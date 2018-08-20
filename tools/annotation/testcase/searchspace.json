@@ -1,0 +1,50 @@
+{
+    "handwrite/conv_size/choice": {
+        "_type": "choice",
+        "_value": [ 0, 1, 2, 3 ]
+    },
+    "handwrite/#5/function_choice": {
+        "_type": "choice",
+        "_value": [ 0, 1, 2 ]
+    },
+    "handwrite/#8/qlognormal": {
+        "_type": "qlognormal",
+        "_value": [ 1.2, 3, 4.5 ]
+    },
+    "mnist/self.conv_size/choice": {
+        "_type": "choice",
+        "_value": [ 0, 1, 2, 3 ]
+    },
+    "mnist/self.hidden_size/choice": {
+        "_type": "choice",
+        "_value": [ 0, 1, 2 ]
+    },
+    "mnist/self.learning_rate/randint": {
+        "_type": "randint",
+        "_value": [ 2, 3, 5 ]
+    },
+    "mnist/tf.nn.relu/function_choice": {
+        "_type": "choice",
+        "_value": [ 0, 1, 2 ]
+    },
+    "mnist/max_pool/function_choice": {
+        "_type": "choice",
+        "_value": [ 0, 1 ]
+    },
+    "mnist/batch_size/choice": {
+        "_type": "choice",
+        "_value": [ 0, 1, 2 ]
+    },
+    "mnist/dropout_rate/choice": {
+        "_type": "choice",
+        "_value": [ 0, 1 ]
+    },
+    "dir.simple/conv_size/choice": {
+        "_type": "choice",
+        "_value": [ 0, 1, 2, 3 ]
+    },
+    "dir.simple/max_pool/function_choice": {
+        "_type": "choice",
+        "_value": [ 0, 1 ]
+    }
+}

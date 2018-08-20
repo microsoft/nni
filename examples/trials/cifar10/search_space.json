@@ -1,0 +1,14 @@
+{
+    "dropout":{"_type":"uniform","_value":[0, 1]},
+    "dropout_notlast":{"_type":"uniform","_value":[0, 1]},
+    "learning_rate":{"_type":"uniform", "_value":[0.0001, 1]},
+    "batch_size":{"_type":"choice", "_value":[50, 100, 200, 300, 400, 500]},
+    "hidden_size":{"_type":"choice", "_value":[100, 200, 500, 1000, 2000]},
+    "conv_size":{"_type":"choice", "_value":[1, 3, 5, 7]},
+    "conv_units_size":{"_type":"choice", "_value":[16, 32, 64]},
+    "num_blocks":{"_type":"choice", "_value":[1, 2, 3, 4, 5, 6, 7]},
+    "act_notlast":{"_type":"choice", "_value":[1, 2, 3, 4, 5, 6]},
+    "act":{"_type":"choice", "_value":[1, 2, 3, 4, 5, 6]},
+    "optimizer":{"_type":"choice", "_value": [1, 2, 3, 4, 5]},
+    "initial_method":{"_type":"choice", "_value":[1, 2]}
+}

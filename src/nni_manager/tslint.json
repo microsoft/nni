@@ -1,0 +1,15 @@
+{
+    "defaultSeverity": "error",
+    "extends": "tslint-microsoft-contrib",
+    "jsRules": {},
+    "rules": {
+        "no-relative-imports": false,
+        "export-name": false,
+        "interface-name": [true, "never-prefix"],
+        "no-increment-decrement": false,
+        "promise-function-async": false,
+        "no-console": [true, "log"],
+        "no-multiline-string": false
+    },
+    "rulesDirectory": []
+}

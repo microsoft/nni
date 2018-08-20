@@ -1,0 +1,28 @@
+authorName: nni
+experimentName: naive
+trialConcurrency: 3
+maxExecDuration: 1h
+maxTrialNum: 10
+#choice: local, remote
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  tunerCommand: python naive_tuner.py
+  tunerCwd: .
+  tunerGpuNum: 0
+assessor:
+  assessorCommand: python naive_assessor.py
+  assessorCwd: .
+  assessorGpuNum: 0
+trial:
+  trialCommand: python naive_trial.py
+  trialCodeDir: .
+  trialGpuNum: 0
+#machineList can be empty if the platform is local
+machineList:
+  - ip: 
+    port: 
+    username: 
+    passwd: 

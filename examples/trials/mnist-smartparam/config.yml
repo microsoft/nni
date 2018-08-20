@@ -1,0 +1,18 @@
+authorName: default
+experimentName: example_mnist-smartparam
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 1
+#choice: local, remote
+trainingServicePlatform: local
+#choice: true, false
+useAnnotation: true
+tuner:
+  #choice: TPE, Random, Anneal, Evolution
+  tunerName: TPE
+  #choice: Maximize, Minimize
+  optimizationMode: Maximize
+trial:
+  trialCommand: python3 mnist.py
+  trialCodeDir: /usr/share/nni/examples/trials/mnist-smartparam
+  trialGpuNum: 0

@@ -1,0 +1,28 @@
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#choice: local, remote
+trainingServicePlatform: 
+searchSpacePath: 
+#choice: true, false
+useAnnotation: 
+tuner:
+  tunerCommand: 
+  tunerCwd: 
+  tunerGpuNum: 
+assessor:
+  assessorCommand: 
+  assessorCwd: 
+  assessorGpuNum: 
+trial:
+  trialCommand: 
+  trialCodeDir: 
+  trialGpuNum: 
+#machineList can be empty if the platform is local
+machineList:
+  - ip: 
+    port: 
+    username: 
+    passwd: 

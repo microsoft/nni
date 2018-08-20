@@ -1,0 +1,18 @@
+# Usage:
+#       pylint --rcfile=PATH_TO_THIS_FILE PACKAGE_NAME
+# or
+#       pylint --rcfile=PATH_TO_THIS_FILE SOURCE_FILE.py
+
+[SETTINGS]
+
+max-line-length=140
+
+max-args=5
+max-locals=15
+max-statements=50
+max-attributes=7
+
+const-naming-style=any
+
+disable=duplicate-code,
+        super-init-not-called

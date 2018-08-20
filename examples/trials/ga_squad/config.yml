@@ -1,0 +1,16 @@
+authorName: default
+experimentName: example_ga_squad
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 1
+#choice: local, remote
+trainingServicePlatform: local
+#choice: true, false
+useAnnotation: false
+tuner:
+  tunerCommand: python3 __main__.py
+  tunerCwd: /usr/share/nni/examples/tuners/ga_customer_tuner
+trial:
+  trialCommand: python3 trial.py
+  trialCodeDir: /usr/share/nni/examples/trials/ga_squad
+  trialGpuNum: 0

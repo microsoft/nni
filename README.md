@@ -1,14 +1,21 @@
+# Introduction 
+Neural Network Intelligence(NNI) is a light package for supporting hyper-parameter tuning or neural architecture search. 
+It could easily run in different environments, such as: local/remote machine/cloud.
+And it offers a new annotation language for user to conveniently design search space.
+Also user could write code using any language or any machine learning framework. 
 
-# Contributing
+# Getting Started
+TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
+1.	Installation process
+2.	Software dependencies
+3.	Latest releases
+4.	API references
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.microsoft.com.
+# Build and Test
+TODO: Describe and show how to build your code and run the tests. 
 
-When you submit a pull request, a CLA-bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+# Contribute
+TODO: Explain how other users and developers can contribute to make your code better. 
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+# Privacy Statement
+The [Microsoft Enterprise and Developer Privacy Statement](https://privacy.microsoft.com/en-us/privacystatement) describes the privacy statement of this software.

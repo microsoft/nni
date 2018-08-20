@@ -1,0 +1,5 @@
+#Build result
+dist/
+
+#node modules
+node_modules/
