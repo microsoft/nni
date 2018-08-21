@@ -1,0 +1,18 @@
+dist: xenial
+sudo: required
+language: python
+python:
+  - "3.6"
+before_install:
+  - sudo apt-get install -y python3-pip python3-setuptools
+  - wget https://nodejs.org/dist/v10.9.0/node-v10.9.0-linux-x64.tar.xz
+  - tar xf node-v10.9.0-linux-x64.tar.xz
+  - sudo mv node-v10.9.0-linux-x64 /usr/local/node
+  - export PATH=/usr/local/node/bin:$PATH
+install:
+  - make
+  - sudo make dev-install
+before_script:
+  - cd test/naive
+script:
+  - python run.py

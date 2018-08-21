@@ -52,12 +52,12 @@ install:
 
 dev-install:
 	### Installing Python SDK dependencies ###
-	pip3 install --user -r src/sdk/pynni/requirements.txt
+	pip3 install -r src/sdk/pynni/requirements.txt
 	### Installing Python SDK ###
-	cd src/sdk/pynni && pip3 install --user -e .
+	cd src/sdk/pynni && pip3 install -e .
 	
 	### Installing nnictl ###
-	cd tools && pip3 install --user -e .
+	cd tools && pip3 install -e .
 
 
 uninstall:
