@@ -9,15 +9,15 @@ searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
-  tunerCommand: python naive_tuner.py
+  tunerCommand: python3 naive_tuner.py
   tunerCwd: .
   tunerGpuNum: 0
 assessor:
-  assessorCommand: python naive_assessor.py
+  assessorCommand: python3 naive_assessor.py
   assessorCwd: .
   assessorGpuNum: 0
 trial:
-  trialCommand: python naive_trial.py
+  trialCommand: python3 naive_trial.py
   trialCodeDir: .
   trialGpuNum: 0
 #machineList can be empty if the platform is local
