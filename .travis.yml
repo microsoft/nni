@@ -3,17 +3,9 @@ sudo: required
 language: python
 python:
   - "3.6"
-before_install:
-  - wget https://nodejs.org/dist/v10.9.0/node-v10.9.0-linux-x64.tar.xz
-  - tar xf node-v10.9.0-linux-x64.tar.xz
-  - sudo mv node-v10.9.0-linux-x64 /usr/local/node
-  - export PATH=/usr/local/node/bin:$PATH
-install:
-  - make
-  - make install
-  - export PATH=$HOME/.nni/bin:$PATH
 before_script:
   - cd test/naive
+  - which python3
 script:
   - python3 veryNaiveTest.py
   - python3 run.py
