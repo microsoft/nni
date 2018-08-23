@@ -12,8 +12,9 @@ install:
   - make
   - make install
   - export PATH=$HOME/.nni/bin:$PATH
-  - cd src/sdk/pynni && pip3 install --user -e .
+  - cd src/sdk/pynni && pip3 install -e .
 before_script:
   - cd test/naive
 script:
+  - python3 veryNaiveTest.py
   - python3 run.py
