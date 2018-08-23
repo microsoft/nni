@@ -14,5 +14,5 @@ tuner:
   optimizationMode: Maximize
 trial:
   trialCommand: python3 mnist.py
-  trialCodeDir: /usr/share/nni/examples/trials/mnist-annotation
+  trialCodeDir: $HOME/.nni/examples/trials/mnist-annotation
   trialGpuNum: 0

@@ -57,7 +57,7 @@ Requirements:
 
 Run the following command to create an experiemnt for [mnist]
 ```bash
-    nnictl create --config /usr/share/nni/examples/trials/mnist-annotation/config.yaml
+    nnictl create --config $HOME/.nni/examples/trials/mnist-annotation/config.yaml
 ```
 This command will start the experiment and WebUI. The WebUI endpoint will be shown in the output of this command (for example, `http://localhost:8080`). Open this URL using your browsers. You can analyze your experiment through WebUI, or open trials' tensorboard.
 
@@ -69,9 +69,9 @@ An experiment is to run multiple trial jobs, each trial job tries a configuratio
 * Provide a yaml experiment configure file
 * (optional) Provide or choose an assessor
 
-**Prepare trial**: Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in /usr/share/nni/examples, run `ls /usr/share/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example: 
+**Prepare trial**: Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in $HOME/.nni/examples, run `ls $HOME/.nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example: 
 
-      python /usr/share/nni/examples/trials/mnist-annotation/mnist.py
+      python $HOME/.nni/examples/trials/mnist-annotation/mnist.py
 
 This command will be filled in the yaml configure file below. Please refer to [here]() for how to write your own trial.
 
@@ -82,7 +82,7 @@ This command will be filled in the yaml configure file below. Please refer to [h
 
 *tunerName* is used to specify a tuner in NNI, *optimizationMode* is to indicate whether you want to maximize or minimize your trial's result.
 
-**Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the yaml configure file. NNI provides a demo configure file for each trial example, `cat /usr/share/nni/examples/trials/mnist-annotation/config.yaml` to see it. Its content is basically shown below:
+**Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the yaml configure file. NNI provides a demo configure file for each trial example, `cat $HOME/.nni/examples/trials/mnist-annotation/config.yaml` to see it. Its content is basically shown below:
 
 ```
 authorName: your_name
@@ -102,7 +102,7 @@ tuner:
   optimizationMode: Maximize
 trial:
   trialCommand: python mnist.py
-  trialCodeDir: /usr/share/nni/examples/trials/mnist-annotation
+  trialCodeDir: $HOME/.nni/examples/trials/mnist-annotation
   trialGpuNum: 0
 ``` 
 
@@ -110,7 +110,7 @@ Here *useAnnotation* is true because this trial example uses our python annotati
 
 With all these steps done, we can run the experiment with the following command:
 
-      nnictl create --config /usr/share/nni/examples/trials/mnist-annotation/config.yaml
+      nnictl create --config $HOME/.nni/examples/trials/mnist-annotation/config.yaml
 
 You can refer to [here](NNICTLDOC.md) for more usage guide of *nnictl* command line tool.
 

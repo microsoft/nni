@@ -29,7 +29,7 @@ from .constants import STDOUT_FULL_PATH, STDERR_FULL_PATH
 
 def start_web_ui(port):
     '''start web ui'''
-    cmds = ['serve', '-s', '-n', '/usr/share/nni/webui', '-l', str(port)]
+    cmds = ['serve', '-s', '-n', '$HOME/.nni/webui', '-l', str(port)]
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
     webui_process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)

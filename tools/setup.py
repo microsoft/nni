@@ -9,7 +9,8 @@ setuptools.setup(
     install_requires = [
         'requests',
         'pyyaml',
-        'psutil'
+        'psutil',
+        'astor'
     ],
 
     author = 'Microsoft NNI Team',
