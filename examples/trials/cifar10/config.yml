@@ -5,7 +5,7 @@ maxExecDuration: 1h
 maxTrialNum: 1
 #choice: local, remote
 trainingServicePlatform: local
-searchSpacePath: /usr/share/nni/examples/trials/cifar10/search_space.json
+searchSpacePath: $HOME/.nni/examples/trials/cifar10/search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
@@ -15,5 +15,5 @@ tuner:
   optimizationMode: Maximize
 trial:
   trialCommand: python3 cifar10.py
-  trialCodeDir: /usr/share/nni/examples/trials/cifar10
+  trialCodeDir: $HOME/.nni/examples/trials/cifar10
   trialGpuNum: 0

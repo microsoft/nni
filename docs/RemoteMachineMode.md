@@ -30,7 +30,7 @@ tuner:
   optimizationMode: Maximize
 trial:
   trialCommand: python mnist.py
-  trialCodeDir: /usr/share/nni/examples/trials/mnist-annotation
+  trialCodeDir: $HOME/.nni/examples/trials/mnist-annotation
   trialGpuNum: 0
 #machineList can be empty if the platform is local
 machineList:

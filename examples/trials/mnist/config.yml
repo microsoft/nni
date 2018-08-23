@@ -5,7 +5,7 @@ maxExecDuration: 1h
 maxTrialNum: 1
 #choice: local, remote
 trainingServicePlatform: local
-searchSpacePath: /usr/share/nni/examples/trials/mnist/search_space.json
+searchSpacePath: $HOME/.nni/examples/trials/mnist/search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
@@ -15,5 +15,5 @@ tuner:
   optimizationMode: Maximize
 trial:
   trialCommand: python3 mnist.py
-  trialCodeDir: /usr/share/nni/examples/trials/mnist
+  trialCodeDir: $HOME/.nni/examples/trials/mnist
   trialGpuNum: 0
