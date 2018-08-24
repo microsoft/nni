@@ -18,7 +18,6 @@ Click the tab "Overview".
 
 * See good performance trial.
 * See search_space json.
-* See complete trial cdf graph.
 
 ### View job accuracy
 
@@ -29,7 +28,7 @@ Click the tab "Optimization Progress" to see the point graph of all trials. Hove
 Click the tab "Hyper Parameter" to see the parallel graph.
 
 * You can select the percentage to cut down some lines.
-* Choose two axes to swap its positions
+* Choose two axis to swap its positions
 
 ### View trial status 
 
@@ -39,11 +38,10 @@ Click the tab "Trial Status" to see the status of the all trials. Specifically:
 * Trial detail: trial's id, trial's duration, start time, end time, status and accuracy.
 * Kill: you can kill a job that status is running.
 * Tensor: you can see a job in the tensorflow graph, it will link to the Tensorboard page.
-* Log: click the button, you can see the log about NNI and pai.
 
 ### Control 
 
-Click the tab "Control" to add a new trial or update the search_space file.
+Click the tab "Control" to add a new trial or update the search_space file and some experiment parameters.
 
 ### View Tensorboard Graph 
    

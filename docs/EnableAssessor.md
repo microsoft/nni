@@ -25,7 +25,7 @@ assessor:
   optimizationMode: Maximize
 trial:
   trialCommand: python mnist.py
-  trialCodeDir: $HOME/.nni/examples/trials/mnist-annotation
+  trialCodeDir: /usr/share/nni/examples/trials/mnist-annotation
   trialGpuNum: 0
 ```
 For our built-in assessors, you need to fill two fields: `assessorName` which chooses NNI provided assessors (refer to [here]() for built-in assessors), `optimizationMode` which includes Maximize and Minimize (you want to maximize or minimize your trial result).
@@ -54,7 +54,7 @@ assessor:
   assessorGpuNum: 0
 trial:
   trialCommand: python mnist.py
-  trialCodeDir: $HOME/.nni/examples/trials/mnist-annotation
+  trialCodeDir: /usr/share/nni/examples/trials/mnist-annotation
   trialGpuNum: 0
 ```
 You only need to fill three field: `assessorCommand`, `assessorCodeDir` and `assessorGpuNum`.

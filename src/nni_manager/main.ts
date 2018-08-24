@@ -32,7 +32,7 @@ import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
 import { RestServer } from './rest_server/server';
-import { LocalTrainingService } from './training_service/local/localTrainingService';
+import { LocalTrainingServiceForGPU } from './training_service/local/localTrainingServiceForGPU';
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
@@ -46,7 +46,7 @@ function initStartupInfo(startExpMode: string, resumeExperimentId: string) {
 
 async function initContainer(platformMode: string): Promise<void> {
     if (platformMode === 'local') {
-        Container.bind(TrainingService).to(LocalTrainingService).scope(Scope.Singleton);
+        Container.bind(TrainingService).to(LocalTrainingServiceForGPU).scope(Scope.Singleton);
     } else if (platformMode === 'remote') {
         Container.bind(TrainingService).to(RemoteMachineTrainingService).scope(Scope.Singleton);
     } else {

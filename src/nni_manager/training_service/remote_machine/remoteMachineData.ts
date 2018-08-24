@@ -23,15 +23,6 @@ import { Client } from 'ssh2';
 import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUSummary } from '../common/gpuData';
 
-/**
- * Enum of key for remote machine metadata for configuration
- */
-export enum RemoteMachineMetadataKey {
-    MACHINE_LIST = 'machine_list',
-    TRIAL_CONFIG = 'trial_config',
-    EXPERIMENT_ID = 'experimentId',
-    RANDOM_SCHEDULER = 'random_scheduler'
-}
 
 /**
  * Metadata of remote machine for configuration and statuc query
@@ -51,21 +42,6 @@ export class RemoteMachineMeta {
         this.username = username;
         this.passwd = passwd;
         this.gpuReservation = new Map<number, string>();
-    }
-}
-
-/**
- * Configuration for trial job on remote machine
- */
-export class RemoteMachineTrialConfig {
-    public readonly command : string;
-    public readonly codeDir : string;
-    public readonly gpuNum : number;
-
-    constructor(command : string, codeDir : string, gpuNum : number) {
-        this.command = command;
-        this.codeDir = codeDir;
-        this.gpuNum = gpuNum;
     }
 }
 

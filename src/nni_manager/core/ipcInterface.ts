@@ -96,10 +96,11 @@ class IpcInterface {
      * @param content: payload of command
      */
     public sendCommand(commandType: string, content: string = ''): void {
+        this.logger.debug(`ipcInterface command type: [${commandType}], content:[${content}]`);
         assert.ok(this.acceptCommandTypes.has(commandType));
         const data: Buffer = encodeCommand(commandType, content);
         if (!this.outgoingStream.write(data)) {
-            //this.logger.warning('Commands jammed in buffer!');
+            this.logger.error('Commands jammed in buffer!');
         }
     }
 

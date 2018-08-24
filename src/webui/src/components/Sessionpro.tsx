@@ -2,12 +2,12 @@ import * as React from 'react';
 import axios from 'axios';
 import { Table, Select, Row, Col, Icon } from 'antd';
 import { MANAGER_IP, overviewItem, roundNum } from '../const';
-import ReactEcharts from 'echarts-for-react';
+// import ReactEcharts from 'echarts-for-react';
 const Option = Select.Option;
 import JSONTree from 'react-json-tree';
-require('echarts/lib/chart/line');
-require('echarts/lib/component/tooltip');
-require('echarts/lib/component/title');
+// require('echarts/lib/chart/line');
+// require('echarts/lib/component/tooltip');
+// require('echarts/lib/component/title');
 require('../style/sessionpro.css');
 
 interface TableObj {
@@ -266,26 +266,26 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         });
                     }
                     // draw CDF
-                    const { trialRun } = this.state;
-                    if (this._isMounted) {
-                        this.setState({
-                            option: this.getOption(trialRun)
-                        });
-                    }
+                    // const { trialRun } = this.state;
+                    // if (this._isMounted) {
+                    //     this.setState({
+                    //         option: this.getOption(trialRun)
+                    //     });
+                    // }
                     // CDF graph 'No data' judge
-                    if (trialRun.length === 0) {
-                        if (this._isMounted) {
-                            this.setState({
-                                noData: 'No data'
-                            });
-                        }
-                    } else {
-                        if (this._isMounted) {
-                            this.setState({
-                                noData: ''
-                            });
-                        }
-                    }
+                    // if (trialRun.length === 0) {
+                    //     if (this._isMounted) {
+                    //         this.setState({
+                    //             noData: 'No data'
+                    //         });
+                    //     }
+                    // } else {
+                    //     if (this._isMounted) {
+                    //         this.setState({
+                    //             noData: ''
+                    //         });
+                    //     }
+                    // }
                 }
             });
     }
@@ -372,7 +372,8 @@ class Sessionpro extends React.Component<{}, SessionState> {
         };
 
         const {
-            trialProfile, searchSpace, tunerAssessor, tableData, option, noData
+            trialProfile, searchSpace, tunerAssessor, tableData, 
+            // option, noData
         } = this.state;
         let running;
         if (trialProfile.endTime === 'not over') {
@@ -500,13 +501,13 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         scroll={{ x: '100%', y: 540 }}
                     />
                 </div>
-                <div className="cdf">
+                {/* <div className="cdf">
                     <ReactEcharts
                         option={option}
                         style={{ height: 500, padding: '0px' }}
                     />
                     <div className="addNodata">{noData}</div>
-                </div>
+                </div> */}
             </div>
         );
     }

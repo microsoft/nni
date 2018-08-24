@@ -54,13 +54,20 @@ def start_rest_server(manager, port, platform, mode, experiment_id=None):
     process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
     return process
 
-def set_local_config(experiment_config, port):
-    '''Call setClusterMetadata (rest PUT /parameters/cluster-metadata) to pass platform and machineList"'''
+def set_trial_config(experiment_config, port):
+    '''set trial configuration'''
     request_data = dict()
-    request_data['codeDir'] = experiment_config['trial']['trialCodeDir']
-    request_data['command'] = experiment_config['trial']['trialCommand']
+    value_dict = dict()
+    value_dict['command'] = experiment_config['trial']['trialCommand']
+    value_dict['codeDir'] = experiment_config['trial']['trialCodeDir']
+    value_dict['gpuNum'] = experiment_config['trial']['trialGpuNum']
+    request_data['trial_config'] = value_dict
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
-    return True if response and response.status_code == 200 else False
+    return True if response.status_code == 200 else False
+
+def set_local_config(experiment_config, port):
+    '''set local configuration'''
+    return set_trial_config(experiment_config, port)
 
 def set_remote_config(experiment_config, port):
     '''Call setClusterMetadata to pass trial'''
@@ -72,14 +79,7 @@ def set_remote_config(experiment_config, port):
         return False
 
     #set trial_config
-    request_data = dict()
-    value_dict = dict()
-    value_dict['command'] = experiment_config['trial']['trialCommand']
-    value_dict['codeDir'] = experiment_config['trial']['trialCodeDir']
-    value_dict['gpuNum'] = experiment_config['trial']['trialGpuNum']
-    request_data['trial_config'] = value_dict
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
-    return True if response.status_code == 200 else False
+    return set_trial_config(experiment_config, port)
 
 def set_experiment(experiment_config, mode, port):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''

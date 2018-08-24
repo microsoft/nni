@@ -22,6 +22,7 @@
 import { TrialJobDetail, TrialJobStatus } from '../../common/trainingService';
 import { GPUScheduler } from './gpuScheduler';
 import { LocalTrainingService } from './localTrainingService';
+import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 
 type LocalTrialJobDetailForGPU = TrialJobDetail & { gpuIndices: number[] };
 
@@ -52,22 +53,19 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         await super.setClusterMetadata(key, value);
         switch (key) {
-            case 'requiredGPUNum':
-                this.requiredGPUNum = parseInt(value, 10);
+            case TrialConfigMetadataKey.TRIAL_CONFIG:
+                if(this.localTrailConfig !== undefined) {
+                    this.requiredGPUNum = this.localTrailConfig.gpuNum;
+                } else {
+                    // If no valid trial config is initialized, set requiredGPUNum to 0 as fallback value.
+                    this.requiredGPUNum = 0;
+                }
+                this.log.info('required GPU number is ' + this.requiredGPUNum);
                 if (this.gpuScheduler === undefined) {
                     this.gpuScheduler = new GPUScheduler();
                 }
                 break;
             default:
-        }
-    }
-
-    public getClusterMetadata(key: string): Promise<string> {
-        switch (key) {
-            case 'requiredGPUNum':
-                return Promise.resolve(`${this.requiredGPUNum}`);
-            default:
-                return super.getClusterMetadata(key);
         }
     }
 
@@ -80,7 +78,7 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
     }
 
     protected onTrialJobStatusChanged(trialJob: LocalTrialJobDetailForGPU, oldStatus: TrialJobStatus): void {
-        if (trialJob.gpuIndices.length !== 0) {
+        if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length !== 0) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
                 for (const index of trialJob.gpuIndices) {
                     this.availableGPUIndices[index] = false;

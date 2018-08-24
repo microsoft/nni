@@ -182,24 +182,24 @@ nnictl log
 
 ### Manage experiment information
 
-* __nnictl experiment ls__
+* __nnictl experiment show__
   * Description
       
 	     Show the information of experiment.
    * Usage
      
-	     nnictl experiment ls
+	     nnictl experiment show
 
  
 
-* __nnictl config ls__
+* __nnictl config show__
     * Description
              
 		    Display the current context information.
    
     * Usage
     
-	      nnictl config ls
+	      nnictl config show
 
 ### Manage restful server
 * __nnictl rest check__  
