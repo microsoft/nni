@@ -43,7 +43,7 @@ WARNING_INFO = 'Waining: %s'
 EXPERIMENT_SUCCESS_INFO = 'Start experiment success! The experiment id is %s, and the restful server post is %s.\n' \
                           'You can use these commands to get more information about this experiment:\n' \
                           '         commands                       description\n' \
-                          '1. nnictl experiment ls          list all of experiments\n' \
+                          '1. nnictl experiment show        show the information of experiments\n' \
                           '2. nnictl trial ls               list all of trial jobs\n' \
                           '3. nnictl stop                   stop a experiment\n' \
                           '4. nnictl trial kill             kill a trial job by id\n' \

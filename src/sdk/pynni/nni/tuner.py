@@ -127,6 +127,8 @@ def _handle_request(tuner):
     _logger.debug('waiting receive_message')
 
     command, data = receive()
+    if command is None:
+        return False
 
     _logger.debug(command)
     _logger.debug(data)

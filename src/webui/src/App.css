@@ -1,6 +1,10 @@
 .header_title{
   width: 100%;
   height: 60px;
+  line-height: 60px;
+  font-size: 24px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: white;
   background-color:	rgb(60,141,188) ;
   user-select: none;
   text-align: center;

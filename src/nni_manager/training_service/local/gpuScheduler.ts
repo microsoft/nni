@@ -19,9 +19,11 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import * as nodeNvidiaSmi from 'node-nvidia-smi';
 import { delay } from '../../common/utils';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
+import { getLogger, Logger } from '../../common/log';
 
 /* Example of nvidia-smi result
 {
@@ -287,9 +289,13 @@ class GPUScheduler {
 
     private gpuSummary!: GPUSummary;
     private stopping: boolean;
+    private log: Logger;
+    private nvdmNotFoundRegex: RegExp;
 
     constructor() {
         this.stopping = false;
+        this.log = getLogger();
+        this.nvdmNotFoundRegex = /nvidia-smi: not found/gi;
     }
 
     public async run(): Promise<void> {
@@ -297,7 +303,11 @@ class GPUScheduler {
             try {
                 this.gpuSummary = await this.readGPUSummary();
             } catch (error) {
-                console.error('Read GPU summary failed with error', error);
+                this.log.error('Read GPU summary failed with error: ', error);
+                // If nvidia-smi command is not found, break the gpu summary reading loop to avoid unnecessary periodically checking
+                if(this.nvdmNotFoundRegex.test(error)) {
+                    break;
+                }
             }
             await delay(5000);
         }
@@ -315,28 +325,42 @@ class GPUScheduler {
         this.stopping = true;
     }
 
+
+    private generateEmbededGPUSummary(data: nodeNvidiaSmi.GPUInfo) : GPUInfo[] {
+        let gpuInfos : GPUInfo[] = [];
+        const gpuNumber : number = parseInt(data.nvidia_smi_log.attached_gpus, 10);
+
+        assert(gpuNumber > 0);
+        if(gpuNumber == 1) {
+            const embededGPUSummary = <nodeNvidiaSmi.EmbededGPUSummary>data.nvidia_smi_log.gpu;
+            gpuInfos.push(this.convertGPUSummaryToInfo(embededGPUSummary));
+        } else {
+            const embededGPUSummaryArray = <nodeNvidiaSmi.EmbededGPUSummary[]>data.nvidia_smi_log.gpu;
+            gpuInfos = embededGPUSummaryArray.map(embededGPUSummary => this.convertGPUSummaryToInfo(embededGPUSummary));
+        }
+
+        return gpuInfos;
+    }
+
+    private convertGPUSummaryToInfo(embededGPUSummary : nodeNvidiaSmi.EmbededGPUSummary) : GPUInfo {
+        return new GPUInfo(
+            typeof embededGPUSummary.process === 'object' ? 1 : 0,
+            parseFloat(embededGPUSummary.utilization.memory_util),
+            parseFloat(embededGPUSummary.utilization.gpu_util),
+            parseInt(embededGPUSummary.minor_number, 10));
+    }
+
     private readGPUSummary(): Promise<GPUSummary> {
         return new Promise((resolve: Function, reject: Function): void => {
             nodeNvidiaSmi((error: Error, data: nodeNvidiaSmi.GPUInfo) => {
-                if (error !== undefined) {
+                if (error) {
                     reject(error);
                 } else {
+                    const gpuNumber : number = parseInt(data.nvidia_smi_log.attached_gpus, 10);
                     const gpuSummary: GPUSummary = new GPUSummary(
-                        parseInt(data.nvidia_smi_log.attached_gpus, 10),
+                        gpuNumber,
                         Date().toString(),
-                        data.nvidia_smi_log.gpu.map((gpuInfo: {
-                            minor_number: string;
-                            utilization: {
-                                gpu_util: string;
-                                memory_util: string;
-                            };
-                            process: string | object;
-                        }) => new GPUInfo(
-                            typeof gpuInfo.process === 'object' ? 1 : 0,
-                            parseFloat(gpuInfo.utilization.memory_util),
-                            parseFloat(gpuInfo.utilization.gpu_util),
-                            parseInt(gpuInfo.minor_number, 10)
-                        ))
+                        this.generateEmbededGPUSummary(data)
                     );
                     resolve(gpuSummary);
                 }

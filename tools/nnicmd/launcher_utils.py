@@ -167,8 +167,10 @@ def validate_trail_content(experiment_config):
     check_empty(experiment_config['trial'], 'trialCodeDir')
     check_directory(experiment_config['trial'], 'trialCodeDir')
     experiment_config['trial']['trialCodeDir'] = os.path.abspath(experiment_config['trial']['trialCodeDir'])
-    check_empty(experiment_config['trial'], 'trialGpuNum')
-    check_digit(experiment_config['trial'], 'trialGpuNum', 0, 100)
+    if experiment_config['trial'].get('trialGpuNum') is None:
+        experiment_config['trial']['trialGpuNum'] = 0
+    else:
+        check_digit(experiment_config['trial'], 'trialGpuNum', 0, 100)
 
 
 def validate_machinelist_content(experiment_config):

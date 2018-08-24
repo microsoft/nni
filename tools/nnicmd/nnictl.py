@@ -94,14 +94,14 @@ def parse_args():
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
     #add subparsers for parser_experiment
     parser_experiment_subparsers = parser_experiment.add_subparsers()
-    parser_experiment_ls = parser_experiment_subparsers.add_parser('ls', help='list experiment')
-    parser_experiment_ls.set_defaults(func=list_experiment)
+    parser_experiment_show = parser_experiment_subparsers.add_parser('show', help='show the information of experiment')
+    parser_experiment_show.set_defaults(func=list_experiment)
 
     #parse config command
     parser_config = subparsers.add_parser('config', help='get config information')
     parser_config_subparsers = parser_config.add_subparsers()
-    parser_config_ls = parser_config_subparsers.add_parser('ls', help='list config')
-    parser_config_ls.set_defaults(func=get_config)
+    parser_config_show = parser_config_subparsers.add_parser('show', help='show the information of config')
+    parser_config_show.set_defaults(func=get_config)
 
     #parse restful server command
     parser_rest = subparsers.add_parser('rest', help='get restful server information')

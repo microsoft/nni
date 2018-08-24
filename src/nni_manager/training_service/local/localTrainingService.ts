@@ -27,6 +27,8 @@ import * as path from 'path';
 import * as ts from 'tail-stream';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
+import { TrialConfig } from '../common/trialConfig';
+import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     HostJobApplicationForm, JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
@@ -92,9 +94,8 @@ class LocalTrainingService implements TrainingService {
     private initialized: boolean;
     private stopping: boolean;
     private rootDir!: string;
-    private codeDir!: string;
-    private command!: string;
-    private log: Logger;
+    protected log: Logger;
+    protected localTrailConfig?: TrialConfig;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -227,11 +228,12 @@ class LocalTrainingService implements TrainingService {
             this.initialized = true;
         }
         switch (key) {
-            case 'codeDir':
-                this.codeDir = value;
-                break;
-            case 'command':
-                this.command = value;
+            case TrialConfigMetadataKey.TRIAL_CONFIG:
+                this.localTrailConfig = <TrialConfig>JSON.parse(value);
+                // Parse trial config failed, throw Error
+                if (!this.localTrailConfig) {
+                    throw new Error('trial config parsed failed');
+                }
                 break;
             default:
         }
@@ -239,10 +241,14 @@ class LocalTrainingService implements TrainingService {
 
     public getClusterMetadata(key: string): Promise<string> {
         switch (key) {
-            case 'codeDir':
-                return Promise.resolve(this.codeDir);
-            case 'command':
-                return Promise.resolve(this.command);
+            case TrialConfigMetadataKey.TRIAL_CONFIG:
+                let getResult : Promise<string>;
+                if(!this.localTrailConfig) {
+                    getResult = Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, `${key} is never set yet`));
+                } else {
+                    getResult = Promise.resolve(!this.localTrailConfig? '' : JSON.stringify(this.localTrailConfig));
+                }
+                return getResult;     
             default:
                 return Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, 'Key not found'));
         }
@@ -292,14 +298,18 @@ class LocalTrainingService implements TrainingService {
         const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource);
 
         const runScriptLines: string[] = [];
+
+        if (!this.localTrailConfig) {
+            throw new Error('trial config is not initialized');
+        }
         runScriptLines.push(
             '#!/bin/bash',
-            `cd ${this.codeDir}`);
+            `cd ${this.localTrailConfig.codeDir}`);
         for (const variable of variables) {
             runScriptLines.push(`export ${variable.key}=${variable.value}`);
         }
         runScriptLines.push(
-            `eval ${this.command} 2>${path.join(trialJobDetail.workingDirectory, '.nni', 'stderr')}`,
+            `eval ${this.localTrailConfig.command} 2>${path.join(trialJobDetail.workingDirectory, '.nni', 'stderr')}`,
             `echo $? \`date +%s%3N\` >${path.join(trialJobDetail.workingDirectory, '.nni', 'state')}`);
 
         await cpp.exec(`mkdir -p ${trialJobDetail.workingDirectory}`);

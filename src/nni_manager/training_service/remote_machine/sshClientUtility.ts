@@ -19,14 +19,16 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
-import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { Client, ClientChannel, SFTPWrapper } from 'ssh2';
-import * as stream from "stream";
+import * as stream from 'stream';
 import { Deferred } from 'ts-deferred';
 import { NNIError, NNIErrorNames } from '../../common/errors';
-import { getExperimentRootDir } from '../../common/utils';
+import { getLogger } from '../../common/log';
+import { uniqueString } from '../../common/utils';
 import { RemoteCommandResult } from './remoteMachineData';
 
 /**
@@ -43,17 +45,18 @@ export namespace SSHClientUtility {
      */
     export async function copyDirectoryToRemote(localDirectory : string, remoteDirectory : string, sshClient : Client) : Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
-        const localCompressedDir: string = path.join(getExperimentRootDir(), 'directory.tar.gz');
-        const remoteCompressedDir: string = path.join(remoteDirectory, 'directory.tar.gz');
+        const tmpTarName: string = `${uniqueString(10)}.tar.gz`;
+        const localTarPath: string = path.join(os.tmpdir(), tmpTarName);
+        const remoteTarPath: string = path.join(os.tmpdir(), tmpTarName);
 
         // Compress files in local directory to experiment root directory
-        await cpp.exec(`tar -czf ${localCompressedDir} -C ${localDirectory} .`);
+        await cpp.exec(`tar -czf ${localTarPath} -C ${localDirectory} .`);
         // Copy the compressed file to remoteDirectory and delete it
-        await copyFileToRemote(localCompressedDir, remoteCompressedDir, sshClient);
-        await cpp.exec(`rm ${localCompressedDir}`);
+        await copyFileToRemote(localTarPath, remoteTarPath, sshClient);
+        await cpp.exec(`rm ${localTarPath}`);
         // Decompress the remote compressed file in and delete it
-        await remoteExeCommand(`tar -oxzf ${remoteCompressedDir} -C ${remoteDirectory}`, sshClient);
-        await remoteExeCommand(`rm ${remoteCompressedDir}`, sshClient);
+        await remoteExeCommand(`tar -oxzf ${remoteTarPath} -C ${remoteDirectory}`, sshClient);
+        await remoteExeCommand(`rm ${remoteTarPath}`, sshClient);
         deferred.resolve();
 
         return deferred.promise;
@@ -65,18 +68,23 @@ export namespace SSHClientUtility {
      * @param remoteFilePath the target path in remote machine
      * @param sshClient SSH Client
      */
-    export function copyFileToRemote(localFilePath : string, remoteFilePath : string, sshClient : Client) : Promise<string> {
-        const deferred: Deferred<string> = new Deferred<string>();
+    export function copyFileToRemote(localFilePath : string, remoteFilePath : string, sshClient : Client) : Promise<boolean> {
+        assert(sshClient !== undefined);
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
         sshClient.sftp((err : Error, sftp : SFTPWrapper) => {
             if (err) {
-                deferred.reject();
+                getLogger().error(`copyFileToRemote: ${err.message}, ${localFilePath}, ${remoteFilePath}`);
+                deferred.reject(err);
+
+                return;
             }
+            assert(sftp !== undefined);
             sftp.fastPut(localFilePath, remoteFilePath, (fastPutErr : Error) => {
                 sftp.end();
                 if (fastPutErr) {
-                    deferred.reject();
+                    deferred.reject(fastPutErr);
                 } else {
-                    deferred.resolve('success');
+                    deferred.resolve(true);
                 }
             });
         });
@@ -97,14 +105,16 @@ export namespace SSHClientUtility {
 
         client.exec(command, (err : Error, channel : ClientChannel) => {
             if (err) {
+                getLogger().error(`remoteExeCommand: ${err.message}`);
                 deferred.reject(err);
+
+                return;
             }
 
-            channel.on('data', function(data : any, dataStderr : any) {
+            channel.on('data', (data : any, dataStderr : any) => {
                 if (dataStderr) {
                     stderr += data.toString();
-                }
-                else {
+                } else {
                     stdout += data.toString();
                 }
             }).on('exit', (code, signal) => {
@@ -124,7 +134,10 @@ export namespace SSHClientUtility {
         const deferred: Deferred<string> = new Deferred<string>();
         sshClient.sftp((err: Error, sftp : SFTPWrapper) => {
             if (err) {
+                getLogger().error(`getRemoteFileContent: ${err.message}`);
                 deferred.reject(new Error(`SFTP error: ${err.message}`));
+
+                return;
             }
             try {
                 const sftpStream : stream.Readable = sftp.createReadStream(filePath);
@@ -133,11 +146,16 @@ export namespace SSHClientUtility {
                 sftpStream.on('data', (data : Buffer | string) => {
                     dataBuffer += data;
                 }).on('error', (streamErr: Error) => {
+                    sftp.end();
                     deferred.reject(new NNIError(NNIErrorNames.NOT_FOUND, streamErr.message));
                 }).on('end', () => {
+                    // sftp connection need to be released manually once operation is done
+                    sftp.end();
                     deferred.resolve(dataBuffer);
                 });
             } catch (error) {
+                getLogger().error(`getRemoteFileContent: ${error.message}`);
+                sftp.end();
                 deferred.reject(new Error(`SFTP error: ${error.message}`));
             }
         });
