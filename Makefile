@@ -4,7 +4,8 @@ EXAMPLE_PATH ?= /usr/share/nni/examples
 
 SRC_DIR := ${PWD}
 
-.PHONY: build install uninstall
+.PHONY: build install pip-install uninstall
+
 
 build:
 	### Building NNI Manager ###
@@ -50,6 +51,57 @@ install:
 	cp -rT examples $(EXAMPLE_PATH)
 
 
+pip-install:
+	### Prepare Node.js ###
+	wget https://nodejs.org/dist/v10.9.0/node-v10.9.0-linux-x64.tar.xz
+	tar xf node-v10.9.0-linux-x64.tar.xz
+	sudo mkdir /usr/local/node/
+	mv node-v10.9.0-linux-x64/* /usr/local/node/
+	
+	### Prepare Yarn 1.9.4 ###
+	wget https://github.com/yarnpkg/yarn/releases/download/v1.9.4/yarn-v1.9.4.tar.gz
+	tar xf yarn-v1.9.4.tar.gz
+	sudo mkdir /usr/local/yarn/
+	mv yarn-v1.9.4/* /usr/local/yarn/
+
+	### Add Node.js and Yarn in PATH ###
+	export PATH=/usr/local/node/bin:/usr/local/yarn/bin:$PATH
+
+	### Building NNI Manager ###
+	cd src/nni_manager && yarn && yarn build
+	
+	### Building Web UI ###
+	cd src/webui && yarn && yarn build
+	
+	mkdir -p $(NODE_PATH)/nni
+	mkdir -p $(EXAMPLE_PATH)
+	
+	### Installing NNI Manager ###
+	cp -rT src/nni_manager/dist $(NODE_PATH)/nni/nni_manager
+	cp -rT src/nni_manager/node_modules $(NODE_PATH)/nni/nni_manager/node_modules
+	
+	### Installing Web UI ###
+	cp -rT src/webui/build $(NODE_PATH)/nni/webui
+	ln -sf $(NODE_PATH)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
+	
+	### Installing Python SDK dependencies ###
+	#pip3 install -r src/sdk/pynni/requirements.txt
+	### Installing Python SDK ###
+	#cd src/sdk/pynni && python3 setup.py install
+	
+	### Installing nnictl ###
+	#cd tools && python3 setup.py install
+	
+	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
+	echo 'cd $(NODE_PATH)/nni/nni_manager && node main.js $$@' >> $(BIN_PATH)/nnimanager
+	chmod +x $(BIN_PATH)/nnimanager
+	
+	#install -m 755 tools/nnictl $(BIN_PATH)/nnictl
+	
+	### Installing examples ###
+	cp -rT examples $(EXAMPLE_PATH)
+
+
 dev-install:
 	### Installing Python SDK dependencies ###
 	pip3 install --user -r src/sdk/pynni/requirements.txt
@@ -68,3 +120,4 @@ uninstall:
 	-rm $(BIN_PATH)/nnictl
 	-rm $(BIN_PATH)/nnimanager
 	-rm $(BIN_PATH)/serve
+
