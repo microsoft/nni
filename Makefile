@@ -67,13 +67,13 @@ pip-install:
 	mv yarn-v1.9.4/* /usr/local/yarn/
 
 	### Add Node.js and Yarn in PATH ###
-	export PATH=/usr/local/node/bin:/usr/local/yarn/bin:$PATH
+	#export PATH=/usr/local/node/bin:/usr/local/yarn/bin:$PATH
 
 	### Building NNI Manager ###
-	cd src/nni_manager && yarn && yarn build
+	cd src/nni_manager && /usr/local/yarn/bin/yarn && /usr/local/yarn/bin/yarn build
 	
 	### Building Web UI ###
-	cd src/webui && yarn && yarn build
+	cd src/webui && /usr/local/yarn/bin/yarn && /usr/local/yarn/bin/yarn build
 	
 	mkdir -p $(NODE_PATH)/nni
 	mkdir -p $(EXAMPLE_PATH)
