@@ -75,7 +75,7 @@ pip-install:
 	wget https://github.com/yarnpkg/yarn/releases/download/v1.9.4/yarn-v1.9.4.tar.gz
 	tar xf yarn-v1.9.4.tar.gz
 	cp -rT yarn-v1.9.4 $(INSTALL_PREFIX)/yarn
-	YARN := $(INSTALL_PREFIX)/yarn/bin/yarn
+	YARN:=$(INSTALL_PREFIX)/yarn/bin/yarn
 
 	### Building NNI Manager ###
 	cd src/nni_manager && $(YARN) && $(YARN) build
