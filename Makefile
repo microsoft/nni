@@ -77,23 +77,23 @@ pip-install:
 	### Building Web UI ###
 	cd src/webui && /usr/local/yarn/bin/yarn && /usr/local/yarn/bin/yarn build
 	
-	mkdir -p $(NODE_PATH)/nni
-	mkdir -p $(EXAMPLE_PATH)
+	mkdir -p $(BIN_PATH)
+	mkdir -p $(INSTALL_PREFIX)/nni
 	
 	### Installing NNI Manager ###
-	cp -rT src/nni_manager/dist $(NODE_PATH)/nni/nni_manager
-	cp -rT src/nni_manager/node_modules $(NODE_PATH)/nni/nni_manager/node_modules
-	
-	### Installing Web UI ###
-	cp -rT src/webui/build $(NODE_PATH)/nni/webui
-	ln -sf $(NODE_PATH)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
-
+	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
+	cp -rT src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
 	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
-	echo 'cd $(NODE_PATH)/nni/nni_manager && node main.js $$@' >> $(BIN_PATH)/nnimanager
+	echo 'cd $(INSTALL_PREFIX)/nni/nni_manager && node main.js $$@' >> $(BIN_PATH)/nnimanager
 	chmod +x $(BIN_PATH)/nnimanager
+
+	### Installing Web UI ###
+	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/webui
+	ln -sf $(INSTALL_PREFIX)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
+	
 	
 	### Installing examples ###
-	cp -rT examples $(EXAMPLE_PATH)
+	cp -rT examples $(INSTALL_PREFIX)/nni/examples
 
 
 dev-install:
