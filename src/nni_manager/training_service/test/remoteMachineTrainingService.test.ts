@@ -27,7 +27,7 @@ import * as tmp from 'tmp';
 import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest } from '../../common/utils';
-import { RemoteMachineMetadataKey } from '../remote_machine/remoteMachineData';
+import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 
 // copy mockedTrail.py to local folder
@@ -95,9 +95,9 @@ describe('Unit Test for RemoteMachineTrainingService', () => {
         if (skip) {
             return;
         }
-        await remoteMachineTrainingService.setClusterMetadata(RemoteMachineMetadataKey.MACHINE_LIST, machineList);
+        await remoteMachineTrainingService.setClusterMetadata(TrialConfigMetadataKey.MACHINE_LIST, machineList);
         await remoteMachineTrainingService.setClusterMetadata(
-            RemoteMachineMetadataKey.TRIAL_CONFIG, `{"command":"sleep 1h && echo ","codeDir":"${localCodeDir}","gpuNum":1}`);
+            TrialConfigMetadataKey.TRIAL_CONFIG, `{"command":"sleep 1h && echo ","codeDir":"${localCodeDir}","gpuNum":1}`);
         const form: TrialJobApplicationForm = {
                 jobType: 'TRIAL',
                 hyperParameters: 'mock hyperparameters'
@@ -126,11 +126,11 @@ describe('Unit Test for RemoteMachineTrainingService', () => {
             return;
         }
         // set machine list'
-        await remoteMachineTrainingService.setClusterMetadata(RemoteMachineMetadataKey.MACHINE_LIST, machineList);
+        await remoteMachineTrainingService.setClusterMetadata(TrialConfigMetadataKey.MACHINE_LIST, machineList);
 
         // set meta data
         const trialConfig: string = `{\"command\":\"python3 mockedTrial.py\", \"codeDir\":\"${localCodeDir}\",\"gpuNum\":0}`
-        await remoteMachineTrainingService.setClusterMetadata(RemoteMachineMetadataKey.TRIAL_CONFIG, trialConfig);
+        await remoteMachineTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
 
         // submit job
         const form: TrialJobApplicationForm = {

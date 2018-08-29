@@ -203,7 +203,7 @@ class Control extends React.Component<{}, ControlState> {
 
     // update trial number parameters
     trialParameterMess = (exper: Experiments, str: string) => {
-        this.getUpdateExample();
+    
         axios(`${MANAGER_IP}/experiment`, {
             method: 'PUT',
             headers: {
@@ -216,6 +216,7 @@ class Control extends React.Component<{}, ControlState> {
         }).then(res => {
             if (res.status === 200) {
                 message.success(`Update ${str.toLocaleLowerCase()} successfully`);
+                this.getUpdateExample();
             } else {
                 message.error(`Update ${str.toLocaleLowerCase()} failed`);
             }
@@ -284,8 +285,8 @@ class Control extends React.Component<{}, ControlState> {
     }
 
     userUpdateSeaspace = () => {
+
         this.updateSearchLoad();
-        this.getUpdateExample();
         const { updateSearch } = this.state;
         if (updateSearch !== '' || updateSearch !== null) {
             const { experiment } = this.state;

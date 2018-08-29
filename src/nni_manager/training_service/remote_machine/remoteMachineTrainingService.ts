@@ -37,12 +37,14 @@ import {
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
 import { GPUSummary } from '../common/gpuData';
+import { TrialConfig } from '../common/trialConfig';
+import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { GPUScheduler } from './gpuScheduler';
 import { MetricsCollector } from './metricsCollector';
 import {
-    HOSTJOBSHELLFORMAT, RemoteCommandResult, RemoteMachineMeta, RemoteMachineMetadataKey,
-    REMOTEMACHINERUNSHELLFORMAT, RemoteMachineScheduleInfo, RemoteMachineScheduleResult, 
-    RemoteMachineTrialConfig, RemoteMachineTrialJobDetail, ScheduleResultType
+    HOSTJOBSHELLFORMAT, RemoteCommandResult, RemoteMachineMeta,
+    REMOTEMACHINERUNSHELLFORMAT, RemoteMachineScheduleInfo, RemoteMachineScheduleResult,
+    RemoteMachineTrialJobDetail, ScheduleResultType
 } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
 
@@ -56,7 +58,7 @@ class RemoteMachineTrainingService implements TrainingService {
     // Experiment root directory
     private expRootDir: string;
     private remoteExpRootDir: string;
-    private trialConfig: RemoteMachineTrialConfig | undefined;
+    private trialConfig: TrialConfig | undefined;
     private gpuScheduler: GPUScheduler;
     private jobQueue: string[];
     private timer: ObservableTimer;
@@ -89,11 +91,11 @@ class RemoteMachineTrainingService implements TrainingService {
                     // Remove trial job with trialJobId from job queue
                     this.jobQueue.shift();
                 } else {
-                    // Break the while loop since no GPU resource is available right now, 
+                    // Break the while loop since no GPU resource is available right now,
                     // Wait to schedule job in next time iteration
                     break;
                 }
-            };
+            }
             const metricsCollector: MetricsCollector = new MetricsCollector(
                 this.machineSSHClientMap, this.trialJobsMap, this.remoteExpRootDir, this.metricsEmitter);
             await metricsCollector.collectMetrics();
@@ -186,6 +188,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 form);
             this.jobQueue.push(trialJobId);
             this.trialJobsMap.set(trialJobId, trialJobDetail);
+
             return Promise.resolve(trialJobDetail);
         } else {
             return Promise.reject(new Error(`Job form not supported: ${JSON.stringify(form)}, jobType should be HOST or TRIAL.`));
@@ -207,7 +210,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
         // Remove the job with trialJobId from job queue
         const index : number = this.jobQueue.indexOf(trialJobId);
-        if(index >= 0) {
+        if (index >= 0) {
             this.jobQueue.splice(index, 1);
         }
 
@@ -243,11 +246,11 @@ class RemoteMachineTrainingService implements TrainingService {
      */
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {
-            case RemoteMachineMetadataKey.MACHINE_LIST:
+            case TrialConfigMetadataKey.MACHINE_LIST:
                 await this.setupConnections(value);
                 break;
-            case RemoteMachineMetadataKey.TRIAL_CONFIG:
-                const remoteMachineTrailConfig: RemoteMachineTrialConfig = <RemoteMachineTrialConfig>JSON.parse(value);
+            case TrialConfigMetadataKey.TRIAL_CONFIG:
+                const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
                 // Parse trial config failed, throw Error
                 if (!remoteMachineTrailConfig) {
                     throw new Error('trial config parsed failed');
@@ -294,14 +297,14 @@ class RemoteMachineTrainingService implements TrainingService {
                     deferred.resolve();
                 }
             }).on('error', (err: Error) => {
-                    // SSH connection error, reject with error message
-                    deferred.reject(new Error(err.message));
-                }).connect({
-                    host: rmMeta.ip,
-                    port: rmMeta.port,
-                    username: rmMeta.username,
-                    password: rmMeta.passwd
-                });
+                // SSH connection error, reject with error message
+                deferred.reject(new Error(err.message));
+            }).connect({
+                host: rmMeta.ip,
+                port: rmMeta.port,
+                username: rmMeta.username,
+                password: rmMeta.passwd
+            });
         });
 
         return deferred.promise;
@@ -312,16 +315,16 @@ class RemoteMachineTrainingService implements TrainingService {
         //TO DO: Should we mk experiments rootDir here?
         const nniRootDir: string = '/tmp/nni';
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${this.remoteExpRootDir}`, conn);
-        
+
         // Copy NNI scripts to remote expeirment working directory
         const remoteScriptsDir: string = this.getRemoteScriptsPath();
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${remoteScriptsDir}`, conn);
         await SSHClientUtility.copyDirectoryToRemote('./scripts', remoteScriptsDir, conn);
         await SSHClientUtility.remoteExeCommand(`chmod 777 ${nniRootDir} ${nniRootDir}/* ${nniRootDir}/scripts/*`, conn);
-        
+
         //Begin to execute gpu_metrics_collection scripts
         SSHClientUtility.remoteExeCommand(`cd ${remoteScriptsDir} && python3 gpu_metrics_collector.py`, conn);
-        
+
         this.timer.subscribe(
             async (tick: number) => {
                 const cmdresult: RemoteCommandResult = await SSHClientUtility.remoteExeCommand(
@@ -351,7 +354,7 @@ class RemoteMachineTrainingService implements TrainingService {
             this.log.error(errorMessage);
             deferred.reject();
             throw new NNIError(NNIErrorNames.RESOURCE_NOT_AVAILABLE, errorMessage);
-        } else if(rmScheduleResult.resultType == ScheduleResultType.SUCCEED
+        } else if (rmScheduleResult.resultType === ScheduleResultType.SUCCEED
             && rmScheduleResult.scheduleInfo !== undefined) {
             const rmScheduleInfo : RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
             const trialWorkingFolder: string = path.join(this.remoteExpRootDir, 'trials', trialJobId);
@@ -364,11 +367,11 @@ class RemoteMachineTrainingService implements TrainingService {
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
 
             deferred.resolve(true);
-        } else if(rmScheduleResult.resultType == ScheduleResultType.TMP_NO_AVAILABLE_GPU) {
+        } else if (rmScheduleResult.resultType === ScheduleResultType.TMP_NO_AVAILABLE_GPU) {
             this.log.info(`Right now no available GPU can be allocated for trial ${trialJobId}, will try to schedule later`);
             deferred.resolve(false);
         } else {
-            deferred.reject('Invalid schedule resutl type: ' + rmScheduleResult.resultType);
+            deferred.reject(`Invalid schedule resutl type: ${rmScheduleResult.resultType}`);
         }
 
         return deferred.promise;
@@ -394,7 +397,7 @@ class RemoteMachineTrainingService implements TrainingService {
             trialWorkingFolder,
             trialJobId,
             path.join(trialWorkingFolder, '.nni', 'jobpid'),
-            // Set CUDA_VISIBLE_DEVICES environment variable based on cuda_visible_device 
+            // Set CUDA_VISIBLE_DEVICES environment variable based on cuda_visible_device
             // If no valid cuda_visible_device is defined, set CUDA_VISIBLE_DEVICES to empty string to hide GPU device
             (typeof cuda_visible_device === 'string' && cuda_visible_device.length > 0) ?
                 `CUDA_VISIBLE_DEVICES=${cuda_visible_device} ` : `CUDA_VISIBLE_DEVICES=" " `,

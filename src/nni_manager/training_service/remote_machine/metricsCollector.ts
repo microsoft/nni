@@ -24,7 +24,7 @@ import { EventEmitter } from 'events';
 import * as path from 'path';
 import { Client } from 'ssh2';
 import { getLogger, Logger } from '../../common/log';
-import { TrialJobStatus } from '../../common/trainingService';
+import { TrialJobStatus, TrialJobDetail } from '../../common/trainingService';
 import { JobMetrics, RemoteCommandResult, RemoteMachineMeta, RemoteMachineTrialJobDetail } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
 
@@ -56,8 +56,12 @@ export class MetricsCollector {
             if (rmMetrics !== undefined && rmMetrics.length > 0) {
                 rmMetrics.forEach((jobMetrics) => {
                     const trialJobId : string = jobMetrics.jobId;
+                    const trialJobDetail : RemoteMachineTrialJobDetail = <RemoteMachineTrialJobDetail>this.trialJobsMap.get(trialJobId);
+                    assert(trialJobDetail);
                     // If job status is not alive again, remove its GPU reservation
                     if(!['RUNNING'].includes(jobMetrics.jobStatus)) {
+                        trialJobDetail.status = jobMetrics.jobStatus;
+                        this.log.info(`Set trialjob ${trialJobDetail.id} status to ${trialJobDetail.status}`);
                         runningJobsMap.forEach((jobIds: string[], rmMeta: RemoteMachineMeta) => {
                             // If remote machine has no GPU, gpuReservcation is not initialized, so check if it's undefined
                             if(rmMeta.gpuReservation !== undefined) {
@@ -81,11 +85,19 @@ export class MetricsCollector {
             if (status.includes(trialJob.status)) {
                 if (map.has(trialJob.rmMeta)) {
                     const ids = map.get(trialJob.rmMeta);
-                    if (ids !== undefined) {
+                    if (ids !== undefined && !ids.includes(id)) {
                         ids.push(id);
                     }
                 } else {
-                    map.set(trialJob.rmMeta, [id]);
+                    let initJobIds : string[] = [id];
+                    
+                    // If the remote machine has jobs reserve GPU, also put that jobs into list to get metrics data
+                    if(trialJob.rmMeta.gpuReservation !== undefined) {
+                        const concatJobIds : string[] = initJobIds.concat(Array.from(trialJob.rmMeta.gpuReservation.values()));                        
+                        initJobIds = concatJobIds.filter((item, pos) => concatJobIds.indexOf(item) === pos);
+                    }
+
+                    map.set(trialJob.rmMeta, initJobIds);
                 }
             }
         });

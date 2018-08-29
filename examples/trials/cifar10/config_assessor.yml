@@ -1,11 +1,11 @@
 authorName: default
-experimentName: example_mnist
+experimentName: example_cifar10
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 1
 #choice: local, remote
 trainingServicePlatform: local
-searchSpacePath: /usr/share/nni/examples/trials/mnist/search_space.json
+searchSpacePath: /usr/share/nni/examples/trials/cifar10/search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
@@ -13,7 +13,12 @@ tuner:
   tunerName: TPE
   #choice: Maximize, Minimize
   optimizationMode: Maximize
+assessor:
+  #choice: Medianstop
+  assessorName: Medianstop
+  #choice: Maximize, Minimize
+  optimizationMode: Maximize
 trial:
-  trialCommand: python3 mnist.py
-  trialCodeDir: /usr/share/nni/examples/trials/mnist
+  trialCommand: python3 cifar10.py
+  trialCodeDir: /usr/share/nni/examples/trials/cifar10
   trialGpuNum: 0
