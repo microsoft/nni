@@ -38,26 +38,33 @@ class CustomInstallCommand(install):
         install.run(self)
         self.makeInstall()
 
-
 setup(
     name = 'NNI',
     version = '0.0.1',
+    author = 'Microsoft NNI Team',
+    author_email = 'NNIUsers@microsoft.com',
+    description = 'Neural Network Intelligence project',
+    long_description = read('docs/NNICTLDOC.md'),
+    license = 'MIT',
+    url = 'https://msrasrg.visualstudio.com/NeuralNetworkIntelligence',
+
     packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools'),
     package_dir = {
-        'nni': 'src/sdk/pynni/nni',
         'annotation': 'tools/annotation',
+        'nni': 'src/sdk/pynni/nni',
         'nnicmd': 'tools/nnicmd'
     },
     python_requires = '>=3.5',
     install_requires = [
+        'astor',
         'json_tricks',
         'numpy',
-        'pymc3',
-        'scipy',
-        'requests',
-        'pyyaml',
         'psutil',
-        'astor'
+        'pymc3',
+        'pyyaml',
+        'requests',
+        'scipy'
+        
     ],
     dependency_links = [
         'git+https://github.com/hyperopt/hyperopt.git',
@@ -68,12 +75,5 @@ setup(
     },
     entry_points={
         'console_scripts': ['nnictl = nnicmd.nnictl:parse_args']
-    },
-
-    author = 'Microsoft NNI Team',
-    author_email = 'NNIUsers@microsoft.com',
-    description = 'Neural Network Intelligence project',
-    long_description = read('docs/NNICTLDOC.md'),
-    license = 'MIT',
-    url = 'https://msrasrg.visualstudio.com/NeuralNetworkIntelligence'
+    }
 )

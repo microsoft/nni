@@ -1,13 +1,8 @@
-ifeq (`id -u`, 0)  # is root 
-    BIN_PATH ?= /usr/bin
-    INSTALL_PREFIX ?= /usr/share
-else  # is normal user
-    BIN_PATH ?= ${HOME}/.local/bin
-    INSTALL_PREFIX ?= ${HOME}/.local
-    PIP_MODE ?= --user
-endif
-
-
+BIN_PATH ?= ${HOME}/.local/bin
+INSTALL_PREFIX ?= ${HOME}/.local
+PIP_MODE ?= --user
+EXAMPLES_PATH ?= ${HOME}/nni/examples
+WHOAMI := $(shell whoami)
 .PHONY: build install uninstall dev-install
 
 build:
@@ -25,6 +20,13 @@ build:
 
 
 install:
+    ifneq ('$(HOME)', '/root')
+        ifeq (${WHOAMI}, root)
+			### Sorry, sudo make install is not supported ###
+			exit 1
+        endif
+    endif
+
 	mkdir -p $(BIN_PATH)
 	mkdir -p $(INSTALL_PREFIX)/nni
 	
@@ -53,25 +55,33 @@ install:
 	chmod +x $(BIN_PATH)/nnictl
 	
 	### Installing examples ###
-	cp -rT examples $(INSTALL_PREFIX)/nni/examples
+	cp -rT examples $(EXAMPLES_PATH)
 
 
 pip-install:
+	ifneq ('$(HOME)', '/root')
+        ifeq (${WHOAMI}, root)
+			### Sorry, sudo make install is not supported ###
+			exit 1
+        endif
+    endif
+
 	### Prepare Node.js ###
 	wget https://nodejs.org/dist/v10.9.0/node-v10.9.0-linux-x64.tar.xz
 	tar xf node-v10.9.0-linux-x64.tar.xz
-	sudo cp -rT node-v10.9.0-linux-x64 /usr/local/node
+	sudo cp -rT node-v10.9.0-linux-x64 $(INSTALL_PREFIX)/node
 	
 	### Prepare Yarn 1.9.4 ###
 	wget https://github.com/yarnpkg/yarn/releases/download/v1.9.4/yarn-v1.9.4.tar.gz
 	tar xf yarn-v1.9.4.tar.gz
-	sudo cp -rT yarn-v1.9.4 /usr/local/yarn
+	sudo cp -rT yarn-v1.9.4 $(INSTALL_PREFIX)/yarn
+	YARN := $(INSTALL_PREFIX)/yarn/bin/yarn
 
 	### Building NNI Manager ###
-	cd src/nni_manager && /usr/local/yarn/bin/yarn && /usr/local/yarn/bin/yarn build
+	cd src/nni_manager && $(YARN) && $(YARN) build
 	
 	### Building Web UI ###
-	cd src/webui && /usr/local/yarn/bin/yarn && /usr/local/yarn/bin/yarn build
+	cd src/webui && $(YARN) && $(YARN) build
 	
 	mkdir -p $(BIN_PATH)
 	mkdir -p $(INSTALL_PREFIX)/nni
@@ -87,9 +97,8 @@ pip-install:
 	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/webui
 	ln -sf $(INSTALL_PREFIX)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
 	
-	
 	### Installing examples ###
-	cp -rT examples $(INSTALL_PREFIX)/nni/examples
+	cp -rT examples $(EXAMPLES_PATH)
 
 
 dev-install:
@@ -121,13 +130,14 @@ dev-install:
 	chmod +x $(BIN_PATH)/nnictl
 	
 	### Installing examples ###
-	ln -sf $(INSTALL_PREFIX)/nni/examples $(PWD)/examples
+	ln -sf $(EXAMPLES_PATH) $(PWD)/examples
 
 
 uninstall:
 	-pip3 uninstall -y nni
 	-pip3 uninstall -y nnictl
 	-rm -r $(INSTALL_PREFIX)/nni
+	-rm -r $(EXAMPLES_PATH)
 	-rm $(BIN_PATH)/serve
 	-rm $(BIN_PATH)/nnimanager
 	-rm $(BIN_PATH)/nnictl
