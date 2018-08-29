@@ -48,8 +48,8 @@ setup(
     packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools'),
     package_dir = {
         'nni': 'src/sdk/pynni/nni',
-        'annotation': 'tools',
-        'nnicmd': 'tools'
+        'annotation': 'tools/annotation',
+        'nnicmd': 'tools/nnicmd'
     },
     python_requires = '>=3.5',
     install_requires = [
