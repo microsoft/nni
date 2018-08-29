@@ -38,20 +38,36 @@ def makeInstall():
 
 class CustomInstallCommand(install):
     def run(self):
+        print('---------------------------')
+        print('In install Command')
+        print('-----------------------------')
         install.run(self)
         makeInstall()
+        print('---------------------------')
+        print('In install Command')
+        print('-----------------------------')
 
 
 class CustomDevelopCommand(develop):
     def run(self):
+        print('---------------------------')
+        print('In Develop Command')
+        print('-----------------------------')
         develop.run(self)
-        makeInstall()
+        print('---------------------------')
+        print('In Develop Command')
+        print('-----------------------------')
 
 
 class CustomEggInfoCommand(egg_info):
     def run(self):
+        print('---------------------------')
+        print('In EGG Command')
+        print('-----------------------------')
         egg_info.run(self)
-        makeInstall()
+        print('---------------------------')
+        print('In EGG Command')
+        print('-----------------------------')
 
 
 setup(
