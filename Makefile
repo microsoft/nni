@@ -20,12 +20,12 @@ build:
 
 
 install:
-	ifneq ('$(HOME)', '/root')
-		ifeq (${WHOAMI}, root)
+    ifneq ('$(HOME)', '/root')
+        ifeq (${WHOAMI}, root)
 			### Sorry, sudo make install is not supported ###
 			exit 1
-		endif
-	endif
+        endif
+    endif
 
 	mkdir -p $(BIN_PATH)
 	mkdir -p $(INSTALL_PREFIX)/nni
@@ -59,12 +59,12 @@ install:
 
 
 pip-install:
-	ifneq ('$(HOME)', '/root')
-		ifeq (${WHOAMI}, root)
+    ifneq ('$(HOME)', '/root')
+        ifeq (${WHOAMI}, root)
 			### Sorry, sudo make install is not supported ###
 			exit 1
-		endif
-	endif
+        endif
+    endif
 
 	### Prepare Node.js ###
 	wget https://nodejs.org/dist/v10.9.0/node-v10.9.0-linux-x64.tar.xz
