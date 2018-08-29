@@ -22,57 +22,26 @@
 import os
 from setuptools import setup, find_packages
 from setuptools.command.install import install
-from setuptools.command.develop import develop
-from setuptools.command.egg_info import egg_info
 from subprocess import Popen
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-def makeInstall():
+class CustomInstallCommand(install):
+    def makeInstall(self):
         cmds = ["make", "pip-install"]
         process = Popen(cmds)
         if process.wait() != 0:
-            print("Error: make install failed")
-            exit(0)
-
-class CustomInstallCommand(install):
+            print("Error: Make Install Failed")
+            exit(-1)
     def run(self):
-        print('---------------------------')
-        print('In install Command')
-        print('-----------------------------')
         install.run(self)
-        makeInstall()
-        print('---------------------------')
-        print('In install Command')
-        print('-----------------------------')
-
-
-class CustomDevelopCommand(develop):
-    def run(self):
-        print('---------------------------')
-        print('In Develop Command')
-        print('-----------------------------')
-        develop.run(self)
-        print('---------------------------')
-        print('In Develop Command')
-        print('-----------------------------')
-
-
-class CustomEggInfoCommand(egg_info):
-    def run(self):
-        print('---------------------------')
-        print('In EGG Command')
-        print('-----------------------------')
-        egg_info.run(self)
-        print('---------------------------')
-        print('In EGG Command')
-        print('-----------------------------')
+        self.makeInstall()
 
 
 setup(
-    name = 'NNITOOLS',
-    version = '0.0.2',
+    name = 'NNI',
+    version = '0.0.1',
     packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools'),
     package_dir = {
         'nni': 'src/sdk/pynni/nni',
@@ -95,9 +64,7 @@ setup(
     ],
 
     cmdclass={
-        'install': CustomInstallCommand,
-        'develop': CustomDevelopCommand,
-        'egg_info': CustomEggInfoCommand
+        'install': CustomInstallCommand
     },
     entry_points={
         'console_scripts': ['nnictl = nnicmd.nnictl:parse_args']
@@ -109,6 +76,4 @@ setup(
     long_description = read('docs/NNICTLDOC.md'),
     license = 'MIT',
     url = 'https://msrasrg.visualstudio.com/NeuralNetworkIntelligence'
-
-    
 )
