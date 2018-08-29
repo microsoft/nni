@@ -22,7 +22,7 @@
 import os
 from setuptools import setup, find_packages
 from setuptools.command.install import install
-import subprocess
+from subprocess import Popen
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
