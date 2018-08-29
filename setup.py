@@ -22,29 +22,41 @@
 import os
 from setuptools import setup, find_packages
 from setuptools.command.install import install
+from setuptools.command.develop import develop
+from setuptools.command.egg_info import egg_info
 from subprocess import Popen
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-
-class InstallWithMakefile(install):
-    """Custom install command."""
-    def makeInstall(self):
+def makeInstall():
         cmds = ["make", "pip-install"]
         process = Popen(cmds)
         if process.wait() != 0:
             print("Error: make install failed")
             exit(0)
 
+class CustomInstallCommand(install):
     def run(self):
-        self.makeInstall()
         install.run(self)
+        makeInstall()
+
+
+class CustomDevelopCommand(develop):
+    def run(self):
+        develop.run(self)
+        makeInstall()
+
+
+class CustomEggInfoCommand(egg_info):
+    def run(self):
+        egg_info.run(self)
+        makeInstall()
 
 
 setup(
-    name = 'NNITOOL',
-    version = '0.0.1',
+    name = 'NNITOOLS',
+    version = '0.0.2',
     packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools'),
     package_dir = {
         'nni': 'src/sdk/pynni/nni',
@@ -67,7 +79,9 @@ setup(
     ],
 
     cmdclass={
-        'install': InstallWithMakefile
+        'install': CustomInstallCommand,
+        'develop': CustomDevelopCommand,
+        'egg_info': CustomEggInfoCommand
     },
     entry_points={
         'console_scripts': ['nnictl = nnicmd.nnictl:parse_args']
