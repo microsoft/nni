@@ -68,4 +68,3 @@ uninstall:
 	-rm $(BIN_PATH)/nnictl
 	-rm $(BIN_PATH)/nnimanager
 	-rm $(BIN_PATH)/serve
-	
