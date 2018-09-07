@@ -41,7 +41,7 @@ Requirements:
 
 Run the following command to create an experiment for [mnist]
 ```bash
-    nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yaml
+    nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yml
 ```
 This command will start the experiment and WebUI. The WebUI endpoint will be shown in the output of this command (for example, `http://localhost:8080`). Open this URL using your browsers. You can analyze your experiment through WebUI, or open trials' tensorboard. Please refer to [here](docs/GetStarted.md) for the GetStarted tutorial.
 
