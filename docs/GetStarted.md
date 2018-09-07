@@ -17,7 +17,7 @@
 * __Install NNI through source code__
    
       git clone https://github.com/Microsoft/nni.git
-      cd NeuralNetworkIntelligence
+      cd nni
       chmod +x install.sh
       source install.sh
 
