@@ -67,7 +67,7 @@ setup(
 
     packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools'),
     package_dir = {
-        'annotation': 'tools/annotation',
+        'annotation': 'tools/nni_annotation',
         'nni': 'src/sdk/pynni/nni',
         'nnicmd': 'tools/nnicmd'
     },
