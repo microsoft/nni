@@ -11,12 +11,12 @@
 
 * __Install NNI through pip__
 
-      pip3 install -v --user git+https://github.com/Microsoft/NeuralNetworkIntelligence.git
+      pip3 install -v --user git+https://github.com/Microsoft/nni.git
       source ~/.bashrc
 
 * __Install NNI through source code__
    
-      git clone https://github.com/Microsoft/NeuralNetworkIntelligence
+      git clone https://github.com/Microsoft/nni.git
       cd NeuralNetworkIntelligence
       chmod +x install.sh
       source install.sh
