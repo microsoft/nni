@@ -19,12 +19,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import os
+import json
+
+def expand_path(experiment_config, key):
+    '''Change '~' to user home directory'''
+    if experiment_config.get(key):
+        experiment_config[key] = os.path.expanduser(experiment_config[key])
+
+def parse_relative_path(root_path, experiment_config, key):
+    '''Change relative path to absolute path'''
+    if experiment_config.get(key) and not os.path.isabs(experiment_config.get(key)):
+        experiment_config[key] = os.path.join(root_path, experiment_config.get(key))
 
 def check_empty(experiment_config, key):
     '''Check whether a key is in experiment_config and has non-empty value'''
     if key not in experiment_config or experiment_config[key] is None:
         raise ValueError('%s can not be empty' % key)
-
 
 def check_digit(experiment_config, key, start, end):
     '''Check whether a value in experiment_config is digit and in a range of [start, end]'''
@@ -61,6 +71,41 @@ def parse_time(experiment_config, key):
     parse_dict = {'s':1, 'm':60, 'h':3600, 'd':86400}
     experiment_config[key] = int(time) * parse_dict[unit]
 
+def parse_path(experiment_config, config_path):
+    '''Parse path in config file'''
+    expand_path(experiment_config, 'searchSpacePath')
+    if experiment_config.get('trial'):
+        expand_path(experiment_config['trial'], 'codeDir')
+    if experiment_config.get('tuner'):
+        expand_path(experiment_config['tuner'], 'codeDir')
+    if experiment_config.get('assessor'):
+        expand_path(experiment_config['assessor'], 'codeDir')
+    
+    #if users use relative path, convert it to absolute path
+    root_path = os.path.dirname(config_path)
+    if experiment_config.get('searchSpacePath'):
+        parse_relative_path(root_path, experiment_config, 'searchSpacePath')
+    if experiment_config.get('trial'):
+        parse_relative_path(root_path, experiment_config['trial'], 'codeDir')
+    if experiment_config.get('tuner'):
+        parse_relative_path(root_path, experiment_config['tuner'], 'codeDir')
+    if experiment_config.get('assessor'):
+        parse_relative_path(root_path, experiment_config['assessor'], 'codeDir')
+
+def validate_search_space_content(experiment_config):
+    '''Validate searchspace content, 
+       if the searchspace file is not json format or its values does not contain _type and _value which must be specified, 
+       it will not be a valid searchspace file'''
+    try:
+        search_space_content = json.load(open(experiment_config.get('searchSpacePath'), 'r'))
+        for value in search_space_content.values():
+            if not value.get('_type') or not value.get('_value'):
+                raise ValueError('please use _type and _value to specify searchspace!')
+    except:
+        raise Exception('searchspace file is not a valid json format!')
+
+
+
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     #validate authorName
@@ -88,89 +133,83 @@ def validate_common_content(experiment_config):
 
 def validate_tuner_content(experiment_config):
     '''Validate whether tuner in experiment_config is valid'''
-    tuner_algorithm_dict = {'TPE': 'nni.hyperopt_tuner --algorithm_name tpe',\
-                            'Random': 'nni.hyperopt_tuner --algorithm_name random_search',\
-                            'Anneal': 'nni.hyperopt_tuner --algorithm_name anneal',\
-                            'Evolution': 'nni.evolution_tuner'}
+    tuner_class_name_dict = {'TPE': 'HyperoptTuner',\
+                            'Random': 'HyperoptTuner',\
+                            'Anneal': 'HyperoptTuner',\
+                            'Evolution': 'EvolutionTuner'}
 
+    tuner_algorithm_name_dict = {'TPE': 'tpe',\
+                            'Random': 'random_search',\
+                            'Anneal': 'anneal'}
 
-    check_empty(experiment_config, 'tuner')
-    #TODO: use elegent way to detect keys
-    if experiment_config['tuner'].get('tunerCommand') and experiment_config['tuner'].get('tunerCwd')\
-            and (experiment_config['tuner'].get('tunerName') or experiment_config['tuner'].get('optimizationMode'))\
-            or experiment_config['tuner'].get('tunerName') and experiment_config['tuner'].get('optimizationMode')\
-            and (experiment_config['tuner'].get('tunerCommand') or experiment_config['tuner'].get('tunerCwd')):
-        raise Exception('Please choose to use (tunerCommand, tunerCwd) or (tunerName, optimizationMode)')
-
-    if experiment_config['tuner'].get('tunerCommand') and experiment_config['tuner'].get('tunerCwd'):
-        check_directory(experiment_config['tuner'], 'tunerCwd')
-        experiment_config['tuner']['tunerCwd'] = os.path.abspath(experiment_config['tuner']['tunerCwd'])
-    elif experiment_config['tuner'].get('tunerName') and experiment_config['tuner'].get('optimizationMode'):
-        check_choice(experiment_config['tuner'], 'tunerName', ['TPE', 'Random', 'Anneal', 'Evolution'])
-        check_choice(experiment_config['tuner'], 'optimizationMode', ['Maximize', 'Minimize'])
-        if experiment_config['tuner']['optimizationMode'] == 'Maximize':
-            experiment_config['tuner']['optimizationMode'] = 'maximize'
-        else:
-            experiment_config['tuner']['optimizationMode'] = 'minimize'
-
-        experiment_config['tuner']['tunerCommand'] = 'python3 -m %s --optimize_mode %s'\
-                                                     % (tuner_algorithm_dict.get(experiment_config['tuner']['tunerName']), experiment_config['tuner']['optimizationMode'])
-        experiment_config['tuner']['tunerCwd'] = ''
+    if experiment_config.get('tuner') is None:
+        raise ValueError('Please set tuner!')
+    if (experiment_config['tuner'].get('builtinTunerName') and \
+        (experiment_config['tuner'].get('codeDir') or experiment_config['tuner'].get('classFileName') or experiment_config['tuner'].get('className'))) or \
+        (experiment_config['tuner'].get('codeDir') and experiment_config['tuner'].get('classFileName') and experiment_config['tuner'].get('className') and \
+        experiment_config['tuner'].get('builtinTunerName')):
+            raise ValueError('Please check tuner content!')
+    
+    if experiment_config['tuner'].get('builtinTunerName') and experiment_config['tuner'].get('classArgs'):
+        if tuner_class_name_dict.get(experiment_config['tuner']['builtinTunerName']) is None:
+            raise ValueError('Please set correct builtinTunerName!')
+        experiment_config['tuner']['className'] = tuner_class_name_dict.get(experiment_config['tuner']['builtinTunerName'])
+        if experiment_config['tuner']['classArgs'].get('optimize_mode') is None:
+            raise ValueError('Please set optimize_mode!')
+        if experiment_config['tuner']['classArgs']['optimize_mode'] not in ['maximize', 'minimize']:
+            raise ValueError('optimize_mode should be maximize or minimize')
+        if tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName']):
+            experiment_config['tuner']['classArgs']['algorithm_name'] = tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName'])
+    elif experiment_config['tuner'].get('codeDir') and experiment_config['tuner'].get('classFileName') and experiment_config['tuner'].get('className'):
+        if not os.path.exists(os.path.join(experiment_config['tuner']['codeDir'], experiment_config['tuner']['classFileName'])):
+            raise ValueError('Tuner file directory is not valid!')
     else:
-        raise ValueError('Please complete tuner information!')
+        raise ValueError('Tuner format is not valid!')
 
-    if experiment_config['tuner'].get('tunerGpuNum'):
-        check_digit(experiment_config['tuner'], 'tunerGpuNum', 0, 100)
+    if experiment_config['tuner'].get('gpuNum'):
+        check_digit(experiment_config['tuner'], 'gpuNum', 0, 100)
 
 
 def validate_assessor_content(experiment_config):
     '''Validate whether assessor in experiment_config is valid'''
-    assessor_algorithm_dict = {'Medianstop': 'nni.medianstop_assessor'}
-
-    if 'assessor' in experiment_config:
-        if experiment_config['assessor']:
-            if experiment_config['assessor'].get('assessorCommand') and experiment_config['assessor'].get('assessorCwd')\
-                    and (experiment_config['assessor'].get('assessorName') or experiment_config['assessor'].get('optimizationMode'))\
-                    or experiment_config['assessor'].get('assessorName') and experiment_config['assessor'].get('optimizationMode')\
-                    and (experiment_config['assessor'].get('assessorCommand') or experiment_config['assessor'].get('assessorCwd')):
-                raise Exception('Please choose to use (assessorCommand, assessorCwd) or (assessorName, optimizationMode)')
-            if experiment_config['assessor'].get('assessorCommand') and experiment_config['assessor'].get('assessorCwd'):
-                check_empty(experiment_config['assessor'], 'assessorCommand')
-                check_empty(experiment_config['assessor'], 'assessorCwd')
-                check_directory(experiment_config['assessor'], 'assessorCwd')
-                experiment_config['assessor']['assessorCwd'] = os.path.abspath(experiment_config['assessor']['assessorCwd'])
-                if 'assessorGpuNum' in experiment_config['assessor']:
-                    if experiment_config['assessor']['assessorGpuNum']:
-                        check_digit(experiment_config['assessor'], 'assessorGpuNum', 0, 100)
-            elif experiment_config['assessor'].get('assessorName') and experiment_config['assessor'].get('optimizationMode'):
-                check_choice(experiment_config['assessor'], 'assessorName', ['Medianstop'])
-                check_choice(experiment_config['assessor'], 'optimizationMode', ['Maximize', 'Minimize'])
-                if experiment_config['assessor']['optimizationMode'] == 'Maximize':
-                    experiment_config['assessor']['optimizationMode'] = 'maximize'
-                else:
-                    experiment_config['assessor']['optimizationMode'] = 'minimize'
-
-                experiment_config['assessor']['assessorCommand'] = 'python3 -m %s --optimize_mode %s'\
-                        % (assessor_algorithm_dict.get(experiment_config['assessor']['assessorName']), experiment_config['assessor']['optimizationMode'])
-                experiment_config['assessor']['assessorCwd'] = ''
-            else:
-                raise ValueError('Please complete assessor information!')
-            
-            if experiment_config['assessor'].get('assessorGpuNum'):
-                check_digit(experiment_config['assessor'], 'assessorGpuNum', 0, 100)
+    assessor_class_name_dict = {'Medianstop': 'MedianstopAssessor'}
+        
+    if experiment_config.get('assessor'):
+        if (experiment_config['assessor'].get('builtinAssessorName') and \
+            (experiment_config['assessor'].get('codeDir') or experiment_config['assessor'].get('classFileName') or experiment_config['assessor'].get('className'))) or \
+            (experiment_config['assessor'].get('codeDir') and experiment_config['assessor'].get('classFileName') and experiment_config['assessor'].get('className') and \
+            experiment_config['assessor'].get('builtinAssessorName')):
+                raise ValueError('Please check assessor content!')
+        
+        if experiment_config['assessor'].get('builtinAssessorName') and experiment_config['assessor'].get('classArgs'):
+            if assessor_class_name_dict.get(experiment_config['assessor']['builtinAssessorName']) is None:
+                raise ValueError('Please set correct builtinAssessorName!')
+            experiment_config['assessor']['className'] = assessor_class_name_dict.get(experiment_config['assessor']['builtinAssessorName'])
+            if experiment_config['assessor']['classArgs'].get('optimize_mode') is None:
+                raise ValueError('Please set optimize_mode!')
+            if experiment_config['assessor']['classArgs']['optimize_mode'] not in ['maximize', 'minimize']:
+                raise ValueError('optimize_mode should be maximize or minimize')
+        elif experiment_config['assessor'].get('codeDir') and experiment_config['assessor'].get('classFileName') and experiment_config['assessor'].get('className'):
+            if not os.path.exists(os.path.join(experiment_config['assessor']['codeDir'], experiment_config['assessor']['classFileName'])):
+                raise ValueError('Assessor file directory is not valid!')
+        else:
+            raise ValueError('Assessor format is not valid!')
+                
+        if experiment_config['assessor'].get('gpuNum'):
+            check_digit(experiment_config['assessor'], 'gpuNum', 0, 100)
 
 
 def validate_trail_content(experiment_config):
     '''Validate whether trial in experiment_config is valid'''
     check_empty(experiment_config, 'trial')
-    check_empty(experiment_config['trial'], 'trialCommand')
-    check_empty(experiment_config['trial'], 'trialCodeDir')
-    check_directory(experiment_config['trial'], 'trialCodeDir')
-    experiment_config['trial']['trialCodeDir'] = os.path.abspath(experiment_config['trial']['trialCodeDir'])
-    if experiment_config['trial'].get('trialGpuNum') is None:
-        experiment_config['trial']['trialGpuNum'] = 0
+    check_empty(experiment_config['trial'], 'command')
+    check_empty(experiment_config['trial'], 'codeDir')
+    check_directory(experiment_config['trial'], 'codeDir')
+    experiment_config['trial']['codeDir'] = os.path.abspath(experiment_config['trial']['codeDir'])
+    if experiment_config['trial'].get('gpuNum') is None:
+        experiment_config['trial']['gpuNum'] = 0
     else:
-        check_digit(experiment_config['trial'], 'trialGpuNum', 0, 100)
+        check_digit(experiment_config['trial'], 'gpuNum', 0, 100)
 
 
 def validate_machinelist_content(experiment_config):
@@ -183,7 +222,12 @@ def validate_machinelist_content(experiment_config):
         else:
             check_digit(machine, 'port', 0, 65535)
         check_empty(machine, 'username')
-        check_empty(machine, 'passwd')
+        if machine.get('passwd') is None and machine.get('sshKeyPath') is None:
+            raise ValueError('Please set passwd or sshKeyPath for remote machine!')
+        if machine.get('sshKeyPath') is None and machine.get('passphrase'):
+            raise ValueError('Please set sshKeyPath!')
+        if machine.get('sshKeyPath'):
+            check_file(machine, 'sshKeyPath')
 
 
 def validate_annotation_content(experiment_config):
@@ -194,16 +238,19 @@ def validate_annotation_content(experiment_config):
             raise Exception('If you set useAnnotation=true, please leave searchSpacePath empty')
     else:
         # validate searchSpaceFile
-        check_empty(experiment_config, 'searchSpacePath')
-        check_file(experiment_config, 'searchSpacePath')
+        if experiment_config['tuner'].get('tunerName') and experiment_config['tuner'].get('optimizationMode'):
+            check_empty(experiment_config, 'searchSpacePath')
+            check_file(experiment_config, 'searchSpacePath')
+            validate_search_space_content(experiment_config)
 
 
-def validate_all_content(experiment_config):
+def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''
+    parse_path(experiment_config, config_path)
     validate_common_content(experiment_config)
     validate_tuner_content(experiment_config)
     validate_assessor_content(experiment_config)
     validate_trail_content(experiment_config)
-    # validate_annotation_content(experiment_config)
+    validate_annotation_content(experiment_config)
     if experiment_config['trainingServicePlatform'] == 'remote':
         validate_machinelist_content(experiment_config)

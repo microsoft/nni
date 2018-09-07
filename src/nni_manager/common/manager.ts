@@ -32,16 +32,22 @@ interface ExperimentParams {
     maxTrialNum: number;
     searchSpace: string;
     tuner: {
-        tunerCommand: string;
-        tunerCwd: string;
-        tunerCheckpointDirectory: string;
-        tunerGpuNum?: number;
+        className: string;
+        builtinTunerName?: string;
+        codeDir?: string;
+        classArgs?: any;
+        classFileName?: string;
+        checkpointDir: string;
+        gpuNum?: number;
     };
     assessor?: {
-        assessorCommand: string;
-        assessorCwd: string;
-        assessorCheckpointDirectory: string;
-        assessorGpuNum?: number;
+        className: string;
+        builtinAssessorName?: string;
+        codeDir?: string;
+        classArgs?: any;
+        classFileName?: string;
+        checkpointDir: string;
+        gpuNum?: number;
     };
     clusterMetaData?: {
         key: string;

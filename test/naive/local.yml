@@ -9,20 +9,14 @@ searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
-  tunerCommand: /home/travis/virtualenv/python3.6.3/bin/python3 naive_tuner.py
-  tunerCwd: .
-  tunerGpuNum: 0
+    codeDir: .
+    classFileName: naive_tuner.py
+    className: NaiveTuner
 assessor:
-  assessorCommand: /home/travis/virtualenv/python3.6.3/bin/python3 naive_assessor.py
-  assessorCwd: .
-  assessorGpuNum: 0
+    codeDir: .
+    classFileName: naive_assessor.py
+    className: NaiveAssessor
 trial:
-  trialCommand: /home/travis/virtualenv/python3.6.3/bin/python3 naive_trial.py
-  trialCodeDir: .
-  trialGpuNum: 0
-#machineList can be empty if the platform is local
-machineList:
-  - ip: 
-    port: 
-    username: 
-    passwd: 
+    command: python3 naive_trial.py
+    codeDir: .
+    gpuNum: 0

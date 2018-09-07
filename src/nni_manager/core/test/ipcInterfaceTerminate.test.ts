@@ -22,18 +22,34 @@
 import * as assert from 'assert';
 import { ChildProcess, spawn } from 'child_process';
 import { Deferred } from 'ts-deferred';
-import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
+import { cleanupUnitTest, prepareUnitTest, getMsgDispatcherCommand } from '../../common/utils';
 import * as CommandType from '../commands';
-import { createAssessorInterface, IpcInterface } from '../ipcInterface';
+import { createDispatcherInterface, IpcInterface } from '../ipcInterface';
 
-let assessor: IpcInterface | undefined;
+let dispatcher: IpcInterface | undefined;
 let procExit: boolean = false;
 let procError: boolean = false;
 
 function startProcess(): void {
     // create fake assessor process
     const stdio: {}[] = ['ignore', 'pipe', process.stderr, 'pipe', 'pipe'];
-    const proc: ChildProcess = spawn('python3 dummy_assessor.py', [], { stdio, cwd: 'core/test', shell: true });
+
+    const dispatcherCmd : string = getMsgDispatcherCommand(
+        // Mock tuner config
+        {
+            className: 'DummyTuner',
+            codeDir: './',
+            classFileName: 'dummy_tuner.py'
+        }, 
+        // Mock assessor config
+        {
+            className: 'DummyAssessor',
+            codeDir: './',
+            classFileName: 'dummy_assessor.py'
+        }
+    );
+
+    const proc: ChildProcess = spawn(dispatcherCmd, [], { stdio, cwd: 'core/test', shell: true });
 
     proc.on('error', (error: Error): void => {
         procExit = true;
@@ -43,10 +59,10 @@ function startProcess(): void {
         procExit = true;
         procError = (code !== 0);
     });
-
+    
     // create IPC interface
-    assessor = createAssessorInterface(proc);
-    (<IpcInterface>assessor).onCommand((commandType: string, content: string): void => {
+    dispatcher = createDispatcherInterface(proc);
+    (<IpcInterface>dispatcher).onCommand((commandType: string, content: string): void => {
         console.log(commandType, content);  // tslint:disable-line:no-console
     });
 }
@@ -62,13 +78,13 @@ describe('core/ipcInterface.terminate', (): void => {
     });
 
     it('normal', () => {
-        (<IpcInterface>assessor).sendCommand(
+        (<IpcInterface>dispatcher).sendCommand(
             CommandType.REPORT_METRIC_DATA,
-            '{"trial_job_id":"A","type":"periodical","value":1}');
+            '{"trial_job_id":"A","type":"PERIODICAL","value":1,"sequence":123}');
 
         const deferred: Deferred<void> = new Deferred<void>();
         setTimeout(
-            () => {
+            () => {                
                 assert.ok(!procExit);
                 assert.ok(!procError);
                 deferred.resolve();
@@ -79,7 +95,7 @@ describe('core/ipcInterface.terminate', (): void => {
     });
 
     it('terminate', () => {
-        (<IpcInterface>assessor).sendCommand(CommandType.TERMINATE);
+        (<IpcInterface>dispatcher).sendCommand(CommandType.TERMINATE);
 
         const deferred: Deferred<void> = new Deferred<void>();
         setTimeout(
@@ -88,7 +104,7 @@ describe('core/ipcInterface.terminate', (): void => {
                 assert.ok(!procError);
                 deferred.resolve();
             },
-            1000);
+            2000);
 
         return deferred.promise;
     });

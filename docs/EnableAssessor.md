@@ -18,17 +18,19 @@ trainingServicePlatform: local
 # choice: true, false  
 useAnnotation: true
 tuner:
-  tunerName: TPE
-  optimizationMode: Maximize
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
 assessor:
-  assessorName: Medianstop
-  optimizationMode: Maximize
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
 trial:
-  trialCommand: python mnist.py
-  trialCodeDir: /usr/share/nni/examples/trials/mnist-annotation
-  trialGpuNum: 0
+  command: python mnist.py
+  codeDir: /usr/share/nni/examples/trials/mnist-annotation
+  gpuNum: 0
 ```
-For our built-in assessors, you need to fill two fields: `assessorName` which chooses NNI provided assessors (refer to [here]() for built-in assessors), `optimizationMode` which includes Maximize and Minimize (you want to maximize or minimize your trial result).
+For our built-in assessors, you need to fill two fields: `builtinAssessorName` which chooses NNI provided assessors (refer to [here]() for built-in assessors), `optimize_mode` which includes maximize and minimize (you want to maximize or minimize your trial result).
 
 ## Using user customized Assessor
 You can also write your own assessor following the guidance [here](). For example, you wrote an assessor for `examples/trials/mnist-annotation`. You should prepare the yaml configure below:
@@ -46,15 +48,25 @@ trainingServicePlatform: local
 # choice: true, false  
 useAnnotation: true
 tuner:
-  tunerName: TPE
-  optimizationMode: Maximize
+  # Possible values: TPE, Random, Anneal, Evolution
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
 assessor:
-  assessorCommand: your_command
-  assessorCodeDir: /path/of/your/asessor
-  assessorGpuNum: 0
+  # Your assessor code directory
+  codeDir: 
+  # Name of the file which contains your assessor class
+  classFileName: 
+  # Your assessor class name, must be a subclass of nni.Assessor
+  className: 
+  # Parameter names and literal values you want to pass to
+  # the __init__ constructor of your assessor class
+  classArgs:
+    arg1: value1
+  gpuNum: 0
 trial:
-  trialCommand: python mnist.py
-  trialCodeDir: /usr/share/nni/examples/trials/mnist-annotation
-  trialGpuNum: 0
+  command: python mnist.py
+  codeDir: /usr/share/nni/examples/trials/mnist-annotation
+  gpuNum: 0
 ```
-You only need to fill three field: `assessorCommand`, `assessorCodeDir` and `assessorGpuNum`.
+You need to fill: `codeDir`, `classFileName`, `className`, and pass parameters to \_\_init__ constructor through `classArgs` field if the \_\_init__ constructor of your assessor class has required parameters.

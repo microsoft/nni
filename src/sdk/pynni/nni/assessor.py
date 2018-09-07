@@ -19,27 +19,18 @@
 # ==================================================================================================
 
 
-from collections import defaultdict
-from enum import Enum
 import logging
-import os
+from enum import Enum
 
-import json_tricks
+from .recoverable import Recoverable
 
-from .common import init_logger
-from .protocol import CommandType, send, receive
-
-
-init_logger('assessor.log')
 _logger = logging.getLogger(__name__)
-
 
 class AssessResult(Enum):
     Good = True
     Bad = False
 
-
-class Assessor:
+class Assessor(Recoverable):
     # pylint: disable=no-self-use,unused-argument
 
     def assess_trial(self, trial_job_id, trial_history):
@@ -57,101 +48,22 @@ class Assessor:
         """
         pass
 
-    def load_checkpoint(self, path):
-        """Load the checkpoint of assessor.
-        path: checkpoint directory of assessor
+    def load_checkpoint(self):
+        """Load the checkpoint of assessr.
+        path: checkpoint directory for assessor
         """
-        _logger.info('Load checkpoint ignored by assessor')
+        checkpoin_path = self.get_checkpoint_path()
+        _logger.info('Load checkpoint ignored by assessor, checkpoint path: %s' % checkpoin_path)
 
-    def save_checkpoint(self, path):
+    def save_checkpoint(self):
         """Save the checkpoint of assessor.
-        path: checkpoint directory of assessor
+        path: checkpoint directory for assessor
         """
-        _logger.info('Save checkpoint ignored by assessor')
+        checkpoin_path = self.get_checkpoint_path()
+        _logger.info('Save checkpoint ignored by assessor, checkpoint path: %s' % checkpoin_path)
 
-    def request_save_checkpoint(self):
-        """Request to save the checkpoint of assessor
-        """
-        self.save_checkpoint(os.getenv('NNI_CHECKPOINT_DIRECTORY'))
+    def _on_exit(self):
+        pass
 
-    def run(self):
-        """Run the assessor.
-        This function will never return unless raise.
-        """
-        mode = os.getenv('NNI_MODE')
-        if mode == 'resume':
-            self.load_checkpoint(os.getenv('NNI_CHECKPOINT_DIRECTORY'))
-        while _handle_request(self):
-            pass
-        _logger.info('Terminated by NNI manager')
-
-
-_trial_history = defaultdict(dict)
-'''key: trial job ID; value: intermediate results, mapping from sequence number to data'''
-
-_ended_trials = set()
-'''trial_job_id of all ended trials.
-We need this because NNI manager may send metrics after reporting a trial ended.
-TODO: move this logic to NNI manager
-'''
-
-def _sort_history(history):
-    ret = [ ]
-    for i, _ in enumerate(history):
-        if i in history:
-            ret.append(history[i])
-        else:
-            break
-    return ret
-
-def _handle_request(assessor):
-    _logger.debug('waiting receive_message')
-
-    command, data = receive()
-
-    _logger.debug(command)
-    _logger.debug(data)
-
-    if command is CommandType.Terminate:
-        return False
-
-    data = json_tricks.loads(data)
-
-    if command is CommandType.ReportMetricData:
-        if data['type'] != 'PERIODICAL':
-            return True
-
-        trial_job_id = data['trial_job_id']
-        if trial_job_id in _ended_trials:
-            return True
-
-        history = _trial_history[trial_job_id]
-        history[data['sequence']] = data['value']
-        ordered_history = _sort_history(history)
-        if len(ordered_history) < data['sequence']:  # no user-visible update since last time
-            return True
-
-        result = assessor.assess_trial(trial_job_id, ordered_history)
-        if isinstance(result, bool):
-            result = AssessResult.Good if result else AssessResult.Bad
-        elif not isinstance(result, AssessResult):
-            msg = 'Result of Assessor.assess_trial must be an object of AssessResult, not %s'
-            raise RuntimeError(msg % type(result))
-
-        if result is AssessResult.Bad:
-            _logger.debug('BAD, kill %s', trial_job_id)
-            send(CommandType.KillTrialJob, json_tricks.dumps(trial_job_id))
-        else:
-            _logger.debug('GOOD')
-
-    elif command is CommandType.TrialEnd:
-        trial_job_id = data['trial_job_id']
-        _ended_trials.add(trial_job_id)
-        if trial_job_id in _trial_history:
-            _trial_history.pop(trial_job_id)
-            assessor.trial_end(trial_job_id, data['event'] == 'SUCCEEDED')
-
-    else:
-        raise AssertionError('Unsupported command: %s' % command)
-
-    return True
+    def _on_error(self):
+        pass

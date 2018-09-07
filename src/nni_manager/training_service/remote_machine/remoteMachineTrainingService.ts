@@ -24,11 +24,11 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { Client } from 'ssh2';
+import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
-import { NNIError, NNIErrorNames } from '../../common/errors';
+import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
@@ -196,6 +196,22 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     /**
+     * Update trial job for multi-phase
+     * @param trialJobId trial job id
+     * @param form job application form
+     */
+    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
+        throw new MethodNotImplementedError();
+    }
+
+    /**
+     * Is multiphase job supported in current training service
+     */
+    public get isMultiPhaseJobSupported(): boolean {
+        return false;
+    }
+
+    /**
      * Cancel trial job
      * @param trialJobId ID of trial job
      */
@@ -290,6 +306,24 @@ class RemoteMachineTrainingService implements TrainingService {
         let connectedRMNum: number = 0;
         rmMetaList.forEach((rmMeta: RemoteMachineMeta) => {
             const conn: Client = new Client();
+            let connectConfig: ConnectConfig = {
+                host: rmMeta.ip,
+                port: rmMeta.port,
+                username: rmMeta.username };
+            if (rmMeta.passwd) {
+                connectConfig.password = rmMeta.passwd;                
+            } else if(rmMeta.sshKeyPath) {
+                if(!fs.existsSync(rmMeta.sshKeyPath)) {
+                    //SSh key path is not a valid file, reject
+                    deferred.reject(new Error(`${rmMeta.sshKeyPath} does not exist.`));
+                }
+                const privateKey: string = fs.readFileSync(rmMeta.sshKeyPath, 'utf8');
+
+                connectConfig.privateKey = privateKey;
+                connectConfig.passphrase = rmMeta.passphrase;
+            } else {
+                deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
+            }
             this.machineSSHClientMap.set(rmMeta, conn);
             conn.on('ready', async () => {
                 await this.initRemoteMachineOnConnected(rmMeta, conn);
@@ -299,12 +333,7 @@ class RemoteMachineTrainingService implements TrainingService {
             }).on('error', (err: Error) => {
                 // SSH connection error, reject with error message
                 deferred.reject(new Error(err.message));
-            }).connect({
-                host: rmMeta.ip,
-                port: rmMeta.port,
-                username: rmMeta.username,
-                password: rmMeta.passwd
-            });
+            }).connect(connectConfig);
         });
 
         return deferred.promise;
@@ -402,7 +431,7 @@ class RemoteMachineTrainingService implements TrainingService {
             (typeof cuda_visible_device === 'string' && cuda_visible_device.length > 0) ?
                 `CUDA_VISIBLE_DEVICES=${cuda_visible_device} ` : `CUDA_VISIBLE_DEVICES=" " `,
             this.trialConfig.command,
-            path.join(trialWorkingFolder, '.nni', 'stderr'),
+            path.join(trialWorkingFolder, 'stderr'),
             path.join(trialWorkingFolder, '.nni', 'code'));
 
         //create tmp trial working folder locally.

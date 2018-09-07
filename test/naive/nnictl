@@ -1,2 +1,2 @@
 #!/bin/sh
-python3 -m nnicmd.nnictl $@
+WEB_UI_FOLDER=${PWD}/../../src/webui python3 -m nnicmd.nnictl $@

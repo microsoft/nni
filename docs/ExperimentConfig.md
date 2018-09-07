@@ -19,14 +19,15 @@ searchSpacePath:
 useAnnotation: 
 tuner:
   #choice: TPE, Random, Anneal, Evolution
-  tunerName: 
-  #choice: Maximize, Minimize
-  optimizationMode: 
-  tunerGpuNum: 
+  builtinTunerName:
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode:
+  gpuNum: 
 trial:
-  trialCommand: 
-  trialCodeDir: 
-  trialGpuNum: 
+  command: 
+  codeDir: 
+  gpuNum: 
 #machineList can be empty if the platform is local
 machineList:
   - ip: 
@@ -48,20 +49,22 @@ searchSpacePath:
 useAnnotation: 
 tuner:
   #choice: TPE, Random, Anneal, Evolution
-  tunerName: 
-  #choice: Maximize, Minimize
-  optimizationMode: 
-  tunerGpuNum: 
+  builtinTunerName:
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode:
+  gpuNum: 
 assessor:
   #choice: Medianstop
-  assessorName: 
-  #choice: Maximize, Minimize
-  optimizationMode: 
-  assessorGpuNum: 
+  builtinAssessorName:
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode:
+  gpuNum: 
 trial:
-  trialCommand: 
-  trialCodeDir: 
-  trialGpuNum: 
+  command: 
+  codeDir: 
+  gpuNum: 
 #machineList can be empty if the platform is local
 machineList:
   - ip: 
@@ -82,20 +85,22 @@ trainingServicePlatform:
 useAnnotation: 
 tuner:
   #choice: TPE, Random, Anneal, Evolution
-  tunerName: 
-  #choice: Maximize, Minimize
-  optimizationMode: 
-  tunerGpuNum: 
+  builtinTunerName:
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode:
+  gpuNum: 
 assessor:
   #choice: Medianstop
-  assessorName: 
-  #choice: Maximize, Minimize
-  optimizationMode: 
-  assessorGpuNum: 
+  builtinAssessorName:
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode:
+  gpuNum: 
 trial:
-  trialCommand: 
-  trialCodeDir: 
-  trialGpuNum: 
+  command: 
+  codeDir: 
+  gpuNum: 
 #machineList can be empty if the platform is local
 machineList:
   - ip: 
@@ -108,11 +113,13 @@ machineList:
   * Description  
             
 	 __authorName__ is the name of the author who create the experiment.
+   TBD: add default value
 	 
 * __experimentName__
   * Description
   
     __experimentName__ is the name of the experiment you created.  
+    TBD: add default value
 	
 * __trialConcurrency__
   * Description
@@ -155,61 +162,73 @@ machineList:
 * __tuner__
   * Description
   
-    __tuner__ specifies the tuner algorithm you use to run an experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by nni sdk, you just need to set __tunerName__ and __optimizationMode__. Another way is to use your own tuner file, and you need to set __tunerCommand__, __tunerCwd__.
-  * __tunerName__ and __optimizationMode__
-    * __tunerName__
+    __tuner__ specifies the tuner algorithm you use to run an experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by nni sdk, you just need to set __builtinTunerName__ and __classArgs__. Another way is to use your own tuner file, and you need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+  * __builtinTunerName__ and __classArgs__
+    * __builtinTunerName__
     
-	  __tunerName__ specifies the name of system tuner you want to use, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__}
-	 * __optimizationMode__
+	  __builtinTunerName__ specifies the name of system tuner you want to use, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__}
+	 * __classArgs__
 	
-	   __optimizationMode__ specifies the optimization mode of tuner algorithm, including {__Maximize__, __Minimize__}
-  * __tunerCommand__ and __tunerCwd__
-      * __tunerCommand__
+	   __classArgs__ specifies the arguments of tuner algorithm
+  * __codeDir__, __classFileName__, __className__ and __classArgs__
+      * __codeDir__
         
-		__tunerCommand__ specifies the command you want to use to run your own tuner file, for example {__python3 mytuner.py__}
-	   * __tunerCwd__
+		__codeDir__ specifies the directory of tuner code.
+	    * __classFileName__
 	   
-	     __tunerCwd__ specifies the working directory of your own tuner file, which is the path of your own tuner file.
-  * __tunerGpuNum__
+	  __classFileName__ specifies the name of tuner file.
+     * __className__
+	   
+	  __className__ specifies the name of tuner class.
+     * __classArgs__
+	   
+	  __classArgs__ specifies the arguments of tuner algorithm.
+  * __gpuNum__
     
-	  __tunerGPUNum__ specifies the gpu number you want to use to run the tuner process. The value of this field should be a positive number.
+	  __gpuNum__ specifies the gpu number you want to use to run the tuner process. The value of this field should be a positive number.
 	  
 	    Note: you could only specify one way to set tuner, for example, you could set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and you could not set them both. 
 
 * __assessor__
  
   * Description
- 
-    __assessor__ specifies the assessor algorithm you use to run experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, you just need to set __assessorName__ and __optimizationMode__. Another way is to use your own assessor file, and you need to set __assessorCommand__, __assessorCwd__.
-  * __assessorName__ and __optimizationMode__
-    * __assessorName__
+  
+    __assessor__ specifies the assessor algorithm you use to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, you just need to set __builtinAssessorName__ and __classArgs__. Another way is to use your own tuner file, and you need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+  * __builtinAssessorName__ and __classArgs__
+    * __builtinAssessorName__
     
-	  __assessorName__ specifies the name of system assessor you want to use, nni sdk provides one kind of assessor, which is {__Medianstop__}.
-	 * __optimizationMode__
-	 
-	   __optimizationMode__ specifies the optimization mode of tuner algorithm, including {__Maximize__, __Minimize__}
-  * __assessorCommand__ and __assessorCwd__
-      * __assessorCommand__
+	  __builtinAssessorName__ specifies the name of system assessor you want to use, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__}
+	 * __classArgs__
+	
+	   __classArgs__ specifies the arguments of tuner algorithm
+  * __codeDir__, __classFileName__, __className__ and __classArgs__
+      * __codeDir__
         
-		__assessorCommand__ specifies the command you want to use to run your own assessor file, for example {__python3 myassessor.py__}
-	 * __assessorCwd__
-	  
-	   __assessorCwd__ specifies the working directory of your own assessor file, which is the path of your own assessor file.
-  * __assessorGpuNum__
+		__codeDir__ specifies the directory of tuner code.
+	    * __classFileName__
+	   
+	  __classFileName__ specifies the name of tuner file.
+     * __className__
+	   
+	  __className__ specifies the name of tuner class.
+     * __classArgs__
+	   
+	  __classArgs__ specifies the arguments of tuner algorithm.
+  * __gpuNum__
     
-	__assessorGPUNum__ specifies the gpu number you want to use to run the assessor process. The value of this field should be a positive number.
+	__gpuNum__ specifies the gpu number you want to use to run the assessor process. The value of this field should be a positive number.
 
-        Note: you could only specify one way to set assessor, for example, you could set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and you could not set them both.If you do not want to use assessor, you just need to leave assessor empty or remove assessor in your config file. 
+        Note: you could only specify one way to set assessor, for example, you could set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and you could not set them both.If you do not want to use assessor, you just need to leave assessor empty or remove assessor in your config file. Default value is 0. 
 * __trial__
-  * __trialCommand__
+  * __command__
 
-      __trialCommand__  specifies the command to run trial process.
-  * __trialCodeDir__
+      __command__  specifies the command to run trial process.
+  * __codeDir__
     
-	  __trialCodeDir__ specifies the directory of your own trial file.
-  * __trialGpuNum__
+	  __codeDir__ specifies the directory of your own trial file.
+  * __gpuNum__
     
-	  __trialGpuNum__ specifies the num of gpu you want to use to run your trial process.
+	  __gpuNum__ specifies the num of gpu you want to use to run your trial process. Default value is 0. 
 * __machineList__
  
      __machineList__ should be set if you set __trainingServicePlatform__=remote, or it could be empty.
@@ -228,6 +247,17 @@ machineList:
     
 	__passwd__ specifies the password of your account.
 
+  * __sshKeyPath__
+
+    If you want to use ssh key to login remote machine, you could set __sshKeyPath__ in config file. __sshKeyPath__ is the path of ssh key file, which should be valid.
+	
+	    Note: if you set passwd and sshKeyPath simultaneously, nni will try passwd.
+		
+  * __passphrase__
+
+    __passphrase__ is used to protect ssh key, which could be empty if you don't have passphrase.
+
+
 ## Examples
 * __local mode__
 
@@ -244,14 +274,15 @@ trainingServicePlatform: local
 useAnnotation: true
 tuner:
   #choice: TPE, Random, Anneal, Evolution
-  tunerName: TPE
-  #choice: Maximize, Minimize
-  optimizationMode: Maximize
-  tunerGpuNum: 0
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+  gpuNum: 0
 trial:
-  trialCommand: python3 mnist.py
-  trialCodeDir: /nni/mnist
-  trialGpuNum: 0
+  command: python3 mnist.py
+  codeDir: /nni/mnist
+  gpuNum: 0
 ```
 
   If you want to use assessor, you could add assessor configuration in your file.
@@ -268,20 +299,22 @@ searchSpacePath: /nni/search_space.json
 useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution
-  tunerName: TPE
-  #choice: Maximize, Minimize
-  optimizationMode: Maximize
-  tunerGpuNum: 0
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+  gpuNum: 0
 assessor:
   #choice: Medianstop
-  assessorName: Medianstop
-  #choice: Maximize, Minimize
-  optimizationMode: Maximize
-  assessorGpuNum: 0
+  builtinAssessorName: Medianstop
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+  gpuNum: 0
 trial:
-  trialCommand: python3 mnist.py
-  trialCodeDir: /nni/mnist
-  trialGpuNum: 0
+  command: python3 mnist.py
+  codeDir: /nni/mnist
+  gpuNum: 0
 ```
 
   Or you could specify your own tuner and assessor file as following:
@@ -297,17 +330,25 @@ searchSpacePath: /nni/search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
-  tunerCommand: python3 mytuner.py
-  tunerCwd: /nni/tuner
-  tunerGpuNum: 0
+  codeDir: /nni/tuner
+  classFileName: mytuner.py
+  className: MyTuner
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+  gpuNum: 0
 assessor:
-  assessorCommand: python3 myassessor.py
-  assessorCwd: /nni/assessor
-  assessorGpuNum: 0
+  codeDir: /nni/assessor
+  classFileName: myassessor.py
+  className: MyAssessor
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+  gpuNum: 0
 trial:
-  trialCommand: python3 mnist.py
-  trialCodeDir: /nni/mnist
-  trialGpuNum: 0
+  command: python3 mnist.py
+  codeDir: /nni/mnist
+  gpuNum: 0
 ```
 
 * __remote mode__
@@ -326,14 +367,15 @@ searchSpacePath: /nni/search_space.json
 useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution
-  tunerName: TPE
-  #choice: Maximize, Minimize
-  optimizationMode: Maximize
-  tunerGpuNum: 0
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+  gpuNum: 0
 trial:
-  trialCommand: python3 mnist.py
-  trialCodeDir: /nni/mnist
-  trialGpuNum: 0
+  command: python3 mnist.py
+  codeDir: /nni/mnist
+  gpuNum: 0
 #machineList can be empty if the platform is local
 machineList:
   - ip: 10.10.10.10
@@ -347,5 +389,6 @@ machineList:
   - ip: 10.10.10.12
     port: 22
     username: test
-    passwd: test
+    sshKeyPath: /nni/sshkey
+    passphrase: qwert
 ```

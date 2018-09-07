@@ -9,17 +9,21 @@ searchSpacePath:
 #choice: true, false
 useAnnotation: 
 tuner:
-  tunerCommand: 
-  tunerCwd: 
-  tunerGpuNum: 
+  #choice: TPE, Random, Anneal, Evolution
+  builtinTunerName: 
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: 
 assessor:
-  assessorCommand: 
-  assessorCwd: 
-  assessorGpuNum: 
+  #choice: Medianstop
+  builtinAssessorName: 
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: 
 trial:
-  trialCommand: 
-  trialCodeDir: 
-  trialGpuNum: 
+  command: 
+  codeDir: 
+  gpuNum: 
 #machineList can be empty if the platform is local
 machineList:
   - ip: 

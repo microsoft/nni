@@ -261,17 +261,12 @@ class Control extends React.Component<{}, ControlState> {
         } else {
             this.addButtonLoad();
             // new experiment obj
-            const parameter = [];
-            parameter.push({
-                parameters: addTrial
-            });
-            const sendPara = JSON.stringify(parameter[0]);
             axios(`${MANAGER_IP}/trial-jobs`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                data: sendPara
+                data: addTrial
             }).then(res => {
                 if (res.status === 200) {
                     message.success('Submit successfully');

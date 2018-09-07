@@ -4,7 +4,7 @@ from nni.assessor import Assessor, AssessResult
 
 _logger = logging.getLogger('NaiveAssessor')
 _logger.info('start')
-_result = open('assessor_result.txt', 'w')
+_result = open('/tmp/nni_assessor_result.txt', 'w')
 
 class NaiveAssessor(Assessor):
     def __init__(self):
@@ -29,10 +29,10 @@ class NaiveAssessor(Assessor):
 
         return AssessResult.Good
 
-try:
-    NaiveAssessor().run()
-    _result.write('DONE\n')
-except Exception as e:
-    _logger.exception(e)
-    _result.write('ERROR\n')
-_result.close()
+    def _on_exit(self):
+        _result.write('DONE\n')
+        _result.close()
+
+    def _on_error(self):
+        _result.write('ERROR\n')
+        _result.close()

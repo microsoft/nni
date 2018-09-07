@@ -20,19 +20,13 @@
 
 
 import logging
-import os
 
-import json_tricks
+from .recoverable import Recoverable
 
-from .common import init_logger
-from .protocol import CommandType, send, receive
-
-
-init_logger('tuner.log')
 _logger = logging.getLogger(__name__)
 
 
-class Tuner:
+class Tuner(Recoverable):
     # pylint: disable=no-self-use,unused-argument
 
     def generate_parameters(self, parameter_id):
@@ -72,100 +66,22 @@ class Tuner:
         """
         raise NotImplementedError('Tuner: update_search_space not implemented')
 
-    def load_checkpoint(self, path):
+    def load_checkpoint(self):
         """Load the checkpoint of tuner.
         path: checkpoint directory for tuner
         """
-        _logger.info('Load checkpoint ignored by tuner')
+        checkpoin_path = self.get_checkpoint_path()
+        _logger.info('Load checkpoint ignored by tuner, checkpoint path: %s' % checkpoin_path)
 
-    def save_checkpoint(self, path):
+    def save_checkpoint(self):
         """Save the checkpoint of tuner.
         path: checkpoint directory for tuner
         """
-        _logger.info('Save checkpoint ignored by tuner')
+        checkpoin_path = self.get_checkpoint_path()
+        _logger.info('Save checkpoint ignored by tuner, checkpoint path: %s' % checkpoin_path)
 
-    def request_save_checkpoint(self):
-        """Request to save the checkpoint of tuner
-        """
-        self.save_checkpoint(os.getenv('NNI_CHECKPOINT_DIRECTORY'))
+    def _on_exit(self):
+        pass
 
-    def run(self):
-        """Run the tuner.
-        This function will never return unless raise.
-        """
-        mode = os.getenv('NNI_MODE')
-        if mode == 'resume':
-            self.load_checkpoint(os.getenv('NNI_CHECKPOINT_DIRECTORY'))
-        while _handle_request(self):
-            pass
-        _logger.info('Terminated by NNI manager')
-
-
-_next_parameter_id = 0
-_trial_params = {}
-'''key: trial job ID; value: parameters'''
-_customized_parameter_ids = set()
-
-
-def _create_parameter_id():
-    global _next_parameter_id  # pylint: disable=global-statement
-    _next_parameter_id += 1
-    return _next_parameter_id - 1
-
-
-def _pack_parameter(parameter_id, params, customized=False):
-    _trial_params[parameter_id] = params
-    ret = {
-        'parameter_id': parameter_id,
-        'parameter_source': 'customized' if customized else 'algorithm',
-        'parameters': params
-    }
-    return json_tricks.dumps(ret)
-
-
-def _handle_request(tuner):
-    _logger.debug('waiting receive_message')
-
-    command, data = receive()
-    if command is None:
-        return False
-
-    _logger.debug(command)
-    _logger.debug(data)
-
-    if command is CommandType.Terminate:
-        return False
-
-    data = json_tricks.loads(data)
-
-    if command is CommandType.RequestTrialJobs:
-        # data: number or trial jobs
-        ids = [_create_parameter_id() for _ in range(data)]
-        params_list = list(tuner.generate_multiple_parameters(ids))
-        assert len(ids) == len(params_list)
-        for i, _ in enumerate(ids):
-            send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))
-
-    elif command is CommandType.ReportMetricData:
-        # data: { 'type': 'FINAL', 'parameter_id': ..., 'value': ... }
-        if data['type'] == 'FINAL':
-            id_ = data['parameter_id']
-            if id_ in _customized_parameter_ids:
-                tuner.receive_customized_trial_result(id_, _trial_params[id_], data['value'])
-            else:
-                tuner.receive_trial_result(id_, _trial_params[id_], data['value'])
-
-    elif command is CommandType.UpdateSearchSpace:
-        # data: search space
-        tuner.update_search_space(data)
-
-    elif command is CommandType.AddCustomizedTrialJob:
-        # data: parameters
-        id_ = _create_parameter_id()
-        _customized_parameter_ids.add(id_)
-        send(CommandType.NewTrialJob, _pack_parameter(id_, data, customized=True))
-
-    else:
-        raise AssertionError('Unsupported command: %s' % command)
-
-    return True
+    def _on_error(self):
+        pass

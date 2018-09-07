@@ -116,7 +116,7 @@ describe('Unit test for rest server', () => {
                 }
 
                 const req: request.Options = {
-                    uri: `${ROOT_URL}/experiment`,
+                    uri: `${ROOT_URL}/experiment?update_type=TRIAL_CONCURRENCY`,
                     method: 'PUT',
                     json: true,
                     body: profile
@@ -141,7 +141,7 @@ describe('Unit test for rest server', () => {
             body: {
                 exception_test_key: 'test'
             }
-        }
+        };
         request(req, (err: Error, res: request.Response) => {
             if (err) {
                 assert.fail(err.message);
@@ -158,7 +158,7 @@ describe('Unit test for rest server', () => {
             method: 'PUT',
             json: true,
             body: {
-                MACHINE_LIST: [{
+                machine_list: [{
                     ip: '10.10.10.101',
                     port: 22,
                     username: 'test',
@@ -170,37 +170,12 @@ describe('Unit test for rest server', () => {
                     passwd: '1234'
                 }]
             }
-        }
+        };
         request(req, (err: Error, res: request.Response) => {
             if (err) {
                 assert.fail(err.message);
             } else {
                 expect(res.statusCode).to.equal(200);
-            }
-            done();
-        });
-    });
-
-    it('Test POST experiment', (done: Mocha.Done) => {
-        const req: request.Options = {
-            uri: `${ROOT_URL}/experiment`,
-            method: 'POST',
-            json: true,
-            body: {
-                author: 'test',
-                trial: {
-                    entrypoint: 'python',
-                    args: 'mnist.py'
-                }
-            }
-        };
-        // tslint:disable-next-line:no-any
-        request(req, (err: Error, res: request.Response, body: any) => {
-            if (err) {
-                assert.fail(err.message);
-            } else {
-                expect(res.statusCode).to.equal(200);
-                expect(body.experiment_id).to.equal('id-1234');
             }
             done();
         });

@@ -22,9 +22,9 @@
 import json
 import os
 import shutil
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, call
 import tempfile
-from annotation import *
+from nni_annotation import *
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick
 from .url_utils import cluster_metadata_url, experiment_url
@@ -33,7 +33,7 @@ from .common_utils import get_yml_content, get_json_content, print_error, print_
 from .constants import EXPERIMENT_SUCCESS_INFO, STDOUT_FULL_PATH, STDERR_FULL_PATH, LOG_DIR, REST_PORT, ERROR_INFO, NORMAL_INFO
 from .webui_utils import start_web_ui, check_web_ui
 
-def start_rest_server(manager, port, platform, mode, experiment_id=None):
+def start_rest_server(port, platform, mode, experiment_id=None):
     '''Run nni manager process'''
     print_normal('Checking experiment...')
     nni_config = Config()
@@ -44,6 +44,7 @@ def start_rest_server(manager, port, platform, mode, experiment_id=None):
         exit(0)
 
     print_normal('Starting restful server...')
+    manager = os.environ.get('NNI_MANAGER', 'nnimanager')
     cmds = [manager, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
@@ -58,9 +59,9 @@ def set_trial_config(experiment_config, port):
     '''set trial configuration'''
     request_data = dict()
     value_dict = dict()
-    value_dict['command'] = experiment_config['trial']['trialCommand']
-    value_dict['codeDir'] = experiment_config['trial']['trialCodeDir']
-    value_dict['gpuNum'] = experiment_config['trial']['trialGpuNum']
+    value_dict['command'] = experiment_config['trial']['command']
+    value_dict['codeDir'] = experiment_config['trial']['codeDir']
+    value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
     request_data['trial_config'] = value_dict
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
     return True if response.status_code == 200 else False
@@ -75,11 +76,14 @@ def set_remote_config(experiment_config, port):
     request_data = dict()
     request_data['machine_list'] = experiment_config['machineList']
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
+    err_message = ''
     if not response or not response.status_code == 200:
-        return False
+        if response is not None:
+            err_message = response.text
+        return False, err_message
 
     #set trial_config
-    return set_trial_config(experiment_config, port)
+    return set_trial_config(experiment_config, port), err_message
 
 def set_experiment(experiment_config, mode, port):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
@@ -89,7 +93,7 @@ def set_experiment(experiment_config, mode, port):
     request_data['trialConcurrency'] = experiment_config['trialConcurrency']
     request_data['maxExecDuration'] = experiment_config['maxExecDuration']
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
-    request_data['searchSpace'] = experiment_config['searchSpace']
+    request_data['searchSpace'] = experiment_config.get('searchSpace')
     request_data['tuner'] = experiment_config['tuner']
     if 'assessor' in experiment_config:
         request_data['assessor'] = experiment_config['assessor']
@@ -97,16 +101,16 @@ def set_experiment(experiment_config, mode, port):
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
         request_data['clusterMetaData'].append(
-            {'key':'codeDir', 'value':experiment_config['trial']['trialCodeDir']})
+            {'key':'codeDir', 'value':experiment_config['trial']['codeDir']})
         request_data['clusterMetaData'].append(
-            {'key': 'command', 'value': experiment_config['trial']['trialCommand']})
+            {'key': 'command', 'value': experiment_config['trial']['command']})
     else:
         request_data['clusterMetaData'].append(
             {'key': 'machine_list', 'value': experiment_config['machineList']})
         value_dict = dict()
-        value_dict['command'] = experiment_config['trial']['trialCommand']
-        value_dict['codeDir'] = experiment_config['trial']['trialCodeDir']
-        value_dict['gpuNum'] = experiment_config['trial']['trialGpuNum']
+        value_dict['command'] = experiment_config['trial']['command']
+        value_dict['codeDir'] = experiment_config['trial']['codeDir']
+        value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': value_dict})
 
@@ -117,23 +121,24 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     '''follow steps to start rest server and start experiment'''
     nni_config = Config()
     # start rest server
-    rest_process = start_rest_server(args.manager, REST_PORT, experiment_config['trainingServicePlatform'], mode, experiment_id)
+    rest_process = start_rest_server(REST_PORT, experiment_config['trainingServicePlatform'], mode, experiment_id)
     nni_config.set_config('restServerPid', rest_process.pid)
-
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
         path = os.path.join(tempfile.gettempdir(), 'nni', 'annotation')
         if os.path.isdir(path):
             shutil.rmtree(path)
         os.makedirs(path)
-        expand_annotations(experiment_config['trial']['trialCodeDir'], path)
-        experiment_config['trial']['trialCodeDir'] = path
-        search_space = generate_search_space(experiment_config['trial']['trialCodeDir'])
+        expand_annotations(experiment_config['trial']['codeDir'], path)
+        experiment_config['trial']['codeDir'] = path
+        search_space = generate_search_space(experiment_config['trial']['codeDir'])
+        experiment_config['searchSpace'] = json.dumps(search_space)
         assert search_space, ERROR_INFO % 'Generated search space is empty'
+    elif experiment_config.get('searchSpacePath'):
+            search_space = get_json_content(experiment_config.get('searchSpacePath'))
+            experiment_config['searchSpace'] = json.dumps(search_space)
     else:
-        search_space = get_json_content(experiment_config['searchSpacePath'])
-
-    experiment_config['searchSpace'] = json.dumps(search_space)
+        experiment_config['searchSpace'] = json.dumps('')
 
     # check rest server
     print_normal('Checking restful server...')
@@ -142,7 +147,8 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     else:
         print_error('Restful server start failed!')
         try:
-            rest_process.kill()
+            cmds = ['pkill', '-P', str(rest_process.pid)]
+            call(cmds)
         except Exception:
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(0)
@@ -150,12 +156,14 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     # set remote config
     if experiment_config['trainingServicePlatform'] == 'remote':
         print_normal('Setting remote config...')
-        if set_remote_config(experiment_config, REST_PORT):
+        config_result, err_msg = set_remote_config(experiment_config, REST_PORT)
+        if config_result:
             print_normal('Success!')
         else:
-            print_error('Failed!')
+            print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                rest_process.kill()
+                cmds = ['pkill', '-P', str(rest_process.pid)]
+                call(cmds)
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
             exit(0)
@@ -168,7 +176,8 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
         else:
             print_error('Failed!')
             try:
-                rest_process.kill()
+                cmds = ['pkill', '-P', str(rest_process.pid)]
+                call(cmds)
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
             exit(0)
@@ -183,7 +192,8 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     else:
         print_error('Failed!')
         try:
-            rest_process.kill()
+            cmds = ['pkill', '-P', str(rest_process.pid)]
+            call(cmds)
         except Exception:
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(0)
@@ -213,9 +223,9 @@ def resume_experiment(args):
 def create_experiment(args):
     '''start a new experiment'''
     nni_config = Config()
-
-    experiment_config = get_yml_content(args.config)
-    validate_all_content(experiment_config)
+    config_path = os.path.abspath(args.config)
+    experiment_config = get_yml_content(config_path)
+    validate_all_content(experiment_config, config_path)
 
     nni_config.set_config('experimentConfig', experiment_config)
     launch_experiment(args, experiment_config, 'new', args.webuiport)

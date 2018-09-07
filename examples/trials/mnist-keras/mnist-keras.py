@@ -84,7 +84,7 @@ class SendMetrics(keras.callbacks.Callback):
         Run on end of each epoch
         '''
         LOG.debug(logs)
-        nni.report_intermediate_result(logs)
+        nni.report_intermediate_result(logs['acc'])
 
 def train(args, params):
     '''

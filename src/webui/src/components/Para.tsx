@@ -71,7 +71,7 @@ class Para extends React.Component<{}, ParaState> {
             paraNodata: '',
         };
     }
-
+    
     hyperParaPic = () => {
         axios
             .all([
@@ -238,9 +238,6 @@ class Para extends React.Component<{}, ParaState> {
                 type: 'continuous',
                 min: 0,
                 max: 1,
-                realtime: false,
-                calculable: true,
-                precision: 1,
                 // gradient color
                 color: ['#fb7c7c', 'yellow', 'lightblue']
             },
@@ -357,6 +354,7 @@ class Para extends React.Component<{}, ParaState> {
         this._isMounted = false;
         window.clearInterval(this.intervalIDPara);
     }
+
     render() {
         const { option, paraNodata, dimName } = this.state;
         return (
@@ -365,6 +363,7 @@ class Para extends React.Component<{}, ParaState> {
                     <div className="paraTitle">
                         <div className="paraLeft">Hyper Parameter</div>
                         <div className="paraRight">
+                            {/* <span>top</span> */}
                             <Select
                                 className="parapercent"
                                 style={{ width: '20%' }}
@@ -372,10 +371,10 @@ class Para extends React.Component<{}, ParaState> {
                                 optionFilterProp="children"
                                 onSelect={this.percentNum}
                             >
-                                <Option value="0.2">0.2</Option>
-                                <Option value="0.5">0.5</Option>
-                                <Option value="0.8">0.8</Option>
-                                <Option value="1">1</Option>
+                                <Option value="0.2">20%</Option>
+                                <Option value="0.5">50%</Option>
+                                <Option value="0.8">80%</Option>
+                                <Option value="1">100%</Option>
                             </Select>
                             <Select
                                 style={{ width: '60%' }}

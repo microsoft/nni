@@ -25,7 +25,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'tail-stream';
-import { NNIError, NNIErrorNames } from '../../common/errors';
+import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -205,6 +205,22 @@ class LocalTrainingService implements TrainingService {
         }
     }
 
+    /**
+     * Update trial job for multi-phase
+     * @param trialJobId trial job id
+     * @param form job application form
+     */
+    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
+        throw new MethodNotImplementedError();
+    }
+
+    /**
+     * Is multiphase job supported in current training service
+     */
+    public get isMultiPhaseJobSupported(): boolean {
+        return false;
+    }
+
     public async cancelTrialJob(trialJobId: string): Promise<void> {
         this.log.info(`cancelTrialJob: ${trialJobId}`);
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
@@ -309,7 +325,7 @@ class LocalTrainingService implements TrainingService {
             runScriptLines.push(`export ${variable.key}=${variable.value}`);
         }
         runScriptLines.push(
-            `eval ${this.localTrailConfig.command} 2>${path.join(trialJobDetail.workingDirectory, '.nni', 'stderr')}`,
+            `eval ${this.localTrailConfig.command} 2>${path.join(trialJobDetail.workingDirectory, 'stderr')}`,
             `echo $? \`date +%s%3N\` >${path.join(trialJobDetail.workingDirectory, '.nni', 'state')}`);
 
         await cpp.exec(`mkdir -p ${trialJobDetail.workingDirectory}`);

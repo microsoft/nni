@@ -55,6 +55,7 @@ def send(command, data):
     data = data.encode('utf8')
     assert len(data) < 1000000, 'Command too long'
     msg = b'%b%06d%b' % (command.value, len(data), data)
+    logging.getLogger(__name__).debug('Sending command, data: [%s]' % data)
     _out_file.write(msg)
     _out_file.flush()
 

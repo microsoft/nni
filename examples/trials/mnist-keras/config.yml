@@ -5,15 +5,16 @@ maxExecDuration: 1h
 maxTrialNum: 1
 #choice: local, remote
 trainingServicePlatform: local
-searchSpacePath: /usr/share/nni/examples/trials/mnist-keras/search_space.json
+searchSpacePath: ~/nni/examples/trials/mnist-keras/search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution
-  tunerName: TPE
-  #choice: Maximize, Minimize
-  optimizationMode: Maximize
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
 trial:
-  trialCommand: python3 mnist-keras.py
-  trialCodeDir: /usr/share/nni/examples/trials/mnist-keras
-  trialGpuNum: 0
+  command: python3 mnist-keras.py
+  codeDir: ~/nni/examples/trials/mnist-keras
+  gpuNum: 0

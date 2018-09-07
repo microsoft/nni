@@ -105,6 +105,8 @@ abstract class TrainingService {
     public abstract addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
     public abstract removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
     public abstract submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail>;
+    public abstract updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail>;
+    public abstract get isMultiPhaseJobSupported(): boolean;
     public abstract cancelTrialJob(trialJobId: string): Promise<void>;
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
     public abstract getClusterMetadata(key: string): Promise<string>;

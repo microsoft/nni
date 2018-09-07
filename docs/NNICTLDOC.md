@@ -8,12 +8,10 @@ nnictl support commands:
 ```
 nnictl create
 nnictl stop
-nnictl create
 nnictl update
 nnictl resume
 nnictl trial
 nnictl webui
-nnictl rest
 nnictl experiment
 nnictl config
 nnictl log
@@ -72,7 +70,7 @@ nnictl log
 	 * __nnictl update searchspace__
        * Description
           
-		     You can use this command to update an experiment's searchspace.
+		     You can use this command to update an experiment's search space.
        
        * Usage
  
@@ -200,15 +198,7 @@ nnictl log
     * Usage
     
 	      nnictl config show
-
-### Manage restful server
-* __nnictl rest check__  
-  * Description
-     
-	    Check the status of restful server
-   * Usage
-		
-		    nnictl rest check
+        
   
 ### Manage log
 * __nnictl log stdout__

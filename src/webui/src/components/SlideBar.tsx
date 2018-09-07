@@ -39,12 +39,6 @@ class SlideBar extends React.Component<{}, {}> {
               <Icon className="floicon" type="right" />
             </Link>
           </li>
-          <li>
-            <Link to={'/tensor'} activeClassName="high">
-              <Icon className="icon" type="link" />Tensorboard
-              <Icon className="floicon" type="right" />
-            </Link>
-          </li>
         </ul>
       </div>
     );
