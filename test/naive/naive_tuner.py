@@ -5,7 +5,7 @@ from nni.tuner import Tuner
 
 _logger = logging.getLogger('NaiveTuner')
 _logger.info('start')
-_result = open('tuner_result.txt', 'w')
+_result = open('/tmp/nni_tuner_result.txt', 'w')
 
 class NaiveTuner(Tuner):
     def __init__(self):
@@ -24,13 +24,13 @@ class NaiveTuner(Tuner):
 
     def update_search_space(self, search_space):
         _logger.info('update_search_space: %s' % search_space)
-        with open('tuner_search_space.json', 'w') as file_:
+        with open('/tmp/nni_tuner_search_space.json', 'w') as file_:
             json.dump(search_space, file_)
 
-try:
-    NaiveTuner().run()
-    _result.write('DONE\n')
-except Exception as e:
-    _logger.exception(e)
-    _result.write('ERROR\n')
-_result.close()
+    def _on_exit(self):
+        _result.write('DONE\n')
+        _result.close()
+
+    def _on_error(self):
+        _result.write('ERROR\n')
+        _result.close()

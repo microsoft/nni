@@ -82,7 +82,12 @@ export class MetricsCollector {
     private getTrialJobIdsGroupByRmMeta(status: TrialJobStatus[]): Map<RemoteMachineMeta, string[]> {
         const map: Map<RemoteMachineMeta, string[]> = new Map<RemoteMachineMeta, string[]>();
         this.trialJobsMap.forEach((trialJob, id) => {
-            if (status.includes(trialJob.status)) {
+            let reservedTrialJobIds : string[] = [];
+            if(trialJob.rmMeta !== undefined 
+              && trialJob.rmMeta.gpuReservation !== undefined) {
+                reservedTrialJobIds = Array.from(trialJob.rmMeta.gpuReservation.values());
+            }
+            if (reservedTrialJobIds.includes(id) || status.includes(trialJob.status)) {
                 if (map.has(trialJob.rmMeta)) {
                     const ids = map.get(trialJob.rmMeta);
                     if (ids !== undefined && !ids.includes(id)) {
@@ -93,7 +98,7 @@ export class MetricsCollector {
                     
                     // If the remote machine has jobs reserve GPU, also put that jobs into list to get metrics data
                     if(trialJob.rmMeta.gpuReservation !== undefined) {
-                        const concatJobIds : string[] = initJobIds.concat(Array.from(trialJob.rmMeta.gpuReservation.values()));                        
+                        const concatJobIds : string[] = initJobIds.concat(reservedTrialJobIds);                        
                         initJobIds = concatJobIds.filter((item, pos) => concatJobIds.indexOf(item) === pos);
                     }
 

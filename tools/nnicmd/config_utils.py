@@ -33,7 +33,7 @@ class Config:
 
     def get_all_config(self):
         '''get all of config values'''
-        return json.dumps(self.config)
+        return json.dumps(self.config, indent=4, sort_keys=True, separators=(',', ':'))
 
     def set_config(self, key, value):
         '''set {key:value} paris to self.config'''

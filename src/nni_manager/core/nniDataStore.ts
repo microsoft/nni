@@ -185,6 +185,9 @@ class NNIDataStore implements DataStore {
         // assume data is stored by time ASC order
         for (const record of trialJobEvents) {
             let jobInfo: TrialJobInfo | undefined;
+            if (record.trialJobId === undefined || record.trialJobId.length < 1) {
+                continue;
+            }
             if (map.has(record.trialJobId)) {
                 jobInfo = map.get(record.trialJobId);
             } else {

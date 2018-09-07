@@ -135,16 +135,8 @@ class IpcInterface {
  * Create IPC proxy for tuner process
  * @param process_ the tuner process
  */
-function createTunerInterface(process: ChildProcess): IpcInterface {
-    return new IpcInterface(process, CommandType.TUNER_COMMANDS);
+function createDispatcherInterface(process: ChildProcess): IpcInterface {
+    return new IpcInterface(process, new Set([...CommandType.TUNER_COMMANDS, ...CommandType.ASSESSOR_COMMANDS]));
 }
 
-/**
- * Create IPC proxy for assessor process
- * @param process_ the assessor process
- */
-function createAssessorInterface(process: ChildProcess): IpcInterface {
-    return new IpcInterface(process, CommandType.ASSESSOR_COMMANDS);
-}
-
-export { IpcInterface, createTunerInterface, createAssessorInterface };
+export { IpcInterface, createDispatcherInterface };

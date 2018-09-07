@@ -10,6 +10,18 @@ NNI supports running an experiment on multiple machines, called remote machine m
 ## Setup environment
 Install NNI on each of your machines following the install guide [here](GetStarted.md).
 
+For remote machines that are used only to run trials but not the nnictl, you can just install python SDK:
+
+* __Install python SDK through pip__
+
+      pip3 install --user git+https://github.com/Microsoft/NeuralNetworkIntelligence.git#subdirectory=src/sdk/pynni
+
+* __Install python SDK through source code__
+
+      git clone https://github.com/Microsoft/NeuralNetworkIntelligence
+      cd src/sdk/pynni
+      python3 setup.py install
+
 ## Run an experiment
 Still using `examples/trials/mnist-annotation` as an example here. The yaml file you need is shown below: 
 ```
@@ -26,12 +38,13 @@ trainingServicePlatform: local
 # choice: true, false  
 useAnnotation: true
 tuner:
-  tunerName: TPE
-  optimizationMode: Maximize
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
 trial:
-  trialCommand: python mnist.py
-  trialCodeDir: /usr/share/nni/examples/trials/mnist-annotation
-  trialGpuNum: 0
+  command: python mnist.py
+  codeDir: /usr/share/nni/examples/trials/mnist-annotation
+  gpuNum: 0
 #machineList can be empty if the platform is local
 machineList:
   - ip: 10.1.1.1

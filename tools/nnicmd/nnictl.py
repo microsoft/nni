@@ -38,7 +38,6 @@ def parse_args():
     # parse start command
     parser_start = subparsers.add_parser('create', help='create a new experiment')
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
-    parser_start.add_argument('--manager', '-m', default='nnimanager', dest='manager')
     parser_start.add_argument('--webuiport', '-w', default=8080, dest='webuiport')
     parser_start.set_defaults(func=create_experiment)
 
@@ -102,13 +101,6 @@ def parse_args():
     parser_config_subparsers = parser_config.add_subparsers()
     parser_config_show = parser_config_subparsers.add_parser('show', help='show the information of config')
     parser_config_show.set_defaults(func=get_config)
-
-    #parse restful server command
-    parser_rest = subparsers.add_parser('rest', help='get restful server information')
-    #add subparsers for parser_rest
-    parser_rest_subparsers = parser_rest.add_subparsers()
-    parser_rest_check = parser_rest_subparsers.add_parser('check', help='check restful server')
-    parser_rest_check.set_defaults(func=check_rest)
 
     #parse log command
     parser_log = subparsers.add_parser('log', help='get log information')

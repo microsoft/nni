@@ -1,10 +1,10 @@
-BIN_PATH ?= /usr/bin
-NODE_PATH ?= /usr/share
-EXAMPLE_PATH ?= /usr/share/nni/examples
-
-SRC_DIR := ${PWD}
-
-.PHONY: build install uninstall
+BIN_PATH ?= ${HOME}/.local/bin
+INSTALL_PREFIX ?= ${HOME}/.local
+PIP_MODE ?= --user
+EXAMPLES_PATH ?= ${HOME}/nni/examples
+WHOAMI := $(shell whoami)
+.PHONY: build install uninstall dev-install
+YARN := $(INSTALL_PREFIX)/yarn/bin/yarn
 
 build:
 	### Building NNI Manager ###
@@ -21,50 +21,124 @@ build:
 
 
 install:
-	mkdir -p $(NODE_PATH)/nni
-	mkdir -p $(EXAMPLE_PATH)
+    ifneq ('$(HOME)', '/root')
+        ifeq (${WHOAMI}, root)
+			### Sorry, sudo make install is not supported ###
+			exit 1
+        endif
+    endif
+
+	mkdir -p $(BIN_PATH)
+	mkdir -p $(INSTALL_PREFIX)/nni
+	mkdir -p $(EXAMPLES_PATH)
 	
 	### Installing NNI Manager ###
-	cp -rT src/nni_manager/dist $(NODE_PATH)/nni/nni_manager
-	cp -rT src/nni_manager/node_modules $(NODE_PATH)/nni/nni_manager/node_modules
+	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
+	cp -rT src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
 	
 	### Installing Web UI ###
-	cp -rT src/webui/build $(NODE_PATH)/nni/webui
-	ln -sf $(NODE_PATH)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
+	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/webui
+	ln -sf $(INSTALL_PREFIX)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
 	
 	### Installing Python SDK dependencies ###
-	pip3 install -r src/sdk/pynni/requirements.txt
+	pip3 install $(PIP_MODE) -r src/sdk/pynni/requirements.txt
 	### Installing Python SDK ###
-	cd src/sdk/pynni && python3 setup.py install
+	cd src/sdk/pynni && python3 setup.py install $(PIP_MODE)
 	
 	### Installing nnictl ###
-	cd tools && python3 setup.py install
+	cd tools && python3 setup.py install $(PIP_MODE)
 	
 	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
-	echo 'cd $(NODE_PATH)/nni/nni_manager && node main.js $$@' >> $(BIN_PATH)/nnimanager
+	echo 'cd $(INSTALL_PREFIX)/nni/nni_manager && node main.js $$@' >> $(BIN_PATH)/nnimanager
 	chmod +x $(BIN_PATH)/nnimanager
 	
-	install -m 755 tools/nnictl $(BIN_PATH)/nnictl
+	echo '#!/bin/sh' > $(BIN_PATH)/nnictl
+	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager WEB_UI_FOLDER=$(INSTALL_PREFIX)/nni/webui python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
+	chmod +x $(BIN_PATH)/nnictl
 	
 	### Installing examples ###
-	cp -rT examples $(EXAMPLE_PATH)
+	cp -rT examples $(EXAMPLES_PATH)
+
+
+pip-install:
+    ifneq ('$(HOME)', '/root')
+        ifeq (${WHOAMI}, root)
+			### Sorry, sudo make install is not supported ###
+			exit 1
+        endif
+    endif
+
+	### Prepare Node.js ###
+	wget https://nodejs.org/dist/v10.9.0/node-v10.9.0-linux-x64.tar.xz
+	tar xf node-v10.9.0-linux-x64.tar.xz
+	cp -rT node-v10.9.0-linux-x64 $(INSTALL_PREFIX)/node
+	
+	### Prepare Yarn 1.9.4 ###
+	wget https://github.com/yarnpkg/yarn/releases/download/v1.9.4/yarn-v1.9.4.tar.gz
+	tar xf yarn-v1.9.4.tar.gz
+	cp -rT yarn-v1.9.4 $(INSTALL_PREFIX)/yarn
+
+	### Building NNI Manager ###
+	cd src/nni_manager && $(YARN) && $(YARN) build
+	
+	### Building Web UI ###
+	cd src/webui && $(YARN) && $(YARN) build
+	
+	mkdir -p $(BIN_PATH)
+	mkdir -p $(INSTALL_PREFIX)/nni
+	
+	### Installing NNI Manager ###
+	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
+	cp -rT src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
+	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
+	echo 'cd $(INSTALL_PREFIX)/nni/nni_manager && node main.js $$@' >> $(BIN_PATH)/nnimanager
+	chmod +x $(BIN_PATH)/nnimanager
+
+	### Installing Web UI ###
+	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/webui
+	ln -sf $(INSTALL_PREFIX)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
+	
+	### Installing examples ###
+	cp -rT examples $(EXAMPLES_PATH)
 
 
 dev-install:
+	mkdir -p $(BIN_PATH)
+	mkdir -p $(INSTALL_PREFIX)/nni
+	
+	### Installing NNI Manager ###
+	ln -sf $(INSTALL_PREFIX)/nni/nni_manager $(PWD)/src/nni_manager/dist
+	ln -sf $(INSTALL_PREFIX)/nni/nni_manager/node_modules $(PWD)/src/nni_manager/node_modules
+	
+	### Installing Web UI ###
+	ln -sf $(INSTALL_PREFIX)/nni/webui $(PWD)/src/webui
+	ln -sf $(INSTALL_PREFIX)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
+	
 	### Installing Python SDK dependencies ###
-	pip3 install --user -r src/sdk/pynni/requirements.txt
+	pip3 install $(PIP_MODE) -r src/sdk/pynni/requirements.txt
 	### Installing Python SDK ###
-	cd src/sdk/pynni && pip3 install --user -e .
+	cd src/sdk/pynni && pip3 install $(PIP_MODE) -e .
 	
 	### Installing nnictl ###
-	cd tools && pip3 install --user -e .
+	cd tools && pip3 install $(PIP_MODE) -e .
+	
+	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
+	echo 'cd $(INSTALL_PREFIX)/nni/nni_manager && node main.js $$@' >> $(BIN_PATH)/nnimanager
+	chmod +x $(BIN_PATH)/nnimanager
+	
+	echo '#!/bin/sh' > $(BIN_PATH)/nnictl
+	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
+	chmod +x $(BIN_PATH)/nnictl
+	
+	### Installing examples ###
+	ln -sf $(EXAMPLES_PATH) $(PWD)/examples
 
 
 uninstall:
-	-rm -r $(EXAMPLE_PATH)
-	-rm -r $(NODE_PATH)/nni
-	-pip3 uninstall -y nnictl
 	-pip3 uninstall -y nni
-	-rm $(BIN_PATH)/nnictl
-	-rm $(BIN_PATH)/nnimanager
+	-pip3 uninstall -y nnictl
+	-rm -r $(INSTALL_PREFIX)/nni
+	-rm -r $(EXAMPLES_PATH)
 	-rm $(BIN_PATH)/serve
+	-rm $(BIN_PATH)/nnimanager
+	-rm $(BIN_PATH)/nnictl

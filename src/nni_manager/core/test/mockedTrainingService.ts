@@ -30,7 +30,6 @@ const testTrainingServiceProvider: Provider = {
 };
 
 class MockedTrainingService extends TrainingService {
-    
     public mockedMetaDataValue: string = "default";
     public jobDetail1: TrialJobDetail = {
         id: '1234',
@@ -93,6 +92,14 @@ class MockedTrainingService extends TrainingService {
         return deferred.promise;
     }
 
+    public updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
+        throw new MethodNotImplementedError();
+    }
+
+    public get isMultiPhaseJobSupported(): boolean {
+        return false;
+    }
+
     public cancelTrialJob(trialJobId: string): Promise<void> {
         const deferred = new Deferred<void>();
         if(trialJobId === '1234' || trialJobId === '3456'){
@@ -125,7 +132,7 @@ class MockedTrainingService extends TrainingService {
     }
 
     public cleanUp(): Promise<void> {
-        throw new MethodNotImplementedError();
+        return Promise.resolve();
     }
 }
 

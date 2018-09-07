@@ -20,6 +20,7 @@
 
 
 import psutil
+import os
 from socket import AddressFamily
 from .rest_utils import rest_get
 from .config_utils import Config
@@ -29,7 +30,8 @@ from .constants import STDOUT_FULL_PATH, STDERR_FULL_PATH
 
 def start_web_ui(port):
     '''start web ui'''
-    cmds = ['serve', '-s', '-n', '/usr/share/nni/webui', '-l', str(port)]
+    web_ui = os.environ.get('WEB_UI_FOLDER')
+    cmds = ['serve', '-s', '-n', web_ui, '-l', str(port)]
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
     webui_process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
@@ -80,7 +82,7 @@ def check_web_ui():
     if not url_list:
         return False
     for url in url_list:
-        response = rest_get(url, 20)
+        response = rest_get(url, 3)
         if response and response.status_code == 200:
             return True
     return False

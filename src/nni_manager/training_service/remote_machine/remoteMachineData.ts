@@ -31,16 +31,21 @@ export class RemoteMachineMeta {
     public readonly ip : string;
     public readonly port : number;
     public readonly username : string;
-    public readonly passwd: string;
+    public readonly passwd?: string;
+    public readonly sshKeyPath?: string;
+    public readonly passphrase?: string;
     public gpuSummary : GPUSummary | undefined;
     /* GPU Reservation info, the key is GPU index, the value is the job id which reserves this GPU*/
     public gpuReservation : Map<number, string>;
 
-    constructor(ip : string, port : number, username : string, passwd : string) {
+    constructor(ip : string, port : number, username : string, passwd : string, 
+        sshKeyPath : string, passphrase : string) {
         this.ip = ip;
         this.port = port;
         this.username = username;
         this.passwd = passwd;
+        this.sshKeyPath = sshKeyPath;
+        this.passphrase = passphrase;
         this.gpuReservation = new Map<number, string>();
     }
 }

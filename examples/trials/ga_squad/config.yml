@@ -8,9 +8,12 @@ trainingServicePlatform: local
 #choice: true, false
 useAnnotation: false
 tuner:
-  tunerCommand: python3 __main__.py
-  tunerCwd: /usr/share/nni/examples/tuners/ga_customer_tuner
+  codeDir: ~/nni/examples/tuners/ga_customer_tuner
+  classFileName: customer_tuner.py
+  className: CustomerTuner
+  classArgs:
+    optimize_mode: maximize
 trial:
-  trialCommand: python3 trial.py
-  trialCodeDir: /usr/share/nni/examples/trials/ga_squad
-  trialGpuNum: 0
+  command: python3 trial.py
+  codeDir: ~/nni/examples/trials/ga_squad
+  gpuNum: 0

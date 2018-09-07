@@ -28,7 +28,7 @@ import { Container } from 'typescript-ioc';
 import * as util from 'util';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, setExperimentStartupInfo, getExperimentId } from './experimentStartupInfo';
+import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
 import { TrainingService } from './trainingService';
 
@@ -128,6 +128,63 @@ function parseArg(names: string[]): string {
 }
 
 /**
+ * Generate command line to start advisor process which runs tuner and assessor
+ * @param tuner : For builtin tuner:
+ *     {
+ *         className: 'EvolutionTuner'
+ *         classArgs: {
+ *             optimize_mode: 'maximize',
+ *             population_size: 3
+ *         }
+ *     }
+ * customized:
+ *     {
+ *         codeDir: '/tmp/mytuner'
+ *         classFile: 'best_tuner.py'
+ *         className: 'BestTuner'
+ *         classArgs: {
+ *             optimize_mode: 'maximize',
+ *             population_size: 3
+ *         }
+ *     }
+ *
+ * @param assessor: similiar as tuner
+ *
+ */
+function getMsgDispatcherCommand(tuner: any, assessor: any): string {
+    let command: string = `python3 -m nni --tuner_class_name ${tuner.className}`;
+
+    if (tuner.classArgs !== undefined) {
+        command += ` --tuner_args ${JSON.stringify(JSON.stringify(tuner.classArgs))}`;
+    }
+
+    if (tuner.codeDir !== undefined && tuner.codeDir.length > 1) {
+        command += ` --tuner_directory ${tuner.codeDir}`;
+    }
+
+    if (tuner.classFileName !== undefined && tuner.classFileName.length > 1) {
+        command += ` --tuner_class_filename ${tuner.classFileName}`;
+    }
+
+    if (assessor !== undefined && assessor.className !== undefined) {
+        command += ` --assessor_class_name ${assessor.className}`;
+        if (assessor.classArgs !== undefined) {
+            command += ` --assessor_args ${JSON.stringify(JSON.stringify(assessor.classArgs))}`;
+        }
+
+        if (assessor.codeDir !== undefined && assessor.codeDir.length > 1) {
+            command += ` --assessor_directory ${assessor.codeDir}`;
+        }
+
+        if (assessor.classFileName !== undefined && assessor.classFileName.length > 1) {
+            command += ` --assessor_class_filename ${assessor.classFileName}`;
+        }
+    }
+
+    return command;
+}
+
+/**
  * Initialize a pseudo experiment environment for unit test.
  * Must be paired with `cleanupUnitTest()`.
  */
@@ -161,5 +218,5 @@ function cleanupUnitTest(): void {
     Container.restore(ExperimentStartupInfo);
 }
 
-export { getLogDir, getExperimentRootDir, getDefaultDatabaseDir, mkDirP, delay, prepareUnitTest,
+export { getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getDefaultDatabaseDir, mkDirP, delay, prepareUnitTest,
     parseArg, cleanupUnitTest, uniqueString };

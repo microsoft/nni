@@ -38,10 +38,9 @@ const expParams1: ExperimentParams = {
     maxTrialNum: 5,
     searchSpace: 'SS',
     tuner: {
-        tunerCommand: './tuner.sh',
-        tunerCwd: '.',
-        tunerCheckpointDirectory: '/tmp',
-        tunerGpuNum: 0
+        className: 'testTuner',
+        checkpointDir: '/tmp',
+        gpuNum: 0
     }
 };
 
@@ -53,14 +52,12 @@ const expParams2: ExperimentParams = {
     maxTrialNum: 5,
     searchSpace: '',
     tuner: {
-        tunerCommand: 'python tuner.py',
-        tunerCwd: '/tmp',
-        tunerCheckpointDirectory: '/tmp'
+        className: 'testTuner',
+        checkpointDir: '/tmp'
     },
     assessor: {
-        assessorCommand: 'python assessor.py',
-        assessorCwd: '/tmp',
-        assessorCheckpointDirectory: '/tmp'
+        className: 'testAssessor',
+        checkpointDir: '/tmp'
     }
 };
 

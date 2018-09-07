@@ -24,7 +24,7 @@ import { ChildProcess, spawn } from 'child_process';
 import { Deferred } from 'ts-deferred';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import * as CommandType from '../commands';
-import { createAssessorInterface, createTunerInterface, IpcInterface } from '../ipcInterface';
+import { createDispatcherInterface, IpcInterface } from '../ipcInterface';
 
 let sentCommands: {[key: string]: string}[] = [];
 const receivedCommands: {[key: string]: string}[] = [];
@@ -52,27 +52,27 @@ function runProcess(): Promise<Error | null> {
     });
 
     // create IPC interface
-    const assessor: IpcInterface = createAssessorInterface(proc);
-    assessor.onCommand((commandType: string, content: string): void => {
+    const dispatcher: IpcInterface = createDispatcherInterface(proc);
+    dispatcher.onCommand((commandType: string, content: string): void => {
         receivedCommands.push({ commandType, content });
     });
 
     // Command #1: ok
-    assessor.sendCommand('IN');
+    dispatcher.sendCommand('IN');
 
     // Command #2: ok
-    assessor.sendCommand('ME', '123');
+    dispatcher.sendCommand('ME', '123');
 
     // Command #3: too long
     try {
-        assessor.sendCommand('ME', 'x'.repeat(1_000_000));
+        dispatcher.sendCommand('ME', 'x'.repeat(1_000_000));
     } catch (error) {
         commandTooLong = error;
     }
 
-    // Command #4: not assessor command
+    // Command #4: FE is not tuner/assessor command, test the exception type of send non-valid command 
     try {
-        assessor.sendCommand('GE', '1');
+        dispatcher.sendCommand('FE', '1');
     } catch (error) {
         rejectCommandType = error;
     }

@@ -56,16 +56,17 @@ describe('Unit test for nnimanager', function () {
         maxTrialNum: 2,
         searchSpace: '{"x":1}',
         tuner: {
-            tunerCommand: 'python3 hyperopt.py',
-            tunerCwd: 'core/test',
-            tunerCheckpointDirectory: '',
-            tunerGpuNum: 1
+            className: 'EvolutionTuner',
+            classArgs: {
+                optimize_mode: 'maximize'
+            },
+            checkpointDir: '',
+            gpuNum: 1
         },
         assessor: {
-            assessorCommand: 'python3 dummy_assessor.py',
-            assessorCwd: 'core/test',
-            assessorCheckpointDirectory: '',
-            assessorGpuNum: 1
+            className: 'MedianstopAssessor',
+            checkpointDir: '',
+            gpuNum: 1
         }
     }
 

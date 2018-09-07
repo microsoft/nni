@@ -234,25 +234,21 @@ class TrialStatus extends React.Component<{}, TabState> {
     // kill job
     killJob = (key: number, id: string, status: string) => {
 
-        if (status === 'RUNNING') {
-            axios(`${MANAGER_IP}/trial-jobs/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json;charset=utf-8'
+        axios(`${MANAGER_IP}/trial-jobs/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            }
+        })
+            .then(res => {
+                if (res.status === 200) {
+                    message.success('Cancel the job successfully');
+                    // render the table
+                    this.drawTable();
+                } else {
+                    message.error('fail to cancel the job');
                 }
-            })
-                .then(res => {
-                    if (res.status === 200) {
-                        message.success('Cancel the job successfully');
-                        // render the table
-                        this.drawTable();
-                    } else {
-                        message.error('fail to cancel the job');
-                    }
-                });
-        } else {
-            message.error('you just can kill the job that status is Running');
-        }
+            });
     }
 
     // get tensorflow address
@@ -347,13 +343,34 @@ class TrialStatus extends React.Component<{}, TabState> {
             key: 'operation',
             width: '10%',
             render: (text: string, record: TableObj) => {
+                let trialStatus = record.status;
+                let flagKill = false;
+                if (trialStatus === 'RUNNING') {
+                    flagKill = true;
+                } else {
+                    flagKill = false;
+                }
                 return (
-                    <Popconfirm
-                        title="Are you sure to delete this trial?"
-                        onConfirm={this.killJob.bind(this, record.key, record.id, record.status)}
-                    >
-                        <Button type="primary" className="tableButton">Kill</Button>
-                    </Popconfirm>
+                    flagKill
+                        ?
+                        (
+                            <Popconfirm
+                                title="Are you sure to delete this trial?"
+                                onConfirm={this.killJob.bind(this, record.key, record.id, record.status)}
+                            >
+                                <Button type="primary" className="tableButton">Kill</Button>
+                            </Popconfirm>
+                        )
+                        :
+                        (
+                            <Button
+                                type="primary"
+                                className="tableButton"
+                                disabled={true}
+                            >
+                                Kill
+                            </Button>
+                        )
                 );
             },
         }, {

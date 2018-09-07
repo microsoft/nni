@@ -26,7 +26,7 @@ class MedianstopAssessor(Assessor):
     if the trial’s best objective value by step S is strictly worse than the median value 
     of the running averages of all completed trials’ objectives reported up to step S
     '''
-    def __init__(self, start_step, optimize_mode):
+    def __init__(self, optimize_mode='maximize', start_step=0):
         self.start_step = start_step
         self.running_history = dict()
         self.completed_avg_history = dict()

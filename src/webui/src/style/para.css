@@ -24,6 +24,11 @@
     float: right;
     width: 60%;
 }
+.paraRight>span{
+    font-size: 14px;
+    color: #333;
+    margin-right: 5px;
+}
 .paraRight .parapercent{
     margin-right: 10px;
 }

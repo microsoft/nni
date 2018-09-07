@@ -37,7 +37,7 @@ export const testManagerProvider: Provider = {
 };
 
 export class MockedNNIManager extends Manager {
-    public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType ): Promise<void> {
+    public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
         return Promise.resolve();
     }
     public getTrialJobStatistics(): Promise<TrialJobStatistics[]> {
@@ -103,23 +103,15 @@ export class MockedNNIManager extends Manager {
         return deferred.promise;
     }
 
-    public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
-        const deferred: Deferred<TrialJobDetail> = new Deferred<TrialJobDetail>();
-        const jobDetail: TrialJobDetail = {
+    public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
+        const deferred: Deferred<TrialJobInfo> = new Deferred<TrialJobInfo>();
+        const jobInfo: TrialJobInfo = {
             id: '1234',
             status: 'SUCCEEDED',
-            submitTime: new Date(),
             startTime: new Date(),
-            endTime: new Date(),
-            tags: ['test'],
-            // tslint:disable-next-line:no-http-string
-            url: 'http://test',
-            workingDirectory: '/tmp/mocked',
-            form: {
-                jobType: 'TRIAL'
-            }
+            endTime: new Date()
         };
-        deferred.resolve(jobDetail);
+        deferred.resolve(jobInfo);
 
         return deferred.promise;
     }
@@ -139,9 +131,8 @@ export class MockedNNIManager extends Manager {
                 maxTrialNum: 3,
                 searchSpace: '{lr: 0.01}',
                 tuner: {
-                    tunerCommand: 'python3 tuner.py',
-                    tunerCwd: '/tmp/tunner',
-                    tunerCheckpointDirectory: ''
+                    className: 'testTuner',
+                    checkpointDir: ''
                 }
             },
             id: '2345',

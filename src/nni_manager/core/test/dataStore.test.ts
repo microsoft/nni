@@ -69,10 +69,9 @@ describe('Unit test for dataStore', () => {
                     }
                 }`,
                 tuner: {
-                    tunerCommand: 'python3 tunner.py',
-                    tunerCwd: '/tmp',
-                    tunerCheckpointDirectory: '/tmp/cp',
-                    tunerGpuNum: 0
+                    className: 'testTuner',
+                    checkpointDir: '/tmp/cp',
+                    gpuNum: 0
                 }
             },
             id: 'exp123',
