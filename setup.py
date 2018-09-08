@@ -57,7 +57,7 @@ class CustomInstallCommand(install):
 
 setup(
     name = 'NNI',
-    version = '0.0.1',
+    version = '0.1.0',
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
@@ -89,8 +89,5 @@ setup(
 
     cmdclass={
         'install': CustomInstallCommand
-    },
-    entry_points={
-        'console_scripts': ['nnictl = nnicmd.nnictl:parse_args']
     }
 )
