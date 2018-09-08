@@ -90,9 +90,14 @@ pip-install:
 	### Installing NNI Manager ###
 	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
 	cp -rT src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
+
 	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
 	echo 'cd $(INSTALL_PREFIX)/nni/nni_manager && node main.js $$@' >> $(BIN_PATH)/nnimanager
 	chmod +x $(BIN_PATH)/nnimanager
+
+	echo '#!/bin/sh' > $(BIN_PATH)/nnictl
+	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager WEB_UI_FOLDER=$(INSTALL_PREFIX)/nni/webui python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
+	chmod +x $(BIN_PATH)/nnictl
 
 	### Installing Web UI ###
 	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/webui
