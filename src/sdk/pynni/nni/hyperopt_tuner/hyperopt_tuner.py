@@ -51,7 +51,7 @@ INDEX = '_index'
 def json2space(in_x, name=ROOT):
     '''
     Change json to search space in hyperopt.
-    '''
+	'''
     out_y = copy.deepcopy(in_x)
     if isinstance(in_x, dict):
         if TYPE in in_x.keys():
@@ -65,11 +65,11 @@ def json2space(in_x, name=ROOT):
         else:
             out_y = dict()
             for key in in_x.keys():
-                out_y[key] = json2space(in_x[key], name+"[%s]" % str(key))
+                out_y[key] = json2space(in_x[key], name+'[%s]' % str(key))
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
-            out_y.append(json2space(x_i, name+"[%d]" % i))
+            out_y.append(json2space(x_i, name+'[%d]' % i))
     else:
         logger.info('in_x is not a dict or a list in json2space fuinction %s', str(in_x))
     return out_y
@@ -88,7 +88,7 @@ def json2paramater(in_x, paramater, name=ROOT):
                 _index = paramater[name]
                 out_y = {
                     INDEX: _index,
-                    VALUE: json2paramater(in_x[VALUE][_index], paramater, name=name+"[%d]" % _index)
+                    VALUE: json2paramater(in_x[VALUE][_index], paramater, name=name+'[%d]' % _index)
                 }
             else:
                 out_y = paramater[name]
@@ -96,11 +96,11 @@ def json2paramater(in_x, paramater, name=ROOT):
             out_y = dict()
             for key in in_x.keys():
                 out_y[key] = json2paramater(
-                    in_x[key], paramater, name + "[%s]" % str(key))
+                    in_x[key], paramater, name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
-            out_y.append(json2paramater(x_i, paramater, name + "[%d]" % i))
+            out_y.append(json2paramater(x_i, paramater, name + '[%d]' % i))
     else:
         logger.info('in_x is not a dict or a list in json2space fuinction %s', str(in_x))
     return out_y
@@ -121,13 +121,13 @@ def json2vals(in_x, vals, out_y, name=ROOT):
             if _type == 'choice':
                 _index = vals[INDEX]
                 json2vals(in_x[VALUE][_index], vals[VALUE],
-                          out_y, name=name + "[%d]" % _index)
+                          out_y, name=name + '[%d]' % _index)
         else:
             for key in in_x.keys():
-                json2vals(in_x[key], vals[key], out_y, name + "[%s]" % str(key))
+                json2vals(in_x[key], vals[key], out_y, name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         for i, temp in enumerate(in_x):
-            json2vals(i, vals[temp], out_y, name + "[%d]" % temp)
+            json2vals(i, vals[temp], out_y, name + '[%d]' % temp)
 
 
 def _split_index(params):
@@ -145,6 +145,7 @@ class HyperoptTuner(Tuner):
     '''
     HyperoptTuner is a tuner which using hyperopt algorithm.
     '''
+    
     def __init__(self, algorithm_name, optimize_mode):
         self.algorithm_name = algorithm_name
         self.optimize_mode = OptimizeMode(optimize_mode)
@@ -179,10 +180,10 @@ class HyperoptTuner(Tuner):
         self.rval.catch_eval_exceptions = False
 
     def generate_parameters(self, parameter_id):
-        """
+        '''
 		Returns a set of trial (hyper-)parameters, as a serializable object.
         parameter_id : int
-        """
+        '''
         rval = self.rval
         trials = rval.trials
         algorithm = rval.algo
@@ -199,7 +200,7 @@ class HyperoptTuner(Tuner):
             except Exception:
                 parameter[key] = None
 
-        # remove "_index" from json2parameter and save params-id
+        # remove '_index' from json2parameter and save params-id
         total_params = json2paramater(self.json, parameter)
         self.total_data[parameter_id] = total_params
         params = _split_index(total_params)
@@ -212,7 +213,7 @@ class HyperoptTuner(Tuner):
         parameters : dict of parameters
         reward : reward of one trial
         '''
-        # restore the paramsters contains "_index"
+        # restore the paramsters contains '_index'
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')
         params = self.total_data[parameter_id]
@@ -258,13 +259,13 @@ class HyperoptTuner(Tuner):
     def miscs_update_idxs_vals(self, miscs, idxs, vals,
                                assert_all_vals_used=True,
                                idxs_map=None):
-        """
+        '''
         Unpack the idxs-vals format into the list of dictionaries that is
         `misc`.
 
         idxs_map: a dictionary of id->id mappings so that the misc['idxs'] can
             contain different numbers than the idxs argument. XXX CLARIFY
-        """
+        '''
         if idxs_map is None:
             idxs_map = {}
 
