@@ -63,7 +63,7 @@ setup(
     description = 'Neural Network Intelligence project',
     long_description = read('docs/NNICTLDOC.md'),
     license = 'MIT',
-    url = 'https://msrasrg.visualstudio.com/NeuralNetworkIntelligence',
+    url = 'https://github.com/Microsoft/nni',
 
     packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools'),
     package_dir = {
