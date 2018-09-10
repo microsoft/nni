@@ -82,7 +82,7 @@ pip-install:
 	export PATH=$(INSTALL_PREFIX)/node/bin:$(INSTALL_PREFIX)/yarn/bin:$(PATH) && cd src/nni_manager && $(YARN) && $(YARN) build
 
 	### Building Web UI ###
-	cd src/webui && $(YARN) && $(YARN) build
+	export PATH=$(INSTALL_PREFIX)/node/bin:$(INSTALL_PREFIX)/yarn/bin:$(PATH) && cd src/webui && $(YARN) && $(YARN) build
 	
 	mkdir -p $(BIN_PATH)
 	mkdir -p $(INSTALL_PREFIX)/nni
