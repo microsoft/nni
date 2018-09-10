@@ -47,9 +47,6 @@ This command will start an experiment and a WebUI. The WebUI endpoint will be sh
 
 Please refer to [here](docs/GetStarted.md) for the GetStarted tutorial.
 
-# Privacy Statement
-The [Microsoft Enterprise and Developer Privacy Statement](https://privacy.microsoft.com/en-us/privacystatement) describes the privacy statement of this software.
-
 # Contributing
 This project welcomes contributions and suggestions, we are constructing the contribution guidelines, stay tuned =).
 
