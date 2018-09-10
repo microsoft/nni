@@ -86,6 +86,7 @@ pip-install:
 	
 	mkdir -p $(BIN_PATH)
 	mkdir -p $(INSTALL_PREFIX)/nni
+	mkdir -p $(EXAMPLES_PATH)
 	
 	### Installing NNI Manager ###
 	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
