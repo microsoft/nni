@@ -51,7 +51,7 @@ INDEX = '_index'
 def json2space(in_x, name=ROOT):
     '''
     Change json to search space in hyperopt.
-	'''
+    '''
     out_y = copy.deepcopy(in_x)
     if isinstance(in_x, dict):
         if TYPE in in_x.keys():
