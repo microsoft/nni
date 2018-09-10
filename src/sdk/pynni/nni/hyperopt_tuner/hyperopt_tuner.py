@@ -51,7 +51,7 @@ INDEX = '_index'
 def json2space(in_x, name=ROOT):
     '''
     Change json to search space in hyperopt.
-	'''
+    '''
     out_y = copy.deepcopy(in_x)
     if isinstance(in_x, dict):
         if TYPE in in_x.keys():
@@ -78,7 +78,7 @@ def json2space(in_x, name=ROOT):
 def json2paramater(in_x, paramater, name=ROOT):
     '''
     Change json to parameters.
-	'''
+    '''
     out_y = copy.deepcopy(in_x)
     if isinstance(in_x, dict):
         if TYPE in in_x.keys():
@@ -181,7 +181,7 @@ class HyperoptTuner(Tuner):
 
     def generate_parameters(self, parameter_id):
         '''
-		Returns a set of trial (hyper-)parameters, as a serializable object.
+        Returns a set of trial (hyper-)parameters, as a serializable object.
         parameter_id : int
         '''
         rval = self.rval
