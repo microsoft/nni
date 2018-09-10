@@ -79,7 +79,7 @@ pip-install:
 	cp -rT yarn-v1.9.4 $(INSTALL_PREFIX)/yarn
 
 	### Export PATH for node and yarn
-	export PATH=${INSTALL_PREFIX}/node/bin:${INSTALL_PREFIX}/yarn/bin:$PATH
+	export PATH=$(INSTALL_PREFIX)/node/bin:$(INSTALL_PREFIX)/yarn/bin:$(PATH)
 
 	### Building NNI Manager ###
 	cd src/nni_manager && $(YARN) && $(YARN) build
