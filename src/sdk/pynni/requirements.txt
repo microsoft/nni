@@ -3,8 +3,5 @@ json_tricks
 
 # hyperopt tuner
 numpy
-git+https://github.com/hyperopt/hyperopt.git#egg=hyperopt
-
-# darkopt assessor
 scipy
-pymc3
+hyperopt
