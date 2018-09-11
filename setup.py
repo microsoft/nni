@@ -61,7 +61,7 @@ setup(
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
-    long_description = read('README.md'),
+    long_description = 'NNI',
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
 
