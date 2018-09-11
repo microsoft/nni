@@ -25,7 +25,7 @@ from setuptools.command.install import install
 from subprocess import Popen
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 class CustomInstallCommand(install):
     '''a customized install class in pip module'''
