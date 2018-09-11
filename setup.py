@@ -37,23 +37,24 @@ class CustomInstallCommand(install):
             print('Error: Make Install Failed')
             exit(-1)
 
-    def writeEnvironmentVariables(self, variable_name):
-        '''write an environment variable into ~/.bashrc'''
+    def exportToPath(self, path):
+        '''add path to Path through ~/.bashrc'''
         paths = os.getenv("PATH").split(':')
-        bin_path = os.path.join(os.getenv('HOME'),'.local/'+variable_name+'/bin')
+        bin_path = os.path.join(os.getenv('HOME'),'.local/'+path)
         
         if bin_path not in paths:
             bashrc_path = os.path.join(os.getenv('HOME'), '.bashrc')
             process = Popen('echo export PATH=' + bin_path + ':\$PATH >> ' + bashrc_path, shell=True)
             if process.wait() != 0:
-                print('Error: Write Environment Variables Failed')
+                print('Error: Write Bashrc Failed')
                 exit(-1)
 
     def run(self):
         install.run(self)
         self.makeInstall()
-        self.writeEnvironmentVariables('node')
-        self.writeEnvironmentVariables('yarn')
+        self.exportToPath('bin')
+        self.exportToPath('node/bin')
+        self.exportToPath('yarn/bin')
 
 setup(
     name = 'NNI',
