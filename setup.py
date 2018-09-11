@@ -78,7 +78,6 @@ setup(
         'json_tricks',
         'numpy',
         'psutil',
-        'pymc3',
         'pyyaml',
         'requests',
         'scipy'
