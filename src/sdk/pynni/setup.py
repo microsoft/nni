@@ -35,7 +35,6 @@ setuptools.setup(
         'hyperopt',
         'json_tricks',
         'numpy',
-        'pymc3',
         'scipy',
     ],
 
