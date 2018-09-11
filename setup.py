@@ -74,6 +74,7 @@ setup(
     python_requires = '>=3.5',
     install_requires = [
         'astor',
+        'hyperopt',
         'json_tricks',
         'numpy',
         'psutil',
@@ -81,10 +82,6 @@ setup(
         'pyyaml',
         'requests',
         'scipy'
-        
-    ],
-    dependency_links = [
-        'git+https://github.com/hyperopt/hyperopt.git',
     ],
 
     cmdclass={

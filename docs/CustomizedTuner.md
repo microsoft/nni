@@ -68,6 +68,8 @@ parameters = {"dropout": 0.3, "learning_rate": 0.4}
 reward = 0.93
 ```
 
+Note that if you want to access a file (e.g., ```data.txt```) in the 
+
 **3) Configure your customized tuner in experiment yaml config file**
 
 NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the \_\_init__ constructor.
