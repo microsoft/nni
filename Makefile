@@ -9,6 +9,8 @@ endif
 .PHONY: build install uninstall dev-install
 
 build:
+
+	which -a python3
 	### Building NNI Manager ###
 	cd src/nni_manager && yarn && yarn build
 	
