@@ -4,9 +4,6 @@ EXAMPLES_PATH ?= ${HOME}/nni/examples
 WHOAMI := $(shell whoami)
 YARN := $(INSTALL_PREFIX)/yarn/bin/yarn
 PIP_MODE ?= --user
-ifdef TRAVIS
-undefine PIP_MODE
-endif
 ifdef VIRTUAL_ENV
 undefine PIP_MODE
 endif

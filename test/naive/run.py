@@ -76,10 +76,10 @@ if __name__ == '__main__':
         run()
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
-    except Exception as e:
+    except Exception as error:
         print(RED + 'FAIL' + CLEAR)
-        print('%r' % e)
+        print('%r' % error)
         traceback.print_exc()
-        raise e
+        raise error
 
     subprocess.run(['nnictl', 'stop'])
