@@ -155,7 +155,7 @@ function getMsgDispatcherCommand(tuner: any, assessor: any): string {
     let command: string = `python3 -m nni --tuner_class_name ${tuner.className}`;
 
     if (process.env.VIRTUAL_ENV) {
-        command = path.join(process.env.VIRTUAL_ENV + 'bin/') +command;
+        command = path.join(process.env.VIRTUAL_ENV, 'bin/') +command;
     }
 
     if (tuner.classArgs !== undefined) {

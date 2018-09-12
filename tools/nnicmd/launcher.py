@@ -52,7 +52,7 @@ def start_rest_server(port, platform, mode, experiment_id=None):
         os.makedirs(LOG_DIR)
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
-    process = Popen(cmds)#, stdout=stdout_file, stderr=stderr_file)
+    process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
     return process
 
 def set_trial_config(experiment_config, port):
