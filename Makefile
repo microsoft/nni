@@ -1,10 +1,12 @@
 BIN_PATH ?= ${HOME}/.local/bin
 INSTALL_PREFIX ?= ${HOME}/.local
-PIP_MODE ?= --user
 EXAMPLES_PATH ?= ${HOME}/nni/examples
 WHOAMI := $(shell whoami)
-.PHONY: build install uninstall dev-install
 YARN := $(INSTALL_PREFIX)/yarn/bin/yarn
+ifndef TRAVIS
+PIP_MODE ?= --user
+endif
+.PHONY: build install uninstall dev-install
 
 build:
 	### Building NNI Manager ###
