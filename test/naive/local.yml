@@ -17,6 +17,6 @@ assessor:
     classFileName: naive_assessor.py
     className: NaiveAssessor
 trial:
-    command: /home/travis/virtualenv/python3.6.3/bin/python3 naive_trial.py
+    command: python3 naive_trial.py
     codeDir: .
     gpuNum: 0
