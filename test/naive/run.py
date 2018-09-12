@@ -80,5 +80,5 @@ if __name__ == '__main__':
         print(RED + 'FAIL' + CLEAR)
         print('%r' % e)
         traceback.print_exc()
-
+    raise Exception("TEST ERROR")
     subprocess.run(['nnictl', 'stop'])

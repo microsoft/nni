@@ -1,10 +1,13 @@
 BIN_PATH ?= ${HOME}/.local/bin
 INSTALL_PREFIX ?= ${HOME}/.local
-PIP_MODE ?= --user
 EXAMPLES_PATH ?= ${HOME}/nni/examples
 WHOAMI := $(shell whoami)
-.PHONY: build install uninstall dev-install
 YARN := $(INSTALL_PREFIX)/yarn/bin/yarn
+PYTHON ?= python3
+ifndef TRAVIS
+PIP_MODE ?= --user
+endif
+.PHONY: build install uninstall dev-install
 
 build:
 	### Building NNI Manager ###
@@ -63,7 +66,7 @@ install:
 pip-install:
     ifneq ('$(HOME)', '/root')
         ifeq (${WHOAMI}, root)
-			### Sorry, sudo make install is not supported ###
+			### Sorry, sudo pip is not supported ###
 			exit 1
         endif
     endif
