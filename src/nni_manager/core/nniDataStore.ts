@@ -217,6 +217,9 @@ class NNIDataStore implements DataStore {
                         jobInfo.logPath = record.logPath;
                     }
                     jobInfo.endTime = record.timestamp;
+                    if (jobInfo.startTime === undefined && record.timestamp !== undefined) {
+                        jobInfo.startTime = record.timestamp;
+                    }
                 default:
             }
             jobInfo.status = this.getJobStatusByLatestEvent(record.event);
