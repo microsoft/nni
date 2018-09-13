@@ -2,7 +2,7 @@ authorName: default
 experimentName: example_auto-gbdt
 trialConcurrency: 1
 maxExecDuration: 10h
-maxTrialNum: 1
+maxTrialNum: 10
 #choice: local, remote
 trainingServicePlatform: local
 searchSpacePath: ~/nni/examples/trials/auto-gbdt/search_space.json
