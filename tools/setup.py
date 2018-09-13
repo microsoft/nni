@@ -10,7 +10,8 @@ setuptools.setup(
         'requests',
         'pyyaml',
         'psutil',
-        'astor'
+        'astor',
+        'schema'
     ],
 
     author = 'Microsoft NNI Team',

@@ -80,7 +80,8 @@ setup(
         'pymc3',
         'pyyaml',
         'requests',
-        'scipy'
+        'scipy',
+        'schema'
         
     ],
     dependency_links = [
@@ -89,5 +90,8 @@ setup(
 
     cmdclass={
         'install': CustomInstallCommand
+    },
+    entry_points={
+        'console_scripts': ['nnictl = nnicmd.nnictl:parse_args']
     }
 )

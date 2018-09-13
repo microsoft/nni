@@ -22,9 +22,11 @@
 import json
 import os
 import shutil
+import string
 from subprocess import Popen, PIPE, call
 import tempfile
 from nni_annotation import *
+import random
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick
 from .url_utils import cluster_metadata_url, experiment_url
@@ -125,7 +127,7 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
-        path = os.path.join(tempfile.gettempdir(), 'nni', 'annotation')
+        path = os.path.join(tempfile.gettempdir(), 'nni', 'annotation', ''.join(random.sample(string.ascii_letters + string.digits, 8)))
         if os.path.isdir(path):
             shutil.rmtree(path)
         os.makedirs(path)

@@ -19,11 +19,12 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import { Client } from 'ssh2';
-import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from '../../common/log';
+import { randomSelect } from '../../common/utils';
 import { GPUInfo } from '../common/gpuData';
-import { RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineScheduleInfo, ScheduleResultType } from './remoteMachineData';
+import { RemoteMachineMeta, RemoteMachineScheduleResult, ScheduleResultType } from './remoteMachineData';
 
 /**
  * A simple GPU scheduler implementation
@@ -45,80 +46,62 @@ export class GPUScheduler {
      * Schedule a machine according to the constraints (requiredGPUNum)
      * @param requiredGPUNum required GPU number
      */
-    public scheduleMachine(requiredGPUNum : Number | undefined, trialJobId : string) : RemoteMachineScheduleResult {
-        const deferred: Deferred<RemoteMachineScheduleResult> = new Deferred<RemoteMachineScheduleResult>();
-        let scheduleResult : RemoteMachineScheduleResult = {
-            resultType : ScheduleResultType.TMP_NO_AVAILABLE_GPU,
-            scheduleInfo : undefined
-        };
-        
-        // Step 0: Check if required GPU number not exceeds the total GPU number in all machines
-        const eligibleRM : RemoteMachineMeta[] = Array.from(this.machineSSHClientMap.keys()).filter((rmMeta : RemoteMachineMeta) =>
-                 rmMeta.gpuSummary === undefined || requiredGPUNum === undefined || rmMeta.gpuSummary.gpuCount >= requiredGPUNum );
-        if(eligibleRM.length == 0) {
+    public scheduleMachine(requiredGPUNum: number, trialJobId : string) : RemoteMachineScheduleResult {
+        assert(requiredGPUNum >= 0);
+        const allRMs: RemoteMachineMeta[] = Array.from(this.machineSSHClientMap.keys());
+        assert(allRMs.length > 0);
+
+        // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
+        const eligibleRM: RemoteMachineMeta[] = allRMs.filter((rmMeta : RemoteMachineMeta) =>
+                 rmMeta.gpuSummary === undefined || requiredGPUNum === 0 || rmMeta.gpuSummary.gpuCount >= requiredGPUNum);
+        if (eligibleRM.length === 0) {
             // If the required gpu number exceeds the upper limit of all machine's GPU number
             // Return REQUIRE_EXCEED_TOTAL directly
             return ({
-                resultType : ScheduleResultType.REQUIRE_EXCEED_TOTAL,
-                scheduleInfo : undefined
+                resultType: ScheduleResultType.REQUIRE_EXCEED_TOTAL,
+                scheduleInfo: undefined
             });
         }
 
-        // Step 1: Generate GPU resource map for remote machines
-        const totalResourceMap : Map<RemoteMachineMeta, GPUInfo[]>  = this.gpuResourceDetection(requiredGPUNum);
-        
-        // Step 2: Find machine whose GPU can be allocated based on user GPU requirement, and allocate GPU
-        for (const rmMeta of Array.from(totalResourceMap.keys())) {
-            const gpuInfos : GPUInfo[] | undefined = totalResourceMap.get(rmMeta);
-            if(gpuInfos !== undefined && (requiredGPUNum === undefined ||  gpuInfos.length >= requiredGPUNum)) {
-                const allocatedGPUIndex : number[] = Array();
-
-                // Allocate
-                gpuInfos.forEach((gpuInfo : GPUInfo) => {
-                    rmMeta.gpuReservation.set(gpuInfo.index, trialJobId);
-                    allocatedGPUIndex.push(gpuInfo.index);
-                });
-
-                // Construct scheduling return object
-                const sshClient : Client | undefined = this.machineSSHClientMap.get(rmMeta);
-                if(sshClient !== undefined) {
-                    this.log.info(`Found available machine, trialJobId is ${trialJobId}, ip is ${rmMeta.ip}, gpu allocated is ${allocatedGPUIndex.toString()}`);
-                    // We found the first available machine whose GPU resource can match user requirement
-                    return  {
-                        resultType : ScheduleResultType.SUCCEED,
-                        scheduleInfo : {
-                            rmMeta : rmMeta,
-                            client : sshClient,
-                            cuda_visible_device : allocatedGPUIndex.join(',')
-                        }
-                    }; 
-                }
+        // Step 2: Allocate Host/GPU for specified trial job
+        // Currenty the requireGPUNum parameter for all trial jobs are identical.
+        if (requiredGPUNum > 0) {
+            // Trial job requires GPU
+            const result: RemoteMachineScheduleResult | undefined = this.scheduleGPUHost(requiredGPUNum, trialJobId);
+            if (result !== undefined) {
+                return result;
             }
-        }        
-        
-        // Step 3: If not found machine whose GPU is availabe, then find the first machine whose GPU summary is unknown
-        for (const rmMeta of Array.from(this.machineSSHClientMap.keys())) {        
-            const client : Client | undefined = this.machineSSHClientMap.get(rmMeta);
-            if(rmMeta.gpuSummary == undefined && client !== undefined) {
-                // We found the firstmachine whose GPU summary is unknown
-                return {
-                    resultType : ScheduleResultType.SUCCEED,
-                    scheduleInfo :{
-                        rmMeta : rmMeta,
-                        client : client,
-                        //Since gpu information is unknown, make all GPU resources visible to the job
-                        cuda_visible_device : ''
-                    }
-                };
-            }
-        };
-        
-        this.log.warning(`Scheduler: trialJob id ${trialJobId}, no machine can be scheduled, resolve as TMP_NO_AVAILABLE_GPU `);
-        // Otherwise, no machine can be scheduled, resolve as TMP_NO_AVAILABLE_GPU 
+        } else {
+            // Trail job does not need GPU
+            const allocatedRm: RemoteMachineMeta = this.selectMachine(allRMs);
+
+            return this.allocateHost(requiredGPUNum, allocatedRm, [], trialJobId);
+        }
+        this.log.warning(`Scheduler: trialJob id ${trialJobId}, no machine can be scheduled, return TMP_NO_AVAILABLE_GPU `);
+
         return {
             resultType : ScheduleResultType.TMP_NO_AVAILABLE_GPU,
             scheduleInfo : undefined
         };
+    }
+
+    private scheduleGPUHost(requiredGPUNum: number, trialJobId: string): RemoteMachineScheduleResult | undefined {
+        const totalResourceMap: Map<RemoteMachineMeta, GPUInfo[]> = this.gpuResourceDetection();
+        const qualifiedRMs: RemoteMachineMeta[] = [];
+        totalResourceMap.forEach((gpuInfos: GPUInfo[], rmMeta: RemoteMachineMeta) => {
+            if (gpuInfos !== undefined && gpuInfos.length >= requiredGPUNum) {
+                qualifiedRMs.push(rmMeta);
+            }
+        });
+        if (qualifiedRMs.length > 0) {
+            const allocatedRm: RemoteMachineMeta = this.selectMachine(qualifiedRMs);
+            const gpuInfos: GPUInfo[] | undefined = totalResourceMap.get(allocatedRm);
+            if (gpuInfos !== undefined) { // should always true
+                return this.allocateHost(requiredGPUNum, allocatedRm, gpuInfos, trialJobId);
+            } else {
+                assert(false, 'gpuInfos is undefined');
+            }
+        }
     }
 
     /**
@@ -128,33 +111,56 @@ export class GPUScheduler {
      * @param availableGPUMap available GPU resource filled by this detection
      * @returns Available GPU number on this remote machine
      */
-    private gpuResourceDetection(requiredGPUNum : Number | undefined) : Map<RemoteMachineMeta, GPUInfo[]> {
+    private gpuResourceDetection() : Map<RemoteMachineMeta, GPUInfo[]> {
         const totalResourceMap : Map<RemoteMachineMeta, GPUInfo[]> = new Map<RemoteMachineMeta, GPUInfo[]>();
         this.machineSSHClientMap.forEach((client: Client, rmMeta: RemoteMachineMeta) => {
             // Assgin totoal GPU count as init available GPU number
-            if(rmMeta.gpuSummary !== undefined) {
-                const availableGPUs : GPUInfo[] = Array();
-                if(rmMeta.gpuReservation === undefined) {
+            if (rmMeta.gpuSummary !== undefined) {
+                const availableGPUs: GPUInfo[] = [];
+                if (rmMeta.gpuReservation === undefined) {
                     rmMeta.gpuReservation = new Map<number, string>();
                 }
-                const gpuReservation = rmMeta.gpuReservation;
 
                 rmMeta.gpuSummary.gpuInfos.forEach((gpuInfo: GPUInfo) => {
-                    //this.log.info(`GPU index:${gpuInfo.index}, activeProcessNum is ${gpuInfo.activeProcessNum}, GPU reservation is ${JSON.stringify([...gpuReservation])}`);
-                    // if the GPU has active process, OR be reserved by a job, 
+                    // if the GPU has active process, OR be reserved by a job,
                     // We should NOT allocate this GPU
-                    if (gpuInfo.activeProcessNum === 0
-                        && !gpuReservation.has(gpuInfo.index)
-                        && requiredGPUNum !== undefined
-                        && availableGPUs.length < requiredGPUNum) {
+                    if (gpuInfo.activeProcessNum === 0 && !rmMeta.gpuReservation.has(gpuInfo.index)) {
                         availableGPUs.push(gpuInfo);
                     }
                 });
-
                 totalResourceMap.set(rmMeta, availableGPUs);
             }
         });
 
         return totalResourceMap;
+    }
+
+    private selectMachine(rmMetas: RemoteMachineMeta[]): RemoteMachineMeta {
+        assert(rmMetas !== undefined && rmMetas.length > 0);
+
+        return randomSelect(rmMetas);
+    }
+
+    private selectGPUsForTrial(gpuInfos: GPUInfo[], requiredGPUNum: number): GPUInfo[] {
+        // Sequentially allocate GPUs
+        return gpuInfos.slice(0, requiredGPUNum);
+    }
+
+    private allocateHost(requiredGPUNum: number, rmMeta: RemoteMachineMeta,
+                         gpuInfos: GPUInfo[], trialJobId: string): RemoteMachineScheduleResult {
+        assert(gpuInfos.length >= requiredGPUNum);
+        const allocatedGPUs: GPUInfo[] = this.selectGPUsForTrial(gpuInfos, requiredGPUNum);
+
+        allocatedGPUs.forEach((gpuInfo: GPUInfo) => {
+            rmMeta.gpuReservation.set(gpuInfo.index, trialJobId);
+        });
+
+        return {
+            resultType: ScheduleResultType.SUCCEED,
+            scheduleInfo: {
+                rmMeta: rmMeta,
+                cuda_visible_device: allocatedGPUs.map((gpuInfo: GPUInfo) => { return gpuInfo.index; }).join(',')
+            }
+        };
     }
 }

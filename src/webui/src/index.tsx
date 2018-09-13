@@ -10,12 +10,10 @@ import TrialStatus from './components/TrialStatus';
 import Tensor from './components/Tensor';
 import Control from './components/Control';
 import Sessionpro from './components/Sessionpro';
-import Logdetail from './components/Logdetail';
 import './index.css';
 
 ReactDOM.render(
     <Router history={browserHistory}>
-        <Route path="/log" component={Logdetail} />
         <Route path="/" component={App}>
             <IndexRedirect to="/oview" />
             <Route path="/oview" component={Sessionpro} />

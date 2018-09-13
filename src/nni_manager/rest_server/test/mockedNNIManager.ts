@@ -26,7 +26,7 @@ import { MetricDataRecord, MetricType, TrialJobInfo } from '../../common/datasto
 import { MethodNotImplementedError } from '../../common/errors';
 import {
     ExperimentParams, ExperimentProfile, Manager, ProfileUpdateType,
-    TrialJobStatistics
+    TrialJobStatistics, NNIManagerStatus
 } from '../../common/manager';
 import {
     TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
@@ -37,6 +37,12 @@ export const testManagerProvider: Provider = {
 };
 
 export class MockedNNIManager extends Manager {
+    public getStatus(): NNIManagerStatus {
+        return {
+            status: 'EXPERIMENT_RUNNING',
+            errors: []
+        }
+    }
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
         return Promise.resolve();
     }
@@ -65,9 +71,9 @@ export class MockedNNIManager extends Manager {
         const jobDetail: TrialJobDetail = {
             id: '1234',
             status: 'RUNNING',
-            submitTime: new Date(),
-            startTime: new Date(),
-            endTime: new Date(),
+            submitTime: Date.now(),
+            startTime: Date.now(),
+            endTime: Date.now(),
             tags: ['test'],
             // tslint:disable-next-line:no-http-string
             url: 'http://test',
@@ -108,8 +114,8 @@ export class MockedNNIManager extends Manager {
         const jobInfo: TrialJobInfo = {
             id: '1234',
             status: 'SUCCEEDED',
-            startTime: new Date(),
-            endTime: new Date()
+            startTime: Date.now(),
+            endTime: Date.now()
         };
         deferred.resolve(jobInfo);
 
@@ -137,8 +143,8 @@ export class MockedNNIManager extends Manager {
             },
             id: '2345',
             execDuration: 0,
-            startTime: new Date(),
-            endTime: new Date(),
+            startTime: Date.now(),
+            endTime: Date.now(),
             revision: 0
         };
 
@@ -148,15 +154,15 @@ export class MockedNNIManager extends Manager {
         const job1: TrialJobInfo = {
             id: '1234',
             status: 'SUCCEEDED',
-            startTime: new Date(),
-            endTime: new Date(),
+            startTime: Date.now(),
+            endTime: Date.now(),
             finalMetricData: 'lr: 0.01, val accuracy: 0.89, batch size: 256'
         };
         const job2: TrialJobInfo = {
             id: '3456',
             status: 'FAILED',
-            startTime: new Date(),
-            endTime: new Date(),
+            startTime: Date.now(),
+            endTime: Date.now(),
             finalMetricData: ''
         };
 
