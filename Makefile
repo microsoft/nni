@@ -11,7 +11,7 @@ else  # is normal user
     INSTALL_PREFIX ?= ${HOME}/.local
     EXAMPLES_PATH ?= ${HOME}/nni/examples
     ifndef VIRTUAL_ENV
-	PIP_MODE ?= --user
+        PIP_MODE ?= --user
     endif
 endif
 
@@ -80,6 +80,8 @@ build:
 	cd tools && python3 setup.py build
 
 
+# Standard installation target
+# Must be invoked after building
 .PHONY: install
 install: install-python-modules
 install: install-node-modules
@@ -89,6 +91,15 @@ install:
 	#$(_INFO) Complete! You may want to add $(BIN_PATH) to your PATH environment $(_END)
 
 
+# Target for remote machine workers
+# Only installs core SDK module
+.PHONY: remote-machine-install
+remote-machine-install:
+	cd src/sdk/pynni && python3 setup.py install $(PIP_MODE)
+
+
+# All-in-one target
+# Installs NNI as well as its dependencies, and update bashrc to set PATH
 .PHONY: easy-install
 easy-install: check-perm
 easy-install: install-dependencies
@@ -102,6 +113,8 @@ easy-install:
 	#$(_INFO) Complete! #(_END)
 
 
+# Target for setup.py
+# Do not invoke this manually
 .PHONY: pip-install
 pip-install: install-dependencies
 pip-install: build
@@ -110,39 +123,13 @@ pip-install: install-scripts
 pip-install: install-examples
 
 
+# Target for NNI developers
+# Creates symlinks instead of copying files
 .PHONY: dev-install
+dev-install: check-dev-env
+dev-install: install-dev-modules
+dev-install: install-scripts
 dev-install:
-	#$(_INFO) Checking permission (you should not develop NNI as root) $(_END)
-	[ `id -u` -ne 0 ] || exit 1
-	
-	mkdir -p $(BIN_PATH)
-	mkdir -p $(INSTALL_PREFIX)/nni
-	
-	#$(_INFO) Installing NNI Manager $(_END)
-	ln -sf $(PWD)/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
-	ln -sf $(PWD)/src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
-	
-	#$(_INFO) Installing Web UI $(_END)
-	ln -sf $(PWD)/src/webui $(INSTALL_PREFIX)/nni/webui
-	
-	#$(_INFO) Installing Python SDK $(_END)
-	cd src/sdk/pynni && pip3 install $(PIP_MODE) -e .
-	
-	#$(_INFO) Installing nnictl $(_END)
-	cd tools && pip3 install $(PIP_MODE) -e .
-	
-	#$(_INFO) Creating scripts $(_END)
-	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
-	echo 'cd $(INSTALL_PREFIX)/nni/nni_manager' >> $(BIN_PATH)/nnimanager
-	echo 'node main.js $$@' >> $(BIN_PATH)/nnimanager
-	chmod +x $(BIN_PATH)/nnimanager
-	
-	echo '#!/bin/sh' > $(BIN_PATH)/nnictl
-	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager \' >> $(BIN_PATH)/nnictl
-	echo 'WEB_UI_FOLDER=$(INSTALL_PREFIX)/nni/webui \' >> $(BIN_PATH)/nnictl
-	echo 'python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
-	chmod +x $(BIN_PATH)/nnictl
-	
 	#$(_INFO) Complete! You may want to add $(BIN_PATH) to your PATH environment $(_END)
 
 
@@ -220,6 +207,24 @@ install-node-modules:
 	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/webui
 
 
+.PHONY: install-dev-modules
+install-dev-modules:
+	#$(_INFO) Installing Python SDK $(_END)
+	cd src/sdk/pynni && pip3 install $(PIP_MODE) -e .
+	
+	#$(_INFO) Installing nnictl $(_END)
+	cd tools && pip3 install $(PIP_MODE) -e .
+	
+	mkdir -p $(INSTALL_PREFIX)/nni
+	
+	#$(_INFO) Installing NNI Manager $(_END)
+	ln -sf $(PWD)/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
+	ln -sf $(PWD)/src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
+	
+	#$(_INFO) Installing Web UI $(_END)
+	ln -sf $(PWD)/src/webui/build $(INSTALL_PREFIX)/nni/webui
+
+
 .PHONY: install-scripts
 install-scripts:
 	mkdir -p $(BIN_PATH)
@@ -231,7 +236,7 @@ install-scripts:
 	
 	echo '#!/bin/sh' > $(BIN_PATH)/nnictl
 	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager \' >> $(BIN_PATH)/nnictl
-	echo 'NNI_SERVE=$(SERVE_PATH)/serve \' >> $(BIN_PATH)/nnictl
+	echo 'NNI_SERVE=$(SERVE) \' >> $(BIN_PATH)/nnictl
 	echo 'WEB_UI_FOLDER=$(INSTALL_PREFIX)/nni/webui \' >> $(BIN_PATH)/nnictl
 	echo 'python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
 	chmod +x $(BIN_PATH)/nnictl
@@ -266,5 +271,17 @@ check-perm:
 else
 check-perm: ;
 endif
+
+
+.PHONY: check-dev-env
+check-dev-env:
+	#$(_INFO) Checking developing environment... $(_END)
+ifdef _ROOT
+	$(error You should not develop NNI as root)
+endif
+ifdef _MISS_DEPS
+	$(error Please install Node.js, Yarn, and Serve to develop NNI)
+endif
+	#$(_INFO) Pass! $(_END)
 
 # Helper targets end
