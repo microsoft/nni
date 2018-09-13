@@ -6,8 +6,9 @@
 
       python >= 3.5
 
-    python pip should also be correctly installed. You could use "which pip" or "pip -V" to check in Linux. (the current version only supports linux, nni on ubuntu 16.04 or newer has been well tested).
-    TBD: For now, we don's support virtual environment.
+    python pip should also be correctly installed. You could use "which pip" or "pip -V" to check in Linux.
+    
+    * Note: For now, we don't support virtual environment.
 
 * __Install NNI through pip__
 
