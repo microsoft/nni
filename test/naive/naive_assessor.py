@@ -7,7 +7,7 @@ _logger.info('start')
 _result = open('/tmp/nni_assessor_result.txt', 'w')
 
 class NaiveAssessor(Assessor):
-    def __init__(self):
+    def __init__(self, optimize_mode):
         self._killed = set()
         _logger.info('init')
 
