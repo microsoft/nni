@@ -42,7 +42,12 @@ class Tuner(Recoverable):
         User code must override either this function or 'generate_parameters()'.
         parameter_id_list: list of int
         """
-        return [self.generate_parameters(parameter_id) for parameter_id in parameter_id_list]
+        result = []
+        for parameter_id in parameter_id_list:
+            temp = self.generate_parameters(parameter_id)
+            if temp:
+                result.append(temp)
+        return result
 
     def receive_trial_result(self, parameter_id, parameters, reward):
         """Invoked when a trial reports its final result. Must override.

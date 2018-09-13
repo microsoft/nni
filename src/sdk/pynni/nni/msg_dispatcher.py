@@ -89,9 +89,14 @@ class MsgDispatcher(MsgDispatcherBase):
         # data: number or trial jobs
         ids = [_create_parameter_id() for _ in range(data)]
         params_list = self.tuner.generate_multiple_parameters(ids)
-        assert len(ids) == len(params_list)
-        for i, _ in enumerate(ids):
-            send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))
+        #assert len(ids) == len(params_list)
+
+        # when parameters is None.
+        if len(params_list) == 0:
+            send(CommandType.NoMoreTrialJobs, _pack_parameter(ids[0], ''))
+        else:
+            for i, _ in enumerate(ids):
+                send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))
         return True
 
     def handle_update_search_space(self, data):
