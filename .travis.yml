@@ -10,6 +10,7 @@ before_install:
   - export PATH=/usr/local/node/bin:$PATH
   - sudo sh -c 'PATH=/usr/local/node/bin:$PATH yarn global add serve'
 install:
+  - make travis-debug
   - make
   - make install
   - export PATH=$HOME/.nni/bin:$PATH

@@ -28,6 +28,16 @@ SERVE_VERSION ?= 9.6.0
 SERVE_TARBALL ?= serve-$(SERVE_VERSION).tgz
 SERVE_PATH ?= $(INSTALL_PREFIX)/nni/serve
 
+_DEBUG_NODE_VER := $(shell node --version)
+travis-debug:
+	#$(_INFO) travis debug (_END)
+	# $(_DEBUG_NODE_VER)
+	node --version
+	sort --version
+	echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr
+	#$(_INFO) travis debug end (_END)
+
+
 ## Check if dependencies have been installed globally
 ifeq (, $(shell command -v node 2>/dev/null))
     $(info Node.js not found)
