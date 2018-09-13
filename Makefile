@@ -26,7 +26,7 @@ YARN_VERSION ?= v1.9.4
 YARN_TARBALL ?= yarn-$(YARN_VERSION).tar.gz
 YARN_PATH ?= /tmp/nni-yarn
 
-SERVE_VERSION ?= 9.6.0
+SERVE_VERSION ?= 10.0.1
 SERVE_TARBALL ?= serve-$(SERVE_VERSION).tgz
 SERVE_PATH ?= $(INSTALL_PREFIX)/nni/serve
 
