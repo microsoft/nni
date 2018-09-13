@@ -138,8 +138,8 @@ dev-install:
 	chmod +x $(BIN_PATH)/nnimanager
 	
 	echo '#!/bin/sh' > $(BIN_PATH)/nnictl
-	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager \\' >> $(BIN_PATH)/nnictl
-	echo 'WEB_UI_FOLDER=$(INSTALL_PREFIX)/nni/webui \\' >> $(BIN_PATH)/nnictl
+	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager \' >> $(BIN_PATH)/nnictl
+	echo 'WEB_UI_FOLDER=$(INSTALL_PREFIX)/nni/webui \' >> $(BIN_PATH)/nnictl
 	echo 'python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
 	chmod +x $(BIN_PATH)/nnictl
 	
@@ -230,9 +230,9 @@ install-scripts:
 	chmod +x $(BIN_PATH)/nnimanager
 	
 	echo '#!/bin/sh' > $(BIN_PATH)/nnictl
-	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager \\' >> $(BIN_PATH)/nnictl
-	echo 'NNI_SERVE=$(SERVE_PATH)/serve \\' >> $(BIN_PATH)/nnictl
-	echo 'WEB_UI_FOLDER=$(INSTALL_PREFIX)/nni/webui \\' >> $(BIN_PATH)/nnictl
+	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager \' >> $(BIN_PATH)/nnictl
+	echo 'NNI_SERVE=$(SERVE_PATH)/serve \' >> $(BIN_PATH)/nnictl
+	echo 'WEB_UI_FOLDER=$(INSTALL_PREFIX)/nni/webui \' >> $(BIN_PATH)/nnictl
 	echo 'python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
 	chmod +x $(BIN_PATH)/nnictl
 
