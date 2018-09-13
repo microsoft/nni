@@ -1,5 +1,7 @@
 # Setting variables
 
+SHELL := /bin/bash
+
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
@@ -35,7 +37,7 @@ ifeq (, $(shell command -v node 2>/dev/null))
     _MISS_DEPS := 1  # node not found
 else
     _VER := $(shell node --version)
-    _NEWER := $(shell /bin/echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr | head -n 1)
+    _NEWER := $(shell echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr | head -n 1)
     ifneq ($(_VER), $(_NEWER))
         $(info Node.js version not match)
         _MISS_DEPS := 1  # node outdated
@@ -63,9 +65,9 @@ else
 endif
 
 ## Colorful output
-_INFO := $(shell /bin/echo -e '\e[1;36m')
-_WARNING := $(shell /bin/echo -e '\e[1;33m')
-_END := $(shell /bin/echo -e '\e[0m')
+_INFO := $(shell echo -e '\e[1;36m')
+_WARNING := $(shell echo -e '\e[1;33m')
+_END := $(shell echo -e '\e[0m')
 
 # Setting variables end
 
