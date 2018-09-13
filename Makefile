@@ -30,26 +30,32 @@ SERVE_PATH ?= $(INSTALL_PREFIX)/nni/serve
 
 ## Check if dependencies have been installed globally
 ifeq (, $(shell command -v node 2>/dev/null))
+    $(info Node.js not found)
     _MISS_DEPS := 1  # node not found
 else
     _VER := $(shell node --version)
     _NEWER := $(shell echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr | head -n 1)
     ifneq ($(_VER), $(_NEWER))
+        $(info Node.js version not match)
         _MISS_DEPS := 1  # node outdated
     endif
 endif
 ifeq (, $(shell command -v yarnpkg 2>/dev/null))
+    $(info Yarn not found)
     _MISS_DEPS := 1  # yarn not found
 endif
 ifeq (, $(shell command -v serve 2>/dev/null))
+    $(info Serve not found)
     _MISS_DEPS := 1  # serve not found
 endif
 
 ifdef _MISS_DEPS
+    $(info Missing dependencies, use local toolchain)
     NODE := $(NODE_PATH)/bin/node
     YARN := PATH=$${PATH}:$(NODE_PATH)/bin $(YARN_PATH)/bin/yarn
     SERVE := $(SERVE_PATH)/serve
 else
+    $(info All dependencies found, use global toolchain)
     NODE := node
     YARN := yarnpkg
     SERVE := serve
