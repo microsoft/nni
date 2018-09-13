@@ -40,6 +40,7 @@ source ~/.bashrc
 ## **Quick start: run an experiment at local**
 Requirements:
 * NNI installed on your local machine
+* tensorflow installed
 
 Run the following command to create an experiment for [mnist]
 ```bash
