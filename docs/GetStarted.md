@@ -7,7 +7,8 @@
       python >= 3.5
 
     python pip should also be correctly installed. You could use "which pip" or "pip -V" to check in Linux.
-    TBD: For now, we don's support virtual environment.
+    
+    * Note: For now, we don's support virtual environment.
 
 * __Install NNI through pip__
 
