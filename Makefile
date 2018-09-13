@@ -92,8 +92,10 @@ travis-debug:
 	#$(_INFO) travis debug $(_END)
 	# $(_DEBUG_NODE_VER)
 	node --version
-	echo -e "$(NODE_VERSION)\n$(_VER)"
-	echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr
+	/bin/echo -e "$(NODE_VERSION)\n$(_VER)"
+	sh -c 'echo -e "x\ny"'
+	bash -c 'echo -e "x\ny"'
+	/bin/echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr
 	#$(_INFO) travis debug end $(_END)
 
 
