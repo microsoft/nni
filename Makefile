@@ -35,7 +35,7 @@ ifeq (, $(shell command -v node 2>/dev/null))
     _MISS_DEPS := 1  # node not found
 else
     _VER := $(shell node --version)
-    _NEWER := $(shell echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr | head -n 1)
+    _NEWER := $(shell /bin/echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr | head -n 1)
     ifneq ($(_VER), $(_NEWER))
         $(info Node.js version not match)
         _MISS_DEPS := 1  # node outdated
@@ -63,9 +63,9 @@ else
 endif
 
 ## Colorful output
-_INFO := $(shell echo -e '\e[1;36m')
-_WARNING := $(shell echo -e '\e[1;33m')
-_END := $(shell echo -e '\e[0m')
+_INFO := $(shell /bin/echo -e '\e[1;36m')
+_WARNING := $(shell /bin/echo -e '\e[1;33m')
+_END := $(shell /bin/echo -e '\e[0m')
 
 # Setting variables end
 
@@ -85,18 +85,6 @@ build:
 	
 	#$(_INFO) Building nnictl $(_END)
 	cd tools && python3 setup.py build
-
-
-_DEBUG_NODE_VER := $(shell node --version)
-travis-debug:
-	#$(_INFO) travis debug $(_END)
-	# $(_DEBUG_NODE_VER)
-	node --version
-	/bin/echo -e "$(NODE_VERSION)\n$(_VER)"
-	sh -c 'echo -e "x\ny"'
-	bash -c 'echo -e "x\ny"'
-	/bin/echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr
-	#$(_INFO) travis debug end $(_END)
 
 
 # Standard installation target
