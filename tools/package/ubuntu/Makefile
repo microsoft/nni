@@ -1,11 +1,18 @@
-DST := ${PWD}/debian/nni
+DST := $(shell echo $$PWD)/debian/nni
 SRC := ../../..
 
 BIN_PATH := $(DST)/usr/bin
 INSTALL_PREFIX := $(DST)/usr/share
 BASH_COMP_SCRIPT := $(DST)/usr/share/bash-completion/completions/nnictl
+PIP_MODE := "--root=$(DST) --install-layout=deb"
 
-NNI_MAKE := BIN_PATH=$(BIN_PATH) INSTALL_PREFIX=$(INSTALL_PREFIX) BASH_COMP_SCRIPT=$(BASH_COMP_SCRIPT) $(MAKE) -C $(SRC)
+NNI_MAKE := \
+    PATH=$$PATH:/usr/local/bin \
+    BIN_PATH=$(BIN_PATH) \
+    INSTALL_PREFIX=$(INSTALL_PREFIX) \
+    BASH_COMP_SCRIPT=$(BASH_COMP_SCRIPT) \
+    PIP_MODE=$(PIP_MODE) \
+    $(MAKE) -C $(SRC)
 
 build:
 	$(NNI_MAKE) build
@@ -15,7 +22,7 @@ clean:
 
 install:
 	$(NNI_MAKE) install-dependencies
-	$(NNI_MAKE) install-install
+	$(NNI_MAKE) install
 	
 	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
 	echo 'cd /usr/share/nni/nni_manager' >> $(BIN_PATH)/nnimanager
