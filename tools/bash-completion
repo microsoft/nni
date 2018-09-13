@@ -43,11 +43,11 @@ __nnictl_remain_args()
 
 _nnictl()
 {
-    if [ ${#COMP_WORDS[@]} == 2 ]; then
+    if [[ ${#COMP_WORDS[@]} -eq 2 ]]; then
         # completing frst argument from __nnictl_cmds
         COMPREPLY=($(compgen -W "$__nnictl_cmds" -- "${COMP_WORDS[1]}"))
 
-    elif [ ${#COMP_WORDS[@]} == 3 ]; then
+    elif [[ ${#COMP_WORDS[@]} -eq 3 ]]; then
         # completing second argument from __nnictl_${FirstArg}_cmds
         local args=__nnictl_${COMP_WORDS[1]}_cmds
         COMPREPLY=($(compgen -W "${!args}" -- "${COMP_WORDS[2]}"))

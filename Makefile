@@ -8,6 +8,7 @@ ifeq ($(shell id -u), 0)  # is root
     BIN_PATH ?= /usr/bin
     INSTALL_PREFIX ?= /usr/share
     EXAMPLES_PATH ?= $(INSTALL_PREFIX)/nni/examples
+    BASH_COMP_SCRIPT ?= /usr/share/bash-completion/completions/nnictl
 else  # is normal user
     BIN_PATH ?= ${HOME}/.local/bin
     INSTALL_PREFIX ?= ${HOME}/.local
@@ -15,6 +16,7 @@ else  # is normal user
     ifndef VIRTUAL_ENV
         PIP_MODE ?= --user
     endif
+    BASH_COMP_SCRIPT ?= ${HOME}/.bash_completion.d/nnictl
 endif
 
 ## Dependency information
@@ -149,6 +151,7 @@ uninstall:
 	-rm -rf $(INSTALL_PREFIX)/nni
 	-rm -f $(BIN_PATH)/nnimanager
 	-rm -f $(BIN_PATH)/nnictl
+	-rm -f $(BASH_COMP_SCRIPT)
 	-[ $(EXAMPLES_PATH) = ${PWD}/examples ] || rm -rf $(EXAMPLES_PATH)
 
 # Main targets end
@@ -249,6 +252,11 @@ install-scripts:
 	echo 'WEB_UI_FOLDER=$(INSTALL_PREFIX)/nni/webui \' >> $(BIN_PATH)/nnictl
 	echo 'python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
 	chmod +x $(BIN_PATH)/nnictl
+	
+	install -Dm644 tools/bash-completion $(BASH_COMP_SCRIPT)
+ifndef _ROOT
+	echo '[[ -f $(BASH_COMP_SCRIPT) ]] && source $(BASH_COMP_SCRIPT)' >> ~/.bash_completion
+endif
 
 
 .PHONY: install-examples
