@@ -1,0 +1,11 @@
+Source: nni
+Maintainer: Microsoft <nni@microsoft.com>
+Build-Depends: wget, python3-pip, python3-setuptools, python3-astor, python3-json-tricks, python3-psutil, python3-requests, python3-yaml
+# nodejs, yarn
+Standards-Version: 4.2.1
+
+Package: nni
+Architecture: amd64
+Depends: python3, python3-pip, python3-astor, python3-psutil, python3-requests, python3-yaml
+Recommends: python3-numpy, python3-scipy
+Description: An open source AutoML toolkit for neural architecture search and hyper-parameter tuning

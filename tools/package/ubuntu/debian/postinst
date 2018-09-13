@@ -1,0 +1,4 @@
+#!/bin/sh
+
+pip3 install hyperopt
+pip3 install json_tricks
