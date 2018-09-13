@@ -136,7 +136,8 @@ def validate_tuner_content(experiment_config):
     tuner_class_name_dict = {'TPE': 'HyperoptTuner',\
                             'Random': 'HyperoptTuner',\
                             'Anneal': 'HyperoptTuner',\
-                            'Evolution': 'EvolutionTuner'}
+                            'Evolution': 'EvolutionTuner',\
+                            'BatchTuning': 'BatchTuner'}
 
     tuner_algorithm_name_dict = {'TPE': 'tpe',\
                             'Random': 'random_search',\
