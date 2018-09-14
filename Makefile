@@ -56,7 +56,6 @@ ifeq (, $(shell command -v yarnpkg 2>/dev/null))
     $(info $(_INFO) Yarn not found $(_END))
     _MISS_DEPS := 1  # yarn not found
 endif
-$(info $(_INFO) $(shell echo $$PATH) $(_END))
 ifeq (, $(shell command -v serve 2>/dev/null))
     $(info $(_INFO) Serve not found $(_END))
     _MISS_DEPS := 1  # serve not found
