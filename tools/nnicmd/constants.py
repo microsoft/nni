@@ -45,7 +45,9 @@ EXPERIMENT_SUCCESS_INFO = 'Start experiment success! The experiment id is %s, an
                           '         commands                       description\n' \
                           '1. nnictl experiment show        show the information of experiments\n' \
                           '2. nnictl trial ls               list all of trial jobs\n' \
-                          '3. nnictl stop                   stop a experiment\n' \
-                          '4. nnictl trial kill             kill a trial job by id\n' \
-                          '5. nnictl --help                 get help information about nnictl\n' \
-                          '6. nnictl webui url              get the url of web ui'
+                          '3. nnictl log stderr             show stderr log content\n' \
+                          '4. nnictl log stdout             show stdout log content\n' \
+                          '5. nnictl stop                   stop a experiment\n' \
+                          '6. nnictl trial kill             kill a trial job by id\n' \
+                          '7. nnictl webui url              get the url of web ui' \
+                          '8. nnictl --help                 get help information about nnictl\n'
