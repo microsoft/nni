@@ -58,7 +58,7 @@ def get_config():
                         default='./glove.840B.300d.txt', help='dev file')
     parser.add_argument('--root_path', default='./data/',
                         type=str, help='Root path of models')
-    parser.add_argument('--batch_size', type=int, default=2, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=64, help='batch size')
     parser.add_argument('--save_path', type=str,
                         default='./save', help='save path dir')
     parser.add_argument('--learning_rate', type=float, default=0.0001,
@@ -241,8 +241,6 @@ def run_epoch(batches, answer_net, is_training):
             if count % 100 == 0:
                 logger.debug('%d %g except:%g' %
                              (count, used, used / count * len(batches)))
-        if count % 100 == 0:
-            break
     loss = loss_sum / len(batches)
     if is_training:
         return loss
