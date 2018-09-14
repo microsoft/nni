@@ -1,0 +1,84 @@
+# list of commands/arguments
+__nnictl_cmds="create resume update stop trial webui experiment config rest log"
+__nnictl_create_cmds="--config --webuiport"
+__nnictl_resume_cmds="--experiment --manager --webuiport"
+__nnictl_update_cmds="searchspace concurrency duration"
+__nnictl_update_searchspace_cmds="--filename"
+__nnictl_update_concurrency_cmds="--value"
+__nnictl_update_duration_cmds="--value"
+__nnictl_trial_cmds="ls kill"
+__nnictl_trial_kill_cmds="--trialid"
+__nnictl_webui_cmds="start stop url"
+__nnictl_webui_start_cmds="--port"
+__nnictl_experiment_cmds="show"
+__nnictl_config_cmds="show"
+__nnictl_rest_cmds="check"
+__nnictl_log_cmds="stdout stderr"
+__nnictl_log_stdout_cmds="--tail --head --path"
+__nnictl_log_stderr_cmds="--tail --head --path"
+
+
+# list of arguments that accept a file name
+__nnictl_file_args=" --config -c --filename -f "
+
+# list of arguments that accept an experiment ID
+__nnictl_experiment_args=" --experiment -e "
+
+# list of arguments that accept a trial ID
+__nnictl_trial_args=" --trialid -t "
+
+
+# remove already set arguments from candidates
+__nnictl_remain_args()
+{
+    local ret=${!1}  # ret = $__nnictl_xxx_cmds
+    # for arg in COMP_WORDS[:-1]:
+    for arg in "${COMP_WORDS[@]::${#COMP_WORDS[@]}-1}"; do
+        if [[ $arg == --* ]]; then
+            local ret=${ret/$arg/}  # remove it from $ret
+        fi
+    done
+    echo $ret
+}
+
+_nnictl()
+{
+    if [[ ${#COMP_WORDS[@]} -eq 2 ]]; then
+        # completing frst argument from __nnictl_cmds
+        COMPREPLY=($(compgen -W "$__nnictl_cmds" -- "${COMP_WORDS[1]}"))
+
+    elif [[ ${#COMP_WORDS[@]} -eq 3 ]]; then
+        # completing second argument from __nnictl_${FirstArg}_cmds
+        local args=__nnictl_${COMP_WORDS[1]}_cmds
+        COMPREPLY=($(compgen -W "${!args}" -- "${COMP_WORDS[2]}"))
+
+    elif [[ ${COMP_WORDS[-2]} != -* ]]; then
+        # last argument does not starts with "-", so this one is likely to be "--xxx"
+        if [[ ${COMP_WORDS[2]} == -* ]]; then
+            # second argument starts with "-", use __nnictl_${FirstArg}_cmds
+            local args=__nnictl_${COMP_WORDS[1]}_cmds
+        else
+            # second argument is a word, use __nnictl_${FirstArg}_{SecondArg}_cmds
+            local args=__nnictl_${COMP_WORDS[1]}_${COMP_WORDS[2]}_cmds
+        fi
+        # remove already set arguments from candidates
+        local remain_args=$(__nnictl_remain_args ${args})
+        COMPREPLY=($(compgen -W "$remain_args" -- "${COMP_WORDS[-1]}"))
+
+    elif [[ $__nnictl_file_args =~ " ${COMP_WORDS[-2]} " ]]; then
+        # complete file names
+        COMPREPLY=($(compgen -f "${COMP_WORDS[-1]}"))
+
+    elif [[ $__nnictl_experiment_args =~ " ${COMP_WORDS[-2]} " ]]; then
+        # complete experiment IDs
+        local experiments=$(ls ~/nni/experiments 2>/dev/null)
+        COMPREPLY=($(compgen -W "$experiments" -- "${COMP_WORDS[-1]}"))
+
+    elif [[ $__nnictl_trial_args =~ " ${COMP_WORDS[-2]} " ]]; then
+        # complete trial IDs
+        local trials=$(ls -d ~/nni/experiments/*/trials/* 2>/dev/null | grep -o '[^/]*$')
+        COMPREPLY=($(compgen -W "$trials" -- "${COMP_WORDS[-1]}"))
+    fi
+}
+
+complete -F _nnictl nnictl

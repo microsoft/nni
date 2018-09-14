@@ -8,6 +8,7 @@ before_install:
   - tar xf node-v10.9.0-linux-x64.tar.xz
   - sudo mv node-v10.9.0-linux-x64 /usr/local/node
   - export PATH=/usr/local/node/bin:$PATH
+  - sudo sh -c 'PATH=/usr/local/node/bin:$PATH yarn global add serve'
 install:
   - make
   - make install
