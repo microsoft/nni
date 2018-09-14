@@ -137,7 +137,7 @@ def validate_tuner_content(experiment_config):
                             'Random': 'HyperoptTuner',\
                             'Anneal': 'HyperoptTuner',\
                             'Evolution': 'EvolutionTuner',\
-                            'BatchTuning': 'BatchTuner'}
+                            'BatchTuner': 'BatchTuner'}
 
     tuner_algorithm_name_dict = {'TPE': 'tpe',\
                             'Random': 'random_search',\
