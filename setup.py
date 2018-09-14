@@ -25,7 +25,7 @@ from setuptools.command.install import install
 from subprocess import Popen
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 class CustomInstallCommand(install):
     '''a customized install class in pip module'''
@@ -37,23 +37,24 @@ class CustomInstallCommand(install):
             print('Error: Make Install Failed')
             exit(-1)
 
-    def writeEnvironmentVariables(self, variable_name):
-        '''write an environment variable into ~/.bashrc'''
+    def exportToPath(self, path):
+        '''add path to Path through ~/.bashrc'''
         paths = os.getenv("PATH").split(':')
-        bin_path = os.path.join(os.getenv('HOME'),'.local/'+variable_name+'/bin')
+        bin_path = os.path.join(os.getenv('HOME'),'.local/'+path)
         
         if bin_path not in paths:
             bashrc_path = os.path.join(os.getenv('HOME'), '.bashrc')
             process = Popen('echo export PATH=' + bin_path + ':\$PATH >> ' + bashrc_path, shell=True)
             if process.wait() != 0:
-                print('Error: Write Environment Variables Failed')
+                print('Error: Write Bashrc Failed')
                 exit(-1)
 
     def run(self):
         install.run(self)
         self.makeInstall()
-        self.writeEnvironmentVariables('node')
-        self.writeEnvironmentVariables('yarn')
+        self.exportToPath('bin')
+        self.exportToPath('node/bin')
+        self.exportToPath('yarn/bin')
 
 setup(
     name = 'NNI',
@@ -61,7 +62,7 @@ setup(
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
-    long_description = read('docs/NNICTLDOC.md'),
+    long_description = read('README.md'),
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
 
@@ -74,17 +75,13 @@ setup(
     python_requires = '>=3.5',
     install_requires = [
         'astor',
+        'hyperopt',
         'json_tricks',
         'numpy',
         'psutil',
-        'pymc3',
         'pyyaml',
         'requests',
         'scipy'
-        
-    ],
-    dependency_links = [
-        'git+https://github.com/hyperopt/hyperopt.git',
     ],
 
     cmdclass={
