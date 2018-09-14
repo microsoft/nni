@@ -366,7 +366,7 @@ class LocalTrainingService implements TrainingService {
         const jobId: string = uniqueString(5);
         const workDir: string = path.join(this.rootDir, 'hostjobs', jobId);
         await cpp.exec(`mkdir -p ${workDir}`);
-        const wrappedCmd: string = `cd ${workDir} && ${form.cmd}>stdout 2>stderr`;
+        const wrappedCmd: string = `cd ${workDir} && ${form.cmd} >stdout 2>stderr`;
         this.log.debug(`runHostJob: command: ${wrappedCmd}`);
         const process: cp.ChildProcess = cp.exec(wrappedCmd);
         const jobDetail: LocalTrialJobDetail = {

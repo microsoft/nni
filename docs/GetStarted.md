@@ -6,17 +6,17 @@
 
       python >= 3.5
 
-    python pip should also be correctly installed. You could use "which pip" or "pip -V" to check in Linux.
+    python pip should also be correctly installed. You could use "which pip" or "pip -V" to check in Linux. (the current version only supports linux, nni on ubuntu 16.04 or newer has been well tested).
     TBD: For now, we don's support virtual environment.
 
 * __Install NNI through pip__
 
-      pip3 install -v --user git+https://github.com/Microsoft/nni.git
+      pip3 install -v --user git+https://github.com/Microsoft/nni.git@v0.1
       source ~/.bashrc
 
 * __Install NNI through source code__
    
-      git clone https://github.com/Microsoft/nni.git
+      git clone -b v0.1 https://github.com/Microsoft/nni.git
       cd nni
       chmod +x install.sh
       source install.sh
@@ -36,12 +36,14 @@ An experiment is to run multiple trial jobs, each trial job tries a configuratio
 
 This command will be filled in the yaml configure file below. Please refer to [here]() for how to write your own trial.
 
-**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here]()), but for simplicity, here we choose a tuner provided by NNI as below:
+**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](CustomizedTuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
 
-      tunerName: TPE
-      optimizationMode: maximize
+      tuner:
+        builtinTunerName: TPE
+        classArgs:
+          optimize_mode: maximize
 
-*tunerName* is used to specify a tuner in NNI, *optimizationMode* is to indicate whether you want to maximize or minimize your trial's result.
+*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found [here]()), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
 
 **Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the yaml configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
 
@@ -73,7 +75,7 @@ trial:
   gpuNum: 0
 ``` 
 
-Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here]() for details). For trial, we should provide *trialCommand* which is the command to run the trial, provide *trialCodeDir* where the trial code is. The command will be executed in this directory. We should also provide how many GPUs a trial requires.
+Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here](../tools/annotation/README.md) for details). For trial, we should provide *trialCommand* which is the command to run the trial, provide *trialCodeDir* where the trial code is. The command will be executed in this directory. We should also provide how many GPUs a trial requires.
 
 With all these steps done, we can run the experiment with the following command:
 
