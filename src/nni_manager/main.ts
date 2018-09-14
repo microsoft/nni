@@ -31,7 +31,7 @@ import { parseArg, uniqueString, mkDirP, getLogDir } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
-import { RestServer } from './rest_server/server';
+import { NNIRestServer } from './rest_server/nniRestServer';
 import { LocalTrainingServiceForGPU } from './training_service/local/localTrainingServiceForGPU';
 import {
     RemoteMachineTrainingService
@@ -64,7 +64,7 @@ function usage(): void {
     console.info('usage: node main.js --port <port> --mode <local/remote> --start_mode <new/resume> --experiment_id <id>');
 }
 
-let port: number = RestServer.DEFAULT_PORT;
+let port: number = NNIRestServer.DEFAULT_PORT;
 const strPort: string = parseArg(['--port', '-p']);
 if (strPort && strPort.length > 0) {
     port = parseInt(strPort, 10);
@@ -94,7 +94,7 @@ mkDirP(getLogDir()).then(async () => {
     const log: Logger = getLogger();
     try {
         await initContainer(mode);
-        const restServer: RestServer = component.get(RestServer);
+        const restServer: NNIRestServer = component.get(NNIRestServer);
         await restServer.start(port);
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {

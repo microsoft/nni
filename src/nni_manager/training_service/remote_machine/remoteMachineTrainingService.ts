@@ -19,6 +19,7 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
@@ -54,8 +55,6 @@ import { SSHClientUtility } from './sshClientUtility';
 class RemoteMachineTrainingService implements TrainingService {
     private machineSSHClientMap: Map<RemoteMachineMeta, Client>;
     private trialJobsMap: Map<string, RemoteMachineTrialJobDetail>;
-    private experimentId: string | undefined;
-    // Experiment root directory
     private expRootDir: string;
     private remoteExpRootDir: string;
     private trialConfig: TrialConfig | undefined;
@@ -72,9 +71,8 @@ class RemoteMachineTrainingService implements TrainingService {
         this.machineSSHClientMap = new Map<RemoteMachineMeta, Client>();
         this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
         this.jobQueue = [];
-        this.experimentId = getExperimentId();
         this.expRootDir = getExperimentRootDir();
-        this.remoteExpRootDir = this.getRemoteModeExperimentRootDir();
+        this.remoteExpRootDir = this.getRemoteExperimentRootDir();
         this.timer = timer;
         this.log = getLogger();
     }
@@ -183,7 +181,7 @@ class RemoteMachineTrainingService implements TrainingService {
             const trialJobDetail: RemoteMachineTrialJobDetail = new RemoteMachineTrialJobDetail(
                 trialJobId,
                 'WAITING',
-                new Date(),
+                Date.now(),
                 trialWorkingFolder,
                 form);
             this.jobQueue.push(trialJobId);
@@ -326,6 +324,7 @@ class RemoteMachineTrainingService implements TrainingService {
             }
             this.machineSSHClientMap.set(rmMeta, conn);
             conn.on('ready', async () => {
+                this.machineSSHClientMap.set(rmMeta, conn);
                 await this.initRemoteMachineOnConnected(rmMeta, conn);
                 if (++connectedRMNum === rmMetaList.length) {
                     deferred.resolve();
@@ -392,7 +391,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
             trialJobDetail.status = 'RUNNING';
             trialJobDetail.url = `file://${rmScheduleInfo.rmMeta.ip}:${trialWorkingFolder}`;
-            trialJobDetail.startTime = new Date();
+            trialJobDetail.startTime = Date.now();
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
 
             deferred.resolve(true);
@@ -412,7 +411,13 @@ class RemoteMachineTrainingService implements TrainingService {
             throw new Error('trial config is not initialized');
         }
         const cuda_visible_device: string = rmScheduleInfo.cuda_visible_device;
-        const sshClient: Client = rmScheduleInfo.client;
+        const sshClient: Client | undefined = this.machineSSHClientMap.get(rmScheduleInfo.rmMeta);
+        if (sshClient === undefined) {
+            assert(false, 'sshClient is undefined.');
+
+            // for lint
+            return;
+        }
         const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);
 
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${trialWorkingFolder}`, sshClient);
@@ -472,9 +477,9 @@ class RemoteMachineTrainingService implements TrainingService {
             path.join(localDir, 'run.sh'), path.join(remoteDir, 'run.sh'), sshClient);
         SSHClientUtility.remoteExeCommand(`bash ${path.join(remoteDir, 'run.sh')}`, sshClient);
 
-        const jobDetail: RemoteMachineTrialJobDetail =  new RemoteMachineTrialJobDetail(jobId, 'RUNNING', new Date(), remoteDir, form);
+        const jobDetail: RemoteMachineTrialJobDetail =  new RemoteMachineTrialJobDetail(jobId, 'RUNNING', Date.now(), remoteDir, form);
         jobDetail.rmMeta = rmMeta;
-        jobDetail.startTime = new Date();
+        jobDetail.startTime = Date.now();
         this.trialJobsMap.set(jobId, jobDetail);
         this.log.debug(`runHostJob: return: ${JSON.stringify(jobDetail)} `);
 
@@ -510,7 +515,7 @@ class RemoteMachineTrainingService implements TrainingService {
                     } else {
                         trialJob.status = 'FAILED';
                     }
-                    trialJob.endTime = new Date(parseInt(timestamp, 10));
+                    trialJob.endTime = parseInt(timestamp, 10);
                 }
                 this.log.info(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
             }
@@ -536,7 +541,7 @@ class RemoteMachineTrainingService implements TrainingService {
         return path.join(this.remoteExpRootDir, 'hostjobs', jobId);
     }
 
-    private getRemoteModeExperimentRootDir(): string{
+    private getRemoteExperimentRootDir(): string{
         return path.join(os.tmpdir(), 'nni', 'experiments', getExperimentId());
     }
 

@@ -21,6 +21,7 @@
 import os
 import psutil
 import json
+import datetime
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick
 from .config_utils import Config
@@ -29,6 +30,18 @@ from .constants import STDERR_FULL_PATH, STDOUT_FULL_PATH
 import time
 from .common_utils import print_normal, print_error, detect_process
 from .webui_utils import stop_web_ui, check_web_ui, start_web_ui
+
+def convert_time_stamp_to_date(content):
+    '''Convert time stamp to date time format'''
+    start_time_stamp = content.get('startTime')
+    end_time_stamp = content.get('endTime')
+    if start_time_stamp:
+        start_time = datetime.datetime.utcfromtimestamp(start_time_stamp // 1000).strftime("%Y/%m/%d %H:%M:%S")
+        content['startTime'] = str(start_time)
+    if end_time_stamp:
+        end_time = datetime.datetime.utcfromtimestamp(end_time_stamp // 1000).strftime("%Y/%m/%d %H:%M:%S")
+        content['endTime'] = str(end_time)
+    return content
 
 def check_rest(args):
     '''check if restful server is running'''
@@ -72,7 +85,10 @@ def trial_ls(args):
     if check_rest_server_quick(rest_port):
         response = rest_get(trial_jobs_url(rest_port), 20)
         if response and response.status_code == 200:
-            print(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+            content = json.loads(response.text)
+            for index, value in enumerate(content):               
+                content[index] = convert_time_stamp_to_date(value)
+            print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
         else:
             print_error('List trial failed...')
     else:
@@ -106,7 +122,8 @@ def list_experiment(args):
     if check_rest_server_quick(rest_port):
         response = rest_get(experiment_url(rest_port), 20)
         if response and response.status_code == 200:
-            print(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+            content = convert_time_stamp_to_date(json.loads(response.text))
+            print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
         else:
             print_error('List experiment failed...')
     else:
