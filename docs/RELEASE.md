@@ -1,4 +1,4 @@
-# Release 0.1.0 - 9/15/2018 
+# Release 0.1.0 - 9/10/2018 (initial release)
 
 Initial release of Neural Network Intelligence (NNI).
 
@@ -19,7 +19,7 @@ Initial release of Neural Network Intelligence (NNI).
    * Others
       * Support simple GPU job scheduling 
 
-
-    
+## Known Issues
+[Known Issues in release 0.1.0](https://github.com/Microsoft/nni/labels/nni010knownissues).
       
    
