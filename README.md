@@ -51,7 +51,7 @@ This command will start an experiment and a WebUI. The WebUI endpoint will be sh
 ## **Please refer to [Get Started Tutorial](docs/GetStarted.md) for more detailed information.**
 ## More tutorials
 * [How to write a trial running on NNI (Mnist as an example)?](docs/WriteYourTrial.md)
-* [Tutorial of NNI python annotation.](tools/annotation/README.md)
+* [Tutorial of NNI python annotation.](tools/nni_annotation/README.md)
 * [Tuners supported by NNI.](src/sdk/pynni/nni/README.md)
 * [How to enable early stop (i.e. assessor) in an experiment?](docs/EnableAssessor.md)
 * [How to run an experiment on multiple machines?](docs/RemoteMachineMode.md)
