@@ -29,8 +29,6 @@ import random
 import numpy as np
 
 from nni.tuner import Tuner
-from . import parameter_expressions
-
 
 TYPE = '_type'
 CHOICE = 'choice'
@@ -48,35 +46,35 @@ class BatchTuner(Tuner):
     }
     '''
     
-    def __init__(self):
+    def __init__(self, optimize_mode):
         self.count = -1
         self.values = []
 
-    def is_valid(self, search_space)
+    def is_valid(self, search_space):
         '''
         Check the search space is valid: only contains 'choice' type
         '''
         if not len(search_space) == 1:
-            raise RuntimeException('BatchTuner only supprt one combined-paramreters key.')
+            raise RuntimeError('BatchTuner only supprt one combined-paramreters key.')
         
         for param in search_space:
-            param_type = param[TYPE]
-            if param_type is not CHOICE:
-                raise RuntimeException('BatchTuner only supprt one combined-paramreters type is choice.')
+            param_type = search_space[param][TYPE]
+            if not param_type == CHOICE:
+                raise RuntimeError('BatchTuner only supprt one combined-paramreters type is choice.')
             else:
-                if isinstance(param[VALUE], list):
-                    return param[VALUE]
-                raise RuntimeException('The combined-paramreters value in BatchTuner is not a list.')
+                if isinstance(search_space[param][VALUE], list):
+                    return search_space[param][VALUE]
+                raise RuntimeError('The combined-paramreters value in BatchTuner is not a list.')
         return None
 
     def update_search_space(self, search_space):
-        self.values = is_valid(search_space)
+        self.values = self.is_valid(search_space)
 
     def generate_parameters(self, parameter_id):
-        count +=1
-        if count>len(self.value)-1:
+        self.count +=1
+        if self.count>len(self.values)-1:
             return None
-        return self.values[count]
+        return self.values[self.count]
 
     def receive_trial_result(self, parameter_id, parameters, reward):
         pass

@@ -30,6 +30,7 @@ import importlib
 from nni.msg_dispatcher import MsgDispatcher
 from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 from nni.evolution_tuner.evolution_tuner import EvolutionTuner
+from nni.batch_tuner.batch_tuner import BatchTuner
 from nni.medianstop_assessor.medianstop_assessor import MedianstopAssessor
 
 logger = logging.getLogger('nni.main')
