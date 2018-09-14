@@ -29,7 +29,7 @@ def nni_help_info(*args):
 
 def parse_args():
     '''Definite the arguments users need to follow and input'''
-    parser = argparse.ArgumentParser(prog='nni ctl', description='use nni control')
+    parser = argparse.ArgumentParser(prog='nnictl', description='use nni control')
     parser.set_defaults(func=nni_help_info)
 
     # create subparsers for args with sub values
