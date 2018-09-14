@@ -89,7 +89,6 @@ class MsgDispatcher(MsgDispatcherBase):
         # data: number or trial jobs
         ids = [_create_parameter_id() for _ in range(data)]
         params_list = self.tuner.generate_multiple_parameters(ids)
-        #assert len(ids) == len(params_list)
 
         # when parameters is None.
         if len(params_list) == 0:
