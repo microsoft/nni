@@ -32,6 +32,7 @@ from graph_to_tf import graph_to_network
 
 
 class GAGConfig:
+    """The class for model hyper-parameter configuration."""
     def __init__(self):
         self.batch_size = 128
 
@@ -56,6 +57,7 @@ class GAGConfig:
 
 
 class GAG:
+    """The class for the computation graph based QA model."""
     def __init__(self, cfg, embed, graph):
         self.cfg = cfg
         self.embed = embed
@@ -83,6 +85,7 @@ class GAG:
 
 
     def build_net(self, is_training):
+        """Build the whole neural network for the QA model."""
         cfg = self.cfg
         with tf.device('/cpu:0'):
             word_embed = tf.get_variable(
@@ -202,6 +205,7 @@ class GAG:
 
         if is_training:
             def label_smoothing(inputs, masks, epsilon=0.1):
+                """Modify target for label smoothing."""
                 epsilon = cfg.labelsmoothing
                 num_of_channel = tf.shape(inputs)[-1]  # number of channels
                 inputs = tf.cast(inputs, tf.float32)
@@ -229,6 +233,7 @@ class GAG:
         return tf.stack([self.begin_prob, self.end_prob])
 
     def build_char_states(self, char_embed, is_training, reuse, char_ids, char_lengths):
+        """Build char embedding network for the QA model."""
         max_char_length = self.cfg.max_char_length
 
         inputs = dropout(tf.nn.embedding_lookup(char_embed, char_ids),
