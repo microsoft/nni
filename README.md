@@ -50,16 +50,15 @@ This command will start an experiment and a WebUI. The WebUI endpoint will be sh
 
 ## **Please refer to [Get Started Tutorial](docs/GetStarted.md) for more detailed information.**
 ## More tutorials
-* [How to write a trial running on NNI (Mnist as an example)?](WriteYourTrial.md)
-* [Tutorial of NNI python annotation.](../tools/annotation/README.md)
-* [Tuners supported by NNI.](../src/sdk/pynni/nni/README.md)
-* [How to enable early stop (i.e. assessor) in an experiment?](EnableAssessor.md)
-* [How to run an experiment on multiple machines?](RemoteMachineMode.md)
-* [How to write a customized tuner?](CustomizedTuner.md)
-* [How to write a customized assessor?](../examples/assessors/README.md)
-* [How to resume an experiment?](NNICTLDOC.md)
-* [Tutorial of the command tool *nnictl*.](NNICTLDOC.md)
-* [How to use *nnictl* to control multiple experiments?]()
+* [How to write a trial running on NNI (Mnist as an example)?](docs/WriteYourTrial.md)
+* [Tutorial of NNI python annotation.](tools/nni_annotation/README.md)
+* [Tuners supported by NNI.](src/sdk/pynni/nni/README.md)
+* [How to enable early stop (i.e. assessor) in an experiment?](docs/EnableAssessor.md)
+* [How to run an experiment on multiple machines?](docs/RemoteMachineMode.md)
+* [How to write a customized tuner?](docs/CustomizedTuner.md)
+* [How to write a customized assessor?](examples/assessors/README.md)
+* [How to resume an experiment?](docs/NNICTLDOC.md)
+* [Tutorial of the command tool *nnictl*.](docs/NNICTLDOC.md)
 
 # Contributing
 This project welcomes contributions and suggestions, we are constructing the contribution guidelines, stay tuned =).
