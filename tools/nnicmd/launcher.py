@@ -31,7 +31,7 @@ from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick
 from .url_utils import cluster_metadata_url, experiment_url
 from .config_utils import Config
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, detect_process
 from .constants import EXPERIMENT_SUCCESS_INFO, STDOUT_FULL_PATH, STDERR_FULL_PATH, LOG_DIR, REST_PORT, ERROR_INFO, NORMAL_INFO
 from .webui_utils import start_web_ui, check_web_ui
 
@@ -122,6 +122,12 @@ def set_experiment(experiment_config, mode, port):
 def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config()
+        #Check if there is an experiment running
+    origin_rest_pid = nni_config.get_config('restServerPid')
+    if origin_rest_pid and detect_process(origin_rest_pid):
+        print_error('There is an experiment running, please stop it first...')
+        print_normal('You can use \'nnictl stop\' command to stop an experiment!')
+        exit(0)
     # start rest server
     rest_process = start_rest_server(REST_PORT, experiment_config['trainingServicePlatform'], mode, experiment_id)
     nni_config.set_config('restServerPid', rest_process.pid)
