@@ -89,7 +89,7 @@ The experiment has been running now, NNI provides WebUI for you to view experime
 
 ## Further reading
 * [How to write a trial running on NNI (Mnist as an example)?](WriteYourTrial.md)
-* [Tutorial of NNI python annotation.](../tools/annotation/README.md)
+* [Tutorial of NNI python annotation.](../tools/nni_annotation/README.md)
 * [Tuners supported by NNI.](../src/sdk/pynni/nni/README.md)
 * [How to enable early stop (i.e. assessor) in an experiment?](EnableAssessor.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
@@ -97,4 +97,3 @@ The experiment has been running now, NNI provides WebUI for you to view experime
 * [How to write a customized assessor?](../examples/assessors/README.md)
 * [How to resume an experiment?](NNICTLDOC.md)
 * [Tutorial of the command tool *nnictl*.](NNICTLDOC.md)
-* [How to use *nnictl* to control multiple experiments?]()
