@@ -1,13 +1,9 @@
 import * as React from 'react';
 import axios from 'axios';
 import { Table, Select, Row, Col, Icon } from 'antd';
-import { MANAGER_IP, overviewItem, roundNum } from '../const';
-// import ReactEcharts from 'echarts-for-react';
+import { MANAGER_IP, overviewItem } from '../const';
 const Option = Select.Option;
 import JSONTree from 'react-json-tree';
-// require('echarts/lib/chart/line');
-// require('echarts/lib/component/tooltip');
-// require('echarts/lib/component/title');
 require('../style/sessionpro.css');
 
 interface TableObj {
@@ -183,6 +179,13 @@ class Sessionpro extends React.Component<{}, SessionState> {
                     let sessionData = res.data;
                     let tunerAsstemp = [];
                     let trialPro = [];
+                    const startExper = new Date(sessionData.startTime).toLocaleString();
+                    let experEndStr: string;
+                    if (sessionData.endTime !== undefined) {
+                        experEndStr = new Date(sessionData.endTime).toLocaleString();
+                    } else {
+                        experEndStr = 'not over';
+                    }
                     trialPro.push({
                         id: sessionData.id,
                         author: sessionData.params.authorName,
@@ -191,8 +194,8 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         maxDuration: sessionData.params.maxExecDuration,
                         execDuration: sessionData.execDuration,
                         MaxTrialNum: sessionData.params.maxTrialNum,
-                        startTime: sessionData.startTime,
-                        endTime: sessionData.endTime === undefined ? 'not over' : sessionData.endTime
+                        startTime: startExper,
+                        endTime: experEndStr
                     });
                     tunerAsstemp.push({
                         tuner: sessionData.params.tuner,
@@ -225,14 +228,12 @@ class Sessionpro extends React.Component<{}, SessionState> {
                             const desJobDetail: Parameters = {
                                 parameters: {}
                             };
-                            const startTime = Date.parse(tableData[item].startTime);
-                            const duration = (Date.parse(tableData[item].endTime) - startTime) / 1000;
+                            const startTime = new Date(tableData[item].startTime).toLocaleString();
+                            const endTime = new Date(tableData[item].endTime).toLocaleString();
+                            const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
                             let acc;
                             if (tableData[item].finalMetricData) {
-                                const accFloat = parseFloat(tableData[item].finalMetricData.data);
-                                acc = roundNum(accFloat, 5);
-                            } else {
-                                acc = 0;
+                                acc = parseFloat(tableData[item].finalMetricData.data);
                             }
                             desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
                             if (tableData[item].logPath !== undefined) {
@@ -242,8 +243,8 @@ class Sessionpro extends React.Component<{}, SessionState> {
                                 key: topTableData.length,
                                 id: tableData[item].id,
                                 duration: duration,
-                                start: tableData[item].startTime,
-                                end: tableData[item].endTime,
+                                start: startTime,
+                                end: endTime,
                                 status: tableData[item].status,
                                 acc: acc,
                                 description: desJobDetail
@@ -265,27 +266,6 @@ class Sessionpro extends React.Component<{}, SessionState> {
                             trialRun: trialRunData.sort(this.sortNumber)
                         });
                     }
-                    // draw CDF
-                    // const { trialRun } = this.state;
-                    // if (this._isMounted) {
-                    //     this.setState({
-                    //         option: this.getOption(trialRun)
-                    //     });
-                    // }
-                    // CDF graph 'No data' judge
-                    // if (trialRun.length === 0) {
-                    //     if (this._isMounted) {
-                    //         this.setState({
-                    //             noData: 'No data'
-                    //         });
-                    //     }
-                    // } else {
-                    //     if (this._isMounted) {
-                    //         this.setState({
-                    //             noData: ''
-                    //         });
-                    //     }
-                    // }
                 }
             });
     }
@@ -372,7 +352,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
         };
 
         const {
-            trialProfile, searchSpace, tunerAssessor, tableData, 
+            trialProfile, searchSpace, tunerAssessor, tableData,
             // option, noData
         } = this.state;
         let running;
@@ -424,9 +404,6 @@ class Sessionpro extends React.Component<{}, SessionState> {
                             </p>
                             <span>End Time</span>
                             <p className="messcont">{trialProfile.endTime}</p>
-                            {/* <div className="logo">
-                                <Icon className="thrpink" type="clock-circle-o" />
-                            </div> */}
                         </div>
                         <div className="cdf">
                             <div className="message">
@@ -501,13 +478,6 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         scroll={{ x: '100%', y: 540 }}
                     />
                 </div>
-                {/* <div className="cdf">
-                    <ReactEcharts
-                        option={option}
-                        style={{ height: 500, padding: '0px' }}
-                    />
-                    <div className="addNodata">{noData}</div>
-                </div> */}
             </div>
         );
     }

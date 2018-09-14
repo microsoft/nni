@@ -14,4 +14,3 @@ export const CONTROLTYPE = [
     'MAX_EXEC_DURATION'
 ];
 export const overviewItem = 5;
-export const roundNum = (acc: number, n: number) => Math.round(acc * 10 ** n) / 10 ** n;

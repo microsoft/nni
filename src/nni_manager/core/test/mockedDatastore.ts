@@ -118,7 +118,7 @@ class MockedDataStore implements DataStore {
     async storeTrialJobEvent(event: TrialJobEvent, trialJobId: string, data?: string | undefined): Promise<void> {
         const dataRecord: TrialJobEventRecord = {
             event: event,
-            timestamp: new Date(),
+            timestamp: Date.now(),
             trialJobId: trialJobId,
             data: data
         }
@@ -175,7 +175,7 @@ class MockedDataStore implements DataStore {
             parameterId: metrics.parameter_id,
             type: metrics.type,
             data: metrics.value,
-            timestamp: new Date()
+            timestamp: Date.now()
         });
     }
 
@@ -234,13 +234,13 @@ class MockedDataStore implements DataStore {
             }
             switch (record.event) {
                 case 'RUNNING':
-                    jobInfo.startTime = new Date();
+                    jobInfo.startTime = Date.now();
                     break;
                 case 'SUCCEEDED':
                 case 'FAILED':
                 case 'USER_CANCELED':
                 case 'SYS_CANCELED':
-                    jobInfo.endTime = new Date();
+                    jobInfo.endTime = Date.now();
             }
             jobInfo.status = this.getJobStatusByLatestEvent(record.event);
             map.set(record.trialJobId, jobInfo);

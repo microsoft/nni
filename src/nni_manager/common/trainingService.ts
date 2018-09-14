@@ -58,9 +58,9 @@ interface HostJobApplicationForm extends JobApplicationForm {
 interface TrialJobDetail {
     readonly id: string;
     readonly status: TrialJobStatus;
-    readonly submitTime: Date;
-    readonly startTime?: Date;
-    readonly endTime?: Date;
+    readonly submitTime: number;
+    readonly startTime?: number;
+    readonly endTime?: number;
     readonly tags?: string[];
     readonly url?: string;
     readonly workingDirectory: string;
