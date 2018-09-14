@@ -30,10 +30,11 @@ import { getLogger, Logger } from '../../common/log';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
-    HostJobApplicationForm, JobApplicationForm, TrainingService, TrialJobApplicationForm,
+    HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { file } from 'tmp';
 
 const tkill = require('tree-kill');
 
@@ -210,8 +211,18 @@ class LocalTrainingService implements TrainingService {
      * @param trialJobId trial job id
      * @param form job application form
      */
-    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
-        throw new MethodNotImplementedError();
+    public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
+        const trialJobDetail: undefined | TrialJobDetail = this.jobMap.get(trialJobId);
+        if (trialJobDetail === undefined) {
+            throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
+        }
+        if (form.jobType === 'TRIAL') {
+            await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>form).hyperParameters);
+        } else {
+            throw new Error(`updateTrialJob failed: jobType ${form.jobType} not supported.`);
+        }
+
+        return trialJobDetail;
     }
 
     /**
@@ -332,10 +343,7 @@ class LocalTrainingService implements TrainingService {
         await cpp.exec(`mkdir -p ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
         await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
         await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8' });
-        await fs.promises.writeFile(
-            path.join(trialJobDetail.workingDirectory, 'parameter.cfg'),
-            (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters,
-            { encoding: 'utf8' });
+        await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
         const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
 
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
@@ -401,6 +409,11 @@ class LocalTrainingService implements TrainingService {
                 throw error;
             }
         }
+    }
+
+    private async writeParameterFile(directory: string, hyperParameters: HyperParameters): Promise<void> {
+        const filepath: string = path.join(directory, `parameter_${hyperParameters.index}.cfg`);
+        await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
     }
 }
 

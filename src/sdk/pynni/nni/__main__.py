@@ -28,6 +28,7 @@ import json
 import importlib
 
 from nni.msg_dispatcher import MsgDispatcher
+from nni.multi_phase.multi_phase_dispatcher import MultiPhaseMsgDispatcher
 from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 from nni.evolution_tuner.evolution_tuner import EvolutionTuner
 from nni.medianstop_assessor.medianstop_assessor import MedianstopAssessor
@@ -78,6 +79,7 @@ def parse_args():
                         help='Assessor directory')
     parser.add_argument('--assessor_class_filename', type=str, required=False,
                         help='Assessor class file path')
+    parser.add_argument('--multi_phase', action='store_true')
 
     flags, _ = parser.parse_known_args()
     return flags
@@ -109,7 +111,10 @@ def main():
     if tuner is None:
         raise AssertionError('Failed to create Tuner instance')
 
-    dispatcher = MsgDispatcher(tuner, assessor)
+    if args.multi_phase:
+        dispatcher = MultiPhaseMsgDispatcher(tuner, assessor)
+    else:
+        dispatcher = MsgDispatcher(tuner, assessor)
 
     try:
         dispatcher.run()

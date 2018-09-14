@@ -37,7 +37,7 @@ import {
 import { delay , getLogDir, getMsgDispatcherCommand} from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, REPORT_METRIC_DATA,
-    REQUEST_TRIAL_JOBS, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
+    REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 import { TrialJobMaintainerEvent, TrialJobs } from './trialJobs';
@@ -460,7 +460,10 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     const trialJobAppForm: TrialJobApplicationForm = {
                         jobType: 'TRIAL',
-                        hyperParameters: content
+                        hyperParameters: {
+                            value: content,
+                            index: 0
+                        }
                     };
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
                     this.trialJobsMaintainer.setTrialJob(trialJobDetail.id, Object.assign({}, trialJobDetail));
@@ -471,6 +474,22 @@ class NNIManager implements Manager {
                         this.trialJobsMaintainer.setNoMoreTrials();
                     }
                 }
+                break;
+            case SEND_TRIAL_JOB_PARAMETER:
+                const tunerCommand: any = JSON.parse(content);
+                assert(tunerCommand.parameter_index >= 0);
+                assert(tunerCommand.trial_job_id !== undefined);
+
+                const trialJobForm: TrialJobApplicationForm = {
+                    jobType: 'TRIAL',
+                    hyperParameters: {
+                        value: content,
+                        index: tunerCommand.parameter_index
+                    }
+                };
+                await this.trainingService.updateTrialJob(tunerCommand.trial_job_id, trialJobForm);
+                await this.dataStore.storeTrialJobEvent(
+                        'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
                 break;
             case NO_MORE_TRIAL_JOBS:
                 this.trialJobsMaintainer.setNoMoreTrials();

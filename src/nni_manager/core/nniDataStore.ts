@@ -168,16 +168,32 @@ class NNIDataStore implements DataStore {
         }
     }
 
-    private getJobStatusByLatestEvent(event: TrialJobEvent): TrialJobStatus {
+    private getJobStatusByLatestEvent(oldStatus: TrialJobStatus, event: TrialJobEvent): TrialJobStatus {
         switch (event) {
             case 'USER_TO_CANCEL':
                 return 'USER_CANCELED';
             case 'ADD_CUSTOMIZED':
                 return 'WAITING';
+            case 'ADD_HYPERPARAMETER':
+                return oldStatus;
             default:
         }
 
         return <TrialJobStatus>event;
+    }
+
+    private mergeHyperParameters(hyperParamList: string[], newParamStr: string): string[] {
+        const mergedHyperParams: any[] = [];
+        const newParam: any = JSON.parse(newParamStr);
+        for (const hyperParamStr of hyperParamList) {
+            const hyperParam: any = JSON.parse(hyperParamStr);
+            mergedHyperParams.push(hyperParam);
+        }
+        if (mergedHyperParams.filter((value: any) => { return value.parameter_index === newParam.parameter_index; }).length <= 0) {
+            mergedHyperParams.push(newParam);
+        }
+
+        return mergedHyperParams.map<string>((value: any) => { return JSON.stringify(value); });
     }
 
     private getTrialJobsByReplayEvents(trialJobEvents: TrialJobEventRecord[]):  Map<string, TrialJobInfo> {
@@ -193,7 +209,8 @@ class NNIDataStore implements DataStore {
             } else {
                 jobInfo = {
                     id: record.trialJobId,
-                    status: this.getJobStatusByLatestEvent(record.event)
+                    status: this.getJobStatusByLatestEvent('UNKNOWN', record.event),
+                    hyperParameters: []
                 };
             }
             if (!jobInfo) {
@@ -222,9 +239,13 @@ class NNIDataStore implements DataStore {
                     }
                 default:
             }
-            jobInfo.status = this.getJobStatusByLatestEvent(record.event);
+            jobInfo.status = this.getJobStatusByLatestEvent(jobInfo.status, record.event);
             if (record.data !== undefined && record.data.trim().length > 0) {
-                jobInfo.hyperParameters = record.data;
+                if (jobInfo.hyperParameters !== undefined) {
+                    jobInfo.hyperParameters = this.mergeHyperParameters(jobInfo.hyperParameters, record.data);
+                } else {
+                    assert(false, 'jobInfo.hyperParameters is undefined');
+                }
             }
             map.set(record.trialJobId, jobInfo);
         }
