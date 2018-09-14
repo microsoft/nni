@@ -37,7 +37,7 @@ class GAGConfig:
 
         self.dropout = 0.1
 
-        self.char_vcb_size = 1371
+        self.char_vcb_size = 1500
         self.max_char_length = 20
         self.char_embed_dim = 100
 
