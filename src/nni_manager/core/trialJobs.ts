@@ -26,6 +26,9 @@ import { delay } from '../common/utils';
 
 type TrialJobMaintainerEvent = TrialJobStatus | 'EXPERIMENT_DONE';
 
+/**
+ * TrialJobs
+ */
 class TrialJobs {
     private eventEmitter: EventEmitter;
     private trialJobs: Map<string, TrialJobDetail>;
@@ -93,9 +96,9 @@ class TrialJobs {
                     // Do nothing
                     break;
                 case 'RUNNING':
-                    const oldTrialJobDetail = this.trialJobs.get(trialJobId);
+                    const oldTrialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
                     assert(oldTrialJobDetail);
-                    if (oldTrialJobDetail && oldTrialJobDetail.status === "WAITING") {
+                    if (oldTrialJobDetail !== undefined && oldTrialJobDetail.status === "WAITING") {
                         this.trialJobs.set(trialJobId, trialJobDetail);
                         this.eventEmitter.emit('all', trialJobDetail.status, trialJobDetail);
                     }
@@ -112,8 +115,8 @@ class TrialJobs {
     }
 
     public async run(): Promise<void> {
-        const startTime: Date = new Date();
-        while ((Date.now() - startTime.getTime()) / 1000 + this.pastExecDuration < this.maxExecDuration) {
+        const startTime: number = Date.now();
+        while ((Date.now() - startTime) / 1000 + this.pastExecDuration < this.maxExecDuration) {
             if (this.stopLoop ||
                 (this.noMoreTrials && this.trialJobs.size === 0)) {
                 break;

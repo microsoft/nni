@@ -26,14 +26,14 @@ type TrialJobEvent = TrialJobStatus | 'USER_TO_CANCEL' | 'ADD_CUSTOMIZED';
 type MetricType = 'PERIODICAL' | 'FINAL' | 'CUSTOM';
 
 interface ExperimentProfileRecord {
-    readonly timestamp: Date;
+    readonly timestamp: number;
     readonly experimentId: number;
     readonly revision: number;
     readonly data: ExperimentProfile;
 }
 
 interface TrialJobEventRecord {
-    readonly timestamp: Date;
+    readonly timestamp: number;
     readonly trialJobId: string;
     readonly event: TrialJobEvent;
     readonly data?: string;
@@ -49,7 +49,7 @@ interface MetricData {
 }
 
 interface MetricDataRecord {
-    readonly timestamp: Date;
+    readonly timestamp: number;
     readonly trialJobId: string;
     readonly parameterId: string;
     readonly type: MetricType;
@@ -60,8 +60,8 @@ interface MetricDataRecord {
 interface TrialJobInfo {
     id: string;
     status: TrialJobStatus;
-    startTime?: Date;
-    endTime?: Date;
+    startTime?: number;
+    endTime?: number;
     hyperParameters?: string;
     logPath?: string;
     finalMetricData?: string;
@@ -96,4 +96,4 @@ abstract class Database {
 export {
     DataStore, Database, TrialJobEvent, MetricType, MetricData, TrialJobInfo,
     ExperimentProfileRecord, TrialJobEventRecord, MetricDataRecord
-}
+};
