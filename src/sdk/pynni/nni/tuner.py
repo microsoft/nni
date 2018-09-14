@@ -21,6 +21,7 @@
 
 import logging
 
+import nni
 from .recoverable import Recoverable
 
 _logger = logging.getLogger(__name__)
@@ -44,9 +45,11 @@ class Tuner(Recoverable):
         """
         result = []
         for parameter_id in parameter_id_list:
-            temp = self.generate_parameters(parameter_id)
-            if temp:
-                result.append(temp)
+            try:
+                res = self.generate_parameters(parameter_id)
+            except nni.NoMoreTrialError:
+                return result
+            result.append(res)
         return result
 
     def receive_trial_result(self, parameter_id, parameters, reward):

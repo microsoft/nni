@@ -2,7 +2,7 @@ authorName: default
 experimentName: example_mnist-keras
 trialConcurrency: 1
 maxExecDuration: 1h
-maxTrialNum: 10
+maxTrialNum: 6
 #choice: local, remote
 trainingServicePlatform: local
 searchSpacePath: ~/nni/examples/trials/mnist-batch-tune-keras/search_space.json

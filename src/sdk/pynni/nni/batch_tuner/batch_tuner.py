@@ -28,6 +28,7 @@ import random
 
 import numpy as np
 
+import nni
 from nni.tuner import Tuner
 
 TYPE = '_type'
@@ -73,7 +74,7 @@ class BatchTuner(Tuner):
     def generate_parameters(self, parameter_id):
         self.count +=1
         if self.count>len(self.values)-1:
-            return None
+            raise nni.NoMoreTrialError('no more parameters now.')
         return self.values[self.count]
 
     def receive_trial_result(self, parameter_id, parameters, reward):
