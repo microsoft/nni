@@ -22,38 +22,16 @@
 import os
 from setuptools import setup, find_packages
 from setuptools.command.install import install
-from subprocess import Popen
+import subprocess
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 class CustomInstallCommand(install):
     '''a customized install class in pip module'''
-    def makeInstall(self):
-        '''execute make pip-install command'''
-        cmds = ['make', 'pip-install']
-        process = Popen(cmds)
-        if process.wait() != 0:
-            print('Error: Make Install Failed')
-            exit(-1)
-
-    def writeEnvironmentVariables(self, variable_name):
-        '''write an environment variable into ~/.bashrc'''
-        paths = os.getenv("PATH").split(':')
-        bin_path = os.path.join(os.getenv('HOME'),'.local/'+variable_name+'/bin')
-        
-        if bin_path not in paths:
-            bashrc_path = os.path.join(os.getenv('HOME'), '.bashrc')
-            process = Popen('echo export PATH=' + bin_path + ':\$PATH >> ' + bashrc_path, shell=True)
-            if process.wait() != 0:
-                print('Error: Write Environment Variables Failed')
-                exit(-1)
-
     def run(self):
-        install.run(self)
-        self.makeInstall()
-        self.writeEnvironmentVariables('node')
-        self.writeEnvironmentVariables('yarn')
+        super().run()
+        subprocess.run(['make', 'pip-install'], check=True)
 
 setup(
     name = 'NNI',
@@ -80,11 +58,8 @@ setup(
         'psutil',
         'pyyaml',
         'requests',
-        'scipy',
-        'schema'        
-    ],
-    dependency_links = [
-        'git+https://github.com/hyperopt/hyperopt.git'
+        'schema',
+        'scipy'
     ],
 
     cmdclass={
