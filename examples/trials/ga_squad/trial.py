@@ -88,11 +88,13 @@ def load_embedding(path):
     '''
     return embedding for a specif file by given file path.
     '''
+    EMBEDDING_DIM = 300
     embedding_dict = {}
     with open(path, 'r', encoding='utf-8') as file:
         pairs = [line.strip('\r\n').split() for line in file.readlines()]
         for pair in pairs:
-            embedding_dict[pair[0]] = [float(x) for x in pair[1:]]
+            if len(pair) == EMBEDDING_DIM + 1:
+                embedding_dict[pair[0]] = [float(x) for x in pair[1:]]
     logger.debug('embedding_dict size: %d', len(embedding_dict))
     return embedding_dict
 
