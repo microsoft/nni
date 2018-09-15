@@ -87,16 +87,16 @@ export class JobMetrics {
 export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;
-    public submitTime: Date;
-    public startTime?: Date;
-    public endTime?: Date;
+    public submitTime: number;
+    public startTime?: number;
+    public endTime?: number;
     public tags?: string[];
     public url?: string;
     public workingDirectory: string;
     public form: JobApplicationForm;
     public rmMeta?: RemoteMachineMeta;
 
-    constructor(id: string, status: TrialJobStatus, submitTime: Date, workingDirectory: string, form: JobApplicationForm) {
+    constructor(id: string, status: TrialJobStatus, submitTime: number, workingDirectory: string, form: JobApplicationForm) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
@@ -106,9 +106,9 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     }
 }
 
-export type RemoteMachineScheduleResult = { scheduleInfo : RemoteMachineScheduleInfo | undefined, resultType : ScheduleResultType};
+export type RemoteMachineScheduleResult = { scheduleInfo : RemoteMachineScheduleInfo | undefined; resultType : ScheduleResultType};
 
-export type RemoteMachineScheduleInfo = { client: Client; rmMeta : RemoteMachineMeta; cuda_visible_device : string};
+export type RemoteMachineScheduleInfo = { rmMeta : RemoteMachineMeta; cuda_visible_device : string};
 
 export enum ScheduleResultType {
     /* Schedule succeeded*/

@@ -58,8 +58,6 @@ class Accuracy extends React.Component<{}, ChartState> {
             yAxis: {
                 name: 'Accuracy',
                 type: 'value',
-                min: 0,
-                max: 1,
                 data: yAxis
             },
             series: [{
@@ -85,7 +83,7 @@ class Accuracy extends React.Component<{}, ChartState> {
                             accArr.push(parseFloat(accData[item].finalMetricData.data));
                         }
                     });
-                    accY.push({yAxis: accArr});
+                    accY.push({ yAxis: accArr });
                     let optionObj = this.getOption(accY[0]);
                     this.setState({ option: optionObj }, () => {
                         if (accArr.length === 0) {

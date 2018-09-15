@@ -8,7 +8,7 @@ _logger.info('start')
 _result = open('/tmp/nni_tuner_result.txt', 'w')
 
 class NaiveTuner(Tuner):
-    def __init__(self):
+    def __init__(self, optimize_mode):
         self.cur = 0
         _logger.info('init')
 
