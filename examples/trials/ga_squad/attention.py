@@ -31,37 +31,6 @@ def _get_variable(variable_dict, name, shape, initializer=None, dtype=tf.float32
             name=name, shape=shape, initializer=initializer, dtype=dtype)
     return variable_dict[name]
 
-
-def batch_linear_layer(matrix_a, matrix_b):
-    '''
-    shape of matrix_a is [*, batch, dima]
-    shape of matrix_b is [batch, dima, dimb]
-    result is [*, batch, dimb]
-    for each batch, do matrix_a linear op to last dim
-    '''
-    matrix_a = tf.expand_dims(matrix_a, -1)
-    while len(list(matrix_b.shape)) < len(list(matrix_a.shape)):
-        matrix_b = tf.expand_dims(matrix_b, 0)
-    return tf.reduce_sum(matrix_a * matrix_b, -2)
-
-
-def split_last_dim(x, factor):
-    shape = tf.shape(x)
-    last_dim = int(x.shape[-1])
-    assert last_dim % factor == 0, \
-        "last dim isn't divisible by factor {%d} {%d}" % (last_dim, factor)
-    new_shape = tf.concat(
-        [shape[:-1], tf.constant([factor, last_dim // factor])], axis=0)
-    return tf.reshape(x, new_shape)
-
-
-def merge_last2_dim(x):
-    shape = tf.shape(x)
-    last_dim = int(x.shape[-1]) * int(x.shape[-2])
-    new_shape = tf.concat([shape[:-2], tf.constant([last_dim])], axis=0)
-    return tf.reshape(x, new_shape)
-
-
 class DotAttention:
     '''
     DotAttention
