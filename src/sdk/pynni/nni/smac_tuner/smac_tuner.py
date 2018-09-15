@@ -36,7 +36,7 @@ from smac.facade.roar_facade import ROAR
 from smac.facade.epils_facade import EPILS
 
 class SMACTuner(Tuner):
-    def __init__(self):
+    def __init__(self, optimize_mode):
         '''
         Constructor
         '''
