@@ -83,14 +83,8 @@ setup(
         'scipy',
         'schema'        
     ],
-    dependency_links = [
-        'git+https://github.com/hyperopt/hyperopt.git'
-    ],
 
     cmdclass={
         'install': CustomInstallCommand
-    },
-    entry_points={
-        'console_scripts': ['nnictl = nnicmd.nnictl:parse_args']
     }
 )
