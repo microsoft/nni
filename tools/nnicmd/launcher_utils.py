@@ -100,7 +100,8 @@ def parse_tuner_content(experiment_config):
     
     if experiment_config['tuner'].get('builtinTunerName') and experiment_config['tuner'].get('classArgs'):
         experiment_config['tuner']['className'] = tuner_class_name_dict.get(experiment_config['tuner']['builtinTunerName'])
-        experiment_config['tuner']['classArgs']['algorithm_name'] = tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName'])
+        if experiment_config['tuner']['className'] == 'HyperoptTuner':
+            experiment_config['tuner']['classArgs']['algorithm_name'] = tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName'])
     elif experiment_config['tuner'].get('codeDir') and experiment_config['tuner'].get('classFileName') and experiment_config['tuner'].get('className'):
         if not os.path.exists(os.path.join(experiment_config['tuner']['codeDir'], experiment_config['tuner']['classFileName'])):
             raise ValueError('Tuner file directory is not valid!')
