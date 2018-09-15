@@ -91,7 +91,8 @@ def parse_tuner_content(experiment_config):
                             'Random': 'HyperoptTuner',\
                             'Anneal': 'HyperoptTuner',\
                             'Evolution': 'EvolutionTuner',\
-                            'BatchTuner': 'BatchTuner'}
+                            'BatchTuner': 'BatchTuner',\
+                            'SMAC': 'SMACTuner'}
 
     tuner_algorithm_name_dict = {'TPE': 'tpe',\
                             'Random': 'random_search',\
