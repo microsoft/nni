@@ -27,7 +27,7 @@ import sys
 import logging
 import numpy as np
 import json_tricks
-from convert_ss_to_scenario import generate_scenario
+from .convert_ss_to_scenario import generate_scenario
 
 from smac.utils.io.cmd_reader import CMDReader
 from smac.scenario.scenario import Scenario
