@@ -158,7 +158,8 @@ def validate_tuner_content(experiment_config):
             raise ValueError('Please set optimize_mode!')
         if experiment_config['tuner']['classArgs']['optimize_mode'] not in ['maximize', 'minimize']:
             raise ValueError('optimize_mode should be maximize or minimize')
-        if tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName']):
+        if tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName']) and \
+            tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName']):
             experiment_config['tuner']['classArgs']['algorithm_name'] = tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName'])
     elif experiment_config['tuner'].get('codeDir') and experiment_config['tuner'].get('classFileName') and experiment_config['tuner'].get('className'):
         if not os.path.exists(os.path.join(experiment_config['tuner']['codeDir'], experiment_config['tuner']['classFileName'])):
