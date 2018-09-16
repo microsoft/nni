@@ -35,6 +35,11 @@ interface ParaObj {
     parallelAxis: Array<Dimobj>;
 }
 
+interface VisualMapValue {
+    maxAccuracy: number;
+    minAccuracy: number;
+}
+
 interface ParaState {
     option: object;
     paraBack: ParaObj;
@@ -42,6 +47,7 @@ interface ParaState {
     swapAxisArr: Array<string>;
     percent: number;
     paraNodata: string;
+    visualValue: VisualMapValue;
 }
 
 message.config({
@@ -69,9 +75,13 @@ class Para extends React.Component<{}, ParaState> {
             swapAxisArr: [],
             percent: 0,
             paraNodata: '',
+            visualValue: {
+                minAccuracy: 0,
+                maxAccuracy: 1
+            }
         };
     }
-    
+
     hyperParaPic = () => {
         axios
             .all([
@@ -110,7 +120,11 @@ class Para extends React.Component<{}, ParaState> {
                         const dimName = Object.keys(speDimName[0]);
                         if (this._isMounted) {
                             this.setState(() => ({
-                                dimName: dimName
+                                dimName: dimName,
+                                visualValue: {
+                                    minAccuracy: accPara.length !== 0 ? Math.min(...accPara) : 0,
+                                    maxAccuracy: accPara.length !== 0 ? Math.max(...accPara) : 1
+                                }
                             }));
                         }
                         // search space range and specific value [only number]
@@ -159,6 +173,11 @@ class Para extends React.Component<{}, ParaState> {
                         Object.keys(paraYdata).map(item => {
                             paraYdata[item].push(accPara[item]);
                         });
+                        // according acc to sort ydata
+                        if (paraYdata.length !== 0) {
+                            const len = paraYdata[0].length - 1;
+                            paraYdata.sort((a, b) => b[len] - a[len]);
+                        }
                         this.setState(() => ({
                             paraBack: {
                                 parallelAxis: parallelAxis,
@@ -205,6 +224,7 @@ class Para extends React.Component<{}, ParaState> {
 
     // deal with response data into pic data
     getOption = (dataObj: ParaObj) => {
+        const { visualValue } = this.state;
         let parallelAxis = dataObj.parallelAxis;
         let paralleData = dataObj.data;
         let optionown = {
@@ -223,8 +243,6 @@ class Para extends React.Component<{}, ParaState> {
                         borderColor: '#ddd'
                     }
                 },
-                feature: {
-                },
                 z: 202
             },
             parallel: {
@@ -236,8 +254,8 @@ class Para extends React.Component<{}, ParaState> {
             },
             visualMap: {
                 type: 'continuous',
-                min: 0,
-                max: 1,
+                min: visualValue.minAccuracy,
+                max: visualValue.maxAccuracy,
                 // gradient color
                 color: ['#fb7c7c', 'yellow', 'lightblue']
             },
@@ -363,7 +381,7 @@ class Para extends React.Component<{}, ParaState> {
                     <div className="paraTitle">
                         <div className="paraLeft">Hyper Parameter</div>
                         <div className="paraRight">
-                            {/* <span>top</span> */}
+                            <span>top</span>
                             <Select
                                 className="parapercent"
                                 style={{ width: '20%' }}

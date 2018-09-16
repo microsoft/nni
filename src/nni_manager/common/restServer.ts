@@ -19,28 +19,27 @@
 
 'use strict';
 
-import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import * as http from 'http';
 import { Deferred } from 'ts-deferred';
+import { getLogger, Logger } from './log';
 
-import * as component from '../common/component';
-import { getLogger, Logger } from '../common/log';
-import { Manager } from '../common/manager';
-import { createRestHandler } from './restHandler';
-
-@component.Singleton
-export class RestServer {
-    public static readonly DEFAULT_PORT: number = 51188;
-    private readonly API_ROOT_URL: string = '/api/v1/nni';
-    private hostName: string = '0.0.0.0';
-    private port: number = RestServer.DEFAULT_PORT;
+/**
+ * Abstraction class to create a RestServer
+ * The module who wants to use a RestServer could <b>extends</b> this abstract class 
+ * And implement its own registerRestHandler() function to register routers
+ */
+export abstract class RestServer {
     private startTask!: Deferred<void>;
     private stopTask!: Deferred<void>;
-    private app: express.Application = express();
     private server!: http.Server;
-    private log: Logger = getLogger();
 
+    /** The fields can be inherited by subclass */
+    protected hostName: string = '0.0.0.0';
+    protected port?: number;
+    protected app: express.Application = express();
+    protected log: Logger = getLogger();
+    
     get endPoint(): string {
         // tslint:disable-next-line:no-http-string
         return `http://${this.hostName}:${this.port}`;
@@ -61,7 +60,7 @@ export class RestServer {
             this.port = port;
         }
 
-        this.server = this.app.listen(this.port, this.hostName).on('listening', () => {
+        this.server = this.app.listen(this.port as number, this.hostName).on('listening', () => {
             this.startTask.resolve();
         }).on('error', (e: Error) => {
             this.startTask.reject(e);
@@ -100,8 +99,8 @@ export class RestServer {
         return this.stopTask.promise;
     }
 
-    private registerRestHandler(): void {
-        this.app.use(bodyParser.json());
-        this.app.use(this.API_ROOT_URL, createRestHandler(this));
-    }
+    /**
+     * Register REST handler, which is left for subclass to implement
+     */
+    protected abstract registerRestHandler(): void;
 }

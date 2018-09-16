@@ -28,16 +28,19 @@ import { NNIError, NNIErrorNames } from '../common/errors';
 import { isNewExperiment } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics} from '../common/manager';
-import { RestServer } from './server';
+import { ValidationSchemas } from './restValidationSchemas';
+import { NNIRestServer } from './nniRestServer';
 import { TensorBoard } from './tensorboard';
 
+const expressJoi = require('express-joi-validator');
+
 class NNIRestHandler {
-    private restServer: RestServer;
+    private restServer: NNIRestServer;
     private nniManager: Manager;
     private tb: TensorBoard;
     private log: Logger;
 
-    constructor(rs: RestServer) {
+    constructor(rs: NNIRestServer) {
         this.nniManager = component.get(Manager);
         this.restServer = rs;
         this.tb = new TensorBoard();
@@ -75,6 +78,15 @@ class NNIRestHandler {
         this.startTensorBoard(router);
         this.stopTensorBoard(router);
 
+        // Express-joi-validator configuration
+        router.use((err: any, req: Request, res: Response, next: any) => {
+            if (err.isBoom) {
+                this.log.error(err.output.payload);
+
+                return res.status(err.output.statusCode).json(err.output.payload);
+            }
+        });
+
         return router;
     }
 
@@ -96,7 +108,7 @@ class NNIRestHandler {
         router.get('/check-status', (req: Request, res: Response) => {
             const ds: DataStore = component.get<DataStore>(DataStore);
             ds.init().then(() => {
-                res.send();
+                res.send(this.nniManager.getStatus());
             }).catch(async (err: Error) => {
                 this.handle_error(err, res);
                 this.log.error(err.message);
@@ -117,7 +129,7 @@ class NNIRestHandler {
     }
 
     private updateExperimentProfile(router: Router): void {
-        router.put('/experiment', (req: Request, res: Response) => {
+        router.put('/experiment', expressJoi(ValidationSchemas.UPDATEEXPERIMENT), (req: Request, res: Response) => {
             this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
                 res.send();
             }).catch((err: Error) => {
@@ -127,7 +139,7 @@ class NNIRestHandler {
     }
 
     private startExperiment(router: Router): void {
-        router.post('/experiment', (req: Request, res: Response) => {
+        router.post('/experiment', expressJoi(ValidationSchemas.STARTEXPERIMENT), (req: Request, res: Response) => {
             if (isNewExperiment()) {
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
                     res.send({
@@ -171,7 +183,9 @@ class NNIRestHandler {
     }
 
     private setClusterMetaData(router: Router): void {
-        router.put('/experiment/cluster-metadata', async (req: Request, res: Response) => {
+        router.put(
+            '/experiment/cluster-metadata', expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
+            async (req: Request, res: Response) => {
             // tslint:disable-next-line:no-any
             const metadata: any = req.body;
             const keys: string[] = Object.keys(metadata);
@@ -241,7 +255,7 @@ class NNIRestHandler {
     }
 
     private startTensorBoard(router: Router): void {
-        router.post('/tensorboard', async (req: Request, res: Response) => {
+        router.post('/tensorboard', expressJoi(ValidationSchemas.STARTTENSORBOARD), async (req: Request, res: Response) => {
             const jobIds: string[] = req.query.job_ids.split(',');
             const tensorboardCmd: string | undefined = req.query.tensorboard_cmd;
             this.tb.startTensorBoard(jobIds, tensorboardCmd).then((endPoint: string) => {
@@ -253,7 +267,7 @@ class NNIRestHandler {
     }
 
     private stopTensorBoard(router: Router): void {
-        router.delete('/tensorboard', async (req: Request, res: Response) => {
+        router.delete('/tensorboard', expressJoi(ValidationSchemas.STOPTENSORBOARD), async (req: Request, res: Response) => {
             const endPoint: string = req.query.endpoint;
             this.tb.stopTensorBoard(endPoint).then(() => {
                 res.send();
@@ -279,13 +293,13 @@ class NNIRestHandler {
         if (jobInfo === undefined || jobInfo.status !== 'FAILED' || jobInfo.logPath === undefined) {
             return jobInfo;
         }
-        jobInfo.stderrPath = path.join(jobInfo.logPath, '.nni', 'stderr');
+        jobInfo.stderrPath = path.join(jobInfo.logPath, 'stderr');
 
         return jobInfo;
     }
 }
 
-export function createRestHandler(rs: RestServer): Router {
+export function createRestHandler(rs: NNIRestServer): Router {
     const handler: NNIRestHandler = new NNIRestHandler(rs);
 
     return handler.createRestHandler();

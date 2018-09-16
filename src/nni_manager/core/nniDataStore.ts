@@ -126,7 +126,7 @@ class NNIDataStore implements DataStore {
             type: metrics.type,
             sequence: metrics.sequence,
             data: metrics.value,
-            timestamp: new Date()
+            timestamp: Date.now()
         }));
     }
 

@@ -19,6 +19,10 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+'''
+Evaluation scripts for QA model.
+'''
+
 from __future__ import print_function
 from collections import Counter
 import string
@@ -68,8 +72,8 @@ def f1_score(prediction, ground_truth):
         return 0
     precision = 1.0 * num_same / len(prediction_tokens)
     recall = 1.0 * num_same / len(ground_truth_tokens)
-    f1 = (2 * precision * recall) / (precision + recall)
-    return f1
+    f1_result = (2 * precision * recall) / (precision + recall)
+    return f1_result
 
 def exact_match_score(prediction, ground_truth):
     '''
@@ -91,28 +95,25 @@ def _evaluate(dataset, predictions):
     '''
     Evaluate function.
     '''
-    f1 = exact_match = total = 0
+    f1_result = exact_match = total = 0
     count = 0
     for article in dataset:
         for paragraph in article['paragraphs']:
-            for qa in paragraph['qas']:
+            for qa_pair in paragraph['qas']:
                 total += 1
-                if qa['id'] not in predictions:
-                    message = 'Unanswered question ' + qa['id'] + \
-                              ' will receive score 0.'
-                    #print(message, file=sys.stderr)
+                if qa_pair['id'] not in predictions:
                     count += 1
                     continue
-                ground_truths = list(map(lambda x: x['text'], qa['answers']))
-                prediction = predictions[qa['id']]
+                ground_truths = list(map(lambda x: x['text'], qa_pair['answers']))
+                prediction = predictions[qa_pair['id']]
                 exact_match += metric_max_over_ground_truths(
                     exact_match_score, prediction, ground_truths)
-                f1 += metric_max_over_ground_truths(
+                f1_result += metric_max_over_ground_truths(
                     f1_score, prediction, ground_truths)
     print('total', total, 'exact_match', exact_match, 'unanswer_question ', count)
     exact_match = 100.0 * exact_match / total
-    f1 = 100.0 * f1 / total
-    return {'exact_match': exact_match, 'f1': f1}
+    f1_result = 100.0 * f1_result / total
+    return {'exact_match': exact_match, 'f1': f1_result}
 
 def evaluate(data_file, pred_file):
     '''
