@@ -27,6 +27,7 @@ import sys
 import logging
 import numpy as np
 import json_tricks
+from enum import Enum, unique
 from .convert_ss_to_scenario import generate_scenario
 
 from smac.utils.io.cmd_reader import CMDReader
