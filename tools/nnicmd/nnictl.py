@@ -25,11 +25,11 @@ from .updater import update_searchspace, update_concurrency, update_duration
 from .nnictl_utils import *
 
 def nni_help_info(*args):
-    print('please run "nnictl --help" to see nnictl guidance')
+    print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
 def parse_args():
     '''Definite the arguments users need to follow and input'''
-    parser = argparse.ArgumentParser(prog='nni ctl', description='use nni control')
+    parser = argparse.ArgumentParser(prog='nnictl', description='use nnictl command to control nni experiments')
     parser.set_defaults(func=nni_help_info)
 
     # create subparsers for args with sub values
