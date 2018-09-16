@@ -35,6 +35,14 @@ from smac.facade.smac_facade import SMAC
 from smac.facade.roar_facade import ROAR
 from smac.facade.epils_facade import EPILS
 
+@unique
+class OptimizeMode(Enum):
+    '''
+    Oprimize Mode class
+    '''
+    Minimize = 'minimize'
+    Maximize = 'maximize'
+
 class SMACTuner(Tuner):
     def __init__(self, optimize_mode):
         '''
@@ -42,6 +50,7 @@ class SMACTuner(Tuner):
         '''
         self.logger = logging.getLogger(
             self.__module__ + "." + self.__class__.__name__)
+        self.optimize_mode = OptimizeMode(optimize_mode)
         self.total_data = {}
         self.optimizer = None
         self.smbo_solver = None
@@ -128,6 +137,9 @@ class SMACTuner(Tuner):
         '''
         receive_trial_result
         '''
+        if self.optimize_mode is OptimizeMode.Maximize:
+            reward = -reward
+
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')
         if self.first_one:
