@@ -9,7 +9,6 @@ before_install:
   - sudo mv node-v10.9.0-linux-x64 /usr/local/node
   - export PATH=/usr/local/node/bin:$PATH
   - sudo sh -c 'PATH=/usr/local/node/bin:$PATH yarn global add serve'
-  - sudo apt-get install swig
 install:
   - make
   - make install
