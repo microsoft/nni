@@ -82,8 +82,11 @@ setup(
         'requests',
         'scipy',
         'schema',      
-        'hyperopt',
-        'smac'
+        'hyperopt'
+    ],
+    dependency_links = [
+        'git+https://github.com/automl/ConfigSpace.git',
+        'git+https://github.com/automl/SMAC3.git'
     ],
 
     cmdclass={

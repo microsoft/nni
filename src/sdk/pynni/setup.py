@@ -38,13 +38,17 @@ setuptools.setup(
         'scipy',
         'smac'
     ],
+    dependency_links = [
+        'git+https://github.com/automl/ConfigSpace.git',
+	'git+https://github.com/automl/SMAC3.git'
+    ],
 
     test_suite = 'tests',
 
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Python SDK for Neural Network Intelligence project',
-     license = 'MIT',
+    license = 'MIT',
     url = 'https://msrasrg.visualstudio.com/NeuralNetworkIntelligence',
 
     long_description = read('README.md')
