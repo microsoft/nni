@@ -126,7 +126,7 @@ dev-install:
 	ln -sf $(INSTALL_PREFIX)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
 	
 	### Installing Python SDK dependencies ###
-	$(PIP_INSTALL) install $(PIP_MODE) -r src/sdk/pynni/requirements.txt
+	$(PIP_INSTALL) $(PIP_MODE) -r src/sdk/pynni/requirements.txt
 	### Installing Python SDK ###
 	cd src/sdk/pynni && $(PIP_INSTALL) $(PIP_MODE) -e .
 	
