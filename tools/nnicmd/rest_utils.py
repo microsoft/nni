@@ -64,16 +64,16 @@ def check_rest_server(rest_port):
         response = rest_get(check_status_url(rest_port), 20)
         if response:
             if response.status_code == 200:
-                return True
+                return True, response
             else:
-                return False
+                return False, response
         else:
             time.sleep(3)
-    return  False
+    return  False, response
 
 def check_rest_server_quick(rest_port):
     '''Check if restful server is ready, only check once'''
     response = rest_get(check_status_url(rest_port), 5)
     if response and response.status_code == 200:
-        return True
-    return False
+        return True, response
+    return False, None

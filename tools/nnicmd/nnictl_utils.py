@@ -47,7 +47,7 @@ def check_rest(args):
     '''check if restful server is running'''
     nni_config = Config()
     rest_port = nni_config.get_config('restServerPort')
-    if check_rest_server_quick(rest_port):
+    if check_rest_server_quick(rest_port)[0]:
         print_normal('Restful server is running...')
     else:
         print_normal('Restful server is not running...')
@@ -62,7 +62,7 @@ def stop_experiment(args):
         print_normal('Experiment is not running...')
         stop_web_ui()
         return
-    if check_rest_server_quick(rest_port):
+    if check_rest_server_quick(rest_port)[0]:
         response = rest_delete(experiment_url(rest_port), 20)
         if not response or response.status_code != 200:
             print_error('Stop experiment failed!')
@@ -82,7 +82,7 @@ def trial_ls(args):
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    if check_rest_server_quick(rest_port):
+    if check_rest_server_quick(rest_port)[0]:
         response = rest_get(trial_jobs_url(rest_port), 20)
         if response and response.status_code == 200:
             content = json.loads(response.text)
@@ -102,7 +102,7 @@ def trial_kill(args):
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    if check_rest_server_quick(rest_port):
+    if check_rest_server_quick(rest_port)[0]:
         response = rest_delete(trial_job_id_url(rest_port, args.trialid), 20)
         if response and response.status_code == 200:
             print(response.text)
@@ -119,7 +119,7 @@ def list_experiment(args):
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    if check_rest_server_quick(rest_port):
+    if check_rest_server_quick(rest_port)[0]:
         response = rest_get(experiment_url(rest_port), 20)
         if response and response.status_code == 200:
             content = convert_time_stamp_to_date(json.loads(response.text))
@@ -128,6 +128,16 @@ def list_experiment(args):
             print_error('List experiment failed...')
     else:
         print_error('Restful server is not running...')
+
+def experiment_status(args):
+    '''Show the status of experiment'''
+    nni_config = Config()
+    rest_port = nni_config.get_config('restServerPort')
+    result, response = check_rest_server_quick(rest_port)
+    if not result:
+        print_normal('Restful server is not running...')
+    else:
+        print(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
 
 def get_log_content(file_name, cmds):
     '''use cmds to read config content'''

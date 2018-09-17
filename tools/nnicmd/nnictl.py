@@ -95,6 +95,8 @@ def parse_args():
     parser_experiment_subparsers = parser_experiment.add_subparsers()
     parser_experiment_show = parser_experiment_subparsers.add_parser('show', help='show the information of experiment')
     parser_experiment_show.set_defaults(func=list_experiment)
+    parser_experiment_status = parser_experiment_subparsers.add_parser('status', help='show the status of experiment')
+    parser_experiment_status.set_defaults(func=experiment_status)
 
     #parse config command
     parser_config = subparsers.add_parser('config', help='get config information')

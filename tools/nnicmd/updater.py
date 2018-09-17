@@ -56,7 +56,7 @@ def update_experiment_profile(key, value):
     '''call restful server to update experiment profile'''
     nni_config = Config()
     rest_port = nni_config.get_config('restServerPort')
-    if check_rest_server_quick(rest_port):
+    if check_rest_server_quick(rest_port)[0]:
         response = rest_get(experiment_url(rest_port), 20)
         if response and response.status_code == 200:
             experiment_profile = json.loads(response.text)
