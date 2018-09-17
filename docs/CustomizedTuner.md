@@ -68,6 +68,13 @@ parameters = {"dropout": 0.3, "learning_rate": 0.4}
 reward = 0.93
 ```
 
+**Note that** if you want to access a file (e.g., ```data.txt```) in the directory of your own tuner, you cannot use ```open('data.txt', 'r')```. Instead, you should use the following:
+```
+_pwd = os.path.dirname(__file__)
+_fd = open(os.path.join(_pwd, 'data.txt'), 'r')
+```
+This is because your tuner is not executed in the directory of your tuner (i.e., ```pwd``` is not the directory of your own tuner).
+
 **3) Configure your customized tuner in experiment yaml config file**
 
 NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the \_\_init__ constructor.

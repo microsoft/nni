@@ -76,8 +76,8 @@ describe('Unit test for dataStore', () => {
             },
             id: 'exp123',
             execDuration: 0,
-            startTime: new Date(),
-            endTime: new Date(),
+            startTime: Date.now(),
+            endTime: Date.now(),
             revision: 0
         }
         const id: string = profile.id;
@@ -128,14 +128,14 @@ describe('Unit test for dataStore', () => {
             parameter_id: 'abc',
             type: 'PERIODICAL',
             value: 'acc: 0.88',
-            timestamp: new Date()
+            timestamp: Date.now()
         },
         {
             trial_job_id: '111',
             parameter_id: 'abc',
             type: 'FINAL',
             value: 'acc: 0.88',
-            timestamp: new Date()
+            timestamp: Date.now()
         }
     ];
 
