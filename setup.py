@@ -82,8 +82,8 @@ setup(
         'requests',
         'scipy',
         'schema',      
-	'hyperopt',
-	'smac'
+        'hyperopt',
+        'smac'
     ],
 
     cmdclass={
