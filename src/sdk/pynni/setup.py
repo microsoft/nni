@@ -36,6 +36,7 @@ setuptools.setup(
         'json_tricks',
         'numpy',
         'scipy',
+	'smac'
     ],
 
     test_suite = 'tests',

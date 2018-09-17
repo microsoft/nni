@@ -81,7 +81,9 @@ setup(
         'pyyaml',
         'requests',
         'scipy',
-        'schema'        
+        'schema',      
+	'hyperopt',
+	'smac'
     ],
 
     cmdclass={
