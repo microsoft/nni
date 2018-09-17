@@ -3,6 +3,8 @@ INSTALL_PREFIX ?= ${HOME}/.local
 EXAMPLES_PATH ?= ${HOME}/nni/examples
 WHOAMI := $(shell whoami)
 YARN := $(INSTALL_PREFIX)/yarn/bin/yarn
+PIP_INSTALL := python3 -m pip install
+PIP_UNINSTALL := python3 -m pip uninstall
 PIP_MODE ?= --user
 ifdef VIRTUAL_ENV
 undefine PIP_MODE
@@ -44,7 +46,7 @@ install:
 	ln -sf $(INSTALL_PREFIX)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
 	
 	### Installing Python SDK dependencies ###
-	pip3 install $(PIP_MODE) -r src/sdk/pynni/requirements.txt
+	$(PIP_INSTALL) $(PIP_MODE) -r src/sdk/pynni/requirements.txt
 	### Installing Python SDK ###
 	cd src/sdk/pynni && python3 setup.py install $(PIP_MODE)
 	
@@ -124,12 +126,12 @@ dev-install:
 	ln -sf $(INSTALL_PREFIX)/nni/nni_manager/node_modules/serve/bin/serve.js $(BIN_PATH)/serve
 	
 	### Installing Python SDK dependencies ###
-	pip3 install $(PIP_MODE) -r src/sdk/pynni/requirements.txt
+	$(PIP_INSTALL) install $(PIP_MODE) -r src/sdk/pynni/requirements.txt
 	### Installing Python SDK ###
-	cd src/sdk/pynni && pip3 install $(PIP_MODE) -e .
+	cd src/sdk/pynni && $(PIP_INSTALL) $(PIP_MODE) -e .
 	
 	### Installing nnictl ###
-	cd tools && pip3 install $(PIP_MODE) -e .
+	cd tools && $(PIP_INSTALL) $(PIP_MODE) -e .
 	
 	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
 	echo 'cd $(INSTALL_PREFIX)/nni/nni_manager && node main.js $$@' >> $(BIN_PATH)/nnimanager
@@ -144,8 +146,8 @@ dev-install:
 
 
 uninstall:
-	-pip3 uninstall -y nni
-	-pip3 uninstall -y nnictl
+	-$(PIP_UNINSTALL) -y nni
+	-$(PIP_UNINSTALL) -y nnictl
 	-rm -r $(INSTALL_PREFIX)/nni
 	-rm -r $(EXAMPLES_PATH)
 	-rm $(BIN_PATH)/serve
