@@ -31,7 +31,7 @@ setuptools.setup(
     install_requires = [],
     dependency_links = [
         'git+https://github.com/automl/ConfigSpace.git',
-	    'git+https://github.com/automl/SMAC3.git'
+        'git+https://github.com/automl/SMAC3.git'
     ],
 
     author = 'Microsoft NNI Team',
