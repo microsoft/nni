@@ -66,7 +66,12 @@ def set_trial_config(experiment_config, port):
     value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
     request_data['trial_config'] = value_dict
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
-    return True if response.status_code == 200 else False
+    if response.status_code == 200:
+        return True
+    else:
+        with open(STDERR_FULL_PATH, 'a+') as fout:
+            fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+        return False
 
 def set_local_config(experiment_config, port):
     '''set local configuration'''
@@ -82,6 +87,8 @@ def set_remote_config(experiment_config, port):
     if not response or not response.status_code == 200:
         if response is not None:
             err_message = response.text
+            with open(STDERR_FULL_PATH, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
 
     #set trial_config
@@ -117,7 +124,12 @@ def set_experiment(experiment_config, mode, port):
             {'key': 'trial_config', 'value': value_dict})
 
     response = rest_post(experiment_url(port), json.dumps(request_data), 20)
-    return response if response.status_code == 200 else None
+    if response.status_code == 200:
+        return response
+    else:
+        with open(STDERR_FULL_PATH, 'a+') as fout:
+            fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+        return None
 
 def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
