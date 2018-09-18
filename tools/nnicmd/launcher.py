@@ -40,7 +40,8 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     print_normal('Checking experiment...')
     nni_config = Config()
     rest_port = nni_config.get_config('restServerPort')
-    if rest_port and check_rest_server_quick(rest_port)[0]:
+    running, _ = check_rest_server_quick(rest_port)
+    if rest_port and running:
         print_error('There is an experiment running, please stop it first...')
         print_normal('You can use \'nnictl stop\' command to stop an experiment!')
         exit(0)
@@ -162,7 +163,8 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
 
     # check rest server
     print_normal('Checking restful server...')
-    if check_rest_server(REST_PORT)[0]:
+    running, _ = check_rest_server(REST_PORT)
+    if running:
         print_normal('Restful server start success!')
     else:
         print_error('Restful server start failed!')

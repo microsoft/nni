@@ -47,7 +47,8 @@ def check_rest(args):
     '''check if restful server is running'''
     nni_config = Config()
     rest_port = nni_config.get_config('restServerPort')
-    if check_rest_server_quick(rest_port)[0]:
+    running, _ = check_rest_server_quick(rest_port)
+    if not running:
         print_normal('Restful server is running...')
     else:
         print_normal('Restful server is not running...')
@@ -62,7 +63,8 @@ def stop_experiment(args):
         print_normal('Experiment is not running...')
         stop_web_ui()
         return
-    if check_rest_server_quick(rest_port)[0]:
+    running, _ = check_rest_server_quick(rest_port)
+    if running:
         response = rest_delete(experiment_url(rest_port), 20)
         if not response or response.status_code != 200:
             print_error('Stop experiment failed!')
@@ -82,7 +84,8 @@ def trial_ls(args):
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    if check_rest_server_quick(rest_port)[0]:
+    running, response = check_rest_server_quick(rest_port)
+    if running:
         response = rest_get(trial_jobs_url(rest_port), 20)
         if response and response.status_code == 200:
             content = json.loads(response.text)
@@ -102,7 +105,8 @@ def trial_kill(args):
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    if check_rest_server_quick(rest_port)[0]:
+    running, _ = check_rest_server_quick(rest_port)
+    if running:
         response = rest_delete(trial_job_id_url(rest_port, args.trialid), 20)
         if response and response.status_code == 200:
             print(response.text)
@@ -119,7 +123,8 @@ def list_experiment(args):
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    if check_rest_server_quick(rest_port)[0]:
+    running, _ = check_rest_server_quick(rest_port)
+    if running:
         response = rest_get(experiment_url(rest_port), 20)
         if response and response.status_code == 200:
             content = convert_time_stamp_to_date(json.loads(response.text))
