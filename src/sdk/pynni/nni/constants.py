@@ -40,12 +40,12 @@ ClassName = {
 
 ClassArgs = {
     'TPE': {
-        'algorithm_name': 'TPE'
+        'algorithm_name': 'tpe'
     },
     'Random': {
-        'algorithm_name': 'Random'
+        'algorithm_name': 'random_search'
     },
     'Anneal': {
-        'algorithm_name': 'Anneal'
+        'algorithm_name': 'anneal'
     }
 }
