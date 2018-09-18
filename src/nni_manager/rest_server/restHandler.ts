@@ -279,7 +279,7 @@ class NNIRestHandler {
         if (jobInfo === undefined || jobInfo.status !== 'FAILED' || jobInfo.logPath === undefined) {
             return jobInfo;
         }
-        jobInfo.stderrPath = path.join(jobInfo.logPath, '.nni', 'stderr');
+        jobInfo.stderrPath = path.join(jobInfo.logPath, 'stderr');
 
         return jobInfo;
     }
