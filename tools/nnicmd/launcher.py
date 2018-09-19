@@ -28,7 +28,7 @@ import tempfile
 from nni_annotation import *
 import random
 from .launcher_utils import validate_all_content
-from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick
+from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
 from .url_utils import cluster_metadata_url, experiment_url
 from .config_utils import Config
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, detect_process
@@ -67,7 +67,7 @@ def set_trial_config(experiment_config, port):
     value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
     request_data['trial_config'] = value_dict
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
-    if response.status_code == 200:
+    if check_response(response):
         return True
     else:
         with open(STDERR_FULL_PATH, 'a+') as fout:
@@ -85,7 +85,7 @@ def set_remote_config(experiment_config, port):
     request_data['machine_list'] = experiment_config['machineList']
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
     err_message = ''
-    if not response or not response.status_code == 200:
+    if not response or not check_response(response):
         if response is not None:
             err_message = response.text
             with open(STDERR_FULL_PATH, 'a+') as fout:
@@ -125,7 +125,7 @@ def set_experiment(experiment_config, mode, port):
             {'key': 'trial_config', 'value': value_dict})
 
     response = rest_post(experiment_url(port), json.dumps(request_data), 20)
-    if response.status_code == 200:
+    if check_response(response):
         return response
     else:
         with open(STDERR_FULL_PATH, 'a+') as fout:

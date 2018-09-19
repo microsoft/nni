@@ -23,7 +23,7 @@ import psutil
 import json
 import datetime
 from subprocess import call, check_output
-from .rest_utils import rest_get, rest_delete, check_rest_server_quick
+from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .config_utils import Config
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
 from .constants import STDERR_FULL_PATH, STDOUT_FULL_PATH
@@ -66,7 +66,7 @@ def stop_experiment(args):
     running, _ = check_rest_server_quick(rest_port)
     if running:
         response = rest_delete(experiment_url(rest_port), 20)
-        if not response or response.status_code != 200:
+        if not response or not check_response(response):
             print_error('Stop experiment failed!')
     #sleep to wait rest handler done
     time.sleep(3)
@@ -87,7 +87,7 @@ def trial_ls(args):
     running, response = check_rest_server_quick(rest_port)
     if running:
         response = rest_get(trial_jobs_url(rest_port), 20)
-        if response and response.status_code == 200:
+        if response and check_response(response):
             content = json.loads(response.text)
             for index, value in enumerate(content):               
                 content[index] = convert_time_stamp_to_date(value)
@@ -108,7 +108,7 @@ def trial_kill(args):
     running, _ = check_rest_server_quick(rest_port)
     if running:
         response = rest_delete(trial_job_id_url(rest_port, args.trialid), 20)
-        if response and response.status_code == 200:
+        if response and check_response(response):
             print(response.text)
         else:
             print_error('Kill trial job failed...')
@@ -126,7 +126,7 @@ def list_experiment(args):
     running, _ = check_rest_server_quick(rest_port)
     if running:
         response = rest_get(experiment_url(rest_port), 20)
-        if response and response.status_code == 200:
+        if response and check_response(response):
             content = convert_time_stamp_to_date(json.loads(response.text))
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
         else:

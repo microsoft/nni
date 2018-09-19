@@ -77,3 +77,9 @@ def check_rest_server_quick(rest_port):
     if response and response.status_code == 200:
         return True, response
     return False, None
+
+def check_response(response):
+    '''Check if a response is success according to status_code'''
+    if response and response.status_code == 200:
+        return True
+    return False
