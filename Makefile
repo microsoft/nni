@@ -109,16 +109,13 @@ remote-machine-install:
 	cd src/sdk/pynni && python3 setup.py install $(PIP_MODE)
 
 
-# All-in-one target
+# All-in-one target for non-expert users
 # Installs NNI as well as its dependencies, and update bashrc to set PATH
 .PHONY: easy-install
 easy-install: check-perm
 easy-install: install-dependencies
 easy-install: build
-easy-install: install-python-modules
-easy-install: install-node-modules
-easy-install: install-scripts
-easy-install: install-examples
+easy-install: install
 easy-install: update-bashrc
 easy-install:
 	#$(_INFO) Complete! #(_END)

@@ -1,9 +1,10 @@
 **Run an Experiment on Multiple Machines**
 ===
-NNI supports running an experiment on multiple machines, called remote machine mode. Let's say you have multiple machines with the account `bob` (Note: the account is not necessarily the same on multiple machines):
-| IP     | Username    | Password |
-| --------|---------|-------|
-| 10.1.1.1  | bob   | bob123    |
+NNI supports running an experiment on multiple machines, called remote machine mode. Let's say you have multiple machines with the account `bob` (Note: the account is not necessarily the same on multiple machines): 
+
+| IP  | Username| Password |
+| -------- |---------|-------|
+| 10.1.1.1 | bob | bob123    |
 | 10.1.1.2 | bob | bob123    |
 | 10.1.1.3 | bob | bob123    |
 
