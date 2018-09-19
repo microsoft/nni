@@ -21,7 +21,7 @@ Refer to [SearchSpaceSpec.md](SearchSpaceSpec.md) to learn more about search spa
 
 >Step 2 - Update model codes
 ~~~~
-2.1 Claim NNI API
+2.1 Declare NNI API
     Include `import nni` in your trial code to use NNI APIs. 
 
 2.2 Get predefined parameters
