@@ -51,6 +51,5 @@ EXPERIMENT_SUCCESS_INFO = 'Start experiment success! The experiment id is %s, an
                           '6. nnictl webui url              get the url of web ui'
 
 PACKAGE_REQUIREMENTS = {
-    'SMAC': {'install':['git+https://github.com/QuanluZhang/ConfigSpace.git','git+https://github.com/QuanluZhang/SMAC3.git'],
-             'uninstall':['ConfigSpace', 'smac']}
+    'SMAC': 'smac_tuner'
 }
