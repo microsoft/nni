@@ -5,7 +5,7 @@ maxExecDuration: 10h
 maxTrialNum: 10
 #choice: local, remote
 trainingServicePlatform: local
-searchSpacePath: search_space.json
+searchSpacePath: ~/nni/examples/trials/auto-gbdt/search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
