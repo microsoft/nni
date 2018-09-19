@@ -83,9 +83,6 @@ setup(
         'scipy',
         'schema'        
     ],
-    dependency_links = [
-        'git+https://github.com/hyperopt/hyperopt.git'
-    ],
 
     cmdclass={
         'install': CustomInstallCommand
