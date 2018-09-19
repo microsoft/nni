@@ -51,7 +51,7 @@ def get_config():
     parser = argparse.ArgumentParser(
         description='This program is using genetic algorithm to search architecture for SQuAD.')
     parser.add_argument('--input_file', type=str,
-                        default='./dev-v1.1.json', help='input file')
+                        default='./train-v1.1.json', help='input file')
     parser.add_argument('--dev_file', type=str,
                         default='./dev-v1.1.json', help='dev file')
     parser.add_argument('--embedding_file', type=str,
