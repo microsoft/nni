@@ -22,8 +22,8 @@
 import os
 import psutil
 from socket import AddressFamily
-from subprocess import Popen, PIPE
-from .rest_utils import rest_get
+from subprocess import Popen, PIPE, call
+from .rest_utils import rest_get, check_response
 from .config_utils import Config
 from .common_utils import print_error, print_normal
 from .constants import STDOUT_FULL_PATH, STDERR_FULL_PATH
@@ -71,6 +71,8 @@ def stop_web_ui():
                 child_process.kill()
         if parent_process.is_running():
             parent_process.kill()
+        cmds = ['pkill', '-P', str(webuiPid)]
+        call(cmds)
         return True
     except Exception as e:
         print_error(e)
@@ -84,6 +86,6 @@ def check_web_ui():
         return False
     for url in url_list:
         response = rest_get(url, 3)
-        if response and response.status_code == 200:
+        if response and check_response(response):
             return True
     return False
