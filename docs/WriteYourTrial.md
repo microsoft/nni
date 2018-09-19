@@ -49,7 +49,7 @@ Refer to [SearchSpaceSpec.md](SearchSpaceSpec.md) to learn more about search spa
 
 **NOTE**: 
 ~~~~
-accuracy - The `accuracy` could be any python data type, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
+accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
 assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
 tuner    - The tuner will generate next parameters/architecture based on the explore history (final result of all trials).
 ~~~~
