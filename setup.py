@@ -70,7 +70,7 @@ setup(
         'nni_annotation': 'tools/nni_annotation',
         'nni': 'src/sdk/pynni/nni',
         'nnicmd': 'tools/nnicmd',
-        'trialkeeper': 'src/nni_manager/training_service_tool/trialkeeper'
+        'trialkeeper': 'src/nni_manager/training_service_tool/trial'
     },
     python_requires = '>=3.5',
     install_requires = [
