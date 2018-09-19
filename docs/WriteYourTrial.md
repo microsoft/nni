@@ -80,7 +80,7 @@ Again, take MNIST as an example, it only requires 2 steps to write a trial with 
 
 Please refer the following tensorflow code snippet for NNI Annotation, the highlighted 4 lines are annotations that help you to: (1) tune batch\_size and (2) dropout\_rate, (3) report test\_acc every 100 steps, and (4) at last report test\_acc as final result.
 
->What noteworthy is: as these new added codes are annotations, it does not actually change your previous codes running dependencies or outputs, you can still run your code as usual in environments without NNI installed.
+>What noteworthy is: as these new added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
 
 ```diff
 with tf.Session() as sess:
