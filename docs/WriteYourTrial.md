@@ -1,7 +1,7 @@
 **Write a Trial Run on NNI**
 ===
 
-A **Trial** in NNI is an individual attempts at applying a set of parameters on a model. 
+A **Trial** in NNI is an individual attempt at applying a set of parameters on a model. 
 
 To define a NNI trial, you need to firstly define the set of parameters and then update the model. NNI provide two approaches for you to define a trial: `NNI API` and `NNI Python annotation`.
 
@@ -17,7 +17,7 @@ An example is shown below:
     "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
 }
 ```
-Refer to [Search Spece Spec](SearchSpaceSpec.md) to learn more about search space.
+Refer to [SearchSpaceSpec.md](SearchSpaceSpec.md) to learn more about search space.
 
 >Step 2 - Update model codes
 ~~~~
