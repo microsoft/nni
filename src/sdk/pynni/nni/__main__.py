@@ -116,10 +116,13 @@ def main():
             args.tuner_class_name,
             args.tuner_args)
 
+    if tuner is None:
+        raise AssertionError('Failed to create Tuner instance')
+
     if args.assessor_class_name:
         if args.assessor_class_name in ModuleName:
             assessor = create_builtin_class_instance(
-                args.assessor_class_name, 
+                args.assessor_class_name,
                 args.assessor_args)
         else:
             assessor = create_customized_class_instance(
@@ -127,9 +130,8 @@ def main():
                 args.assessor_class_filename,
                 args.assessor_class_name,
                 args.assessor_args)
-
-    if tuner is None:
-        raise AssertionError('Failed to create Tuner instance')
+        if assessor is None:
+            raise AssertionError('Failed to create Assessor instance')
 
     dispatcher = MsgDispatcher(tuner, assessor)
 
