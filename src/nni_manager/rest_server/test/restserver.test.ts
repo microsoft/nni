@@ -32,7 +32,7 @@ import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { MockedDataStore } from '../../core/test/mockedDatastore';
 import { MockedTrainingService } from '../../core/test/mockedTrainingService';
-import { RestServer } from '../server';
+import { NNIRestServer } from '../nniRestServer';
 import { testManagerProvider } from './mockedNNIManager';
 
 describe('Unit test for rest server', () => {
@@ -44,7 +44,7 @@ describe('Unit test for rest server', () => {
         Container.bind(Manager).provider(testManagerProvider);
         Container.bind(DataStore).to(MockedDataStore);
         Container.bind(TrainingService).to(MockedTrainingService);
-        const restServer: RestServer = component.get(RestServer);
+        const restServer: NNIRestServer = component.get(NNIRestServer);
         restServer.start().then(() => {
             ROOT_URL = `${restServer.endPoint}/api/v1/nni`;
             done();
@@ -54,7 +54,7 @@ describe('Unit test for rest server', () => {
     });
 
     after(() => {
-        component.get<RestServer>(RestServer).stop();
+        component.get<NNIRestServer>(NNIRestServer).stop();
         cleanupUnitTest();
     });
 

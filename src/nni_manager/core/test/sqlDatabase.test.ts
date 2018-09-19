@@ -62,33 +62,33 @@ const expParams2: ExperimentParams = {
 };
 
 const profiles: ExperimentProfile[] = [
-    { params: expParams1, id: '#1', execDuration: 0, startTime: new Date(), endTime: undefined, revision: 1 },
-    { params: expParams1, id: '#1', execDuration: 0, startTime: new Date(), endTime: new Date(), revision: 2 },
-    { params: expParams2, id: '#2', execDuration: 0, startTime: new Date(), endTime: new Date(), revision: 2 },
-    { params: expParams2, id: '#2', execDuration: 0, startTime: new Date(), endTime: new Date(), revision: 3 }
+    { params: expParams1, id: '#1', execDuration: 0, startTime: Date.now(), endTime: undefined, revision: 1 },
+    { params: expParams1, id: '#1', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 2 },
+    { params: expParams2, id: '#2', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 2 },
+    { params: expParams2, id: '#2', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 3 }
 ];
 
 const events: TrialJobEventRecord[] = [
-    { timestamp: new Date(), event: 'WAITING', trialJobId: 'A', data: 'hello' },     // 0
-    { timestamp: new Date(), event: 'UNKNOWN', trialJobId: 'B', data: 'world' },     // 1
-    { timestamp: new Date(), event: 'RUNNING', trialJobId: 'B', data: undefined },   // 2
-    { timestamp: new Date(), event: 'RUNNING', trialJobId: 'A', data: '123' },       // 3
-    { timestamp: new Date(), event: 'FAILED', trialJobId: 'A', data: undefined }     // 4
+    { timestamp: Date.now(), event: 'WAITING', trialJobId: 'A', data: 'hello' },     // 0
+    { timestamp: Date.now(), event: 'UNKNOWN', trialJobId: 'B', data: 'world' },     // 1
+    { timestamp: Date.now(), event: 'RUNNING', trialJobId: 'B', data: undefined },   // 2
+    { timestamp: Date.now(), event: 'RUNNING', trialJobId: 'A', data: '123' },       // 3
+    { timestamp: Date.now(), event: 'FAILED', trialJobId: 'A', data: undefined }     // 4
 ];
 
 const metrics: MetricDataRecord[] = [
-    { timestamp: new Date(), trialJobId: 'A', parameterId: '1', type: 'PERIODICAL', sequence: 0, data: 1.1 },   // 0
-    { timestamp: new Date(), trialJobId: 'B', parameterId: '2', type: 'PERIODICAL', sequence: 0, data: 2.1 },   // 1
-    { timestamp: new Date(), trialJobId: 'A', parameterId: '1', type: 'PERIODICAL', sequence: 1, data: 1.2 },   // 2
-    { timestamp: new Date(), trialJobId: 'A', parameterId: '1', type: 'FINAL', sequence: 0, data: 1.3 },        // 3
-    { timestamp: new Date(), trialJobId: 'C', parameterId: '2', type: 'PERIODICAL', sequence: 1, data: 2.1 },   // 4
-    { timestamp: new Date(), trialJobId: 'C', parameterId: '2', type: 'FINAL', sequence: 0, data: 2.2 }         // 5
+    { timestamp: Date.now(), trialJobId: 'A', parameterId: '1', type: 'PERIODICAL', sequence: 0, data: 1.1 },   // 0
+    { timestamp: Date.now(), trialJobId: 'B', parameterId: '2', type: 'PERIODICAL', sequence: 0, data: 2.1 },   // 1
+    { timestamp: Date.now(), trialJobId: 'A', parameterId: '1', type: 'PERIODICAL', sequence: 1, data: 1.2 },   // 2
+    { timestamp: Date.now(), trialJobId: 'A', parameterId: '1', type: 'FINAL', sequence: 0, data: 1.3 },        // 3
+    { timestamp: Date.now(), trialJobId: 'C', parameterId: '2', type: 'PERIODICAL', sequence: 1, data: 2.1 },   // 4
+    { timestamp: Date.now(), trialJobId: 'C', parameterId: '2', type: 'FINAL', sequence: 0, data: 2.2 }         // 5
 ];
 
 // tslint:disable-next-line:no-any
 function assertRecordEqual(record: any, value: any): void {
-    assert.ok(record.timestamp > new Date(2018, 6, 1));
-    assert.ok(record.timestamp < new Date());
+    assert.ok(record.timestamp > new Date(2018, 6, 1).getTime());
+    assert.ok(record.timestamp < Date.now());
 
     for (const key in value) {  // tslint:disable-line:no-for-in
         if (key !== 'timestamp') {

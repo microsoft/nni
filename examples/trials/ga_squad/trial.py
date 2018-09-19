@@ -51,14 +51,14 @@ def get_config():
     parser = argparse.ArgumentParser(
         description='This program is using genetic algorithm to search architecture for SQuAD.')
     parser.add_argument('--input_file', type=str,
-                        default='./dev-v1.1.json', help='input file')
+                        default='./train-v1.1.json', help='input file')
     parser.add_argument('--dev_file', type=str,
                         default='./dev-v1.1.json', help='dev file')
     parser.add_argument('--embedding_file', type=str,
                         default='./glove.840B.300d.txt', help='dev file')
     parser.add_argument('--root_path', default='./data/',
                         type=str, help='Root path of models')
-    parser.add_argument('--batch_size', type=int, default=2, help='batch size')
+    parser.add_argument('--batch_size', type=int, default=64, help='batch size')
     parser.add_argument('--save_path', type=str,
                         default='./save', help='save path dir')
     parser.add_argument('--learning_rate', type=float, default=0.0001,
@@ -88,11 +88,13 @@ def load_embedding(path):
     '''
     return embedding for a specif file by given file path.
     '''
+    EMBEDDING_DIM = 300
     embedding_dict = {}
     with open(path, 'r', encoding='utf-8') as file:
         pairs = [line.strip('\r\n').split() for line in file.readlines()]
         for pair in pairs:
-            embedding_dict[pair[0]] = [float(x) for x in pair[1:]]
+            if len(pair) == EMBEDDING_DIM + 1:
+                embedding_dict[pair[0]] = [float(x) for x in pair[1:]]
     logger.debug('embedding_dict size: %d', len(embedding_dict))
     return embedding_dict
 
@@ -241,8 +243,6 @@ def run_epoch(batches, answer_net, is_training):
             if count % 100 == 0:
                 logger.debug('%d %g except:%g' %
                              (count, used, used / count * len(batches)))
-        if count % 100 == 0:
-            break
     loss = loss_sum / len(batches)
     if is_training:
         return loss

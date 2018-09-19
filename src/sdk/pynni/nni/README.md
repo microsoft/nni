@@ -44,16 +44,19 @@ Here is an example:
     ```
     # config.yaml
     tuner:
-      tunerName: TPE
-      optimizationMode: Maximize
+      # choice: TPE, Random, Anneal, Evolution, ...
+      builtinTunerName: TPE
+      classArgs:
+        # choice: maximize, minimize
+        optimize_mode: maximize
     ```
 
 There are two filed you need to set: 
 
-```tunerName``` and ```optimizationMode```.
+```builtinTunerName``` and ```optimize_mode```.
 
-    tunerName: TPE / Random / Anneal / Evolution
-    optimizationMode:  Maximize / Minimize
+    builtinTunerName: TPE / Random / Anneal / Evolution
+    optimize_mode:  maximize / minimize
 
 
   [1]: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf

@@ -1,4 +1,4 @@
-﻿nnictl
+nnictl
 ===
 ## Introduction
 __nnictl__ is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc.

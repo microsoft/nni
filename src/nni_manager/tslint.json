@@ -11,5 +11,12 @@
         "no-console": [true, "log"],
         "no-multiline-string": false
     },
-    "rulesDirectory": []
+    "rulesDirectory": [],
+    "linterOptions": {
+        "exclude": [
+            "training_service/test/*",
+            "rest_server/test/*",
+            "core/test/*"
+        ]
+    }
 }

@@ -1,12 +1,14 @@
 import * as React from 'react';
 import { browserHistory } from 'react-router';
 import axios from 'axios';
-import { Table, Button, Popconfirm, message } from 'antd';
-import { MANAGER_IP, roundNum, trialJobStatus } from '../const';
+import { Table, Button, Popconfirm, message, Modal } from 'antd';
+import { MANAGER_IP, trialJobStatus } from '../const';
 import JSONTree from 'react-json-tree';
 import ReactEcharts from 'echarts-for-react';
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/bar');
+require('echarts/lib/chart/line');
+require('echarts/lib/chart/scatter');
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
 require('../style/trialStatus.css');
@@ -45,6 +47,8 @@ interface TabState {
     downhref: string;
     option: object;
     trialJobs: object;
+    intermediateOption: object;
+    modalVisible: boolean;
 }
 
 class TrialStatus extends React.Component<{}, TabState> {
@@ -71,9 +75,48 @@ class TrialStatus extends React.Component<{}, TabState> {
             }],
             downhref: 'javascript:;',
             option: {},
-            trialJobs: {}
-            // trialJobs: this.getTrialJobs()
+            intermediateOption: {},
+            trialJobs: {},
+            modalVisible: false
         };
+    }
+
+    showIntermediateModal = (id: string) => {
+
+        axios(`${MANAGER_IP}/metric-data/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json;charset=utf-8'
+            }
+        })
+            .then(res => {
+                if (res.status === 200) {
+                    const intermediateArr: number[] = [];
+                    const xinter: number[] = [];
+                    Object.keys(res.data).map(item => {
+                        intermediateArr.push(parseFloat(res.data[item].data));
+                        xinter.push(res.data[item].sequence);
+                    });
+                    if (this._isMounted) {
+                        this.setState({
+                            intermediateOption: this.intermediateGraphOption(intermediateArr, id, xinter)
+                        });
+                    }
+                }
+            });
+        if (this._isMounted) {
+            this.setState({
+                modalVisible: true
+            });
+        }
+    }
+
+    hideIntermediateModal = () => {
+        if (this._isMounted) {
+            this.setState({
+                modalVisible: false
+            });
+        }
     }
 
     getOption = (dataObj: Runtrial) => {
@@ -146,9 +189,9 @@ class TrialStatus extends React.Component<{}, TabState> {
                             const end = trialJobs[item].endTime;
                             const start = trialJobs[item].startTime;
                             if (start && end) {
-                                duration = (Date.parse(end) - Date.parse(start)) / 1000;
+                                duration = (end - start) / 1000;
                             } else {
-                                duration = (new Date().getTime() - Date.parse(start)) / 1000;
+                                duration = (new Date().getTime() - start) / 1000;
                             }
                             trialId.push(trialJobs[item].id);
                             trialTime.push(duration);
@@ -184,14 +227,11 @@ class TrialStatus extends React.Component<{}, TabState> {
                         const status = trialJobs[item].status !== undefined
                             ? trialJobs[item].status
                             : '';
-                        const acc = trialJobs[item].finalMetricData !== undefined
-                            ? roundNum(parseFloat(trialJobs[item].finalMetricData.data), 5)
-                            : 0;
                         const startTime = trialJobs[item].startTime !== undefined
-                            ? trialJobs[item].startTime
+                            ? new Date(trialJobs[item].startTime).toLocaleString()
                             : '';
                         const endTime = trialJobs[item].endTime !== undefined
-                            ? trialJobs[item].endTime
+                            ? new Date(trialJobs[item].endTime).toLocaleString()
                             : '';
                         let desc: DescObj = {
                             parameters: {}
@@ -202,11 +242,15 @@ class TrialStatus extends React.Component<{}, TabState> {
                         if (trialJobs[item].logPath !== undefined) {
                             desc.logPath = trialJobs[item].logPath;
                         }
+                        let acc = 0;
+                        if (trialJobs[item].finalMetricData !== undefined) {
+                            acc = parseFloat(trialJobs[item].finalMetricData.data);
+                        }
                         let duration = 0;
                         if (startTime !== '' && endTime !== '') {
-                            duration = (Date.parse(endTime) - Date.parse(startTime)) / 1000;
+                            duration = (trialJobs[item].endTime - trialJobs[item].startTime) / 1000;
                         } else if (startTime !== '' && endTime === '') {
-                            duration = (new Date().getTime() - Date.parse(startTime)) / 1000;
+                            duration = (new Date().getTime() - trialJobs[item].startTime) / 1000;
                         } else {
                             duration = 0;
                         }
@@ -262,6 +306,28 @@ class TrialStatus extends React.Component<{}, TabState> {
         browserHistory.push(path);
     }
 
+    intermediateGraphOption = (intermediateArr: number[], id: string, xinter: number[]) => {
+        return {
+            tooltip: {
+                trigger: 'item'
+            },
+            xAxis: {
+                name: 'Trial',
+                data: xinter
+            },
+            yAxis: {
+                name: 'Accuracy',
+                type: 'value',
+                data: intermediateArr
+            },
+            series: [{
+                symbolSize: 6,
+                type: 'scatter',
+                data: intermediateArr
+            }]
+        };
+    }
+
     componentDidMount() {
 
         this._isMounted = true;
@@ -281,6 +347,7 @@ class TrialStatus extends React.Component<{}, TabState> {
     }
 
     render() {
+        const { intermediateOption, modalVisible, option, tableData } = this.state;
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
         trialJobStatus.map(item => {
@@ -401,11 +468,17 @@ class TrialStatus extends React.Component<{}, TabState> {
                         getItemString={() => (<span />)}  // remove the {} items
                         data={record.description}
                     />
+                    <Button
+                        type="primary"
+                        className="tableButton"
+                        onClick={this.showIntermediateModal.bind(this, record.id)}
+                    >
+                        Intermediate Result
+                    </Button>
                 </pre>
             );
         };
 
-        const { option, tableData } = this.state;
         return (
             <div className="hyper" id="tableCenter">
                 <ReactEcharts
@@ -422,6 +495,23 @@ class TrialStatus extends React.Component<{}, TabState> {
                     bordered={true}
                     scroll={{ x: '100%', y: window.innerHeight * 0.78 }}
                 />
+                <Modal
+                    title="Intermediate Result"
+                    visible={modalVisible}
+                    onCancel={this.hideIntermediateModal}
+                    footer={null}
+                    destroyOnClose={true}
+                    width="80%"
+                >
+                    <ReactEcharts
+                        option={intermediateOption}
+                        style={{
+                            width: '100%',
+                            height: 0.7 * window.innerHeight
+                        }}
+                        theme="my_theme"
+                    />
+                </Modal>
             </div>
         );
     }

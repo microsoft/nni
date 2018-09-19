@@ -25,7 +25,7 @@ from setuptools.command.install import install
 from subprocess import Popen
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 class CustomInstallCommand(install):
     '''a customized install class in pip module'''
@@ -61,7 +61,7 @@ setup(
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
-    long_description = read('docs/NNICTLDOC.md'),
+    long_description = read('README.md'),
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
 
@@ -80,10 +80,14 @@ setup(
         'psutil',
         'pyyaml',
         'requests',
-        'scipy'
+        'scipy',
+        'schema'        
     ],
 
     cmdclass={
         'install': CustomInstallCommand
+    },
+    entry_points={
+        'console_scripts': ['nnictl = nnicmd.nnictl:parse_args']
     }
 )

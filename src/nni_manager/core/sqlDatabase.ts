@@ -60,15 +60,15 @@ function loadExperimentProfile(row: any): ExperimentProfile {
         params: JSON.parse(row.params),
         id: row.id,
         execDuration: row.execDuration,
-        startTime: row.startTime === null ? undefined : new Date(row.startTime),
-        endTime: row.endTime === null ? undefined : new Date(row.endTime),
+        startTime: row.startTime === null ? undefined : row.startTime,
+        endTime: row.endTime === null ? undefined : row.endTime,
         revision: row.revision
     };
 }
 
 function loadTrialJobEvent(row: any): TrialJobEventRecord {
     return {
-        timestamp: new Date(row.timestamp),
+        timestamp: row.timestamp,
         trialJobId: row.trialJobId,
         event: row.event,
         data: row.data === null ? undefined : row.data,
@@ -78,7 +78,7 @@ function loadTrialJobEvent(row: any): TrialJobEventRecord {
 
 function loadMetricData(row: any): MetricDataRecord {
     return {
-        timestamp: new Date(row.timestamp),
+        timestamp: row.timestamp,
         trialJobId: row.trialJobId,
         parameterId: row.parameterId,
         type: row.type,
@@ -132,8 +132,8 @@ class SqlDB implements Database {
             JSON.stringify(exp.params),
             exp.id,
             exp.execDuration,
-            exp.startTime === undefined ? null : exp.startTime.getTime(),
-            exp.endTime === undefined ? null : exp.endTime.getTime(),
+            exp.startTime === undefined ? null : exp.startTime,
+            exp.endTime === undefined ? null : exp.endTime,
             exp.revision
         ];
 

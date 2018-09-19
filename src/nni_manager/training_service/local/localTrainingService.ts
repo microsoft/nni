@@ -65,16 +65,16 @@ function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
 class LocalTrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;
-    public submitTime: Date;
-    public startTime?: Date;
-    public endTime?: Date;
+    public submitTime: number;
+    public startTime?: number;
+    public endTime?: number;
     public tags?: string[];
     public url?: string;
     public workingDirectory: string;
     public form: JobApplicationForm;
     public pid?: number;
 
-    constructor(id: string, status: TrialJobStatus, submitTime: Date, workingDirectory: string, form: JobApplicationForm) {
+    constructor(id: string, status: TrialJobStatus, submitTime: number, workingDirectory: string, form: JobApplicationForm) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
@@ -152,7 +152,7 @@ class LocalTrainingService implements TrainingService {
             }
 
             if (!alive) {
-                trialJob.endTime = new Date();
+                trialJob.endTime = Date.now();
                 this.setTrialJobStatus(trialJob, 'FAILED');
                 try {
                     const state: string = await fs.promises.readFile(path.join(trialJob.workingDirectory, '.nni', 'state'), 'utf8');
@@ -162,7 +162,7 @@ class LocalTrainingService implements TrainingService {
                         if (parseInt(code, 10) === 0) {
                             this.setTrialJobStatus(trialJob, 'SUCCEEDED');
                         }
-                        trialJob.endTime = new Date(parseInt(timestamp, 10));
+                        trialJob.endTime = parseInt(timestamp, 10);
                     }
                 } catch (error) {
                     //ignore
@@ -191,7 +191,7 @@ class LocalTrainingService implements TrainingService {
             const trialJobDetail: LocalTrialJobDetail = new LocalTrialJobDetail(
                 trialJobId,
                 'WAITING',
-                new Date(),
+                Date.now(),
                 path.join(this.rootDir, 'trials', trialJobId),
                 form);
             this.jobQueue.push(trialJobId);
@@ -339,7 +339,7 @@ class LocalTrainingService implements TrainingService {
         const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
 
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
-        trialJobDetail.startTime = new Date();
+        trialJobDetail.startTime = Date.now();
         trialJobDetail.pid = process.pid;
         this.setExtraProperties(trialJobDetail, resource);
 
@@ -372,7 +372,7 @@ class LocalTrainingService implements TrainingService {
         const jobDetail: LocalTrialJobDetail = {
             id: jobId,
             status: 'RUNNING',
-            submitTime: new Date(),
+            submitTime: Date.now(),
             workingDirectory: workDir,
             form: form,
             pid: process.pid

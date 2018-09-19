@@ -52,8 +52,8 @@ pre.hyperpar{
 Button.tableButton{
     background:	#3c8dbc;
     border-color: #3c8dbc;
-    height: 26px;
-    line-height: 26px;
+    height: 28px;
+    line-height: 28px;
     /* padding: 3px 4px; */
 }
 /* status bgcolor */
@@ -97,6 +97,9 @@ Button.tableButton{
 Button.tableButton:hover, Button.tableButton:focus{
     background-color: #3c8dbc;
     border-color: #3c8dbc;
+}
+.ant-modal-title{
+    font-size: 20px;
 }
 
 
