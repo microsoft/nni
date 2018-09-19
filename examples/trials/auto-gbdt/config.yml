@@ -16,5 +16,5 @@ tuner:
     optimize_mode: minimize
 trial:
   command: python3 main.py
-  codeDir: .
+  codeDir: ~/nni/examples/trials/auto-gbdt/
   gpuNum: 0
