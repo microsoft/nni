@@ -19,13 +19,19 @@
 
 'use strict';
 
-/**
- * Enum of metadata keys for configuration
- */
-export enum TrialConfigMetadataKey {
-    MACHINE_LIST = 'machine_list',
-    TRIAL_CONFIG = 'trial_config',
-    EXPERIMENT_ID = 'experimentId',
-    RANDOM_SCHEDULER = 'random_scheduler',
-    PAI_CLUSTER_CONFIG = 'pai_config'
+import { TrialJobStatus  } from '../../common/trainingService';
+
+// tslint:disable-next-line:max-classes-per-file
+export class JobMetrics {
+    public readonly jobId: string;
+    public readonly metrics: string[];
+    public readonly jobStatus: TrialJobStatus;
+    public readonly endTimestamp: number;
+
+    constructor(jobId : string, metrics : string[], jobStatus : TrialJobStatus, endTimestamp : number) {
+        this.jobId = jobId;
+        this.metrics = metrics;
+        this.jobStatus = jobStatus;
+        this.endTimestamp = endTimestamp;
+    }
 }

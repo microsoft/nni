@@ -65,11 +65,12 @@ setup(
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
 
-    packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools'),
+    packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools') + find_packages('src/nni_manager/training_service_tool'),
     package_dir = {
         'nni_annotation': 'tools/nni_annotation',
         'nni': 'src/sdk/pynni/nni',
-        'nnicmd': 'tools/nnicmd'
+        'nnicmd': 'tools/nnicmd',
+        'trialkeeper': 'src/nni_manager/training_service_tool/trialkeeper'
     },
     python_requires = '>=3.5',
     install_requires = [

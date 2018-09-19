@@ -19,13 +19,30 @@
 
 'use strict';
 
-/**
- * Enum of metadata keys for configuration
- */
-export enum TrialConfigMetadataKey {
-    MACHINE_LIST = 'machine_list',
-    TRIAL_CONFIG = 'trial_config',
-    EXPERIMENT_ID = 'experimentId',
-    RANDOM_SCHEDULER = 'random_scheduler',
-    PAI_CLUSTER_CONFIG = 'pai_config'
+import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from 'common/trainingService';
+
+export class PAITrialJobDetail implements TrialJobDetail {
+    public id: string;
+    public status: TrialJobStatus;
+    public submitTime: number;
+    public startTime?: number;
+    public endTime?: number;
+    public tags?: string[];
+    public url?: string;
+    public workingDirectory: string;
+    public form: JobApplicationForm;
+
+    constructor(id: string, status: TrialJobStatus, submitTime: number, workingDirectory: string, form: JobApplicationForm) {
+        this.id = id;
+        this.status = status;
+        this.submitTime = submitTime;
+        this.workingDirectory = workingDirectory;
+        this.form = form;
+        this.tags = [];
+    }
 }
+
+export const PAI_TRIAL_COMMAND_FORMAT: string =
+`export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_OUTPUT_DIR={0} 
+&& cd $NNI_SYS_DIR 
+&& python3 -m trial.trial_keeper --trial_command '{2}'`;

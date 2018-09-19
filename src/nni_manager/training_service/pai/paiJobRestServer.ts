@@ -17,4 +17,75 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
- 
+'use strict';
+
+import { Request, Response, Router } from 'express';
+import * as bodyParser from 'body-parser';
+import * as component from '../../common/component';
+import { RestServer } from '../../common/restServer'
+import { Inject } from 'typescript-ioc';
+import { PAITrainingService } from './paiTrainingService';
+
+/**
+ * PAI Training service Rest server, provides rest API to support pai job metrics update
+ * 
+ */
+@component.Singleton
+export class PAIJobRestServer extends RestServer{
+    /** NNI main rest service default port */
+    private static readonly DEFAULT_PORT: number = 51189;
+
+    private readonly API_ROOT_URL: string = '/api/v1/nni-pai';
+
+    @Inject
+    private readonly paiTrainingService : PAITrainingService;
+
+    /**
+     * constructor to provide NNIRestServer's own rest property, e.g. port
+     */
+    constructor() {
+        super();
+        this.port = PAIJobRestServer.DEFAULT_PORT;
+        this.paiTrainingService = component.get(PAITrainingService);
+    }
+
+    /**
+     * NNIRestServer's own router registration
+     */
+    protected registerRestHandler(): void {
+        this.app.use(bodyParser.json());
+        this.app.use(this.API_ROOT_URL, this.createRestHandler());
+    }
+
+    private createRestHandler() : Router {
+        const router: Router = Router();
+
+        // tslint:disable-next-line:typedef
+        router.use((req: Request, res: Response, next) => {
+            this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
+            res.setHeader('Content-Type', 'application/json');
+            next();
+        });
+
+        router.post('/update-metrics/:id', (req: Request, res: Response) => {
+            try {
+                this.log.info(`Get update-metrics request, trial job id is ${req.params.id}`);
+                this.log.info(`update-metrics body is ${JSON.stringify(req.body)}`);
+    
+                this.paiTrainingService.MetricsEmitter.emit('metric', {
+                    id : req.body.jobId,
+                    data : req.body.metrics
+                });
+
+                res.send();
+            }
+            catch(err) {
+                this.log.error(`json parse metrics error: ${err}`);
+                res.status(500);
+                res.send(err.message);
+            }
+        });
+
+        return router;
+    }
+}

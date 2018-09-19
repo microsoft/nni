@@ -90,14 +90,9 @@ build:
 	#$(_INFO) Building nnictl $(_END)
 	cd tools && python3 setup.py build
 
+	#$(_INFO) Building Training Service tool $(_END)
+	cd src/nni_manager/training_service_tool && python3 setup.py build
 
-# Standard installation target
-# Must be invoked after building
-.PHONY: install
-install: install-python-modules
-install: install-node-modules
-install: install-scripts
-install: install-examples
 install:
 	#$(_INFO) Complete! You may want to add $(BIN_PATH) to your PATH environment $(_END)
 
@@ -107,6 +102,7 @@ install:
 .PHONY: remote-machine-install
 remote-machine-install:
 	cd src/sdk/pynni && python3 setup.py install $(PIP_MODE)
+	cd src/nni_manager/training_service_tool && python3 setup.py install $(PIP_MODE)
 
 
 # All-in-one target for non-expert users
@@ -145,6 +141,7 @@ dev-install:
 uninstall:
 	-pip3 uninstall -y nni
 	-pip3 uninstall -y nnictl
+	-pip3 uninstall -y nnits-tool
 	-rm -rf $(INSTALL_PREFIX)/nni
 	-rm -f $(BIN_PATH)/nnimanager
 	-rm -f $(BIN_PATH)/nnictl
@@ -203,6 +200,8 @@ install-python-modules:
 	#$(_INFO) Installing nnictl $(_END)
 	cd tools && python3 setup.py install $(PIP_MODE)
 
+	#$(_INFO) Installing NNI training service tool $(_END)
+	cd src/nni_manager/training_service_tool && python3 setup.py install $(PIP_MODE)
 
 .PHONY: install-node-modules
 install-node-modules:
@@ -223,7 +222,10 @@ install-dev-modules:
 	
 	#$(_INFO) Installing nnictl $(_END)
 	cd tools && pip3 install $(PIP_MODE) -e .
-	
+
+	#$(_INFO) Installing NNI training service tool $(_END)
+	cd src/nni_manager/training_service_tool && pip3 install $(PIP_MODE) -e .
+
 	mkdir -p $(INSTALL_PREFIX)/nni
 	
 	#$(_INFO) Installing NNI Manager $(_END)
