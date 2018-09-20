@@ -1,4 +1,4 @@
-# Automaticlly Model Architecture Search for Reading Comprehensio
+# Automatic Model Architecture Search for Reading Comprehension
 This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension task.
 
 ## Search Space
@@ -15,7 +15,7 @@ We conclude the search space as follow:
 
 ![ga-squad-logo](./ga_squad.png)
 
-## Ner version
+## New version
 Also we have another version which time cost is less and performance is better. We will release soon.
 
 # How to run this example?
