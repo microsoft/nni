@@ -1,2 +1,2 @@
-configspace-nni
-smac-nni
+git+https://github.com/QuanluZhang/ConfigSpace.git
+git+https://github.com/QuanluZhang/SMAC3.git
