@@ -1,4 +1,4 @@
-# Automaticlly Model Architecture Search for Reading Comprehension
+# Automatic Model Architecture Search for Reading Comprehension
 This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension task.
 
 ## Search Space
