@@ -229,5 +229,19 @@ function cleanupUnitTest(): void {
     Container.restore(ExperimentStartupInfo);
 }
 
-export { getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getDefaultDatabaseDir, mkDirP, delay, prepareUnitTest,
-    parseArg, cleanupUnitTest, uniqueString, randomSelect };
+/**
+ * Get IPv4 address of current machine
+ */
+function getIPV4Address(): string {
+    let ipv4Address : string = '';
+
+    for(const item of os.networkInterfaces().eth0) {
+        if(item.family === 'IPv4') {
+            ipv4Address = item.address;
+        }
+    }
+    return ipv4Address;
+}
+
+export { getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getDefaultDatabaseDir, getIPV4Address, 
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };

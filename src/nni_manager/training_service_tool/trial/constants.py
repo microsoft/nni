@@ -22,7 +22,7 @@ import os
 
 API_ROOT_URL = '/api/v1/nni-pai'
 
-BASE_URL = 'http://localhost'
+BASE_URL = 'http://{}'
 
 DEFAULT_REST_PORT = 51189
 

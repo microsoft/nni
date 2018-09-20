@@ -24,7 +24,7 @@ import os
 import re
 import requests
 
-from .constants import DEFAULT_REST_PORT
+from .constants import BASE_URL, DEFAULT_REST_PORT
 from .rest_utils import rest_get, rest_post, rest_put, rest_delete
 from .url_utils import gen_update_metrics_url
 
@@ -103,7 +103,7 @@ class TrialMetricsReader():
         offset = self._get_offset()
         return self._read_all_available_records(offset)
 
-def read_experiment_metrics():
+def read_experiment_metrics(nnimanager_ip):
     '''
     Read metrics data for specified trial jobs
     '''
@@ -113,7 +113,7 @@ def read_experiment_metrics():
         result['jobId'] = NNI_TRIAL_JOB_ID
         result['metrics'] = reader.read_trial_metrics()
         print('Result metrics is {}'.format(json.dumps(result)))
-        response = rest_post(gen_update_metrics_url(DEFAULT_REST_PORT, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
+        response = rest_post(gen_update_metrics_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
 
         print('Response code is {}'.format(response.status_code))
     except Exception:

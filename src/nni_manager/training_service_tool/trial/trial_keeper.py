@@ -50,7 +50,7 @@ def main_loop(args):
             break
         else:
             print('subprocess pid: {} is still alive'.format(process.pid))
-            read_experiment_metrics()
+            read_experiment_metrics(args.nnimanager_ip)
         time.sleep(2)
 
 def trial_keeper_help_info(*args):
@@ -60,7 +60,8 @@ if __name__ == '__main__':
     '''NNI Trial Keeper main function'''
     PARSER = argparse.ArgumentParser()
     PARSER.set_defaults(func=trial_keeper_help_info)
-    PARSER.add_argument("--trial_command", type=str, help="Command to launch trial process")
+    PARSER.add_argument('--trial_command', type=str, help='Command to launch trial process')
+    PARSER.add_argument('--nnimanager_ip', type=str, default='localhost', help='NNI manager IP')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)
