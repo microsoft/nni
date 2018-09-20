@@ -54,7 +54,7 @@ def run():
                 if trial > current_trial:
                     current_trial = trial
                     print('Trial #%d done' % trial)
-
+    subprocess.run(['nnictl', 'log', 'stderr'])
     assert tuner_status == 'DONE' and assessor_status == 'DONE', 'Failed to finish in 1 min'
 
     ss1 = json.load(open('search_space.json'))
