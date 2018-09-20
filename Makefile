@@ -20,7 +20,7 @@ else  # is normal user
 endif
 
 ## Dependency information
-NODE_VERSION ?= v10.6.0
+NODE_VERSION ?= v10.9.0
 NODE_TARBALL ?= node-$(NODE_VERSION)-linux-x64.tar.xz
 NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
 
@@ -72,7 +72,6 @@ _WARNING := $(shell echo -e '\e[1;33m')
 _END := $(shell echo -e '\e[0m')
 
 # Setting variables end
-YARN := yarnpkg
 
 # Main targets
 
