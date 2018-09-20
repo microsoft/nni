@@ -13,9 +13,9 @@ We conclude the search space as follow:
 6. ADD-SKIP (Identity between random layers).
 7. REMOVE-SKIP (Removes random skip).
 
-![ga-squad-logo](./ga_squad.png)
+![ga-squad-logo](./ga_squad.png=100x100)
 
-## Ner version
+## New version
 Also we have another version which time cost is less and performance is better. We will release soon.
 
 # How to run this example?
