@@ -1,10 +1,8 @@
-# Automaticlly model architecture search for Reading Comprehension
-SQuAD is a competition holded by Stanford. Giving you queries and passages, you need to select answer from passage.
-
+# Automaticlly Model Architecture Search for Reading Comprehensio
 This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension task.
 
+## Search Space
 Since attention and recurrent neural network (RNN) module have been proven effective in Reading Comprehension.
-
 We conclude the search space as follow:
 
 1. IDENTITY (Effectively means keep training).
@@ -15,15 +13,14 @@ We conclude the search space as follow:
 6. ADD-SKIP (Identity between random layers).
 7. REMOVE-SKIP (Removes random skip).
 
-
 ![ga-squad-logo](./ga_squad.png)
 
+## Ner version
 Also we have another version which time cost is less and performance is better. We will release soon.
 
+# How to run this example?
 
-# Download data
-
-## Use downloading script
+## Use downloading script to download data
 
 Execute the following command to download needed files
 using the downloading script:
@@ -49,7 +46,7 @@ wget http://nlp.stanford.edu/data/glove.840B.300d.zip
 unzip glove.840B.300d.zip
 ```
 
-# How to submit this job
+# submit this job
 ```
 nnictl create --config ~/nni/examples/trials/ga_squad/config.yaml
 ```
