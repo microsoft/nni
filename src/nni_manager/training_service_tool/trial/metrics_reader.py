@@ -40,8 +40,8 @@ class TrialMetricsReader():
     Read metrics data from a trial job
     '''
     def __init__(self, rest_port = DEFAULT_REST_PORT):
-        self.offset_filename = os.path.join(NNI_SYS_DIR, '.nni', 'metrics_offset')
-        self.metrics_filename = os.path.join(NNI_SYS_DIR, '.nni', 'metrics')
+        self.offset_filename = os.path.join('.nni', 'metrics_offset')
+        self.metrics_filename = os.path.join('.nni', 'metrics')
         self.rest_port = rest_port
 
     def _metrics_file_is_empty(self):
