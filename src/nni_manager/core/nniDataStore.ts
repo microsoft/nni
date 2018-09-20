@@ -118,6 +118,7 @@ class NNIDataStore implements DataStore {
     }
 
     public async storeMetricData(trialJobId: string, data: string): Promise<void> {
+        this.log.debug(`storeMetricData: trialJobId: ${trialJobId}, data: ${data}`);
         const metrics = JSON.parse(data) as MetricData;
         assert(trialJobId === metrics.trial_job_id);
         await this.db.storeMetricData(trialJobId, JSON.stringify({

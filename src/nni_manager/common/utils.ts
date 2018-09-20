@@ -158,7 +158,7 @@ function parseArg(names: string[]): string {
  * @param assessor: similiar as tuner
  *
  */
-function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean = true): string {
+function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean = false): string {
     let command: string = `python3 -m nni --tuner_class_name ${tuner.className}`;
     if (multiPhase) {
         command += ' --multi_phase';

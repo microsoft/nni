@@ -94,9 +94,10 @@ class MultiPhaseMsgDispatcher(MsgDispatcherBase):
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
         ids = [_create_parameter_id() for _ in range(data)]
+        params_list = self.tuner.generate_multiple_parameters(ids)
+        assert len(ids) == len(params_list)
         for i, _ in enumerate(ids):
-            params = self.tuner.generate_parameters(ids[i])
-            send(CommandType.NewTrialJob, _pack_parameter(ids[i], params))
+            send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))
         return True
 
     def handle_update_search_space(self, data):

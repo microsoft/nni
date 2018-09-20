@@ -116,7 +116,7 @@ class NNIManager implements Manager {
         await this.storeExperimentProfile();
         this.log.debug('Setup tuner...');
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor);
+        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
         console.log(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
             //expParams.tuner.tunerCommand,
@@ -140,7 +140,7 @@ class NNIManager implements Manager {
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor);
+        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
         console.log(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
             dispatcherCommand,

@@ -36,6 +36,14 @@ class MultiPhaseTuner(Recoverable):
         """
         raise NotImplementedError('Tuner: generate_parameters not implemented')
 
+    def generate_multiple_parameters(self, parameter_id_list):
+        """Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
+        Call 'generate_parameters()' by 'count' times by default.
+        User code must override either this function or 'generate_parameters()'.
+        parameter_id_list: list of int
+        """
+        return [self.generate_parameters(parameter_id) for parameter_id in parameter_id_list]
+
     def receive_trial_result(self, parameter_id, parameters, reward, trial_job_id):
         """Invoked when a trial reports its final result. Must override.
         parameter_id: int
