@@ -24,7 +24,7 @@ import { EventEmitter } from 'events';
 import { TrainingService, TrialJobDetail, TrialJobStatus } from '../common/trainingService';
 import { delay } from '../common/utils';
 
-type TrialJobMaintainerEvent = TrialJobStatus | 'EXPERIMENT_DONE';
+type TrialJobMaintainerEvent = TrialJobStatus | 'EXPERIMENT_DONE' | 'NO_RUNNING_TRIALS';
 
 /**
  * TrialJobs
@@ -33,10 +33,12 @@ class TrialJobs {
     private eventEmitter: EventEmitter;
     private trialJobs: Map<string, TrialJobDetail>;
     private noMoreTrials: boolean;
+    private reachedMaxTrialNum: boolean;
     private stopLoop: boolean;
     private trainingService: TrainingService;
     private pastExecDuration: number; // second
     private maxExecDuration: number; // second
+    private isRunning: boolean;
 
     constructor(
         trainingService: TrainingService,
@@ -46,10 +48,16 @@ class TrialJobs {
         this.eventEmitter = new EventEmitter();
         this.trialJobs = new Map<string, TrialJobDetail>();
         this.noMoreTrials = false;
+        this.reachedMaxTrialNum = false;
         this.stopLoop = false;
         this.trainingService = trainingService;
         this.pastExecDuration = pastExecDuration;
         this.maxExecDuration = maxExecDuration;
+        this.isRunning = true;
+    }
+
+    public isTrialJobsRunning(): boolean {
+        return this.isRunning;
     }
 
     public setTrialJob(key: string, value: TrialJobDetail): void {
@@ -60,7 +68,14 @@ class TrialJobs {
         return this.trialJobs.get(key);
     }
 
+    public setReachMaxTrialNum(fact: boolean): void {
+        this.reachedMaxTrialNum = fact;
+    }
+
     public setNoMoreTrials(): void {
+        // NOTE: this variable is not used, because even tuner has no more trials,
+        // user could also submit customized trial jobs, thus the experiment should not stop.
+        // that is, noMoreTrials does not control experiment's status.
         this.noMoreTrials = true;
     }
 
@@ -68,7 +83,7 @@ class TrialJobs {
         this.stopLoop = true;
     }
 
-    public updateMaxExecDuration(duration: number): void {
+    public setMaxExecDuration(duration: number): void {
         this.maxExecDuration = duration;
     }
 
@@ -77,6 +92,11 @@ class TrialJobs {
     }
 
     public async requestTrialJobsStatus(): Promise<void> {
+        if (this.trialJobs.size === 0) {
+            // TODO: we can relax this condition, to reach the full concurrency in some corner cases.
+            this.eventEmitter.emit('all', 'NO_RUNNING_TRIALS', undefined);
+            return Promise.resolve();
+        }
         for (const trialJobId of Array.from(this.trialJobs.keys())) {
             const trialJobDetail: TrialJobDetail = await this.trainingService.getTrialJob(trialJobId);
             switch (trialJobDetail.status) {
@@ -115,13 +135,25 @@ class TrialJobs {
     }
 
     public async run(): Promise<void> {
-        const startTime: number = Date.now();
-        while ((Date.now() - startTime) / 1000 + this.pastExecDuration < this.maxExecDuration) {
-            if (this.stopLoop ||
-                (this.noMoreTrials && this.trialJobs.size === 0)) {
+        let startTime: number = Date.now();
+        let pastExecDurationThisRun: number = 0;
+        while (true) {
+            if (this.stopLoop) {
                 break;
             }
-            await this.requestTrialJobsStatus();
+            if ((Date.now() - startTime) / 1000
+                + pastExecDurationThisRun
+                + this.pastExecDuration < this.maxExecDuration
+                && !this.reachedMaxTrialNum) {
+                if (!this.isRunning) {
+                    startTime = Date.now();
+                    this.isRunning = true;
+                }
+                await this.requestTrialJobsStatus();
+            } else {
+                this.isRunning = false;
+                pastExecDurationThisRun += (Date.now() - startTime) / 1000;
+            }
             await delay(5000);
         }
         this.eventEmitter.emit('all', 'EXPERIMENT_DONE');

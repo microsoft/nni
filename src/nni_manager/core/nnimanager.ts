@@ -57,6 +57,7 @@ class NNIManager implements Manager {
     private experimentProfile: ExperimentProfile;
     private dispatcherPid: number;
     private status: NNIManagerStatus;
+    private skippedJobFinishEventNum: number; // used to maintain trial concurrency
 
     constructor() {
         this.currSubmittedTrialNum = 0;
@@ -73,6 +74,7 @@ class NNIManager implements Manager {
             status: 'INITIALIZED',
             errors: []
         };
+        this.skippedJobFinishEventNum = 0;
     }
 
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
@@ -273,9 +275,19 @@ class NNIManager implements Manager {
 
     private updateMaxExecDuration(duration: number): void {
         if (this.trialJobsMaintainer !== undefined) {
-            this.trialJobsMaintainer.updateMaxExecDuration(duration);
+            this.trialJobsMaintainer.setMaxExecDuration(duration);
         }
         this.experimentProfile.params.maxExecDuration = duration;
+
+        return;
+    }
+
+    private updateMaxTrialNum(trialNum: number): void {
+        if (this.trialJobsMaintainer !== undefined &&
+            trialNum > this.currSubmittedTrialNum) {
+            this.trialJobsMaintainer.setReachMaxTrialNum(false);
+        }
+        this.experimentProfile.params.maxTrialNum = trialNum;
 
         return;
     }
@@ -330,10 +342,15 @@ class NNIManager implements Manager {
     private async periodicallyUpdateExecDuration(): Promise<void> {
         const startTime: number = Date.now();
         const execDuration: number = this.experimentProfile.execDuration;
+        if (!this.trialJobsMaintainer) {
+            throw new Error('Error: trialJobsMaintainer has not been setup');
+        }
         for (; ;) {
-            await delay(1000 * 60 * 10); // 10 minutes
-            this.experimentProfile.execDuration = execDuration + (Date.now() - startTime) / 1000;
-            await this.storeExperimentProfile();
+            await delay(1000 * 60 * 2); // 2 minutes
+            if (this.trialJobsMaintainer.isTrialJobsRunning()) {
+                this.experimentProfile.execDuration = execDuration + (Date.now() - startTime) / 1000;
+                await this.storeExperimentProfile();
+            }
         }
     }
 
@@ -431,6 +448,8 @@ class NNIManager implements Manager {
                         } else {
                             this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, '1');
                         }
+                    } else {
+                        this.skippedJobFinishEventNum += 1;
                     }
                 }
                 this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: event}));
@@ -438,6 +457,17 @@ class NNIManager implements Manager {
                 break;
             case 'RUNNING':
                 await this.dataStore.storeTrialJobEvent(event, trialJobDetail.id, undefined, trialJobDetail.url);
+                break;
+            case 'NO_RUNNING_TRIALS':
+                if (this.skippedJobFinishEventNum > 0) {
+                    if (this.customizedTrials.length > 0) {
+                        const hyperParams: string | undefined = this.customizedTrials.shift();
+                        this.dispatcher.sendCommand(ADD_CUSTOMIZED_TRIAL_JOB, hyperParams);
+                    } else {
+                        this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, '1');
+                    }
+                    this.skippedJobFinishEventNum -= 1;
+                }
                 break;
             case 'EXPERIMENT_DONE':
                 this.log.info('Experiment done, cleaning up...');
@@ -468,8 +498,10 @@ class NNIManager implements Manager {
                     assert(trialJobDetail.status === 'WAITING');
                     await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, content, trialJobDetail.url);
                     if (this.currSubmittedTrialNum === this.experimentProfile.params.maxTrialNum) {
-                        this.trialJobsMaintainer.setNoMoreTrials();
+                        this.trialJobsMaintainer.setReachMaxTrialNum(true);
                     }
+                } else {
+                    this.skippedJobFinishEventNum += 1;
                 }
                 break;
             case NO_MORE_TRIAL_JOBS:
