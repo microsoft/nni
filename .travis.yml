@@ -16,5 +16,4 @@ install:
 before_script:
   - cd test
 script:
-  - python3 naive/run.py
-  - python3 test_builtin_tuner/run.py
+  - source run.sh
