@@ -20,8 +20,9 @@
 
 'use strict'
 
-import * as assert from 'assert';
 import * as component from '../../common/component';
+import * as cpp from 'child-process-promise';
+import * as fs from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 
@@ -34,10 +35,11 @@ import {
     HostJobApplicationForm, JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
-import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { ObservableTimer } from '../../common/observableTimer';
 import { PAIJobRestServer } from './paiJobRestServer'
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT } from './paiData';
+import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
 import { HDFSClientUtility } from './hdfsClientUtility'
@@ -62,34 +64,52 @@ class PAITrainingService implements TrainingService {
     private hdfsClient: any;
     private paiToken? : string;
     private experimentId! : string;
+    private readonly paiJobCollector : PAIJobInfoCollector;
 
-    constructor(@component.Inject timer: ObservableTimer) {
+    constructor() {
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, PAITrialJobDetail>();
         // Root dir on HDFS
         this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
-        this.experimentId = getExperimentId();        
+        this.experimentId = getExperimentId();      
+        this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
     }
 
     public async run(): Promise<void> {
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         await restServer.start();
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
+        while (!this.stopping) {
+            await this.paiJobCollector.updateTrialStatusFromPAI(this.paiToken, this.paiClusterConfig);
+            await delay(3000);
+        }
     }
 
-    public listTrialJobs(): Promise<TrialJobDetail[]> {
-        const deferred : Deferred<TrialJobDetail[]> = new Deferred<TrialJobDetail[]>();
+    public async listTrialJobs(): Promise<TrialJobDetail[]> {
+        const jobs: TrialJobDetail[] = [];
+        
+        this.trialJobsMap.forEach(async (value: PAITrialJobDetail, key: string) => {
+            if (value.form.jobType === 'TRIAL') {
+                jobs.push(await this.getTrialJob(key));
+            }
+        });
 
-        deferred.resolve([]);
-        return deferred.promise; 
+        return Promise.resolve(jobs);
     }
 
     public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
-        const deferred : Deferred<TrialJobDetail> = new Deferred<TrialJobDetail>();
+        if(!this.paiClusterConfig) {
+            throw new Error('PAI Cluster config is not initialized');
+        }
 
-        deferred.resolve(undefined);
-        return deferred.promise; 
+        const paiTrialJob: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+
+        if (!paiTrialJob) {
+            return Promise.reject(`trial job ${trialJobId} not found`)
+        }        
+
+        return Promise.resolve(paiTrialJob);
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void) {
@@ -118,23 +138,37 @@ class PAITrainingService implements TrainingService {
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
 
-        const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
-            trialJobId,
-            'WAITING',
-            Date.now(),
-            trialWorkingFolder,
-            form);
-        this.trialJobsMap.set(trialJobId, trialJobDetail);
+        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
+        //create tmp trial working folder locally.
+        await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
+        await cpp.exec(`cp -r ${this.paiTrialConfig.codeDir} ${trialLocalTempFolder}`);
+        
+        // Write file content ( parameter.cfg ) to local tmp folders
+        const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
+        if(trialForm) {
+            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'parameter.cfg'), trialForm.hyperParameters, { encoding: 'utf8' });
+        }
 
         // Step 1. Prepare PAI job configuration
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
 
+        const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
+            trialJobId,
+            'WAITING',
+            paiJobName,            
+            Date.now(),
+            trialWorkingFolder,
+            form);
+        this.trialJobsMap.set(trialJobId, trialJobDetail);
+
         const nniPaiTrialCommand : string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
-            `./${trialJobId}`,
+            // PAI will copy job's codeDir into /root directory
+            `/root/${trialJobId}`,
             trialJobId,
-            this.paiTrialConfig.command
+            this.paiTrialConfig.command, 
+            getIPV4Address()
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
@@ -165,10 +199,11 @@ class PAITrainingService implements TrainingService {
                                     // PAI Task roles
                                     paiTaskRoles);
         console.log(`PAI job config is ${JSON.stringify(paiJobConfig)}`);
+        console.log(`Before submission, trial job detail is ${JSON.stringify(trialJobDetail)}`);
 
         // Step 2. Upload code files in codeDir onto HDFS
         try {
-            await HDFSClientUtility.copyDirectoryToHdfs(this.paiTrialConfig.codeDir, hdfsCodeDir, this.hdfsClient);
+            await HDFSClientUtility.copyDirectoryToHdfs(trialLocalTempFolder, hdfsCodeDir, this.hdfsClient);
         } catch (error) {
             this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${hdfsCodeDir} failed, error is ${error}`);
             throw new Error(error.message);
@@ -187,11 +222,13 @@ class PAITrainingService implements TrainingService {
             }
         };
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
+            console.log(`After submission, trial job detail is ${JSON.stringify(trialJobDetail)}`);
             if (error || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: Submit trial ${trialJobId} to PAI Cluster failed!`);
                 trialJobDetail.status = 'FAILED';
                 deferred.reject(error ? error.message : 'Submit trial failed, http code: ' + response.statusCode);                
             } else {
+                trialJobDetail.submitTime = Date.now();
                 deferred.resolve(trialJobDetail);
             }
         });
@@ -282,14 +319,23 @@ class PAITrainingService implements TrainingService {
         return deferred.promise; 
     }
 
-    public cleanUp(): Promise<void> {
-        const deferred : Deferred<void> = new Deferred<void>();
+    public async cleanUp(): Promise<void> {
+        this.stopping = true;
 
-        deferred.resolve();
+        const deferred : Deferred<void> = new Deferred<void>();
+        const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
+        try {
+            await restServer.stop();
+            deferred.resolve();
+            this.log.info('PAI Training service rest server stopped successfully.');
+        } catch (error) {
+            this.log.error(`PAI Training service rest server stopped failed, error: ${error.message}`);    
+            deferred.reject(error);
+        }
+
         return deferred.promise; 
     }
 
-    
     public get MetricsEmitter() : EventEmitter {
         return this.metricsEmitter;
     }

@@ -24,6 +24,7 @@ import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from 'common/trai
 export class PAITrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;
+    public paiJobName: string;
     public submitTime: number;
     public startTime?: number;
     public endTime?: number;
@@ -32,9 +33,11 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public workingDirectory: string;
     public form: JobApplicationForm;
 
-    constructor(id: string, status: TrialJobStatus, submitTime: number, workingDirectory: string, form: JobApplicationForm) {
+    constructor(id: string, status: TrialJobStatus, paiJobName : string, 
+            submitTime: number, workingDirectory: string, form: JobApplicationForm) {
         this.id = id;
         this.status = status;
+        this.paiJobName = paiJobName;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
@@ -43,6 +46,7 @@ export class PAITrialJobDetail implements TrialJobDetail {
 }
 
 export const PAI_TRIAL_COMMAND_FORMAT: string =
-`export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_OUTPUT_DIR={0} 
-&& cd $NNI_SYS_DIR 
-&& python3 -m trial.trial_keeper --trial_command '{2}'`;
+`pip3 install -v --user git+https://github.com/yds05/nni.git@dev-pai 
+&& export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_OUTPUT_DIR={0} 
+&& cd $NNI_SYS_DIR && mkdir .nni 
+&& python3 -m trial.trial_keeper --trial_command '{2}' --nnimanager_ip '{3}'`;
