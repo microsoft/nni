@@ -20,7 +20,9 @@ Also we have another version which time cost is less and performance is better. 
 
 # How to run this example?
 
-## Use downloading script to download data
+## Download data
+
+### Use downloading script to download data
 
 Execute the following command to download needed files
 using the downloading script:
@@ -30,7 +32,7 @@ chmod +x ./download.sh
 ./download.sh
 ```
 
-## Download manually
+### Download manually
 
 1. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
 
@@ -46,7 +48,37 @@ wget http://nlp.stanford.edu/data/glove.840B.300d.zip
 unzip glove.840B.300d.zip
 ```
 
-# submit this job
+## Update configuration
+Modify `nni/examples/trials/ga_squad/config.yaml`, here is the default configuration:
+
+```
+authorName: default
+experimentName: example_ga_squad
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 1
+#choice: local, remote
+trainingServicePlatform: local
+#choice: true, false
+useAnnotation: false
+tuner:
+  codeDir: ~/nni/examples/tuners/ga_customer_tuner
+  classFileName: customer_tuner.py
+  className: CustomerTuner
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python3 trial.py
+  codeDir: ~/nni/examples/trials/ga_squad
+  gpuNum: 0
+```
+
+In the "trial" part, if you want to use GPU to perform the architecture search, change `gpuNum` from `0` to `1`. You need to increase the `maxTrialNum` and `maxExecDuration`, according to how long you want to wait for the search result.
+
+`trialConcurrency` is the number of trials running concurrently, which is the number of GPUs you want to use, if you are setting `gpuNum` to 1.
+
+## submit this job
+
 ```
 nnictl create --config ~/nni/examples/trials/ga_squad/config.yaml
 ```
@@ -104,8 +136,9 @@ Here is an example of the model configuration, which is passed from the tuner to
 
 Every model configuration will has a "layers" section, which is a JSON list of layer definitions. The definition of each layer is also a JSON object, where:
 
- * "type" is the type of the layer. 0, 1, 2, 3, 4 corresponde to attention, self-attention, RNN, input and output layer respectively.
- * "size" is the length of the output. "x", "y" corresponde to document length / question length, respectively.
- * "input_size" is the number of inputs the layer has.
- * "input" is the indices of layers taken as input of this layer.
- * "output" is the indices of layers use this layer's output as their input.
+ * `type` is the type of the layer. 0, 1, 2, 3, 4 corresponde to attention, self-attention, RNN, input and output layer respectively.
+ * `size` is the length of the output. "x", "y" corresponde to document length / question length, respectively.
+ * `input_size` is the number of inputs the layer has.
+ * `input` is the indices of layers taken as input of this layer.
+ * `output` is the indices of layers use this layer's output as their input.
+ * `is_delete` means whether the layer is still available.
