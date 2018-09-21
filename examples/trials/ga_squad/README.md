@@ -50,3 +50,62 @@ unzip glove.840B.300d.zip
 ```
 nnictl create --config ~/nni/examples/trials/ga_squad/config.yaml
 ```
+
+# Techinal details about the trial
+
+## Model configuration format
+
+Here is an example of the model configuration, which is passed from the tuner to the trial in the architecture search procedure.
+
+```
+{
+    "max_layer_num": 50,
+    "layers": [
+        {
+            "input_size": 0,
+            "type": 3,
+            "output_size": 1,
+            "input": [],
+            "size": "x",
+            "output": [4, 5],
+            "is_delete": false
+        },
+        {
+            "input_size": 0,
+            "type": 3,
+            "output_size": 1,
+            "input": [],
+            "size": "y",
+            "output": [4, 5],
+            "is_delete": false
+        },
+        {
+            "input_size": 1,
+            "type": 4,
+            "output_size": 0,
+            "input": [6],
+            "size": "x",
+            "output": [],
+            "is_delete": false
+        },
+        {
+            "input_size": 1,
+            "type": 4,
+            "output_size": 0,
+            "input": [5],
+            "size": "y",
+            "output": [],
+            "is_delete": false
+        },
+        {"Comment": "More layers will be here for actual graphs."}
+    ]
+}
+```
+
+Every model configuration will has a "layers" section, which is a JSON list of layer definitions. The definition of each layer is also a JSON object, where:
+
+ * "type" is the type of the layer. 0, 1, 2, 3, 4 corresponde to attention, self-attention, RNN, input and output layer respectively.
+ * "size" is the length of the output. "x", "y" corresponde to document length / question length, respectively.
+ * "input_size" is the number of inputs the layer has.
+ * "input" is the indices of layers taken as input of this layer.
+ * "output" is the indices of layers use this layer's output as their input.
