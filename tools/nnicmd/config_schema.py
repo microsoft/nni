@@ -50,7 +50,12 @@ Optional('searchSpacePath'): os.path.exists,
 'trial':{
     'command': str,
     'codeDir': os.path.exists,
-    'gpuNum': And(int, lambda x: 0 <= x <= 99999)
+    'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+    Optional('cpuNum'): And(int, lambda x: 0 <= x <= 99999),
+    Optional('memoryMB'): int,
+    Optional('image'): str,
+    Optional('dataDir'): str,
+    Optional('outputDir'): str
     },
 Optional('assessor'): Or({
     'builtinAssessorName': lambda x: x in ['Medianstop'],
@@ -77,36 +82,9 @@ Optional('machineList'):[Or({
     'sshKeyPath': os.path.exists,
     Optional('passphrase'): str
 })],
-Optional('pai'):
-{
-  'jobName': str,
-  "image": str,
-  "authFile": os.path.exists,
-  "dataDir": os.path.exists,
-  "outputDir": os.path.exists,
-  "codeDir": os.path.exists,
-  "virtualCluster": str,
-  "taskRoles": [
-    {
-      "name": str,
-      "taskNumber": And(int, lambda x: 0 <= x <= 99999),
-      "cpuNumber": And(int, lambda x: 0 <= x <= 99999),
-      "memoryMB": And(int, lambda x: 0 <= x <= 99999),
-      "shmMB": And(int, lambda x: 0 <= x <= 99999),
-      "gpuNumber": And(int, lambda x: 0 <= x <= 99999),
-      "portList": [
-        {
-          "label": str,
-          "beginAt": str,
-          "portNumber": And(int, lambda x: 0 < x < 65535)
-        }
-      ],
-      "command": str,
-      "minFailedTaskCount": And(int, lambda x: 0 <= x <= 99999),
-      "minSucceededTaskCount": And(int, lambda x: 0 <= x <= 99999)
-    }
-  ],
-  "gpuType": str,
-  "retryCount": And(int, lambda x: 0 <= x <= 99999)
+Optional('paiConfig'):{
+  'userName': str,
+  'passWord': str,
+  'host': str
 }
 })
