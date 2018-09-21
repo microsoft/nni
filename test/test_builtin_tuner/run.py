@@ -60,7 +60,7 @@ def test_builtin_tuner(tuner_name):
 
 if __name__ == '__main__':
 
-    os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
+    os.environ['PATH'] = os.environ['PATH'] + ':' + os.path.join(os.environ['PWD'],'..')
     # Test each built-in tuner
     for tuner_name in TUNER_LIST:
         try:
