@@ -113,9 +113,9 @@ def read_experiment_metrics(nnimanager_ip):
         result['jobId'] = NNI_TRIAL_JOB_ID
         result['metrics'] = reader.read_trial_metrics()
         print('Result metrics is {}'.format(json.dumps(result)))
-        response = rest_post(gen_update_metrics_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
-
-        print('Response code is {}'.format(response.status_code))
+        if len(result['metrics']) > 0:            
+            response = rest_post(gen_update_metrics_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
+            print('Response code is {}'.format(response.status_code))
     except Exception:
         #TODO error logging to file
         pass
