@@ -89,9 +89,11 @@ class Tuner(Recoverable):
         _logger.info('Save checkpoint ignored by tuner, checkpoint path: %s' % checkpoin_path)
 
     def _on_exit(self):
+        """For debug's sake"""
         _result.write('DONE\n')
         _result.close()
 
     def _on_error(self):
+        """For debug's sake"""
         _result.write('ERROR\n')
         _result.close()
