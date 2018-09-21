@@ -32,6 +32,7 @@ def dump_yml_content(file_path, content):
         file.write(yaml.dump(content, default_flow_style=False))
 
 def switch_tuner(tuner_name):
+    '''Change tuner in config.yml'''
     config_path = 'local.yml'
     experiment_config = get_yml_content(config_path)
     experiment_config['tuner'] = {
