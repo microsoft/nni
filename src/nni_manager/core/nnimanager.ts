@@ -340,15 +340,16 @@ class NNIManager implements Manager {
     }
 
     private async periodicallyUpdateExecDuration(): Promise<void> {
-        const startTime: number = Date.now();
         const execDuration: number = this.experimentProfile.execDuration;
+        let execDurationThisRun: number = 0;
         if (!this.trialJobsMaintainer) {
             throw new Error('Error: trialJobsMaintainer has not been setup');
         }
         for (; ;) {
             await delay(1000 * 60 * 2); // 2 minutes
             if (this.trialJobsMaintainer.isTrialJobsRunning()) {
-                this.experimentProfile.execDuration = execDuration + (Date.now() - startTime) / 1000;
+                execDurationThisRun += 60 * 2;
+                this.experimentProfile.execDuration = execDuration + execDurationThisRun;
                 await this.storeExperimentProfile();
             }
         }
@@ -494,7 +495,6 @@ class NNIManager implements Manager {
                     };
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
                     this.trialJobsMaintainer.setTrialJob(trialJobDetail.id, Object.assign({}, trialJobDetail));
-                    // TO DO: to uncomment
                     assert(trialJobDetail.status === 'WAITING');
                     await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, content, trialJobDetail.url);
                     if (this.currSubmittedTrialNum === this.experimentProfile.params.maxTrialNum) {
