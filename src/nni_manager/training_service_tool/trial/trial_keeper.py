@@ -63,11 +63,12 @@ def main_loop(args):
                 #init hdfs client
                 print(url_host, local_directory, hdfs_directory)
                 hdfs_client = hdfs.Client('http://{0}:{1}'.format(url_host, 50070))
-                
+                '''
                 if copyDirectoryToHdfs(local_directory, hdfs_directory, hdfs_client):
                     print('copy directory success!')
                 else:
                     print('copy directory failed!')
+                '''
             break
         else:
             print('subprocess pid: {} is still alive'.format(process.pid))
