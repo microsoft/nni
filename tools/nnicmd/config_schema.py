@@ -41,8 +41,8 @@ Optional('searchSpacePath'): os.path.exists,
     'codeDir': os.path.exists,
     'classFileName': str,
     'className': str,
-    'classArgs': {
-        'optimize_mode': Or('maximize', 'minimize'),
+    Optional('classArgs'): {
+        Optional('optimize_mode'): Or('maximize', 'minimize'),
         Optional('speed'): int
         },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),

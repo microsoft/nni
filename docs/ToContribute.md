@@ -1,3 +1,0 @@
-## How to contribute
-
-TBD
