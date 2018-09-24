@@ -151,8 +151,10 @@ class TrialJobs {
                 }
                 await this.requestTrialJobsStatus();
             } else {
-                this.isRunning = false;
-                pastExecDurationThisRun += (Date.now() - startTime) / 1000;
+                if (this.isRunning) {
+                    pastExecDurationThisRun += (Date.now() - startTime) / 1000;
+                    this.isRunning = false;
+                }
             }
             await delay(5000);
         }
