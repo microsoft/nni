@@ -47,6 +47,6 @@ export class PAITrialJobDetail implements TrialJobDetail {
 
 export const PAI_TRIAL_COMMAND_FORMAT: string =
 `pip3 install -v --user git+https://github.com/yds05/nni.git@dev-pai-t-shya2
-&& export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_OUTPUT_DIR={0} 
+&& export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_OUTPUT_DIR={0} NNI_HDFS_OUTPUT_DIR={2} 
 && cd $NNI_SYS_DIR && mkdir .nni 
-&& python3 -m trial.trial_keeper --trial_command '{2}' --nnimanager_ip '{3}'`;
+&& python3 -m trial.trial_keeper --trial_command '{3}' --nnimanager_ip '{4}'`;
