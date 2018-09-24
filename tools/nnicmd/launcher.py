@@ -48,6 +48,7 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     print_normal('Starting restful server...')
     manager = os.environ.get('NNI_MANAGER', 'nnimanager')
     cmds = [manager, '--port', str(port), '--mode', platform, '--start_mode', mode]
+    print('zql: ', cmds)
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     if not os.path.exists(LOG_DIR):
