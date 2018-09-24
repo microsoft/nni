@@ -24,7 +24,10 @@ from subprocess import Popen, PIPE
 import time
 import logging
 import shlex
+import re
+import hdfs
 
+from .hdfsClientUtility import copyDirectoryToHdfs
 from .constants import HOME_DIR, LOG_DIR, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .metrics_reader import read_experiment_metrics
 
@@ -47,6 +50,24 @@ def main_loop(args):
         retCode = process.poll()
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
+            if 'NNI_OUTPUT_DIR' in os.environ and 'NNI_HDFS_OUTPUT_DIR' in os.environ:
+                local_directory = os.environ['NNI_OUTPUT_DIR'] 
+                hdfs_output_dir = os.environ['NNI_HDFS_OUTPUT_DIR']
+                #get hdfs_host and hdfs_directory
+                hdfs_host_pattern = 'hdfs://[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]{2,5}'
+                hdfs_host = re.findall(hdfs_host_pattern, hdfs_output_dir)
+                hdfs_directory = hdfs_output_dir.replace(hdfs_host[0], '')
+                #get url_host
+                url_host_pattern = '[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}'
+                url_host = re.findall(url_host_pattern, hdfs_host[0])
+                #init hdfs client
+                print(url_host, local_directory, hdfs_directory)
+                hdfs_client = hdfs.Client('http://{0}:{1}'.format(url_host, 50070))
+                
+                if copyDirectoryToHdfs(local_directory, hdfs_directory, hdfs_client):
+                    print('copy directory success!')
+                else:
+                    print('copy directory failed!')
             break
         else:
             print('subprocess pid: {} is still alive'.format(process.pid))
