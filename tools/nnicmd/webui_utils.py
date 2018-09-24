@@ -31,7 +31,9 @@ from .constants import STDOUT_FULL_PATH, STDERR_FULL_PATH
 def start_web_ui(port):
     '''start web ui'''
     serve = os.environ.get('NNI_SERVE', 'serve')
+    print(serve)
     web_ui = os.environ.get('WEB_UI_FOLDER')
+    print(web_ui)
     cmds = [serve, '-s', '-n', web_ui, '-l', str(port)]
     print(cmds)
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
