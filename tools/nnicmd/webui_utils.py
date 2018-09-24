@@ -33,6 +33,7 @@ def start_web_ui(port):
     serve = os.environ.get('NNI_SERVE', 'serve')
     web_ui = os.environ.get('WEB_UI_FOLDER')
     cmds = [serve, '-s', '-n', web_ui, '-l', str(port)]
+    print(cmds)
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
     print(cmds)
