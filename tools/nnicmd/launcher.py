@@ -261,9 +261,10 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     else:
         print_normal('Starting web ui...')
         webui_process = start_web_ui(webuiport)
-        nni_config.set_config('webuiPid', webui_process.pid)
-        print_normal('Starting web ui success!')
-        print_normal('{0} {1}'.format('Web UI url:', '   '.join(nni_config.get_config('webuiUrl'))))
+        if webui_process:
+            nni_config.set_config('webuiPid', webui_process.pid)
+            print_normal('Starting web ui success!')
+            print_normal('{0} {1}'.format('Web UI url:', '   '.join(nni_config.get_config('webuiUrl'))))
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, REST_PORT))
 

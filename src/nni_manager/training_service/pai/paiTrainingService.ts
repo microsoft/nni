@@ -168,6 +168,7 @@ class PAITrainingService implements TrainingService {
             `/root/${trialJobId}`,
             trialJobId,
             this.paiTrialConfig.outputDir,
+            this.paiClusterConfig.userName,
             this.paiTrialConfig.command, 
             getIPV4Address()
         ).replace(/\r\n|\n|\r/gm, '');

@@ -35,6 +35,10 @@ def start_web_ui(port):
     cmds = [serve, '-s', '-n', web_ui, '-l', str(port)]
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
+    print(cmds)
+    if not serve or not web_ui:
+        print_error('Failed to start webui!')
+        return None
     webui_process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
     if webui_process.returncode is None:
         webui_url_list = []
