@@ -69,10 +69,10 @@ def main_loop(args):
                 hdfs_output_dir_full = os.path.join(hdfs_directory, local_folder_name)
                 hdfs_client = HdfsClient(hosts='{0}:{1}'.format(url_host[0], '50070'), user_name=nni_user_name)
                 print(local_directory, hdfs_output_dir_full)
-                if copyDirectoryToHdfs(local_directory, hdfs_output_dir_full, hdfs_client):
-                    print('copy directory success!')
-                else:
-                    print('copy directory failed!')
+                # if copyDirectoryToHdfs(local_directory, hdfs_output_dir_full, hdfs_client):
+                #     print('copy directory success!')
+                # else:
+                #     print('copy directory failed!')
             break
         else:
             print('subprocess pid: {} is still alive'.format(process.pid))
