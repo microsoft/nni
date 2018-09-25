@@ -146,11 +146,16 @@ def set_experiment(experiment_config, mode, port):
         value_dict['command'] = experiment_config['trial']['command']
         value_dict['codeDir'] = experiment_config['trial']['codeDir']
         value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
-        value_dict['cpuNum'] = experiment_config['trial']['cpuNum']
-        value_dict['memoryMB'] = experiment_config['trial']['memoryMB']
-        value_dict['image'] = experiment_config['trial']['image']
-        value_dict['dataDir'] = experiment_config['trial']['dataDir']
-        value_dict['outputDir'] = experiment_config['trial']['outputDir']
+        if experiment_config['trial'].get('cpuNum'):
+            value_dict['cpuNum'] = experiment_config['trial']['cpuNum']
+        if experiment_config['trial'].get('memoryMB'):
+            value_dict['memoryMB'] = experiment_config['trial']['memoryMB']
+        if experiment_config['trial'].get('image'):
+            value_dict['image'] = experiment_config['trial']['image']
+        if experiment_config['trial'].get('dataDir'):
+            value_dict['dataDir'] = experiment_config['trial']['dataDir']
+        if experiment_config['trial'].get('outputDir'):
+            value_dict['outputDir'] = experiment_config['trial']['outputDir']
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': value_dict})
 
