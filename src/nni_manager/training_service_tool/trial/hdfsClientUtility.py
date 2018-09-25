@@ -47,6 +47,9 @@ def copyDirectoryToHdfs(localDirectory, hdfsDirectory, hdfsClient):
         raise Exception('Local Directory does not exist!')
     try:
         hdfsClient.mkdirs(hdfsDirectory)
+        print('---------list all files in ', localDirectory)
+        print(os.listdir(localDirectory))
+        print('-----------end----------')
         for file in os.listdir(localDirectory):
             file_path = os.path.join(localDirectory, file)
             if os.path.isdir(file_path):
