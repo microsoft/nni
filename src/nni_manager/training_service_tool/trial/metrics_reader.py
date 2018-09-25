@@ -30,6 +30,7 @@ from .url_utils import gen_update_metrics_url
 
 NNI_SYS_DIR = os.environ['NNI_SYS_DIR']
 NNI_TRIAL_JOB_ID = os.environ['NNI_TRIAL_JOB_ID']
+NNI_EXP_ID = os.environ['NNI_EXP_ID']
 LEN_FIELD_SIZE = 6
 MAGIC = 'ME'
 
@@ -114,7 +115,7 @@ def read_experiment_metrics(nnimanager_ip):
         result['metrics'] = reader.read_trial_metrics()
         print('Result metrics is {}'.format(json.dumps(result)))
         if len(result['metrics']) > 0:            
-            response = rest_post(gen_update_metrics_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
+            response = rest_post(gen_update_metrics_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_EXP_ID, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
             print('Response code is {}'.format(response.status_code))
     except Exception:
         #TODO error logging to file

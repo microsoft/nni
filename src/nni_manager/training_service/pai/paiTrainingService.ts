@@ -167,6 +167,7 @@ class PAITrainingService implements TrainingService {
             // PAI will copy job's codeDir into /root directory
             `/root/${trialJobId}`,
             trialJobId,
+            this.experimentId,
             this.paiTrialConfig.command, 
             getIPV4Address()
         ).replace(/\r\n|\n|\r/gm, '');

@@ -22,9 +22,10 @@
 import { Request, Response, Router } from 'express';
 import * as bodyParser from 'body-parser';
 import * as component from '../../common/component';
-import { RestServer } from '../../common/restServer'
+import { getExperimentId } from '../../common/experimentStartupInfo';
 import { Inject } from 'typescript-ioc';
 import { PAITrainingService } from './paiTrainingService';
+import { RestServer } from '../../common/restServer'
 
 /**
  * PAI Training service Rest server, provides rest API to support pai job metrics update
@@ -36,6 +37,8 @@ export class PAIJobRestServer extends RestServer{
     private static readonly DEFAULT_PORT: number = 51189;
 
     private readonly API_ROOT_URL: string = '/api/v1/nni-pai';
+
+    private readonly expId: string = getExperimentId();
 
     @Inject
     private readonly paiTrainingService : PAITrainingService;
@@ -67,9 +70,9 @@ export class PAIJobRestServer extends RestServer{
             next();
         });
 
-        router.post('/update-metrics/:id', (req: Request, res: Response) => {
+        router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
-                this.log.info(`Get update-metrics request, trial job id is ${req.params.id}`);
+                this.log.info(`Get update-metrics request, trial job id is ${req.params.trialId}`);
                 this.log.info(`update-metrics body is ${JSON.stringify(req.body)}`);
 
                 // Split metrics array into single metric, then emit
