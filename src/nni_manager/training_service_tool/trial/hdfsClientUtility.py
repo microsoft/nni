@@ -48,6 +48,7 @@ def copyDirectoryToHdfs(localDirectory, hdfsDirectory, hdfsClient):
         hdfsClient.mkdirs(hdfsDirectory)
     for file in os.listdir(localDirectory):
         file_path = os.path.join(localDirectory, file)
+        print('------copying ', file_path)
         if os.path.isdir(file_path):
             hdfs_directory = os.path.join(hdfsDirectory, file)
             try:
