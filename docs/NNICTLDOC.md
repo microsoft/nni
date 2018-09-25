@@ -234,4 +234,19 @@ nnictl log
     | --head, -h| False| |show head lines of stderr|
     | --tail, -t|  False| |show tail lines of stderr|
 	  | --path, -p|  False| |show the path of stderr file|
+
+* __nnictl log trial__
+  * Description
+  
+        Show trial log path. 
+  
+  * Usage
+  
+        nnictl log trial [options]
+        
+	   Options:
+	   
+      | Name, shorthand | Required|Default | Description |
+      | ------ | ------ | ------ |------ |
+    | --id, -I| False| |the id of trial|
      
