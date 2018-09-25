@@ -24,14 +24,10 @@ from subprocess import Popen, PIPE
 import time
 import logging
 import shlex
-<<<<<<< HEAD
 import re
 from pyhdfs import HdfsClient
 
 from .hdfsClientUtility import copyDirectoryToHdfs
-=======
-
->>>>>>> fad2ba359d74a8fcac6b8d1e34571b7206a3b50d
 from .constants import HOME_DIR, LOG_DIR, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .metrics_reader import read_experiment_metrics
 
