@@ -38,11 +38,7 @@ import {
 import { delay, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { ObservableTimer } from '../../common/observableTimer';
 import { PAIJobRestServer } from './paiJobRestServer'
-<<<<<<< HEAD
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT } from './paiData';
-=======
-import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT } from './paiData';
->>>>>>> fad2ba359d74a8fcac6b8d1e34571b7206a3b50d
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
@@ -156,7 +152,6 @@ class PAITrainingService implements TrainingService {
         // Step 1. Prepare PAI job configuration
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
-<<<<<<< HEAD
         //get hdfs url
         const hdfsURLPattern: string = 'hdfs://[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]{2,5}'
         const hdfsHostURL = this.paiTrialConfig.outputDir.match(hdfsURLPattern)
@@ -174,9 +169,6 @@ class PAITrainingService implements TrainingService {
         //get hdfsOUtputDir
         const hdfsBaseDirectory = this.paiTrialConfig.outputDir.replace(hdfsHostURL[0], "")
         const hdfsOutputDir = path.join(hdfsBaseDirectory, this.experimentId, trialJobId)
-=======
->>>>>>> fad2ba359d74a8fcac6b8d1e34571b7206a3b50d
-
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
             'WAITING',
@@ -192,16 +184,11 @@ class PAITrainingService implements TrainingService {
             `/root/${trialJobId}`,
             trialJobId,
             this.experimentId,
-<<<<<<< HEAD
             hdfsHost[0],
             this.paiClusterConfig.userName,
             this.paiTrialConfig.command, 
             getIPV4Address(),
             hdfsOutputDir
-=======
-            this.paiTrialConfig.command, 
-            getIPV4Address()
->>>>>>> fad2ba359d74a8fcac6b8d1e34571b7206a3b50d
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
