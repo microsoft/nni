@@ -1,14 +1,16 @@
-**Getting Started with NNI**
+**Get Started with NNI**
 ===
 
 ## **Installation**
 * __Dependencies__
 
       python >= 3.5
+      git
+      wget
 
     python pip should also be correctly installed. You could use "which pip" or "pip -V" to check in Linux.
     
-    * Note: For now, we don't support virtual environment.
+    * Note: we don't support virtual environment in current releases.
 
 * __Install NNI through pip__
 

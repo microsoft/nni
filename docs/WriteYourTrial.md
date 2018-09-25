@@ -1,9 +1,14 @@
-**Write a Trial which can Run on NNI**
+**Write a Trial Run on NNI**
 ===
-There would be only a few changes on your existing trial(model) code to make the code runnable on NNI. We provide two approaches for you to modify your code: `Python annotation` and `NNI APIs for trial`
 
-## NNI APIs 
-We also support NNI APIs for trial code. By using this approach, you should first prepare a search space file. An example is shown below: 
+A **Trial** in NNI is an individual attempt at applying a set of parameters on a model. 
+
+To define a NNI trial, you need to firstly define the set of parameters and then update the model. NNI provide two approaches for you to define a trial: `NNI API` and `NNI Python annotation`.
+
+## NNI API
+>Step 1 - Prepare a SearchSpace parameters file. 
+
+An example is shown below: 
 ```
 {
     "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
@@ -12,32 +17,71 @@ We also support NNI APIs for trial code. By using this approach, you should firs
     "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
 }
 ```
-You can refer to [here](SearchSpaceSpec.md) for the tutorial of search space.
+Refer to [SearchSpaceSpec.md](SearchSpaceSpec.md) to learn more about search space.
 
-Then, include `import nni` in your trial code to use NNI APIs. Using the line: 
-```
-RECEIVED_PARAMS = nni.get_parameters()
-```
-to get hyper-parameters' values assigned by tuner. `RECEIVED_PARAMS` is an object, for example: 
-```
-{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
-```
+>Step 2 - Update model codes
+~~~~
+2.1 Declare NNI API
+    Include `import nni` in your trial code to use NNI APIs. 
 
-On the other hand, you can use the API: `nni.report_intermediate_result(accuracy)` to send `accuracy` to assessor. And use `nni.report_final_result(accuracy)` to send `accuracy` to tuner. Here `accuracy` could be any python data type, but **NOTE that if you use built-in tuner/assessor, `accuracy` should be a numerical variable(e.g. float, int)**.
+2.2 Get predefined parameters
+    Use the following code snippet: 
 
-The assessor will decide which trial should early stop based on the history performance of trial(intermediate result of one trial).
-The tuner will generate next parameters/architecture based on the explore history(final result of all trials).
+        RECEIVED_PARAMS = nni.get_parameters()
 
-In the yaml configure file, you need two lines to enable NNI APIs:
+    to get hyper-parameters' values assigned by tuner. `RECEIVED_PARAMS` is an object, for example: 
+
+        {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
+
+2.3 Report NNI results
+    Use the API: 
+
+        `nni.report_intermediate_result(accuracy)` 
+    
+    to send `accuracy` to assessor.
+    
+    Use the API:
+
+        `nni.report_final_result(accuracy)` 
+        
+    to send `accuracy` to tuner. 
+~~~~
+
+**NOTE**: 
+~~~~
+accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
+assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
+tuner    - The tuner will generate next parameters/architecture based on the explore history (final result of all trials).
+~~~~
+
+>Step 3 - Enable NNI API
+
+To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of SearchSpace file (you just defined in step 1):
+
 ```
 useAnnotation: false
 searchSpacePath: /path/to/your/search_space.json
 ```
 
-You can refer to [here](../examples/trials/README.md) for more information about how to write trial code using NNI APIs.
+You can refer to [here](ExperimentConfig.md) for more information about how to set up experiment configurations.
 
-## NNI Annotation
-We designed a new syntax for users to annotate the variables they want to tune and in what range they want to tune the variables. Also, they can annotate which variable they want to report as intermediate result to `assessor`, and which variable to report as the final result (e.g. model accuracy) to `tuner`. A really appealing feature of our NNI annotation is that it exists as comments in your code, which means you can run your code as before without NNI. Let's look at an example, below is a piece of tensorflow code:
+(../examples/trials/README.md) for more information about how to write trial code using NNI APIs.
+
+## NNI Python Annotation
+An alternative to write a trial is to use NNI's syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
+* annotate the variables you want to tune 
+* specify in which range you want to tune the variables
+* annotate which variable you want to report as intermediate result to `assessor`
+* annotate which variable you want to report as the final result (e.g. model accuracy) to `tuner`. 
+
+Again, take MNIST as an example, it only requires 2 steps to write a trial with NNI Annotation.
+
+>Step 1 - Update codes with annotations 
+
+Please refer the following tensorflow code snippet for NNI Annotation, the highlighted 4 lines are annotations that help you to: (1) tune batch\_size and (2) dropout\_rate, (3) report test\_acc every 100 steps, and (4) at last report test\_acc as final result.
+
+>What noteworthy is: as these new added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
+
 ```diff
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
@@ -64,14 +108,16 @@ with tf.Session() as sess:
 +   """@nni.report_final_result(test_acc)"""
 ```
 
-Let's say you want to tune batch\_size and dropout\_rate, and report test\_acc every 100 steps, at last report test\_acc as final result. With our NNI annotation, your code would look like below:
+>NOTE
+>>`@nni.variable` will take effect on its following line
+>>
+>>`@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
+>>
+>>Please refer to [Annotation README](../tools/annotation/README.md) for more information about annotation syntax and its usage. 
 
 
-Simply adding four lines would make your code runnable on NNI. You can still run your code independently. `@nni.variable` works on its next line assignment, and `@nni.report_intermediate_result`/`@nni.report_final_result` would send the data to assessor/tuner at that line. Please refer to [here](../tools/annotation/README.md) for more annotation syntax and more powerful usage. In the yaml configure file, you need one line to enable NNI annotation:
+>Step 2 - Enable NNI Annotation
+In the yaml configure file, you need to set *useAnnotation* to true to enable NNI annotation:
 ```
 useAnnotation: true
 ```
-
-For users to correctly leverage NNI annotation, we briefly introduce how NNI annotation works here: NNI precompiles users' trial code to find all the annotations each of which is one line with `"""@nni` at the head of the line. Then NNI replaces each annotation with a corresponding NNI API at the location where the annotation is.
-
-**Note that: in your trial code, you can use either one of NNI APIs and NNI annotation, but not both of them simultaneously.** 
