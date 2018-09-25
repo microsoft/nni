@@ -322,7 +322,7 @@ class PAITrainingService implements TrainingService {
                     break;
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
-                if(this.paiTrialConfig.outputDir === undefined){
+                if(this.paiTrialConfig.outputDir === undefined || this.paiTrialConfig.outputDir === null){
                     this.paiTrialConfig.outputDir = String.Format(
                         PAI_OUTPUT_DIR_FORMAT,
                         this.paiClusterConfig.host,
