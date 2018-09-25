@@ -20,7 +20,7 @@ else  # is normal user
 endif
 
 ## Dependency information
-NODE_VERSION ?= v10.9.0
+NODE_VERSION ?= v10.10.0
 NODE_TARBALL ?= node-$(NODE_VERSION)-linux-x64.tar.xz
 NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
 
@@ -294,7 +294,7 @@ ifdef _ROOT
 	$(error You should not develop NNI as root)
 endif
 ifdef _MISS_DEPS
-	$(error Please install Node.js, Yarn, and Serve to develop NNI)
+#	$(error Please install Node.js, Yarn, and Serve to develop NNI)
 endif
 	#$(_INFO) Pass! $(_END)
 

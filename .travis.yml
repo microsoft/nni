@@ -4,9 +4,9 @@ language: python
 python:
   - "3.6"
 before_install:
-  - wget https://nodejs.org/dist/v10.9.0/node-v10.9.0-linux-x64.tar.xz
-  - tar xf node-v10.9.0-linux-x64.tar.xz
-  - sudo mv node-v10.9.0-linux-x64 /usr/local/node
+  - wget https://nodejs.org/dist/v10.10.0/node-v10.10.0-linux-x64.tar.xz
+  - tar xf node-v10.10.0-linux-x64.tar.xz
+  - sudo mv node-v10.10.0-linux-x64 /usr/local/node
   - export PATH=/usr/local/node/bin:$PATH
   - sudo sh -c 'PATH=/usr/local/node/bin:$PATH yarn global add serve'
 install:
