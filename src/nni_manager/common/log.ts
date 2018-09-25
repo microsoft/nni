@@ -40,7 +40,7 @@ class BufferSerialEmitter {
     private writable: Writable;
 
     constructor(writable: Writable) {
-        this.buffer = new Buffer(0);
+        this.buffer = Buffer.alloc(0);
         this.emitting = false;
         this.writable = writable;
     }
@@ -61,7 +61,7 @@ class BufferSerialEmitter {
                 this.emit();
             }
         });
-        this.buffer = new Buffer(0);
+        this.buffer = Buffer.alloc(0);
     }
 }
 
