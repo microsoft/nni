@@ -118,6 +118,10 @@ def parse_args():
     parser_log_stderr.add_argument('--head', '-H', dest='head', type=int, help='get head -100 content of stderr')
     parser_log_stderr.add_argument('--path', '-p', action='store_true', default=False, help='get the path of stderr file')
     parser_log_stderr.set_defaults(func=log_stderr)
+    parser_log_trial = parser_log_subparsers.add_parser('trial', help='get trial log path')
+    parser_log_trial.add_argument('--id', '-I', dest='id', help='find trial log path by id')
+    parser_log_trial.set_defaults(func=log_trial)
+
 
     args = parser.parse_args()
     args.func(args)

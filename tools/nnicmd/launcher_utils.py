@@ -82,6 +82,11 @@ def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     try:
         CONFIG_SCHEMA.validate(experiment_config)
+        #set default value
+        if experiment_config.get('maxExecDuration') is None:
+            experiment_config['maxExecDuration'] = '999d'
+        if experiment_config.get('maxTrialNum') is None:
+            experiment_config['maxTrialNum'] = 99999
     except Exception as exception:
         raise Exception(exception)
 
