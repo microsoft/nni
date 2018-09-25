@@ -28,7 +28,6 @@ class NaiveTuner(Tuner):
             json.dump(search_space, file_)
 
     def _on_exit(self):
-        _result.write('DONE\n')
         _result.close()
 
     def _on_error(self):
