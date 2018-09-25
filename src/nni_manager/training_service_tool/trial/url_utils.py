@@ -20,6 +20,6 @@
 
 from .constants import API_ROOT_URL, UPDATE_METRICS_API
 
-def gen_update_metrics_url(base_url, port, trial_job_id):
+def gen_update_metrics_url(base_url, port, exp_id, trial_job_id):
     '''Generate update trial metrics url'''
-    return '{0}:{1}{2}{3}/:{4}'.format(base_url, port, API_ROOT_URL, UPDATE_METRICS_API, trial_job_id)
+    return '{0}:{1}{2}{3}/{4}/:{5}'.format(base_url, port, API_ROOT_URL, UPDATE_METRICS_API, exp_id, trial_job_id)

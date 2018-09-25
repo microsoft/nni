@@ -152,6 +152,23 @@ class PAITrainingService implements TrainingService {
         // Step 1. Prepare PAI job configuration
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
+        //get hdfs url
+        const hdfsURLPattern: string = 'hdfs://[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]{2,5}'
+        const hdfsHostURL = this.paiTrialConfig.outputDir.match(hdfsURLPattern)
+        if(hdfsHostURL === null){
+            throw new Error('HDFS ouotput dir format error!');
+        }
+        
+        //get hdfs host
+        const hdfsHostPattern:string = '[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}'
+        const hdfsHost = this.paiTrialConfig.outputDir.match(hdfsHostPattern)
+        if(hdfsHost === null){
+            throw new Error('HDFS ouotput dir format error!');
+        }
+        
+        //get hdfsOUtputDir
+        const hdfsBaseDirectory = this.paiTrialConfig.outputDir.replace(hdfsHostURL[0], "")
+        const hdfsOutputDir = path.join(hdfsBaseDirectory, this.experimentId, trialJobId)
 
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
@@ -167,10 +184,12 @@ class PAITrainingService implements TrainingService {
             // PAI will copy job's codeDir into /root directory
             `/root/${trialJobId}`,
             trialJobId,
+            this.experimentId,
             this.paiTrialConfig.outputDir,
-            this.paiClusterConfig.userName,
+            hdfsHost[0],
             this.paiTrialConfig.command, 
-            getIPV4Address()
+            getIPV4Address(),
+            hdfsOutputDir
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);

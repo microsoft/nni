@@ -48,35 +48,39 @@ def main_loop(args):
     print('Current cwd is {}'.format(os.getcwd()))
     while True:
         retCode = process.poll()
+        ## Read experiment metrics, to avoid missing metrics
+        read_experiment_metrics(args.nnimanager_ip)
+        
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
-            if 'NNI_OUTPUT_DIR' in os.environ and 'NNI_HDFS_OUTPUT_DIR' in os.environ and 'NNI_USER_NAME' in os.environ:
-                local_directory = os.environ['NNI_OUTPUT_DIR']
-                hdfs_output_dir = os.environ['NNI_HDFS_OUTPUT_DIR']
-                nni_user_name = os.environ['NNI_USER_NAME']
-                #get hdfs_host and hdfs_directory
-                hdfs_host_pattern = 'hdfs://[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]{2,5}'
-                hdfs_host = re.findall(hdfs_host_pattern, hdfs_output_dir)
-                hdfs_directory = hdfs_output_dir.replace(hdfs_host[0], '')
-                #get url_host
-                url_host_pattern = '[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}'
-                url_host = re.findall(url_host_pattern, hdfs_host[0])
-                #init hdfs client
-                if not os.path.isdir(local_directory):
-                    raise Exception('Local Directory Error!')
-                #get local folder name
-                local_folder_name = local_directory.replace(os.path.dirname(local_directory), '')[1:]
-                hdfs_output_dir_full = os.path.join(hdfs_directory, local_folder_name)
-                hdfs_client = HdfsClient(hosts='{0}:{1}'.format(url_host[0], '50070'), user_name=nni_user_name)
-                print(local_directory, hdfs_output_dir_full)
-                if copyDirectoryToHdfs(local_directory, hdfs_output_dir_full, hdfs_client):
-                    print('copy directory success!')
-                else:
-                    print('copy directory failed!')
+            #copy local directory to hdfs
+            local_directory = os.environ['NNI_OUTPUT_DIR']
+            hdfs_output_dir = os.environ['NNI_HDFS_OUTPUT_DIR']
+            nni_user_name = os.environ['NNI_USER_NAME']
+            trial_job_id = os.environ['NNI_TRIAL_JOB_ID']
+            exp_id = os.environ['NNI_EXP_ID']
+            #get hdfs_host and hdfs_directory
+            hdfs_host_pattern = 'hdfs://[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]{2,5}'
+            hdfs_host = re.findall(hdfs_host_pattern, hdfs_output_dir)
+            hdfs_directory = hdfs_output_dir.replace(hdfs_host[0], '')
+            #get url_host
+            url_host_pattern = '[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}'
+            url_host = re.findall(url_host_pattern, hdfs_host[0])
+            #init hdfs client
+            if not os.path.isdir(local_directory):
+                raise Exception('Local Directory Error!')
+            #get local folder name
+            hdfs_output_dir_full = os.path.join(hdfs_directory, exp_id, trial_job_id)
+            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(url_host[0], '50070'), user_name=nni_user_name)
+            print(local_directory, hdfs_output_dir_full)
+            if copyDirectoryToHdfs(local_directory, hdfs_output_dir_full, hdfs_client):
+                print('copy directory success!')
+            else:
+                print('copy directory failed!')
             break
         else:
             print('subprocess pid: {} is still alive'.format(process.pid))
-            read_experiment_metrics(args.nnimanager_ip)
+
         time.sleep(2)
 
 def trial_keeper_help_info(*args):
@@ -88,6 +92,7 @@ if __name__ == '__main__':
     PARSER.set_defaults(func=trial_keeper_help_info)
     PARSER.add_argument('--trial_command', type=str, help='Command to launch trial process')
     PARSER.add_argument('--nnimanager_ip', type=str, default='localhost', help='NNI manager IP')
+    PARSER.add_argument('--pai_hdfs_output_dir', type=str, help='pai_hdfs_output_dir')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)
