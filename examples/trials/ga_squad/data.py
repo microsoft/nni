@@ -19,6 +19,10 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+'''
+Data processing script for the QA model.
+'''
+
 import csv
 import json
 from random import shuffle
@@ -73,19 +77,19 @@ def load_from_file(path, fmt=None, is_training=True):
             for doc in data:
                 for paragraph in doc['paragraphs']:
                     passage = paragraph['context']
-                    for qa in paragraph['qas']:
-                        question = qa['question']
-                        id = qa['id']
+                    for qa_pair in paragraph['qas']:
+                        question = qa_pair['question']
+                        qa_id = qa_pair['id']
                         if not is_training:
                             qp_pairs.append(
-                                {'passage': passage, 'question': question, 'id': id})
+                                {'passage': passage, 'question': question, 'id': qa_id})
                         else:
-                            for answer in qa['answers']:
+                            for answer in qa_pair['answers']:
                                 answer_begin = int(answer['answer_start'])
                                 answer_end = answer_begin + len(answer['text'])
                                 qp_pairs.append({'passage': passage,
                                                  'question': question,
-                                                 'id': id,
+                                                 'id': qa_id,
                                                  'answer_begin': answer_begin,
                                                  'answer_end': answer_end})
     else:
@@ -121,21 +125,21 @@ def collect_vocab(qp_pairs):
     Build the vocab from corpus.
     '''
     vocab = set()
-    for qp in qp_pairs:
-        for word in qp['question_tokens']:
+    for qp_pair in qp_pairs:
+        for word in qp_pair['question_tokens']:
             vocab.add(word['word'])
-        for word in qp['passage_tokens']:
+        for word in qp_pair['passage_tokens']:
             vocab.add(word['word'])
     return vocab
 
 
-def shuffle_step(l, step):
+def shuffle_step(entries, step):
     '''
     Shuffle the step
     '''
     answer = []
-    for i in range(0, len(l), step):
-        sub = l[i:i+step]
+    for i in range(0, len(entries), step):
+        sub = entries[i:i+step]
         shuffle(sub)
         answer += sub
     return answer
@@ -163,13 +167,13 @@ def get_char_input(data, char_dict, max_char_length):
     char_id = np.zeros((max_char_length, sequence_length,
                         batch_size), dtype=np.int32)
     char_lengths = np.zeros((sequence_length, batch_size), dtype=np.float32)
-    for b in range(0, min(len(data), batch_size)):
-        d = data[b]
-        for s in range(0, min(len(d), sequence_length)):
-            word = d[s]['word']
-            char_lengths[s, b] = min(len(word), max_char_length)
+    for batch_idx in range(0, min(len(data), batch_size)):
+        batch_data = data[batch_idx]
+        for sample_idx in range(0, min(len(batch_data), sequence_length)):
+            word = batch_data[sample_idx]['word']
+            char_lengths[sample_idx, batch_idx] = min(len(word), max_char_length)
             for i in range(0, min(len(word), max_char_length)):
-                char_id[i, s, b] = get_id(char_dict, word[i])
+                char_id[i, sample_idx, batch_idx] = get_id(char_dict, word[i])
     return char_id, char_lengths
 
 
@@ -180,26 +184,26 @@ def get_word_input(data, word_dict, embed, embed_dim):
     batch_size = len(data)
     max_sequence_length = max(len(d) for d in data)
     sequence_length = max_sequence_length
-    t = np.zeros((max_sequence_length, batch_size,
-                  embed_dim), dtype=np.float32)
+    word_input = np.zeros((max_sequence_length, batch_size,
+                           embed_dim), dtype=np.float32)
     ids = np.zeros((sequence_length, batch_size), dtype=np.int32)
     masks = np.zeros((sequence_length, batch_size), dtype=np.float32)
     lengths = np.zeros([batch_size], dtype=np.int32)
 
-    for b in range(0, min(len(data), batch_size)):
-        d = data[b]
+    for batch_idx in range(0, min(len(data), batch_size)):
+        batch_data = data[batch_idx]
 
-        lengths[b] = len(d)
+        lengths[batch_idx] = len(batch_data)
 
-        for s in range(0, min(len(d), sequence_length)):
-            word = d[s]['word'].lower()
+        for sample_idx in range(0, min(len(batch_data), sequence_length)):
+            word = batch_data[sample_idx]['word'].lower()
             if word in word_dict.keys():
-                t[s, b] = embed[word_dict[word]]
-                ids[s, b] = word_dict[word]
-            masks[s, b] = 1
+                word_input[sample_idx, batch_idx] = embed[word_dict[word]]
+                ids[sample_idx, batch_idx] = word_dict[word]
+            masks[sample_idx, batch_idx] = 1
 
-    t = np.reshape(t, (-1, embed_dim))
-    return t, ids, masks, lengths
+    word_input = np.reshape(word_input, (-1, embed_dim))
+    return word_input, ids, masks, lengths
 
 
 def get_word_index(tokens, char_index):

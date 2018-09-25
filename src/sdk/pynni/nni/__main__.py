@@ -31,12 +31,13 @@ from nni.msg_dispatcher import MsgDispatcher
 from nni.multi_phase.multi_phase_dispatcher import MultiPhaseMsgDispatcher
 from nni.hyperopt_tuner.hyperopt_tuner import HyperoptTuner
 from nni.evolution_tuner.evolution_tuner import EvolutionTuner
+from nni.batch_tuner.batch_tuner import BatchTuner
 from nni.medianstop_assessor.medianstop_assessor import MedianstopAssessor
 
 logger = logging.getLogger('nni.main')
 logger.debug('START')
 
-BUILT_IN_CLASS_NAMES = ['HyperoptTuner', 'EvolutionTuner', 'MedianstopAssessor']
+BUILT_IN_CLASS_NAMES = ['HyperoptTuner', 'EvolutionTuner', 'BatchTuner', 'MedianstopAssessor']
 
 def create_builtin_class_instance(classname, jsonstr_args):
     if jsonstr_args:

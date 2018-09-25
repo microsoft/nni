@@ -43,8 +43,8 @@ class Layer(object):
     '''
     Layer class, which contains the information of graph.
     '''
-    def __init__(self, graph_type, input=None, output=None, size=None):
-        self.input = input if input is not None else []
+    def __init__(self, graph_type, inputs=None, output=None, size=None):
+        self.input = inputs if inputs is not None else []
         self.output = output if output is not None else []
         self.graph_type = graph_type
         self.is_delete = False
@@ -117,11 +117,11 @@ class Graph(object):
     '''
     Customed Graph class.
     '''
-    def __init__(self, max_layer_num, input, output, hide):
+    def __init__(self, max_layer_num, inputs, output, hide):
         self.layers = []
         self.max_layer_num = max_layer_num
 
-        for layer in input:
+        for layer in inputs:
             self.layers.append(layer)
         for layer in output:
             self.layers.append(layer)
@@ -240,7 +240,7 @@ class Graph(object):
             if graph_type <= 1:
                 new_id = len(layers)
                 out = random.choice(layers_out)
-                input = []
+                inputs = []
                 output = [out]
                 pos = random.randint(0, len(layers[out].input) - 1)
                 last_in = layers[out].input[pos]
@@ -250,13 +250,13 @@ class Graph(object):
                 if graph_type == 1:
                     layers[last_in].output.remove(out)
                     layers[last_in].output.append(new_id)
-                    input = [last_in]
-                lay = Layer(graph_type=layer_type, input=input, output=output)
-                while len(input) < lay.input_size:
+                    inputs = [last_in]
+                lay = Layer(graph_type=layer_type, inputs=inputs, output=output)
+                while len(inputs) < lay.input_size:
                     layer1 = random.choice(layers_in)
-                    input.append(layer1)
+                    inputs.append(layer1)
                     layers[layer1].output.append(new_id)
-                lay.input = input
+                lay.input = inputs
                 layers.append(lay)
             else:
                 layer1 = random.choice(layers_del)
