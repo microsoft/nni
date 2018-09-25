@@ -110,7 +110,7 @@ export class NNIPAITrialConfig extends TrialConfig{
     public readonly memoryMB: number;
     public readonly image: string;
     public readonly dataDir: string; 
-    public readonly outputDir: string;
+    public outputDir: string;
 
     constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number, image: string, dataDir: string, outputDir: string) {
         super(command, codeDir, gpuNum);

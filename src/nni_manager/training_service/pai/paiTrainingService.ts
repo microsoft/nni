@@ -38,7 +38,7 @@ import {
 import { delay, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { ObservableTimer } from '../../common/observableTimer';
 import { PAIJobRestServer } from './paiJobRestServer'
-import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT } from './paiData';
+import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
@@ -303,6 +303,13 @@ class PAITrainingService implements TrainingService {
                     break;
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
+                if(this.paiTrialConfig.outputDir === undefined){
+                    this.paiTrialConfig.outputDir = String.Format(
+                        PAI_OUTPUT_DIR_FORMAT,
+                        this.paiClusterConfig.host,
+                        this.paiClusterConfig.userName
+                    ).replace(/\r\n|\n|\r/gm, '');
+                }
                 console.log(`Set Cluster metadata: paiTrialConfig is ${JSON.stringify(this.paiTrialConfig)}`);
                 deferred.resolve();
                 break;
