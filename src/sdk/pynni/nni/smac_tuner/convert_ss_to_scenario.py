@@ -31,6 +31,7 @@ def get_json_content(file_path):
         return None
 
 def generate_pcs(nni_search_space_content):
+    '''
     # parameter_name categorical {value_1, ..., value_N} [default value]
     # parameter_name ordinal {value_1, ..., value_N} [default value]
     # parameter_name integer [min_value, max_value] [default value]
@@ -38,6 +39,7 @@ def generate_pcs(nni_search_space_content):
     # parameter_name real [min_value, max_value] [default value]
     # parameter_name real [min_value, max_value] [default value] log
     # https://automl.github.io/SMAC3/stable/options.html
+    '''
     search_space = nni_search_space_content
     with open('param_config_space.pcs', 'w') as pcs_fd:
         if isinstance(search_space, dict):
@@ -80,18 +82,11 @@ def generate_pcs(nni_search_space_content):
             raise RuntimeError('incorrect search space.')
 
 def generate_scenario(ss_content):
+    '''
     # deterministic, 1/0
     # output_dir,
     # paramfile, 
     # run_obj, 'quality'
-    sce_fd = open('scenario.txt', 'w')
-    sce_fd.write('deterministic = 0\n')
-    #sce_fd.write('output_dir = \n')
-    sce_fd.write('paramfile = param_config_space.pcs\n')
-    sce_fd.write('run_obj = quality\n')
-    sce_fd.close()
-
-    generate_pcs(ss_content)
 
     # the following keys use default value or empty
     # algo, not required by tuner, but required by nni's training service for running trials
@@ -114,6 +109,14 @@ def generate_scenario(ss_content):
     # runcount_limit, default: inf., use default because this is controlled by nni
     # wallclock_limit,default: inf., use default because this is controlled by nni
     # please refer to https://automl.github.io/SMAC3/stable/options.html
+    '''
+    with open('scenario.txt', 'w') as sce_fd:
+        sce_fd.write('deterministic = 0\n')
+        #sce_fd.write('output_dir = \n')
+        sce_fd.write('paramfile = param_config_space.pcs\n')
+        sce_fd.write('run_obj = quality\n')
+
+    generate_pcs(ss_content)
 
 if __name__ == '__main__':
     generate_scenario('search_space.json')
