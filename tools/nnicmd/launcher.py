@@ -246,6 +246,9 @@ def create_experiment(args):
     '''start a new experiment'''
     nni_config = Config()
     config_path = os.path.abspath(args.config)
+    if not os.path.exists(config_path):
+        print_error('Please set correct config path!')
+        exit(0)
     experiment_config = get_yml_content(config_path)
     validate_all_content(experiment_config, config_path)
 
