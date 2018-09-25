@@ -51,13 +51,15 @@ def copyDirectoryToHdfs(localDirectory, hdfsDirectory, hdfsClient):
             file_path = os.path.join(localDirectory, file)
             if os.path.isdir(file_path):
                 hdfs_directory = os.path.join(hdfsDirectory, file)
-                copyDirectoryToHdfs(file_path, hdfs_directory, hdfsClient)
+                if not copyDirectoryToHdfs(file_path, hdfs_directory, hdfsClient):
+                    return False
             else:
                 hdfs_file_path = os.path.join(hdfsDirectory, file)
                 if not copyFileToHdfs(file_path, hdfs_file_path, hdfsClient):
                     return False
         return True
-    except:
+    except Exception as exception:
+        print(exception)
         return False
 
 def copyFileToHdfs(localFilePath, hdfsFilePath, hdfsClient, override=True):
@@ -71,5 +73,6 @@ def copyFileToHdfs(localFilePath, hdfsFilePath, hdfsClient, override=True):
             return False
     try:
         return hdfsClient.copy_from_local(localFilePath, hdfsFilePath)
-    except:
+    except Exception as exception:
+        print(exception)
         return False
