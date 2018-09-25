@@ -45,12 +45,15 @@ def main_loop(args):
     print('Current cwd is {}'.format(os.getcwd()))
     while True:
         retCode = process.poll()
+        ## Read experiment metrics, to avoid missing metrics
+        read_experiment_metrics(args.nnimanager_ip)
+        
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
             break
         else:
             print('subprocess pid: {} is still alive'.format(process.pid))
-            read_experiment_metrics(args.nnimanager_ip)
+
         time.sleep(2)
 
 def trial_keeper_help_info(*args):

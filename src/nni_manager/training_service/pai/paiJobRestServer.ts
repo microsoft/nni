@@ -71,11 +71,15 @@ export class PAIJobRestServer extends RestServer{
             try {
                 this.log.info(`Get update-metrics request, trial job id is ${req.params.id}`);
                 this.log.info(`update-metrics body is ${JSON.stringify(req.body)}`);
-    
-                this.paiTrainingService.MetricsEmitter.emit('metric', {
-                    id : req.body.jobId,
-                    data : req.body.metrics
-                });
+
+                // Split metrics array into single metric, then emit
+                // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
+                for (const singleMetric of req.body.metrics) {
+                    this.paiTrainingService.MetricsEmitter.emit('metric', {
+                        id : req.body.jobId,
+                        data : singleMetric
+                    });
+                }
 
                 res.send();
             }
