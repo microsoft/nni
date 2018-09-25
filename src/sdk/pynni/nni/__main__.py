@@ -47,8 +47,7 @@ def create_builtin_class_instance(classname, jsonstr_args):
     class_module = importlib.import_module(ModuleName[classname])
     class_constructor = getattr(class_module, ClassName[classname])
     if jsonstr_args:
-        class_args = json.loads(jsonstr_args)
-        class_args = augment_classargs(class_args, classname)
+        class_args = augment_classargs(json.loads(jsonstr_args), classname)
     else:
         class_args = augment_classargs({}, classname)
     if class_args:

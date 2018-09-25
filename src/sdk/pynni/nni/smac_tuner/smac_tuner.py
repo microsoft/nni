@@ -65,10 +65,10 @@ class SMACTuner(Tuner):
         self.logger.info("SMAC call: %s" % (" ".join(sys.argv)))
 
         cmd_reader = CMDReader()
-        args_, _ = cmd_reader.read_cmd()
+        args, _ = cmd_reader.read_cmd()
 
         root_logger = logging.getLogger()
-        root_logger.setLevel(args_.verbose_level)
+        root_logger.setLevel(args.verbose_level)
         logger_handler = logging.StreamHandler(
                 stream=sys.stdout)
         if root_logger.level >= logging.INFO:
@@ -90,31 +90,31 @@ class SMACTuner(Tuner):
         incumbent = None
 
         # Create scenario-object
-        scen = Scenario(args_.scenario_file, [])
+        scen = Scenario(args.scenario_file, [])
 
-        if args_.mode == "SMAC":
+        if args.mode == "SMAC":
             optimizer = SMAC(
                 scenario=scen,
-                rng=np.random.RandomState(args_.seed),
+                rng=np.random.RandomState(args.seed),
                 runhistory=rh,
                 initial_configurations=initial_configs,
                 stats=stats,
                 restore_incumbent=incumbent,
-                run_id=args_.seed)
-        elif args_.mode == "ROAR":
+                run_id=args.seed)
+        elif args.mode == "ROAR":
             optimizer = ROAR(
                 scenario=scen,
-                rng=np.random.RandomState(args_.seed),
+                rng=np.random.RandomState(args.seed),
                 runhistory=rh,
                 initial_configurations=initial_configs,
-                run_id=args_.seed)
-        elif args_.mode == "EPILS":
+                run_id=args.seed)
+        elif args.mode == "EPILS":
             optimizer = EPILS(
                 scenario=scen,
-                rng=np.random.RandomState(args_.seed),
+                rng=np.random.RandomState(args.seed),
                 runhistory=rh,
                 initial_configurations=initial_configs,
-                run_id=args_.seed)
+                run_id=args.seed)
         else:
             optimizer = None
 
@@ -132,7 +132,7 @@ class SMACTuner(Tuner):
             self.smbo_solver = self.optimizer.solver
             self.update_ss_done = True
         else:
-            pass
+            self.logger.warning('update search space is not supported.')
 
     def receive_trial_result(self, parameter_id, parameters, reward):
         '''
