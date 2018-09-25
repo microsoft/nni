@@ -28,23 +28,21 @@ import * as request from 'request';
 
 import { Deferred } from 'ts-deferred';
 import { EventEmitter } from 'events';
-import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
+import { getExperimentId } from '../../common/experimentStartupInfo';
+import { HDFSClientUtility } from './hdfsClientUtility'
+import { MethodNotImplementedError } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
-    HostJobApplicationForm, JobApplicationForm, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, TrialJobStatus
+    JobApplicationForm, TrainingService, TrialJobApplicationForm,
+    TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
-import { ObservableTimer } from '../../common/observableTimer';
 import { PAIJobRestServer } from './paiJobRestServer'
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
-import { HDFSClientUtility } from './hdfsClientUtility'
-import { getExperimentId } from '../../common/experimentStartupInfo';
-
 
 var WebHDFS = require('webhdfs');
 
@@ -218,8 +216,6 @@ class PAITrainingService implements TrainingService {
                                     // TODO: Add Virutal Cluster
                                     // PAI Task roles
                                     paiTaskRoles);
-        console.log(`PAI job config is ${JSON.stringify(paiJobConfig)}`);
-        console.log(`Before submission, trial job detail is ${JSON.stringify(trialJobDetail)}`);
 
         // Step 2. Upload code files in codeDir onto HDFS
         try {
@@ -242,7 +238,6 @@ class PAITrainingService implements TrainingService {
             }
         };
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
-            console.log(`After submission, trial job detail is ${JSON.stringify(trialJobDetail)}`);
             if (error || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: Submit trial ${trialJobId} to PAI Cluster failed!`);
                 trialJobDetail.status = 'FAILED';
@@ -309,7 +304,6 @@ class PAITrainingService implements TrainingService {
                         }
                         this.paiToken = body.token;
 
-                        console.log(`Got token ${this.paiToken} from PAI Cluster`);
                         deferred.resolve();
                     }
                 });
@@ -330,6 +324,7 @@ class PAITrainingService implements TrainingService {
                 }
 
                 console.log(`Set Cluster metadata: paiTrialConfig is ${JSON.stringify(this.paiTrialConfig)}`);
+
                 deferred.resolve();
                 break;
             default:

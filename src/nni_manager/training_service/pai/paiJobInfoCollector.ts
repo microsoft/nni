@@ -87,7 +87,6 @@ export class PAIJobInfoCollector {
                 }
             } else {
                 if(response.body.jobStatus && response.body.jobStatus.state) {
-                    console.log(`*****IN getSinglePAITrialJobInfo: response body state is ${response.body.jobStatus.state}`);
                     switch(response.body.jobStatus.state) {
                         case 'WAITING': 
                             paiTrialJob.status = 'WAITING';
