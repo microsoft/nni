@@ -8,7 +8,7 @@ For now, NNI could support tuner algorithms as following:
  - Naive Evolution
  - SMAC
  - ENAS (ongoing)
- - Grid Search (ongoing)
+ - Batch (ongoing)
 
  ## 1. Tuner algorithm introduction
 
@@ -41,6 +41,10 @@ Naive Evolution comes from [Large-Scale Evolution of Image Classifiers][3]. Naiv
 [SMAC][4] is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on [the SMAC3 github repo][5]. 
 
 Note that SMAC only supports a subset of the types in [search space spec](../../../../docs/SearchSpaceSpec.md), including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
+
+**Batch**
+
+Batch allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done.
 
 
  ## 2. How to use the tuner algorithm in NNI?

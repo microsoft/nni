@@ -66,3 +66,5 @@ The candidate type and value for variable is here:
    * Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
    * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 <br/>
+
+Note that SMAC only supports a subset of the types above, including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
