@@ -19,13 +19,21 @@
 
 'use strict';
 
-/**
- * Enum of metadata keys for configuration
- */
-export enum TrialConfigMetadataKey {
-    MACHINE_LIST = 'machine_list',
-    TRIAL_CONFIG = 'trial_config',
-    EXPERIMENT_ID = 'experimentId',
-    RANDOM_SCHEDULER = 'random_scheduler',
-    PAI_CLUSTER_CONFIG = 'pai_config'
+import {TrialConfig} from '../common/trialConfig'
+
+export class PAITrialConfig extends TrialConfig{
+    public readonly cpuNum: number;
+    public readonly memoryMB: number;
+    public readonly image: string;
+    public readonly dataDir: string; 
+    public readonly outputDir: string;
+
+    constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number, image: string, dataDir: string, outputDir: string) {
+        super(command, codeDir, gpuNum);
+        this.cpuNum = cpuNum;
+        this.memoryMB = memoryMB;
+        this.image = image;
+        this.dataDir = dataDir;
+        this.outputDir = outputDir;
+    }
 }

@@ -25,7 +25,8 @@ import * as path from 'path';
 import { Client } from 'ssh2';
 import { getLogger, Logger } from '../../common/log';
 import { TrialJobStatus, TrialJobDetail } from '../../common/trainingService';
-import { JobMetrics, RemoteCommandResult, RemoteMachineMeta, RemoteMachineTrialJobDetail } from './remoteMachineData';
+import { JobMetrics } from '../common/jobMetrics';
+import { RemoteCommandResult, RemoteMachineMeta, RemoteMachineTrialJobDetail } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
 
 export class MetricsCollector {
