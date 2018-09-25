@@ -47,6 +47,7 @@ def main_loop(args):
     print('Subprocess pid is {}'.format(process.pid))
     print('Current cwd is {}'.format(os.getcwd()))
     while True:
+        print(os.listdir(os.environ['NNI_OUTPUT_DIR']))
         retCode = process.poll()
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
