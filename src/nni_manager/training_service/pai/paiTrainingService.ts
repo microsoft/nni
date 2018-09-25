@@ -185,8 +185,8 @@ class PAITrainingService implements TrainingService {
             `/root/${trialJobId}`,
             trialJobId,
             this.experimentId,
-            this.paiTrialConfig.outputDir,
             hdfsHost[0],
+            this.paiClusterConfig.userName,
             this.paiTrialConfig.command, 
             getIPV4Address(),
             hdfsOutputDir
