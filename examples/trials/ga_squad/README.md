@@ -55,11 +55,14 @@ nnictl create --config ~/nni/examples/trials/ga_squad/config.yaml
 ```
 
 # Techinal details about the trial	
- ## How does it works	
+## How does it works	
+
 The evolution-algorithm based architecture for question answering has two different parts just like any other examples: the trial and the tuner.	
- ### The trial	
- The trial has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:	
- * `attention.py` contains an implementaion for attention mechanism in Tensorflow.	
+
+### The trial	
+The trial has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:	
+
+* `attention.py` contains an implementaion for attention mechanism in Tensorflow.	
 * `data.py` contains functions for data preprocessing.	
 * `evaluate.py` contains the evaluation script.	
 * `graph.py` contains the definition of the computation graph.	
@@ -106,7 +109,8 @@ topology = graph.is_topology()
 for _, topo_i in enumerate(topology):	
 ```	
  performs actually conversion that maps each layer to a part in Tensorflow computation graph.	
- ### The tuner	
+
+### The tuner	
  The tuner is much more simple than the trial. They actually share the same `graph.py`. Besides, the tuner has a `customer_tuner.py`, the most important class in which is `CustomerTuner`:	
  ```	
 class CustomerTuner(Tuner):	
@@ -146,7 +150,8 @@ class CustomerTuner(Tuner):
             indiv = copy.deepcopy(self.population[0])	
 ```	
  controls the mutation process. It will always take two random individuals in the population, only keeping and mutating the one with better result.	
- ## Model configuration format	
+
+## Model configuration format	
  Here is an example of the model configuration, which is passed from the tuner to the trial in the architecture search procedure.	
  ```	
 {	
@@ -192,8 +197,10 @@ class CustomerTuner(Tuner):
     ]	
 }	
 ```	
- Every model configuration will has a "layers" section, which is a JSON list of layer definitions. The definition of each layer is also a JSON object, where:	
-  * `type` is the type of the layer. 0, 1, 2, 3, 4 corresponde to attention, self-attention, RNN, input and output layer respectively.	
+
+Every model configuration will has a "layers" section, which is a JSON list of layer definitions. The definition of each layer is also a JSON object, where:	
+ 
+ * `type` is the type of the layer. 0, 1, 2, 3, 4 corresponde to attention, self-attention, RNN, input and output layer respectively.	
  * `size` is the length of the output. "x", "y" corresponde to document length / question length, respectively.	
  * `input_size` is the number of inputs the layer has.	
  * `input` is the indices of layers taken as input of this layer.	
