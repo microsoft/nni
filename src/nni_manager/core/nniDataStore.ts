@@ -170,17 +170,11 @@ class NNIDataStore implements DataStore {
 
         const multiPhase: boolean | undefined = await this.isMultiPhase();
 
-        if (multiPhase) {
-            if (metrics.length > 0) {
-                return metrics[metrics.length - 1];
-            } else {
-                return undefined;
-            }
-        } else {
-            assert(metrics.length <= 1);
-
-            return metrics[0];
+        if (metrics.length > 1 && !multiPhase) {
+            this.log.error(`Found multiple FINAL results for trial job ${trialJobId}`);
         }
+
+        return metrics[metrics.length - 1];
     }
 
     private async isMultiPhase(): Promise<boolean|undefined> {
@@ -188,7 +182,7 @@ class NNIDataStore implements DataStore {
             this.multiPhase = (await this.getExperimentProfile(getExperimentId())).params.multiPhase;
         }
 
-        if (this.multiPhase !== undefined) {
+        if (this.multiPhase) {
             return this.multiPhase;
         } else {
             assert(false, 'Failed to retrieve multiPhase flag');
