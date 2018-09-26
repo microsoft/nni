@@ -5,7 +5,7 @@ maxExecDuration: 10h
 maxTrialNum: 10
 #choice: local, remote
 trainingServicePlatform: local
-searchSpacePath: ~/nni/examples/trials/auto-gbdt/search_space.json
+searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
@@ -16,5 +16,5 @@ tuner:
     optimize_mode: minimize
 trial:
   command: python3 main.py
-  codeDir: ~/nni/examples/trials/auto-gbdt/
+  codeDir: .
   gpuNum: 0
