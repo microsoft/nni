@@ -53,4 +53,4 @@ export const PAI_TRIAL_COMMAND_FORMAT: string =
 --pai_hdfs_host '{6}' --pai_user_name {7}`;
 
 export const PAI_OUTPUT_DIR_FORMAT: string = 
-`hdfs://{0}:9000/{1}`;
+`hdfs://{0}:9000/`;

@@ -73,7 +73,7 @@ class PAITrainingService implements TrainingService {
         this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
         this.experimentId = getExperimentId();      
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
-        this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3}):[0-9]{2,5}(?<baseDir>/.*)';
+        this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
     }
 
     public async run(): Promise<void> {
@@ -164,7 +164,10 @@ class PAITrainingService implements TrainingService {
         }
 
         const hdfsHost = groups['host']
-        const hdfsBaseDirectory = groups['baseDir']
+        let hdfsBaseDirectory = groups['baseDir']
+        if(hdfsBaseDirectory === undefined){
+            hdfsBaseDirectory = "/";
+        }
         const hdfsOutputDir = path.join(hdfsBaseDirectory, this.experimentId, trialJobId)
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
@@ -318,8 +321,7 @@ class PAITrainingService implements TrainingService {
                 if(this.paiTrialConfig.outputDir === undefined || this.paiTrialConfig.outputDir === null){
                     this.paiTrialConfig.outputDir = String.Format(
                         PAI_OUTPUT_DIR_FORMAT,
-                        this.paiClusterConfig.host,
-                        this.paiClusterConfig.userName
+                        this.paiClusterConfig.host
                     ).replace(/\r\n|\n|\r/gm, '');
                 }
                 deferred.resolve();
