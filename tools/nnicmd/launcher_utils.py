@@ -82,6 +82,11 @@ def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     try:
         CONFIG_SCHEMA.validate(experiment_config)
+        #set default value
+        if experiment_config.get('maxExecDuration') is None:
+            experiment_config['maxExecDuration'] = '999d'
+        if experiment_config.get('maxTrialNum') is None:
+            experiment_config['maxTrialNum'] = 99999
     except Exception as exception:
         raise Exception(exception)
 
@@ -99,7 +104,8 @@ def parse_tuner_content(experiment_config):
     
     if experiment_config['tuner'].get('builtinTunerName') and experiment_config['tuner'].get('classArgs'):
         experiment_config['tuner']['className'] = tuner_class_name_dict.get(experiment_config['tuner']['builtinTunerName'])
-        experiment_config['tuner']['classArgs']['algorithm_name'] = tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName'])
+        if tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName']):
+            experiment_config['tuner']['classArgs']['algorithm_name'] = tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName'])
     elif experiment_config['tuner'].get('codeDir') and experiment_config['tuner'].get('classFileName') and experiment_config['tuner'].get('className'):
         if not os.path.exists(os.path.join(experiment_config['tuner']['codeDir'], experiment_config['tuner']['classFileName'])):
             raise ValueError('Tuner file directory is not valid!')
