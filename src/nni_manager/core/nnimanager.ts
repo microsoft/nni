@@ -236,14 +236,16 @@ class NNIManager implements Manager {
             newCwd = cwd;
         }
         // TO DO: add CUDA_VISIBLE_DEVICES
+        let nniEnv = {
+            NNI_MODE: mode,
+            NNI_CHECKPOINT_DIRECTORY: dataDirectory,
+            NNI_LOG_DIRECTORY: getLogDir()
+        };
+        let newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = spawn(command, [], {
             stdio,
             cwd: newCwd,
-            env: {
-                NNI_MODE: mode,
-                NNI_CHECKPOINT_DIRECTORY: dataDirectory,
-                NNI_LOG_DIRECTORY: getLogDir()
-            },
+            env: newEnv,
             shell: true
         });
         this.dispatcherPid = tunerProc.pid;
