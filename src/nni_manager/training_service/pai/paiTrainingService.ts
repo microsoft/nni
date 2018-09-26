@@ -135,7 +135,7 @@ class PAITrainingService implements TrainingService {
         const trialJobId: string = uniqueString(5);
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
-
+        
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
@@ -146,26 +146,25 @@ class PAITrainingService implements TrainingService {
         if(trialForm) {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'parameter.cfg'), trialForm.hyperParameters, { encoding: 'utf8' });
         }
-
+        
         // Step 1. Prepare PAI job configuration
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
-        //get hdfs url
-        const hdfsURLPattern: string = 'hdfs://[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}:[0-9]{2,5}'
-        const hdfsHostURL = this.paiTrialConfig.outputDir.match(hdfsURLPattern)
-        if(hdfsHostURL === null){
-            throw new Error('HDFS ouotput dir format error!');
-        }
         
-        //get hdfs host
-        const hdfsHostPattern:string = '[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}'
-        const hdfsHost = this.paiTrialConfig.outputDir.match(hdfsHostPattern)
-        if(hdfsHost === null){
-            throw new Error('HDFS ouotput dir format error!');
+        const hdfsDirPattern: string = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3}):[0-9]{2,5}(?<baseDir>/.*)'
+    
+        const hdfsDirContent = this.paiTrialConfig.outputDir.match(hdfsDirPattern)
+
+        if(hdfsDirContent === null){
+            throw new Error('Trial outputDir format Error');
         }
-        
-        //get hdfsOUtputDir
-        const hdfsBaseDirectory = this.paiTrialConfig.outputDir.replace(hdfsHostURL[0], "")
+        const groups = hdfsDirContent.groups
+        if(groups === undefined){
+            throw new Error('Trial outputDir format Error');
+        }
+
+        const hdfsHost = groups['host']
+        const hdfsBaseDirectory = groups['baseDir']
         const hdfsOutputDir = path.join(hdfsBaseDirectory, this.experimentId, trialJobId)
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
@@ -182,11 +181,11 @@ class PAITrainingService implements TrainingService {
             `/root/${trialJobId}`,
             trialJobId,
             this.experimentId,
-            hdfsHost[0],
-            this.paiClusterConfig.userName,
             this.paiTrialConfig.command, 
             getIPV4Address(),
-            hdfsOutputDir
+            hdfsOutputDir,
+            hdfsHost,
+            this.paiClusterConfig.userName
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);

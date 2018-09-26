@@ -55,11 +55,9 @@ def main_loop(args):
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
             #copy local directory to hdfs
             local_directory = os.environ['NNI_OUTPUT_DIR']
-            hdfs_host = os.environ['NNI_HDFS_HOST']
-            nni_user_name = os.environ['NNI_USER_NAME']
             trial_job_id = os.environ['NNI_TRIAL_JOB_ID']
             exp_id = os.environ['NNI_EXP_ID']
-            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(hdfs_host, '50070'), user_name=nni_user_name)
+            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name)
             print(local_directory, args.pai_hdfs_output_dir)
             if copyDirectoryToHdfs(local_directory, args.pai_hdfs_output_dir, hdfs_client):
                 print('copy directory success!')
@@ -80,7 +78,9 @@ if __name__ == '__main__':
     PARSER.set_defaults(func=trial_keeper_help_info)
     PARSER.add_argument('--trial_command', type=str, help='Command to launch trial process')
     PARSER.add_argument('--nnimanager_ip', type=str, default='localhost', help='NNI manager IP')
-    PARSER.add_argument('--pai_hdfs_output_dir', type=str, help='pai_hdfs_output_dir')
+    PARSER.add_argument('--pai_hdfs_output_dir', type=str, help='the output dir of hdfs')
+    PARSER.add_argument('--pai_hdfs_host', type=str, help='the host of hdfs')
+    PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)
