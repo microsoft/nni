@@ -26,6 +26,7 @@ import * as component from '../common/component';
 import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
     TrialJobEvent, TrialJobEventRecord, TrialJobInfo } from '../common/datastore';
 import { isNewExperiment } from '../common/experimentStartupInfo';
+import { getExperimentId } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile,  TrialJobStatistics } from '../common/manager';
 import { TrialJobStatus } from '../common/trainingService';
@@ -35,6 +36,7 @@ class NNIDataStore implements DataStore {
     private db: Database = component.get(Database);
     private log: Logger = getLogger();
     private initTask!: Deferred<void>;
+    private multiPhase: boolean | undefined;
 
     public init(): Promise<void> {
         if (this.initTask !== undefined) {
@@ -165,10 +167,31 @@ class NNIDataStore implements DataStore {
 
     private async getFinalMetricData(trialJobId: string): Promise<any> {
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
-        if (metrics.length > 0) {
-            return metrics[metrics.length - 1];
+
+        const multiPhase: boolean | undefined = await this.isMultiPhase();
+
+        if (multiPhase) {
+            if (metrics.length > 0) {
+                return metrics[metrics.length - 1];
+            } else {
+                return undefined;
+            }
         } else {
-            return undefined;
+            assert(metrics.length <= 1);
+
+            return metrics[0];
+        }
+    }
+
+    private async isMultiPhase(): Promise<boolean|undefined> {
+        if (this.multiPhase === undefined) {
+            this.multiPhase = (await this.getExperimentProfile(getExperimentId())).params.multiPhase;
+        }
+
+        if (this.multiPhase !== undefined) {
+            return this.multiPhase;
+        } else {
+            assert(false, 'Failed to retrieve multiPhase flag');
         }
     }
 
