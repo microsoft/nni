@@ -112,14 +112,18 @@ class NNIDataStore implements DataStore {
     }
 
     public async getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
-        const trialJobs = await this.queryTrialJobs(undefined, trialJobId);
+        const trialJobs: TrialJobInfo[] = await this.queryTrialJobs(undefined, trialJobId);
 
         return trialJobs[0];
     }
 
     public async storeMetricData(trialJobId: string, data: string): Promise<void> {
         this.log.debug(`storeMetricData: trialJobId: ${trialJobId}, data: ${data}`);
-        const metrics = JSON.parse(data) as MetricData;
+        const metrics: MetricData = JSON.parse(data);
+        if (metrics.type === 'REQUEST_PARAMETER') {
+
+            return;
+        }
         assert(trialJobId === metrics.trial_job_id);
         await this.db.storeMetricData(trialJobId, JSON.stringify({
             trialJobId: metrics.trial_job_id,
@@ -161,9 +165,8 @@ class NNIDataStore implements DataStore {
 
     private async getFinalMetricData(trialJobId: string): Promise<any> {
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
-        assert(metrics.length <= 1);
-        if (metrics.length === 1) {
-            return metrics[0];
+        if (metrics.length > 0) {
+            return metrics[metrics.length - 1];
         } else {
             return undefined;
         }
