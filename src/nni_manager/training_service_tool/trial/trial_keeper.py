@@ -55,8 +55,6 @@ def main_loop(args):
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
             #copy local directory to hdfs
             nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
-            trial_job_id = os.environ['NNI_TRIAL_JOB_ID']
-            exp_id = os.environ['NNI_EXP_ID']
             hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name)
             print(nni_local_output_dir, args.pai_hdfs_output_dir)
             try:
