@@ -63,7 +63,7 @@ class PAITrainingService implements TrainingService {
     private paiToken? : string;
     private experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
-    private hdfsDirPattern: string;
+    private readonly hdfsDirPattern: string;
 
     constructor() {
         this.log = getLogger();
