@@ -58,14 +58,11 @@ setup(
         'psutil',
         'pyyaml',
         'requests',
-        'schema',
-        'scipy'
+        'scipy',
+        'schema'
     ],
 
     cmdclass={
         'install': CustomInstallCommand
-    },
-    entry_points={
-        'console_scripts': ['nnictl = nnicmd.nnictl:parse_args']
     }
 )

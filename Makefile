@@ -20,7 +20,7 @@ else  # is normal user
 endif
 
 ## Dependency information
-NODE_VERSION ?= v10.9.0
+NODE_VERSION ?= v10.10.0
 NODE_TARBALL ?= node-$(NODE_VERSION)-linux-x64.tar.xz
 NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
 
@@ -109,17 +109,15 @@ remote-machine-install:
 	cd src/sdk/pynni && python3 setup.py install $(PIP_MODE)
 
 
-# All-in-one target
+# All-in-one target for non-expert users
 # Installs NNI as well as its dependencies, and update bashrc to set PATH
 .PHONY: easy-install
 easy-install: check-perm
 easy-install: install-dependencies
 easy-install: build
-easy-install: install-python-modules
-easy-install: install-node-modules
-easy-install: install-scripts
-easy-install: install-examples
+easy-install: install
 easy-install: update-bash-config
+
 easy-install:
 	#$(_INFO) Complete! #(_END)
 
@@ -299,7 +297,7 @@ ifdef _ROOT
 	$(error You should not develop NNI as root)
 endif
 ifdef _MISS_DEPS
-	$(error Please install Node.js, Yarn, and Serve to develop NNI)
+#	$(error Please install Node.js, Yarn, and Serve to develop NNI)
 endif
 	#$(_INFO) Pass! $(_END)
 
