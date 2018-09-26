@@ -182,7 +182,7 @@ class NNIDataStore implements DataStore {
             this.multiPhase = (await this.getExperimentProfile(getExperimentId())).params.multiPhase;
         }
 
-        if (this.multiPhase) {
+        if (this.multiPhase !== undefined) {
             return this.multiPhase;
         } else {
             assert(false, 'Failed to retrieve multiPhase flag');
