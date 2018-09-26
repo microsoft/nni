@@ -29,6 +29,7 @@ CONFIG_SCHEMA = Schema({
 'maxTrialNum': And(int, lambda x: 1 <= x <= 99999),
 'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai']),
 Optional('searchSpacePath'): os.path.exists,
+Optional('multiPhase'): bool,
 'useAnnotation': bool,
 'tuner': Or({
     'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution'),
