@@ -28,10 +28,10 @@ import tempfile
 from nni_annotation import *
 import random
 from .launcher_utils import validate_all_content
-from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick
+from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
 from .url_utils import cluster_metadata_url, experiment_url
 from .config_utils import Config
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, detect_process
 from .constants import EXPERIMENT_SUCCESS_INFO, STDOUT_FULL_PATH, STDERR_FULL_PATH, LOG_DIR, REST_PORT, ERROR_INFO, NORMAL_INFO
 from .webui_utils import start_web_ui, check_web_ui
 
@@ -40,7 +40,8 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     print_normal('Checking experiment...')
     nni_config = Config()
     rest_port = nni_config.get_config('restServerPort')
-    if rest_port and check_rest_server_quick(rest_port):
+    running, _ = check_rest_server_quick(rest_port)
+    if rest_port and running:
         print_error('There is an experiment running, please stop it first...')
         print_normal('You can use \'nnictl stop\' command to stop an experiment!')
         exit(0)
@@ -76,7 +77,12 @@ def set_trial_config(experiment_config, port):
         value_dict['outputDir'] = experiment_config['trial']['outputDir']
     request_data['trial_config'] = value_dict
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
-    return True if response.status_code == 200 else False
+    if check_response(response):
+        return True
+    else:
+        with open(STDERR_FULL_PATH, 'a+') as fout:
+            fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+        return False
 
 def set_local_config(experiment_config, port):
     '''set local configuration'''
@@ -89,9 +95,11 @@ def set_remote_config(experiment_config, port):
     request_data['machine_list'] = experiment_config['machineList']
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
     err_message = ''
-    if not response or not response.status_code == 200:
+    if not response or not check_response(response):
         if response is not None:
             err_message = response.text
+            with open(STDERR_FULL_PATH, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
 
     #set trial_config
@@ -160,11 +168,22 @@ def set_experiment(experiment_config, mode, port):
             {'key': 'trial_config', 'value': value_dict})
 
     response = rest_post(experiment_url(port), json.dumps(request_data), 20)
-    return response if response.status_code == 200 else None
+    if check_response(response):
+        return response
+    else:
+        with open(STDERR_FULL_PATH, 'a+') as fout:
+            fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+        return None
 
 def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config()
+    #Check if there is an experiment running
+    origin_rest_pid = nni_config.get_config('restServerPid')
+    if origin_rest_pid and detect_process(origin_rest_pid):
+        print_error('There is an experiment running, please stop it first...')
+        print_normal('You can use \'nnictl stop\' command to stop an experiment!')
+        exit(0)
     # start rest server
     rest_process = start_rest_server(REST_PORT, experiment_config['trainingServicePlatform'], mode, experiment_id)
     nni_config.set_config('restServerPid', rest_process.pid)
@@ -187,7 +206,8 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
 
     # check rest server
     print_normal('Checking restful server...')
-    if check_rest_server(REST_PORT):
+    running, _ = check_rest_server(REST_PORT)
+    if running:
         print_normal('Restful server start success!')
     else:
         print_error('Restful server start failed!')

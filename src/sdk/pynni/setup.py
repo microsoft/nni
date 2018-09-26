@@ -35,7 +35,7 @@ setuptools.setup(
         'hyperopt',
         'json_tricks',
         'numpy',
-        'scipy',
+        'scipy'
     ],
 
     test_suite = 'tests',
@@ -43,7 +43,7 @@ setuptools.setup(
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Python SDK for Neural Network Intelligence project',
-     license = 'MIT',
+    license = 'MIT',
     url = 'https://msrasrg.visualstudio.com/NeuralNetworkIntelligence',
 
     long_description = read('README.md')

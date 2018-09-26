@@ -262,10 +262,39 @@ class PAITrainingService implements TrainingService {
     }
 
     public cancelTrialJob(trialJobId: string): Promise<void> {
-        this.log.info(`PAI Training service cancelTrialJob: jobId: ${trialJobId}`);
+        const trialJobDetail : PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         const deferred : Deferred<void> = new Deferred<void>();
+        if(!trialJobDetail) {
+            this.log.error(`cancelTrialJob: trial job id ${trialJobId} not found`);
+            return Promise.reject();
+        }
 
-        deferred.resolve();
+        if(!this.paiClusterConfig) {
+            throw new Error('PAI Cluster config is not initialized');
+        }        
+        if (!this.paiToken) {
+            throw new Error('PAI token is not initialized');
+        }
+
+        const stopJobRequest: request.Options = {
+            uri: `http://${this.paiClusterConfig.host}:9186/api/v1/jobs/${trialJobDetail.paiJobName}/executionType`,
+            method: 'PUT',
+            json: true,
+            body: {'value' : 'STOP'},
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": 'Bearer ' + this.paiToken
+            }
+        };
+        request(stopJobRequest, (error: Error, response: request.Response, body: any) => {
+            if (error || response.statusCode >= 400) {
+                this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
+                deferred.reject(error ? error.message : 'Stop trial failed, http code: ' + response.statusCode);                
+            } else {
+                deferred.resolve();
+            }
+        });
+
         return deferred.promise; 
     }
 

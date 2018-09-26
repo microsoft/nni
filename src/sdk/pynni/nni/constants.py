@@ -18,31 +18,34 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
+ModuleName = {
+    'TPE': 'nni.hyperopt_tuner.hyperopt_tuner',
+    'Random': 'nni.hyperopt_tuner.hyperopt_tuner',
+    'Anneal': 'nni.hyperopt_tuner.hyperopt_tuner',
+    'Evolution': 'nni.evolution_tuner.evolution_tuner',
+    'SMAC': 'nni.smac_tuner.smac_tuner',
 
-LABEL maintainer='Microsoft NNI Team<nni@microsoft.com>'
+    'Medianstop': 'nni.medianstop_assessor.medianstop_assessor'
+}
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    sudo apt-utils git curl vim unzip openssh-client wget \
-    build-essential cmake \
-    libopenblas-dev
+ClassName = {
+    'TPE': 'HyperoptTuner',
+    'Random': 'HyperoptTuner',
+    'Anneal': 'HyperoptTuner',
+    'Evolution': 'EvolutionTuner',
+    'SMAC': 'SMACTuner',
 
-#
-# Python 3.5
-#
-RUN apt-get install -y --no-install-recommends python3.5 python3.5-dev python3-pip python3-tk && \
-    pip3 install --no-cache-dir --upgrade pip setuptools && \
-    echo "alias python='python3'" >> /root/.bash_aliases && \
-    echo "alias pip='pip3'" >> /root/.bash_aliases
+    'Medianstop': 'MedianstopAssessor'
+}
 
-# numpy 1.14.3  scipy 1.1.0 
-RUN pip3 --no-cache-dir install \
-    numpy==1.14.3 scipy==1.1.0 
-
-#
-#Install node 10.10.0, yarn 1.9.4, NNI v0.1
-#
-RUN git clone -b v0.1 https://github.com/Microsoft/nni.git
-RUN cd nni && sh install.sh
-RUN echo 'PATH=~/.local/node/bin:~/.local/yarn/bin:~/.local/bin:$PATH' >> ~/.bashrc
-RUN cd .. && rm -rf nni
+ClassArgs = {
+    'TPE': {
+        'algorithm_name': 'tpe'
+    },
+    'Random': {
+        'algorithm_name': 'random_search'
+    },
+    'Anneal': {
+        'algorithm_name': 'anneal'
+    }
+}
