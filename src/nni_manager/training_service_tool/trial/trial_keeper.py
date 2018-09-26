@@ -54,15 +54,18 @@ def main_loop(args):
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
             #copy local directory to hdfs
-            local_directory = os.environ['NNI_OUTPUT_DIR']
+            nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
             trial_job_id = os.environ['NNI_TRIAL_JOB_ID']
             exp_id = os.environ['NNI_EXP_ID']
             hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name)
-            print(local_directory, args.pai_hdfs_output_dir)
-            if copyDirectoryToHdfs(local_directory, args.pai_hdfs_output_dir, hdfs_client):
-                print('copy directory success!')
-            else:
-                print('copy directory failed!')
+            print(nni_local_output_dir, args.pai_hdfs_output_dir)
+            try:
+                if copyDirectoryToHdfs(nni_local_output_dir, args.pai_hdfs_output_dir, hdfs_client):
+                    print('copy directory success!')
+                else:
+                    print('copy directory failed!')
+            except Exception as exception:
+                print(exception)
             break
         else:
             print('subprocess pid: {} is still alive'.format(process.pid))

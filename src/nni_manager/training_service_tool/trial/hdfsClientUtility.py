@@ -25,7 +25,7 @@ def copyDirectoryToHdfs(localDirectory, hdfsDirectory, hdfsClient):
     '''Copy directory from local to hdfs'''
     if not os.path.exists(localDirectory):
         raise Exception('Local Directory does not exist!')
-        hdfsClient.mkdirs(hdfsDirectory)
+    hdfsClient.mkdirs(hdfsDirectory)
     result = True
     for file in os.listdir(localDirectory):
         file_path = os.path.join(localDirectory, file)
@@ -49,6 +49,8 @@ def copyFileToHdfs(localFilePath, hdfsFilePath, hdfsClient, override=True):
     '''Copy a local file to hdfs directory'''
     if not os.path.exists(localFilePath):
         raise Exception('Local file Path does not exist!')
+    if os.path.isdir(localFilePath):
+        raise Exception('localFile should not a directory!')
     if hdfsClient.exists(hdfsFilePath):
         if override:
             hdfsClient.delete(hdfsFilePath)

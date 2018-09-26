@@ -314,6 +314,7 @@ class PAITrainingService implements TrainingService {
                     break;
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
+                //paiTrialConfig.outputDir could be null if it is not set in nnictl
                 if(this.paiTrialConfig.outputDir === undefined || this.paiTrialConfig.outputDir === null){
                     this.paiTrialConfig.outputDir = String.Format(
                         PAI_OUTPUT_DIR_FORMAT,
@@ -321,9 +322,6 @@ class PAITrainingService implements TrainingService {
                         this.paiClusterConfig.userName
                     ).replace(/\r\n|\n|\r/gm, '');
                 }
-
-                console.log(`Set Cluster metadata: paiTrialConfig is ${JSON.stringify(this.paiTrialConfig)}`);
-
                 deferred.resolve();
                 break;
             default:
