@@ -1,6 +1,8 @@
 # Setting variables
 
 SHELL := /bin/bash
+PIP_INSTALL := python3 -m pip install
+PIP_UNINSTALL := python3 -m pip uninstall
 
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
@@ -20,7 +22,7 @@ else  # is normal user
 endif
 
 ## Dependency information
-NODE_VERSION ?= v10.9.0
+NODE_VERSION ?= v10.10.0
 NODE_TARBALL ?= node-$(NODE_VERSION)-linux-x64.tar.xz
 NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
 
@@ -143,8 +145,8 @@ dev-install:
 
 .PHONY: uninstall
 uninstall:
-	-pip3 uninstall -y nni
-	-pip3 uninstall -y nnictl
+	-$(PIP_UNINSTALL) -y nni
+	-$(PIP_UNINSTALL) -y nnictl
 	-rm -rf $(INSTALL_PREFIX)/nni
 	-rm -f $(BIN_PATH)/nnimanager
 	-rm -f $(BIN_PATH)/nnictl
@@ -219,10 +221,10 @@ install-node-modules:
 .PHONY: install-dev-modules
 install-dev-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	cd src/sdk/pynni && pip3 install $(PIP_MODE) -e .
+	cd src/sdk/pynni && $(PIP_INSTALL) $(PIP_MODE) -e .
 	
 	#$(_INFO) Installing nnictl $(_END)
-	cd tools && pip3 install $(PIP_MODE) -e .
+	cd tools && $(PIP_INSTALL) $(PIP_MODE) -e .
 	
 	mkdir -p $(INSTALL_PREFIX)/nni
 	
@@ -294,7 +296,7 @@ ifdef _ROOT
 	$(error You should not develop NNI as root)
 endif
 ifdef _MISS_DEPS
-	$(error Please install Node.js, Yarn, and Serve to develop NNI)
+#	$(error Please install Node.js, Yarn, and Serve to develop NNI)
 endif
 	#$(_INFO) Pass! $(_END)
 

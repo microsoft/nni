@@ -23,6 +23,7 @@ import argparse
 from .launcher import create_experiment, resume_experiment
 from .updater import update_searchspace, update_concurrency, update_duration
 from .nnictl_utils import *
+from .package_management import *
 
 def nni_help_info(*args):
     print('please run "nnictl {positional argument} --help" to see nnictl guidance')
@@ -106,7 +107,7 @@ def parse_args():
 
     #parse log command
     parser_log = subparsers.add_parser('log', help='get log information')
-    # add subparsers for parser_rest
+    # add subparsers for parser_log
     parser_log_subparsers = parser_log.add_subparsers()
     parser_log_stdout = parser_log_subparsers.add_parser('stdout', help='get stdout information')
     parser_log_stdout.add_argument('--tail', '-T', dest='tail', type=int, help='get tail -100 content of stdout')
@@ -118,6 +119,21 @@ def parse_args():
     parser_log_stderr.add_argument('--head', '-H', dest='head', type=int, help='get head -100 content of stderr')
     parser_log_stderr.add_argument('--path', '-p', action='store_true', default=False, help='get the path of stderr file')
     parser_log_stderr.set_defaults(func=log_stderr)
+    parser_log_trial = parser_log_subparsers.add_parser('trial', help='get trial log path')
+    parser_log_trial.add_argument('--id', '-I', dest='id', help='find trial log path by id')
+    parser_log_trial.set_defaults(func=log_trial)
+
+
+    #parse package command
+    parser_package = subparsers.add_parser('package', help='control nni tuner and assessor packages')
+    # add subparsers for parser_package
+    parser_package_subparsers = parser_package.add_subparsers()
+    parser_package_install = parser_package_subparsers.add_parser('install', help='install packages')
+    parser_package_install.add_argument('--name', '-n', dest='name', help='package name to be installed')
+    parser_package_install.set_defaults(func=package_install)
+    parser_package_show = parser_package_subparsers.add_parser('show', help='show the information of packages')
+    parser_package_show.set_defaults(func=package_show)
+
 
     args = parser.parse_args()
     args.func(args)

@@ -25,13 +25,13 @@ CONFIG_SCHEMA = Schema({
 'authorName': str,
 'experimentName': str,
 'trialConcurrency': And(int, lambda n: 1 <=n <= 999999),
-'maxExecDuration': Regex(r'^[1-9][0-9]*[s|m|h|d]$'),
-'maxTrialNum': And(int, lambda x: 1 <= x <= 99999),
+Optional('maxExecDuration'): Regex(r'^[1-9][0-9]*[s|m|h|d]$'),
+Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
 'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai']),
 Optional('searchSpacePath'): os.path.exists,
 'useAnnotation': bool,
 'tuner': Or({
-    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution'),
+    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC'),
     'classArgs': {
         'optimize_mode': Or('maximize', 'minimize'),
         Optional('speed'): int
@@ -41,10 +41,7 @@ Optional('searchSpacePath'): os.path.exists,
     'codeDir': os.path.exists,
     'classFileName': str,
     'className': str,
-    Optional('classArgs'): {
-        Optional('optimize_mode'): Or('maximize', 'minimize'),
-        Optional('speed'): int
-        },
+    Optional('classArgs'): dict,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 }),
 'trial':{

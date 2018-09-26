@@ -18,31 +18,25 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
+import nni
+import os
+from subprocess import call
+from .constants import PACKAGE_REQUIREMENTS
+from .common_utils import print_normal, print_error
 
-LABEL maintainer='Microsoft NNI Team<nni@microsoft.com>'
+def process_install(package_name):
+    if PACKAGE_REQUIREMENTS.get(package_name) is None:
+        print_error('{0} is not supported!' % package_name)
+    else:
+        requirements_path = os.path.join(nni.__path__[0], PACKAGE_REQUIREMENTS[package_name])
+        cmds = 'cd ' + requirements_path + ' && python3 -m pip install --user -r requirements.txt'
+        call(cmds, shell=True)
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    sudo apt-utils git curl vim unzip openssh-client wget \
-    build-essential cmake \
-    libopenblas-dev
-
-#
-# Python 3.5
-#
-RUN apt-get install -y --no-install-recommends python3.5 python3.5-dev python3-pip python3-tk && \
-    pip3 install --no-cache-dir --upgrade pip setuptools && \
-    echo "alias python='python3'" >> /root/.bash_aliases && \
-    echo "alias pip='pip3'" >> /root/.bash_aliases
-
-# numpy 1.14.3  scipy 1.1.0 
-RUN pip3 --no-cache-dir install \
-    numpy==1.14.3 scipy==1.1.0 
-
-#
-#Install node 10.10.0, yarn 1.9.4, NNI v0.1
-#
-RUN git clone -b v0.1 https://github.com/Microsoft/nni.git
-RUN cd nni && sh install.sh
-RUN echo 'PATH=~/.local/node/bin:~/.local/yarn/bin:~/.local/bin:$PATH' >> ~/.bashrc
-RUN cd .. && rm -rf nni
+def package_install(args):
+    '''install packages'''
+    process_install(args.name)
+    
+def package_show(args):
+    '''show all packages'''
+    print(' '.join(PACKAGE_REQUIREMENTS.keys()))
+    
