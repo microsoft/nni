@@ -82,7 +82,8 @@ setup(
         'pyyaml',
         'requests',
         'scipy',
-        'schema'        
+        'schema',
+        'pyhdfs'   
     ],
     dependency_links = [
         'git+https://github.com/hyperopt/hyperopt.git'

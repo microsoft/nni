@@ -146,11 +146,16 @@ def set_experiment(experiment_config, mode, port):
         value_dict['command'] = experiment_config['trial']['command']
         value_dict['codeDir'] = experiment_config['trial']['codeDir']
         value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
-        value_dict['cpuNum'] = experiment_config['trial']['cpuNum']
-        value_dict['memoryMB'] = experiment_config['trial']['memoryMB']
-        value_dict['image'] = experiment_config['trial']['image']
-        value_dict['dataDir'] = experiment_config['trial']['dataDir']
-        value_dict['outputDir'] = experiment_config['trial']['outputDir']
+        if experiment_config['trial'].get('cpuNum'):
+            value_dict['cpuNum'] = experiment_config['trial']['cpuNum']
+        if experiment_config['trial'].get('memoryMB'):
+            value_dict['memoryMB'] = experiment_config['trial']['memoryMB']
+        if experiment_config['trial'].get('image'):
+            value_dict['image'] = experiment_config['trial']['image']
+        if experiment_config['trial'].get('dataDir'):
+            value_dict['dataDir'] = experiment_config['trial']['dataDir']
+        if experiment_config['trial'].get('outputDir'):
+            value_dict['outputDir'] = experiment_config['trial']['outputDir']
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': value_dict})
 
@@ -261,9 +266,10 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     else:
         print_normal('Starting web ui...')
         webui_process = start_web_ui(webuiport)
-        nni_config.set_config('webuiPid', webui_process.pid)
-        print_normal('Starting web ui success!')
-        print_normal('{0} {1}'.format('Web UI url:', '   '.join(nni_config.get_config('webuiUrl'))))
+        if webui_process:
+            nni_config.set_config('webuiPid', webui_process.pid)
+            print_normal('Starting web ui success!')
+            print_normal('{0} {1}'.format('Web UI url:', '   '.join(nni_config.get_config('webuiUrl'))))
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, REST_PORT))
 
