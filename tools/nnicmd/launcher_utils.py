@@ -21,6 +21,7 @@
 import os
 import json
 from .config_schema import CONFIG_SCHEMA
+from .common_utils import get_json_content
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -92,35 +93,29 @@ def validate_common_content(experiment_config):
 
 def parse_tuner_content(experiment_config):
     '''Validate whether tuner in experiment_config is valid'''
-    tuner_class_name_dict = {'TPE': 'HyperoptTuner',\
-                            'Random': 'HyperoptTuner',\
-                            'Anneal': 'HyperoptTuner',\
-                            'Evolution': 'EvolutionTuner',\
-                            'BatchTuner': 'BatchTuner'}
-
-    tuner_algorithm_name_dict = {'TPE': 'tpe',\
-                            'Random': 'random_search',\
-                            'Anneal': 'anneal'}
-    
-    if experiment_config['tuner'].get('builtinTunerName') and experiment_config['tuner'].get('classArgs'):
-        experiment_config['tuner']['className'] = tuner_class_name_dict.get(experiment_config['tuner']['builtinTunerName'])
-        if tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName']):
-            experiment_config['tuner']['classArgs']['algorithm_name'] = tuner_algorithm_name_dict.get(experiment_config['tuner']['builtinTunerName'])
-    elif experiment_config['tuner'].get('codeDir') and experiment_config['tuner'].get('classFileName') and experiment_config['tuner'].get('className'):
-        if not os.path.exists(os.path.join(experiment_config['tuner']['codeDir'], experiment_config['tuner']['classFileName'])):
+    if experiment_config['tuner'].get('builtinTunerName'):
+        experiment_config['tuner']['className'] = experiment_config['tuner']['builtinTunerName']
+    elif experiment_config['tuner'].get('codeDir') and \
+        experiment_config['tuner'].get('classFileName') and \
+        experiment_config['tuner'].get('className'):
+        if not os.path.exists(os.path.join(
+                experiment_config['tuner']['codeDir'],
+                experiment_config['tuner']['classFileName'])):
             raise ValueError('Tuner file directory is not valid!')
     else:
         raise ValueError('Tuner format is not valid!')
 
 def parse_assessor_content(experiment_config):
     '''Validate whether assessor in experiment_config is valid'''
-    assessor_class_name_dict = {'Medianstop': 'MedianstopAssessor'}
-    
     if experiment_config.get('assessor'):
-        if experiment_config['assessor'].get('builtinAssessorName') and experiment_config['assessor'].get('classArgs'):
-            experiment_config['assessor']['className'] = assessor_class_name_dict.get(experiment_config['assessor']['builtinAssessorName'])
-        elif experiment_config['assessor'].get('codeDir') and experiment_config['assessor'].get('classFileName') and experiment_config['assessor'].get('className') and experiment_config['assessor'].get('classArgs'):
-            if not os.path.exists(os.path.join(experiment_config['assessor']['codeDir'], experiment_config['assessor']['classFileName'])):
+        if experiment_config['assessor'].get('builtinAssessorName'):
+            experiment_config['assessor']['className'] = experiment_config['assessor']['builtinAssessorName']
+        elif experiment_config['assessor'].get('codeDir') and \
+            experiment_config['assessor'].get('classFileName') and \
+            experiment_config['assessor'].get('className'):
+            if not os.path.exists(os.path.join(
+                    experiment_config['assessor']['codeDir'],
+                    experiment_config['assessor']['classFileName'])):
                 raise ValueError('Assessor file directory is not valid!')
         else:
             raise ValueError('Assessor format is not valid!')
