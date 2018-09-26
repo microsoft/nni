@@ -118,7 +118,8 @@ easy-install: check-perm
 easy-install: install-dependencies
 easy-install: build
 easy-install: install
-easy-install: update-bashrc
+easy-install: update-bash-config
+
 easy-install:
 	#$(_INFO) Complete! #(_END)
 
@@ -131,6 +132,7 @@ pip-install: build
 pip-install: install-node-modules
 pip-install: install-scripts
 pip-install: install-examples
+pip-install: update-bash-config
 
 
 # Target for NNI developers
@@ -253,9 +255,6 @@ install-scripts:
 	chmod +x $(BIN_PATH)/nnictl
 	
 	install -Dm644 tools/bash-completion $(BASH_COMP_SCRIPT)
-ifndef _ROOT
-	echo '[[ -f $(BASH_COMP_SCRIPT) ]] && source $(BASH_COMP_SCRIPT)' >> ~/.bash_completion
-endif
 
 
 .PHONY: install-examples
@@ -264,16 +263,20 @@ install-examples:
 	[ $(EXAMPLES_PATH) = ${PWD}/examples ] || cp -rT examples $(EXAMPLES_PATH)
 
 
-.PHONY: update-bashrc
-ifeq (, $(shell echo $$PATH | tr ':' '\n' | grep -x '$(BIN_PATH)'))  # $(BIN_PATH) not in PATH
-    ifdef _ROOT
-        $(error $(BIN_PATH) not in PATH as root, which should never happen)
-    endif
-update-bashrc:
+.PHONY: update-bash-config
+ifndef _ROOT
+update-bash-config:
+	#$(_INFO) Updating bash configurations $(_END)
+    ifeq (, $(shell echo $$PATH | tr ':' '\n' | grep -x '$(BIN_PATH)'))  # $(BIN_PATH) not in PATH
 	#$(_WARNING) NOTE: adding $(BIN_PATH) to PATH in bashrc $(_END)
 	echo 'export PATH="$$PATH:$(BIN_PATH)"' >> ~/.bashrc
-else  # $(BIN_PATH) already in PATH
-update-bashrc: ;
+    endif
+    ifeq (, $(shell (source ~/.bash_completion ; command -v _nnictl) 2>/dev/null))  # completion not installed
+	#$(_WARNING) NOTE: adding $(BASH_COMP_SCRIPT) to ~/.bash_completion $(_END)
+	echo '[[ -f $(BASH_COMP_SCRIPT) ]] && source $(BASH_COMP_SCRIPT)' >> ~/.bash_completion
+    endif
+else
+update-bash-config: ;
 endif
 
 
