@@ -63,6 +63,7 @@ class PAITrainingService implements TrainingService {
     private paiToken? : string;
     private experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
+    private hdfsDirPattern: string;
 
     constructor() {
         this.log = getLogger();
@@ -72,6 +73,7 @@ class PAITrainingService implements TrainingService {
         this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
         this.experimentId = getExperimentId();      
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
+        this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3}):[0-9]{2,5}(?<baseDir>/.*)';
     }
 
     public async run(): Promise<void> {
@@ -150,10 +152,8 @@ class PAITrainingService implements TrainingService {
         // Step 1. Prepare PAI job configuration
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
-        
-        const hdfsDirPattern: string = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3}):[0-9]{2,5}(?<baseDir>/.*)'
     
-        const hdfsDirContent = this.paiTrialConfig.outputDir.match(hdfsDirPattern)
+        const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern)
 
         if(hdfsDirContent === null){
             throw new Error('Trial outputDir format Error');
