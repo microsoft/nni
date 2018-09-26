@@ -40,7 +40,7 @@ RUN pip3 --no-cache-dir install \
     numpy==1.14.3 scipy==1.1.0 
 
 #
-#Install node 10.9.0, yarn 1.9.4, NNI v0.1
+#Install node 10.10.0, yarn 1.9.4, NNI v0.1
 #
 RUN git clone -b v0.1 https://github.com/Microsoft/nni.git
 RUN cd nni && sh install.sh

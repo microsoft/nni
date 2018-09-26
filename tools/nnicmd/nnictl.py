@@ -25,7 +25,7 @@ from .updater import update_searchspace, update_concurrency, update_duration
 from .nnictl_utils import *
 
 def nni_help_info(*args):
-    print('please run "nnictl --help" to see nnictl guidance')
+    print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
 def parse_args():
     '''Definite the arguments users need to follow and input'''
@@ -95,6 +95,8 @@ def parse_args():
     parser_experiment_subparsers = parser_experiment.add_subparsers()
     parser_experiment_show = parser_experiment_subparsers.add_parser('show', help='show the information of experiment')
     parser_experiment_show.set_defaults(func=list_experiment)
+    parser_experiment_status = parser_experiment_subparsers.add_parser('status', help='show the status of experiment')
+    parser_experiment_status.set_defaults(func=experiment_status)
 
     #parse config command
     parser_config = subparsers.add_parser('config', help='get config information')
@@ -116,6 +118,10 @@ def parse_args():
     parser_log_stderr.add_argument('--head', '-H', dest='head', type=int, help='get head -100 content of stderr')
     parser_log_stderr.add_argument('--path', '-p', action='store_true', default=False, help='get the path of stderr file')
     parser_log_stderr.set_defaults(func=log_stderr)
+    parser_log_trial = parser_log_subparsers.add_parser('trial', help='get trial log path')
+    parser_log_trial.add_argument('--id', '-I', dest='id', help='find trial log path by id')
+    parser_log_trial.set_defaults(func=log_trial)
+
 
     args = parser.parse_args()
     args.func(args)

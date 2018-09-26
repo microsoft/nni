@@ -18,23 +18,41 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-
+import json_tricks
 import json
 import os
+import time
 
-from ..common import init_logger
+from ..common import init_logger, env_args
 
 
 _dir = os.environ['NNI_SYS_DIR']
 _metric_file = open(os.path.join(_dir, '.nni', 'metrics'), 'wb')
+_param_index = 0
 
 _log_file_path = os.path.join(_dir, 'trial.log')
 init_logger(_log_file_path)
 
+def _send_request_parameter_metric():
+    metric = json_tricks.dumps({
+        'trial_job_id': env_args.trial_job_id,
+        'type': 'REQUEST_PARAMETER',
+        'sequence': 0,
+        'parameter_index': _param_index
+    })
+    send_metric(metric)
 
 def get_parameters():
-    params_file = open(os.path.join(_dir, 'parameter.cfg'), 'r')
-    return json.load(params_file)
+    global _param_index
+    params_filepath = os.path.join(_dir, 'parameter_{}.cfg'.format(_param_index))
+    if not os.path.isfile(params_filepath):
+        _send_request_parameter_metric()
+    while not os.path.isfile(params_filepath):
+        time.sleep(3)
+    params_file = open(params_filepath, 'r')
+    params = json.load(params_file)
+    _param_index += 1
+    return params
 
 def send_metric(string):
     data = (string + '\n').encode('utf8')

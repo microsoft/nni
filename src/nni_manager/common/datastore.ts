@@ -22,7 +22,7 @@
 import { ExperimentProfile, TrialJobStatistics } from './manager';
 import { TrialJobDetail, TrialJobStatus } from './trainingService';
 
-type TrialJobEvent = TrialJobStatus | 'USER_TO_CANCEL' | 'ADD_CUSTOMIZED';
+type TrialJobEvent = TrialJobStatus | 'USER_TO_CANCEL' | 'ADD_CUSTOMIZED' | 'ADD_HYPERPARAMETER';
 type MetricType = 'PERIODICAL' | 'FINAL' | 'CUSTOM';
 
 interface ExperimentProfileRecord {
@@ -62,7 +62,7 @@ interface TrialJobInfo {
     status: TrialJobStatus;
     startTime?: number;
     endTime?: number;
-    hyperParameters?: string;
+    hyperParameters?: string[];
     logPath?: string;
     finalMetricData?: string;
     stderrPath?: string;

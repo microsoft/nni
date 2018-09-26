@@ -31,6 +31,7 @@ interface ExperimentParams {
     maxExecDuration: number; //seconds
     maxTrialNum: number;
     searchSpace: string;
+    multiPhase?: boolean;
     tuner: {
         className: string;
         builtinTunerName?: string;
