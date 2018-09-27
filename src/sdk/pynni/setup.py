@@ -27,7 +27,7 @@ def read(fname):
 
 setuptools.setup(
     name = 'nni',
-    version = '0.0.1',
+    version = '0.2.0',
     packages = setuptools.find_packages(exclude=['tests']),
 
     python_requires = '>=3.5',
