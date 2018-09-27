@@ -2,10 +2,10 @@ authorName: default
 experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 1h
-maxTrialNum: 100
+maxTrialNum: 10
 #choice: local, remote
 trainingServicePlatform: local
-searchSpacePath: ~/nni/examples/trials/mnist/search_space.json
+searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
@@ -16,5 +16,5 @@ tuner:
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
-  codeDir: ~/nni/examples/trials/mnist
+  codeDir: .
   gpuNum: 0

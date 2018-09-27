@@ -55,7 +55,7 @@ Try it out:
 
 In the command output, find out the **Web UI url** and open it in your browser. You can analyze your experiment through WebUI, or browse trials' tensorboard. 
 
-To learn more about how this example was constructed and how to analyze the experiement results in NNI Web UI, please refer to [How to write a trial run on NNI (MNIST as an example)?](docs/WriteYourTrial.md)
+To learn more about how this example was constructed and how to analyze the experiment results in NNI Web UI, please refer to [How to write a trial run on NNI (MNIST as an example)?](docs/WriteYourTrial.md)
 
 ## **Please refer to [Get Started Tutorial](docs/GetStarted.md) for more detailed information.**
 ## More tutorials
