@@ -43,7 +43,7 @@ export class PAIJobInfoCollector {
         this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED'];
     }
 
-    public async updateTrialStatusFromPAI(paiToken? : string, paiClusterConfig?: PAIClusterConfig, paiLogPath?: string) : Promise<void> {
+    public async updateTrialStatusFromPAI(paiToken? : string, paiClusterConfig?: PAIClusterConfig) : Promise<void> {
         if (!paiClusterConfig || !paiToken) {
             return Promise.resolve();            
         }
@@ -53,13 +53,13 @@ export class PAIJobInfoCollector {
             if (!paiTrialJob) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
-            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiTrialJob, paiToken, paiClusterConfig, paiLogPath))            
+            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiTrialJob, paiToken, paiClusterConfig))
         }
 
         await Promise.all(updatePaiTrialJobs);
     }
 
-    private getSinglePAITrialJobInfo(paiTrialJob : PAITrialJobDetail, paiToken : string, paiClusterConfig: PAIClusterConfig, paiLogPath?: string) : Promise<void> {
+    private getSinglePAITrialJobInfo(paiTrialJob : PAITrialJobDetail, paiToken : string, paiClusterConfig: PAIClusterConfig) : Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
         if (!this.statusesNeedToCheck.includes(paiTrialJob.status)) {
             deferred.resolve();
@@ -101,21 +101,12 @@ export class PAIJobInfoCollector {
                             }
                             break;
                         case 'SUCCEEDED':
-                            if(paiLogPath !== undefined){
-                                paiTrialJob.url = paiLogPath;
-                            }
                             paiTrialJob.status = 'SUCCEEDED';
                             break;
                         case 'STOPPED':
-                            if(paiLogPath !== undefined){
-                                paiTrialJob.url = paiLogPath;
-                            }
                             paiTrialJob.status = 'USER_CANCELED';
                             break;
                         case 'FAILED':
-                            if(paiLogPath !== undefined){
-                                paiTrialJob.url = paiLogPath;
-                            }
                             paiTrialJob.status = 'FAILED';                            
                             break;
                         default:
@@ -130,8 +121,9 @@ export class PAIJobInfoCollector {
                         if(!paiTrialJob.endTime) {
                             paiTrialJob.endTime = response.body.jobStatus.completedTime;
                         }
-                        if(!paiTrialJob.url) {
-                            paiTrialJob.url = response.body.jobStatus.appTrackingUrl;    
+                        // Set pai trial job's url to WebHDFS output path
+                        if(paiTrialJob.hdfsLogPath) {
+                            paiTrialJob.url = paiTrialJob.hdfsLogPath;
                         }
                     }
                 }
