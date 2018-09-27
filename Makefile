@@ -4,6 +4,12 @@ SHELL := /bin/bash
 PIP_INSTALL := python3 -m pip install
 PIP_UNINSTALL := python3 -m pip uninstall
 
+## Colorful output
+_INFO := $(shell echo -e '\e[1;36m')
+_WARNING := $(shell echo -e '\e[1;33m')
+_END := $(shell echo -e '\e[0m')
+
+
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
@@ -37,41 +43,37 @@ SERVE_PATH ?= $(INSTALL_PREFIX)/nni/serve
 
 ## Check if dependencies have been installed globally
 ifeq (, $(shell command -v node 2>/dev/null))
-    $(info Node.js not found)
+    $(info $(_INFO) Node.js not found $(_END))
     _MISS_DEPS := 1  # node not found
 else
     _VER := $(shell node --version)
     _NEWER := $(shell echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr | head -n 1)
     ifneq ($(_VER), $(_NEWER))
-        $(info Node.js version not match)
+        $(info $(_INFO) Node.js version not match $(_END))
         _MISS_DEPS := 1  # node outdated
     endif
 endif
 ifeq (, $(shell command -v yarnpkg 2>/dev/null))
-    $(info Yarn not found)
+    $(info $(_INFO) Yarn not found $(_END))
     _MISS_DEPS := 1  # yarn not found
 endif
 ifeq (, $(shell command -v serve 2>/dev/null))
-    $(info Serve not found)
+    $(info $(_INFO) Serve not found $(_END))
     _MISS_DEPS := 1  # serve not found
 endif
 
 ifdef _MISS_DEPS
-    $(info Missing dependencies, use local toolchain)
+    $(info $(_INFO) Missing dependencies, use local toolchain $(_END))
     NODE := $(NODE_PATH)/bin/node
     YARN := PATH=$${PATH}:$(NODE_PATH)/bin $(YARN_PATH)/bin/yarn
     SERVE := $(SERVE_PATH)/serve
 else
-    $(info All dependencies found, use global toolchain)
+     $(info $(_INFO) All dependencies found, use global toolchain $(_END))
     NODE := node
     YARN := yarnpkg
     SERVE := serve
 endif
 
-## Colorful output
-_INFO := $(shell echo -e '\e[1;36m')
-_WARNING := $(shell echo -e '\e[1;33m')
-_END := $(shell echo -e '\e[0m')
 
 # Setting variables end
 
