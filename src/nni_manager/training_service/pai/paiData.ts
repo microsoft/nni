@@ -55,3 +55,6 @@ export const PAI_TRIAL_COMMAND_FORMAT: string =
 
 export const PAI_OUTPUT_DIR_FORMAT: string = 
 `hdfs://{0}:9000/`;
+
+export const PAI_LOG_PATH_FORMAT: string = 
+`http://{0}:50070/explorer.html#{1}`

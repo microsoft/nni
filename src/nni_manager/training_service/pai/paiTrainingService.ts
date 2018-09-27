@@ -39,7 +39,7 @@ import {
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
-import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT } from './paiData';
+import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
@@ -169,6 +169,11 @@ class PAITrainingService implements TrainingService {
             hdfsBaseDirectory = "/";
         }
         const hdfsOutputDir = path.join(hdfsBaseDirectory, this.experimentId, trialJobId)
+        const logPath: string = String.Format(
+            PAI_LOG_PATH_FORMAT,
+            hdfsHost,
+            hdfsOutputDir
+        )
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
             'WAITING',
@@ -176,7 +181,7 @@ class PAITrainingService implements TrainingService {
             Date.now(),
             trialWorkingFolder,
             form,
-            this.paiTrialConfig.outputDir);
+            logPath);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
         const nniPaiTrialCommand : string = String.Format(
