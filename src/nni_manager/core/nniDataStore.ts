@@ -160,12 +160,11 @@ class NNIDataStore implements DataStore {
 
     private async getFinalMetricData(trialJobId: string): Promise<any> {
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
-        assert(metrics.length <= 1);
-        if (metrics.length === 1) {
-            return metrics[0];
-        } else {
-            return undefined;
+        if (metrics.length > 1) {
+            this.log.error(`Found multiple final results for trial job: ${trialJobId}`);
         }
+
+        return metrics[0];
     }
 
     private getJobStatusByLatestEvent(event: TrialJobEvent): TrialJobStatus {
