@@ -33,7 +33,7 @@ export namespace ValidationSchemas {
                 passphrase: joi.string()
             })),
             trial_config: joi.object({
-                image: joi.string().min(1),                
+                image: joi.string().min(1),
                 codeDir: joi.string().min(1).required(),
                 dataDir: joi.string(),
                 outputDir: joi.string(),

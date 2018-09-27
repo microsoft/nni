@@ -44,7 +44,7 @@ setuptools.setup(
     author_email = 'nni@microsoft.com',
     description = 'Python SDK for Neural Network Intelligence project',
     license = 'MIT',
-    url = 'https://msrasrg.visualstudio.com/NeuralNetworkIntelligence',
+    url = 'https://github.com/Microsoft/nni',
 
     long_description = read('README.md')
 )
