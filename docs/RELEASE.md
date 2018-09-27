@@ -8,7 +8,7 @@
    * Support NNI installation on [conda](https://conda.io/docs/index.html) and python virtual environment
    * Others
       * Update ga squad example and related documentation
-      * WebUI UX small enhancement and bug fixsss
+      * WebUI UX small enhancement and bug fix
 
 ## Known Issues
 [Known Issues in release 0.2.0](https://github.com/Microsoft/nni/labels/nni020knownissues).
