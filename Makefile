@@ -148,7 +148,6 @@ dev-install:
 uninstall:
 	-$(PIP_UNINSTALL) -y nni
 	-$(PIP_UNINSTALL) -y nnictl
-	-$(PIP_UNINSTALL) -y nnits-tool
 	-rm -rf $(INSTALL_PREFIX)/nni
 	-rm -f $(BIN_PATH)/nnimanager
 	-rm -f $(BIN_PATH)/nnictl
