@@ -65,6 +65,16 @@ def set_trial_config(experiment_config, port):
     value_dict['command'] = experiment_config['trial']['command']
     value_dict['codeDir'] = experiment_config['trial']['codeDir']
     value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
+    if experiment_config['trial'].get('cpuNum'):
+        value_dict['cpuNum'] = experiment_config['trial']['cpuNum']
+    if experiment_config['trial'].get('memoryMB'):
+        value_dict['memoryMB'] = experiment_config['trial']['memoryMB']
+    if experiment_config['trial'].get('image'):
+        value_dict['image'] = experiment_config['trial']['image']
+    if experiment_config['trial'].get('dataDir'):
+        value_dict['dataDir'] = experiment_config['trial']['dataDir']
+    if experiment_config['trial'].get('outputDir'):
+        value_dict['outputDir'] = experiment_config['trial']['outputDir']
     request_data['trial_config'] = value_dict
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
     if check_response(response):
@@ -95,6 +105,20 @@ def set_remote_config(experiment_config, port):
     #set trial_config
     return set_trial_config(experiment_config, port), err_message
 
+def set_pai_config(experiment_config, port):
+    '''set pai configuration''' 
+    pai_config_data = dict()
+    pai_config_data['pai_config'] = experiment_config['paiConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(pai_config_data), 20)
+    err_message = ''
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+        return False, err_message
+
+    #set trial_config
+    return set_trial_config(experiment_config, port), err_message
+
 def set_experiment(experiment_config, mode, port):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
     request_data = dict()
@@ -116,13 +140,32 @@ def set_experiment(experiment_config, mode, port):
             {'key':'codeDir', 'value':experiment_config['trial']['codeDir']})
         request_data['clusterMetaData'].append(
             {'key': 'command', 'value': experiment_config['trial']['command']})
-    else:
+    elif experiment_config['trainingServicePlatform'] == 'remote':
         request_data['clusterMetaData'].append(
             {'key': 'machine_list', 'value': experiment_config['machineList']})
         value_dict = dict()
         value_dict['command'] = experiment_config['trial']['command']
         value_dict['codeDir'] = experiment_config['trial']['codeDir']
         value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': value_dict})
+    elif experiment_config['trainingServicePlatform'] == 'pai':
+        request_data['clusterMetaData'].append(
+            {'key': 'pai_config', 'value': experiment_config['paiConfig']})
+        value_dict = dict()
+        value_dict['command'] = experiment_config['trial']['command']
+        value_dict['codeDir'] = experiment_config['trial']['codeDir']
+        value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
+        if experiment_config['trial'].get('cpuNum'):
+            value_dict['cpuNum'] = experiment_config['trial']['cpuNum']
+        if experiment_config['trial'].get('memoryMB'):
+            value_dict['memoryMB'] = experiment_config['trial']['memoryMB']
+        if experiment_config['trial'].get('image'):
+            value_dict['image'] = experiment_config['trial']['image']
+        if experiment_config['trial'].get('dataDir'):
+            value_dict['dataDir'] = experiment_config['trial']['dataDir']
+        if experiment_config['trial'].get('outputDir'):
+            value_dict['outputDir'] = experiment_config['trial']['outputDir']
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': value_dict})
 
@@ -205,6 +248,21 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
             exit(0)
+    
+    #set pai config
+    if experiment_config['trainingServicePlatform'] == 'pai':
+        print_normal('Setting pai config...')
+        config_result, err_msg = set_pai_config(experiment_config, REST_PORT)
+        if config_result:
+            print_normal('Success!')
+        else:
+            print_error('Failed! Error is: {}'.format(err_msg))
+            try:
+                cmds = ['pkill', '-P', str(rest_process.pid)]
+                call(cmds)
+            except Exception:
+                raise Exception(ERROR_INFO % 'Rest server stopped!')
+            exit(0)
 
     # start a new experiment
     print_normal('Starting experiment...')
@@ -230,9 +288,10 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     else:
         print_normal('Starting web ui...')
         webui_process = start_web_ui(webuiport)
-        nni_config.set_config('webuiPid', webui_process.pid)
-        print_normal('Starting web ui success!')
-        print_normal('{0} {1}'.format('Web UI url:', '   '.join(nni_config.get_config('webuiUrl'))))
+        if webui_process:
+            nni_config.set_config('webuiPid', webui_process.pid)
+            print_normal('Starting web ui success!')
+            print_normal('{0} {1}'.format('Web UI url:', '   '.join(nni_config.get_config('webuiUrl'))))
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, REST_PORT))
 
