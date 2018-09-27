@@ -24,14 +24,6 @@
       chmod +x install.sh
       source install.sh
 
-
-* __Install NNI for all users__
-   
-      sudo python3 -m pip install -v --user git+https://github.com/Microsoft/nni.git@v0.1
-
-    * Note: NNI will be installed to `/usr/share/nni` for all users and to `~/.local/nni` for current user. Respectively, the examples will be copied to `/usr/share/nni/examples` or `~/.local/nni/examples`.
-    * The following tutorial assumes that NNI is installed for current user.
-
 ## **Quick start: run a customized experiment**
 An experiment is to run multiple trial jobs, each trial job tries a configuration which includes a specific neural architecture (or model) and hyper-parameter values. To run an experiment through NNI, you should:
 
