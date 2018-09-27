@@ -175,7 +175,8 @@ class PAITrainingService implements TrainingService {
             paiJobName,            
             Date.now(),
             trialWorkingFolder,
-            form);
+            form,
+            this.paiTrialConfig.outputDir);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
         const nniPaiTrialCommand : string = String.Format(
