@@ -10,13 +10,6 @@ require('echarts/lib/component/title');
 require('echarts/lib/component/visualMap');
 require('../style/para.css');
 
-const chartMulineStyle = {
-    width: '100%',
-    height: 600,
-    margin: '0 auto',
-    padding: 15
-};
-
 interface Dimobj {
     dim: number;
     name: string;
@@ -227,6 +220,22 @@ class Para extends React.Component<{}, ParaState> {
         const { visualValue } = this.state;
         let parallelAxis = dataObj.parallelAxis;
         let paralleData = dataObj.data;
+        const maxAccuracy = visualValue.maxAccuracy;
+        const minAccuracy = visualValue.minAccuracy;
+        let visualMapObj = {};
+        if (maxAccuracy === minAccuracy) {
+            visualMapObj = {
+                type: 'continuous',
+                color: ['#fb7c7c', 'yellow', 'lightblue']
+            };
+        } else {
+            visualMapObj = {
+                type: 'continuous',
+                min: visualValue.minAccuracy,
+                max: visualValue.maxAccuracy,
+                color: ['#fb7c7c', 'yellow', 'lightblue']
+            };
+        }
         let optionown = {
             parallelAxis,
             tooltip: {
@@ -252,13 +261,7 @@ class Para extends React.Component<{}, ParaState> {
                     }
                 }
             },
-            visualMap: {
-                type: 'continuous',
-                min: visualValue.minAccuracy,
-                max: visualValue.maxAccuracy,
-                // gradient color
-                color: ['#fb7c7c', 'yellow', 'lightblue']
-            },
+            visualMap: visualMapObj,
             highlight: {
                 type: 'highlight'
             },
@@ -375,6 +378,12 @@ class Para extends React.Component<{}, ParaState> {
 
     render() {
         const { option, paraNodata, dimName } = this.state;
+        const chartMulineStyle = {
+            width: '100%',
+            height: 600,
+            margin: '0 auto',
+            padding: 15
+        };
         return (
             <div className="para">
                 <div className="paraCon">
@@ -384,7 +393,7 @@ class Para extends React.Component<{}, ParaState> {
                             <span>top</span>
                             <Select
                                 className="parapercent"
-                                style={{ width: '20%' }}
+                                style={{ width: '15%' }}
                                 placeholder="100%"
                                 optionFilterProp="children"
                                 onSelect={this.percentNum}
@@ -395,7 +404,7 @@ class Para extends React.Component<{}, ParaState> {
                                 <Option value="1">100%</Option>
                             </Select>
                             <Select
-                                style={{ width: '60%' }}
+                                style={{ width: '50%' }}
                                 mode="multiple"
                                 placeholder="Please select two items to swap"
                                 onChange={this.getSwapArr}
