@@ -43,7 +43,7 @@ setup(
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
 
-    packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools') + find_packages('src/nni_manager/training_service_tool'),
+    packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools'),
     package_dir = {
         'nni_annotation': 'tools/nni_annotation',
         'nni': 'src/sdk/pynni/nni',
