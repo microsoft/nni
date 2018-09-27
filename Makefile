@@ -68,7 +68,7 @@ ifdef _MISS_DEPS
     YARN := PATH=$${PATH}:$(NODE_PATH)/bin $(YARN_PATH)/bin/yarn
     SERVE := $(SERVE_PATH)/serve
 else
-     $(info $(_INFO) All dependencies found, use global toolchain $(_END))
+    $(info $(_INFO) All dependencies found, use global toolchain $(_END))
     NODE := node
     YARN := yarnpkg
     SERVE := serve
