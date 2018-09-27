@@ -39,7 +39,7 @@ import {
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
-import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT } from './paiData';
+import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
@@ -153,29 +153,35 @@ class PAITrainingService implements TrainingService {
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
     
-        const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern)
+        const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
 
-        if(hdfsDirContent === null){
+        if(hdfsDirContent === null) {
             throw new Error('Trial outputDir format Error');
         }
-        const groups = hdfsDirContent.groups
-        if(groups === undefined){
+        const groups = hdfsDirContent.groups;
+        if(groups === undefined) {
             throw new Error('Trial outputDir format Error');
         }
 
-        const hdfsHost = groups['host']
-        let hdfsBaseDirectory = groups['baseDir']
-        if(hdfsBaseDirectory === undefined){
+        const hdfsHost = groups['host'];
+        let hdfsBaseDirectory = groups['baseDir'];
+        if(hdfsBaseDirectory === undefined) {
             hdfsBaseDirectory = "/";
         }
-        const hdfsOutputDir = path.join(hdfsBaseDirectory, this.experimentId, trialJobId)
+        const hdfsOutputDir : string = path.join(hdfsBaseDirectory, this.experimentId, trialJobId);
+        const hdfsLogPath : string = String.Format(
+            PAI_LOG_PATH_FORMAT,
+            hdfsHost,
+            hdfsOutputDir);
+
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
             'WAITING',
             paiJobName,            
             Date.now(),
             trialWorkingFolder,
-            form);
+            form, 
+            hdfsLogPath);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
         const nniPaiTrialCommand : string = String.Format(

@@ -53,7 +53,7 @@ export class PAIJobInfoCollector {
             if (!paiTrialJob) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
-            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiTrialJob, paiToken, paiClusterConfig))            
+            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiTrialJob, paiToken, paiClusterConfig))
         }
 
         await Promise.all(updatePaiTrialJobs);
@@ -121,8 +121,9 @@ export class PAIJobInfoCollector {
                         if(!paiTrialJob.endTime) {
                             paiTrialJob.endTime = response.body.jobStatus.completedTime;
                         }
-                        if(!paiTrialJob.url) {
-                            paiTrialJob.url = response.body.jobStatus.appTrackingUrl;    
+                        // Set pai trial job's url to WebHDFS output path
+                        if(paiTrialJob.hdfsLogPath) {
+                            paiTrialJob.url = paiTrialJob.hdfsLogPath;
                         }
                     }
                 }

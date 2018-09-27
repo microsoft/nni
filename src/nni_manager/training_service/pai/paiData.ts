@@ -32,9 +32,10 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public url?: string;
     public workingDirectory: string;
     public form: JobApplicationForm;
+    public hdfsLogPath: string;
 
     constructor(id: string, status: TrialJobStatus, paiJobName : string, 
-            submitTime: number, workingDirectory: string, form: JobApplicationForm) {
+            submitTime: number, workingDirectory: string, form: JobApplicationForm, hdfsLogPath: string) {
         this.id = id;
         this.status = status;
         this.paiJobName = paiJobName;
@@ -42,15 +43,19 @@ export class PAITrialJobDetail implements TrialJobDetail {
         this.workingDirectory = workingDirectory;
         this.form = form;
         this.tags = [];
+        this.hdfsLogPath = hdfsLogPath;
     }
 }
 
 export const PAI_TRIAL_COMMAND_FORMAT: string =
 `pip3 install -v --user git+https://github.com/yds05/nni.git@master 
-&& export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_EXP_ID={2}
+&& export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_EXP_ID={2} 
 && cd $NNI_SYS_DIR && mkdir .nni 
 && python3 -m trial.trial_keeper --trial_command '{3}' --nnimanager_ip '{4}' --pai_hdfs_output_dir '{5}' 
 --pai_hdfs_host '{6}' --pai_user_name {7}`;
 
 export const PAI_OUTPUT_DIR_FORMAT: string = 
 `hdfs://{0}:9000/`;
+
+export const PAI_LOG_PATH_FORMAT: string = 
+`http://{0}:50070/explorer.html#{1}`
