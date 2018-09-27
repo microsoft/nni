@@ -27,7 +27,7 @@ def read(fname):
 
 setuptools.setup(
     name = 'nni',
-    version = '0.0.1',
+    version = '0.2.0',
     packages = setuptools.find_packages(exclude=['tests']),
 
     python_requires = '>=3.5',
@@ -44,7 +44,7 @@ setuptools.setup(
     author_email = 'nni@microsoft.com',
     description = 'Python SDK for Neural Network Intelligence project',
     license = 'MIT',
-    url = 'https://msrasrg.visualstudio.com/NeuralNetworkIntelligence',
+    url = 'https://github.com/Microsoft/nni',
 
     long_description = read('README.md')
 )

@@ -36,6 +36,7 @@ import { LocalTrainingServiceForGPU } from './training_service/local/localTraini
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
+import { PAITrainingService } from './training_service/pai/paiTrainingService'
 
 
 function initStartupInfo(startExpMode: string, resumeExperimentId: string) {
@@ -49,6 +50,8 @@ async function initContainer(platformMode: string): Promise<void> {
         Container.bind(TrainingService).to(LocalTrainingServiceForGPU).scope(Scope.Singleton);
     } else if (platformMode === 'remote') {
         Container.bind(TrainingService).to(RemoteMachineTrainingService).scope(Scope.Singleton);
+    } else if (platformMode === 'pai'){
+        Container.bind(TrainingService).to(PAITrainingService).scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${mode}`);
     }
@@ -61,7 +64,7 @@ async function initContainer(platformMode: string): Promise<void> {
 }
 
 function usage(): void {
-    console.info('usage: node main.js --port <port> --mode <local/remote> --start_mode <new/resume> --experiment_id <id>');
+    console.info('usage: node main.js --port <port> --mode <local/remote/pai> --start_mode <new/resume> --experiment_id <id>');
 }
 
 let port: number = NNIRestServer.DEFAULT_PORT;
@@ -71,7 +74,7 @@ if (strPort && strPort.length > 0) {
 }
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote'].includes(mode)) {
+if (!['local', 'remote', 'pai'].includes(mode)) {
     usage();
     process.exit(1);
 }

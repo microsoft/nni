@@ -20,8 +20,8 @@
 
 import os
 import json
-from .config_schema import CONFIG_SCHEMA
-from .common_utils import get_json_content
+from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA
+from .common_utils import get_json_content, print_error
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -81,8 +81,17 @@ def validate_search_space_content(experiment_config):
 
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
+    if not experiment_config.get('trainingServicePlatform') or \
+        experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai']:
+        print_error('Please set correct trainingServicePlatform!')
+        exit(0)
+    schema_dict = {
+            'local': LOCAL_CONFIG_SCHEMA,
+            'remote': REMOTE_CONFIG_SCHEMA,
+            'pai': PAI_CONFIG_SCHEMA
+        }
     try:
-        CONFIG_SCHEMA.validate(experiment_config)
+        schema_dict.get(experiment_config['trainingServicePlatform']).validate(experiment_config)
         #set default value
         if experiment_config.get('maxExecDuration') is None:
             experiment_config['maxExecDuration'] = '999d'

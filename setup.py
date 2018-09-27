@@ -35,7 +35,7 @@ class CustomInstallCommand(install):
 
 setup(
     name = 'NNI',
-    version = '0.1.0',
+    version = '0.2.0',
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
@@ -47,7 +47,8 @@ setup(
     package_dir = {
         'nni_annotation': 'tools/nni_annotation',
         'nni': 'src/sdk/pynni/nni',
-        'nnicmd': 'tools/nnicmd'
+        'nnicmd': 'tools/nnicmd',
+        'trial_tool':'tools/trial_tool'
     },
     python_requires = '>=3.5',
     install_requires = [
@@ -59,7 +60,8 @@ setup(
         'pyyaml',
         'requests',
         'scipy',
-        'schema'
+        'schema',
+        'pyhdfs'
     ],
 
     cmdclass={

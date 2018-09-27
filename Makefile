@@ -92,7 +92,6 @@ build:
 	#$(_INFO) Building nnictl $(_END)
 	cd tools && python3 setup.py build
 
-
 # Standard installation target
 # Must be invoked after building
 .PHONY: install
@@ -207,7 +206,6 @@ install-python-modules:
 	#$(_INFO) Installing nnictl $(_END)
 	cd tools && python3 setup.py install $(PIP_MODE)
 
-
 .PHONY: install-node-modules
 install-node-modules:
 	mkdir -p $(INSTALL_PREFIX)/nni
@@ -227,7 +225,7 @@ install-dev-modules:
 	
 	#$(_INFO) Installing nnictl $(_END)
 	cd tools && $(PIP_INSTALL) $(PIP_MODE) -e .
-	
+
 	mkdir -p $(INSTALL_PREFIX)/nni
 	
 	#$(_INFO) Installing NNI Manager $(_END)
