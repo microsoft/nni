@@ -15,6 +15,9 @@ __nnictl_rest_cmds="check"
 __nnictl_log_cmds="stdout stderr"
 __nnictl_log_stdout_cmds="--tail --head --path"
 __nnictl_log_stderr_cmds="--tail --head --path"
+__nnictl_package_cmds="show"
+__nnictl_package_install_cmds="--name"
+
 
 __nnictl_remain_args()
 {

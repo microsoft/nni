@@ -128,6 +128,8 @@ def set_experiment(experiment_config, mode, port):
     request_data['maxExecDuration'] = experiment_config['maxExecDuration']
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
     request_data['searchSpace'] = experiment_config.get('searchSpace')
+    if experiment_config.get('multiPhase'):
+        request_data['multiPhase'] = experiment_config.get('multiPhase')
     request_data['tuner'] = experiment_config['tuner']
     if 'assessor' in experiment_config:
         request_data['assessor'] = experiment_config['assessor']
@@ -305,6 +307,9 @@ def create_experiment(args):
     '''start a new experiment'''
     nni_config = Config()
     config_path = os.path.abspath(args.config)
+    if not os.path.exists(config_path):
+        print_error('Please set correct config path!')
+        exit(0)
     experiment_config = get_yml_content(config_path)
     validate_all_content(experiment_config, config_path)
 

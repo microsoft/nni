@@ -1,0 +1,3 @@
+{
+    "model_name":{"_type":"choice","_value":["LinearRegression", "Lasso", "Ridge", "BayesianRidge", "RidgeCV"]}
+}
