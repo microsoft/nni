@@ -49,6 +49,7 @@ setup(
         'nni': 'src/sdk/pynni/nni',
         'nnicmd': 'tools/nnicmd'
     },
+    package_data = {'nni': ['**/requirements.txt']},
     python_requires = '>=3.5',
     install_requires = [
         'astor',
