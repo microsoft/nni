@@ -39,7 +39,7 @@ import {
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
-import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT } from './paiData';
+import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
@@ -63,6 +63,7 @@ class PAITrainingService implements TrainingService {
     private paiToken? : string;
     private experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
+    private readonly hdfsDirPattern: string;
 
     constructor() {
         this.log = getLogger();
@@ -72,6 +73,7 @@ class PAITrainingService implements TrainingService {
         this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
         this.experimentId = getExperimentId();      
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
+        this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
     }
 
     public async run(): Promise<void> {
@@ -135,7 +137,7 @@ class PAITrainingService implements TrainingService {
         const trialJobId: string = uniqueString(5);
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
-
+        
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
@@ -146,11 +148,27 @@ class PAITrainingService implements TrainingService {
         if(trialForm) {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'parameter.cfg'), trialForm.hyperParameters, { encoding: 'utf8' });
         }
-
+        
         // Step 1. Prepare PAI job configuration
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
+    
+        const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern)
 
+        if(hdfsDirContent === null){
+            throw new Error('Trial outputDir format Error');
+        }
+        const groups = hdfsDirContent.groups
+        if(groups === undefined){
+            throw new Error('Trial outputDir format Error');
+        }
+
+        const hdfsHost = groups['host']
+        let hdfsBaseDirectory = groups['baseDir']
+        if(hdfsBaseDirectory === undefined){
+            hdfsBaseDirectory = "/";
+        }
+        const hdfsOutputDir = path.join(hdfsBaseDirectory, this.experimentId, trialJobId)
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
             'WAITING',
@@ -167,7 +185,10 @@ class PAITrainingService implements TrainingService {
             trialJobId,
             this.experimentId,
             this.paiTrialConfig.command, 
-            getIPV4Address()
+            getIPV4Address(),
+            hdfsOutputDir,
+            hdfsHost,
+            this.paiClusterConfig.userName
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
@@ -241,10 +262,39 @@ class PAITrainingService implements TrainingService {
     }
 
     public cancelTrialJob(trialJobId: string): Promise<void> {
-        this.log.info(`PAI Training service cancelTrialJob: jobId: ${trialJobId}`);
+        const trialJobDetail : PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         const deferred : Deferred<void> = new Deferred<void>();
+        if(!trialJobDetail) {
+            this.log.error(`cancelTrialJob: trial job id ${trialJobId} not found`);
+            return Promise.reject();
+        }
 
-        deferred.resolve();
+        if(!this.paiClusterConfig) {
+            throw new Error('PAI Cluster config is not initialized');
+        }        
+        if (!this.paiToken) {
+            throw new Error('PAI token is not initialized');
+        }
+
+        const stopJobRequest: request.Options = {
+            uri: `http://${this.paiClusterConfig.host}:9186/api/v1/jobs/${trialJobDetail.paiJobName}/executionType`,
+            method: 'PUT',
+            json: true,
+            body: {'value' : 'STOP'},
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": 'Bearer ' + this.paiToken
+            }
+        };
+        request(stopJobRequest, (error: Error, response: request.Response, body: any) => {
+            if (error || response.statusCode >= 400) {
+                this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
+                deferred.reject(error ? error.message : 'Stop trial failed, http code: ' + response.statusCode);                
+            } else {
+                deferred.resolve();
+            }
+        });
+
         return deferred.promise; 
     }
 
@@ -296,6 +346,13 @@ class PAITrainingService implements TrainingService {
                     break;
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
+                //paiTrialConfig.outputDir could be null if it is not set in nnictl
+                if(this.paiTrialConfig.outputDir === undefined || this.paiTrialConfig.outputDir === null){
+                    this.paiTrialConfig.outputDir = String.Format(
+                        PAI_OUTPUT_DIR_FORMAT,
+                        this.paiClusterConfig.host
+                    ).replace(/\r\n|\n|\r/gm, '');
+                }
                 deferred.resolve();
                 break;
             default:

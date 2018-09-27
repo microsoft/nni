@@ -9,7 +9,8 @@ setuptools.setup(
     python_requires = '>=3.5',
     install_requires = [
         'requests',
-        'psutil'
+        'psutil',
+        'pyhdfs'
     ],
 
     author = 'Microsoft NNI Team',

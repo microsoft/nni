@@ -49,3 +49,7 @@ EXPERIMENT_SUCCESS_INFO = 'Start experiment success! The experiment id is %s, an
                           '4. nnictl trial kill             kill a trial job by id\n' \
                           '5. nnictl --help                 get help information about nnictl\n' \
                           '6. nnictl webui url              get the url of web ui'
+
+PACKAGE_REQUIREMENTS = {
+    'SMAC': 'smac_tuner'
+}
