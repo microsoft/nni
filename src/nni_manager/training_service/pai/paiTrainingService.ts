@@ -64,6 +64,7 @@ class PAITrainingService implements TrainingService {
     private experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
     private readonly hdfsDirPattern: string;
+    private logPath: string | undefined;
 
     constructor() {
         this.log = getLogger();
@@ -81,7 +82,7 @@ class PAITrainingService implements TrainingService {
         await restServer.start();
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
-            await this.paiJobCollector.updateTrialStatusFromPAI(this.paiToken, this.paiClusterConfig);
+            await this.paiJobCollector.updateTrialStatusFromPAI(this.paiToken, this.paiClusterConfig, this.logPath);
             await delay(3000);
         }
     }
@@ -169,7 +170,7 @@ class PAITrainingService implements TrainingService {
             hdfsBaseDirectory = "/";
         }
         const hdfsOutputDir = path.join(hdfsBaseDirectory, this.experimentId, trialJobId)
-        const logPath: string = String.Format(
+        this.logPath = String.Format(
             PAI_LOG_PATH_FORMAT,
             hdfsHost,
             hdfsOutputDir
@@ -180,8 +181,7 @@ class PAITrainingService implements TrainingService {
             paiJobName,            
             Date.now(),
             trialWorkingFolder,
-            form,
-            logPath);
+            form);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
         const nniPaiTrialCommand : string = String.Format(
