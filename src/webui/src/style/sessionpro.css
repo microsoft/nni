@@ -68,7 +68,7 @@
     padding-top: 16px;
 }
 .message .trialNum{
-    padding-top: 32px;
+    padding-top: 21px;
 }
 .session .head .headCon>div .logo{
     width: 100%;
@@ -178,21 +178,8 @@
 }
 .tabuser1, .tabuser2{
     color: #333;
-}
-.tabuser1, .tabuser2{
     margin-right: 8px;
 }
-.cdf{
-    width: 100%;
-    border: 1px solid #ccc;
-}
-.cdf>div:first-child{
-    position: relative;
-}
-.cdf .addNodata{
-    position: absolute;
-    left: 48.5%;
-    top: 75%;
-    font-size: 13px;
-    color: rgba(0, 0, 0, 0.45)
+.experStatus{
+    line-height: 12px;
 }
