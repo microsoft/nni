@@ -48,7 +48,7 @@ export class PAITrialJobDetail implements TrialJobDetail {
 }
 
 export const PAI_TRIAL_COMMAND_FORMAT: string =
-`pip3 install -v --user git+https://github.com/yds05/nni.git@master 
+`pip3 install -v --user git+https://github.com/Microsoft/nni.git@master 
 && export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_EXP_ID={2} 
 && cd $NNI_SYS_DIR && mkdir .nni 
 && python3 -m trial_tool.trial_keeper --trial_command '{3}' --nnimanager_ip '{4}' --pai_hdfs_output_dir '{5}' 
