@@ -45,7 +45,8 @@ class TrialMetricsReader():
         self.offset_filename = os.path.join(metrics_base_dir, 'metrics_offset')
         self.metrics_filename = os.path.join(metrics_base_dir, 'metrics')
         self.rest_port = rest_port
-        os.makedirs(metrics_base_dir)
+        if not os.path.exists(metrics_base_dir):
+            os.makedirs(metrics_base_dir)
 
     def _metrics_file_is_empty(self):
         if not os.path.isfile(self.metrics_filename):

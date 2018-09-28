@@ -25,7 +25,8 @@ import os
 from ..common import init_logger
 
 _sysdir = os.environ['NNI_SYS_DIR']
-os.makedirs(os.path.join(_sysdir, '.nni'))
+if not os.path.exists(os.path.join(_sysdir, '.nni')):
+    os.makedirs(os.path.join(_sysdir, '.nni'))
 _metric_file = open(os.path.join(_sysdir, '.nni', 'metrics'), 'wb')
 
 _outputdir = os.environ['NNI_OUTPUT_DIR']
