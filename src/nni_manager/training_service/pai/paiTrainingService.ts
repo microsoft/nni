@@ -328,11 +328,11 @@ class PAITrainingService implements TrainingService {
                     if (error) {
                         //TODO: should me make the setClusterMetadata's return type to Promise<string>? 
                         this.log.error(`Get PAI token failed: ${error.message}`);
-                        deferred.reject();
+                        deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
                     } else {
                         if(response.statusCode !== 200){
                             this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
-                            deferred.reject();
+                            deferred.reject(new Error(`Get PAI token failed, please check paiConfig username or password`));
                         }
                         this.paiToken = body.token;
 
@@ -343,7 +343,7 @@ class PAITrainingService implements TrainingService {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 if (!this.paiClusterConfig){
                     this.log.error('pai cluster config is not initialized');
-                    deferred.reject();
+                    deferred.reject(new Error('pai cluster config is not initialized'));
                     break;
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
@@ -376,12 +376,10 @@ class PAITrainingService implements TrainingService {
                     port: 50070,
                     host: this.hdfsOutputHost
                 });
-                await HDFSClientUtility.pathExists("/", hdfsClient).then(exist =>{
-                    console.log(exist)
-                    if(!exist){
-                        deferred.reject("hdfsOutputDir host incorrect!");
-                    }
-                });
+                const exist : boolean = await HDFSClientUtility.pathExists("/", hdfsClient);
+                if(!exist){
+                    deferred.reject(new Error(`Please check hdfsOutputDir host!`));
+                }
                 deferred.resolve();
                 break;
             default:
