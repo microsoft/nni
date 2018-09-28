@@ -24,16 +24,16 @@ import os
 
 from ..common import init_logger
 
+_sysdir = os.environ['NNI_SYS_DIR']
+_outputdir = os.environ['NNI_OUTPUT_DIR']
+_metric_file = open(os.path.join(_sysdir, '.nni', 'metrics'), 'wb')
 
-_dir = os.environ['NNI_OUTPUT_DIR']
-_metric_file = open(os.path.join(_dir, '.nni', 'metrics'), 'wb')
-
-_log_file_path = os.path.join(_dir, 'trial.log')
+_log_file_path = os.path.join(_outputdir, 'trial.log')
 init_logger(_log_file_path)
 
 
 def get_parameters():
-    params_file = open(os.path.join(_dir, 'parameter.cfg'), 'r')
+    params_file = open(os.path.join(_sysdir, 'parameter.cfg'), 'r')
     return json.load(params_file)
 
 def send_metric(string):
