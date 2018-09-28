@@ -19,12 +19,12 @@ def read_last_line(file_name):
         return None
 
 def run():
-    os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
+    os.environ['PATH'] = os.environ['PATH'] + ':' + os.path.join(os.environ['PWD'], '..')
 
     with contextlib.suppress(FileNotFoundError):
-        os.remove('tuner_search_space.txt')
+        os.remove('/tmp/nni_tuner_search_space.txt')
     with contextlib.suppress(FileNotFoundError):
-        os.remove('tuner_result.txt')
+        os.remove('/tmp/nni_tuner_result.txt')
     with contextlib.suppress(FileNotFoundError):
         os.remove('/tmp/nni_assessor_result.txt')
 

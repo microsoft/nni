@@ -25,7 +25,7 @@ import nni
 from .recoverable import Recoverable
 
 _logger = logging.getLogger(__name__)
-
+_result = open('/tmp/nni_tuner_result.txt', 'w')
 
 class Tuner(Recoverable):
     # pylint: disable=no-self-use,unused-argument
@@ -89,7 +89,11 @@ class Tuner(Recoverable):
         _logger.info('Save checkpoint ignored by tuner, checkpoint path: %s' % checkpoin_path)
 
     def _on_exit(self):
-        pass
+        """For debug's sake"""
+        _result.write('DONE\n')
+        _result.close()
 
     def _on_error(self):
-        pass
+        """For debug's sake"""
+        _result.write('ERROR\n')
+        _result.close()
