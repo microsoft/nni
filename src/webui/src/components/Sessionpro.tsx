@@ -5,6 +5,7 @@ import { MANAGER_IP, overviewItem } from '../const';
 const Option = Select.Option;
 import JSONTree from 'react-json-tree';
 require('../style/sessionpro.css');
+require('../style/logPath.css');
 
 interface TableObj {
     key: number;
@@ -14,12 +15,13 @@ interface TableObj {
     end: string;
     status: string;
     acc?: number;
-    description: object;
+    description: Parameters;
 }
 
 interface Parameters {
     parameters: object;
     logPath?: string;
+    isLink?: boolean;
 }
 
 interface Experiment {
@@ -76,7 +78,9 @@ class Sessionpro extends React.Component<{}, SessionState> {
                 end: '',
                 status: '',
                 acc: 0,
-                description: {}
+                description: {
+                    parameters: {}
+                }
             }],
             selNum: overviewItem,
             option: {},
@@ -162,6 +166,10 @@ class Sessionpro extends React.Component<{}, SessionState> {
                             desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
                             if (tableData[item].logPath !== undefined) {
                                 desJobDetail.logPath = tableData[item].logPath;
+                                const isSessionLink = /^http/gi.test(tableData[item].logPath);
+                                if (isSessionLink) {
+                                    desJobDetail.isLink = true;
+                                }
                             }
                             topTableData.push({
                                 key: topTableData.length,
@@ -261,14 +269,35 @@ class Sessionpro extends React.Component<{}, SessionState> {
         }];
 
         const openRow = (record: TableObj) => {
+            const openRowDataSource = {
+                parameters: record.description.parameters
+            };
+            let isLogLink: boolean = false;
+            const logPathRow = record.description.logPath;
+            if (record.description.isLink !== undefined) {
+                isLogLink = true;
+            }
             return (
                 <pre id="description" className="jsontree">
                     <JSONTree
                         hideRoot={true}
                         shouldExpandNode={() => true}  // default expandNode
                         getItemString={() => (<span />)}  // remove the {} items
-                        data={record.description}
+                        data={openRowDataSource}
                     />
+                     {
+                        isLogLink
+                            ?
+                            <div className="logpath">
+                                <span className="logName">logPath: </span>
+                                <a className="logContent logHref" href={logPathRow} target="_blank">{logPathRow}</a>
+                            </div>
+                            :
+                            <div className="logpath">
+                                <span className="logName">logPath: </span>
+                                <span className="logContent">{logPathRow}</span>
+                            </div>
+                    }
                 </pre>
             );
         };
