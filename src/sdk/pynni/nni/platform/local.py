@@ -25,9 +25,10 @@ import os
 from ..common import init_logger
 
 _sysdir = os.environ['NNI_SYS_DIR']
-_outputdir = os.environ['NNI_OUTPUT_DIR']
+os.makedirs(os.path.join(_sysdir, '.nni'))
 _metric_file = open(os.path.join(_sysdir, '.nni', 'metrics'), 'wb')
 
+_outputdir = os.environ['NNI_OUTPUT_DIR']
 _log_file_path = os.path.join(_outputdir, 'trial.log')
 init_logger(_log_file_path)
 
