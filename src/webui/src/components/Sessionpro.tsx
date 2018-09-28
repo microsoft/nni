@@ -37,11 +37,10 @@ interface Experiment {
 interface SessionState {
     tableData: Array<TableObj>;
     searchSpace: object;
+    status: string;
     trialProfile: Experiment;
     tunerAssessor: object;
     selNum: number;
-    selStatus: string;
-    trialRun: Array<number>;
     option: object;
     noData: string;
 }
@@ -56,6 +55,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
         super(props);
         this.state = {
             searchSpace: {},
+            status: '',
             trialProfile: {
                 id: '',
                 author: '',
@@ -79,93 +79,8 @@ class Sessionpro extends React.Component<{}, SessionState> {
                 description: {}
             }],
             selNum: overviewItem,
-            selStatus: 'Complete',
-            trialRun: [],
             option: {},
             noData: ''
-        };
-    }
-
-    sortNumber = (a: number, b: number) => {
-
-        return a - b;
-    }
-
-    // draw cdf data
-    getOption = (data: Array<number>) => {
-        let len = data.length;
-        // let min = Math.floor(Math.min.apply(null, data));
-        let min = Math.floor(data[0]);
-        let max = Math.ceil(data[len - 1]);
-        let gap = (max - min) / 10;
-        let a = 0;
-        let b = 0;
-        let c = 0;
-        let d = 0;
-        let e = 0;
-        let f = 0;
-        let g = 0;
-        let h = 0;
-        let i = 0;
-        let j = 0;
-
-        let xAxis: number[] = [];
-        for (let m = 0; m < 10; m++) {
-            xAxis.push(min + gap * m);
-        }
-
-        data.map(item => {
-            switch (Math.floor((item - min) / gap)) {
-
-                case 0: a++; b++; c++; d++; e++; f++; g++; h++; i++; j++; break;
-                case 1: b++; c++; d++; e++; f++; g++; h++; i++; j++; break;
-                case 2: c++; d++; e++; f++; g++; h++; i++; j++; break;
-                case 3: d++; e++; f++; g++; h++; i++; j++; break;
-                case 4: e++; f++; g++; h++; i++; j++; break;
-                case 5: f++; g++; h++; i++; j++; break;
-                case 6: g++; h++; i++; j++; break;
-                case 7: h++; i++; j++; break;
-                case 8: i++; j++; break;
-                case 9: j++; break;
-                default: j++; break;
-            }
-        });
-        let prob = [a / len, b / len, c / len, d / len, e / len, f / len, g / len, h / len, i / len, j / len];
-        return {
-            tooltip: {
-                trigger: 'item'
-            },
-            title: {
-                left: 'center',
-                text: 'Succeeded Trials CDF',
-                top: 16
-            },
-            grid: {
-                left: '5%'
-            },
-            xAxis: {
-                name: 'trial running time/s',
-                type: 'category',
-                data: xAxis
-            },
-            yAxis: {
-                name: 'percent',
-                type: 'value',
-                min: 0,
-                max: 1
-            },
-            series: [
-                {
-                    type: 'line',
-                    smooth: true,
-                    itemStyle: {
-                        normal: {
-                            color: 'skyblue'
-                        }
-                    },
-                    data: prob
-                }
-            ]
         };
     }
 
@@ -210,6 +125,17 @@ class Sessionpro extends React.Component<{}, SessionState> {
                     }
                 }
             });
+
+        axios(`${MANAGER_IP}/check-status`, {
+            method: 'GET'
+        })
+            .then(res => {
+                if (res.status === 200 && this._isMounted) {
+                    this.setState({
+                        status: res.data.status
+                    });
+                }
+            });
     }
 
     showTrials = () => {
@@ -218,8 +144,6 @@ class Sessionpro extends React.Component<{}, SessionState> {
         })
             .then(res => {
                 if (res.status === 200) {
-                    // deal with complete trial data to draw CDF graph
-                    let trialRunData: Array<number> = [];
                     const { selNum } = this.state;
                     const tableData = res.data;
                     const topTableData: Array<TableObj> = [];
@@ -249,7 +173,6 @@ class Sessionpro extends React.Component<{}, SessionState> {
                                 acc: acc,
                                 description: desJobDetail
                             });
-                            trialRunData.push(duration);
                         }
                     });
                     topTableData.sort((a: TableObj, b: TableObj) => {
@@ -262,8 +185,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                     topTableData.length = Math.min(selNum, topTableData.length);
                     if (this._isMounted) {
                         this.setState({
-                            tableData: topTableData,
-                            trialRun: trialRunData.sort(this.sortNumber)
+                            tableData: topTableData
                         });
                     }
                 }
@@ -276,7 +198,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
         if (this._isMounted) {
             this.setState({ selNum: num }, () => {
                 this.showTrials();
-                this.intervalID = window.setInterval(this.showTrials, 60000);
+                this.intervalID = window.setInterval(this.showTrials, 10000);
             });
         }
     }
@@ -352,8 +274,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
         };
 
         const {
-            trialProfile, searchSpace, tunerAssessor, tableData,
-            // option, noData
+            trialProfile, searchSpace, tunerAssessor, tableData, status
         } = this.state;
         let running;
         if (trialProfile.endTime === 'not over') {
@@ -415,6 +336,10 @@ class Sessionpro extends React.Component<{}, SessionState> {
                                     Max&nbsp;Trial&nbsp;Number
                                     <span className="messcont">{trialProfile.MaxTrialNum}</span>
                                 </p>
+                                <p className="experStatus">
+                                    Status
+                                    <span className="messcont">{status}</span>
+                                </p>
                             </div>
                             <div className="logo">
                                 <Icon className="fogreen" type="picture" />
@@ -458,13 +383,15 @@ class Sessionpro extends React.Component<{}, SessionState> {
                                 <span className="tabuser1">top</span>
                                 <Select
                                     style={{ width: 200 }}
-                                    placeholder="5"
+                                    placeholder="50"
                                     optionFilterProp="children"
                                     onSelect={this.handleChange}
                                 >
-                                    <Option value="20">20</Option>
+                                    <Option value="5">5</Option>
                                     <Option value="50">50</Option>
                                     <Option value="100">100</Option>
+                                    <Option value="150">150</Option>
+                                    <Option value="200">200</Option>
                                 </Select>
                             </Col>
                         </Row>
@@ -475,7 +402,6 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         dataSource={tableData}
                         className="tables"
                         bordered={true}
-                        scroll={{ x: '100%', y: 540 }}
                     />
                 </div>
             </div>

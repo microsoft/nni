@@ -37,6 +37,7 @@ setuptools.setup(
         'numpy',
         'scipy'
     ],
+    package_data = {'nni': ['**/requirements.txt']},
 
     test_suite = 'tests',
 

@@ -50,6 +50,7 @@ setup(
         'nnicmd': 'tools/nnicmd',
         'trial_tool':'tools/trial_tool'
     },
+    package_data = {'nni': ['**/requirements.txt']},
     python_requires = '>=3.5',
     install_requires = [
         'astor',
