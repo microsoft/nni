@@ -47,7 +47,7 @@ export class PAITrialJobDetail implements TrialJobDetail {
     }
 }
 
-export const RAI_INSTALL_NNI_SHELL_FORMAT: string = 
+export const PAI_INSTALL_NNI_SHELL_FORMAT: string = 
 `#!/bin/bash
 if python3 -c 'import nni' > /dev/null 2>&1; then
   # nni module is already installed, skip
