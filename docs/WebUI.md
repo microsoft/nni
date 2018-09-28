@@ -1,25 +1,6 @@
 # WebUI
 
-NNI is a research platform for metalearning. It provides easy-to-use interface so that you could perform neural architecture search, hyperparameter optimization and optimizer design for your own problems and models.
-Web UI allows user to monitor the status of the NNI system using a graphical interface.
-
-## Deployment
-
-### To start the webui
-
-* cd webui
-
-> $ yarn
-
-> $ yarn build
-
-* cd build
-
-> $ yarn start
-
-## Usage
-
-### View summary page
+## View summary page
 
 Click the tab "Overview".
 
@@ -29,13 +10,13 @@ Click the tab "Overview".
 
 ![](./img/overview.jpg)
 
-### View job accuracy
+## View job accuracy
 
 Click the tab "Optimization Progress" to see the point graph of all trials. Hover every point to see its specific accuracy.
 
 ![](./img/accuracy.jpg)
 
-### View hyper parameter
+## View hyper parameter
 
 Click the tab "Hyper Parameter" to see the parallel graph.
 
@@ -44,7 +25,7 @@ Click the tab "Hyper Parameter" to see the parallel graph.
 
 ![](./img/searchspace.jpg)
 
-### View trial status 
+## View trial status 
 
 Click the tab "Trial Status" to see the status of the all trials. Specifically:
 
@@ -62,12 +43,12 @@ Click the tab "Trial Status" to see the status of the all trials. Specifically:
 
 ![](./img/intermediate.jpg)
 
-### Control 
+## Control 
 
 Click the tab "Control" to add a new trial or update the search_space file and some experiment parameters.
 
 ![](./img/control.jpg)
 
-### Feedback
+## Feedback
 
 [Known Issues](https://github.com/Microsoft/nni/issues).
