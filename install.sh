@@ -1,5 +1,5 @@
 #!/bin/bash
-make build
 make install-dependencies
+make build
 make dev-install
 source ~/.bashrc
