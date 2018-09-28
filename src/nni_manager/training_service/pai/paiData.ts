@@ -47,12 +47,22 @@ export class PAITrialJobDetail implements TrialJobDetail {
     }
 }
 
+export const RAI_INSTALL_NNI_SHELL_FORMAT: string = 
+`#!/bin/bash
+if python3 -c 'import nni' > /dev/null 2>&1; then
+  # nni module is already installed, skip
+  return
+else
+  # Install nni
+  pip3 install -v --user git+https://github.com/Microsoft/nni.git@v0.2
+fi`;
+
 export const PAI_TRIAL_COMMAND_FORMAT: string =
-`pip3 install -v --user git+https://github.com/Microsoft/nni.git@master 
-&& export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_EXP_ID={2} 
+`export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} 
 && cd $NNI_SYS_DIR && mkdir .nni 
-&& python3 -m trial_tool.trial_keeper --trial_command '{3}' --nnimanager_ip '{4}' --pai_hdfs_output_dir '{5}' 
---pai_hdfs_host '{6}' --pai_user_name {7}`;
+&& sh install_nni.sh 
+&& python3 -m trial_tool.trial_keeper --trial_command '{4}' --nnimanager_ip '{5}' --pai_hdfs_output_dir '{6}' 
+--pai_hdfs_host '{7}' --pai_user_name {8}`;
 
 export const PAI_OUTPUT_DIR_FORMAT: string = 
 `hdfs://{0}:9000/`;
