@@ -64,6 +64,8 @@ class PAITrainingService implements TrainingService {
     private experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
     private readonly hdfsDirPattern: string;
+    private hdfsBaseDir: string | undefined;
+    private hdfsOutputHost: string | undefined;
 
     constructor() {
         this.log = getLogger();
@@ -131,6 +133,14 @@ class PAITrainingService implements TrainingService {
         if (!this.paiToken) {
             throw new Error('PAI token is not initialized');
         }
+        
+        if(!this.hdfsBaseDir){
+            throw new Error('hdfsBaseDir is not initialized');
+        }
+
+        if(!this.hdfsOutputHost){
+            throw new Error('hdfsOutputHost is not initialized');
+        }
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
@@ -152,26 +162,11 @@ class PAITrainingService implements TrainingService {
         // Step 1. Prepare PAI job configuration
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
-    
-        const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
-
-        if(hdfsDirContent === null) {
-            throw new Error('Trial outputDir format Error');
-        }
-        const groups = hdfsDirContent.groups;
-        if(groups === undefined) {
-            throw new Error('Trial outputDir format Error');
-        }
-
-        const hdfsHost = groups['host'];
-        let hdfsBaseDirectory = groups['baseDir'];
-        if(hdfsBaseDirectory === undefined) {
-            hdfsBaseDirectory = "/";
-        }
-        const hdfsOutputDir : string = path.join(hdfsBaseDirectory, this.experimentId, trialJobId);
+        
+        const hdfsOutputDir : string = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
         const hdfsLogPath : string = String.Format(
             PAI_LOG_PATH_FORMAT,
-            hdfsHost,
+            this.hdfsOutputHost,
             hdfsOutputDir);
 
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
@@ -193,7 +188,7 @@ class PAITrainingService implements TrainingService {
             this.paiTrialConfig.command, 
             getIPV4Address(),
             hdfsOutputDir,
-            hdfsHost,
+            this.hdfsOutputHost,
             this.paiClusterConfig.userName
         ).replace(/\r\n|\n|\r/gm, '');
 
@@ -304,7 +299,7 @@ class PAITrainingService implements TrainingService {
         return deferred.promise; 
     }
 
-    public setClusterMetadata(key: string, value: string): Promise<void> {
+    public async setClusterMetadata(key: string, value: string): Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
 
         switch (key) {
@@ -359,6 +354,34 @@ class PAITrainingService implements TrainingService {
                         this.paiClusterConfig.host
                     ).replace(/\r\n|\n|\r/gm, '');
                 }
+                
+                const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
+
+                if(hdfsDirContent === null) {
+                    throw new Error('Trial outputDir format Error');
+                }
+                const groups = hdfsDirContent.groups;
+                if(groups === undefined) {
+                    throw new Error('Trial outputDir format Error');
+                }
+        
+                this.hdfsOutputHost = groups['host'];
+                this.hdfsBaseDir = groups['baseDir'];
+                if(this.hdfsBaseDir === undefined) {
+                    this.hdfsBaseDir = "/";
+                }
+                
+                const hdfsClient = WebHDFS.createClient({
+                    user: this.paiClusterConfig.userName,
+                    port: 50070,
+                    host: this.hdfsOutputHost
+                });
+                await HDFSClientUtility.pathExists("/", hdfsClient).then(exist =>{
+                    console.log(exist)
+                    if(!exist){
+                        deferred.reject("hdfsOutputDir host incorrect!");
+                    }
+                });
                 deferred.resolve();
                 break;
             default:
