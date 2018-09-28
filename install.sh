@@ -1,3 +1,5 @@
 #!/bin/bash
-make easy-install
+make build
+make install-dependencies
+make dev-install
 source ~/.bashrc

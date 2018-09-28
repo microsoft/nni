@@ -1,6 +1,14 @@
 # Setting variables
 
 SHELL := /bin/bash
+PIP_INSTALL := python3 -m pip install
+PIP_UNINSTALL := python3 -m pip uninstall
+
+## Colorful output
+_INFO := $(shell echo -e '\e[1;36m')
+_WARNING := $(shell echo -e '\e[1;33m')
+_END := $(shell echo -e '\e[0m')
+
 
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
@@ -20,7 +28,7 @@ else  # is normal user
 endif
 
 ## Dependency information
-NODE_VERSION ?= v10.9.0
+NODE_VERSION ?= v10.10.0
 NODE_TARBALL ?= node-$(NODE_VERSION)-linux-x64.tar.xz
 NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
 
@@ -35,41 +43,37 @@ SERVE_PATH ?= $(INSTALL_PREFIX)/nni/serve
 
 ## Check if dependencies have been installed globally
 ifeq (, $(shell command -v node 2>/dev/null))
-    $(info Node.js not found)
+    $(info $(_INFO) Node.js not found $(_END))
     _MISS_DEPS := 1  # node not found
 else
     _VER := $(shell node --version)
     _NEWER := $(shell echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr | head -n 1)
     ifneq ($(_VER), $(_NEWER))
-        $(info Node.js version not match)
+        $(info $(_INFO) Node.js version not match $(_END))
         _MISS_DEPS := 1  # node outdated
     endif
 endif
 ifeq (, $(shell command -v yarnpkg 2>/dev/null))
-    $(info Yarn not found)
+    $(info $(_INFO) Yarn not found $(_END))
     _MISS_DEPS := 1  # yarn not found
 endif
 ifeq (, $(shell command -v serve 2>/dev/null))
-    $(info Serve not found)
+    $(info $(_INFO) Serve not found $(_END))
     _MISS_DEPS := 1  # serve not found
 endif
 
 ifdef _MISS_DEPS
-    $(info Missing dependencies, use local toolchain)
+    $(info $(_INFO) Missing dependencies, use local toolchain $(_END))
     NODE := $(NODE_PATH)/bin/node
     YARN := PATH=$${PATH}:$(NODE_PATH)/bin $(YARN_PATH)/bin/yarn
     SERVE := $(SERVE_PATH)/serve
 else
-    $(info All dependencies found, use global toolchain)
+    $(info $(_INFO) All dependencies found, use global toolchain $(_END))
     NODE := node
     YARN := yarnpkg
     SERVE := serve
 endif
 
-## Colorful output
-_INFO := $(shell echo -e '\e[1;36m')
-_WARNING := $(shell echo -e '\e[1;33m')
-_END := $(shell echo -e '\e[0m')
 
 # Setting variables end
 
@@ -90,7 +94,6 @@ build:
 	#$(_INFO) Building nnictl $(_END)
 	cd tools && python3 setup.py build
 
-
 # Standard installation target
 # Must be invoked after building
 .PHONY: install
@@ -109,17 +112,15 @@ remote-machine-install:
 	cd src/sdk/pynni && python3 setup.py install $(PIP_MODE)
 
 
-# All-in-one target
+# All-in-one target for non-expert users
 # Installs NNI as well as its dependencies, and update bashrc to set PATH
 .PHONY: easy-install
 easy-install: check-perm
 easy-install: install-dependencies
 easy-install: build
-easy-install: install-python-modules
-easy-install: install-node-modules
-easy-install: install-scripts
-easy-install: install-examples
-easy-install: update-bashrc
+easy-install: install
+easy-install: update-bash-config
+
 easy-install:
 	#$(_INFO) Complete! #(_END)
 
@@ -132,6 +133,7 @@ pip-install: build
 pip-install: install-node-modules
 pip-install: install-scripts
 pip-install: install-examples
+pip-install: update-bash-config
 
 
 # Target for NNI developers
@@ -146,8 +148,8 @@ dev-install:
 
 .PHONY: uninstall
 uninstall:
-	-pip3 uninstall -y nni
-	-pip3 uninstall -y nnictl
+	-$(PIP_UNINSTALL) -y nni
+	-$(PIP_UNINSTALL) -y nnictl
 	-rm -rf $(INSTALL_PREFIX)/nni
 	-rm -f $(BIN_PATH)/nnimanager
 	-rm -f $(BIN_PATH)/nnictl
@@ -206,7 +208,6 @@ install-python-modules:
 	#$(_INFO) Installing nnictl $(_END)
 	cd tools && python3 setup.py install $(PIP_MODE)
 
-
 .PHONY: install-node-modules
 install-node-modules:
 	mkdir -p $(INSTALL_PREFIX)/nni
@@ -222,11 +223,11 @@ install-node-modules:
 .PHONY: install-dev-modules
 install-dev-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	cd src/sdk/pynni && pip3 install $(PIP_MODE) -e .
+	cd src/sdk/pynni && $(PIP_INSTALL) $(PIP_MODE) -e .
 	
 	#$(_INFO) Installing nnictl $(_END)
-	cd tools && pip3 install $(PIP_MODE) -e .
-	
+	cd tools && $(PIP_INSTALL) $(PIP_MODE) -e .
+
 	mkdir -p $(INSTALL_PREFIX)/nni
 	
 	#$(_INFO) Installing NNI Manager $(_END)
@@ -254,9 +255,6 @@ install-scripts:
 	chmod +x $(BIN_PATH)/nnictl
 	
 	install -Dm644 tools/bash-completion $(BASH_COMP_SCRIPT)
-ifndef _ROOT
-	echo '[[ -f $(BASH_COMP_SCRIPT) ]] && source $(BASH_COMP_SCRIPT)' >> ~/.bash_completion
-endif
 
 
 .PHONY: install-examples
@@ -265,16 +263,20 @@ install-examples:
 	[ $(EXAMPLES_PATH) = ${PWD}/examples ] || cp -rT examples $(EXAMPLES_PATH)
 
 
-.PHONY: update-bashrc
-ifeq (, $(shell echo $$PATH | tr ':' '\n' | grep -x '$(BIN_PATH)'))  # $(BIN_PATH) not in PATH
-    ifdef _ROOT
-        $(error $(BIN_PATH) not in PATH as root, which should never happen)
-    endif
-update-bashrc:
+.PHONY: update-bash-config
+ifndef _ROOT
+update-bash-config:
+	#$(_INFO) Updating bash configurations $(_END)
+    ifeq (, $(shell echo $$PATH | tr ':' '\n' | grep -x '$(BIN_PATH)'))  # $(BIN_PATH) not in PATH
 	#$(_WARNING) NOTE: adding $(BIN_PATH) to PATH in bashrc $(_END)
 	echo 'export PATH="$$PATH:$(BIN_PATH)"' >> ~/.bashrc
-else  # $(BIN_PATH) already in PATH
-update-bashrc: ;
+    endif
+    ifeq (, $(shell (source ~/.bash_completion ; command -v _nnictl) 2>/dev/null))  # completion not installed
+	#$(_WARNING) NOTE: adding $(BASH_COMP_SCRIPT) to ~/.bash_completion $(_END)
+	echo '[[ -f $(BASH_COMP_SCRIPT) ]] && source $(BASH_COMP_SCRIPT)' >> ~/.bash_completion
+    endif
+else
+update-bash-config: ;
 endif
 
 
@@ -297,7 +299,7 @@ ifdef _ROOT
 	$(error You should not develop NNI as root)
 endif
 ifdef _MISS_DEPS
-	$(error Please install Node.js, Yarn, and Serve to develop NNI)
+#	$(error Please install Node.js, Yarn, and Serve to develop NNI)
 endif
 	#$(_INFO) Pass! $(_END)
 

@@ -1,18 +1,20 @@
-**Getting Started with NNI**
+**Get Started with NNI**
 ===
 
 ## **Installation**
 * __Dependencies__
 
       python >= 3.5
+      git
+      wget
 
-    python pip should also be correctly installed. You could use "which pip" or "pip -V" to check in Linux.
+    python pip should also be correctly installed. You could use "python3 -m pip -V" to check in Linux.
     
-    * Note: For now, we don't support virtual environment.
+    * Note: we don't support virtual environment in current releases.
 
 * __Install NNI through pip__
 
-      pip3 install -v --user git+https://github.com/Microsoft/nni.git@v0.1
+      python3 -m pip install -v --user git+https://github.com/Microsoft/nni.git@v0.1
       source ~/.bashrc
 
 * __Install NNI through source code__
@@ -21,7 +23,6 @@
       cd nni
       chmod +x install.sh
       source install.sh
-
 
 ## **Quick start: run a customized experiment**
 An experiment is to run multiple trial jobs, each trial job tries a configuration which includes a specific neural architecture (or model) and hyper-parameter values. To run an experiment through NNI, you should:

@@ -33,9 +33,19 @@ export namespace ValidationSchemas {
                 passphrase: joi.string()
             })),
             trial_config: joi.object({
-                gpuNum: joi.number().min(0).required(),
+                image: joi.string().min(1),
                 codeDir: joi.string().min(1).required(),
-                command: joi.string().min(1).required()
+                dataDir: joi.string(),
+                outputDir: joi.string(),
+                cpuNum: joi.number().min(1),
+                memoryMB: joi.number().min(100),
+                gpuNum: joi.number().min(0).required(),
+                command: joi.string().min(1).required()                
+            }),
+            pai_config: joi.object({
+                userName: joi.string().min(1).required(),
+                passWord: joi.string().min(1).required(),
+                host: joi.string().min(1).required()
             })
         }
     };
@@ -48,7 +58,7 @@ export namespace ValidationSchemas {
             searchSpace: joi.string().required(),
             maxExecDuration: joi.number().min(0).required(),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
