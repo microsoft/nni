@@ -10,7 +10,7 @@ _pwd = os.path.dirname(__file__)
 _result = open(os.path.join(_pwd, 'assessor_result.txt'), 'w')
 
 class NaiveAssessor(Assessor):
-    def __init__(self):
+    def __init__(self, optimize_mode):
         self._killed = set()
         _logger.info('init')
 

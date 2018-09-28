@@ -19,19 +19,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import psutil
 import os
+import psutil
 from socket import AddressFamily
-from .rest_utils import rest_get
+from subprocess import Popen, PIPE, call
+from .rest_utils import rest_get, check_response
 from .config_utils import Config
-from subprocess import Popen, PIPE
 from .common_utils import print_error, print_normal
 from .constants import STDOUT_FULL_PATH, STDERR_FULL_PATH
 
 def start_web_ui(port):
     '''start web ui'''
+    serve = os.environ.get('NNI_SERVE', 'serve')
     web_ui = os.environ.get('WEB_UI_FOLDER')
-    cmds = ['serve', '-s', '-n', web_ui, '-l', str(port)]
+    cmds = [serve, '-s', '-n', web_ui, '-l', str(port)]
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
     webui_process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
@@ -70,6 +71,8 @@ def stop_web_ui():
                 child_process.kill()
         if parent_process.is_running():
             parent_process.kill()
+        cmds = ['pkill', '-P', str(webuiPid)]
+        call(cmds)
         return True
     except Exception as e:
         print_error(e)
@@ -83,6 +86,6 @@ def check_web_ui():
         return False
     for url in url_list:
         response = rest_get(url, 3)
-        if response and response.status_code == 200:
+        if response and check_response(response):
             return True
     return False

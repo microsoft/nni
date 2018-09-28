@@ -22,46 +22,24 @@
 import os
 from setuptools import setup, find_packages
 from setuptools.command.install import install
-from subprocess import Popen
+import subprocess
 
 def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 class CustomInstallCommand(install):
     '''a customized install class in pip module'''
-    def makeInstall(self):
-        '''execute make pip-install command'''
-        cmds = ['make', 'pip-install']
-        process = Popen(cmds)
-        if process.wait() != 0:
-            print('Error: Make Install Failed')
-            exit(-1)
-
-    def writeEnvironmentVariables(self, variable_name):
-        '''write an environment variable into ~/.bashrc'''
-        paths = os.getenv("PATH").split(':')
-        bin_path = os.path.join(os.getenv('HOME'),'.local/'+variable_name+'/bin')
-        
-        if bin_path not in paths:
-            bashrc_path = os.path.join(os.getenv('HOME'), '.bashrc')
-            process = Popen('echo export PATH=' + bin_path + ':\$PATH >> ' + bashrc_path, shell=True)
-            if process.wait() != 0:
-                print('Error: Write Environment Variables Failed')
-                exit(-1)
-
     def run(self):
-        install.run(self)
-        self.makeInstall()
-        self.writeEnvironmentVariables('node')
-        self.writeEnvironmentVariables('yarn')
+        super().run()
+        subprocess.run(['make', 'pip-install'], check=True)
 
 setup(
     name = 'NNI',
-    version = '0.1.0',
+    version = '0.2.0',
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
-    long_description = read('docs/NNICTLDOC.md'),
+    long_description = read('README.md'),
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
 
@@ -69,22 +47,22 @@ setup(
     package_dir = {
         'nni_annotation': 'tools/nni_annotation',
         'nni': 'src/sdk/pynni/nni',
-        'nnicmd': 'tools/nnicmd'
+        'nnicmd': 'tools/nnicmd',
+        'trial_tool':'tools/trial_tool'
     },
+    package_data = {'nni': ['**/requirements.txt']},
     python_requires = '>=3.5',
     install_requires = [
         'astor',
+        'hyperopt',
         'json_tricks',
         'numpy',
         'psutil',
-        'pymc3',
         'pyyaml',
         'requests',
-        'scipy'
-        
-    ],
-    dependency_links = [
-        'git+https://github.com/hyperopt/hyperopt.git',
+        'scipy',
+        'schema',
+        'pyhdfs'
     ],
 
     cmdclass={

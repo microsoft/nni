@@ -26,7 +26,7 @@ The candidate type and value for variable is here:
 <br/>
 
 * {"_type":"randint","_value":[upper]}
-   * Which means the variable value is a random integer in the range [0, upper). The semantics of this distribution is that there is no more correlation in the loss function between nearby integer values, as compared with more distant integer values. This is an appropriate distribution for describing random seeds for example. If the loss function is probably more correlated for nearby integer values, then you should probably use one of the "quantized" continuous distributions, such as either quniform, qloguniform, qnormal or qlognormal.
+   * Which means the variable value is a random integer in the range [0, upper). The semantics of this distribution is that there is no more correlation in the loss function between nearby integer values, as compared with more distant integer values. This is an appropriate distribution for describing random seeds for example. If the loss function is probably more correlated for nearby integer values, then you should probably use one of the "quantized" continuous distributions, such as either quniform, qloguniform, qnormal or qlognormal. Note that if you want to change lower bound, you can use `quniform` for now.
 <br/>
 
 * {"_type":"uniform","_value":[low, high]}
@@ -36,7 +36,7 @@ The candidate type and value for variable is here:
 
 * {"_type":"quniform","_value":[low, high, q]}
    * Which means the variable value is a value like round(uniform(low, high) / q) * q
-   * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below.
+   * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.
 <br/>
 
 * {"_type":"loguniform","_value":[low, high]}
@@ -66,3 +66,5 @@ The candidate type and value for variable is here:
    * Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
    * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 <br/>
+
+Note that SMAC only supports a subset of the types above, including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`. In the current version, SMAC does not support cascaded search space (i.e., conditional variable in SMAC).

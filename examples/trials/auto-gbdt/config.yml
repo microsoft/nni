@@ -1,0 +1,20 @@
+authorName: default
+experimentName: example_auto-gbdt
+trialConcurrency: 1
+maxExecDuration: 10h
+maxTrialNum: 10
+#choice: local, remote
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: minimize
+trial:
+  command: python3 main.py
+  codeDir: .
+  gpuNum: 0

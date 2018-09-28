@@ -126,7 +126,7 @@ class NNIDataStore implements DataStore {
             type: metrics.type,
             sequence: metrics.sequence,
             data: metrics.value,
-            timestamp: new Date()
+            timestamp: Date.now()
         }));
     }
 
@@ -160,12 +160,11 @@ class NNIDataStore implements DataStore {
 
     private async getFinalMetricData(trialJobId: string): Promise<any> {
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
-        assert(metrics.length <= 1);
-        if (metrics.length === 1) {
-            return metrics[0];
-        } else {
-            return undefined;
+        if (metrics.length > 1) {
+            this.log.error(`Found multiple final results for trial job: ${trialJobId}`);
         }
+
+        return metrics[0];
     }
 
     private getJobStatusByLatestEvent(event: TrialJobEvent): TrialJobStatus {
@@ -217,6 +216,9 @@ class NNIDataStore implements DataStore {
                         jobInfo.logPath = record.logPath;
                     }
                     jobInfo.endTime = record.timestamp;
+                    if (jobInfo.startTime === undefined && record.timestamp !== undefined) {
+                        jobInfo.startTime = record.timestamp;
+                    }
                 default:
             }
             jobInfo.status = this.getJobStatusByLatestEvent(record.event);

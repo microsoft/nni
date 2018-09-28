@@ -59,14 +59,19 @@ interface ExperimentProfile {
     params: ExperimentParams;
     id: string;
     execDuration: number;
-    startTime?: Date;
-    endTime?: Date;
+    startTime?: number;
+    endTime?: number;
     revision: number;
 }
 
 interface TrialJobStatistics {
     trialJobStatus: TrialJobStatus;
     trialJobNumber: number;
+}
+
+interface NNIManagerStatus {
+    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED';
+    errors: string[];
 }
 
 abstract class Manager {
@@ -86,6 +91,7 @@ abstract class Manager {
 
     public abstract getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]>;
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
+    public abstract getStatus(): NNIManagerStatus;
 }
 
-export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType };
+export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus };

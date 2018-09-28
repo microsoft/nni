@@ -10,13 +10,6 @@ require('echarts/lib/component/title');
 require('echarts/lib/component/visualMap');
 require('../style/para.css');
 
-const chartMulineStyle = {
-    width: '100%',
-    height: 600,
-    margin: '0 auto',
-    padding: 15
-};
-
 interface Dimobj {
     dim: number;
     name: string;
@@ -35,6 +28,11 @@ interface ParaObj {
     parallelAxis: Array<Dimobj>;
 }
 
+interface VisualMapValue {
+    maxAccuracy: number;
+    minAccuracy: number;
+}
+
 interface ParaState {
     option: object;
     paraBack: ParaObj;
@@ -42,6 +40,7 @@ interface ParaState {
     swapAxisArr: Array<string>;
     percent: number;
     paraNodata: string;
+    visualValue: VisualMapValue;
 }
 
 message.config({
@@ -69,9 +68,13 @@ class Para extends React.Component<{}, ParaState> {
             swapAxisArr: [],
             percent: 0,
             paraNodata: '',
+            visualValue: {
+                minAccuracy: 0,
+                maxAccuracy: 1
+            }
         };
     }
-    
+
     hyperParaPic = () => {
         axios
             .all([
@@ -110,7 +113,11 @@ class Para extends React.Component<{}, ParaState> {
                         const dimName = Object.keys(speDimName[0]);
                         if (this._isMounted) {
                             this.setState(() => ({
-                                dimName: dimName
+                                dimName: dimName,
+                                visualValue: {
+                                    minAccuracy: accPara.length !== 0 ? Math.min(...accPara) : 0,
+                                    maxAccuracy: accPara.length !== 0 ? Math.max(...accPara) : 1
+                                }
                             }));
                         }
                         // search space range and specific value [only number]
@@ -159,6 +166,11 @@ class Para extends React.Component<{}, ParaState> {
                         Object.keys(paraYdata).map(item => {
                             paraYdata[item].push(accPara[item]);
                         });
+                        // according acc to sort ydata
+                        if (paraYdata.length !== 0) {
+                            const len = paraYdata[0].length - 1;
+                            paraYdata.sort((a, b) => b[len] - a[len]);
+                        }
                         this.setState(() => ({
                             paraBack: {
                                 parallelAxis: parallelAxis,
@@ -205,8 +217,25 @@ class Para extends React.Component<{}, ParaState> {
 
     // deal with response data into pic data
     getOption = (dataObj: ParaObj) => {
+        const { visualValue } = this.state;
         let parallelAxis = dataObj.parallelAxis;
         let paralleData = dataObj.data;
+        const maxAccuracy = visualValue.maxAccuracy;
+        const minAccuracy = visualValue.minAccuracy;
+        let visualMapObj = {};
+        if (maxAccuracy === minAccuracy) {
+            visualMapObj = {
+                type: 'continuous',
+                color: ['#fb7c7c', 'yellow', 'lightblue']
+            };
+        } else {
+            visualMapObj = {
+                type: 'continuous',
+                min: visualValue.minAccuracy,
+                max: visualValue.maxAccuracy,
+                color: ['#fb7c7c', 'yellow', 'lightblue']
+            };
+        }
         let optionown = {
             parallelAxis,
             tooltip: {
@@ -223,8 +252,6 @@ class Para extends React.Component<{}, ParaState> {
                         borderColor: '#ddd'
                     }
                 },
-                feature: {
-                },
                 z: 202
             },
             parallel: {
@@ -234,13 +261,7 @@ class Para extends React.Component<{}, ParaState> {
                     }
                 }
             },
-            visualMap: {
-                type: 'continuous',
-                min: 0,
-                max: 1,
-                // gradient color
-                color: ['#fb7c7c', 'yellow', 'lightblue']
-            },
+            visualMap: visualMapObj,
             highlight: {
                 type: 'highlight'
             },
@@ -357,16 +378,22 @@ class Para extends React.Component<{}, ParaState> {
 
     render() {
         const { option, paraNodata, dimName } = this.state;
+        const chartMulineStyle = {
+            width: '100%',
+            height: 600,
+            margin: '0 auto',
+            padding: 15
+        };
         return (
             <div className="para">
                 <div className="paraCon">
                     <div className="paraTitle">
                         <div className="paraLeft">Hyper Parameter</div>
                         <div className="paraRight">
-                            {/* <span>top</span> */}
+                            <span>top</span>
                             <Select
                                 className="parapercent"
-                                style={{ width: '20%' }}
+                                style={{ width: '15%' }}
                                 placeholder="100%"
                                 optionFilterProp="children"
                                 onSelect={this.percentNum}
@@ -377,7 +404,7 @@ class Para extends React.Component<{}, ParaState> {
                                 <Option value="1">100%</Option>
                             </Select>
                             <Select
-                                style={{ width: '60%' }}
+                                style={{ width: '50%' }}
                                 mode="multiple"
                                 placeholder="Please select two items to swap"
                                 onChange={this.getSwapArr}

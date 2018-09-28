@@ -19,9 +19,17 @@ def read_last_line(file_name):
     except (FileNotFoundError, ValueError):
         return None
 
-def run(installed = False):
+def run(installed = True):
     if not installed:
         os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
+        sdk_path = os.path.abspath('../../src/sdk/pynni')
+        cmd_path = os.path.abspath('../../tools')
+        pypath = os.environ.get('PYTHONPATH')
+        if pypath:
+            pypath = ':'.join([pypath, sdk_path, cmd_path])
+        else:
+            pypath = ':'.join([sdk_path, cmd_path])
+        os.environ['PYTHONPATH'] = pypath
 
     with contextlib.suppress(FileNotFoundError):
         os.remove('tuner_search_space.txt')
@@ -74,16 +82,16 @@ def run(installed = False):
     assert assessor_result == expected, 'Bad assessor result'
 
 if __name__ == '__main__':
-    installed = (sys.argv[-1] == '--installed')
+    installed = (sys.argv[-1] != '--preinstall')
 
     try:
         run(installed)
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
         ret_code = 0
-    except Exception as e:
+    except Exception as error:
         print(RED + 'FAIL' + CLEAR)
-        print('%r' % e)
+        print('%r' % error)
         traceback.print_exc()
         ret_code = 1
 

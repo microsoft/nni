@@ -11,7 +11,7 @@ _pwd = os.path.dirname(__file__)
 _result = open(os.path.join(_pwd, 'tuner_result.txt'), 'w')
 
 class NaiveTuner(Tuner):
-    def __init__(self):
+    def __init__(self, optimize_mode):
         self.cur = 0
         _logger.info('init')
 

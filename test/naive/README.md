@@ -2,11 +2,11 @@
 
 To test before installing:
 
-    ./run.py
+    ./run.py --preinstall
 
 To test the integrity of installation:
 
-    ./run.py --installed
+    ./run.py
 
 It will print `PASS` in green eventually if everything works well.
 

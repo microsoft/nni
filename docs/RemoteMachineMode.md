@@ -1,9 +1,10 @@
 **Run an Experiment on Multiple Machines**
 ===
-NNI supports running an experiment on multiple machines, called remote machine mode. Let's say you have multiple machines with the account `bob` (Note: the account is not necessarily the same on multiple machines):
-| IP     | Username    | Password |
-| --------|---------|-------|
-| 10.1.1.1  | bob   | bob123    |
+NNI supports running an experiment on multiple machines, called remote machine mode. Let's say you have multiple machines with the account `bob` (Note: the account is not necessarily the same on multiple machines): 
+
+| IP  | Username| Password |
+| -------- |---------|-------|
+| 10.1.1.1 | bob | bob123    |
 | 10.1.1.2 | bob | bob123    |
 | 10.1.1.3 | bob | bob123    |
 
@@ -14,7 +15,7 @@ For remote machines that are used only to run trials but not the nnictl, you can
 
 * __Install python SDK through pip__
 
-      pip3 install --user git+https://github.com/Microsoft/NeuralNetworkIntelligence.git#subdirectory=src/sdk/pynni
+      python3 -m pip install --user git+https://github.com/Microsoft/NeuralNetworkIntelligence.git#subdirectory=src/sdk/pynni
 
 * __Install python SDK through source code__
 

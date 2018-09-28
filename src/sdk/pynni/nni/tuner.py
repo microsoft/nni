@@ -21,6 +21,7 @@
 
 import logging
 
+import nni
 from .recoverable import Recoverable
 
 _logger = logging.getLogger(__name__)
@@ -42,7 +43,14 @@ class Tuner(Recoverable):
         User code must override either this function or 'generate_parameters()'.
         parameter_id_list: list of int
         """
-        return [self.generate_parameters(parameter_id) for parameter_id in parameter_id_list]
+        result = []
+        for parameter_id in parameter_id_list:
+            try:
+                res = self.generate_parameters(parameter_id)
+            except nni.NoMoreTrialError:
+                return result
+            result.append(res)
+        return result
 
     def receive_trial_result(self, parameter_id, parameters, reward):
         """Invoked when a trial reports its final result. Must override.

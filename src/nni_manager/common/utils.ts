@@ -19,6 +19,7 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import { randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -32,7 +33,7 @@ import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from
 import { Manager } from './manager';
 import { TrainingService } from './trainingService';
 
-function getExperimentRootDir(): string{
+function getExperimentRootDir(): string {
     return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
 }
 
@@ -115,6 +116,12 @@ function uniqueString(len: number): string {
     return String.fromCharCode(...codes);
 }
 
+function randomSelect<T>(a: T[]): T {
+    assert(a !== undefined);
+
+    // tslint:disable-next-line:insecure-random
+    return a[Math.floor(Math.random() * a.length)];
+}
 function parseArg(names: string[]): string {
     if (process.argv.length >= 4) {
         for (let i: number = 2; i < process.argv.length - 1; i++) {
@@ -218,5 +225,19 @@ function cleanupUnitTest(): void {
     Container.restore(ExperimentStartupInfo);
 }
 
-export { getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getDefaultDatabaseDir, mkDirP, delay, prepareUnitTest,
-    parseArg, cleanupUnitTest, uniqueString };
+/**
+ * Get IPv4 address of current machine
+ */
+function getIPV4Address(): string {
+    let ipv4Address : string = '';
+
+    for(const item of os.networkInterfaces().eth0) {
+        if(item.family === 'IPv4') {
+            ipv4Address = item.address;
+        }
+    }
+    return ipv4Address;
+}
+
+export { getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getDefaultDatabaseDir, getIPV4Address, 
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
