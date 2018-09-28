@@ -59,8 +59,7 @@ fi`;
 
 export const PAI_TRIAL_COMMAND_FORMAT: string =
 `export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} 
-&& cd $NNI_SYS_DIR && mkdir .nni 
-&& sh install_nni.sh 
+&& cd $NNI_SYS_DIR && sh install_nni.sh 
 && python3 -m trial_tool.trial_keeper --trial_command '{4}' --nnimanager_ip '{5}' --pai_hdfs_output_dir '{6}' 
 --pai_hdfs_host '{7}' --pai_user_name {8}`;
 
