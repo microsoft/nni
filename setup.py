@@ -30,24 +30,24 @@ def read(fname):
 class CustomInstallCommand(install):
     '''a customized install class in pip module'''
     user_options = install.user_options + [
-        ('target=', None, '<add it if you only want to install nni sdk only')
+        ('platform=', None, '<add it if you only want to install nni sdk only')
     ]
 
     def initialize_options(self):
+        self.platform = None
         install.initialize_options(self)
-        self.target = None
 
     def finalize_options(self):
-        print("in final", self.target)
+        print("in final", self.platform)
         install.finalize_options(self)
 
     def run(self):
-        #super().run()
-        if self.target == 'remote':
-            print("in run's if: %s"%self.target)
+        if self.platform == 'remote':
+            print("in run's if: %s"%self.platform)
             #subprocess.run(['make', 'pip-install'], check=True)
         else:
             print("in run's else")
+        super().run()
 
 setup(
     name = 'NNI',
