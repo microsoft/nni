@@ -30,7 +30,7 @@ def read(fname):
 class CustomInstallCommand(install):
     '''a customized install class in pip module'''
     user_options = install.user_options + [
-        ('sdk-only', None, '<add --sdk-only if you only want to install nni sdk only')
+        ('sdk-only', None, '<add --sdk-only if you want to only install nni sdk')
     ]
 
     def initialize_options(self):
