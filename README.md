@@ -35,7 +35,7 @@ pip Installation Prerequisites
 * git, wget
 
 ```
-python3 -m pip install -v --user git+https://github.com/Microsoft/nni.git@v0.1
+python3 -m pip install -v --user git+https://github.com/Microsoft/nni.git@v0.2
 source ~/.bashrc
 ```
 
