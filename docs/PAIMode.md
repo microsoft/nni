@@ -25,7 +25,7 @@ tuner:
   classArgs:
     optimize_mode: maximize
 trial:
-  command: python mnist.py
+  command: python3 mnist.py
   codeDir: ~/nni/examples/trials/mnist-annotation
   gpuNum: 0
   cpuNum: 1
