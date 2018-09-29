@@ -58,13 +58,10 @@ class CustomInstallCommand(install):
             subprocess.run(['python3', '-m', 'pip', 'install', pkg], check=True)
 
     def run(self):
-        if self.platform == 'remote':
-            print("in run's if: %s"%self.platform)
-            #subprocess.run(['make', 'pip-install'], check=True)
-        else:
-            print("in run's else")
+        if self.platform != 'remote':
+            subprocess.run(['make', 'pip-install'], check=True)
         self.install_requires()
-        #super().run()
+        super().run()
 
 setup(
     name = 'NNI',
