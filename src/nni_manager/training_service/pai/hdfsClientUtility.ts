@@ -21,8 +21,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Deferred } from 'ts-deferred';
 import { getLogger } from '../../common/log';
-import { delay } from '../../common/utils';
-import * as util from 'util';
 
 /**
  * HDFS client utility, including copy file/directory
