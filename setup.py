@@ -33,7 +33,15 @@ class CustomInstallCommand(install):
         ('platform=', None, '<add it if you only want to install nni sdk only')
     ]
 
-    def __init__(self):
+    def initialize_options(self):
+        install.initialize_options(self)
+        self.platform = None
+
+    def finalize_options(self):
+        print("in final", self.platform)
+        install.finalize_options(self)
+
+    def install_requires(self):
         self.install_requires_list = [
             'astor',
             'hyperopt',
@@ -46,16 +54,6 @@ class CustomInstallCommand(install):
             'schema',
             'pyhdfs'
         ]
-
-    def initialize_options(self):
-        install.initialize_options(self)
-        self.platform = None
-
-    def finalize_options(self):
-        print("in final", self.platform)
-        install.finalize_options(self)
-
-    def install_requires(self):
         for pkg in self.install_requires_list:
             subprocess.run(['python3', '-m', 'pip', 'install', pkg], check=True)
 
