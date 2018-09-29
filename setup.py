@@ -36,6 +36,9 @@ class CustomInstallCommand(install):
     def initialize_options(self):
         install.initialize_options(self)
         self.sdk_only = None
+        print('-----------------')
+        print('in init    ', self.sdk_only)
+        print('-----------------')
 
     def install_requires(self):
         self.install_requires_list = [
@@ -51,13 +54,16 @@ class CustomInstallCommand(install):
             'pyhdfs'
         ]
         for pkg in self.install_requires_list:
-            subprocess.run(['python3', '-m', 'pip', 'install', pkg], check=True)
+            subprocess.run(['python3', '-m', 'pip', 'install', '--user', pkg], check=True)
 
     def run(self):
-        super().run()
+        print('-----------------')
+        print('in run    ', self.sdk_only)
+        print('-----------------')
         if self.sdk_only is None:
             subprocess.run(['make', 'pip-install'], check=True)
         self.install_requires()
+        super().run()
 
 setup(
     name = 'NNI',
