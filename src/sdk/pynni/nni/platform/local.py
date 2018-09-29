@@ -30,6 +30,8 @@ if not os.path.exists(os.path.join(_sysdir, '.nni')):
 _metric_file = open(os.path.join(_sysdir, '.nni', 'metrics'), 'wb')
 
 _outputdir = os.environ['NNI_OUTPUT_DIR']
+if not os.path.exists(_outputdir):
+    os.makedirs(_outputdir)
 _log_file_path = os.path.join(_outputdir, 'trial.log')
 init_logger(_log_file_path)
 

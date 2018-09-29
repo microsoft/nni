@@ -79,6 +79,7 @@ def set_trial_config(experiment_config, port):
     if check_response(response):
         return True
     else:
+        print('Error message is {}'.format(response.text))
         with open(STDERR_FULL_PATH, 'a+') as fout:
             fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         return False
@@ -109,7 +110,7 @@ def set_pai_config(experiment_config, port):
     pai_config_data = dict()
     pai_config_data['pai_config'] = experiment_config['paiConfig']
     response = rest_put(cluster_metadata_url(port), json.dumps(pai_config_data), 20)
-    err_message = ''
+    err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
             err_message = response.text
@@ -172,6 +173,7 @@ def set_experiment(experiment_config, mode, port):
     else:
         with open(STDERR_FULL_PATH, 'a+') as fout:
             fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+        print_error('Setting experiment error, error message is {}'.format(response.text))
         return None
 
 def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=None):
@@ -251,7 +253,8 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
         if config_result:
             print_normal('Success!')
         else:
-            print_error('Failed! Error is: {}'.format(err_msg))
+            if err_msg:
+                print_error('Failed! Error is: {}'.format(err_msg))
             try:
                 cmds = ['pkill', '-P', str(rest_process.pid)]
                 call(cmds)

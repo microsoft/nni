@@ -64,6 +64,8 @@ class PAITrainingService implements TrainingService {
     private experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
     private readonly hdfsDirPattern: string;
+    private hdfsBaseDir: string | undefined;
+    private hdfsOutputHost: string | undefined;
 
     constructor() {
         this.log = getLogger();
@@ -131,6 +133,14 @@ class PAITrainingService implements TrainingService {
         if (!this.paiToken) {
             throw new Error('PAI token is not initialized');
         }
+        
+        if(!this.hdfsBaseDir){
+            throw new Error('hdfsBaseDir is not initialized');
+        }
+
+        if(!this.hdfsOutputHost){
+            throw new Error('hdfsOutputHost is not initialized');
+        }
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
@@ -156,26 +166,11 @@ class PAITrainingService implements TrainingService {
         // Step 1. Prepare PAI job configuration
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
-    
-        const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
-
-        if(hdfsDirContent === null) {
-            throw new Error('Trial outputDir format Error');
-        }
-        const groups = hdfsDirContent.groups;
-        if(groups === undefined) {
-            throw new Error('Trial outputDir format Error');
-        }
-
-        const hdfsHost = groups['host'];
-        let hdfsBaseDirectory = groups['baseDir'];
-        if(hdfsBaseDirectory === undefined) {
-            hdfsBaseDirectory = "/";
-        }
-        const hdfsOutputDir : string = path.join(hdfsBaseDirectory, this.experimentId, trialJobId);
+        
+        const hdfsOutputDir : string = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
         const hdfsLogPath : string = String.Format(
             PAI_LOG_PATH_FORMAT,
-            hdfsHost,
+            this.hdfsOutputHost,
             hdfsOutputDir);
 
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
@@ -198,7 +193,7 @@ class PAITrainingService implements TrainingService {
             this.paiTrialConfig.command, 
             getIPV4Address(),
             hdfsOutputDir,
-            hdfsHost,
+            this.hdfsOutputHost,
             this.paiClusterConfig.userName
         ).replace(/\r\n|\n|\r/gm, '');
 
@@ -309,7 +304,7 @@ class PAITrainingService implements TrainingService {
         return deferred.promise; 
     }
 
-    public setClusterMetadata(key: string, value: string): Promise<void> {
+    public async setClusterMetadata(key: string, value: string): Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
 
         switch (key) {
@@ -336,13 +331,12 @@ class PAITrainingService implements TrainingService {
 
                 request(authentication_req, (error: Error, response: request.Response, body: any) => {
                     if (error) {
-                        //TODO: should me make the setClusterMetadata's return type to Promise<string>? 
                         this.log.error(`Get PAI token failed: ${error.message}`);
-                        deferred.reject();
+                        deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
                     } else {
                         if(response.statusCode !== 200){
                             this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
-                            deferred.reject();
+                            deferred.reject(new Error(`Get PAI token failed, please check paiConfig username or password`));
                         }
                         this.paiToken = body.token;
 
@@ -353,7 +347,7 @@ class PAITrainingService implements TrainingService {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 if (!this.paiClusterConfig){
                     this.log.error('pai cluster config is not initialized');
-                    deferred.reject();
+                    deferred.reject(new Error('pai cluster config is not initialized'));
                     break;
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
@@ -364,6 +358,38 @@ class PAITrainingService implements TrainingService {
                         this.paiClusterConfig.host
                     ).replace(/\r\n|\n|\r/gm, '');
                 }
+                
+                const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
+
+                if(hdfsDirContent === null) {
+                    throw new Error('Trial outputDir format Error');
+                }
+                const groups = hdfsDirContent.groups;
+                if(groups === undefined) {
+                    throw new Error('Trial outputDir format Error');
+                }
+        
+                this.hdfsOutputHost = groups['host'];
+                this.hdfsBaseDir = groups['baseDir'];
+                if(this.hdfsBaseDir === undefined) {
+                    this.hdfsBaseDir = "/";
+                }
+                
+                const hdfsClient = WebHDFS.createClient({
+                    user: this.paiClusterConfig.userName,
+                    port: 50070,
+                    host: this.hdfsOutputHost
+                });
+
+                try {
+                    const exist : boolean = await HDFSClientUtility.pathExists("/", hdfsClient);
+                    if(!exist) {
+                        deferred.reject(new Error(`Please check hdfsOutputDir host!`));
+                    }
+                } catch(error) {
+                    deferred.reject(new Error(`HDFS encounters problem, error is ${error}. Please check hdfsOutputDir host!`));
+                }
+
                 deferred.resolve();
                 break;
             default:
