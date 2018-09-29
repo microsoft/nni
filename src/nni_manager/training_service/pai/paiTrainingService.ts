@@ -331,7 +331,6 @@ class PAITrainingService implements TrainingService {
 
                 request(authentication_req, (error: Error, response: request.Response, body: any) => {
                     if (error) {
-                        //TODO: should me make the setClusterMetadata's return type to Promise<string>? 
                         this.log.error(`Get PAI token failed: ${error.message}`);
                         deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
                     } else {
