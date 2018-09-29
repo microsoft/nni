@@ -33,6 +33,20 @@ class CustomInstallCommand(install):
         ('platform=', None, '<add it if you only want to install nni sdk only')
     ]
 
+    def __init__(self):
+        self.install_requires_list = [
+            'astor',
+            'hyperopt',
+            'json_tricks',
+            'numpy',
+            'psutil',
+            'pyyaml',
+            'requests',
+            'scipy',
+            'schema',
+            'pyhdfs'
+        ]
+
     def initialize_options(self):
         install.initialize_options(self)
         self.platform = None
@@ -41,13 +55,18 @@ class CustomInstallCommand(install):
         print("in final", self.platform)
         install.finalize_options(self)
 
+    def install_requires(self):
+        for pkg in self.install_requires_list:
+            subprocess.run(['python3', '-m', 'pip', 'install', pkg], check=True)
+
     def run(self):
         if self.platform == 'remote':
             print("in run's if: %s"%self.platform)
             #subprocess.run(['make', 'pip-install'], check=True)
         else:
             print("in run's else")
-        super().run()
+        self.install_requires()
+        #super().run()
 
 setup(
     name = 'NNI',
@@ -68,18 +87,7 @@ setup(
     },
     package_data = {'nni': ['**/requirements.txt']},
     python_requires = '>=3.5',
-    install_requires = [
-        'astor',
-        'hyperopt',
-        'json_tricks',
-        'numpy',
-        'psutil',
-        'pyyaml',
-        'requests',
-        'scipy',
-        'schema',
-        'pyhdfs'
-    ],
+    
 
     cmdclass={
         'install': CustomInstallCommand
