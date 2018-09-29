@@ -26,7 +26,6 @@ import string
 from subprocess import Popen, PIPE, call
 import tempfile
 from nni_annotation import *
-import random
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
 from .url_utils import cluster_metadata_url, experiment_url
@@ -189,13 +188,11 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
-        path = os.path.join(tempfile.gettempdir(), 'nni', 'annotation', ''.join(random.sample(string.ascii_letters + string.digits, 8)))
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-        os.makedirs(path)
-        expand_annotations(experiment_config['trial']['codeDir'], path)
-        experiment_config['trial']['codeDir'] = path
-        search_space = generate_search_space(experiment_config['trial']['codeDir'])
+        path = os.path.join(tempfile.gettempdir(), 'nni', 'annotation')
+        path = tempfile.mkdtemp(dir=path)
+        code_dir = expand_annotations(experiment_config['trial']['codeDir'], path)
+        experiment_config['trial']['codeDir'] = code_dir
+        search_space = generate_search_space(code_dir)
         experiment_config['searchSpace'] = json.dumps(search_space)
         assert search_space, ERROR_INFO % 'Generated search space is empty'
     elif experiment_config.get('searchSpacePath'):

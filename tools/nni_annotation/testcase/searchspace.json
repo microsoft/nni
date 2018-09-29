@@ -3,15 +3,15 @@
         "_type": "choice",
         "_value": [ 0, 1, 2, 3 ]
     },
-    "handwrite/#5/function_choice": {
+    "handwrite/__line5/function_choice": {
         "_type": "choice",
         "_value": [ 0, 1, 2 ]
     },
-    "handwrite/#8/qlognormal": {
+    "handwrite/__line8/qlognormal": {
         "_type": "qlognormal",
         "_value": [ 1.2, 3, 4.5 ]
     },
-    "handwrite/#13/choice": {
+    "handwrite/__line13/choice": {
         "_type": "choice",
         "_value": [ 0, 1 ]
     },
