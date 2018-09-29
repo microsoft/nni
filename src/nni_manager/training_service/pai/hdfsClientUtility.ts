@@ -131,7 +131,10 @@ export namespace HDFSClientUtility {
         const deferred : Deferred<boolean> = new Deferred<boolean>();
         hdfsClient.exists(hdfsPath, (exist : boolean ) => {
              deferred.resolve(exist);
-        })
+        });
+
+        // Set timeout and reject the promise once reach timeout (5 seconds)
+        setTimeout(() => deferred.reject(`Check HDFS path ${hdfsPath} exists timeout`), 5000);
 
         return deferred.promise;
     }

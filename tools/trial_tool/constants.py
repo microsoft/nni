@@ -28,7 +28,7 @@ DEFAULT_REST_PORT = 51189
 
 HOME_DIR = os.path.join(os.environ['HOME'], 'nni')
 
-LOG_DIR = os.path.join(HOME_DIR, 'trial-keeper', 'log')
+LOG_DIR = os.environ['NNI_OUTPUT_DIR']
 
 STDOUT_FULL_PATH = os.path.join(LOG_DIR, 'stdout')
 
