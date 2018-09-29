@@ -54,10 +54,10 @@ class CustomInstallCommand(install):
             subprocess.run(['python3', '-m', 'pip', 'install', pkg], check=True)
 
     def run(self):
+        super().run()
         if self.sdk_only is None:
             subprocess.run(['make', 'pip-install'], check=True)
         self.install_requires()
-        super().run()
 
 setup(
     name = 'NNI',
