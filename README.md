@@ -64,6 +64,7 @@ To learn more about how this example was constructed and how to analyze the expe
 * [Tuners supported by NNI.](src/sdk/pynni/nni/README.md)
 * [How to enable early stop (i.e. assessor) in an experiment?](docs/EnableAssessor.md)
 * [How to run an experiment on multiple machines?](docs/RemoteMachineMode.md)
+* [How to run an experiment on OpenPAI?](docs/PAIMode.md)
 * [How to write a customized tuner?](docs/CustomizedTuner.md)
 * [How to write a customized assessor?](examples/assessors/README.md)
 * [How to resume an experiment?](docs/NNICTLDOC.md)
