@@ -190,9 +190,6 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     if experiment_config.get('useAnnotation'):
         path = os.path.join(tempfile.gettempdir(), 'nni', 'annotation')
         path = tempfile.mkdtemp(dir=path)
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-        os.makedirs(path)
         code_dir = expand_annotations(experiment_config['trial']['codeDir'], path)
         experiment_config['trial']['codeDir'] = code_dir
         search_space = generate_search_space(code_dir)
