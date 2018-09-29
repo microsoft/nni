@@ -64,6 +64,9 @@ def main_loop(args):
                     print('copy directory failed!')
             except Exception as exception:
                 print(exception)
+
+            ## Exit as the retCode of subprocess(trial)
+            exit(retCode)
             break
         else:
             print('subprocess pid: {} is still alive'.format(process.pid))
