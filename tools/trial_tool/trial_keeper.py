@@ -65,6 +65,8 @@ def main_loop(args):
             except Exception as exception:
                 print(exception)
             break
+            ## Exit as the retCode of subprocess(trial)
+            exit(retCode)
         else:
             print('subprocess pid: {} is still alive'.format(process.pid))
 
