@@ -381,10 +381,16 @@ class PAITrainingService implements TrainingService {
                     port: 50070,
                     host: this.hdfsOutputHost
                 });
-                const exist : boolean = await HDFSClientUtility.pathExists("/", hdfsClient);
-                if(!exist){
-                    deferred.reject(new Error(`Please check hdfsOutputDir host!`));
+
+                try {
+                    const exist : boolean = await HDFSClientUtility.pathExists("/", hdfsClient);
+                    if(!exist) {
+                        deferred.reject(new Error(`Please check hdfsOutputDir host!`));
+                    }
+                } catch(error) {
+                    deferred.reject(new Error(`HDFS encounters problem, error is ${error}. Please check hdfsOutputDir host!`));
                 }
+
                 deferred.resolve();
                 break;
             default:
