@@ -29,41 +29,9 @@ def read(fname):
 
 class CustomInstallCommand(install):
     '''a customized install class in pip module'''
-    user_options = install.user_options + [
-        ('sdk-only', None, '<add --sdk-only if you want to only install nni sdk')
-    ]
-
-    def initialize_options(self):
-        install.initialize_options(self)
-        self.sdk_only = None
-        print('-----------------')
-        print('in init    ', self.sdk_only)
-        print('-----------------')
-
-    def install_requires(self):
-        self.install_requires_list = [
-            'astor',
-            'hyperopt',
-            'json_tricks',
-            'numpy',
-            'psutil',
-            'pyyaml',
-            'requests',
-            'scipy',
-            'schema',
-            'pyhdfs'
-        ]
-        for pkg in self.install_requires_list:
-            subprocess.run(['python3', '-m', 'pip', 'install', '--user', pkg], check=True)
-
     def run(self):
-        print('-----------------')
-        print('in run    ', self.sdk_only)
-        print('-----------------')
-        if self.sdk_only is None:
-            subprocess.run(['make', 'pip-install'], check=True)
-        self.install_requires()
         super().run()
+        subprocess.run(['make', 'pip-install'], check=True)
 
 setup(
     name = 'NNI',
@@ -84,7 +52,18 @@ setup(
     },
     package_data = {'nni': ['**/requirements.txt']},
     python_requires = '>=3.5',
-    
+    install_requires = [
+        'astor',
+        'hyperopt',
+        'json_tricks',
+        'numpy',
+        'psutil',
+        'pyyaml',
+        'requests',
+        'scipy',
+        'schema',
+        'pyhdfs'
+    ],
 
     cmdclass={
         'install': CustomInstallCommand
