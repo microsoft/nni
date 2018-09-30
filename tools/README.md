@@ -12,14 +12,14 @@ python >= 3.5
  1.Enter tools directory  
  
  2.Use pip3 to install packages
+ 
+  * Install for current user:
 
-   2.1 Install for current user:
+          pip3 install --user -e .
 
-     pip3 install --user -e .
+  * Install for all users:
 
-   2.2 Install for all users:
-
-     pip3 install -e .
+          pip3 install -e .
 
  
  3.Change the mode of nnictl file 
