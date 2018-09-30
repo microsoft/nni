@@ -122,7 +122,7 @@ easy-install: install
 easy-install: update-bash-config
 
 easy-install:
-	#$(_INFO) Complete! #(_END)
+	#$(_INFO) Complete! $(_END)
 
 
 # Target for setup.py
