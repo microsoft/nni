@@ -17,3 +17,12 @@ trial:
   command: python3 trial.py
   codeDir: .
   gpuNum: 0
+  cpuNum: 1
+  memoryMB: 8196
+  image: openpai/pai.example.tensorflow
+  hdfsDataDir: hdfs://1.1.1.1:9000/username
+  hdfsOutputDir: hdfs://1.1.1.1:9000/username
+paiConfig:
+  userName: username
+  passWord: password
+  host: 1.1.1.1

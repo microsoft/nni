@@ -1,10 +1,10 @@
 authorName: default
-experimentName: example_pytorch_cifar10
+experimentName: example_auto-gbdt
 trialConcurrency: 1
-maxExecDuration: 100h
+maxExecDuration: 10h
 maxTrialNum: 10
 #choice: local, remote, pai
-trainingServicePlatform: local
+trainingServicePlatform: pai
 searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
@@ -14,8 +14,17 @@ tuner:
   builtinTunerName: TPE
   classArgs:
     #choice: maximize, minimize
-    optimize_mode: maximize
+    optimize_mode: minimize
 trial:
   command: python3 main.py
   codeDir: .
-  gpuNum: 1
+  gpuNum: 0
+  cpuNum: 1
+  memoryMB: 8196
+  image: openpai/pai.example.tensorflow
+  hdfsDataDir: hdfs://1.1.1.1:9000/username
+  hdfsOutputDir: hdfs://1.1.1.1:9000/username
+paiConfig:
+  userName: username
+  passWord: password
+  host: 1.1.1.1
