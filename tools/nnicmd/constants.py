@@ -34,22 +34,37 @@ STDOUT_FULL_PATH = os.path.join(LOG_DIR, 'stdout')
 
 STDERR_FULL_PATH = os.path.join(LOG_DIR, 'stderr')
 
-ERROR_INFO = 'Error: %s'
+ERROR_INFO = 'ERROR: %s'
 
-NORMAL_INFO = 'Info: %s'
+NORMAL_INFO = 'INFO: %s'
 
-WARNING_INFO = 'Waining: %s'
+WARNING_INFO = 'WARNING: %s'
 
-EXPERIMENT_SUCCESS_INFO = 'Start experiment success! The experiment id is %s, and the restful server post is %s.\n' \
-                          'You can use these commands to get more information about this experiment:\n' \
+EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0m' \
+                          '-----------------------------------------------------------------------\n' \
+                          'The experiment id is %s\n'\
+                          'The restful server post is %s\n' \
+                          'The Web UI urls are: %s\n' \
+                          '-----------------------------------------------------------------------\n\n' \
+                          'You can use these commands to get more information about the experiment\n' \
+                          '-----------------------------------------------------------------------\n' \
                           '         commands                       description\n' \
                           '1. nnictl experiment show        show the information of experiments\n' \
                           '2. nnictl trial ls               list all of trial jobs\n' \
-                          '3. nnictl stop                   stop a experiment\n' \
-                          '4. nnictl trial kill             kill a trial job by id\n' \
-                          '5. nnictl --help                 get help information about nnictl\n' \
-                          '6. nnictl webui url              get the url of web ui'
+                          '3. nnictl log stderr             show stderr log content\n' \
+                          '4. nnictl log stdout             show stdout log content\n' \
+                          '5. nnictl stop                   stop a experiment\n' \
+                          '6. nnictl trial kill             kill a trial job by id\n' \
+                          '7. nnictl webui url              get the url of web ui\n' \
+                          '8. nnictl --help                 get help information about nnictl\n' \
+                          '-----------------------------------------------------------------------\n' \
 
 PACKAGE_REQUIREMENTS = {
     'SMAC': 'smac_tuner'
 }
+
+COLOR_RED_FORMAT = '\033[1;31;31m%s\033[0m'
+
+COLOR_GREEN_FORMAT = '\033[1;32;32m%s\033[0m'
+
+COLOR_YELLOW_FORMAT = '\033[1;33;33m%s\033[0m'

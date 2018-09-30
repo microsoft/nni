@@ -30,13 +30,13 @@ from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
 from .url_utils import cluster_metadata_url, experiment_url
 from .config_utils import Config
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, detect_process
-from .constants import EXPERIMENT_SUCCESS_INFO, STDOUT_FULL_PATH, STDERR_FULL_PATH, LOG_DIR, REST_PORT, ERROR_INFO, NORMAL_INFO
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process
+from .constants import *
 from .webui_utils import start_web_ui, check_web_ui
 
 def start_rest_server(port, platform, mode, experiment_id=None):
     '''Run nni manager process'''
-    print_normal('Checking experiment...')
+    print_normal('Checking environment...')
     nni_config = Config()
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)
@@ -204,10 +204,9 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
         experiment_config['searchSpace'] = json.dumps('')
 
     # check rest server
-    print_normal('Checking restful server...')
     running, _ = check_rest_server(REST_PORT)
     if running:
-        print_normal('Restful server start success!')
+        print_normal('Successfully started Restful server!')
     else:
         print_error('Restful server start failed!')
         try:
@@ -236,7 +235,7 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     if experiment_config['trainingServicePlatform'] == 'local':
         print_normal('Setting local config...')
         if set_local_config(experiment_config, REST_PORT):
-            print_normal('Success!')
+            print_normal('Successfully set local config!')
         else:
             print_error('Failed!')
             try:
@@ -251,7 +250,7 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
         print_normal('Setting pai config...')
         config_result, err_msg = set_pai_config(experiment_config, REST_PORT)
         if config_result:
-            print_normal('Success!')
+            print_normal('Successfully set pai config!')
         else:
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
@@ -259,8 +258,19 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
                 cmds = ['pkill', '-P', str(rest_process.pid)]
                 call(cmds)
             except Exception:
-                raise Exception(ERROR_INFO % 'Rest server stopped!')
+                raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(0)
+    
+    #start webui
+    if check_web_ui():
+        print_warning('{0} {1}'.format(' '.join(nni_config.get_config('webuiUrl')),'is being used, please stop it first!'))
+        print_normal('You can use \'nnictl webui stop\' to stop old Web UI process...')
+    else:
+        print_normal('Starting Web UI...')
+        webui_process = start_web_ui(webuiport)
+        if webui_process:
+            nni_config.set_config('webuiPid', webui_process.pid)
+            print_normal('Successfully started Web UI!')
 
     # start a new experiment
     print_normal('Starting experiment...')
@@ -274,25 +284,12 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
         try:
             cmds = ['pkill', '-P', str(rest_process.pid)]
             call(cmds)
+            cmds = ['pkill', '-P', str(webui_process.pid)]
+            call(cmds)
         except Exception:
-            raise Exception(ERROR_INFO % 'Rest server stopped!')
+            raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(0)
-
-    #start webui
-    print_normal('Checking web ui...')
-    if check_web_ui():
-        print_error('{0} {1}'.format(' '.join(nni_config.get_config('webuiUrl')),'is being used, please stop it first!'))
-        print_normal('You can use \'nnictl webui stop\' to stop old web ui process...')
-    else:
-        print_normal('Starting web ui...')
-        webui_process = start_web_ui(webuiport)
-        if webui_process:
-            nni_config.set_config('webuiPid', webui_process.pid)
-            print_normal('Starting web ui success!')
-            print_normal('{0} {1}'.format('Web UI url:', '   '.join(nni_config.get_config('webuiUrl'))))
-
-    print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, REST_PORT))
-
+    print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, REST_PORT, '   '.join(nni_config.get_config('webuiUrl'))))
 
 def resume_experiment(args):
     '''resume an experiment'''
