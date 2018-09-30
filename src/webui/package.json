@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "antd": "^3.8.1",
+    "antd": "^3.9.3",
     "axios": "^0.18.0",
     "babel-polyfill": "^6.26.0",
     "echarts": "^4.1.0",
