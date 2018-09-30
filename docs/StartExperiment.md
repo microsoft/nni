@@ -8,7 +8,7 @@ There are few steps to start an new experiment of nni, here are the  process.
 The first step to start an experiment is to check whether the environment is ready, nnictl will check if there is an old experiment running or the port of restfurl server is occupied.
 NNICTL will also validate the content of config yaml file, to ensure the experiment config is in correct format.
 
-### 2.2 Check restful server
+### 2.2 Start restful server
 After check environment, nnictl will start an restful server process to manage nni experiment, the devault port is 51188.
 
 ### 2.3 Check restful server
