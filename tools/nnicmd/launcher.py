@@ -114,6 +114,8 @@ def set_pai_config(experiment_config, port):
     if not response or not response.status_code == 200:
         if response is not None:
             err_message = response.text
+            with open(STDERR_FULL_PATH, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
 
     #set trial_config
@@ -128,6 +130,8 @@ def set_experiment(experiment_config, mode, port):
     request_data['maxExecDuration'] = experiment_config['maxExecDuration']
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
     request_data['searchSpace'] = experiment_config.get('searchSpace')
+    if experiment_config.get('multiPhase'):
+        request_data['multiPhase'] = experiment_config.get('multiPhase')
     request_data['tuner'] = experiment_config['tuner']
     if 'assessor' in experiment_config:
         request_data['assessor'] = experiment_config['assessor']
