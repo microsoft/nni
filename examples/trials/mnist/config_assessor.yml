@@ -9,7 +9,8 @@ searchSpacePath: ~/nni/examples/trials/mnist/search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #choice: TPE, Random, Anneal, Evolution,
+  #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: TPE
   classArgs:
     #choice: maximize, minimize
