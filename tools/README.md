@@ -27,11 +27,11 @@ python >= 3.5
     
 2. Add nnictl to your PATH system environment variable.   
   
-  * You could use `export` command to set PATH variable temporary.
+    * You could use `export` command to set PATH variable temporary.
   
           export PATH={your nnictl path}:$PATH  
 
-  * Or you could edit your `/etc/profile` file.
+    * Or you could edit your `/etc/profile` file.
           
           1.sudo vim /etc/profile
           
