@@ -10,6 +10,7 @@ searchSpacePath: search_space.json
 useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: BatchTuner
   classArgs:
     #choice: maximize, minimize
