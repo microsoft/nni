@@ -3,7 +3,7 @@ experimentName: example_pytorch_cifar10
 trialConcurrency: 1
 maxExecDuration: 100h
 maxTrialNum: 10
-#choice: local, remote
+#choice: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: search_space.json
 #choice: true, false
