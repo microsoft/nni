@@ -64,17 +64,20 @@ def stop_experiment(args):
         stop_web_ui()
         return
     running, _ = check_rest_server_quick(rest_port)
+    stop_rest_result = True
     if running:
         response = rest_delete(experiment_url(rest_port), 20)
         if not response or not check_response(response):
             print_error('Stop experiment failed!')
+            stop_rest_result = False
     #sleep to wait rest handler done
     time.sleep(3)
     rest_pid = nni_config.get_config('restServerPid')
     cmds = ['pkill', '-P', str(rest_pid)]
     call(cmds)
     stop_web_ui()
-    print_normal('Stop experiment success!')
+    if stop_rest_result:
+        print_normal('Stop experiment success!')
 
 def trial_ls(args):
     '''List trial'''
