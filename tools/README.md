@@ -9,24 +9,23 @@ python >= 3.5
 
 ## Installation
 
- 1.Enter tools directory  
+ 1. Enter tools directory  
  
- 2.Use pip3 to install packages
- 
-  * Install for current user:
+ 2. Use pip3 to install packages
+    * Install for current user:
 
           pip3 install --user -e .
 
-  * Install for all users:
+    * Install for all users:
 
           pip3 install -e .
 
  
- 3.Change the mode of nnictl file 
+1. Change the mode of nnictl file 
    
     chmod +x ./nnictl
     
-4.Add nnictl to your PATH system environment variable.   
+2. Add nnictl to your PATH system environment variable.   
   
   * You could use `export` command to set PATH variable temporary.
   
