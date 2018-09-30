@@ -191,6 +191,8 @@ def launch_experiment(args, experiment_config, mode, webuiport, experiment_id=No
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
         path = os.path.join(tempfile.gettempdir(), 'nni', 'annotation')
+        if not os.path.isdir(path):
+            os.makedirs(path)
         path = tempfile.mkdtemp(dir=path)
         code_dir = expand_annotations(experiment_config['trial']['codeDir'], path)
         experiment_config['trial']['codeDir'] = code_dir
