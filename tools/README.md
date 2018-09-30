@@ -1,12 +1,14 @@
-##NNI CTL
+## NNI CTL
 The NNI CTL module is used to control Neural Network Intelligence, including start a new experiment, stop an experiment and update an experiment etc.  
-##Environment
+## Environment
+
 ```
 Ubuntu 16.04 or other Linux OS
 python >= 3.5
 ```
 
-##Installation
+## Installation
+
  1.Enter tools directory  
  
  2.Use pip3 to install packages
@@ -43,7 +45,8 @@ python >= 3.5
           3.source /etc/profile 
           
      
-##To start using NNI CTL
+## To start using NNI CTL
+
 please reference to the [NNI CTL document].
 
 
