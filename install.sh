@@ -1,7 +1,3 @@
 #!/bin/bash
-make install-dependencies
-make build
-make dev-install
-make install-examples
-make update-bash-config
+make easy-install
 source ~/.bashrc

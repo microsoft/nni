@@ -203,21 +203,21 @@ install-dependencies: $(NODE_TARBALL) $(YARN_TARBALL) $(SERVE_TARBALL)
 .PHONY: install-python-modules
 install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	cd src/sdk/pynni && python3 setup.py install $(PIP_MODE)
+	cd src/sdk/pynni && $(PIP_INSTALL) $(PIP_MODE) .
 	
 	#$(_INFO) Installing nnictl $(_END)
-	cd tools && python3 setup.py install $(PIP_MODE)
+	cd tools && $(PIP_INSTALL) $(PIP_MODE) .
 
 .PHONY: install-node-modules
 install-node-modules:
 	mkdir -p $(INSTALL_PREFIX)/nni
 	
 	#$(_INFO) Installing NNI Manager $(_END)
-	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
-	cp -rT src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
+	cp -rT ${PWD}/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
+	cp -rT ${PWD}/src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
 	
 	#$(_INFO) Installing Web UI $(_END)
-	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/webui
+	cp -rT ${PWD}/src/webui/build $(INSTALL_PREFIX)/nni/webui
 
 
 .PHONY: install-dev-modules
@@ -231,11 +231,11 @@ install-dev-modules:
 	mkdir -p $(INSTALL_PREFIX)/nni
 	
 	#$(_INFO) Installing NNI Manager $(_END)
-	ln -sf $(PWD)/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
-	ln -sf $(PWD)/src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
+	ln -sf ${PWD}/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
+	ln -sf ${PWD}/src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
 	
 	#$(_INFO) Installing Web UI $(_END)
-	ln -sf $(PWD)/src/webui/build $(INSTALL_PREFIX)/nni/webui
+	ln -sf ${PWD}/src/webui/build $(INSTALL_PREFIX)/nni/webui
 
 
 .PHONY: install-scripts
