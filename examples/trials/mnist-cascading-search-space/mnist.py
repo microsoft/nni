@@ -19,7 +19,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 import nni
 
 
-logger = logging.getLogger('mnist_iterative_search_space')
+logger = logging.getLogger('mnist_cascading_search_space')
 FLAGS = None
 
 class MnistNetwork(object):
@@ -35,7 +35,7 @@ class MnistNetwork(object):
 
     def is_expand_dim(self, input):
         # input is a tensor
-        shape = len(input.get_shape().as_list())  # The length of the tensor
+        shape = len(input.get_shape().as_list())
         if shape < 4:
             return True
         return False
@@ -43,7 +43,7 @@ class MnistNetwork(object):
 
     def is_flatten(self, input):
         # input is a tensor
-        shape = len(input.get_shape().as_list())  # The length of the tensor
+        shape = len(input.get_shape().as_list())
         if shape > 2:
             return True
         return False
@@ -115,7 +115,7 @@ def main(params):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(params['batch_num']):
-            batch = mnist.train.next_batch(params['batch_num'])
+            batch = mnist.train.next_batch(params['batch_size'])
             mnist_network.train_step.run(feed_dict={mnist_network.x: batch[0], mnist_network.y: batch[1]})
         
             if i % 100 == 0:
@@ -126,11 +126,12 @@ def main(params):
         test_acc = mnist_network.accuracy.eval(feed_dict={
             mnist_network.x: mnist.test.images, mnist_network.y: mnist.test.labels})
         
-        #nni.report_final_result(test_acc)
+        nni.report_final_result(test_acc)
 
 def generate_defualt_params():
     params = {'data_dir': '/tmp/tensorflow/mnist/input_data',
-              'batch_num': 1000}
+              'batch_num': 1000,
+              'batch_size': 200}
     return params
 
 
@@ -149,13 +150,7 @@ if __name__ == '__main__':
     try:
         # get parameters form tuner
         data = nni.get_parameters()
-        print(data)
-
-        '''
-        #RCV_PARAMS = None
-        with open('./sample.json') as file:
-            data = json.load(file)
-        '''
+        logger.debug(data)
 
         RCV_PARAMS = parse_init_json(data)
         logger.debug(RCV_PARAMS)

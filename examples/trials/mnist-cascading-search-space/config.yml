@@ -1,11 +1,11 @@
 authorName: default
-experimentName: mnist-iterative-search-space
-trialConcurrency: 10
+experimentName: mnist-cascading-search-space
+trialConcurrency: 2
 maxExecDuration: 1h
 maxTrialNum: 100
 #choice: local, remote
 trainingServicePlatform: local
-searchSpacePath: /home/xuehui/xuehui_repo/nni/examples/trials/mnist-iterative-search-space/search_space.json
+searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
@@ -16,5 +16,5 @@ tuner:
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
-  codeDir: /home/xuehui/xuehui_repo/nni/examples/trials/mnist-iterative-search-space
+  codeDir: .
   gpuNum: 0
