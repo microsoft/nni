@@ -12,6 +12,7 @@ require('echarts/lib/chart/scatter');
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
 require('../style/trialStatus.css');
+require('../style/logPath.css');
 echarts.registerTheme('my_theme', {
     color: '#3c8dbc'
 });
@@ -19,6 +20,7 @@ echarts.registerTheme('my_theme', {
 interface DescObj {
     parameters: Object;
     logPath?: string;
+    isLink?: boolean;
 }
 
 interface TableObj {
@@ -84,22 +86,17 @@ class TrialStatus extends React.Component<{}, TabState> {
     showIntermediateModal = (id: string) => {
 
         axios(`${MANAGER_IP}/metric-data/${id}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json;charset=utf-8'
-            }
+            method: 'GET'
         })
             .then(res => {
                 if (res.status === 200) {
                     const intermediateArr: number[] = [];
-                    const xinter: number[] = [];
                     Object.keys(res.data).map(item => {
                         intermediateArr.push(parseFloat(res.data[item].data));
-                        xinter.push(res.data[item].sequence);
                     });
                     if (this._isMounted) {
                         this.setState({
-                            intermediateOption: this.intermediateGraphOption(intermediateArr, id, xinter)
+                            intermediateOption: this.intermediateGraphOption(intermediateArr, id)
                         });
                     }
                 }
@@ -131,7 +128,7 @@ class TrialStatus extends React.Component<{}, TabState> {
             },
             title: {
                 left: 'center',
-                text: 'Running Trial',
+                text: 'Trial Duration',
                 textStyle: {
                     fontSize: 18,
                     color: '#333'
@@ -221,6 +218,11 @@ class TrialStatus extends React.Component<{}, TabState> {
                     const trialTable: Array<TableObj> = [];
                     Object.keys(trialJobs).map(item => {
                         // only succeeded trials have finalMetricData
+                        let desc: DescObj = {
+                            parameters: {}
+                        };
+                        let acc = 0;
+                        let duration = 0;
                         const id = trialJobs[item].id !== undefined
                             ? trialJobs[item].id
                             : '';
@@ -228,25 +230,24 @@ class TrialStatus extends React.Component<{}, TabState> {
                             ? trialJobs[item].status
                             : '';
                         const startTime = trialJobs[item].startTime !== undefined
-                            ? new Date(trialJobs[item].startTime).toLocaleString()
+                            ? new Date(trialJobs[item].startTime).toLocaleString('en-US')
                             : '';
                         const endTime = trialJobs[item].endTime !== undefined
-                            ? new Date(trialJobs[item].endTime).toLocaleString()
+                            ? new Date(trialJobs[item].endTime).toLocaleString('en-US')
                             : '';
-                        let desc: DescObj = {
-                            parameters: {}
-                        };
                         if (trialJobs[item].hyperParameters !== undefined) {
                             desc.parameters = JSON.parse(trialJobs[item].hyperParameters).parameters;
                         }
                         if (trialJobs[item].logPath !== undefined) {
                             desc.logPath = trialJobs[item].logPath;
+                            const isHyperLink = /^http/gi.test(trialJobs[item].logPath);
+                            if (isHyperLink) {
+                                desc.isLink = true;
+                            }
                         }
-                        let acc = 0;
                         if (trialJobs[item].finalMetricData !== undefined) {
                             acc = parseFloat(trialJobs[item].finalMetricData.data);
                         }
-                        let duration = 0;
                         if (startTime !== '' && endTime !== '') {
                             duration = (trialJobs[item].endTime - trialJobs[item].startTime) / 1000;
                         } else if (startTime !== '' && endTime === '') {
@@ -254,7 +255,6 @@ class TrialStatus extends React.Component<{}, TabState> {
                         } else {
                             duration = 0;
                         }
-
                         trialTable.push({
                             key: trialTable.length,
                             id: id,
@@ -267,9 +267,9 @@ class TrialStatus extends React.Component<{}, TabState> {
                         });
                     });
                     if (this._isMounted) {
-                        this.setState({
+                        this.setState(() => ({
                             tableData: trialTable
-                        });
+                        }));
                     }
                 }
             });
@@ -292,6 +292,11 @@ class TrialStatus extends React.Component<{}, TabState> {
                 } else {
                     message.error('fail to cancel the job');
                 }
+            })
+            .catch(error => {
+                if (error.response.status === 500) {
+                    message.error('500 error, fail to cancel the job');
+                }
             });
     }
 
@@ -306,14 +311,27 @@ class TrialStatus extends React.Component<{}, TabState> {
         browserHistory.push(path);
     }
 
-    intermediateGraphOption = (intermediateArr: number[], id: string, xinter: number[]) => {
+    intermediateGraphOption = (intermediateArr: number[], id: string) => {
+        const sequence: number[] = [];
+        const lengthInter = intermediateArr.length;
+        for (let i = 1; i <= lengthInter; i++) {
+            sequence.push(i);
+        }
         return {
+            title: {
+                text: id,
+                left: 'center',
+                textStyle: {
+                    fontSize: 16,
+                    color: '#333',
+                }
+            },
             tooltip: {
                 trigger: 'item'
             },
             xAxis: {
                 name: 'Trial',
-                data: xinter
+                data: sequence
             },
             yAxis: {
                 name: 'Accuracy',
@@ -376,7 +394,7 @@ class TrialStatus extends React.Component<{}, TabState> {
             dataIndex: 'start',
             key: 'start',
             width: '15%',
-            sorter: (a: TableObj, b: TableObj): number => a.start.localeCompare(b.start)
+            sorter: (a: TableObj, b: TableObj): number => (Date.parse(a.start) - Date.parse(b.start))
         }, {
             title: 'End',
             dataIndex: 'end',
@@ -460,14 +478,35 @@ class TrialStatus extends React.Component<{}, TabState> {
         ];
 
         const openRow = (record: TableObj) => {
+            const parametersRow = {
+                parameters: record.description.parameters
+            };
+            let isLogLink: boolean = false;
+            const logPathRow = record.description.logPath;
+            if (record.description.isLink !== undefined) {
+                isLogLink = true;
+            }
             return (
                 <pre className="hyperpar">
                     <JSONTree
                         hideRoot={true}
                         shouldExpandNode={() => true}  // default expandNode
                         getItemString={() => (<span />)}  // remove the {} items
-                        data={record.description}
+                        data={parametersRow}
                     />
+                    {
+                        isLogLink
+                            ?
+                            <div className="logpath">
+                                <span className="logName">logPath: </span>
+                                <a className="logContent logHref" href={logPathRow} target="_blank">{logPathRow}</a>
+                            </div>
+                            :
+                            <div className="logpath">
+                                <span className="logName">logPath: </span>
+                                <span className="logContent">{logPathRow}</span>
+                            </div>
+                    }
                     <Button
                         type="primary"
                         className="tableButton"
@@ -490,10 +529,9 @@ class TrialStatus extends React.Component<{}, TabState> {
                     columns={columns}
                     expandedRowRender={openRow}
                     dataSource={tableData}
-                    pagination={{ pageSize: 20 }}
+                    pagination={{ pageSize: 10 }}
                     className="tables"
                     bordered={true}
-                    scroll={{ x: '100%', y: window.innerHeight * 0.78 }}
                 />
                 <Modal
                     title="Intermediate Result"

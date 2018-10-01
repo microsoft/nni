@@ -43,8 +43,8 @@ import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { GPUScheduler } from './gpuScheduler';
 import { MetricsCollector } from './metricsCollector';
 import {
-    HOSTJOBSHELLFORMAT, RemoteCommandResult, RemoteMachineMeta,
-    REMOTEMACHINERUNSHELLFORMAT, RemoteMachineScheduleInfo, RemoteMachineScheduleResult,
+    HOST_JOB_SHELL_FORMAT, RemoteCommandResult, RemoteMachineMeta,
+    REMOTEMACHINE_RUN_SHELL_FORMAT, RemoteMachineScheduleInfo, RemoteMachineScheduleResult,
     RemoteMachineTrialJobDetail, ScheduleResultType
 } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
@@ -427,7 +427,7 @@ class RemoteMachineTrainingService implements TrainingService {
         // RemoteMachineRunShellFormat is the run shell format string,
         // See definition in remoteMachineData.ts
         const runScriptContent: string = String.Format(
-            REMOTEMACHINERUNSHELLFORMAT,
+            REMOTEMACHINE_RUN_SHELL_FORMAT,
             trialWorkingFolder,
             trialJobId,
             path.join(trialWorkingFolder, '.nni', 'jobpid'),
@@ -470,7 +470,7 @@ class RemoteMachineTrainingService implements TrainingService {
         await cpp.exec(`mkdir -p ${localDir}`);
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${remoteDir}`, sshClient);
         const runScriptContent: string = String.Format(
-            HOSTJOBSHELLFORMAT, remoteDir, path.join(remoteDir, 'jobpid'), form.cmd, path.join(remoteDir, 'code')
+            HOST_JOB_SHELL_FORMAT, remoteDir, path.join(remoteDir, 'jobpid'), form.cmd, path.join(remoteDir, 'code')
         );
         await fs.promises.writeFile(path.join(localDir, 'run.sh'), runScriptContent, { encoding: 'utf8' });
         await SSHClientUtility.copyFileToRemote(
