@@ -21,7 +21,7 @@
 import json
 import yaml
 import psutil
-from .constants import ERROR_INFO, NORMAL_INFO
+from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO, COLOR_RED_FORMAT, COLOR_YELLOW_FORMAT
 
 def get_yml_content(file_path):
     '''Load yaml file content'''
@@ -43,11 +43,15 @@ def get_json_content(file_path):
 
 def print_error(content):
     '''Print error information to screen'''
-    print(ERROR_INFO % content)
+    print(COLOR_RED_FORMAT % (ERROR_INFO % content))
 
 def print_normal(content):
     '''Print error information to screen'''
     print(NORMAL_INFO % content)
+
+def print_warning(content):
+    '''Print warning information to screen'''
+    print(COLOR_YELLOW_FORMAT % (WARNING_INFO % content))
 
 def detect_process(pid):
     '''Detect if a process is alive'''

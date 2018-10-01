@@ -1,9 +1,9 @@
 # Release 0.2.0 - 9/29/2018
 ## Major Features
-   * Support for [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service 
+   * Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
       * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
       * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
-   * Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner
+   * Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](../src/sdk/pynni/nni/README.md) for instructions about how to use SMAC tuner)
       * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO to handle categorical parameters. The SMAC supported by NNI is a wrapper on [SMAC3](https://github.com/automl/SMAC3)
    * Support NNI installation on [conda](https://conda.io/docs/index.html) and python virtual environment
    * Others

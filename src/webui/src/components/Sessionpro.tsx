@@ -98,10 +98,10 @@ class Sessionpro extends React.Component<{}, SessionState> {
                     let sessionData = res.data;
                     let tunerAsstemp = [];
                     let trialPro = [];
-                    const startExper = new Date(sessionData.startTime).toLocaleString();
+                    const startExper = new Date(sessionData.startTime).toLocaleString('en-US');
                     let experEndStr: string;
                     if (sessionData.endTime !== undefined) {
-                        experEndStr = new Date(sessionData.endTime).toLocaleString();
+                        experEndStr = new Date(sessionData.endTime).toLocaleString('en-US');
                     } else {
                         experEndStr = 'not over';
                     }
@@ -156,8 +156,8 @@ class Sessionpro extends React.Component<{}, SessionState> {
                             const desJobDetail: Parameters = {
                                 parameters: {}
                             };
-                            const startTime = new Date(tableData[item].startTime).toLocaleString();
-                            const endTime = new Date(tableData[item].endTime).toLocaleString();
+                            const startTime = new Date(tableData[item].startTime).toLocaleString('en-US');
+                            const endTime = new Date(tableData[item].endTime).toLocaleString('en-US');
                             const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
                             let acc;
                             if (tableData[item].finalMetricData) {
