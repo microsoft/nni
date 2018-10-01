@@ -76,7 +76,7 @@ class SearchSpaceGenerator(ast.NodeVisitor):
         else:
             # generate the missing name automatically
             assert len(node.args) > 0, 'Smart parameter expression has no argument'
-            name = '#' + str(node.args[-1].lineno)
+            name = '__line' + str(node.args[-1].lineno)
             specified_name = False
 
         if func in ('choice', 'function_choice'):

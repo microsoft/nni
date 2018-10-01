@@ -49,8 +49,8 @@ def generate_pcs(nni_search_space_content):
                         if search_space[key]['_type'] == 'choice':
                             pcs_fd.write('%s categorical {%s} [%s]\n' % (
                                 key, 
-                                str(search_space[key]['_value'])[1:-1], 
-                                search_space[key]['_value'][0]))
+                                json.dumps(search_space[key]['_value'])[1:-1], 
+                                json.dumps(search_space[key]['_value'][0])))
                         elif search_space[key]['_type'] == 'randint':
                             # TODO: support lower bound in randint
                             pcs_fd.write('%s integer [0, %d] [%d]\n' % (
@@ -58,15 +58,15 @@ def generate_pcs(nni_search_space_content):
                                 search_space[key]['_value'][0], 
                                 search_space[key]['_value'][0]))
                         elif search_space[key]['_type'] == 'uniform':
-                            pcs_fd.write('%s real %s [%f]\n' % (
+                            pcs_fd.write('%s real %s [%s]\n' % (
                                 key, 
-                                search_space[key]['_value'], 
-                                search_space[key]['_value'][0]))
+                                json.dumps(search_space[key]['_value']),
+                                json.dumps(search_space[key]['_value'][0])))
                         elif search_space[key]['_type'] == 'loguniform':
-                            pcs_fd.write('%s real %s [%f] log\n' % (
+                            pcs_fd.write('%s real %s [%s] log\n' % (
                                 key, 
-                                search_space[key]['_value'], 
-                                search_space[key]['_value'][0]))
+                                json.dumps(search_space[key]['_value']),
+                                json.dumps(search_space[key]['_value'][0])))
                         elif search_space[key]['_type'] == 'quniform' \
                             and search_space[key]['_value'][2] == 1:
                             pcs_fd.write('%s integer [%d, %d] [%d]\n' % (

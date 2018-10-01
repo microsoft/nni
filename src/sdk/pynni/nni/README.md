@@ -1,12 +1,12 @@
 # How to use Tuner that NNI supports?
 
-For now, NNI could support tuner algorithms as following:
+For now, NNI has supported the following tuner algorithms. Note that NNI installation only installs a subset of those algorithms, other algorithms should be installed through `nnictl package install` before you use them. For example, for SMAC the installation command is `nnictl package install --name=SMAC`.
 
  - TPE
  - Random Search
  - Anneal
  - Naive Evolution
- - SMAC
+ - SMAC (to install through `nnictl`)
  - ENAS (ongoing)
  - Batch (ongoing)
 
