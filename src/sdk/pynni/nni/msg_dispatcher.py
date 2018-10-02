@@ -116,11 +116,9 @@ class MsgDispatcher(MsgDispatcherBase):
             
             if isinstance(data['value'], float) or isinstance(data['value'], int):
                 value = data['value']
-
-            if isinstance(data['value'], dict) and 'default' in data['value']:
+            elif isinstance(data['value'], dict) and 'default' in data['value']:
                 value = data['value']['default']
             else:
-                logger.debug(data)
                 raise RuntimeError('The final result from Trial is dict and has no default key in Tuner.')  
             
             if id_ in _customized_parameter_ids:
