@@ -45,7 +45,7 @@ _nnictl()
 {
     if [[ ${#COMP_WORDS[@]} -eq 2 ]]; then
         # completing frst argument from __nnictl_cmds
-        COMPREPLY=($(compgen -W "${__nnictl_cmds}" -- "${COMP_WORDS[1]}"))
+        COMPREPLY=($(compgen -W "$__nnictl_cmds" -- "${COMP_WORDS[1]}"))
 
     elif [[ ${#COMP_WORDS[@]} -eq 3 ]]; then
         # completing second argument from __nnictl_${FirstArg}_cmds
