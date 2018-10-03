@@ -211,6 +211,7 @@ install-python-modules:
 .PHONY: install-node-modules
 install-node-modules:
 	mkdir -p $(INSTALL_PREFIX)/nni
+	rm -rf ${PWD}/src/nni_manager/dist/node_modules
 	
 	#$(_INFO) Installing NNI Manager $(_END)
 	cp -rT ${PWD}/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
