@@ -230,10 +230,10 @@ class TrialStatus extends React.Component<{}, TabState> {
                             ? trialJobs[item].status
                             : '';
                         const startTime = trialJobs[item].startTime !== undefined
-                            ? new Date(trialJobs[item].startTime).toLocaleString()
+                            ? new Date(trialJobs[item].startTime).toLocaleString('en-US')
                             : '';
                         const endTime = trialJobs[item].endTime !== undefined
-                            ? new Date(trialJobs[item].endTime).toLocaleString()
+                            ? new Date(trialJobs[item].endTime).toLocaleString('en-US')
                             : '';
                         if (trialJobs[item].hyperParameters !== undefined) {
                             desc.parameters = JSON.parse(trialJobs[item].hyperParameters).parameters;
@@ -394,7 +394,7 @@ class TrialStatus extends React.Component<{}, TabState> {
             dataIndex: 'start',
             key: 'start',
             width: '15%',
-            sorter: (a: TableObj, b: TableObj): number => a.start.localeCompare(b.start)
+            sorter: (a: TableObj, b: TableObj): number => (Date.parse(a.start) - Date.parse(b.start))
         }, {
             title: 'End',
             dataIndex: 'end',
