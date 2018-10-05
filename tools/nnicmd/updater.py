@@ -51,6 +51,8 @@ def get_query_type(key):
         return '?update_type=MAX_EXEC_DURATION'
     if key == 'searchSpace':
         return '?update_type=SEARCH_SPACE'
+    if key == 'maxTrialNum':
+        return '?update_type=MAX_TRIAL_NUM'
 
 def update_experiment_profile(key, value):
     '''call restful server to update experiment profile'''
@@ -91,3 +93,9 @@ def update_duration(args):
     else:
         print('ERROR: update %s failed!' % 'duration')
 
+def update_trialnum(args):
+    validate_digit(args.value, 1, 999999999)
+    if update_experiment_profile('maxTrialNum', int(args.value)):
+        print('INFO: update %s success!' % 'trialnum')
+    else:
+        print('ERROR: update %s failed!' % 'trialnum')

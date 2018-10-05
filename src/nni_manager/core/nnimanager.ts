@@ -90,6 +90,9 @@ class NNIManager implements Manager {
             case 'SEARCH_SPACE':
                 this.updateSearchSpace(experimentProfile.params.searchSpace);
                 break;
+            case 'MAX_TRIAL_NUM':
+                this.updateMaxTrialNum(experimentProfile.params.maxTrialNum);
+                break;
             default:
                 throw new Error('Error: unrecognized updateType');
         }
@@ -273,6 +276,12 @@ class NNIManager implements Manager {
         }
         this.dispatcher.sendCommand(UPDATE_SEARCH_SPACE, searchSpace);
         this.experimentProfile.params.searchSpace = searchSpace;
+
+        return;
+    }
+
+    private updateMaxTrialNum(maxTrialNum: number): void {
+        this.experimentProfile.params.maxTrialNum = maxTrialNum;
 
         return;
     }

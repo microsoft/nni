@@ -21,7 +21,7 @@
 
 import argparse
 from .launcher import create_experiment, resume_experiment
-from .updater import update_searchspace, update_concurrency, update_duration
+from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum
 from .nnictl_utils import *
 from .package_management import *
 
@@ -62,6 +62,9 @@ def parse_args():
     parser_updater_searchspace = parser_updater_subparsers.add_parser('duration', help='update duration')
     parser_updater_searchspace.add_argument('--value', '-v', required=True)
     parser_updater_searchspace.set_defaults(func=update_duration)
+    parser_updater_searchspace = parser_updater_subparsers.add_parser('trialnum', help='update maxtrialnum')
+    parser_updater_searchspace.add_argument('--value', '-v', required=True)
+    parser_updater_searchspace.set_defaults(func=update_trialnum)
 
     #parse stop command
     parser_stop = subparsers.add_parser('stop', help='stop the experiment')
