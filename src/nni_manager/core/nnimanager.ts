@@ -48,7 +48,7 @@ class NNIManager implements Manager {
     private trainingService: TrainingService;
     private dispatcher: IpcInterface | undefined;
     private currSubmittedTrialNum: number; // need to be recovered
-    private trialConcurrencyReduction: number;
+    private trialConcurrencyChange: number; // >0: increase, <0: decrease
     private customizedTrials: string[]; // need to be recovered
     private log: Logger;
     private dataStore: DataStore;
@@ -61,7 +61,7 @@ class NNIManager implements Manager {
 
     constructor() {
         this.currSubmittedTrialNum = 0;
-        this.trialConcurrencyReduction = 0;
+        this.trialConcurrencyChange = 0;
         this.customizedTrials = [];
         this.trainingService = component.get(TrainingService);
         assert(this.trainingService);
@@ -266,6 +266,8 @@ class NNIManager implements Manager {
             // we assume trialConcurrency >= 0, which is checked by restserver
             this.trialConcurrencyReduction += (this.experimentProfile.params.trialConcurrency - trialConcurrency);
         }
+        // we assume trialConcurrency >= 0, which is checked by restserver
+        this.trialConcurrencyChange += (trialConcurrency - this.experimentProfile.params.trialConcurrency);
         this.experimentProfile.params.trialConcurrency = trialConcurrency;
 
         return;
@@ -383,7 +385,13 @@ class NNIManager implements Manager {
                 break;
             }
             const finishedTrialJobNum = await this.requestTrialJobsStatus();
-            for (let i: number = 0; i < finishedTrialJobNum; i++) {
+            const requestTrialNum = this.trialConcurrencyChange + finishedTrialJobNum;
+            if (requestTrialNum >= 0) {
+                this.trialConcurrencyChange = 0;
+            } else {
+                this.trialConcurrencyChange = requestTrialNum;
+            }
+            for (let i: number = 0; i < requestTrialNum; i++) {
                 // ask tuner for more trials
                 if (this.customizedTrials.length > 0) {
                     const hyperParams: string | undefined = this.customizedTrials.shift();
