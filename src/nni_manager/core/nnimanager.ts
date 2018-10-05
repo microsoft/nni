@@ -40,7 +40,6 @@ import {
     REQUEST_TRIAL_JOBS, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
-import { TrialJobMaintainerEvent, TrialJobs } from './trialJobs';
 
 /**
  * NNIManager
@@ -48,7 +47,6 @@ import { TrialJobMaintainerEvent, TrialJobs } from './trialJobs';
 class NNIManager implements Manager {
     private trainingService: TrainingService;
     private dispatcher: IpcInterface | undefined;
-    private trialJobsMaintainer: TrialJobs | undefined;
     private currSubmittedTrialNum: number; // need to be recovered
     private trialConcurrencyReduction: number;
     private customizedTrials: string[]; // need to be recovered
@@ -57,6 +55,9 @@ class NNIManager implements Manager {
     private experimentProfile: ExperimentProfile;
     private dispatcherPid: number;
     private status: NNIManagerStatus;
+    private waitingTrials: string[];
+    private trialJobs: Map<string, TrialJobDetail>;
+    private suspendDuration: number;
 
     constructor() {
         this.currSubmittedTrialNum = 0;
@@ -65,6 +66,9 @@ class NNIManager implements Manager {
         this.trainingService = component.get(TrainingService);
         assert(this.trainingService);
         this.dispatcherPid = 0;
+        this.waitingTrials = [];
+        this.trialJobs = new Map<string, TrialJobDetail>();
+        this.suspendDuration = 0;
 
         this.log = getLogger();
         this.dataStore = component.get(DataStore);
@@ -195,13 +199,7 @@ class NNIManager implements Manager {
 
     public stopExperiment(): Promise<void> {
         this.status.status = 'STOPPING';
-        if (this.trialJobsMaintainer !== undefined) {
-            this.trialJobsMaintainer.setStopLoop();
-
-            return Promise.resolve();
-        } else {
-            return Promise.reject(new Error('Error: undefined trialJobsMaintainer'));
-        }
+        return Promise.resolve();
     }
 
     public async getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]> {
@@ -274,9 +272,6 @@ class NNIManager implements Manager {
     }
 
     private updateMaxExecDuration(duration: number): void {
-        if (this.trialJobsMaintainer !== undefined) {
-            this.trialJobsMaintainer.updateMaxExecDuration(duration);
-        }
         this.experimentProfile.params.maxExecDuration = duration;
 
         return;
@@ -334,9 +329,108 @@ class NNIManager implements Manager {
         const execDuration: number = this.experimentProfile.execDuration;
         for (; ;) {
             await delay(1000 * 60 * 10); // 10 minutes
-            this.experimentProfile.execDuration = execDuration + (Date.now() - startTime) / 1000;
+            this.experimentProfile.execDuration = execDuration + (Date.now() - startTime) / 1000 - this.suspendDuration;
             await this.storeExperimentProfile();
         }
+    }
+
+    private async requestTrialJobsStatus(): Promise<number> {
+        const deferred: Deferred<number> = new Deferred<number>();
+        let finishedTrialJobNum: number = 0;
+        for (const trialJobId of Array.from(this.trialJobs.keys())) {
+            const trialJobDetail: TrialJobDetail = await this.trainingService.getTrialJob(trialJobId);
+            const oldTrialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+            assert(oldTrialJobDetail);
+            if (oldTrialJobDetail !== undefined &&  oldTrialJobDetail.status !== trialJobDetail.status) {
+                this.trialJobs.set(trialJobId, trialJobDetail);
+                await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail.url);
+            }
+            switch (trialJobDetail.status) {
+                case 'SUCCEEDED':
+                case 'USER_CANCELED':
+                    this.trialJobs.delete(trialJobId);
+                    finishedTrialJobNum++;
+                    break;
+                case 'FAILED':
+                case 'SYS_CANCELED':
+                    // In the current version, we do not retry
+                    // TO DO: push this job to queue for retry
+                    this.trialJobs.delete(trialJobId);
+                    finishedTrialJobNum++;
+                    break;
+                case 'WAITING':
+                case 'RUNNING':
+                case 'UNKNOWN':
+                    // Do nothing
+                    break;
+                default:
+                // TO DO: add warning in log
+            }
+        }
+        deferred.resolve(finishedTrialJobNum);
+
+        return deferred.promise;
+    }
+
+    private async manageTrials(): Promise<void> {
+        if (this.dispatcher === undefined) {
+            throw new Error('Error: tuner has not been setup');
+        }
+        const startTime: number = Date.now();
+        let suspendStartTime: number = 0;
+        for (; ;) {
+            if (this.status.status === 'STOPPING') {
+                break;
+            }
+            const finishedTrialJobNum = await this.requestTrialJobsStatus();
+            for (let i: number = 0; i < finishedTrialJobNum; i++) {
+                // ask tuner for more trials
+                if (this.customizedTrials.length > 0) {
+                    const hyperParams: string | undefined = this.customizedTrials.shift();
+                    this.dispatcher.sendCommand(ADD_CUSTOMIZED_TRIAL_JOB, hyperParams);
+                } else {
+                    this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, '1');
+                }
+            }
+            // check maxtrialnum and maxduration here
+            if ((Date.now() - startTime) / 1000 + this.experimentProfile.execDuration - this.suspendDuration 
+                > this.experimentProfile.params.maxExecDuration ||
+                this.currSubmittedTrialNum > this.experimentProfile.params.maxTrialNum) {
+                assert(this.status.status === 'EXPERIMENT_RUNNING' || this.status.status === 'SUSPENDED');
+                if (this.status.status === 'EXPERIMENT_RUNNING') {
+                    suspendStartTime = Date.now();
+                }
+                this.status.status = 'SUSPENDED';
+            } else {
+                if (this.status.status === 'SUSPENDED') {
+                    this.suspendDuration += (Date.now() - suspendStartTime) / 1000;
+                }
+                this.status.status = 'EXPERIMENT_RUNNING';
+                for (let i: number = this.trialJobs.size; i < this.experimentProfile.params.trialConcurrency; i++) {
+                    if (this.waitingTrials.length === 0 ||
+                        this.currSubmittedTrialNum === this.experimentProfile.params.maxTrialNum) {
+                        break;
+                    }
+                    const hyperParams: string | undefined = this.waitingTrials.shift();
+                    if (hyperParams === undefined) {
+                        throw new Error(`Error: invalid hyper-parameters for job submission: ${hyperParams}`);
+                    }
+                    this.currSubmittedTrialNum++;
+                    const trialJobAppForm: TrialJobApplicationForm = {
+                        jobType: 'TRIAL',
+                        hyperParameters: hyperParams
+                    };
+                    const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
+                    this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
+                    assert(trialJobDetail.status === 'WAITING');
+                    await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, hyperParams, trialJobDetail.url);
+                }
+            }
+            await delay(1000 * 5); // 5 seconds
+        }
+        this.log.info('Experiment done, cleaning up...');
+        await this.experimentDoneCleanUp();
+        this.log.info('Experiment done.');
     }
 
     private storeExperimentProfile(): Promise<void> {
@@ -346,12 +440,7 @@ class NNIManager implements Manager {
     }
 
     private async run(): Promise<void> {
-        this.trialJobsMaintainer = new TrialJobs(
-            this.trainingService,
-            this.experimentProfile.execDuration,
-            this.experimentProfile.params.maxExecDuration);
-
-        assert(this.dispatcher !== undefined && this.trialJobsMaintainer !== undefined);
+        assert(this.dispatcher !== undefined);
 
         this.addEventListeners();
 
@@ -360,22 +449,17 @@ class NNIManager implements Manager {
         await Promise.all([
             this.periodicallyUpdateExecDuration(),
             this.trainingService.run(),
-            this.trialJobsMaintainer.run()]);
+            //this.trialJobsMaintainer.run()]);
+            this.manageTrials()]);
     }
 
-     private addEventListeners(): void {
+    private addEventListeners(): void {
         // TO DO: cannot run this method more than once in one NNIManager instance
-        if (this.dispatcher === undefined || this.trialJobsMaintainer === undefined) {
+        if (this.dispatcher === undefined) {
             throw new Error('Error: tuner or job maintainer have not been setup');
         }
         this.trainingService.addTrialJobMetricListener((metric: TrialJobMetric) => {
             this.onTrialJobMetrics(metric).catch((err: Error) => {
-                this.criticalError(err);
-            });
-        });
-
-        this.trialJobsMaintainer.on(async (event: TrialJobMaintainerEvent, trialJobDetail: TrialJobDetail) => {
-            this.onTrialJobEvent(event, trialJobDetail).catch((err: Error) => {
                 this.criticalError(err);
             });
         });
@@ -409,7 +493,7 @@ class NNIManager implements Manager {
         this.dispatcher.sendCommand(REPORT_METRIC_DATA, metric.data);
     }
 
-    private async onTrialJobEvent(event: TrialJobMaintainerEvent, trialJobDetail: TrialJobDetail): Promise<void> {
+    /*private async onTrialJobEvent(event: TrialJobMaintainerEvent, trialJobDetail: TrialJobDetail): Promise<void> {
         if (trialJobDetail !== undefined) {
             this.log.debug(`Job event: ${event}, id: ${trialJobDetail.id}`);
         } else {
@@ -449,33 +533,17 @@ class NNIManager implements Manager {
             default:
                 throw new Error('Error: unrecognized event from trialJobsMaintainer');
         }
-    }
+    }*/
 
     private async onTunerCommand(commandType: string, content: string): Promise<void> {
         this.log.info(`Command from tuner: ${commandType}, ${content}`);
-        if (this.trialJobsMaintainer === undefined) {
-            throw new Error('Error: trialJobsMaintainer not initialized');
-        }
         switch (commandType) {
             case NEW_TRIAL_JOB:
-                if (this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum) {
-                    this.currSubmittedTrialNum++;
-                    const trialJobAppForm: TrialJobApplicationForm = {
-                        jobType: 'TRIAL',
-                        hyperParameters: content
-                    };
-                    const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
-                    this.trialJobsMaintainer.setTrialJob(trialJobDetail.id, Object.assign({}, trialJobDetail));
-                    // TO DO: to uncomment
-                    assert(trialJobDetail.status === 'WAITING');
-                    await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, content, trialJobDetail.url);
-                    if (this.currSubmittedTrialNum === this.experimentProfile.params.maxTrialNum) {
-                        this.trialJobsMaintainer.setNoMoreTrials();
-                    }
-                }
+                this.waitingTrials.push(content);
                 break;
             case NO_MORE_TRIAL_JOBS:
-                this.trialJobsMaintainer.setNoMoreTrials();
+                //this.trialJobsMaintainer.setNoMoreTrials();
+                // ignore this event for now
                 break;
             case KILL_TRIAL_JOB:
                 await this.trainingService.cancelTrialJob(JSON.parse(content));

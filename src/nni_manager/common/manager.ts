@@ -70,7 +70,7 @@ interface TrialJobStatistics {
 }
 
 interface NNIManagerStatus {
-    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED';
+    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'SUSPENDED';
     errors: string[];
 }
 
