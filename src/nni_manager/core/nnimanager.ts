@@ -332,7 +332,7 @@ class NNIManager implements Manager {
             const oldTrialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
             assert(oldTrialJobDetail);
             if (oldTrialJobDetail !== undefined && oldTrialJobDetail.status !== trialJobDetail.status) {
-                this.trialJobs.set(trialJobId, trialJobDetail);
+                this.trialJobs.set(trialJobId, Object.assign({}, trialJobDetail));
                 await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail.url);
             }
             switch (trialJobDetail.status) {
