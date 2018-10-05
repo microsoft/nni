@@ -253,19 +253,6 @@ class NNIManager implements Manager {
     }
 
     private updateTrialConcurrency(trialConcurrency: number): void {
-        // TO DO: this method can only be called after startExperiment/resumeExperiment
-        if (trialConcurrency > this.experimentProfile.params.trialConcurrency) {
-            if (this.dispatcher === undefined) {
-                throw new Error('Error: tuner has to be initialized');
-            }
-            this.dispatcher.sendCommand(
-                REQUEST_TRIAL_JOBS,
-                String(trialConcurrency - this.experimentProfile.params.trialConcurrency)
-            );
-        } else {
-            // we assume trialConcurrency >= 0, which is checked by restserver
-            this.trialConcurrencyReduction += (this.experimentProfile.params.trialConcurrency - trialConcurrency);
-        }
         // we assume trialConcurrency >= 0, which is checked by restserver
         this.trialConcurrencyChange += (trialConcurrency - this.experimentProfile.params.trialConcurrency);
         this.experimentProfile.params.trialConcurrency = trialConcurrency;
@@ -486,9 +473,6 @@ class NNIManager implements Manager {
         // TO DO: we should send INITIALIZE command to tuner if user's tuner needs to run init method in tuner
         this.log.debug(`Send tuner command: update search space: ${this.experimentProfile.params.searchSpace}`);
         this.dispatcher.sendCommand(UPDATE_SEARCH_SPACE, this.experimentProfile.params.searchSpace);
-        if (this.trialConcurrencyReduction !== 0) {
-            throw new Error('Error: cannot modify trialConcurrency before startExperiment');
-        }
         this.log.debug(`Send tuner command: ${this.experimentProfile.params.trialConcurrency}`);
         this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, String(this.experimentProfile.params.trialConcurrency));
     }
