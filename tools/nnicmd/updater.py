@@ -21,7 +21,7 @@
 
 import json
 import os
-from .rest_utils import rest_put, rest_get, check_rest_server_quick
+from .rest_utils import rest_put, rest_get, check_rest_server_quick, check_response
 from .url_utils import experiment_url
 from .config_utils import Config
 from .common_utils import get_json_content
@@ -51,18 +51,21 @@ def get_query_type(key):
         return '?update_type=MAX_EXEC_DURATION'
     if key == 'searchSpace':
         return '?update_type=SEARCH_SPACE'
+    if key == 'maxTrialNum':
+        return '?update_type=MAX_TRIAL_NUM'
 
 def update_experiment_profile(key, value):
     '''call restful server to update experiment profile'''
     nni_config = Config()
     rest_port = nni_config.get_config('restServerPort')
-    if check_rest_server_quick(rest_port):
+    running, _ = check_rest_server_quick(rest_port)
+    if running:
         response = rest_get(experiment_url(rest_port), 20)
-        if response and response.status_code == 200:
+        if response and check_response(response):
             experiment_profile = json.loads(response.text)
             experiment_profile['params'][key] = value
             response = rest_put(experiment_url(rest_port)+get_query_type(key), json.dumps(experiment_profile), 20)
-            if response and response.status_code == 200:
+            if response and check_response(response):
                 return response
     else:
         print('ERROR: restful server is not running...')
@@ -90,3 +93,9 @@ def update_duration(args):
     else:
         print('ERROR: update %s failed!' % 'duration')
 
+def update_trialnum(args):
+    validate_digit(args.value, 1, 999999999)
+    if update_experiment_profile('maxTrialNum', int(args.value)):
+        print('INFO: update %s success!' % 'trialnum')
+    else:
+        print('ERROR: update %s failed!' % 'trialnum')

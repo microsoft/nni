@@ -33,9 +33,9 @@ class SmartParamTestCase(TestCase):
     def setUp(self):
         params = {
             'test_smartparam/choice1/choice': 2,
-            'test_smartparam/#{:d}/uniform'.format(lineno1): '5',
+            'test_smartparam/__line{:d}/uniform'.format(lineno1): '5',
             'test_smartparam/func/function_choice': 1,
-            'test_smartparam/#{:d}/function_choice'.format(lineno2): 0
+            'test_smartparam/__line{:d}/function_choice'.format(lineno2): 0
         }
         nni.trial._params = { 'parameter_id': 'test_trial', 'parameters': params }
 

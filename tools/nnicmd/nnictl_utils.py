@@ -23,7 +23,7 @@ import psutil
 import json
 import datetime
 from subprocess import call, check_output
-from .rest_utils import rest_get, rest_delete, check_rest_server_quick
+from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .config_utils import Config
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
 from .constants import STDERR_FULL_PATH, STDOUT_FULL_PATH
@@ -47,7 +47,8 @@ def check_rest(args):
     '''check if restful server is running'''
     nni_config = Config()
     rest_port = nni_config.get_config('restServerPort')
-    if check_rest_server_quick(rest_port):
+    running, _ = check_rest_server_quick(rest_port)
+    if not running:
         print_normal('Restful server is running...')
     else:
         print_normal('Restful server is not running...')
@@ -62,17 +63,21 @@ def stop_experiment(args):
         print_normal('Experiment is not running...')
         stop_web_ui()
         return
-    if check_rest_server_quick(rest_port):
+    running, _ = check_rest_server_quick(rest_port)
+    stop_rest_result = True
+    if running:
         response = rest_delete(experiment_url(rest_port), 20)
-        if not response or response.status_code != 200:
+        if not response or not check_response(response):
             print_error('Stop experiment failed!')
+            stop_rest_result = False
     #sleep to wait rest handler done
     time.sleep(3)
     rest_pid = nni_config.get_config('restServerPid')
     cmds = ['pkill', '-P', str(rest_pid)]
     call(cmds)
     stop_web_ui()
-    print_normal('Stop experiment success!')
+    if stop_rest_result:
+        print_normal('Stop experiment success!')
 
 def trial_ls(args):
     '''List trial'''
@@ -82,9 +87,10 @@ def trial_ls(args):
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    if check_rest_server_quick(rest_port):
+    running, response = check_rest_server_quick(rest_port)
+    if running:
         response = rest_get(trial_jobs_url(rest_port), 20)
-        if response and response.status_code == 200:
+        if response and check_response(response):
             content = json.loads(response.text)
             for index, value in enumerate(content):               
                 content[index] = convert_time_stamp_to_date(value)
@@ -102,9 +108,10 @@ def trial_kill(args):
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    if check_rest_server_quick(rest_port):
+    running, _ = check_rest_server_quick(rest_port)
+    if running:
         response = rest_delete(trial_job_id_url(rest_port, args.trialid), 20)
-        if response and response.status_code == 200:
+        if response and check_response(response):
             print(response.text)
         else:
             print_error('Kill trial job failed...')
@@ -119,15 +126,26 @@ def list_experiment(args):
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    if check_rest_server_quick(rest_port):
+    running, _ = check_rest_server_quick(rest_port)
+    if running:
         response = rest_get(experiment_url(rest_port), 20)
-        if response and response.status_code == 200:
+        if response and check_response(response):
             content = convert_time_stamp_to_date(json.loads(response.text))
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
         else:
             print_error('List experiment failed...')
     else:
         print_error('Restful server is not running...')
+
+def experiment_status(args):
+    '''Show the status of experiment'''
+    nni_config = Config()
+    rest_port = nni_config.get_config('restServerPort')
+    result, response = check_rest_server_quick(rest_port)
+    if not result:
+        print_normal('Restful server is not running...')
+    else:
+        print(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
 
 def get_log_content(file_name, cmds):
     '''use cmds to read config content'''
@@ -159,6 +177,36 @@ def log_stdout(args):
 def log_stderr(args):
     '''get stderr log'''
     log_internal(args, 'stderr')
+
+def log_trial(args):
+    ''''get trial log path'''
+    trial_id_path_dict = {}
+    nni_config = Config()
+    rest_port = nni_config.get_config('restServerPort')
+    rest_pid = nni_config.get_config('restServerPid')
+    if not detect_process(rest_pid):
+        print_error('Experiment is not running...')
+        return
+    running, response = check_rest_server_quick(rest_port)
+    if running:
+        response = rest_get(trial_jobs_url(rest_port), 20)
+        if response and check_response(response):
+            content = json.loads(response.text)
+            for trial in content:
+                trial_id_path_dict[trial['id']] = trial['logPath']
+    else:
+        print_error('Restful server is not running...')
+        exit(0)
+    if args.id:
+        if trial_id_path_dict.get(args.id):
+            print('id:' + args.id + ' path:' + trial_id_path_dict[args.id])
+        else:
+            print_error('trial id is not valid!')
+            exit(0)
+    else:
+        for key in trial_id_path_dict.keys():
+            print('id:' + key + ' path:' + trial_id_path_dict[key])
+
 
 def get_config(args):
     '''get config info'''
