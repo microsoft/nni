@@ -1,0 +1,5 @@
+{
+    "loss":{"_type":"choice","_value":["squared_hinge", "hinge"]},
+    "C": {"_type":"uniform","_value":[0.5, 2.0]},
+    "max_iter": {"_type":"uniform","_value":[1000, 3000]}
+}
