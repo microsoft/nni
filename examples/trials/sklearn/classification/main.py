@@ -16,10 +16,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import nni
-from sklearn.datasets import fetch_20newsgroups
-from sklearn.svm import LinearSVC
 from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.datasets import load_digits
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
 import logging
 import numpy as np
 
@@ -28,30 +28,34 @@ LOG = logging.getLogger('sklearn_classification')
 
 def load_data():
     '''Load dataset, use 20newsgroups dataset'''
-    news = fetch_20newsgroups(subset='all')
-    X_train, X_test, y_train, y_test = train_test_split(news.data, news.target, random_state=99, test_size=0.25)
-    #normalize data
-    vec = TfidfVectorizer(stop_words='english')
-    X_train = vec.fit_transform(X_train)
-    X_test = vec.transform(X_test)
+    digits = load_digits()
+    X_train, X_test, y_train, y_test = train_test_split(digits.data, digits.target, random_state=99, test_size=0.25)
+
+    ss = StandardScaler()
+    X_train = ss.fit_transform(X_train)
+    X_test = ss.transform(X_test)
 
     return X_train, X_test, y_train, y_test
 
 def get_default_parameters():
     '''get default parameters'''
     params = {
-        'loss': 'squared_hinge',
         'C': 1.0,
-        'max_iter': 1000
+        'keral': 'linear',
+        'degree': 3,
+        'gamma': 0.01,
+        'coef0': 0.01
     }
     return params
 
 def get_model(PARAMS):
     '''Get model according to parameters'''
-    model = LinearSVC()
-    model.loss = PARAMS.get('loss')
+    model = SVC()
     model.C = PARAMS.get('C')
-    model.max_iter = PARAMS.get('max_iter')
+    model.keral = PARAMS.get('keral')
+    model.degree = PARAMS.get('degree')
+    model.gamma = PARAMS.get('gamma')
+    model.coef0 = PARAMS.get('coef0')
     
     return model
 
