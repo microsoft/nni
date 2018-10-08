@@ -58,6 +58,7 @@ To learn more about how this example was constructed and how to analyze the expe
 * [How to write a customized assessor?](examples/assessors/README.md)
 * [How to resume an experiment?](docs/NNICTLDOC.md)
 * [Tutorial of the command tool *nnictl*.](docs/NNICTLDOC.md)
+* [How to debug in NNI](docs/HowToDebug.md)
 
 # Contributing
 This project welcomes contributions and suggestions, we are constructing the contribution guidelines, stay tuned =).
