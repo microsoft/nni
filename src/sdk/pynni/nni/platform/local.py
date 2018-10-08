@@ -18,10 +18,10 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-import json_tricks
-import json
 import os
+import json
 import time
+import json_tricks
 
 from ..common import init_logger, env_args
 
@@ -38,7 +38,7 @@ init_logger(_log_file_path)
 
 _param_index = 0
 
-def _send_request_parameter_metric():
+def request_next_parameter():
     metric = json_tricks.dumps({
         'trial_job_id': env_args.trial_job_id,
         'type': 'REQUEST_PARAMETER',
@@ -51,7 +51,7 @@ def get_parameters():
     global _param_index
     params_filepath = os.path.join(_sysdir, 'parameter_{}.cfg'.format(_param_index))
     if not os.path.isfile(params_filepath):
-        _send_request_parameter_metric()
+        request_next_parameter()
     while not os.path.isfile(params_filepath):
         time.sleep(3)
     params_file = open(params_filepath, 'r')

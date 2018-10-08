@@ -120,8 +120,9 @@ class NNIDataStore implements DataStore {
     }
 
     public async storeMetricData(trialJobId: string, data: string): Promise<void> {
-        this.log.debug(`storeMetricData: trialJobId: ${trialJobId}, data: ${data}`);
         const metrics: MetricData = JSON.parse(data);
+        // REQUEST_PARAMETER is used to request new parameters for multiphase trial job,
+        // it is not metrics, so it is skipped here.
         if (metrics.type === 'REQUEST_PARAMETER') {
 
             return;
@@ -168,7 +169,7 @@ class NNIDataStore implements DataStore {
     private async getFinalMetricData(trialJobId: string): Promise<any> {
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
 
-        const multiPhase: boolean | undefined = await this.isMultiPhase();
+        const multiPhase: boolean = await this.isMultiPhase();
 
         if (metrics.length > 1 && !multiPhase) {
             this.log.error(`Found multiple FINAL results for trial job ${trialJobId}`);
@@ -177,7 +178,7 @@ class NNIDataStore implements DataStore {
         return metrics[metrics.length - 1];
     }
 
-    private async isMultiPhase(): Promise<boolean|undefined> {
+    private async isMultiPhase(): Promise<boolean> {
         if (this.multiPhase === undefined) {
             this.multiPhase = (await this.getExperimentProfile(getExperimentId())).params.multiPhase;
         }
@@ -210,7 +211,7 @@ class NNIDataStore implements DataStore {
             const hyperParam: any = JSON.parse(hyperParamStr);
             mergedHyperParams.push(hyperParam);
         }
-        if (mergedHyperParams.filter((value: any) => { return value.parameter_index === newParam.parameter_index; }).length <= 0) {
+        if (mergedHyperParams.filter((value: any) => value.parameter_index === newParam.parameter_index).length <= 0) {
             mergedHyperParams.push(newParam);
         }
 
