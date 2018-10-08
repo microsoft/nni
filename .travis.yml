@@ -11,7 +11,7 @@ before_install:
   - sudo sh -c 'PATH=/usr/local/node/bin:$PATH yarn global add serve'
 install:
   - make
-  - make install
+  - make easy-install
   - export PATH=$HOME/.nni/bin:$PATH
 before_script:
   - cd test/naive
