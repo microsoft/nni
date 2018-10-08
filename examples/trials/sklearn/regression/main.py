@@ -20,7 +20,6 @@ from sklearn.datasets import load_boston
 from sklearn.model_selection import train_test_split
 from sklearn import linear_model
 import logging
-from sklearn.model_selection import train_test_split
 import numpy as np
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import StandardScaler
