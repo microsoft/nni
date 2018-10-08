@@ -186,8 +186,8 @@ class PAITrainingService implements TrainingService {
         const nniPaiTrialCommand : string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
             // PAI will copy job's codeDir into /root directory
-            `/root/${trialJobId}`,
-            `/root/${trialJobId}/nnioutput`,
+            `$PWD/${trialJobId}`,
+            `$PWD/${trialJobId}/nnioutput`,
             trialJobId,
             this.experimentId,
             this.paiTrialConfig.command, 
@@ -343,7 +343,17 @@ class PAITrainingService implements TrainingService {
                         deferred.resolve();
                     }
                 });
-                break;
+
+                let timeoutId: NodeJS.Timer;
+                const timeoutDelay: Promise<void> = new Promise<void>((resolve: Function, reject: Function): void => {
+                    // Set timeout and reject the promise once reach timeout (5 seconds)
+                    timeoutId = setTimeout(
+                        () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
+                        5000);
+                });
+
+                return Promise.race([timeoutDelay, deferred.promise]).finally(() => clearTimeout(timeoutId));
+
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 if (!this.paiClusterConfig){
                     this.log.error('pai cluster config is not initialized');
