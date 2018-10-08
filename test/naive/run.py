@@ -95,6 +95,8 @@ class Integration_test():
         ss2 = json.load(open('tuner_search_space.json'))
         assert ss1 == ss2, 'Tuner got wrong search space'
 
+        # Waiting for naive_trial to report_final_result
+        time.sleep(3)
         tuner_result = set(open('tuner_result.txt'))
         expected = set(open('expected_tuner_result.txt'))
         # Trials may complete before NNI gets assessor's result,
