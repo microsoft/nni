@@ -11,7 +11,7 @@ class SlideBar extends React.Component<{}, {}> {
         <ul className="nav">
           <li>
             <IndexLink to={'/oview'} activeClassName="high">
-              <Icon className="icon" type="experiment" theme="outlined" />Overview
+              <Icon className="icon" type="rocket" />Overview
               <Icon className="floicon" type="right" />
             </IndexLink>
           </li>
@@ -41,7 +41,7 @@ class SlideBar extends React.Component<{}, {}> {
           </li>
           <li>
             <a href="https://github.com/Microsoft/nni/issues" target="_blank">
-              <Icon className="icon" type="smile" theme="outlined" />Feedback
+              <Icon className="icon" type="smile" />Feedback
             </a>
           </li>
         </ul>
