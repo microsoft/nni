@@ -127,7 +127,7 @@ def json2vals(in_x, vals, out_y, name=ROOT):
                 json2vals(in_x[key], vals[key], out_y, name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         for i, temp in enumerate(in_x):
-            json2vals(i, vals[temp], out_y, name + '[%d]' % temp)
+            json2vals(temp, vals[i], out_y, name + '[%d]' % i)
 
 
 def _split_index(params):
