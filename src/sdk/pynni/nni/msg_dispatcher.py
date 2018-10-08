@@ -118,8 +118,10 @@ class MsgDispatcher(MsgDispatcherBase):
                 value = data['value']
             elif isinstance(data['value'], dict) and 'default' in data['value']:
                 value = data['value']['default']
+                if (not isinstance(value, float)) and (not isinstance(value, int)):
+                    raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.')
             else:
-                raise RuntimeError('The final result from Trial is dict and has no default key in Tuner.')  
+                raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.') 
             
             if id_ in _customized_parameter_ids:
                 self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value)
