@@ -22,13 +22,14 @@
 import os
 import json
 import shutil
-from .constants import METADATA_DIR, METADATA_FULL_PATH
+from .constants import HOME_DIR
 
 class Config:
     '''a util class to load and save config'''
-    def __init__(self):
-        os.makedirs(METADATA_DIR, exist_ok=True)
-        self.config_file = METADATA_FULL_PATH
+    def __init__(self, port):
+        config_path = os.path.join(HOME_DIR, str(port))
+        os.makedirs(config_path, exist_ok=True)
+        self.config_file = os.path.join(config_path, '.config')
         self.config = self.read_file()
 
     def get_all_config(self):
