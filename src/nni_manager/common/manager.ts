@@ -22,7 +22,7 @@
 import { MetricDataRecord, MetricType, TrialJobInfo } from './datastore';
 import { TrialJobStatus } from './trainingService';
 
-type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE';
+type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
 
 interface ExperimentParams {
     authorName: string;
@@ -70,7 +70,7 @@ interface TrialJobStatistics {
 }
 
 interface NNIManagerStatus {
-    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED';
+    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'SUSPENDED';
     errors: string[];
 }
 

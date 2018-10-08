@@ -21,17 +21,17 @@
 import os
 from schema import Schema, And, Use, Optional, Regex, Or
 
-CONFIG_SCHEMA = Schema({
+common_schema = {
 'authorName': str,
 'experimentName': str,
 'trialConcurrency': And(int, lambda n: 1 <=n <= 999999),
-'maxExecDuration': Regex(r'^[1-9][0-9]*[s|m|h|d]$'),
-'maxTrialNum': And(int, lambda x: 1 <= x <= 99999),
+Optional('maxExecDuration'): Regex(r'^[1-9][0-9]*[s|m|h|d]$'),
+Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
 'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai']),
 Optional('searchSpacePath'): os.path.exists,
 'useAnnotation': bool,
 'tuner': Or({
-    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution'),
+    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC'),
     'classArgs': {
         'optimize_mode': Or('maximize', 'minimize'),
         Optional('speed'): int
@@ -41,17 +41,9 @@ Optional('searchSpacePath'): os.path.exists,
     'codeDir': os.path.exists,
     'classFileName': str,
     'className': str,
-    Optional('classArgs'): {
-        Optional('optimize_mode'): Or('maximize', 'minimize'),
-        Optional('speed'): int
-        },
+    Optional('classArgs'): dict,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 }),
-'trial':{
-    'command': str,
-    'codeDir': os.path.exists,
-    'gpuNum': And(int, lambda x: 0 <= x <= 99999)
-    },
 Optional('assessor'): Or({
     'builtinAssessorName': lambda x: x in ['Medianstop'],
     'classArgs': {
@@ -61,10 +53,41 @@ Optional('assessor'): Or({
     'codeDir': os.path.exists,
     'classFileName': str,
     'className': str,
-    'classArgs': {
-        'optimize_mode': lambda x: x in ['maximize', 'minimize']},
-    'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+    Optional('classArgs'): dict,
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 }),
+}
+
+common_trial_schema = {
+'trial':{
+    'command': str,
+    'codeDir': os.path.exists,
+    'gpuNum': And(int, lambda x: 0 <= x <= 99999)
+    }
+}
+
+pai_trial_schema = {
+'trial':{
+    'command': str,
+    'codeDir': os.path.exists,
+    'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+    'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+    'memoryMB': int,
+    'image': str,
+    Optional('dataDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
+    Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?')
+    }
+}
+
+pai_config_schema = {
+'paiConfig':{
+  'userName': str,
+  'passWord': str,
+  'host': str
+}
+}
+
+machine_list_schima = {
 Optional('machineList'):[Or({
     'ip': str,
     'port': And(int, lambda x: 0 < x < 65535),
@@ -76,37 +99,11 @@ Optional('machineList'):[Or({
     'username': str,
     'sshKeyPath': os.path.exists,
     Optional('passphrase'): str
-})],
-Optional('pai'):
-{
-  'jobName': str,
-  "image": str,
-  "authFile": os.path.exists,
-  "dataDir": os.path.exists,
-  "outputDir": os.path.exists,
-  "codeDir": os.path.exists,
-  "virtualCluster": str,
-  "taskRoles": [
-    {
-      "name": str,
-      "taskNumber": And(int, lambda x: 0 <= x <= 99999),
-      "cpuNumber": And(int, lambda x: 0 <= x <= 99999),
-      "memoryMB": And(int, lambda x: 0 <= x <= 99999),
-      "shmMB": And(int, lambda x: 0 <= x <= 99999),
-      "gpuNumber": And(int, lambda x: 0 <= x <= 99999),
-      "portList": [
-        {
-          "label": str,
-          "beginAt": str,
-          "portNumber": And(int, lambda x: 0 < x < 65535)
-        }
-      ],
-      "command": str,
-      "minFailedTaskCount": And(int, lambda x: 0 <= x <= 99999),
-      "minSucceededTaskCount": And(int, lambda x: 0 <= x <= 99999)
-    }
-  ],
-  "gpuType": str,
-  "retryCount": And(int, lambda x: 0 <= x <= 99999)
+})]
 }
-})
+
+LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
+
+REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine_list_schima})
+
+PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})

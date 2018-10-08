@@ -11,3 +11,5 @@ RUN pip3 --no-cache-dir install tensorflow-gpu==1.10.0
 #Keras 2.1.6
 #
 RUN pip3 --no-cache-dir install Keras==2.1.6
+
+WORKDIR /root

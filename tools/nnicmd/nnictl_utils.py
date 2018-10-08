@@ -64,17 +64,20 @@ def stop_experiment(args):
         stop_web_ui()
         return
     running, _ = check_rest_server_quick(rest_port)
+    stop_rest_result = True
     if running:
         response = rest_delete(experiment_url(rest_port), 20)
         if not response or not check_response(response):
             print_error('Stop experiment failed!')
+            stop_rest_result = False
     #sleep to wait rest handler done
     time.sleep(3)
     rest_pid = nni_config.get_config('restServerPid')
     cmds = ['pkill', '-P', str(rest_pid)]
     call(cmds)
     stop_web_ui()
-    print_normal('Stop experiment success!')
+    if stop_rest_result:
+        print_normal('Stop experiment success!')
 
 def trial_ls(args):
     '''List trial'''
@@ -174,6 +177,36 @@ def log_stdout(args):
 def log_stderr(args):
     '''get stderr log'''
     log_internal(args, 'stderr')
+
+def log_trial(args):
+    ''''get trial log path'''
+    trial_id_path_dict = {}
+    nni_config = Config()
+    rest_port = nni_config.get_config('restServerPort')
+    rest_pid = nni_config.get_config('restServerPid')
+    if not detect_process(rest_pid):
+        print_error('Experiment is not running...')
+        return
+    running, response = check_rest_server_quick(rest_port)
+    if running:
+        response = rest_get(trial_jobs_url(rest_port), 20)
+        if response and check_response(response):
+            content = json.loads(response.text)
+            for trial in content:
+                trial_id_path_dict[trial['id']] = trial['logPath']
+    else:
+        print_error('Restful server is not running...')
+        exit(0)
+    if args.id:
+        if trial_id_path_dict.get(args.id):
+            print('id:' + args.id + ' path:' + trial_id_path_dict[args.id])
+        else:
+            print_error('trial id is not valid!')
+            exit(0)
+    else:
+        for key in trial_id_path_dict.keys():
+            print('id:' + key + ' path:' + trial_id_path_dict[key])
+
 
 def get_config(args):
     '''get config info'''

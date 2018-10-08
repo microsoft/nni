@@ -13,4 +13,4 @@ export const CONTROLTYPE = [
     'TRIAL_CONCURRENCY',
     'MAX_EXEC_DURATION'
 ];
-export const overviewItem = 5;
+export const overviewItem = 50;
