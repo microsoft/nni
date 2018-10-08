@@ -56,7 +56,7 @@ class Integration_test():
                 pypath = ':'.join([sdk_path, cmd_path])
             os.environ['PYTHONPATH'] = pypath
 
-        to_remove = ['tuner_search_space.txt', 'nni_tuner_result.txt', 'nni_assessor_result.txt']
+        to_remove = ['tuner_search_space.json', 'tuner_result.txt', 'assessor_result.txt']
         self.remove_files(to_remove)
 
         proc = subprocess.run(['nnictl', 'create', '--config', 'local.yml'])
@@ -70,8 +70,8 @@ class Integration_test():
         for _ in range(60):
             time.sleep(1)
 
-            tuner_status = self.read_last_line('nni_tuner_result.txt')
-            assessor_status = self.read_last_line('nni_assessor_result.txt')
+            tuner_status = self.read_last_line('tuner_result.txt')
+            assessor_status = self.read_last_line('assessor_result.txt')
             experiment_status = self.check_experiment_status()
 
             assert tuner_status != 'ERROR', 'Tuner exited with error'
@@ -81,7 +81,7 @@ class Integration_test():
                 break
 
             if tuner_status is not None:
-                for line in open('nni_tuner_result.txt'):
+                for line in open('tuner_result.txt'):
                     if line.strip() == 'ERROR':
                         break
                     trial = int(line.split(' ')[0])
@@ -92,16 +92,16 @@ class Integration_test():
         assert experiment_status, 'Failed to finish in 1 min'
 
         ss1 = json.load(open('search_space.json'))
-        ss2 = json.load(open('nni_tuner_search_space.json'))
+        ss2 = json.load(open('tuner_search_space.json'))
         assert ss1 == ss2, 'Tuner got wrong search space'
 
-        tuner_result = set(open('nni_tuner_result.txt'))
+        tuner_result = set(open('tuner_result.txt'))
         expected = set(open('expected_tuner_result.txt'))
         # Trials may complete before NNI gets assessor's result,
         # so it is possible to have more final result than expected
         assert tuner_result.issuperset(expected), 'Bad tuner result'
 
-        assessor_result = set(open('nni_assessor_result.txt'))
+        assessor_result = set(open('assessor_result.txt'))
         expected = set(open('expected_assessor_result.txt'))
         assert assessor_result == expected, 'Bad assessor result'
 
