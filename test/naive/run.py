@@ -5,6 +5,7 @@ import json
 import os
 import subprocess
 import requests
+import sys
 import time
 import traceback
 
@@ -16,7 +17,7 @@ class Integration_test():
     def __init__(self):
         self.experiment_url = 'http://localhost:51188/api/v1/nni/experiment'
         self.experiment_id = None
-        self.experiment_done_signal = '"nnimanager reaches maxTrailNum"'
+        self.experiment_suspended_signal = '"Experiment suspended"'
 
     def read_last_line(self, file_name):
         try:
@@ -33,7 +34,7 @@ class Integration_test():
 
     def check_experiment_status(self):
         assert os.path.exists(self.nnimanager_log_path), 'Experiment starts failed'
-        cmds = ['cat', self.nnimanager_log_path, '|', 'grep', self.experiment_done_signal]
+        cmds = ['cat', self.nnimanager_log_path, '|', 'grep', self.experiment_suspended_signal]
         completed_process = subprocess.run(' '.join(cmds), shell = True)
         
         return completed_process.returncode == 0
@@ -43,10 +44,19 @@ class Integration_test():
             with contextlib.suppress(FileNotFoundError):
                 os.remove(file_path)
 
-    def run(self):
-        os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
+    def run(self, installed = True):
+        if not installed:
+            os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
+            sdk_path = os.path.abspath('../../src/sdk/pynni')
+            cmd_path = os.path.abspath('../../tools')
+            pypath = os.environ.get('PYTHONPATH')
+            if pypath:
+                pypath = ':'.join([pypath, sdk_path, cmd_path])
+            else:
+                pypath = ':'.join([sdk_path, cmd_path])
+            os.environ['PYTHONPATH'] = pypath
 
-        to_remove = ['tuner_search_space.txt', '/tmp/nni_tuner_result.txt', '/tmp/nni_assessor_result.txt']
+        to_remove = ['tuner_search_space.txt', 'nni_tuner_result.txt', 'nni_assessor_result.txt']
         self.remove_files(to_remove)
 
         proc = subprocess.run(['nnictl', 'create', '--config', 'local.yml'])
@@ -60,8 +70,8 @@ class Integration_test():
         for _ in range(60):
             time.sleep(1)
 
-            tuner_status = self.read_last_line('/tmp/nni_tuner_result.txt')
-            assessor_status = self.read_last_line('/tmp/nni_assessor_result.txt')
+            tuner_status = self.read_last_line('nni_tuner_result.txt')
+            assessor_status = self.read_last_line('nni_assessor_result.txt')
             experiment_status = self.check_experiment_status()
 
             assert tuner_status != 'ERROR', 'Tuner exited with error'
@@ -71,7 +81,7 @@ class Integration_test():
                 break
 
             if tuner_status is not None:
-                for line in open('/tmp/nni_tuner_result.txt'):
+                for line in open('nni_tuner_result.txt'):
                     if line.strip() == 'ERROR':
                         break
                     trial = int(line.split(' ')[0])
@@ -82,23 +92,25 @@ class Integration_test():
         assert experiment_status, 'Failed to finish in 1 min'
 
         ss1 = json.load(open('search_space.json'))
-        ss2 = json.load(open('/tmp/nni_tuner_search_space.json'))
+        ss2 = json.load(open('nni_tuner_search_space.json'))
         assert ss1 == ss2, 'Tuner got wrong search space'
 
-        tuner_result = set(open('/tmp/nni_tuner_result.txt'))
+        tuner_result = set(open('nni_tuner_result.txt'))
         expected = set(open('expected_tuner_result.txt'))
         # Trials may complete before NNI gets assessor's result,
         # so it is possible to have more final result than expected
         assert tuner_result.issuperset(expected), 'Bad tuner result'
 
-        assessor_result = set(open('/tmp/nni_assessor_result.txt'))
+        assessor_result = set(open('nni_assessor_result.txt'))
         expected = set(open('expected_assessor_result.txt'))
         assert assessor_result == expected, 'Bad assessor result'
 
 if __name__ == '__main__':
+    installed = (sys.argv[-1] != '--preinstall')
+
     ic = Integration_test()
     try:
-        ic.run()
+        ic.run(installed)
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:

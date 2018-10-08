@@ -406,6 +406,7 @@ class NNIManager implements Manager {
                     suspendStartTime = Date.now();
                 }
                 this.status.status = 'SUSPENDED';
+                this.log.info('Experiment suspended.');
             } else {
                 if (this.status.status === 'SUSPENDED') {
                     assert(suspendStartTime !== 0);
