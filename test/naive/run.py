@@ -96,7 +96,7 @@ class Integration_test():
         assert ss1 == ss2, 'Tuner got wrong search space'
 
         # Waiting for naive_trial to report_final_result
-        time.sleep(3)
+        time.sleep(2)
         tuner_result = set(open('tuner_result.txt'))
         expected = set(open('expected_tuner_result.txt'))
         # Trials may complete before NNI gets assessor's result,
@@ -119,7 +119,6 @@ if __name__ == '__main__':
         print(RED + 'FAIL' + CLEAR)
         print('%r' % error)
         traceback.print_exc()
-        print(open('tuner_result.txt').read())
         sys.exit(1)
     finally:
         subprocess.run(['nnictl', 'stop'])
