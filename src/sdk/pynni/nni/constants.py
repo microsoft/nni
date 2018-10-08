@@ -24,6 +24,7 @@ ModuleName = {
     'Anneal': 'nni.hyperopt_tuner.hyperopt_tuner',
     'Evolution': 'nni.evolution_tuner.evolution_tuner',
     'SMAC': 'nni.smac_tuner.smac_tuner',
+    'BatchTuner': 'nni.batch_tuner.batch_tuner',
 
     'Medianstop': 'nni.medianstop_assessor.medianstop_assessor'
 }
@@ -34,6 +35,7 @@ ClassName = {
     'Anneal': 'HyperoptTuner',
     'Evolution': 'EvolutionTuner',
     'SMAC': 'SMACTuner',
+    'BatchTuner': 'BatchTuner',
 
     'Medianstop': 'MedianstopAssessor'
 }

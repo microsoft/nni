@@ -1,16 +1,15 @@
 authorName: default
-experimentName: example_pytorch_cifar10
+experimentName: example_sklearn-regression
 trialConcurrency: 1
-maxExecDuration: 100h
-maxTrialNum: 10
-#choice: local, remote, pai
+maxExecDuration: 1h
+maxTrialNum: 30
+#choice: local, remote
 trainingServicePlatform: local
 searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution,
-  #SMAC (SMAC should be installed through nnictl)
+  #choice: TPE, Random, Anneal, Evolution
   builtinTunerName: TPE
   classArgs:
     #choice: maximize, minimize
@@ -18,4 +17,4 @@ tuner:
 trial:
   command: python3 main.py
   codeDir: .
-  gpuNum: 1
+  gpuNum: 0
