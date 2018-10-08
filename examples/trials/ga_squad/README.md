@@ -20,9 +20,7 @@ Also we have another version which time cost is less and performance is better. 
 
 # How to run this example?
 
-## Download data
-
-### Use downloading script to download data
+## Use downloading script to download data
 
 Execute the following command to download needed files
 using the downloading script:
@@ -32,7 +30,7 @@ chmod +x ./download.sh
 ./download.sh
 ```
 
-### Download manually
+## Download manually
 
 1. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
 
