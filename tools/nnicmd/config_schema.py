@@ -31,7 +31,7 @@ Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
 Optional('searchSpacePath'): os.path.exists,
 'useAnnotation': bool,
 'tuner': Or({
-    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC'),
+    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner'),
     'classArgs': {
         'optimize_mode': Or('maximize', 'minimize'),
         Optional('speed'): int
