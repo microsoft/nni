@@ -118,7 +118,9 @@ class MsgDispatcher(MsgDispatcherBase):
                 value = data['value']
             elif isinstance(data['value'], dict) and 'default' in data['value']:
                 value = data['value']['default']
-                if (not isinstance(value, float)) and (not isinstance(value, int)):
+                if isinstance(value, float) or isinstance(value, int):
+                    pass
+                else:
                     raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.')
             else:
                 raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.') 
