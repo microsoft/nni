@@ -25,16 +25,16 @@ Comparing with other algorithm, TPE could be achieve better result when the numb
 
 **Random Search**
 
-In [Random Search for Hyper-Parameter Optimization][2] show that Random Search might be surprsingly simple and effective. We suggests that we could use Random Search as basline when we have no knowledge about the prior distribution of hyper-parameters.
+In [Random Search for Hyper-Parameter Optimization][2] show that Random Search might be surprisingly simple and effective. We suggests that we could use Random Search as bassline when we have no knowledge about the prior distribution of hyper-parameters.
     
 **Anneal**
     
 **Naive Evolution**
 
-Naive Evolution comes from [Large-Scale Evolution of Image Classifiers][3]. Naive Evolution requir more experiments to works, but it's very simple and easily to expand new features. There are some tips for user: 
+Naive Evolution comes from [Large-Scale Evolution of Image Classifiers][3]. Naive Evolution require more experiments to works, but it's very simple and easily to expand new features. There are some tips for user: 
 
 1) large initial population could avoid to fall into local optimum
-2) use some strategies to keep the deversity of population could be better.
+2) use some strategies to keep the diversity of population could be better.
 
 **SMAC**
 
