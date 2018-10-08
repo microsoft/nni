@@ -6,6 +6,8 @@ Firstly, if you are unsure or afraid of anything, just ask or submit the issue o
 
 However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover all the points we're looking for in your contributions, raising your chances of quickly merging or addressing your contributions.
 
+If you are looking for How to go about contributing and debugging the NNI source code, you can refer our [How to Contribute](./docs/HowToContribute.md) file in the `docs` folder.
+
 There are a few simple guidelines that you need to follow before providing your hacks. 
 
 ## Raising Issues
