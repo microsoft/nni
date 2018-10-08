@@ -45,7 +45,6 @@ def main_loop(args):
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     process = Popen(args.trial_command, shell = True, stdout = stdout_file, stderr = stderr_file)
     print('Subprocess pid is {}'.format(process.pid))
-    print('Current cwd is {}'.format(os.getcwd()))
     while True:
         retCode = process.poll()
         ## Read experiment metrics, to avoid missing metrics
@@ -55,15 +54,18 @@ def main_loop(args):
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
             #copy local directory to hdfs
             nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
-            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name)
-            print(nni_local_output_dir, args.pai_hdfs_output_dir)
+            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
             try:
                 if copyDirectoryToHdfs(nni_local_output_dir, args.pai_hdfs_output_dir, hdfs_client):
-                    print('copy directory success!')
+                    print('copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
                 else:
-                    print('copy directory failed!')
+                    print('copy directory from {0} to {1} failed!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
             except Exception as exception:
-                print(exception)
+                print('HDFS copy directory got exception')
+                raise exception
+
+            ## Exit as the retCode of subprocess(trial)
+            exit(retCode)
             break
         else:
             print('subprocess pid: {} is still alive'.format(process.pid))
@@ -88,7 +90,10 @@ if __name__ == '__main__':
 
     try:
         main_loop(args)
-    except:
-        print('Exiting by user request')
+    except SystemExit as se:
+        print('NNI trial keeper exit with code {}'.format(se.code))
+        sys.exit(se.code)
+    except Exception as e:
+        print('Exit trial keeper with code 1 because Exception: {} is catched'.format(str(e)))
         sys.exit(1)
 

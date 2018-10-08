@@ -32,23 +32,6 @@ pre.hyperpar{
     float: right;
     margin-right: 30px; 
 }
-/* the pagination of next and prev */
-.ant-pagination-prev .ant-pagination-item-link:after{
-    content: "Previous";
-    display: block;
-    font-size: 14px;
-    color: #333;
-    padding-left: 5px;
-    padding-right: 5px;
-}
-.ant-pagination-next .ant-pagination-item-link:after {
-    content: "NEXT";
-    display: block;
-    font-size: 14px;
-    color: #333;
-    padding-left: 5px;
-    padding-right: 5px;
-}
 Button.tableButton{
     background:	#3c8dbc;
     border-color: #3c8dbc;

@@ -124,6 +124,6 @@ else:
         del frame  # see official doc
         module = inspect.getmodulename(filename)
         if name is None:
-            name = '#{:d}'.format(lineno)
+            name = '__line{:d}'.format(lineno)
         key = '{}/{}/{}'.format(module, name, func)
         return trial.get_parameter(key)

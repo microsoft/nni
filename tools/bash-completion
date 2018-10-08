@@ -82,4 +82,4 @@ _nnictl()
     fi
 }
 
-complete -F _nnictl nnictl
+complete -o nospace -F _nnictl nnictl

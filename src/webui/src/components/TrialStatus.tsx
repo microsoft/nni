@@ -12,6 +12,7 @@ require('echarts/lib/chart/scatter');
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
 require('../style/trialStatus.css');
+require('../style/logPath.css');
 echarts.registerTheme('my_theme', {
     color: '#3c8dbc'
 });
@@ -19,6 +20,7 @@ echarts.registerTheme('my_theme', {
 interface DescObj {
     parameters: Object;
     logPath?: string;
+    isLink?: boolean;
 }
 
 interface TableObj {
@@ -228,16 +230,20 @@ class TrialStatus extends React.Component<{}, TabState> {
                             ? trialJobs[item].status
                             : '';
                         const startTime = trialJobs[item].startTime !== undefined
-                            ? new Date(trialJobs[item].startTime).toLocaleString()
+                            ? new Date(trialJobs[item].startTime).toLocaleString('en-US')
                             : '';
                         const endTime = trialJobs[item].endTime !== undefined
-                            ? new Date(trialJobs[item].endTime).toLocaleString()
+                            ? new Date(trialJobs[item].endTime).toLocaleString('en-US')
                             : '';
                         if (trialJobs[item].hyperParameters !== undefined) {
                             desc.parameters = JSON.parse(trialJobs[item].hyperParameters).parameters;
                         }
                         if (trialJobs[item].logPath !== undefined) {
                             desc.logPath = trialJobs[item].logPath;
+                            const isHyperLink = /^http/gi.test(trialJobs[item].logPath);
+                            if (isHyperLink) {
+                                desc.isLink = true;
+                            }
                         }
                         if (trialJobs[item].finalMetricData !== undefined) {
                             acc = parseFloat(trialJobs[item].finalMetricData.data);
@@ -388,7 +394,7 @@ class TrialStatus extends React.Component<{}, TabState> {
             dataIndex: 'start',
             key: 'start',
             width: '15%',
-            sorter: (a: TableObj, b: TableObj): number => a.start.localeCompare(b.start)
+            sorter: (a: TableObj, b: TableObj): number => (Date.parse(a.start) - Date.parse(b.start))
         }, {
             title: 'End',
             dataIndex: 'end',
@@ -472,14 +478,35 @@ class TrialStatus extends React.Component<{}, TabState> {
         ];
 
         const openRow = (record: TableObj) => {
+            const parametersRow = {
+                parameters: record.description.parameters
+            };
+            let isLogLink: boolean = false;
+            const logPathRow = record.description.logPath;
+            if (record.description.isLink !== undefined) {
+                isLogLink = true;
+            }
             return (
                 <pre className="hyperpar">
                     <JSONTree
                         hideRoot={true}
                         shouldExpandNode={() => true}  // default expandNode
                         getItemString={() => (<span />)}  // remove the {} items
-                        data={record.description}
+                        data={parametersRow}
                     />
+                    {
+                        isLogLink
+                            ?
+                            <div className="logpath">
+                                <span className="logName">logPath: </span>
+                                <a className="logContent logHref" href={logPathRow} target="_blank">{logPathRow}</a>
+                            </div>
+                            :
+                            <div className="logpath">
+                                <span className="logName">logPath: </span>
+                                <span className="logContent">{logPathRow}</span>
+                            </div>
+                    }
                     <Button
                         type="primary"
                         className="tableButton"
