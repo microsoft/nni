@@ -124,25 +124,38 @@ class Para extends React.Component<{}, ParaState> {
                         const searchRange = JSON.parse(res1.data.params.searchSpace);
                         for (let i = 0; i < dimName.length; i++) {
                             const searchKey = searchRange[dimName[i]];
-                            if (searchKey._type === 'uniform') {
-                                parallelAxis.push({
-                                    dim: i,
-                                    name: dimName[i],
-                                    max: searchKey._value[1],
-                                    min: searchKey._value[0]
-                                });
-                            } else { // choice
-                                // data number ['0.2', '0.4', '0.6']
-                                const data: Array<string> = [];
-                                for (let j = 0; j < searchKey._value.length; j++) {
-                                    data.push(searchKey._value[j].toString());
-                                }
-                                parallelAxis.push({
-                                    dim: i,
-                                    name: dimName[i],
-                                    type: 'category',
-                                    data: data
-                                });
+                            switch (searchKey._type) {
+                                case 'uniform':
+                                case 'quniform':
+                                    parallelAxis.push({
+                                        dim: i,
+                                        name: dimName[i],
+                                        max: searchKey._value[1],
+                                        min: searchKey._value[0]
+                                    });
+                                    break;
+
+                                case 'choice':
+                                    const data: Array<string> = [];
+                                    for (let j = 0; j < searchKey._value.length; j++) {
+                                        data.push(searchKey._value[j].toString());
+                                    }
+                                    parallelAxis.push({
+                                        dim: i,
+                                        name: dimName[i],
+                                        type: 'category',
+                                        data: data
+                                    });
+                                    break;
+
+                                case 'loguniform':
+                                    parallelAxis.push({
+                                        dim: i,
+                                        name: dimName[i]
+                                    });
+                                    break;
+
+                                default:
                             }
                         }
                         // get data for every lines. if dim is choice type
