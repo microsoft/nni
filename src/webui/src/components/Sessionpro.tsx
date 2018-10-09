@@ -120,10 +120,26 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         tuner: sessionData.params.tuner,
                         assessor: sessionData.params.assessor
                     });
+                    // search space format loguniform max and min
+                    const searchSpace = JSON.parse(sessionData.params.searchSpace);
+                    Object.keys(searchSpace).map(item => {
+                        const key = searchSpace[item]._type;
+                        if (key === 'loguniform') {
+                            let value = searchSpace[item]._value;
+                            const a = Math.pow(10, value[0]);
+                            const b = Math.pow(10, value[1]);
+                            if (a < b) {
+                                value = [a, b];
+                            } else {
+                                value = [b, a];
+                            }
+                            searchSpace[item]._value = value;
+                        }
+                    });
                     if (this._isMounted) {
                         this.setState({
                             trialProfile: trialPro[0],
-                            searchSpace: JSON.parse(sessionData.params.searchSpace),
+                            searchSpace: searchSpace,
                             tunerAssessor: tunerAsstemp[0]
                         });
                     }
