@@ -64,3 +64,6 @@ This project welcomes contributions and suggestions, please refer to our [contri
 
 We use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
 
+# License 
+The entire codebase is under [MIT license](https://github.com/Microsoft/nni/blob/master/LICENSE)
+
