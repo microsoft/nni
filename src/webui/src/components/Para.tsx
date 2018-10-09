@@ -239,14 +239,16 @@ class Para extends React.Component<{}, ParaState> {
         if (maxAccuracy === minAccuracy) {
             visualMapObj = {
                 type: 'continuous',
-                color: ['#fb7c7c', 'yellow', 'lightblue']
+                precision: 3,
+                color: ['#CA0000', '#FFC400', '#90EE90']
             };
         } else {
             visualMapObj = {
                 type: 'continuous',
+                precision: 3,
                 min: visualValue.minAccuracy,
                 max: visualValue.maxAccuracy,
-                color: ['#fb7c7c', 'yellow', 'lightblue']
+                color: ['#CA0000', '#FFC400', '#90EE90']
             };
         }
         let optionown = {
