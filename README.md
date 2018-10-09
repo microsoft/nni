@@ -60,7 +60,10 @@ To learn more about how this example was constructed and how to analyze the expe
 * [Tutorial of the command tool *nnictl*.](docs/NNICTLDOC.md)
 
 # Contributing
-This project welcomes contributions and suggestions, we are constructing the contribution guidelines, stay tuned =).
+This project welcomes contributions and suggestions, please refer to our [contributing](./docs/CONTRIBUTING.md) document for the same.
 
 We use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
+
+# License 
+The entire codebase is under [MIT license](https://github.com/Microsoft/nni/blob/master/LICENSE)
 
