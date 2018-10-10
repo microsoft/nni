@@ -211,14 +211,14 @@ install-python-modules:
 .PHONY: install-node-modules
 install-node-modules:
 	mkdir -p $(INSTALL_PREFIX)/nni
-	rm -rf ${PWD}/src/nni_manager/dist/node_modules
+	rm -rf src/nni_manager/dist/node_modules
 	
 	#$(_INFO) Installing NNI Manager $(_END)
-	cp -rT ${PWD}/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
-	cp -rT ${PWD}/src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
+	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
+	cp -rT src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
 	
 	#$(_INFO) Installing Web UI $(_END)
-	cp -rT ${PWD}/src/webui/build $(INSTALL_PREFIX)/nni/webui
+	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/webui
 
 
 .PHONY: install-dev-modules

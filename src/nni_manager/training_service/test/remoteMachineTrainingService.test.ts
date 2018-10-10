@@ -100,7 +100,10 @@ describe('Unit Test for RemoteMachineTrainingService', () => {
             TrialConfigMetadataKey.TRIAL_CONFIG, `{"command":"sleep 1h && echo ","codeDir":"${localCodeDir}","gpuNum":1}`);
         const form: TrialJobApplicationForm = {
                 jobType: 'TRIAL',
-                hyperParameters: 'mock hyperparameters'
+                hyperParameters: {
+                    value: 'mock hyperparameters',
+                    index: 0
+                }
         };
         const trialJob = await remoteMachineTrainingService.submitTrialJob(form);
 
@@ -135,7 +138,10 @@ describe('Unit Test for RemoteMachineTrainingService', () => {
         // submit job
         const form: TrialJobApplicationForm = {
             jobType: 'TRIAL',
-            hyperParameters: 'mock hyperparameters'
+            hyperParameters: {
+                value: 'mock hyperparameters',
+                index: 0
+            }
         };
         const jobDetail: TrialJobDetail = await remoteMachineTrainingService.submitTrialJob(form);
         // Add metrics listeners

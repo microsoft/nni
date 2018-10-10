@@ -29,7 +29,7 @@ import importlib
 
 from .constants import ModuleName, ClassName, ClassArgs
 from nni.msg_dispatcher import MsgDispatcher
-
+from nni.multi_phase.multi_phase_dispatcher import MultiPhaseMsgDispatcher
 logger = logging.getLogger('nni.main')
 logger.debug('START')
 
@@ -90,6 +90,7 @@ def parse_args():
                         help='Assessor directory')
     parser.add_argument('--assessor_class_filename', type=str, required=False,
                         help='Assessor class file path')
+    parser.add_argument('--multi_phase', action='store_true')
 
     flags, _ = parser.parse_known_args()
     return flags
@@ -132,7 +133,10 @@ def main():
         if assessor is None:
             raise AssertionError('Failed to create Assessor instance')
 
-    dispatcher = MsgDispatcher(tuner, assessor)
+    if args.multi_phase:
+        dispatcher = MultiPhaseMsgDispatcher(tuner, assessor)
+    else:
+        dispatcher = MsgDispatcher(tuner, assessor)
 
     try:
         dispatcher.run()
