@@ -8,7 +8,7 @@ trainingServicePlatform: local
 #choice: true, false
 useAnnotation: true
 tuner:
-  #choice: TPE, Random, Anneal, Evolution,
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner
   #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: TPE
   classArgs:
