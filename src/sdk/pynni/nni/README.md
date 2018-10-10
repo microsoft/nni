@@ -25,7 +25,7 @@ Comparing with other algorithm, TPE could be achieve better result when the numb
 
 **Random Search**
 
-In [Random Search for Hyper-Parameter Optimization][2] show that Random Search might be surprisingly simple and effective. We suggests that we could use Random Search as bassline when we have no knowledge about the prior distribution of hyper-parameters.
+In [Random Search for Hyper-Parameter Optimization][2] show that Random Search might be surprisingly simple and effective. We suggests that we could use Random Search as baseline when we have no knowledge about the prior distribution of hyper-parameters.
     
 **Anneal**
     
