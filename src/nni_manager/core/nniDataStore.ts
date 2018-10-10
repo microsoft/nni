@@ -26,6 +26,7 @@ import * as component from '../common/component';
 import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
     TrialJobEvent, TrialJobEventRecord, TrialJobInfo } from '../common/datastore';
 import { isNewExperiment } from '../common/experimentStartupInfo';
+import { getExperimentId } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile,  TrialJobStatistics } from '../common/manager';
 import { TrialJobStatus } from '../common/trainingService';
@@ -35,6 +36,7 @@ class NNIDataStore implements DataStore {
     private db: Database = component.get(Database);
     private log: Logger = getLogger();
     private initTask!: Deferred<void>;
+    private multiPhase: boolean | undefined;
 
     public init(): Promise<void> {
         if (this.initTask !== undefined) {
@@ -112,13 +114,19 @@ class NNIDataStore implements DataStore {
     }
 
     public async getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
-        const trialJobs = await this.queryTrialJobs(undefined, trialJobId);
+        const trialJobs: TrialJobInfo[] = await this.queryTrialJobs(undefined, trialJobId);
 
         return trialJobs[0];
     }
 
     public async storeMetricData(trialJobId: string, data: string): Promise<void> {
-        const metrics = JSON.parse(data) as MetricData;
+        const metrics: MetricData = JSON.parse(data);
+        // REQUEST_PARAMETER is used to request new parameters for multiphase trial job,
+        // it is not metrics, so it is skipped here.
+        if (metrics.type === 'REQUEST_PARAMETER') {
+
+            return;
+        }
         assert(trialJobId === metrics.trial_job_id);
         await this.db.storeMetricData(trialJobId, JSON.stringify({
             trialJobId: metrics.trial_job_id,
@@ -160,23 +168,54 @@ class NNIDataStore implements DataStore {
 
     private async getFinalMetricData(trialJobId: string): Promise<any> {
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
-        if (metrics.length > 1) {
-            this.log.error(`Found multiple final results for trial job: ${trialJobId}`);
+
+        const multiPhase: boolean = await this.isMultiPhase();
+
+        if (metrics.length > 1 && !multiPhase) {
+            this.log.error(`Found multiple FINAL results for trial job ${trialJobId}`);
         }
 
-        return metrics[0];
+        return metrics[metrics.length - 1];
     }
 
-    private getJobStatusByLatestEvent(event: TrialJobEvent): TrialJobStatus {
+    private async isMultiPhase(): Promise<boolean> {
+        if (this.multiPhase === undefined) {
+            this.multiPhase = (await this.getExperimentProfile(getExperimentId())).params.multiPhase;
+        }
+
+        if (this.multiPhase !== undefined) {
+            return this.multiPhase;
+        } else {
+            return false;
+        }
+    }
+
+    private getJobStatusByLatestEvent(oldStatus: TrialJobStatus, event: TrialJobEvent): TrialJobStatus {
         switch (event) {
             case 'USER_TO_CANCEL':
                 return 'USER_CANCELED';
             case 'ADD_CUSTOMIZED':
                 return 'WAITING';
+            case 'ADD_HYPERPARAMETER':
+                return oldStatus;
             default:
         }
 
         return <TrialJobStatus>event;
+    }
+
+    private mergeHyperParameters(hyperParamList: string[], newParamStr: string): string[] {
+        const mergedHyperParams: any[] = [];
+        const newParam: any = JSON.parse(newParamStr);
+        for (const hyperParamStr of hyperParamList) {
+            const hyperParam: any = JSON.parse(hyperParamStr);
+            mergedHyperParams.push(hyperParam);
+        }
+        if (mergedHyperParams.filter((value: any) => value.parameter_index === newParam.parameter_index).length <= 0) {
+            mergedHyperParams.push(newParam);
+        }
+
+        return mergedHyperParams.map<string>((value: any) => { return JSON.stringify(value); });
     }
 
     private getTrialJobsByReplayEvents(trialJobEvents: TrialJobEventRecord[]):  Map<string, TrialJobInfo> {
@@ -192,7 +231,8 @@ class NNIDataStore implements DataStore {
             } else {
                 jobInfo = {
                     id: record.trialJobId,
-                    status: this.getJobStatusByLatestEvent(record.event)
+                    status: this.getJobStatusByLatestEvent('UNKNOWN', record.event),
+                    hyperParameters: []
                 };
             }
             if (!jobInfo) {
@@ -221,9 +261,13 @@ class NNIDataStore implements DataStore {
                     }
                 default:
             }
-            jobInfo.status = this.getJobStatusByLatestEvent(record.event);
+            jobInfo.status = this.getJobStatusByLatestEvent(jobInfo.status, record.event);
             if (record.data !== undefined && record.data.trim().length > 0) {
-                jobInfo.hyperParameters = record.data;
+                if (jobInfo.hyperParameters !== undefined) {
+                    jobInfo.hyperParameters = this.mergeHyperParameters(jobInfo.hyperParameters, record.data);
+                } else {
+                    assert(false, 'jobInfo.hyperParameters is undefined');
+                }
             }
             map.set(record.trialJobId, jobInfo);
         }

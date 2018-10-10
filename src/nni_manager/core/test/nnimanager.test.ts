@@ -54,6 +54,7 @@ describe('Unit test for nnimanager', function () {
         trialConcurrency: 2,
         maxExecDuration: 5,
         maxTrialNum: 2,
+        trainingServicePlatform: 'local',
         searchSpace: '{"x":1}',
         tuner: {
             className: 'EvolutionTuner',
