@@ -25,11 +25,12 @@ import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger } from './common/log';
-import { Manager } from './common/manager';
+import { Manager, BoardManager } from './common/manager';
 import { TrainingService } from './common/trainingService';
 import { parseArg, uniqueString, mkDirP, getLogDir } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
+import { TensorboardManager } from './core/tensorboardManager';
 import { SqlDB } from './core/sqlDatabase';
 import { NNIRestServer } from './rest_server/nniRestServer';
 import { LocalTrainingServiceForGPU } from './training_service/local/localTrainingServiceForGPU';
@@ -58,6 +59,7 @@ async function initContainer(platformMode: string): Promise<void> {
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(NNIDataStore).scope(Scope.Singleton);
+    Container.bind(BoardManager).to(TensorboardManager).scope(Scope.Singleton);
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();

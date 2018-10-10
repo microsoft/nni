@@ -94,4 +94,8 @@ abstract class Manager {
     public abstract getStatus(): NNIManagerStatus;
 }
 
-export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus };
+abstract class BoardManager{
+    public abstract startTensorBoard(trialJobIds: string[], tbCmd?: string, port?: number): Promise<string>;
+}
+
+export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, BoardManager };

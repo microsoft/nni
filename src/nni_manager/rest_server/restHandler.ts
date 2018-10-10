@@ -27,7 +27,7 @@ import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
 import { isNewExperiment } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
-import { ExperimentProfile, Manager, TrialJobStatistics} from '../common/manager';
+import { ExperimentProfile, Manager, TrialJobStatistics, BoardManager} from '../common/manager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { TensorBoard } from './tensorboard';
@@ -37,11 +37,13 @@ const expressJoi = require('express-joi-validator');
 class NNIRestHandler {
     private restServer: NNIRestServer;
     private nniManager: Manager;
+    private tensorboardManager: BoardManager;
     private tb: TensorBoard;
     private log: Logger;
 
     constructor(rs: NNIRestServer) {
         this.nniManager = component.get(Manager);
+        this.tensorboardManager = component.get(BoardManager);
         this.restServer = rs;
         this.tb = new TensorBoard();
         this.log = getLogger();
