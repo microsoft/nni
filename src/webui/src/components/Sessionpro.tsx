@@ -459,7 +459,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                     <div className="selectInline">
                         <Row>
                             <Col span={18}>
-                                <h2>The trials that successed</h2>
+                                <h2>The trials that succeeded</h2>
                             </Col>
                             <Col span={6}>
                                 <span className="tabuser1">top</span>
