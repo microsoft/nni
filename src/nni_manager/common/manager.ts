@@ -27,10 +27,12 @@ type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPA
 interface ExperimentParams {
     authorName: string;
     experimentName: string;
+    description?: string;
     trialConcurrency: number;
     maxExecDuration: number; //seconds
     maxTrialNum: number;
     searchSpace: string;
+    trainingServicePlatform: string;
     multiPhase?: boolean;
     tuner: {
         className: string;

@@ -36,6 +36,7 @@ const expParams1: ExperimentParams = {
     trialConcurrency: 3,
     maxExecDuration: 100,
     maxTrialNum: 5,
+    trainingServicePlatform: 'local',
     searchSpace: 'SS',
     tuner: {
         className: 'testTuner',
@@ -50,6 +51,7 @@ const expParams2: ExperimentParams = {
     trialConcurrency: 5,
     maxExecDuration: 1000,
     maxTrialNum: 5,
+    trainingServicePlatform: 'local',
     searchSpace: '',
     tuner: {
         className: 'testTuner',

@@ -528,6 +528,7 @@ class NNIManager implements Manager {
                 trialConcurrency: 0,
                 maxExecDuration: 0, // unit: second
                 maxTrialNum: 0, // maxTrialNum includes all the submitted trial jobs
+                trainingServicePlatform: '',
                 searchSpace: '',
                 tuner: {
                     className: '',
