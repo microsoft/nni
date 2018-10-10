@@ -20,19 +20,7 @@
 
 import os
 
-REST_PORT = 51188
-
-HOME_DIR = os.path.join(os.environ['HOME'], 'nni')
-
-METADATA_DIR = os.path.join(HOME_DIR, 'nnictl')
-
-METADATA_FULL_PATH = os.path.join(METADATA_DIR, 'metadata')
-
-LOG_DIR = os.path.join(HOME_DIR, 'nnictl', 'log')
-
-STDOUT_FULL_PATH = os.path.join(LOG_DIR, 'stdout')
-
-STDERR_FULL_PATH = os.path.join(LOG_DIR, 'stderr')
+HOME_DIR = os.path.join(os.environ['HOME'], '.local',  'nni', 'nnictl')
 
 ERROR_INFO = 'ERROR: %s'
 
@@ -44,7 +32,6 @@ EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0
                           '-----------------------------------------------------------------------\n' \
                           'The experiment id is %s\n'\
                           'The restful server post is %s\n' \
-                          'The Web UI urls are: %s\n' \
                           '-----------------------------------------------------------------------\n\n' \
                           'You can use these commands to get more information about the experiment\n' \
                           '-----------------------------------------------------------------------\n' \
