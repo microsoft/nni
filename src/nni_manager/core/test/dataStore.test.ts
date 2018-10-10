@@ -58,6 +58,7 @@ describe('Unit test for dataStore', () => {
                 trialConcurrency: 2,
                 maxExecDuration: 10,
                 maxTrialNum: 5,
+                trainingServicePlatform: 'local',
                 searchSpace: `{
                     "dropout_rate": {
                         "_type": "uniform",

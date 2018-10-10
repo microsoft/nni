@@ -130,6 +130,10 @@ def set_experiment(experiment_config, mode, port):
     request_data['maxExecDuration'] = experiment_config['maxExecDuration']
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
     request_data['searchSpace'] = experiment_config.get('searchSpace')
+    request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
+
+    if experiment_config.get('description'):
+        request_data['description'] = experiment_config['description']
     if experiment_config.get('multiPhase'):
         request_data['multiPhase'] = experiment_config.get('multiPhase')
     request_data['tuner'] = experiment_config['tuner']
