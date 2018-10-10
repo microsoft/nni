@@ -88,6 +88,20 @@ class Sessionpro extends React.Component<{}, SessionState> {
         };
     }
 
+    convertTime = (num: number) => {
+        let hour = Math.floor(num / 3600 % 24);
+        let result: string = '';
+        if (num % 3600 === 0) {
+            return result = hour + 'h';
+        } 
+        let min = Math.floor(num / 60 % 60);
+        if (hour < 1) {
+            return result = min + '';
+        } else {
+            return result = hour + 'h  ' + min + 'min';
+        }
+    }
+
     // show session
     showSessionPro = () => {
         axios(`${MANAGER_IP}/experiment`, {
@@ -124,7 +138,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                     const searchSpace = JSON.parse(sessionData.params.searchSpace);
                     Object.keys(searchSpace).map(item => {
                         const key = searchSpace[item]._type;
-                        if (key === 'loguniform') {
+                        if (key === 'loguniform' || key === 'qloguniform') {
                             let value = searchSpace[item]._value;
                             const a = Math.pow(10, value[0]);
                             const b = Math.pow(10, value[1]);
@@ -358,11 +372,15 @@ class Sessionpro extends React.Component<{}, SessionState> {
         const {
             trialProfile, searchSpace, tunerAssessor, tableData, status
         } = this.state;
+
+        const maxRuntime = this.convertTime(trialProfile.maxDuration);
         let running;
+        let runningStr = '';
         if (trialProfile.endTime === 'not over') {
             running = trialProfile.maxDuration - trialProfile.execDuration;
+            runningStr = this.convertTime(running);
         } else {
-            running = 0;
+            runningStr = '0';
         }
         return (
             <div className="session" id="session">
@@ -389,11 +407,11 @@ class Sessionpro extends React.Component<{}, SessionState> {
                                 </div>
                                 <p>
                                     <span>Duration</span>
-                                    <span className="messcont">{trialProfile.maxDuration}s</span>
+                                    <span className="messcont">{maxRuntime}</span>
                                 </p>
                                 <p>
-                                    <span>Still&nbsp;running</span>
-                                    <span className="messcont">{running}s</span>
+                                    <span>Still&nbsp;run</span>
+                                    <span className="messcont">{runningStr}</span>
                                 </p>
                             </div>
                             <div className="logo">
