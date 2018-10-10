@@ -89,16 +89,12 @@ class Sessionpro extends React.Component<{}, SessionState> {
     }
 
     convertTime = (num: number) => {
-        let hour = Math.floor(num / 3600 % 24);
-        let result: string = '';
         if (num % 3600 === 0) {
-            return result = hour + 'h';
-        } 
-        let min = Math.floor(num / 60 % 60);
-        if (hour < 1) {
-            return result = min + '';
+            return num / 3600 + 'h';
         } else {
-            return result = hour + 'h  ' + min + 'min';
+            const hour = Math.floor(num / 3600);
+            const min = Math.floor(num / 60 % 60);
+            return hour > 0 ? `${hour} h ${min} min` : `${min} min`;
         }
     }
 
@@ -510,7 +506,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         className="tableButton"
                         onClick={this.downExperimentContent}
                     >
-                        Download Experiment
+                        Download experiment summary
                     </Button>
                 </div>
             </div>
