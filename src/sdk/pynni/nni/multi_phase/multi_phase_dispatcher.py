@@ -22,9 +22,9 @@ import logging
 from collections import defaultdict
 import json_tricks
 
-from .protocol import CommandType, send
-from .msg_dispatcher_base import MsgDispatcherBase
-from .assessor import AssessResult
+from nni.protocol import CommandType, send
+from nni.msg_dispatcher_base import MsgDispatcherBase
+from nni.assessor import AssessResult
 
 _logger = logging.getLogger(__name__)
 
@@ -58,16 +58,22 @@ def _create_parameter_id():
     _next_parameter_id += 1
     return _next_parameter_id - 1
 
-def _pack_parameter(parameter_id, params, customized=False):
+def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, parameter_index=None):
     _trial_params[parameter_id] = params
     ret = {
         'parameter_id': parameter_id,
         'parameter_source': 'customized' if customized else 'algorithm',
         'parameters': params
     }
+    if trial_job_id is not None:
+        ret['trial_job_id'] = trial_job_id
+    if parameter_index is not None:
+        ret['parameter_index'] = parameter_index
+    else:
+        ret['parameter_index'] = 0
     return json_tricks.dumps(ret)
 
-class MsgDispatcher(MsgDispatcherBase):
+class MultiPhaseMsgDispatcher(MsgDispatcherBase):
     def __init__(self, tuner, assessor=None):
         super()
         self.tuner = tuner
@@ -89,13 +95,9 @@ class MsgDispatcher(MsgDispatcherBase):
         # data: number or trial jobs
         ids = [_create_parameter_id() for _ in range(data)]
         params_list = self.tuner.generate_multiple_parameters(ids)
-
-        # when parameters is None.
-        if len(params_list) == 0:
-            send(CommandType.NoMoreTrialJobs, _pack_parameter(ids[0], ''))
-        else:
-            for i, _ in enumerate(ids):
-                send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))
+        assert len(ids) == len(params_list)
+        for i, _ in enumerate(ids):
+            send(CommandType.NewTrialJob, _pack_parameter(ids[i], params_list[i]))
         return True
 
     def handle_update_search_space(self, data):
@@ -110,30 +112,24 @@ class MsgDispatcher(MsgDispatcherBase):
         return True
 
     def handle_report_metric_data(self, data):
+        trial_job_id = data['trial_job_id']
         if data['type'] == 'FINAL':
-            value = None
             id_ = data['parameter_id']
-            
-            if isinstance(data['value'], float) or isinstance(data['value'], int):
-                value = data['value']
-            elif isinstance(data['value'], dict) and 'default' in data['value']:
-                value = data['value']['default']
-                if isinstance(value, float) or isinstance(value, int):
-                    pass
-                else:
-                    raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.')
-            else:
-                raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.') 
-            
             if id_ in _customized_parameter_ids:
-                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value)
+                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], data['value'], trial_job_id)
             else:
-                self.tuner.receive_trial_result(id_, _trial_params[id_], value)
+                self.tuner.receive_trial_result(id_, _trial_params[id_], data['value'], trial_job_id)
         elif data['type'] == 'PERIODICAL':
             if self.assessor is not None:
                 self._handle_intermediate_metric_data(data)
             else:
                pass
+        elif data['type'] == 'REQUEST_PARAMETER':
+            assert data['trial_job_id'] is not None
+            assert data['parameter_index'] is not None
+            param_id = _create_parameter_id()
+            param = self.tuner.generate_parameters(param_id, trial_job_id)
+            send(CommandType.SendTrialJobParameter, _pack_parameter(param_id, param, trial_job_id=data['trial_job_id'], parameter_index=data['parameter_index']))
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
 
