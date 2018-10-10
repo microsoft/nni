@@ -510,7 +510,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         className="tableButton"
                         onClick={this.downExperimentContent}
                     >
-                        Down Experiment
+                        Download Experiment
                     </Button>
                 </div>
             </div>
