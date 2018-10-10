@@ -19,6 +19,7 @@
 
 'use strict';
 
+import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as component from '../common/component';
 import { RestServer } from '../common/restServer'
@@ -32,9 +33,6 @@ import { createRestHandler } from './restHandler';
  */
 @component.Singleton
 export class NNIRestServer extends RestServer{
-    /** NNI main rest service default port */
-    public static readonly DEFAULT_PORT: number = 51188;
-
     private readonly API_ROOT_URL: string = '/api/v1/nni';
 
     /**
@@ -42,13 +40,13 @@ export class NNIRestServer extends RestServer{
      */
     constructor() {
         super();
-        this.port = NNIRestServer.DEFAULT_PORT;
     }
 
     /**
      * NNIRestServer's own router registration
      */
     protected registerRestHandler(): void {
+        this.app.use(express.static('static'));
         this.app.use(bodyParser.json());
         this.app.use(this.API_ROOT_URL, createRestHandler(this));
     }
