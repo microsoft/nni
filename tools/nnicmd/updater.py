@@ -52,9 +52,9 @@ def get_query_type(key):
     if key == 'searchSpace':
         return '?update_type=SEARCH_SPACE'
 
-def update_experiment_profile(key, value):
+def update_experiment_profile(args, key, value):
     '''call restful server to update experiment profile'''
-    nni_config = Config()
+    nni_config = Config(args.port)
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)
     if running:
@@ -72,21 +72,21 @@ def update_experiment_profile(key, value):
 def update_searchspace(args):
     validate_file(args.filename)
     content = load_search_space(args.filename)
-    if update_experiment_profile('searchSpace', content):
+    if update_experiment_profile(args, 'searchSpace', content):
         print('INFO: update %s success!' % 'searchSpace')
     else:
         print('ERROR: update %s failed!' % 'searchSpace')
 
 def update_concurrency(args):
     validate_digit(args.value, 1, 1000)
-    if update_experiment_profile('trialConcurrency', int(args.value)):
+    if update_experiment_profile(args, 'trialConcurrency', int(args.value)):
         print('INFO: update %s success!' % 'concurrency')
     else:
         print('ERROR: update %s failed!' % 'concurrency')
 
 def update_duration(args):
     validate_digit(args.value, 1, 999999999)
-    if update_experiment_profile('maxExecDuration', int(args.value)):
+    if update_experiment_profile(args, 'maxExecDuration', int(args.value)):
         print('INFO: update %s success!' % 'duration')
     else:
         print('ERROR: update %s failed!' % 'duration')

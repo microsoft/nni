@@ -17,7 +17,6 @@ __nnictl_log_cmds="stdout stderr"
 __nnictl_log_stdout_cmds="--tail --head --path"
 __nnictl_log_stderr_cmds="--tail --head --path"
 
-
 # list of arguments that accept a file name
 __nnictl_file_args=" --config -c --filename -f "
 
