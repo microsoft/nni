@@ -2,6 +2,8 @@ Dockerfile
 ===
 ## 1.Description  
 This is the Dockerfile of nni project, including the most kinds of deeplearning frameworks and nni source code.  You can run your nni experiment in this docker container directly.
+Dockerfile.build.base is the base Docker, including Ubuntu, cudnn and the NNI environment.
+Dockerfile is the customized docker for users, if you want to add your own deeplearning environment, you could update this Dockerfile.
 ## 2.Including Libraries  
 
 ```
