@@ -33,7 +33,7 @@ import {
     HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
-import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
 import { file } from 'tmp';
 
 const tkill = require('tree-kill');
@@ -412,7 +412,7 @@ class LocalTrainingService implements TrainingService {
     }
 
     private async writeParameterFile(directory: string, hyperParameters: HyperParameters): Promise<void> {
-        const filepath: string = path.join(directory, `parameter_${hyperParameters.index}.cfg`);
+        const filepath: string = path.join(directory, generateParamFileName(hyperParameters));
         await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
     }
 }
