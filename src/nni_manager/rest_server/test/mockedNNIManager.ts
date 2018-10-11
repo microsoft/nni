@@ -135,6 +135,7 @@ export class MockedNNIManager extends Manager {
                 trialConcurrency: 2,
                 maxExecDuration: 30,
                 maxTrialNum: 3,
+                trainingServicePlatform: 'local',
                 searchSpace: '{lr: 0.01}',
                 tuner: {
                     className: 'testTuner',

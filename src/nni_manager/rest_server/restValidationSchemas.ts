@@ -52,9 +52,11 @@ export namespace ValidationSchemas {
     export const STARTEXPERIMENT = {
         body: {
             experimentName: joi.string().required(),
+            description: joi.string(),
             authorName: joi.string(),
             maxTrialNum: joi.number().min(0).required(),
             trialConcurrency: joi.number().min(0).required(),
+            trainingServicePlatform: joi.string(),
             searchSpace: joi.string().required(),
             maxExecDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
