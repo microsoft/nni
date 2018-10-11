@@ -138,7 +138,7 @@ class NNIDataStore implements DataStore {
         }));
     }
 
-    public getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]> {
+    public getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
         return this.db.queryMetricData(trialJobId, metricType);
     }
 

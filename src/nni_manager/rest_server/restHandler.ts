@@ -248,7 +248,7 @@ class NNIRestHandler {
     }
 
     private getMetricData(router: Router): void {
-        router.get('/metric-data/:job_id', async (req: Request, res: Response) => {
+        router.get('/metric-data/:job_id*?', async (req: Request, res: Response) => {
             this.nniManager.getMetricData(req.params.job_id, req.query.type).then((metricsData: MetricDataRecord[]) => {
                 res.send(metricsData);
             }).catch((err: Error) => {

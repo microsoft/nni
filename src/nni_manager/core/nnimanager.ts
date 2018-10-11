@@ -204,7 +204,7 @@ class NNIManager implements Manager {
         }
     }
 
-    public async getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]> {
+    public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
         return this.dataStore.getMetricData(trialJobId, metricType);
     }
 

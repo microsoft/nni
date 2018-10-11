@@ -78,7 +78,7 @@ abstract class DataStore {
     public abstract listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]>;
     public abstract getTrialJob(trialJobId: string): Promise<TrialJobInfo>;
     public abstract storeMetricData(trialJobId: string, data: string): Promise<void>;
-    public abstract getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]>;
+    public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
 }
 
 abstract class Database {
