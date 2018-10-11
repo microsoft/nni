@@ -91,6 +91,7 @@ class TensorboardManager implements BoardManager {
     
     public async runTensorboardProcess(cmd: string): Promise<number>{
         const process: cp.ChildProcess = cp.exec(cmd);
+        this.isRunning = true;
         return Promise.resolve(process.pid);
     }
     
@@ -102,6 +103,7 @@ class TensorboardManager implements BoardManager {
         if(this.tbPid !== undefined){
             await cpp.exec(`pkill -9 -P ${this.tbPid}`);
             this.tbPid = undefined;
+            this.isRunning = false;
         }
         Promise.resolve();
     }
