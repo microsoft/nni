@@ -48,7 +48,7 @@ Optional('assessor'): Or({
     'builtinAssessorName': lambda x: x in ['Medianstop'],
     'classArgs': {
         'optimize_mode': lambda x: x in ['maximize', 'minimize']},
-    'gpuNum': And(int, lambda x: 0 <= x <= 99999)
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
 },{
     'codeDir': os.path.exists,
     'classFileName': str,
