@@ -28,18 +28,13 @@ else  # is normal user
 endif
 
 ## Dependency information
-NODE_VERSION ?= v10.10.0
+NODE_VERSION ?= v10.12.0
 NODE_TARBALL ?= node-$(NODE_VERSION)-linux-x64.tar.xz
 NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
 
-YARN_VERSION ?= v1.9.4
+YARN_VERSION ?= v1.10.1
 YARN_TARBALL ?= yarn-$(YARN_VERSION).tar.gz
 YARN_PATH ?= /tmp/nni-yarn
-
-SERVE_VERSION ?= 10.0.1
-SERVE_TARBALL ?= serve-$(SERVE_VERSION).tgz
-SERVE_PATH ?= $(INSTALL_PREFIX)/nni/serve
-
 
 ## Check if dependencies have been installed globally
 ifeq (, $(shell command -v node 2>/dev/null))
@@ -57,21 +52,15 @@ ifeq (, $(shell command -v yarnpkg 2>/dev/null))
     $(info $(_INFO) Yarn not found $(_END))
     _MISS_DEPS := 1  # yarn not found
 endif
-ifeq (, $(shell command -v serve 2>/dev/null))
-    $(info $(_INFO) Serve not found $(_END))
-    _MISS_DEPS := 1  # serve not found
-endif
 
 ifdef _MISS_DEPS
     $(info $(_INFO) Missing dependencies, use local toolchain $(_END))
     NODE := $(NODE_PATH)/bin/node
     YARN := PATH=$${PATH}:$(NODE_PATH)/bin $(YARN_PATH)/bin/yarn
-    SERVE := $(SERVE_PATH)/serve
 else
     $(info $(_INFO) All dependencies found, use global toolchain $(_END))
     NODE := node
     YARN := yarnpkg
-    SERVE := serve
 endif
 
 
@@ -85,7 +74,7 @@ build:
 	#$(_INFO) Building NNI Manager $(_END)
 	cd src/nni_manager && $(YARN) && $(YARN) build
 	
-	#$(_INFO) Building Web UI $(_END)
+	#$(_INFO) Building WebUI $(_END)
 	cd src/webui && $(YARN) && $(YARN) build
 	
 	#$(_INFO) Building Python SDK $(_END)
@@ -169,19 +158,13 @@ $(YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
 	wget https://github.com/yarnpkg/yarn/releases/download/$(YARN_VERSION)/$(YARN_TARBALL)
 
-$(SERVE_TARBALL):
-	#$(_INFO) Downloading serve $(_END)
-	wget https://registry.npmjs.org/serve/-/$(SERVE_TARBALL)
-
 .PHONY: intall-dependencies
-install-dependencies: $(NODE_TARBALL) $(YARN_TARBALL) $(SERVE_TARBALL)
+install-dependencies: $(NODE_TARBALL) $(YARN_TARBALL)
 	#$(_INFO) Cleaning $(_END)
 	rm -rf $(NODE_PATH)
 	rm -rf $(YARN_PATH)
-	rm -rf $(SERVE_PATH)
 	mkdir -p $(NODE_PATH)
 	mkdir -p $(YARN_PATH)
-	mkdir -p $(SERVE_PATH)
 	
 	#$(_INFO) Extracting Node.js $(_END)
 	tar -xf $(NODE_TARBALL)
@@ -190,15 +173,6 @@ install-dependencies: $(NODE_TARBALL) $(YARN_TARBALL) $(SERVE_TARBALL)
 	#$(_INFO) Extracting Yarn $(_END)
 	tar -xf $(YARN_TARBALL)
 	mv -fT yarn-$(YARN_VERSION) $(YARN_PATH)
-	
-	#$(_INFO) Installing serve $(_END)
-	PATH=$${PATH}:$(NODE_PATH)/bin npm install --prefix $(SERVE_PATH) $(SERVE_TARBALL)
-	
-	#$(_INFO) Creating serve executable script $(_END)
-	echo '#!/bin/sh' > $(SERVE_PATH)/serve
-	echo '$(NODE) $(SERVE_PATH)/node_modules/serve/bin/serve.js $$@' >> $(SERVE_PATH)/serve
-	chmod +x $(SERVE_PATH)/serve
-
 
 .PHONY: install-python-modules
 install-python-modules:
@@ -217,8 +191,8 @@ install-node-modules:
 	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
 	cp -rT src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
 	
-	#$(_INFO) Installing Web UI $(_END)
-	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/webui
+	#$(_INFO) Installing WebUI $(_END)
+	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/nni_manager/static
 
 
 .PHONY: install-dev-modules
@@ -235,8 +209,8 @@ install-dev-modules:
 	ln -sf ${PWD}/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
 	ln -sf ${PWD}/src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
 	
-	#$(_INFO) Installing Web UI $(_END)
-	ln -sf ${PWD}/src/webui/build $(INSTALL_PREFIX)/nni/webui
+	#$(_INFO) Installing WebUI $(_END)
+	ln -sf ${PWD}/src/webui/build $(INSTALL_PREFIX)/nni/nni_manager/static
 
 
 .PHONY: install-scripts
@@ -250,8 +224,6 @@ install-scripts:
 	
 	echo '#!/bin/sh' > $(BIN_PATH)/nnictl
 	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager \' >> $(BIN_PATH)/nnictl
-	echo 'NNI_SERVE=$(SERVE) \' >> $(BIN_PATH)/nnictl
-	echo 'WEB_UI_FOLDER=$(INSTALL_PREFIX)/nni/webui \' >> $(BIN_PATH)/nnictl
 	echo 'python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
 	chmod +x $(BIN_PATH)/nnictl
 	
@@ -300,7 +272,7 @@ ifdef _ROOT
 	$(error You should not develop NNI as root)
 endif
 ifdef _MISS_DEPS
-#	$(error Please install Node.js, Yarn, and Serve to develop NNI)
+#	$(error Please install Node.js and Yarn to develop NNI)
 endif
 	#$(_INFO) Pass! $(_END)
 

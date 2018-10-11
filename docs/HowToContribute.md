@@ -43,7 +43,7 @@ For example, run the command
 ```
 nnictl create --config ~/nni/examples/trials/mnist/config.yml
 ```
-And open web ui to check if everything is OK
+And open WebUI to check if everything is OK
 
 **6. Redeploy**
 
