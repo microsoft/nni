@@ -54,13 +54,13 @@ class TensorboardManager implements BoardManager {
 
     public async startTensorBoard(trialJobIds: string[], tbCmd?: string, port?: number): Promise<string> {
         const trialJobId = trialJobIds[0];
-        
+        console.log('-------------------------------57----------------')
         let tensorBoardPort: number = this.DEFAULT_PORT;
         if (port !== undefined) {
             tensorBoardPort = port;
         }
         const tbEndpoint: string = `http://localhost:${tensorBoardPort}`;
-        
+        console.log('-------------------------------63----------------')
         this.tbPortTrialMap.set(tensorBoardPort, trialJobId);
         try {
             if (await this.isTensorBoardRunning(tensorBoardPort)) {
@@ -74,22 +74,24 @@ class TensorboardManager implements BoardManager {
             }
         }
         const logDirs: string[] = [];
-        
+        console.log('-------------------------------77----------------')
         logDirs.push(await this.getLogDir(trialJobId));
         
         let tensorBoardCmd: string = this.TENSORBOARD_COMMAND;
         if (tbCmd !== undefined && tbCmd.trim().length > 0) {
             tensorBoardCmd = tbCmd;
         }
+        console.log('-------------------------------84----------------')
         const cmd: string = `${tensorBoardCmd} --logdir ${logDirs.join(':')} --port ${tensorBoardPort}`;
         const pid: number = await this.runTensorboardProcess(cmd);
-
+        console.log('-------------------------------87----------------')
         this.trialTbPidMap.set(trialJobId, pid);
 
         return tbEndpoint;
     }
     
     public async runTensorboardProcess(cmd: string): Promise<number>{
+        console.log('-------------------------------94----------------')
         const process: cp.ChildProcess = cp.exec(cmd);
         return Promise.resolve(process.pid);
     }
