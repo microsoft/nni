@@ -88,6 +88,16 @@ class Sessionpro extends React.Component<{}, SessionState> {
         };
     }
 
+    convertTime = (num: number) => {
+        if (num % 3600 === 0) {
+            return num / 3600 + 'h';
+        } else {
+            const hour = Math.floor(num / 3600);
+            const min = Math.floor(num / 60 % 60);
+            return hour > 0 ? `${hour} h ${min} min` : `${min} min`;
+        }
+    }
+
     // show session
     showSessionPro = () => {
         axios(`${MANAGER_IP}/experiment`, {
@@ -124,7 +134,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                     const searchSpace = JSON.parse(sessionData.params.searchSpace);
                     Object.keys(searchSpace).map(item => {
                         const key = searchSpace[item]._type;
-                        if (key === 'loguniform') {
+                        if (key === 'loguniform' || key === 'qloguniform') {
                             let value = searchSpace[item]._value;
                             const a = Math.pow(10, value[0]);
                             const b = Math.pow(10, value[1]);
@@ -231,17 +241,29 @@ class Sessionpro extends React.Component<{}, SessionState> {
         axios
             .all([
                 axios.get(`${MANAGER_IP}/experiment`),
-                axios.get(`${MANAGER_IP}/trial-jobs`)
+                axios.get(`${MANAGER_IP}/trial-jobs`),
+                axios.get(`${MANAGER_IP}/metric-data`)
             ])
-            .then(axios.spread((res, res1) => {
-                if (res.status === 200 && res1.status === 200) {
+            .then(axios.spread((res, res1, res2) => {
+                if (res.status === 200 && res1.status === 200 && res2.status === 200) {
                     if (res.data.params.searchSpace) {
                         res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
                     }
+                    const interResultList = res2.data;
                     const contentOfExperiment = JSON.stringify(res.data, null, 2);
                     let trialMessagesArr = res1.data;
                     Object.keys(trialMessagesArr).map(item => {
+                        // transform hyperparameters as object to show elegantly
                         trialMessagesArr[item].hyperParameters = JSON.parse(trialMessagesArr[item].hyperParameters);
+                        const trialId = trialMessagesArr[item].id;
+                        // add intermediate result message
+                        trialMessagesArr[item].intermediate = [];
+                        Object.keys(interResultList).map(key => {
+                            const interId = interResultList[key].trialJobId;
+                            if (trialId === interId) {
+                                trialMessagesArr[item].intermediate.push(interResultList[key]);
+                            }
+                        });
                     });
                     const trialMessages = JSON.stringify(trialMessagesArr, null, 2);
                     const aTag = document.createElement('a');
@@ -358,11 +380,15 @@ class Sessionpro extends React.Component<{}, SessionState> {
         const {
             trialProfile, searchSpace, tunerAssessor, tableData, status
         } = this.state;
+
+        const maxRuntime = this.convertTime(trialProfile.maxDuration);
         let running;
+        let runningStr = '';
         if (trialProfile.endTime === 'not over') {
             running = trialProfile.maxDuration - trialProfile.execDuration;
+            runningStr = this.convertTime(running);
         } else {
-            running = 0;
+            runningStr = '0';
         }
         return (
             <div className="session" id="session">
@@ -389,11 +415,11 @@ class Sessionpro extends React.Component<{}, SessionState> {
                                 </div>
                                 <p>
                                     <span>Duration</span>
-                                    <span className="messcont">{trialProfile.maxDuration}s</span>
+                                    <span className="messcont">{maxRuntime}</span>
                                 </p>
                                 <p>
-                                    <span>Still&nbsp;running</span>
-                                    <span className="messcont">{running}s</span>
+                                    <span>Still&nbsp;run</span>
+                                    <span className="messcont">{runningStr}</span>
                                 </p>
                             </div>
                             <div className="logo">
@@ -492,7 +518,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         className="tableButton"
                         onClick={this.downExperimentContent}
                     >
-                        Down Experiment
+                        Download experiment summary
                     </Button>
                 </div>
             </div>
