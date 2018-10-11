@@ -24,6 +24,7 @@ from schema import Schema, And, Use, Optional, Regex, Or
 common_schema = {
 'authorName': str,
 'experimentName': str,
+Optional('description'): str,
 'trialConcurrency': And(int, lambda n: 1 <=n <= 999999),
 Optional('maxExecDuration'): Regex(r'^[1-9][0-9]*[s|m|h|d]$'),
 Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),

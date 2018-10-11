@@ -27,10 +27,12 @@ type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPA
 interface ExperimentParams {
     authorName: string;
     experimentName: string;
+    description?: string;
     trialConcurrency: number;
     maxExecDuration: number; //seconds
     maxTrialNum: number;
     searchSpace: string;
+    trainingServicePlatform: string;
     multiPhase?: boolean;
     tuner: {
         className: string;
@@ -90,7 +92,7 @@ abstract class Manager {
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
     public abstract getClusterMetadata(key: string): Promise<string>;
 
-    public abstract getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]>;
+    public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract getStatus(): NNIManagerStatus;
 }
