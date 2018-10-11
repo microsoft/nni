@@ -95,6 +95,7 @@ class LocalTrainingService implements TrainingService {
     private initialized: boolean;
     private stopping: boolean;
     private rootDir!: string;
+    private trialSequenceId: number;
     protected log: Logger;
     protected localTrailConfig?: TrialConfig;
 
@@ -105,6 +106,7 @@ class LocalTrainingService implements TrainingService {
         this.initialized = false;
         this.stopping = false;
         this.log = getLogger();
+        this.trialSequenceId = 0;
     }
 
     public async run(): Promise<void> {
@@ -344,6 +346,7 @@ class LocalTrainingService implements TrainingService {
         await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
         await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8' });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
+        await this.writeSequenceIdFile(trialJobId);
         const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
 
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
@@ -414,6 +417,16 @@ class LocalTrainingService implements TrainingService {
     private async writeParameterFile(directory: string, hyperParameters: HyperParameters): Promise<void> {
         const filepath: string = path.join(directory, `parameter_${hyperParameters.index}.cfg`);
         await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
+    }
+
+    private generateSequenceId(): number {
+        return this.trialSequenceId++;
+    }
+
+    private async writeSequenceIdFile(trialJobId: string): Promise<void> {
+        const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
+        const filepath: string = path.join(trialJobDetail.workingDirectory, '.nni', 'sequence_id');
+        await fs.promises.writeFile(filepath, this.generateSequenceId().toString(), { encoding: 'utf8' });
     }
 }
 
