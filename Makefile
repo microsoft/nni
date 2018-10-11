@@ -74,7 +74,7 @@ build:
 	#$(_INFO) Building NNI Manager $(_END)
 	cd src/nni_manager && $(YARN) && $(YARN) build
 	
-	#$(_INFO) Building Web UI $(_END)
+	#$(_INFO) Building WebUI $(_END)
 	cd src/webui && $(YARN) && $(YARN) build
 	
 	#$(_INFO) Building Python SDK $(_END)
@@ -191,7 +191,7 @@ install-node-modules:
 	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
 	cp -rT src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
 	
-	#$(_INFO) Installing Web UI $(_END)
+	#$(_INFO) Installing WebUI $(_END)
 	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/nni_manager/static
 
 
@@ -209,7 +209,7 @@ install-dev-modules:
 	ln -sf ${PWD}/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
 	ln -sf ${PWD}/src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
 	
-	#$(_INFO) Installing Web UI $(_END)
+	#$(_INFO) Installing WebUI $(_END)
 	ln -sf ${PWD}/src/webui/build $(INSTALL_PREFIX)/nni/nni_manager/static
 
 

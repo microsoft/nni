@@ -28,7 +28,7 @@ import { createRestHandler } from './restHandler';
 /**
  * NNI Main rest server, provides rest API to support
  * # nnictl CLI tool
- * # NNI Web UI
+ * # NNI WebUI
  * 
  */
 @component.Singleton
