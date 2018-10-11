@@ -42,8 +42,7 @@ EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0
                           '4. nnictl log stdout             show stdout log content\n' \
                           '5. nnictl stop                   stop a experiment\n' \
                           '6. nnictl trial kill             kill a trial job by id\n' \
-                          '7. nnictl webui url              get the url of web ui\n' \
-                          '8. nnictl --help                 get help information about nnictl\n' \
+                          '7. nnictl --help                 get help information about nnictl\n' \
                           '-----------------------------------------------------------------------\n' \
 
 PACKAGE_REQUIREMENTS = {

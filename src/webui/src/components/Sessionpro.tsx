@@ -1,6 +1,6 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Table, Select, Row, Col, Icon } from 'antd';
+import { Table, Select, Row, Col, Icon, Button } from 'antd';
 import { MANAGER_IP, overviewItem } from '../const';
 const Option = Select.Option;
 import JSONTree from 'react-json-tree';
@@ -120,10 +120,26 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         tuner: sessionData.params.tuner,
                         assessor: sessionData.params.assessor
                     });
+                    // search space format loguniform max and min
+                    const searchSpace = JSON.parse(sessionData.params.searchSpace);
+                    Object.keys(searchSpace).map(item => {
+                        const key = searchSpace[item]._type;
+                        if (key === 'loguniform') {
+                            let value = searchSpace[item]._value;
+                            const a = Math.pow(10, value[0]);
+                            const b = Math.pow(10, value[1]);
+                            if (a < b) {
+                                value = [a, b];
+                            } else {
+                                value = [b, a];
+                            }
+                            searchSpace[item]._value = value;
+                        }
+                    });
                     if (this._isMounted) {
                         this.setState({
                             trialProfile: trialPro[0],
-                            searchSpace: JSON.parse(sessionData.params.searchSpace),
+                            searchSpace: searchSpace,
                             tunerAssessor: tunerAsstemp[0]
                         });
                     }
@@ -211,6 +227,43 @@ class Sessionpro extends React.Component<{}, SessionState> {
         }
     }
 
+    downExperimentContent = () => {
+        axios
+            .all([
+                axios.get(`${MANAGER_IP}/experiment`),
+                axios.get(`${MANAGER_IP}/trial-jobs`)
+            ])
+            .then(axios.spread((res, res1) => {
+                if (res.status === 200 && res1.status === 200) {
+                    if (res.data.params.searchSpace) {
+                        res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
+                    }
+                    const contentOfExperiment = JSON.stringify(res.data, null, 2);
+                    let trialMessagesArr = res1.data;
+                    Object.keys(trialMessagesArr).map(item => {
+                        trialMessagesArr[item].hyperParameters = JSON.parse(trialMessagesArr[item].hyperParameters);
+                    });
+                    const trialMessages = JSON.stringify(trialMessagesArr, null, 2);
+                    const aTag = document.createElement('a');
+                    const file = new Blob([contentOfExperiment, trialMessages], { type: 'application/json' });
+                    aTag.download = 'experiment.txt';
+                    aTag.href = URL.createObjectURL(file);
+                    aTag.click();
+                    URL.revokeObjectURL(aTag.href);
+                    if (navigator.userAgent.indexOf('Firefox') > -1) {
+                        const downTag = document.createElement('a');
+                        downTag.addEventListener('click', function () {
+                            downTag.download = 'experiment.txt';
+                            downTag.href = URL.createObjectURL(file);
+                        });
+                        let eventMouse = document.createEvent('MouseEvents');
+                        eventMouse.initEvent('click', false, false);
+                        downTag.dispatchEvent(eventMouse);
+                    }
+                }
+            }));
+    }
+
     componentDidMount() {
         this.showSessionPro();
         this.showTrials();
@@ -285,7 +338,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         getItemString={() => (<span />)}  // remove the {} items
                         data={openRowDataSource}
                     />
-                     {
+                    {
                         isLogLink
                             ?
                             <div className="logpath">
@@ -432,6 +485,15 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         className="tables"
                         bordered={true}
                     />
+                </div>
+                <div className="downExp">
+                    <Button
+                        type="primary"
+                        className="tableButton"
+                        onClick={this.downExperimentContent}
+                    >
+                        Down Experiment
+                    </Button>
                 </div>
             </div>
         );

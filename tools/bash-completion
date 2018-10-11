@@ -1,5 +1,5 @@
 # list of commands/arguments
-__nnictl_cmds="create resume update stop trial webui experiment config rest log"
+__nnictl_cmds="create resume update stop trial experiment config rest log"
 __nnictl_create_cmds="--config --webuiport"
 __nnictl_resume_cmds="--experiment --manager --webuiport"
 __nnictl_update_cmds="searchspace concurrency duration"

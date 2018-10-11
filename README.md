@@ -42,9 +42,9 @@ Try it out:
     nnictl create --config ~/nni/examples/trials/mnist/config.yml
 ```
 
-In the command output, find out the **Web UI url** and open it in your browser. You can analyze your experiment through WebUI, or browse trials' tensorboard. 
+In the command output, find out the **WebUI url** and open it in your browser. You can analyze your experiment through WebUI, or browse trials' tensorboard. 
 
-To learn more about how this example was constructed and how to analyze the experiment results in NNI Web UI, please refer to [How to write a trial run on NNI (MNIST as an example)?](docs/WriteYourTrial.md)
+To learn more about how this example was constructed and how to analyze the experiment results in NNI WebUI, please refer to [How to write a trial run on NNI (MNIST as an example)?](docs/WriteYourTrial.md)
 
 ## **Please refer to [Get Started Tutorial](docs/GetStarted.md) for more detailed information.**
 ## More tutorials
@@ -58,9 +58,13 @@ To learn more about how this example was constructed and how to analyze the expe
 * [How to write a customized assessor?](examples/assessors/README.md)
 * [How to resume an experiment?](docs/NNICTLDOC.md)
 * [Tutorial of the command tool *nnictl*.](docs/NNICTLDOC.md)
+* [How to debug in NNI](docs/HowToDebug.md)
 
 # Contributing
-This project welcomes contributions and suggestions, we are constructing the contribution guidelines, stay tuned =).
+This project welcomes contributions and suggestions, please refer to our [contributing](./docs/CONTRIBUTING.md) document for the same.
 
 We use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
+
+# License 
+The entire codebase is under [MIT license](https://github.com/Microsoft/nni/blob/master/LICENSE)
 

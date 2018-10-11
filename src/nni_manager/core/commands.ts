@@ -27,6 +27,7 @@ const TRIAL_END = 'EN';
 const TERMINATE = 'TE';
 
 const NEW_TRIAL_JOB = 'TR';
+const SEND_TRIAL_JOB_PARAMETER = 'SP';
 const NO_MORE_TRIAL_JOBS = 'NO';
 const KILL_TRIAL_JOB = 'KI';
 
@@ -39,6 +40,7 @@ const TUNER_COMMANDS: Set<string> = new Set([
     TERMINATE,
 
     NEW_TRIAL_JOB,
+    SEND_TRIAL_JOB_PARAMETER,
     NO_MORE_TRIAL_JOBS
 ]);
 
@@ -63,5 +65,6 @@ export {
     NO_MORE_TRIAL_JOBS,
     KILL_TRIAL_JOB,
     TUNER_COMMANDS,
-    ASSESSOR_COMMANDS
+    ASSESSOR_COMMANDS,
+    SEND_TRIAL_JOB_PARAMETER
 };
