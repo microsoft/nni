@@ -39,19 +39,14 @@ class TensorboardManager implements BoardManager {
     
     private DEFAULT_PORT: number = 6006;
     private TENSORBOARD_COMMAND: string = 'PATH=$PATH:~/.local/bin:/usr/local/bin tensorboard';
-    private tbPortTrialMap: Map<number, string>;
-    private trialTbPidMap: Map<string, number>;
     private trainingService: TrainingService;
     private dataStore: DataStore;
-    private logPaths: string[];
+    private tbPid?: number;
 
 
     constructor() {
-        this.tbPortTrialMap = new Map();
-        this.trialTbPidMap = new Map();
         this.trainingService = component.get(TrainingService);
         this.dataStore = component.get(DataStore);
-        this.logPaths = [];
     }
 
     public async startTensorBoard(trialJobIds: string[], tbCmd?: string, port?: number): Promise<string> {
@@ -61,35 +56,25 @@ class TensorboardManager implements BoardManager {
             tensorBoardPort = port;
         }
         const tbEndpoint: string = `http://localhost:${tensorBoardPort}`;
-
-        for (const id of trialJobIds) {
-            this.tbPortTrialMap.set(tensorBoardPort, id);
-        }
         
-        try {
-            if (await this.isTensorBoardRunning(tensorBoardPort)) {
-                await this.stopTensorBoard(tensorBoardPort);
-            }
-        } catch (error) {
-            if (error.name !== NNIErrorNames.NOT_FOUND) {
-                throw error;
-            } else {
-                this.tbPortTrialMap.delete(tensorBoardPort);
-            }
+        if(this.tbPid !== undefined){
+            await this.stopTensorBoard(this.tbPid);
         }
 
+        const logDirs: string[] = [];
+
         for (const id of trialJobIds) {
-            this.logPaths.push(await this.getLogDir(id));
+            logDirs.push(await this.getLogDir(id));
         }
-        
+
         let tensorBoardCmd: string = this.TENSORBOARD_COMMAND;
         if (tbCmd !== undefined && tbCmd.trim().length > 0) {
             tensorBoardCmd = tbCmd;
         }
         const cmd: string = `${tensorBoardCmd} --logdir ${logDirs.join(':')} --port ${tensorBoardPort}`;
-        const pid: number = await this.runTensorboardProcess(cmd);
-        this.trialTbPidMap.set(trialJobId, pid);
-
+        this.tbPid = await this.runTensorboardProcess(cmd);
+        console.log('---------------------debug tensorboard manager-------------------')
+        console.log(this.tbPid)
         return tbEndpoint;
     }
     
@@ -102,8 +87,14 @@ class TensorboardManager implements BoardManager {
         
     }
     
-    public async stopTensorBoard(tensorBoardPort: number): Promise<void> {
-    
+    public async stopTensorBoard(pid: number): Promise<void> {
+        try{
+            await cpp.exec(`pkill -9 -P ${pid}`);
+            this.tbPid = undefined;
+        }catch{
+            Promise.reject(new Error("Tensorboard process is not running"));
+        }
+        Promise.resolve();
     }
     
     private async isTensorBoardRunning(port: number): Promise<boolean> {
