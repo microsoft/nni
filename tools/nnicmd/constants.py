@@ -28,6 +28,8 @@ NORMAL_INFO = 'INFO: %s'
 
 WARNING_INFO = 'WARNING: %s'
 
+DEFAULT_REST_PORT = 51188
+
 EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0m' \
                           '-----------------------------------------------------------------------\n' \
                           'The experiment id is %s\n'\
