@@ -28,7 +28,7 @@ Initial release of Neural Network Intelligence (NNI).
       * Provide Python API for user to wrap trial code as NNI deployable codes
    * Experiments
       * Provide a command line toolkit 'nnictl' for experiments management
-      * Provide a web UI for viewing experiments details and managing experiments
+      * Provide a WebUI for viewing experiments details and managing experiments
    * Continuous Integration
       * Support CI by providing out-of-box integration with [travis-ci](https://github.com/travis-ci) on ubuntu    
    * Others

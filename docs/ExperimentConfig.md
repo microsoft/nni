@@ -136,7 +136,7 @@ machineList:
 * __maxTrialNum__
   *  Description
     
-	 __maxTrialNum__ specifies the max number of trial jobs created by nni, including successed and failed jobs.  
+	 __maxTrialNum__ specifies the max number of trial jobs created by nni, including succeeded and failed jobs.  
 	 
 * __trainingServicePlatform__
   * Description
