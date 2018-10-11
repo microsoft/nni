@@ -46,12 +46,6 @@ class Config:
         '''get a value according to key'''
         return self.config.get(key)
 
-    def copy_metadata_to_new_path(self, path):
-        '''copy metadata to a new path'''
-        if not os.path.exists(path):
-            os.mkdir(path)
-        shutil.copy(self.config_file, path)
-
     def write_file(self):
         '''save config to local file'''
         if self.config:
@@ -71,3 +65,44 @@ class Config:
             except ValueError:
                 return {}
         return {}
+
+class Experiment:
+    '''Maintain experiment list'''
+    def __init__(self):
+        os.makedirs(HOME_DIR, exist_ok=True)
+        self.experiment_file = os.path.join(HOME_DIR, '.experiment')
+        self.experiment = self.read_file()
+
+    def add_experiment(self, id, port):
+        '''set {key:value} paris to self.experiment'''
+        self.experiment[id] = port
+        self.write_file()
+    
+    def remove_experiment(self, id):
+        '''remove an experiment by id'''
+        if id in self.experiment:
+            self.experiment.pop(id)
+        self.write_file()
+        
+    def get_all_experiments(self):
+        '''return all of experiments'''
+        return self.experiment
+    
+    def write_file(self):
+        '''save config to local file'''
+        try:
+            with open(self.experiment_file, 'w') as file:
+                json.dump(self.experiment, file)
+        except IOError as error:
+            print('Error:', error)
+            return
+
+    def read_file(self):
+        '''load config from local file'''
+        if os.path.exists(self.experiment_file):
+            try:
+                with open(self.experiment_file, 'r') as file:
+                    return json.load(file)
+            except ValueError:
+                return {}
+        return {} 

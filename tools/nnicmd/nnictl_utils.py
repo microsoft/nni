@@ -24,11 +24,37 @@ import json
 import datetime
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
-from .config_utils import Config
+from .config_utils import Config, Experiment
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
 from .constants import HOME_DIR
 import time
 from .common_utils import print_normal, print_error, detect_process
+
+def get_experiment_port(args):
+    experiment_config = Experiment()
+    experiment_dict = experiment_config.get_all_experiments()
+
+    if not experiment_dict:
+        print_normal('Experiment is not running...')
+        return None
+    if not args.id and len(experiment_dict.keys()) > 1:
+        print_normal('There are multiple experiments running, please set the experiment id...\n')
+        print('Experiment id: ', '   '.join(list(str(id) for id in experiment_dict.keys())))
+        return None
+    if not args.id:
+        return list(experiment_dict.values())[0]
+    if experiment_dict.get(args.id):
+        return experiment_dict[args.id]
+    else:
+        print_error('Id not correct!')     
+        return None
+
+def get_experiment_id(args):
+    experiment_config = Experiment()
+    experiment_dict = experiment_config.get_all_experiments()
+    if not args.id:
+        return list(experiment_dict.keys())[0]
+    return args.id
 
 def convert_time_stamp_to_date(content):
     '''Convert time stamp to date time format'''
@@ -44,7 +70,10 @@ def convert_time_stamp_to_date(content):
 
 def check_rest(args):
     '''check if restful server is running'''
-    nni_config = Config(args.port)
+    port = get_experiment_port(args)
+    if port is None:
+        return None
+    nni_config = Config(port)
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)
     if not running:
@@ -54,8 +83,11 @@ def check_rest(args):
 
 def stop_experiment(args):
     '''Stop the experiment which is running'''
+    port = get_experiment_port(args)
+    if port is None:
+        return None
     print_normal('Stoping experiment...')
-    nni_config = Config(args.port)
+    nni_config = Config(port)
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
@@ -71,14 +103,20 @@ def stop_experiment(args):
     #sleep to wait rest handler done
     time.sleep(3)
     rest_pid = nni_config.get_config('restServerPid')
-    cmds = ['pkill', '-P', str(rest_pid)]
-    call(cmds)
+    if rest_pid:
+        cmds = ['pkill', '-P', str(rest_pid)]
+        call(cmds)
     if stop_rest_result:
         print_normal('Stop experiment success!')
+    experiment_config = Experiment()
+    experiment_config.remove_experiment(get_experiment_id(args))
 
 def trial_ls(args):
     '''List trial'''
-    nni_config = Config(args.port)
+    port = get_experiment_port(args)
+    if port is None:
+        return None
+    nni_config = Config(port)
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
@@ -99,7 +137,10 @@ def trial_ls(args):
 
 def trial_kill(args):
     '''List trial'''
-    nni_config = Config(args.port)
+    port = get_experiment_port(args)
+    if port is None:
+        return None
+    nni_config = Config(port)
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
@@ -117,7 +158,10 @@ def trial_kill(args):
 
 def list_experiment(args):
     '''Get experiment information'''
-    nni_config = Config(args.port)
+    port = get_experiment_port(args)
+    if port is None:
+        return None
+    nni_config = Config(port)
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
@@ -136,7 +180,10 @@ def list_experiment(args):
 
 def experiment_status(args):
     '''Show the status of experiment'''
-    nni_config = Config(args.port)
+    port = get_experiment_port(args)
+    if port is None:
+        return None
+    nni_config = Config(port)
     rest_port = nni_config.get_config('restServerPort')
     result, response = check_rest_server_quick(rest_port)
     if not result:
@@ -154,10 +201,13 @@ def get_log_content(file_name, cmds):
 
 def log_internal(args, filetype):
     '''internal function to call get_log_content'''
+    port = get_experiment_port(args)
+    if port is None:
+        return None
     if filetype == 'stdout':
-        file_full_path = os.path.join(HOME_DIR, args.port, 'stdout')
+        file_full_path = os.path.join(HOME_DIR, str(port), 'stdout')
     else:
-        file_full_path = os.path.join(HOME_DIR, args.port, 'stderr')
+        file_full_path = os.path.join(HOME_DIR, str(port), 'stderr')
     if args.head:
         get_log_content(file_full_path, ['head', '-' + str(args.head), file_full_path])
     elif args.tail:
@@ -178,7 +228,10 @@ def log_stderr(args):
 def log_trial(args):
     ''''get trial log path'''
     trial_id_path_dict = {}
-    nni_config = Config(args.port)
+    port = get_experiment_port(args)
+    if port is None:
+        return None
+    nni_config = Config(port)
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
@@ -208,3 +261,16 @@ def get_config(args):
     '''get config info'''
     nni_config = Config(args.port)
     print(nni_config.get_all_config())
+
+def webui_url(args):
+    '''show the url of web ui'''
+    nni_config = Config(args.port)
+    print_normal('{0} {1}'.format('Web UI url:', ' '.join(nni_config.get_config('webuiUrl'))))
+
+def experiment_id(args):
+    experiment_config = Experiment()
+    experiment_dict = experiment_config.get_all_experiments()
+    if not experiment_dict:
+        print('There is no experiment running...')
+    else:
+       print('Experiment id: ', '   '.join(list(str(id) for id in experiment_dict.keys())))
