@@ -28,11 +28,11 @@ else  # is normal user
 endif
 
 ## Dependency information
-NODE_VERSION ?= v10.10.0
+NODE_VERSION ?= v10.12.0
 NODE_TARBALL ?= node-$(NODE_VERSION)-linux-x64.tar.xz
 NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
 
-YARN_VERSION ?= v1.9.4
+YARN_VERSION ?= v1.10.1
 YARN_TARBALL ?= yarn-$(YARN_VERSION).tar.gz
 YARN_PATH ?= /tmp/nni-yarn
 
