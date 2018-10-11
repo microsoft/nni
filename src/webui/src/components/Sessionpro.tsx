@@ -241,17 +241,29 @@ class Sessionpro extends React.Component<{}, SessionState> {
         axios
             .all([
                 axios.get(`${MANAGER_IP}/experiment`),
-                axios.get(`${MANAGER_IP}/trial-jobs`)
+                axios.get(`${MANAGER_IP}/trial-jobs`),
+                axios.get(`${MANAGER_IP}/metric-data`)
             ])
-            .then(axios.spread((res, res1) => {
-                if (res.status === 200 && res1.status === 200) {
+            .then(axios.spread((res, res1, res2) => {
+                if (res.status === 200 && res1.status === 200 && res2.status === 200) {
                     if (res.data.params.searchSpace) {
                         res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
                     }
+                    const interResultList = res2.data;
                     const contentOfExperiment = JSON.stringify(res.data, null, 2);
                     let trialMessagesArr = res1.data;
                     Object.keys(trialMessagesArr).map(item => {
+                        // transform hyperparameters as object to show elegantly
                         trialMessagesArr[item].hyperParameters = JSON.parse(trialMessagesArr[item].hyperParameters);
+                        const trialId = trialMessagesArr[item].id;
+                        // add intermediate result message
+                        trialMessagesArr[item].intermediate = [];
+                        Object.keys(interResultList).map(key => {
+                            const interId = interResultList[key].trialJobId;
+                            if (trialId === interId) {
+                                trialMessagesArr[item].intermediate.push(interResultList[key]);
+                            }
+                        });
                     });
                     const trialMessages = JSON.stringify(trialMessagesArr, null, 2);
                     const aTag = document.createElement('a');
