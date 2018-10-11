@@ -260,8 +260,6 @@ class NNIRestHandler {
         router.post('/tensorboard', expressJoi(ValidationSchemas.STARTTENSORBOARD), async (req: Request, res: Response) => {
             const jobIds: string[] = req.query.job_ids.split(',');
             const tensorboardCmd: string | undefined = req.query.tensorboard_cmd;
-            console.log('-------------------263---------------')
-            console.log(tensorboardCmd)
             this.tb.startTensorBoard(jobIds, tensorboardCmd).then((endPoint: string) => {
                 res.send({endPoint: endPoint});
             }).catch((err: Error) => {
