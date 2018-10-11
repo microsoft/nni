@@ -42,11 +42,20 @@ class TensorboardManager implements BoardManager {
     private trainingService: TrainingService;
     private dataStore: DataStore;
     private tbPid?: number;
+    private isRunning: boolean;
 
 
     constructor() {
+        this.isRunning = false;
         this.trainingService = component.get(TrainingService);
         this.dataStore = component.get(DataStore);
+    }
+    
+    public async Run(): Promise<void>{
+        while(this.isRunning){
+            console.log('----------in run------------');
+            await(5000);
+        }
     }
 
     public async startTensorBoard(trialJobIds: string[], tbCmd?: string, port?: number): Promise<string> {
@@ -58,7 +67,7 @@ class TensorboardManager implements BoardManager {
         const tbEndpoint: string = `http://localhost:${tensorBoardPort}`;
         
         if(this.tbPid !== undefined){
-            await this.stopTensorBoard(this.tbPid);
+            await this.stopTensorBoard();
         }
 
         const logDirs: string[] = [];
@@ -73,8 +82,10 @@ class TensorboardManager implements BoardManager {
         }
         const cmd: string = `${tensorBoardCmd} --logdir ${logDirs.join(':')} --port ${tensorBoardPort}`;
         this.tbPid = await this.runTensorboardProcess(cmd);
-        console.log('---------------------debug tensorboard manager-------------------')
-        console.log(this.tbPid)
+        this.Run().catch(()=>{
+
+        });
+        console.log('----after run-----')        
         return tbEndpoint;
     }
     
@@ -87,18 +98,12 @@ class TensorboardManager implements BoardManager {
         
     }
     
-    public async stopTensorBoard(pid: number): Promise<void> {
-        try{
-            await cpp.exec(`pkill -9 -P ${pid}`);
+    public async stopTensorBoard(): Promise<void> {
+        if(this.tbPid !== undefined){
+            await cpp.exec(`pkill -9 -P ${this.tbPid}`);
             this.tbPid = undefined;
-        }catch{
-            Promise.reject(new Error("Tensorboard process is not running"));
         }
         Promise.resolve();
-    }
-    
-    private async isTensorBoardRunning(port: number): Promise<boolean> {
-        return Promise.resolve(false);
     }
     
     private async getLogDir(trialJobId: string): Promise<string> {

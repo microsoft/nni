@@ -165,6 +165,7 @@ class NNIRestHandler {
             try {
                 await this.tb.cleanUp();
                 await this.nniManager.stopExperiment();
+                await this.tensorboardManager.stopTensorBoard();
                 res.send();
                 this.log.debug('Stopping rest server');
                 await this.restServer.stop();
@@ -260,7 +261,7 @@ class NNIRestHandler {
         router.post('/tensorboard', expressJoi(ValidationSchemas.STARTTENSORBOARD), async (req: Request, res: Response) => {
             const jobIds: string[] = req.query.job_ids.split(',');
             const tensorboardCmd: string | undefined = req.query.tensorboard_cmd;
-            this.tb.startTensorBoard(jobIds, tensorboardCmd).then((endPoint: string) => {
+            this.tensorboardManager.startTensorBoard(jobIds, tensorboardCmd).then((endPoint: string) => {
                 res.send({endPoint: endPoint});
             }).catch((err: Error) => {
                 this.handle_error(err, res);
@@ -271,7 +272,7 @@ class NNIRestHandler {
     private stopTensorBoard(router: Router): void {
         router.delete('/tensorboard', expressJoi(ValidationSchemas.STOPTENSORBOARD), async (req: Request, res: Response) => {
             const endPoint: string = req.query.endpoint;
-            this.tb.stopTensorBoard(endPoint).then(() => {
+            this.tensorboardManager.stopTensorBoard().then(() => {
                 res.send();
             }).catch((err: Error) => {
                 this.handle_error(err, res);

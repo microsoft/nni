@@ -31,7 +31,7 @@ import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, TrialJobStatus
+    TrialJobDetail, TrialJobMetric, TrialJobStatus, ICopyData
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
 import { file } from 'tmp';

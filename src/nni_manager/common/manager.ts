@@ -99,6 +99,7 @@ abstract class Manager {
 
 abstract class BoardManager{
     public abstract startTensorBoard(trialJobIds: string[], tbCmd?: string, port?: number): Promise<string>;
+    public abstract stopTensorBoard(): Promise<void>;
 }
 
 export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, BoardManager };
