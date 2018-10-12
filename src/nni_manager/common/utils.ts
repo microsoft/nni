@@ -31,7 +31,7 @@ import * as util from 'util';
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
-import { TrainingService } from './trainingService';
+import { HyperParameters, TrainingService } from './trainingService';
 
 function getExperimentRootDir(): string {
     return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
@@ -195,6 +195,23 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean 
 }
 
 /**
+ * Generate parameter file name based on HyperParameters object
+ * @param hyperParameters HyperParameters instance
+ */
+function generateParamFileName(hyperParameters : HyperParameters): string {
+    assert(hyperParameters !== undefined);
+    assert(hyperParameters.index >= 0);
+
+    let paramFileName : string;
+    if(hyperParameters.index == 0) {
+        paramFileName = 'parameter.cfg';
+    } else {
+        paramFileName = `parameter_${hyperParameters.index}.cfg`
+    }
+    return paramFileName;
+}
+
+/**
  * Initialize a pseudo experiment environment for unit test.
  * Must be paired with `cleanupUnitTest()`.
  */
@@ -242,5 +259,5 @@ function getIPV4Address(): string {
     return ipv4Address;
 }
 
-export { getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
+export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, 
+    getDefaultDatabaseDir, getIPV4Address, mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
