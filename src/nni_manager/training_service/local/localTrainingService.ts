@@ -229,7 +229,7 @@ class LocalTrainingService implements TrainingService {
      * Is multiphase job supported in current training service
      */
     public get isMultiPhaseJobSupported(): boolean {
-        return false;
+        return true;
     }
 
     public async cancelTrialJob(trialJobId: string): Promise<void> {

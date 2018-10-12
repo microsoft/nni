@@ -64,6 +64,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private stopping: boolean = false;
     private metricsEmitter: EventEmitter;
     private log: Logger;
+    private isMultiPhase: boolean = false;
 
     constructor(@component.Inject timer: ObservableTimer) {
         this.metricsEmitter = new EventEmitter();
@@ -222,7 +223,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * Is multiphase job supported in current training service
      */
     public get isMultiPhaseJobSupported(): boolean {
-        return false;
+        return true;
     }
 
     /**
@@ -290,6 +291,9 @@ class RemoteMachineTrainingService implements TrainingService {
                     throw new Error(`codeDir ${remoteMachineTrailConfig.codeDir} is not a directory`);
                 }
                 this.trialConfig = remoteMachineTrailConfig;
+                break;
+            case TrialConfigMetadataKey.MULTI_PHASE:
+                this.isMultiPhase = (value === 'true' || value === 'True');
                 break;
             default:
                 //Reject for unknown keys
@@ -453,7 +457,9 @@ class RemoteMachineTrainingService implements TrainingService {
                 `CUDA_VISIBLE_DEVICES=${cuda_visible_device} ` : `CUDA_VISIBLE_DEVICES=" " `,
             this.trialConfig.command,
             path.join(trialWorkingFolder, 'stderr'),
-            path.join(trialWorkingFolder, '.nni', 'code'));
+            path.join(trialWorkingFolder, '.nni', 'code'),
+            /** Mark if the trial is multi-phase job */
+            this.isMultiPhase);
 
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);

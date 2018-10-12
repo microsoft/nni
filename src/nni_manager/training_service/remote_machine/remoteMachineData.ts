@@ -19,7 +19,6 @@
 
 'use strict';
 
-import { Client } from 'ssh2';
 import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUSummary } from '../common/gpuData';
 
@@ -109,6 +108,7 @@ export enum ScheduleResultType {
 export const REMOTEMACHINE_RUN_SHELL_FORMAT: string =
 `#!/bin/bash
 export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_OUTPUT_DIR={0}
+export MULTI_PHASE={7}
 cd $NNI_SYS_DIR
 echo $$ >{2}
 eval {3}{4} 2>{5}
