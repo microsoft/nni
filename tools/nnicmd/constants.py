@@ -33,7 +33,7 @@ DEFAULT_REST_PORT = 51188
 EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0m' \
                           '-----------------------------------------------------------------------\n' \
                           'The experiment id is %s\n'\
-                          'The restful server post is %s\n' \
+                          'The Web UI urls are: %s\n' \
                           '-----------------------------------------------------------------------\n\n' \
                           'You can use these commands to get more information about the experiment\n' \
                           '-----------------------------------------------------------------------\n' \
@@ -42,10 +42,14 @@ EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0
                           '2. nnictl trial ls               list all of trial jobs\n' \
                           '3. nnictl log stderr             show stderr log content\n' \
                           '4. nnictl log stdout             show stdout log content\n' \
-                          '5. nnictl stop                   stop a experiment\n' \
+                          '5. nnictl stop                   stop an experiment\n' \
                           '6. nnictl trial kill             kill a trial job by id\n' \
                           '7. nnictl --help                 get help information about nnictl\n' \
                           '-----------------------------------------------------------------------\n' \
+
+LOG_HEADER = '-----------------------------------------------------------------------\n' \
+             '                Experiment start time %s\n' \
+             '-----------------------------------------------------------------------\n'
 
 PACKAGE_REQUIREMENTS = {
     'SMAC': 'smac_tuner'

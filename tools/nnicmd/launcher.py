@@ -29,9 +29,11 @@ from nni_annotation import *
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
 from .url_utils import cluster_metadata_url, experiment_url
-from .config_utils import Config
+from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process
 from .constants import *
+from .webui_utils import *
+import time
 
 def start_rest_server(port, platform, mode, experiment_id=None):
     '''Run nni manager process'''
@@ -40,8 +42,8 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)
     if rest_port and running:
-        print_error('There is an experiment running, please stop it first...')
-        print_normal('You can use \'nnictl stop\' command to stop an experiment!')
+        print_error('There is an experiment running in the port %d, please stop it first or set another port!' % port)
+        print_normal('You can use \'nnictl stop --port [PORT]\' command to stop an experiment! Or you could use \'nnictl create --config [CONFIG_PATH] --port [PORT] to set port!\' ')
         exit(0)
 
     print_normal('Starting restful server...')
@@ -53,6 +55,10 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     stderr_full_path = os.path.join(HOME_DIR, str(port), 'stderr')
     stdout_file = open(stdout_full_path, 'a+')
     stderr_file = open(stderr_full_path, 'a+')
+    time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+    log_header = LOG_HEADER % str(time_now)
+    stdout_file.write(log_header)
+    stderr_file.write(log_header)
     process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
     return process
 
@@ -115,7 +121,8 @@ def set_pai_config(experiment_config, port):
     if not response or not response.status_code == 200:
         if response is not None:
             err_message = response.text
-            with open(STDERR_FULL_PATH, 'a+') as fout:
+            stderr_full_path = os.path.join(HOME_DIR, str(port), 'stderr')
+            with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
 
@@ -233,7 +240,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
         print_normal('Setting remote config...')
         config_result, err_msg = set_remote_config(experiment_config, args.port)
         if config_result:
-            print_normal('Success!')
+            print_normal('Successfully set remote config!')
         else:
             print_error('Failed! Error is: {}'.format(err_msg))
             try:
@@ -288,7 +295,13 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
-    print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, args.port))
+    web_ui_url_list = get_web_ui_urls(args.port)
+    
+    #save experiment information
+    experiment_config = Experiments()
+    experiment_config.add_experiment(experiment_id, args.port)
+
+    print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
 
 def resume_experiment(args):
     '''resume an experiment'''
