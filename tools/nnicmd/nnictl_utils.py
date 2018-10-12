@@ -24,14 +24,14 @@ import json
 import datetime
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
-from .config_utils import Config, Experiment
+from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
 from .constants import HOME_DIR
 import time
 from .common_utils import print_normal, print_error, detect_process
 
 def get_experiment_port(args):
-    experiment_config = Experiment()
+    experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
 
     if not experiment_dict:
@@ -50,7 +50,7 @@ def get_experiment_port(args):
         return None
 
 def get_experiment_id(args):
-    experiment_config = Experiment()
+    experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not args.id:
         return list(experiment_dict.keys())[0]
@@ -108,7 +108,7 @@ def stop_experiment(args):
         call(cmds)
     if stop_rest_result:
         print_normal('Stop experiment success!')
-    experiment_config = Experiment()
+    experiment_config = Experiments()
     experiment_config.remove_experiment(get_experiment_id(args))
 
 def trial_ls(args):
@@ -268,7 +268,7 @@ def webui_url(args):
     print_normal('{0} {1}'.format('Web UI url:', ' '.join(nni_config.get_config('webuiUrl'))))
 
 def experiment_id(args):
-    experiment_config = Experiment()
+    experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
         print('There is no experiment running...')

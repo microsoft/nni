@@ -66,33 +66,33 @@ class Config:
                 return {}
         return {}
 
-class Experiment:
+class Experiments:
     '''Maintain experiment list'''
     def __init__(self):
         os.makedirs(HOME_DIR, exist_ok=True)
         self.experiment_file = os.path.join(HOME_DIR, '.experiment')
-        self.experiment = self.read_file()
+        self.experiments = self.read_file()
 
     def add_experiment(self, id, port):
         '''set {key:value} paris to self.experiment'''
-        self.experiment[id] = port
+        self.experiments[id] = port
         self.write_file()
     
     def remove_experiment(self, id):
         '''remove an experiment by id'''
-        if id in self.experiment:
-            self.experiment.pop(id)
+        if id in self.experiments:
+            self.experiments.pop(id)
         self.write_file()
         
     def get_all_experiments(self):
         '''return all of experiments'''
-        return self.experiment
+        return self.experiments
     
     def write_file(self):
         '''save config to local file'''
         try:
             with open(self.experiment_file, 'w') as file:
-                json.dump(self.experiment, file)
+                json.dump(self.experiments, file)
         except IOError as error:
             print('Error:', error)
             return
