@@ -346,6 +346,22 @@ class TrialStatus extends React.Component<{}, TabState> {
         };
     }
 
+    convertTime = (num: number) => {
+        const hour = Math.floor(num / 3600);
+        const min = Math.floor(num / 60 % 60);
+        const second = Math.floor(num % 60);
+        const result = hour > 0 ? `${hour} h ${min} min ${second}s` : `${min} min ${second}s`;
+        if (hour <= 0 && min === 0 && second !== 0) {
+            return `${second}s`;
+        } else if (hour === 0 && min !== 0 && second === 0) {
+            return `${min}min`;
+        } else if (hour === 0 && min !== 0 && second !== 0) {
+            return `${min}min ${second}s`;
+        } else {
+            return result;
+        }
+    }
+
     componentDidMount() {
 
         this._isMounted = true;
@@ -388,7 +404,16 @@ class TrialStatus extends React.Component<{}, TabState> {
             key: 'duration',
             width: '10%',
             // the sort of number
-            sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number)
+            sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
+            render: (text: string, record: TableObj) => {
+                let duration;
+                if (record.duration) {
+                    duration = this.convertTime(record.duration);
+                }
+                return (
+                    <span>{duration}</span>
+                );
+            },
         }, {
             title: 'Start',
             dataIndex: 'start',
