@@ -259,12 +259,18 @@ def log_trial(args):
 
 def get_config(args):
     '''get config info'''
-    nni_config = Config(args.port)
+    port = get_experiment_port(args)
+    if port is None:
+        return None
+    nni_config = Config(port)
     print(nni_config.get_all_config())
 
 def webui_url(args):
     '''show the url of web ui'''
-    nni_config = Config(args.port)
+    port = get_experiment_port(args)
+    if port is None:
+        return None
+    nni_config = Config(port)
     print_normal('{0} {1}'.format('Web UI url:', ' '.join(nni_config.get_config('webuiUrl'))))
 
 def experiment_id(args):
