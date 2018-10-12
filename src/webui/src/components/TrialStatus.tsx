@@ -51,6 +51,7 @@ interface TabState {
     trialJobs: object;
     intermediateOption: object;
     modalVisible: boolean;
+    disTensorButton: boolean;
 }
 
 class TrialStatus extends React.Component<{}, TabState> {
@@ -79,7 +80,8 @@ class TrialStatus extends React.Component<{}, TabState> {
             option: {},
             intermediateOption: {},
             trialJobs: {},
-            modalVisible: false
+            modalVisible: false,
+            disTensorButton: false
         };
     }
 
@@ -346,6 +348,26 @@ class TrialStatus extends React.Component<{}, TabState> {
         };
     }
 
+    // experiment mode is pai, display tensorboard button
+    disTensorBoard = () => {
+        axios(`${MANAGER_IP}/experiment`, {
+            method: 'GET'
+        })
+            .then(res => {
+                if (res.status === 200) {
+                    const experimentObj = res.data;
+                    const trainPlatform = experimentObj.params.trainingServicePlatform;
+                    if (trainPlatform && trainPlatform === 'pai') {
+                        if (this._isMounted) {
+                            this.setState(() => ({
+                                disTensorButton: true
+                            }));
+                        }
+                    }
+                }
+            });
+    }
+
     componentDidMount() {
 
         this._isMounted = true;
@@ -353,6 +375,7 @@ class TrialStatus extends React.Component<{}, TabState> {
         this.drawRunGraph();
         // the init of trials status in the table
         this.drawTable();
+        this.disTensorBoard();
         this.intervalID = window.setInterval(this.drawRunGraph, 10000);
         this.intervalIDS = window.setInterval(this.drawTable, 10000);
     }
@@ -365,7 +388,7 @@ class TrialStatus extends React.Component<{}, TabState> {
     }
 
     render() {
-        const { intermediateOption, modalVisible, option, tableData } = this.state;
+        const { intermediateOption, modalVisible, option, tableData, disTensorButton } = this.state;
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
         trialJobStatus.map(item => {
@@ -457,7 +480,7 @@ class TrialStatus extends React.Component<{}, TabState> {
                             </Button>
                         )
                 );
-            },
+            }
         }, {
             title: 'Tensor',
             dataIndex: 'tensor',
@@ -468,6 +491,7 @@ class TrialStatus extends React.Component<{}, TabState> {
                     <Button
                         type="primary"
                         className="tableButton"
+                        disabled={disTensorButton}
                         onClick={this.getTensorpage.bind(this, record.id)}
                     >
                         TensorBoard
@@ -476,7 +500,6 @@ class TrialStatus extends React.Component<{}, TabState> {
             },
         }
         ];
-
         const openRow = (record: TableObj) => {
             const parametersRow = {
                 parameters: record.description.parameters
