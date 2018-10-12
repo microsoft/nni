@@ -49,7 +49,7 @@ def request_next_parameter():
 
 def get_parameters():
     global _param_index
-    params_filepath = os.path.join(_sysdir, 'parameter_{}.cfg'.format(_param_index))
+    params_filepath = os.path.join(_sysdir, ('parameter_{}.cfg'.format(_param_index), 'parameter.cfg')[_param_index == 0])
     if not os.path.isfile(params_filepath):
         request_next_parameter()
     while not os.path.isfile(params_filepath):

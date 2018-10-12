@@ -14,5 +14,16 @@ max-attributes=7
 
 const-naming-style=any
 
-disable=duplicate-code,
-        super-init-not-called
+disable=all
+
+enable=F,
+       E,
+       unreachable,
+       duplicate-key,
+       unnecessary-semicolon,
+       global-variable-not-assigned,
+       unused-variable,
+       binary-op-exception,
+       bad-format-string,
+       anomalous-backslash-in-string,
+       bad-open-mode

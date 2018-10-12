@@ -20,6 +20,7 @@
 
 'use strict'
 
+import * as assert from 'assert';
 import * as component from '../../common/component';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
@@ -37,7 +38,7 @@ import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { delay, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
 import { PAITrialJobDetail, PAI_INSTALL_NNI_SHELL_FORMAT, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
@@ -160,11 +161,12 @@ class PAITrainingService implements TrainingService {
         const runScriptContent : string = PAI_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
-        
+
         // Write file content ( parameter.cfg ) to local tmp folders
         const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
         if(trialForm) {
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'parameter.cfg'), trialForm.hyperParameters, { encoding: 'utf8' });
+            await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
+                            trialForm.hyperParameters.value, { encoding: 'utf8' });
             await fs.promises.writeFile(path.join(trialLocalTempFolder, '.nni', 'sequence_id'), trialSequenceId.toString(), { encoding: 'utf8' });
         }
         

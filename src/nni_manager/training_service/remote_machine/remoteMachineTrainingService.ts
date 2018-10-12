@@ -36,7 +36,7 @@ import { ObservableTimer } from '../../common/observableTimer';
 import {
     HostJobApplicationForm, HyperParameters, JobApplicationForm, TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
 import { GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -462,7 +462,7 @@ class RemoteMachineTrainingService implements TrainingService {
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
 
-        // Write file content ( run.sh and parameter_0.cfg ) to local tmp files
+        // Write file content ( run.sh and parameter.cfg ) to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run.sh'), runScriptContent, { encoding: 'utf8' });
 
         // Copy local tmp files to remote machine
@@ -593,7 +593,7 @@ class RemoteMachineTrainingService implements TrainingService {
         const trialWorkingFolder: string = path.join(this.remoteExpRootDir, 'trials', trialJobId);
         const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);
 
-        const fileName: string = `parameter_${hyperParameters.index}.cfg`;
+        const fileName: string = generateParamFileName(hyperParameters);
         const localFilepath: string = path.join(trialLocalTempFolder, fileName);
         await fs.promises.writeFile(localFilepath, hyperParameters.value, { encoding: 'utf8' });
 
