@@ -67,6 +67,7 @@ class PAITrainingService implements TrainingService {
     private readonly hdfsDirPattern: string;
     private hdfsBaseDir: string | undefined;
     private hdfsOutputHost: string | undefined;
+    private trialSequenceId: number;
 
     constructor() {
         this.log = getLogger();
@@ -77,6 +78,7 @@ class PAITrainingService implements TrainingService {
         this.experimentId = getExperimentId();      
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
+        this.trialSequenceId = 0;
     }
 
     public async run(): Promise<void> {
@@ -146,6 +148,7 @@ class PAITrainingService implements TrainingService {
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
         const trialJobId: string = uniqueString(5);
+        const trialSequenceId: number = this.generateSequenceId();
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         
@@ -153,6 +156,7 @@ class PAITrainingService implements TrainingService {
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
         await cpp.exec(`cp -r ${this.paiTrialConfig.codeDir} ${trialLocalTempFolder}`);
+        await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
 
         const runScriptContent : string = PAI_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
@@ -163,6 +167,7 @@ class PAITrainingService implements TrainingService {
         if(trialForm) {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
                             trialForm.hyperParameters.value, { encoding: 'utf8' });
+            await fs.promises.writeFile(path.join(trialLocalTempFolder, '.nni', 'sequence_id'), trialSequenceId.toString(), { encoding: 'utf8' });
         }
         
         // Step 1. Prepare PAI job configuration
@@ -181,7 +186,8 @@ class PAITrainingService implements TrainingService {
             paiJobName,            
             Date.now(),
             trialWorkingFolder,
-            form, 
+            form,
+            trialSequenceId,
             hdfsLogPath);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
@@ -438,6 +444,10 @@ class PAITrainingService implements TrainingService {
 
     public get MetricsEmitter() : EventEmitter {
         return this.metricsEmitter;
+    }
+
+    private generateSequenceId(): number {
+        return this.trialSequenceId++;
     }
 }
 
