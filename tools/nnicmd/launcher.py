@@ -43,7 +43,7 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     running, _ = check_rest_server_quick(rest_port)
     if rest_port and running:
         print_error('There is an experiment running in the port %d, please stop it first or set another port!' % port)
-        print_normal('You can use \'nnictl stop\' command to stop an experiment!')
+        print_normal('You can use \'nnictl stop --port [PORT]\' command to stop an experiment! Or you could use \'nnictl create --config [CONFIG_PATH] --port [PORT] to set port!\' ')
         exit(0)
 
     print_normal('Starting restful server...')
