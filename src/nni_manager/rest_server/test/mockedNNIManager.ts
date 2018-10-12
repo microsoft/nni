@@ -78,6 +78,7 @@ export class MockedNNIManager extends Manager {
             // tslint:disable-next-line:no-http-string
             url: 'http://test',
             workingDirectory: '/tmp/mocked',
+            sequenceId: 0,
             form: {
                 jobType: 'TRIAL'
             }

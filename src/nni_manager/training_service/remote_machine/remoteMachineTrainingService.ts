@@ -185,7 +185,9 @@ class RemoteMachineTrainingService implements TrainingService {
                 'WAITING',
                 Date.now(),
                 trialWorkingFolder,
-                form);
+                form,
+                this.generateSequenceId()
+            );
             this.jobQueue.push(trialJobId);
             this.trialJobsMap.set(trialJobId, trialJobDetail);
 
@@ -494,7 +496,9 @@ class RemoteMachineTrainingService implements TrainingService {
             path.join(localDir, 'run.sh'), path.join(remoteDir, 'run.sh'), sshClient);
         SSHClientUtility.remoteExeCommand(`bash ${path.join(remoteDir, 'run.sh')}`, sshClient);
 
-        const jobDetail: RemoteMachineTrialJobDetail =  new RemoteMachineTrialJobDetail(jobId, 'RUNNING', Date.now(), remoteDir, form);
+        const jobDetail: RemoteMachineTrialJobDetail =  new RemoteMachineTrialJobDetail(
+            jobId, 'RUNNING', Date.now(), remoteDir, form, this.generateSequenceId()
+        );
         jobDetail.rmMeta = rmMeta;
         jobDetail.startTime = Date.now();
         this.trialJobsMap.set(jobId, jobDetail);
@@ -601,7 +605,12 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private async writeSequenceIdFile(trialJobId: string, rmMeta: RemoteMachineMeta): Promise<void> {
-        await this.writeRemoteTrialFile(trialJobId, this.generateSequenceId().toString(), rmMeta, path.join('.nni', 'sequence_id'));
+        const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        if (trialJobDetail === undefined) {
+            assert(false, `Can not get trial job detail for job: ${trialJobId}`);
+        } else {
+            await this.writeRemoteTrialFile(trialJobId, trialJobDetail.sequenceId.toString(), rmMeta, path.join('.nni', 'sequence_id'));
+        }
     }
 
     private async writeRemoteTrialFile(trialJobId: string, fileContent: string,

@@ -19,6 +19,7 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { EventEmitter } from 'events';
@@ -73,15 +74,18 @@ class LocalTrialJobDetail implements TrialJobDetail {
     public url?: string;
     public workingDirectory: string;
     public form: JobApplicationForm;
+    public sequenceId: number;
     public pid?: number;
 
-    constructor(id: string, status: TrialJobStatus, submitTime: number, workingDirectory: string, form: JobApplicationForm) {
+    constructor(id: string, status: TrialJobStatus, submitTime: number,
+                workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
         this.url = `file://localhost:${workingDirectory}`;
+        this.sequenceId = sequenceId;
     }
 }
 
@@ -196,7 +200,9 @@ class LocalTrainingService implements TrainingService {
                 'WAITING',
                 Date.now(),
                 path.join(this.rootDir, 'trials', trialJobId),
-                form);
+                form,
+                this.generateSequenceId()
+            );
             this.jobQueue.push(trialJobId);
             this.jobMap.set(trialJobId, trialJobDetail);
 
@@ -386,6 +392,7 @@ class LocalTrainingService implements TrainingService {
             submitTime: Date.now(),
             workingDirectory: workDir,
             form: form,
+            sequenceId: this.generateSequenceId(),
             pid: process.pid
         };
         this.jobMap.set(jobId, jobDetail);
@@ -425,8 +432,9 @@ class LocalTrainingService implements TrainingService {
 
     private async writeSequenceIdFile(trialJobId: string): Promise<void> {
         const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
+        assert(trialJobDetail !== undefined);
         const filepath: string = path.join(trialJobDetail.workingDirectory, '.nni', 'sequence_id');
-        await fs.promises.writeFile(filepath, this.generateSequenceId().toString(), { encoding: 'utf8' });
+        await fs.promises.writeFile(filepath, trialJobDetail.sequenceId.toString(), { encoding: 'utf8' });
     }
 }
 

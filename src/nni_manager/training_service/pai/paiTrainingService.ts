@@ -147,6 +147,7 @@ class PAITrainingService implements TrainingService {
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
         const trialJobId: string = uniqueString(5);
+        const trialSequenceId: number = this.generateSequenceId();
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         
@@ -164,7 +165,7 @@ class PAITrainingService implements TrainingService {
         const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
         if(trialForm) {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'parameter.cfg'), trialForm.hyperParameters, { encoding: 'utf8' });
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, '.nni', 'sequence_id'), this.generateSequenceId().toString(), { encoding: 'utf8' });
+            await fs.promises.writeFile(path.join(trialLocalTempFolder, '.nni', 'sequence_id'), trialSequenceId.toString(), { encoding: 'utf8' });
         }
         
         // Step 1. Prepare PAI job configuration
@@ -183,7 +184,8 @@ class PAITrainingService implements TrainingService {
             paiJobName,            
             Date.now(),
             trialWorkingFolder,
-            form, 
+            form,
+            trialSequenceId,
             hdfsLogPath);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
