@@ -59,7 +59,7 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     stdout_file.write(log_header)
     stderr_file.write(log_header)
     process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
-    return process
+    return process, str(time_now)
 
 def set_trial_config(experiment_config, port):
     '''set trial configuration'''
@@ -201,7 +201,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
         print_error(EXPERIMENT_START_FAILED_INFO % args.port)
         exit(1)
     # start rest server
-    rest_process = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, experiment_id)
+    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, experiment_id)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
@@ -297,7 +297,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
     
     #save experiment information
     experiment_config = Experiments()
-    experiment_config.add_experiment(experiment_id, args.port)
+    experiment_config.add_experiment(experiment_id, args.port, start_time)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
 

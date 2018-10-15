@@ -26,7 +26,7 @@ from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
-from .constants import HOME_DIR
+from .constants import HOME_DIR, EXPERIMENT_ID_INFO
 import time
 from .common_utils import print_normal, print_error, detect_process
 
@@ -38,23 +38,19 @@ def get_experiment_port(args):
         print_normal('Experiment is not running...')
         return None
     if not args.id and len(experiment_dict.keys()) > 1:
-        print_normal('There are multiple experiments running, please set the experiment id...\n')
-        print('Experiment id: ', '   '.join(list(str(id) for id in experiment_dict.keys())))
+        print_error('There are multiple experiments running, please set the experiment id...')
+        experiment_information = ""
+        for key in experiment_dict.keys():
+            experiment_information += ('Id: ' + key + '    StartTime: ' + experiment_dict[key][1] + '\n')
+        print(EXPERIMENT_ID_INFO % experiment_information)
         return None
     if not args.id:
-        return list(experiment_dict.values())[0]
+        return list(experiment_dict.values())[0][0]
     if experiment_dict.get(args.id):
         return experiment_dict[args.id]
     else:
         print_error('Id not correct!')     
         return None
-
-def get_experiment_id(args):
-    experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
-    if not args.id:
-        return list(experiment_dict.keys())[0]
-    return args.id
 
 def convert_time_stamp_to_date(content):
     '''Convert time stamp to date time format'''
@@ -81,35 +77,75 @@ def check_rest(args):
     else:
         print_normal('Restful server is not running...')
 
+def parse_ids(args):
+    '''Parse the arguments for nnictl stop'''
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    if not experiment_dict:
+        print_normal('Experiment is not running...')
+        return None
+    experiment_id_list = list(experiment_dict.keys())
+    result_list = []
+    if not args.id:
+        if len(experiment_id_list) > 1:
+            print_error('There are multiple experiments running, please set the experiment id...')
+            experiment_information = ""
+            for key in experiment_dict.keys():
+                experiment_information += ('Id: ' + key + '    StartTime: ' + experiment_dict[key][1] + '\n')
+            print(EXPERIMENT_ID_INFO % experiment_information)
+            return None
+        result_list = experiment_id_list
+    elif args.id.endswith('*'):
+        for id in experiment_id_list:
+            if id.startswith(args.id[:-1]):
+                result_list.append(id)
+    elif args.id in experiment_id_list:
+        result_list.append(args.id)
+    else:
+        for id in experiment_id_list:
+            if id.startswith(args.id):
+                result_list.append(id)
+        if len(result_list) > 1:
+            print_error(args.id + ' is ambiguous, please choose ' + ' '.join(result_list) )
+            return None
+    if not result_list:
+        print_error('There are no experiments matched, please check experiment id...')
+    return result_list
+
 def stop_experiment(args):
     '''Stop the experiment which is running'''
-    port = get_experiment_port(args)
-    if port is None:
-        return None
-    print_normal('Stoping experiment...')
-    nni_config = Config(port)
-    rest_port = nni_config.get_config('restServerPort')
-    rest_pid = nni_config.get_config('restServerPid')
-    if not detect_process(rest_pid):
-        print_normal('Experiment is not running...')
-        return
-    running, _ = check_rest_server_quick(rest_port)
-    stop_rest_result = True
-    if running:
-        response = rest_delete(experiment_url(rest_port), 20)
-        if not response or not check_response(response):
-            print_error('Stop experiment failed!')
-            stop_rest_result = False
-    #sleep to wait rest handler done
-    time.sleep(3)
-    rest_pid = nni_config.get_config('restServerPid')
-    if rest_pid:
-        cmds = ['pkill', '-P', str(rest_pid)]
-        call(cmds)
-    if stop_rest_result:
-        print_normal('Stop experiment success!')
-    experiment_config = Experiments()
-    experiment_config.remove_experiment(get_experiment_id(args))
+    experiment_id_list = parse_ids(args)
+    if experiment_id_list:
+        experiment_config = Experiments()
+        experiment_dict = experiment_config.get_all_experiments()
+        for experiment_id in experiment_id_list:
+            port = experiment_dict.get(experiment_id)[0]
+            if port is None:
+                return None
+            print_normal('Stoping experiment %s' % experiment_id)
+            nni_config = Config(port)
+            rest_port = nni_config.get_config('restServerPort')
+            rest_pid = nni_config.get_config('restServerPid')
+            if not detect_process(rest_pid):
+                print_normal('Experiment is not running...')
+                return
+            running, _ = check_rest_server_quick(rest_port)
+            stop_rest_result = True
+            if running:
+                response = rest_delete(experiment_url(rest_port), 20)
+                if not response or not check_response(response):
+                    print_error('Stop experiment failed!')
+                    stop_rest_result = False
+            #sleep to wait rest handler done
+            time.sleep(3)
+            rest_pid = nni_config.get_config('restServerPid')
+            if rest_pid:
+                cmds = ['pkill', '-P', str(rest_pid)]
+                call(cmds)
+            if stop_rest_result:
+                print_normal('Stop experiment success!')
+            experiment_config = Experiments()
+            experiment_config.remove_experiment(experiment_id)
 
 def trial_ls(args):
     '''List trial'''

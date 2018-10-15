@@ -52,7 +52,12 @@ LOG_HEADER = '------------------------------------------------------------------
              '-----------------------------------------------------------------------\n'
 
 EXPERIMENT_START_FAILED_INFO = 'There is an experiment running in the port %d, please stop it first or set another port!\n' \
-                               'You could use \'nnictl stop --port [PORT]\' command to stop an experiment! Or you could use \'nnictl create --config [CONFIG_PATH] --port [PORT]\' to set port!\n'
+                               'You could use \'nnictl stop --port [PORT]\' command to stop an experiment!\n Or you could use \'nnictl create --config [CONFIG_PATH] --port [PORT]\' to set port!\n'
+
+EXPERIMENT_ID_INFO = '-----------------------------------------------------------------------\n' \
+                     '                Experiment information\n' \
+                     '%s\n' \
+                     '-----------------------------------------------------------------------\n'
 
 PACKAGE_REQUIREMENTS = {
     'SMAC': 'smac_tuner'

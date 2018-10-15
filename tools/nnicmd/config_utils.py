@@ -73,9 +73,9 @@ class Experiments:
         self.experiment_file = os.path.join(HOME_DIR, '.experiment')
         self.experiments = self.read_file()
 
-    def add_experiment(self, id, port):
+    def add_experiment(self, id, port, time):
         '''set {key:value} paris to self.experiment'''
-        self.experiments[id] = port
+        self.experiments[id] = [port, time]
         self.write_file()
     
     def remove_experiment(self, id):
