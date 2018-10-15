@@ -35,7 +35,7 @@ import { getLogger, Logger } from '../../common/log';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric
+    TrialJobDetail, TrialJobMetric, ICopyData
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
@@ -51,7 +51,7 @@ var WebHDFS = require('webhdfs');
  * Refer https://github.com/Microsoft/pai for more info about OpenPAI
  */
 @component.Singleton
-class PAITrainingService implements TrainingService {
+class PAITrainingService implements TrainingService, ICopyData {
     private readonly log!: Logger;
     private readonly metricsEmitter: EventEmitter;
     private readonly trialJobsMap: Map<string, PAITrialJobDetail>;
@@ -86,6 +86,10 @@ class PAITrainingService implements TrainingService {
             await this.paiJobCollector.updateTrialStatusFromPAI(this.paiToken, this.paiClusterConfig);
             await delay(3000);
         }
+    }
+
+    public async copyDataToLocal(): Promise<void>{
+        console.log('-----------in pai copy data-------')
     }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {

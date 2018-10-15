@@ -39,13 +39,14 @@ export abstract class RestServer {
     protected port?: number;
     protected app: express.Application = express();
     protected log: Logger = getLogger();
+    protected platForm?: string;
     
     get endPoint(): string {
         // tslint:disable-next-line:no-http-string
         return `http://${this.hostName}:${this.port}`;
     }
 
-    public start(port?: number, hostName?: string): Promise<void> {
+    public start(port?: number, hostName?: string, platForm?: string): Promise<void> {
         if (this.startTask !== undefined) {
             return this.startTask.promise;
         }
@@ -58,6 +59,9 @@ export abstract class RestServer {
         }
         if (port) {
             this.port = port;
+        }
+        if(platForm){
+            this.platForm = platForm;
         }
 
         this.server = this.app.listen(this.port as number, this.hostName).on('listening', () => {

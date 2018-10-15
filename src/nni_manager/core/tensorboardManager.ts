@@ -29,7 +29,7 @@ import { NNIErrorNames } from '../common/errors';
 import { getLogger, Logger } from '../common/log';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
-import { HostJobApplicationForm, TrainingService, TrialJobStatus } from '../common/trainingService';
+import { HostJobApplicationForm, TrainingService, PAITrainingService, TrialJobStatus, ICopyData } from '../common/trainingService';
 
 
 /**
@@ -44,9 +44,18 @@ class TensorboardManager implements BoardManager {
     private tbPid?: number;
     private isRunning: boolean;
 
+    private copyDataInstance: ICopyData;
 
-    constructor() {
+
+    constructor(platform) {
         this.isRunning = false;
+        if(plaform == pai) {
+         const trainingService = component.get(PAITrainingService);
+         this.copyDataInstance = trainingService as ICopyData;
+         this.trainingService = trainingService;   
+        } else {
+
+        }
         this.trainingService = component.get(TrainingService);
         this.dataStore = component.get(DataStore);
     }
@@ -54,7 +63,8 @@ class TensorboardManager implements BoardManager {
     public async Run(): Promise<void>{
         while(this.isRunning){
             console.log('----------in run------------');
-            await(5000);
+            this.trainingService as ICopyData;
+            await delay(5000);
         }
     }
 
@@ -84,8 +94,7 @@ class TensorboardManager implements BoardManager {
         this.tbPid = await this.runTensorboardProcess(cmd);
         this.Run().catch(()=>{
 
-        });
-        console.log('----after run-----')        
+        });     
         return tbEndpoint;
     }
     
