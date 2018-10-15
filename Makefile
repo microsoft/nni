@@ -56,7 +56,7 @@ endif
 ifdef _MISS_DEPS
     $(info $(_INFO) Missing dependencies, use local toolchain $(_END))
     NODE := $(NODE_PATH)/bin/node
-    YARN := PATH=$${PATH}:$(NODE_PATH)/bin $(YARN_PATH)/bin/yarn
+    YARN := PATH=$(NODE_PATH)/bin:$${PATH} $(YARN_PATH)/bin/yarn
 else
     $(info $(_INFO) All dependencies found, use global toolchain $(_END))
     NODE := node
