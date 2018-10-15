@@ -72,3 +72,7 @@ def send_metric(string):
     assert len(data) < 1000000, 'Metric too long'
     _metric_file.write(b'ME%06d%b' % (len(data), data))
     _metric_file.flush()
+
+def get_sequence_id():
+    with open(os.path.join(_sysdir, '.nni', 'sequence_id'), 'r') as f:
+        return int(f.read().strip())
