@@ -95,6 +95,8 @@ def parse_ids(args):
             print(EXPERIMENT_ID_INFO % experiment_information)
             return None
         result_list = experiment_id_list
+    elif args.id == 'all':
+        result_list = experiment_id_list
     elif args.id.endswith('*'):
         for id in experiment_id_list:
             if id.startswith(args.id[:-1]):
@@ -315,4 +317,7 @@ def experiment_id(args):
     if not experiment_dict:
         print('There is no experiment running...')
     else:
-       print('Experiment id: ', '   '.join(list(str(id) for id in experiment_dict.keys())))
+        experiment_information = ""
+        for key in experiment_dict.keys():
+            experiment_information += ('Id: ' + key + '    StartTime: ' + experiment_dict[key][1] + '\n')
+        print(EXPERIMENT_ID_INFO % experiment_information)
