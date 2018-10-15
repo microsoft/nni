@@ -49,7 +49,7 @@ def request_next_parameter():
 
 def get_parameters():
     global _param_index
-    params_filepath = os.path.join(_sysdir, 'parameter_{}.cfg'.format(_param_index))
+    params_filepath = os.path.join(_sysdir, ('parameter_{}.cfg'.format(_param_index), 'parameter.cfg')[_param_index == 0])
     if not os.path.isfile(params_filepath):
         request_next_parameter()
     while not os.path.isfile(params_filepath):
@@ -64,3 +64,7 @@ def send_metric(string):
     assert len(data) < 1000000, 'Metric too long'
     _metric_file.write(b'ME%06d%b' % (len(data), data))
     _metric_file.flush()
+
+def get_sequence_id():
+    with open(os.path.join(_sysdir, '.nni', 'sequence_id'), 'r') as f:
+        return int(f.read().strip())
