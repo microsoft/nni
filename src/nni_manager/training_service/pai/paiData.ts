@@ -32,16 +32,18 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public url?: string;
     public workingDirectory: string;
     public form: JobApplicationForm;
+    public sequenceId: number;
     public hdfsLogPath: string;
 
     constructor(id: string, status: TrialJobStatus, paiJobName : string, 
-            submitTime: number, workingDirectory: string, form: JobApplicationForm, hdfsLogPath: string) {
+            submitTime: number, workingDirectory: string, form: JobApplicationForm, sequenceId: number, hdfsLogPath: string) {
         this.id = id;
         this.status = status;
         this.paiJobName = paiJobName;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
+        this.sequenceId = sequenceId;
         this.tags = [];
         this.hdfsLogPath = hdfsLogPath;
     }

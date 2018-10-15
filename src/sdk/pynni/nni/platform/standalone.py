@@ -25,6 +25,9 @@ import json_tricks
 def get_parameters():
     pass
 
+def get_sequence_id():
+    pass
+
 def send_metric(string):
     metric = json_tricks.loads(string)
     if metric['type'] == 'FINAL':
