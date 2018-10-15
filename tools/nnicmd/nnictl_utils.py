@@ -95,6 +95,8 @@ def parse_ids(args):
             print(EXPERIMENT_ID_INFO % experiment_information)
             return None
         result_list = experiment_id_list
+    elif args.id == 'all':
+        result_list = experiment_id_list
     elif args.id.endswith('*'):
         for id in experiment_id_list:
             if id.startswith(args.id[:-1]):
