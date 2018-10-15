@@ -30,7 +30,7 @@ from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
 from .url_utils import cluster_metadata_url, experiment_url
 from .config_utils import Config, Experiments
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port
 from .constants import *
 from .webui_utils import *
 import time
@@ -43,7 +43,11 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     running, _ = check_rest_server_quick(rest_port)
     if rest_port and running:
         print_error(EXPERIMENT_START_FAILED_INFO % port)
-        exit(0)
+        exit(1)
+    
+    if detect_port(port):
+        print_error('Port %s is used by another process, please reset the port!' % port)
+        exit(1)
 
     print_normal('Starting restful server...')
     manager = os.environ.get('NNI_MANAGER', 'nnimanager')
@@ -59,7 +63,7 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     stdout_file.write(log_header)
     stderr_file.write(log_header)
     process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
-    return process
+    return process, str(time_now)
 
 def set_trial_config(experiment_config, port):
     '''set trial configuration'''
@@ -195,13 +199,8 @@ def set_experiment(experiment_config, mode, port):
 def launch_experiment(args, experiment_config, mode, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(args.port)
-    #Check if there is an experiment running
-    origin_rest_pid = nni_config.get_config('restServerPid')
-    if origin_rest_pid and detect_process(origin_rest_pid):
-        print_error(EXPERIMENT_START_FAILED_INFO % args.port)
-        exit(1)
     # start rest server
-    rest_process = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, experiment_id)
+    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, experiment_id)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
@@ -297,7 +296,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
     
     #save experiment information
     experiment_config = Experiments()
-    experiment_config.add_experiment(experiment_id, args.port)
+    experiment_config.add_experiment(experiment_id, args.port, start_time)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
 
