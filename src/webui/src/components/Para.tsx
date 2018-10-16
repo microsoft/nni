@@ -445,7 +445,7 @@ class Para extends React.Component<{}, ParaState> {
                                 className="changeBtu"
                                 onClick={this.swapBtn}
                             >
-                                sure
+                                Confirm
                             </Button>
                         </div>
                     </div>
