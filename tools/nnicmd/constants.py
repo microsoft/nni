@@ -20,7 +20,7 @@
 
 import os
 
-HOME_DIR = os.path.join(os.environ['HOME'], '.local',  'nni', 'nnictl')
+NNICTL_HOME_DIR = os.path.join(os.environ['HOME'], '.local',  'nni', 'nnictl')
 
 ERROR_INFO = 'ERROR: %s'
 
@@ -28,12 +28,12 @@ NORMAL_INFO = 'INFO: %s'
 
 WARNING_INFO = 'WARNING: %s'
 
-DEFAULT_REST_PORT = 51188
+DEFAULT_REST_PORT = 8080
 
 EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0m' \
                           '-----------------------------------------------------------------------\n' \
                           'The experiment id is %s\n'\
-                          'The restful server post is %s\n' \
+                          'The Web UI urls are: %s\n' \
                           '-----------------------------------------------------------------------\n\n' \
                           'You can use these commands to get more information about the experiment\n' \
                           '-----------------------------------------------------------------------\n' \
@@ -42,10 +42,22 @@ EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0
                           '2. nnictl trial ls               list all of trial jobs\n' \
                           '3. nnictl log stderr             show stderr log content\n' \
                           '4. nnictl log stdout             show stdout log content\n' \
-                          '5. nnictl stop                   stop a experiment\n' \
+                          '5. nnictl stop                   stop an experiment\n' \
                           '6. nnictl trial kill             kill a trial job by id\n' \
                           '7. nnictl --help                 get help information about nnictl\n' \
                           '-----------------------------------------------------------------------\n' \
+
+LOG_HEADER = '-----------------------------------------------------------------------\n' \
+             '                Experiment start time %s\n' \
+             '-----------------------------------------------------------------------\n'
+
+EXPERIMENT_START_FAILED_INFO = 'There is an experiment running in the port %d, please stop it first or set another port!\n' \
+                               'You could use \'nnictl stop --port [PORT]\' command to stop an experiment!\nOr you could use \'nnictl create --config [CONFIG_PATH] --port [PORT]\' to set port!\n'
+
+EXPERIMENT_ID_INFO = '-----------------------------------------------------------------------\n' \
+                     '                Experiment information\n' \
+                     '%s\n' \
+                     '-----------------------------------------------------------------------\n'
 
 PACKAGE_REQUIREMENTS = {
     'SMAC': 'smac_tuner'
