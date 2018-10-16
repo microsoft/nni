@@ -479,8 +479,6 @@ class NNIManager implements Manager {
                     };
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
                     this.trialJobsMaintainer.setTrialJob(trialJobDetail.id, Object.assign({}, trialJobDetail));
-                    // TO DO: to uncomment
-                    assert(trialJobDetail.status === 'WAITING');
                     await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, content, trialJobDetail.url);
                     if (this.currSubmittedTrialNum === this.experimentProfile.params.maxTrialNum) {
                         this.trialJobsMaintainer.setNoMoreTrials();
