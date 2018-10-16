@@ -29,8 +29,9 @@ import { NNIErrorNames } from '../common/errors';
 import { getLogger, Logger } from '../common/log';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
-import { HostJobApplicationForm, TrainingService, PAITrainingService, TrialJobStatus, ICopyData } from '../common/trainingService';
-
+import { HostJobApplicationForm, TrainingService, TrialJobStatus, ICopyData } from '../common/trainingService';
+import { PAITrainingService } from '../training_service/pai/paiTrainingService'
+import { MethodNotImplementedError, NNIError} from '../common/errors';
 
 /**
  * TensorboardManager
@@ -43,27 +44,30 @@ class TensorboardManager implements BoardManager {
     private dataStore: DataStore;
     private tbPid?: number;
     private isRunning: boolean;
-
+    private platForm: string;
     private copyDataInstance: ICopyData;
 
-
-    constructor(platform) {
+    constructor(platForm: string) {
+        this.platForm = platForm;
         this.isRunning = false;
-        if(plaform == pai) {
-         const trainingService = component.get(PAITrainingService);
-         this.copyDataInstance = trainingService as ICopyData;
-         this.trainingService = trainingService;   
+        let trainingService: undefined;
+        if(platForm === "pai") {
+            trainingService = component.get(PAITrainingService);
         } else {
 
         }
-        this.trainingService = component.get(TrainingService);
+        if(trainingService === undefined){
+            throw new Error("trainingService not initialized!");
+        }
+        this.copyDataInstance = trainingService as ICopyData;
+        this.trainingService = trainingService as TrainingService;
         this.dataStore = component.get(DataStore);
     }
     
     public async Run(): Promise<void>{
         while(this.isRunning){
             console.log('----------in run------------');
-            this.trainingService as ICopyData;
+            console.log(this.platForm)
             await delay(5000);
         }
     }

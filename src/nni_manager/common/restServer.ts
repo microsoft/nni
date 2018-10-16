@@ -39,7 +39,7 @@ export abstract class RestServer {
     protected port?: number;
     protected app: express.Application = express();
     protected log: Logger = getLogger();
-    protected platForm?: string;
+    public platForm?: string;
     
     get endPoint(): string {
         // tslint:disable-next-line:no-http-string

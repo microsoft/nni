@@ -59,7 +59,7 @@ async function initContainer(platformMode: string): Promise<void> {
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(NNIDataStore).scope(Scope.Singleton);
-    Container.bind(BoardManager).to(TensorboardManager).scope(Scope.Singleton);
+    Container.bind(BoardManager).to(new TensorboardManager(mode)).scope(Scope.Singleton);
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
@@ -102,7 +102,7 @@ mkDirP(getLogDir()).then(async () => {
     try {
         await initContainer(mode);
         const restServer: NNIRestServer = component.get(NNIRestServer);
-        await restServer.start(port);
+        await restServer.start(port, mode);
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {
         log.error(`${err.stack}`);

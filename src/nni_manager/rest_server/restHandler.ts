@@ -40,6 +40,7 @@ class NNIRestHandler {
     private tensorboardManager: BoardManager;
     private tb: TensorBoard;
     private log: Logger;
+    private tensorboardEndpoint?: string;
 
     constructor(rs: NNIRestServer) {
         this.nniManager = component.get(Manager);
@@ -165,7 +166,11 @@ class NNIRestHandler {
             try {
                 await this.tb.cleanUp();
                 await this.nniManager.stopExperiment();
-                await this.tensorboardManager.stopTensorBoard();
+                if(this.restServer.platForm === 'pai'){
+                    await this.tensorboardManager.stopTensorBoard();
+                }else if(this.tensorboardEndpoint){
+                    this.tb.stopTensorBoard(this.tensorboardEndpoint);
+                }
                 res.send();
                 this.log.debug('Stopping rest server');
                 await this.restServer.stop();
@@ -261,22 +266,40 @@ class NNIRestHandler {
         router.post('/tensorboard', expressJoi(ValidationSchemas.STARTTENSORBOARD), async (req: Request, res: Response) => {
             const jobIds: string[] = req.query.job_ids.split(',');
             const tensorboardCmd: string | undefined = req.query.tensorboard_cmd;
-            this.tensorboardManager.startTensorBoard(jobIds, tensorboardCmd).then((endPoint: string) => {
-                res.send({endPoint: endPoint});
-            }).catch((err: Error) => {
-                this.handle_error(err, res);
-            });
+            if(this.restServer.platForm ===  'pai'){
+                this.tensorboardManager.startTensorBoard(jobIds, tensorboardCmd).then((endPoint: string) => {
+                    res.send({endPoint: endPoint});
+                }).catch((err: Error) => {
+                    this.handle_error(err, res);
+                });
+            }else{
+                this.tb.startTensorBoard(jobIds, tensorboardCmd).then((endPoint: string) => {
+                    this.tensorboardEndpoint = endPoint;
+                    res.send({endPoint: endPoint});
+                }).catch((err: Error) => {
+                    this.handle_error(err, res);
+                });
+            }
+            
         });
     }
 
     private stopTensorBoard(router: Router): void {
         router.delete('/tensorboard', expressJoi(ValidationSchemas.STOPTENSORBOARD), async (req: Request, res: Response) => {
             const endPoint: string = req.query.endpoint;
-            this.tensorboardManager.stopTensorBoard().then(() => {
-                res.send();
-            }).catch((err: Error) => {
-                this.handle_error(err, res);
-            });
+            if(this.restServer.platForm ===  'pai'){
+                this.tensorboardManager.stopTensorBoard().then(() => {
+                    res.send();
+                }).catch((err: Error) => {
+                    this.handle_error(err, res);
+                });
+            }else{
+                this.tb.stopTensorBoard(endPoint).then(() => {
+                    res.send();
+                }).catch((err: Error) => {
+                    this.handle_error(err, res);
+                });
+            }
         });
     }
 
