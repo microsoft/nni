@@ -17,8 +17,12 @@ echarts.registerTheme('my_theme', {
     color: '#3c8dbc'
 });
 
+interface ErrorPara {
+    error?: string;
+}
+
 interface DescObj {
-    parameters: Object;
+    parameters: ErrorPara;
     logPath?: string;
     isLink?: boolean;
 }
@@ -237,6 +241,8 @@ class TrialStatus extends React.Component<{}, TabState> {
                             : '';
                         if (trialJobs[item].hyperParameters !== undefined) {
                             desc.parameters = JSON.parse(trialJobs[item].hyperParameters).parameters;
+                        } else {
+                            desc.parameters = { error: 'This trial\'s parameters are not available.' };
                         }
                         if (trialJobs[item].logPath !== undefined) {
                             desc.logPath = trialJobs[item].logPath;
@@ -478,6 +484,10 @@ class TrialStatus extends React.Component<{}, TabState> {
         ];
 
         const openRow = (record: TableObj) => {
+            let isHasParameters = true;
+            if (record.description.parameters.error) {
+                isHasParameters = false;
+            }
             const parametersRow = {
                 parameters: record.description.parameters
             };
@@ -488,12 +498,21 @@ class TrialStatus extends React.Component<{}, TabState> {
             }
             return (
                 <pre className="hyperpar">
-                    <JSONTree
-                        hideRoot={true}
-                        shouldExpandNode={() => true}  // default expandNode
-                        getItemString={() => (<span />)}  // remove the {} items
-                        data={parametersRow}
-                    />
+                    {
+                        isHasParameters
+                            ?
+                            < JSONTree
+                                hideRoot={true}
+                                shouldExpandNode={() => true}  // default expandNode
+                                getItemString={() => (<span />)}  // remove the {} items
+                                data={parametersRow}
+                            />
+                            :
+                            <div className="logpath">
+                                <span className="logName">Error: </span>
+                                <span className="error">'This trial's parameters are not available.'</span>
+                            </div>
+                    }
                     {
                         isLogLink
                             ?

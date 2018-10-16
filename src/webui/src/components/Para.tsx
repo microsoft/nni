@@ -99,7 +99,7 @@ class Para extends React.Component<{}, ParaState> {
                                 speDimName.push(tem);
                             }
                             if (accParaData[item].status === 'SUCCEEDED') {
-                                if (accParaData[item].finalMetricData !== undefined) {
+                                if (accParaData[item].finalMetricData && accParaData[item].hyperParameters) {
                                     // get acc array
                                     accPara.push(parseFloat(accParaData[item].finalMetricData.data));
                                     // get dim and every line specific number
