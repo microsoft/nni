@@ -22,12 +22,12 @@
 import os
 import json
 import shutil
-from .constants import HOME_DIR
+from .constants import NNICTL_HOME_DIR
 
 class Config:
     '''a util class to load and save config'''
     def __init__(self, port):
-        config_path = os.path.join(HOME_DIR, str(port))
+        config_path = os.path.join(NNICTL_HOME_DIR, str(port))
         os.makedirs(config_path, exist_ok=True)
         self.config_file = os.path.join(config_path, '.config')
         self.config = self.read_file()
@@ -69,8 +69,8 @@ class Config:
 class Experiments:
     '''Maintain experiment list'''
     def __init__(self):
-        os.makedirs(HOME_DIR, exist_ok=True)
-        self.experiment_file = os.path.join(HOME_DIR, '.experiment')
+        os.makedirs(NNICTL_HOME_DIR, exist_ok=True)
+        self.experiment_file = os.path.join(NNICTL_HOME_DIR, '.experiment')
         self.experiments = self.read_file()
 
     def add_experiment(self, id, port, time):

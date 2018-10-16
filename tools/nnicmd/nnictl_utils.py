@@ -26,7 +26,7 @@ from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
-from .constants import HOME_DIR, EXPERIMENT_ID_INFO
+from .constants import NNICTL_HOME_DIR, EXPERIMENT_ID_INFO
 import time
 from .common_utils import print_normal, print_error, detect_process
 
@@ -36,6 +36,11 @@ def get_experiment_port(args):
     experiment_dict = experiment_config.get_all_experiments()
     #1.If there is an id specified, return the corresponding port
     #2.If there is no id specified, and there is an experiment running, return it as default port, or return Error
+    #3.If the id matches an experiment, nnictl will return the id.
+    #4.If the id ends with *, nnictl will match all ids matchs the regular
+    #5.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
+    #6.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
+    #7.Users could use 'nnictl stop all' to stop all experiments  
     if not experiment_dict:
         print_normal('Experiment is not running...')
         return None
@@ -245,9 +250,9 @@ def log_internal(args, filetype):
     if port is None:
         return None
     if filetype == 'stdout':
-        file_full_path = os.path.join(HOME_DIR, str(port), 'stdout')
+        file_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stdout')
     else:
-        file_full_path = os.path.join(HOME_DIR, str(port), 'stderr')
+        file_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
     if args.head:
         get_log_content(file_full_path, ['head', '-' + str(args.head), file_full_path])
     elif args.tail:
