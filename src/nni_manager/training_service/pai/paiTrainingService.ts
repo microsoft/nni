@@ -36,7 +36,7 @@ import { getLogger, Logger } from '../../common/log';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, ICopyData
+    TrialJobDetail, TrialJobMetric, ITensorBoardUtil
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
@@ -52,7 +52,7 @@ var WebHDFS = require('webhdfs');
  * Refer https://github.com/Microsoft/pai for more info about OpenPAI
  */
 @component.Singleton
-class PAITrainingService implements TrainingService, ICopyData {
+class PAITrainingService implements TrainingService, ITensorBoardUtil {
     private readonly log!: Logger;
     private readonly metricsEmitter: EventEmitter;
     private readonly trialJobsMap: Map<string, PAITrialJobDetail>;
@@ -91,8 +91,22 @@ class PAITrainingService implements TrainingService, ICopyData {
         }
     }
 
-    public async copyDataToLocal(): Promise<void>{
+    public getLocalDirectory(trialJobId: string): string{
+        const localLogDir = `/tmp/nni/logdata/${trialJobId}`
+        return localLogDir;
+    }
+
+    public async copyDataToLocal(trialJobId: string): Promise<void>{
         console.log('-----------in pai copy data-------')
+        //1. get local path and remote path
+        //2. inform trial keeper to copy data to hdfs
+        //3. after copy data, trial keeper inform trainingService to copy data to local
+        const jobDetail = this.trialJobsMap.get(trialJobId);
+        if(jobDetail === undefined){
+            throw Error("trialJobId does not exist!");
+        }
+        const hdfsDir = jobDetail.hdfsOutputDir;
+        
     }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -178,7 +192,7 @@ class PAITrainingService implements TrainingService, ICopyData {
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
         
-        const hdfsOutputDir : string = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
+        const hdfsOutputDir = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
         const hdfsLogPath : string = String.Format(
             PAI_LOG_PATH_FORMAT,
             this.hdfsOutputHost,
@@ -192,7 +206,8 @@ class PAITrainingService implements TrainingService, ICopyData {
             trialWorkingFolder,
             form,
             trialSequenceId,
-            hdfsLogPath);
+            hdfsLogPath,
+            hdfsOutputDir);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
         const nniPaiTrialCommand : string = String.Format(

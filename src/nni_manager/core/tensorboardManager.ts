@@ -29,7 +29,7 @@ import { NNIErrorNames } from '../common/errors';
 import { getLogger, Logger } from '../common/log';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
-import { HostJobApplicationForm, TrainingService, TrialJobStatus, ICopyData } from '../common/trainingService';
+import { HostJobApplicationForm, TrainingService, TrialJobStatus, ITensorBoardUtil } from '../common/trainingService';
 import { PAITrainingService } from '../training_service/pai/paiTrainingService'
 import { MethodNotImplementedError, NNIError} from '../common/errors';
 
@@ -45,7 +45,7 @@ class TensorboardManager implements BoardManager {
     private tbPid?: number;
     private isRunning: boolean;
     private platForm: string;
-    private copyDataInstance: ICopyData;
+    private tensorBoardUtilInstance: ITensorBoardUtil;
 
     constructor(platForm: string) {
         this.platForm = platForm;
@@ -59,7 +59,7 @@ class TensorboardManager implements BoardManager {
         if(trainingService === undefined){
             throw new Error("trainingService not initialized!");
         }
-        this.copyDataInstance = trainingService as ICopyData;
+        this.tensorBoardUtilInstance = trainingService as ITensorBoardUtil;
         this.trainingService = trainingService as TrainingService;
         this.dataStore = component.get(DataStore);
     }

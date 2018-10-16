@@ -34,9 +34,10 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public form: JobApplicationForm;
     public sequenceId: number;
     public hdfsLogPath: string;
+    public hdfsOutputDir: string;
 
     constructor(id: string, status: TrialJobStatus, paiJobName : string, 
-            submitTime: number, workingDirectory: string, form: JobApplicationForm, sequenceId: number, hdfsLogPath: string) {
+            submitTime: number, workingDirectory: string, form: JobApplicationForm, sequenceId: number, hdfsLogPath: string, hdfsOutputDir: string) {
         this.id = id;
         this.status = status;
         this.paiJobName = paiJobName;
@@ -46,6 +47,7 @@ export class PAITrialJobDetail implements TrialJobDetail {
         this.sequenceId = sequenceId;
         this.tags = [];
         this.hdfsLogPath = hdfsLogPath;
+        this.hdfsOutputDir = hdfsOutputDir;
     }
 }
 
