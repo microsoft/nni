@@ -245,18 +245,27 @@ function cleanupUnitTest(): void {
     Container.restore(ExperimentStartupInfo);
 }
 
+let cachedipv4Address : string = '';
 /**
  * Get IPv4 address of current machine
  */
 function getIPV4Address(): string {
-    let ipv4Address : string = '';
-
-    for(const item of os.networkInterfaces().eth0) {
-        if(item.family === 'IPv4') {
-            ipv4Address = item.address;
-        }
+    if (cachedipv4Address && cachedipv4Address.length > 0) {
+        return cachedipv4Address;
     }
-    return ipv4Address;
+
+    if(os.networkInterfaces().eth0) {
+        for(const item of os.networkInterfaces().eth0) {
+            if(item.family === 'IPv4') {
+                cachedipv4Address = item.address;
+                return cachedipv4Address;
+            }
+        }
+    } else {
+        throw Error('getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.');
+    }
+
+    throw Error('getIPV4Address() failed because no valid IPv4 address found.')
 }
 
 export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, 
