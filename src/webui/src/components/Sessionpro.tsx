@@ -7,6 +7,10 @@ import JSONTree from 'react-json-tree';
 require('../style/sessionpro.css');
 require('../style/logPath.css');
 
+interface ErrorPara {
+    error?: string;
+}
+
 interface TableObj {
     key: number;
     id: string;
@@ -19,7 +23,7 @@ interface TableObj {
 }
 
 interface Parameters {
-    parameters: object;
+    parameters: ErrorPara;
     logPath?: string;
     isLink?: boolean;
 }
@@ -189,7 +193,11 @@ class Sessionpro extends React.Component<{}, SessionState> {
                             if (tableData[item].finalMetricData) {
                                 acc = parseFloat(tableData[item].finalMetricData.data);
                             }
-                            desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
+                            if (tableData[item].hyperParameters) {
+                                desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
+                            } else {
+                                desJobDetail.parameters = { error: 'This trial\'s parameters are not available.' };
+                            }
                             if (tableData[item].logPath !== undefined) {
                                 desJobDetail.logPath = tableData[item].logPath;
                                 const isSessionLink = /^http/gi.test(tableData[item].logPath);
@@ -237,6 +245,23 @@ class Sessionpro extends React.Component<{}, SessionState> {
         }
     }
 
+    // trial's duration, accurate to seconds
+    convertDuration = (num: number) => {
+        const hour = Math.floor(num / 3600);
+        const min = Math.floor(num / 60 % 60);
+        const second = Math.floor(num % 60);
+        const result = hour > 0 ? `${hour} h ${min} min ${second}s` : `${min} min ${second}s`;
+        if (hour <= 0 && min === 0 && second !== 0) {
+            return `${second}s`;
+        } else if (hour === 0 && min !== 0 && second === 0) {
+            return `${min}min`;
+        } else if (hour === 0 && min !== 0 && second !== 0) {
+            return `${min}min ${second}s`;
+        } else {
+            return result;
+        }
+    }
+    
     downExperimentContent = () => {
         axios
             .all([
@@ -313,7 +338,17 @@ class Sessionpro extends React.Component<{}, SessionState> {
             title: 'Duration/s',
             dataIndex: 'duration',
             key: 'duration',
-            width: '9%'
+            width: '9%',
+            sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
+            render: (text: string, record: TableObj) => {
+                let duration;
+                if (record.duration) {
+                    duration = this.convertDuration(record.duration);
+                }
+                return (
+                    <span>{duration}</span>
+                );
+            },
         }, {
             title: 'Start',
             dataIndex: 'start',
@@ -344,6 +379,10 @@ class Sessionpro extends React.Component<{}, SessionState> {
         }];
 
         const openRow = (record: TableObj) => {
+            let isHasParameters = true;
+            if (record.description.parameters.error) {
+                isHasParameters = false;
+            }
             const openRowDataSource = {
                 parameters: record.description.parameters
             };
@@ -354,12 +393,21 @@ class Sessionpro extends React.Component<{}, SessionState> {
             }
             return (
                 <pre id="description" className="jsontree">
-                    <JSONTree
-                        hideRoot={true}
-                        shouldExpandNode={() => true}  // default expandNode
-                        getItemString={() => (<span />)}  // remove the {} items
-                        data={openRowDataSource}
-                    />
+                    {
+                        isHasParameters
+                            ?
+                            <JSONTree
+                                hideRoot={true}
+                                shouldExpandNode={() => true}  // default expandNode
+                                getItemString={() => (<span />)}  // remove the {} items
+                                data={openRowDataSource}
+                            />
+                            :
+                            <div className="logpath">
+                                <span className="logName">Error: </span>
+                                <span className="error">'This trial's parameters are not available.'</span>
+                            </div>
+                    }
                     {
                         isLogLink
                             ?

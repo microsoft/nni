@@ -20,7 +20,7 @@
 
 import os
 
-HOME_DIR = os.path.join(os.environ['HOME'], '.local',  'nni', 'nnictl')
+NNICTL_HOME_DIR = os.path.join(os.environ['HOME'], '.local',  'nni', 'nnictl')
 
 ERROR_INFO = 'ERROR: %s'
 
