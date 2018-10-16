@@ -97,6 +97,7 @@ class LocalTrainingService implements TrainingService {
     private rootDir!: string;
     protected log: Logger;
     protected localTrailConfig?: TrialConfig;
+    private isMultiPhase: boolean = false;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -262,6 +263,9 @@ class LocalTrainingService implements TrainingService {
                     throw new Error('trial config parsed failed');
                 }
                 break;
+            case TrialConfigMetadataKey.MULTI_PHASE:
+                this.isMultiPhase = (value === 'true' || value === 'True');
+                break;
             default:
         }
     }
@@ -296,7 +300,8 @@ class LocalTrainingService implements TrainingService {
             { key: 'NNI_PLATFORM', value: 'local' },
             { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
             { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
-            { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory }
+            { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
+            { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
     }
 
