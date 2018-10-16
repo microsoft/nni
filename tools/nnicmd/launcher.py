@@ -285,8 +285,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
         try:
             cmds = ['pkill', '-P', str(rest_process.pid)]
             call(cmds)
-            cmds = ['pkill', '-P', str(webui_process.pid)]
-            call(cmds)
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)

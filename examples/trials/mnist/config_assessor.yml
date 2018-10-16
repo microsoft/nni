@@ -1,4 +1,4 @@
-sauthorName: default
+authorName: default
 experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 1h
