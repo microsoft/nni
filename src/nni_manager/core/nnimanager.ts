@@ -385,6 +385,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
+        let allFinishedTrialJobNum: number = 0;
         const startTime: number = Date.now();
         let suspendStartTime: number = 0;
         for (; ;) {
@@ -392,6 +393,13 @@ class NNIManager implements Manager {
                 break;
             }
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
+
+            allFinishedTrialJobNum += finishedTrialJobNum;
+            if (allFinishedTrialJobNum >= this.experimentProfile.params.maxTrialNum) {
+                // write this log for travis CI
+                this.log.info('Experiment suspended.');
+            }
+
             const requestTrialNum: number = this.trialConcurrencyChange + finishedTrialJobNum;
             if (requestTrialNum >= 0) {
                 this.trialConcurrencyChange = 0;
@@ -407,6 +415,7 @@ class NNIManager implements Manager {
                     this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, '1');
                 }
             }
+
             // check maxtrialnum and maxduration here
             if ((Date.now() - startTime) / 1000 + this.experimentProfile.execDuration - this.suspendDuration 
                 > this.experimentProfile.params.maxExecDuration ||
@@ -416,7 +425,6 @@ class NNIManager implements Manager {
                     suspendStartTime = Date.now();
                 }
                 this.status.status = 'SUSPENDED';
-                this.log.info('Experiment suspended.');
             } else {
                 if (this.status.status === 'SUSPENDED') {
                     assert(suspendStartTime !== 0);
@@ -448,6 +456,7 @@ class NNIManager implements Manager {
             }
             await delay(1000 * 5); // 5 seconds
         }
+        
         this.log.info('Experiment done, cleaning up...');
         await this.experimentDoneCleanUp();
         this.log.info('Experiment done.');
