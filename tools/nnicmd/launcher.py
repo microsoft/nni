@@ -45,9 +45,9 @@ def start_rest_server(port, platform, mode, experiment_id=None):
         print_error(EXPERIMENT_START_FAILED_INFO % port)
         exit(1)
     
-    if detect_port(port):
-        print_error('Port %s is used by another process, please reset the port!' % port)
-        exit(1)
+    # if detect_port(port):
+    #     print_error('Port %s is used by another process, please reset the port!' % port)
+    #     exit(1)
 
     print_normal('Starting restful server...')
     manager = os.environ.get('NNI_MANAGER', 'nnimanager')
