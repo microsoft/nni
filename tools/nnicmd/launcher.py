@@ -114,6 +114,8 @@ def set_pai_config(experiment_config, port):
     if not response or not response.status_code == 200:
         if response is not None:
             err_message = response.text
+            with open(STDERR_FULL_PATH, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
 
     #set trial_config
