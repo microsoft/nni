@@ -80,16 +80,16 @@ class Integration_test():
             if experiment_status:
                 break
 
-        if tuner_status is not None:
-            for line in open('/tmp/nni_tuner_result.txt'):
-                if line.strip() in ('DONE', 'ERROR'):
-                    break
-                trial = int(line.split(' ')[0])
-                if trial > current_trial:
-                    current_trial = trial
-                    print('Trial #%d done' % trial)
-        subprocess.run(['nnictl', 'log', 'stderr'])
-        assert tuner_status == 'DONE' and assessor_status == 'DONE', 'Failed to finish in 1 min'
+            if tuner_status is not None:
+                for line in open('tuner_result.txt'):
+                    if line.strip() == 'ERROR':
+                        break
+                    trial = int(line.split(' ')[0])
+                    if trial > current_trial:
+                        current_trial = trial
+                        print('Trial #%d done' % trial)
+
+        assert experiment_status, 'Failed to finish in 1 min'
 
         ss1 = json.load(open('search_space.json'))
         ss2 = json.load(open('tuner_search_space.json'))
@@ -119,6 +119,6 @@ if __name__ == '__main__':
         print(RED + 'FAIL' + CLEAR)
         print('%r' % error)
         traceback.print_exc()
-        raise error
-
-    subprocess.run(['nnictl', 'stop'])
+        sys.exit(1)
+    finally:
+        subprocess.run(['nnictl', 'stop'])
