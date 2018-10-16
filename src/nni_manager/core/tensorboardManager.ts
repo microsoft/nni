@@ -79,7 +79,7 @@ class TensorboardManager implements BoardManager {
             tensorBoardPort = port;
         }
         const tbEndpoint: string = `http://localhost:${tensorBoardPort}`;
-        
+        /*
         if(this.tbPid !== undefined){
             await this.stopTensorBoard();
         }
@@ -96,6 +96,8 @@ class TensorboardManager implements BoardManager {
         }
         const cmd: string = `${tensorBoardCmd} --logdir ${logDirs.join(':')} --port ${tensorBoardPort}`;
         this.tbPid = await this.runTensorboardProcess(cmd);
+        */
+        console.log('--------------before run---------------')
         this.Run().catch(()=>{
 
         });     
