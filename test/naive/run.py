@@ -15,7 +15,7 @@ CLEAR = '\33[0m'
 
 class Integration_test():
     def __init__(self):
-        self.experiment_url = 'http://localhost:51188/api/v1/nni/experiment'
+        self.experiment_url = 'http://localhost:8080/api/v1/nni/experiment'
         self.experiment_id = None
         self.experiment_suspended_signal = '"Experiment suspended"'
 
