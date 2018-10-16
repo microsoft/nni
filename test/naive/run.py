@@ -91,21 +91,21 @@ class Integration_test():
     subprocess.run(['nnictl', 'log', 'stderr'])
     assert tuner_status == 'DONE' and assessor_status == 'DONE', 'Failed to finish in 1 min'
 
-        ss1 = json.load(open('search_space.json'))
-        ss2 = json.load(open('tuner_search_space.json'))
-        assert ss1 == ss2, 'Tuner got wrong search space'
+    ss1 = json.load(open('search_space.json'))
+    ss2 = json.load(open('tuner_search_space.json'))
+    assert ss1 == ss2, 'Tuner got wrong search space'
 
-        # Waiting for naive_trial to report_final_result
-        time.sleep(2)
-        tuner_result = set(open('tuner_result.txt'))
-        expected = set(open('expected_tuner_result.txt'))
-        # Trials may complete before NNI gets assessor's result,
-        # so it is possible to have more final result than expected
-        assert tuner_result.issuperset(expected), 'Bad tuner result'
+    # Waiting for naive_trial to report_final_result
+    time.sleep(2)
+    tuner_result = set(open('tuner_result.txt'))
+    expected = set(open('expected_tuner_result.txt'))
+    # Trials may complete before NNI gets assessor's result,
+    # so it is possible to have more final result than expected
+    assert tuner_result.issuperset(expected), 'Bad tuner result'
 
-        assessor_result = set(open('assessor_result.txt'))
-        expected = set(open('expected_assessor_result.txt'))
-        assert assessor_result == expected, 'Bad assessor result'
+    assessor_result = set(open('assessor_result.txt'))
+    expected = set(open('expected_assessor_result.txt'))
+    assert assessor_result == expected, 'Bad assessor result'
 
 if __name__ == '__main__':
     installed = (sys.argv[-1] != '--preinstall')
