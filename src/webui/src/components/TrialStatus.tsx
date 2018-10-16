@@ -413,8 +413,10 @@ class TrialStatus extends React.Component<{}, TabState> {
             sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
             render: (text: string, record: TableObj) => {
                 let duration;
-                if (record.duration) {
+                if (record.duration !== undefined && record.duration > 0) {
                     duration = this.convertTime(record.duration);
+                } else {
+                    duration = 0;
                 }
                 return (
                     <span>{duration}</span>
