@@ -70,8 +70,4 @@ def detect_port(port):
         socket_test.close()
         return True
     except:
-        try:
-            socket_test.close()
-        except:
-            return False
         return False
