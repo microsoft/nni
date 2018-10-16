@@ -124,25 +124,45 @@ class Para extends React.Component<{}, ParaState> {
                         const searchRange = JSON.parse(res1.data.params.searchSpace);
                         for (let i = 0; i < dimName.length; i++) {
                             const searchKey = searchRange[dimName[i]];
-                            if (searchKey._type === 'uniform') {
-                                parallelAxis.push({
-                                    dim: i,
-                                    name: dimName[i],
-                                    max: searchKey._value[1],
-                                    min: searchKey._value[0]
-                                });
-                            } else { // choice
-                                // data number ['0.2', '0.4', '0.6']
-                                const data: Array<string> = [];
-                                for (let j = 0; j < searchKey._value.length; j++) {
-                                    data.push(searchKey._value[j].toString());
-                                }
-                                parallelAxis.push({
-                                    dim: i,
-                                    name: dimName[i],
-                                    type: 'category',
-                                    data: data
-                                });
+                            switch (searchKey._type) {
+                                case 'uniform':
+                                case 'quniform':
+                                    parallelAxis.push({
+                                        dim: i,
+                                        name: dimName[i],
+                                        max: searchKey._value[1],
+                                        min: searchKey._value[0]
+                                    });
+                                    break;
+
+                                case 'randint':
+                                    parallelAxis.push({
+                                        dim: i,
+                                        name: dimName[i],
+                                        max: searchKey._value[0],
+                                        min: 0
+                                    });
+                                    break;
+
+                                case 'choice':
+                                    const data: Array<string> = [];
+                                    for (let j = 0; j < searchKey._value.length; j++) {
+                                        data.push(searchKey._value[j].toString());
+                                    }
+                                    parallelAxis.push({
+                                        dim: i,
+                                        name: dimName[i],
+                                        type: 'category',
+                                        data: data
+                                    });
+                                    break;
+
+                                default:
+                                    parallelAxis.push({
+                                        dim: i,
+                                        name: dimName[i]
+                                    });
+
                             }
                         }
                         // get data for every lines. if dim is choice type
@@ -226,14 +246,16 @@ class Para extends React.Component<{}, ParaState> {
         if (maxAccuracy === minAccuracy) {
             visualMapObj = {
                 type: 'continuous',
-                color: ['#fb7c7c', 'yellow', 'lightblue']
+                precision: 3,
+                color: ['#CA0000', '#FFC400', '#90EE90']
             };
         } else {
             visualMapObj = {
                 type: 'continuous',
+                precision: 3,
                 min: visualValue.minAccuracy,
                 max: visualValue.maxAccuracy,
-                color: ['#fb7c7c', 'yellow', 'lightblue']
+                color: ['#CA0000', '#FFC400', '#90EE90']
             };
         }
         let optionown = {

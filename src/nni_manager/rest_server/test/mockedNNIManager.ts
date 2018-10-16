@@ -78,6 +78,7 @@ export class MockedNNIManager extends Manager {
             // tslint:disable-next-line:no-http-string
             url: 'http://test',
             workingDirectory: '/tmp/mocked',
+            sequenceId: 0,
             form: {
                 jobType: 'TRIAL'
             }
@@ -135,6 +136,7 @@ export class MockedNNIManager extends Manager {
                 trialConcurrency: 2,
                 maxExecDuration: 30,
                 maxTrialNum: 3,
+                trainingServicePlatform: 'local',
                 searchSpace: '{lr: 0.01}',
                 tuner: {
                     className: 'testTuner',

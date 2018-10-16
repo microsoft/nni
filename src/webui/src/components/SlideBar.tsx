@@ -11,7 +11,7 @@ class SlideBar extends React.Component<{}, {}> {
         <ul className="nav">
           <li>
             <IndexLink to={'/oview'} activeClassName="high">
-              <Icon className="icon" type="rocket" />Overview
+              <Icon className="icon" type="home" />Overview
               <Icon className="floicon" type="right" />
             </IndexLink>
           </li>

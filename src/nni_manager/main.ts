@@ -67,11 +67,13 @@ function usage(): void {
     console.info('usage: node main.js --port <port> --mode <local/remote/pai> --start_mode <new/resume> --experiment_id <id>');
 }
 
-let port: number = NNIRestServer.DEFAULT_PORT;
 const strPort: string = parseArg(['--port', '-p']);
-if (strPort && strPort.length > 0) {
-    port = parseInt(strPort, 10);
+if (!strPort || strPort.length === 0) {
+    usage();
+    process.exit(1);
 }
+
+const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
 if (!['local', 'remote', 'pai'].includes(mode)) {

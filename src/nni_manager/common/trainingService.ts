@@ -37,11 +37,16 @@ interface JobApplicationForm {
     readonly jobType: JobType;
 }
 
+interface HyperParameters {
+    readonly value: string;
+    readonly index: number;
+}
+
 /**
  * define TrialJobApplicationForm
  */
 interface TrialJobApplicationForm extends JobApplicationForm {
-    readonly hyperParameters: string;
+    readonly hyperParameters: HyperParameters;
 }
 
 /**
@@ -65,6 +70,7 @@ interface TrialJobDetail {
     readonly url?: string;
     readonly workingDirectory: string;
     readonly form: JobApplicationForm;
+    readonly sequenceId: number;
 }
 
 interface HostJobDetail {
@@ -116,6 +122,6 @@ abstract class TrainingService {
 
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
-    TrainingServiceMetadata, TrialJobDetail, TrialJobMetric,
+    TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
     HostJobApplicationForm, JobApplicationForm, JobType
 };

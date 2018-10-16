@@ -43,7 +43,7 @@ For example, run the command
 ```
 nnictl create --config ~/nni/examples/trials/mnist/config.yml
 ```
-And open web ui to check if everything is OK
+And open WebUI to check if everything is OK
 
 **6. Redeploy**
 
@@ -51,3 +51,4 @@ After you change some code, just use **step 4** to rebuild your code, then the c
 
 ---
 At last, wish you have a wonderful day.
+For more contribution guidelines on making PR's or issues to NNI source code, you can refer to our [CONTRIBUTING](./docs/CONTRIBUTING.md) document. 

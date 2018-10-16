@@ -1,4 +1,4 @@
-export const MANAGER_IP = `${window.location.protocol}//${window.location.hostname}:51188/api/v1/nni`;
+export const MANAGER_IP = `/api/v1/nni`;
 export const trialJobStatus = [
     'UNKNOWN',
     'WAITING',

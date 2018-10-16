@@ -37,7 +37,7 @@ import {
 import { delay , getLogDir, getMsgDispatcherCommand} from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, REPORT_METRIC_DATA,
-    REQUEST_TRIAL_JOBS, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
+    REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 
@@ -123,7 +123,7 @@ class NNIManager implements Manager {
         await this.storeExperimentProfile();
         this.log.debug('Setup tuner...');
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor);
+        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
         console.log(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
             //expParams.tuner.tunerCommand,
@@ -147,7 +147,7 @@ class NNIManager implements Manager {
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor);
+        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
         console.log(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
             dispatcherCommand,
@@ -206,7 +206,7 @@ class NNIManager implements Manager {
         return Promise.resolve();
     }
 
-    public async getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]> {
+    public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
         return this.dataStore.getMetricData(trialJobId, metricType);
     }
 
@@ -425,7 +425,10 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     const trialJobAppForm: TrialJobApplicationForm = {
                         jobType: 'TRIAL',
-                        hyperParameters: hyperParams
+                        hyperParameters: {
+                            value: hyperParams,
+                            index: 0
+                        }
                     };
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
                     this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
@@ -502,6 +505,22 @@ class NNIManager implements Manager {
             case NEW_TRIAL_JOB:
                 this.waitingTrials.push(content);
                 break;
+            case SEND_TRIAL_JOB_PARAMETER:
+                const tunerCommand: any = JSON.parse(content);
+                assert(tunerCommand.parameter_index >= 0);
+                assert(tunerCommand.trial_job_id !== undefined);
+
+                const trialJobForm: TrialJobApplicationForm = {
+                    jobType: 'TRIAL',
+                    hyperParameters: {
+                        value: content,
+                        index: tunerCommand.parameter_index
+                    }
+                };
+                await this.trainingService.updateTrialJob(tunerCommand.trial_job_id, trialJobForm);
+                await this.dataStore.storeTrialJobEvent(
+                        'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
+                break;
             case NO_MORE_TRIAL_JOBS:
                 //this.trialJobsMaintainer.setNoMoreTrials();
                 // ignore this event for now
@@ -538,6 +557,7 @@ class NNIManager implements Manager {
                 trialConcurrency: 0,
                 maxExecDuration: 0, // unit: second
                 maxTrialNum: 0, // maxTrialNum includes all the submitted trial jobs
+                trainingServicePlatform: '',
                 searchSpace: '',
                 tuner: {
                     className: '',

@@ -121,3 +121,6 @@ In the yaml configure file, you need to set *useAnnotation* to true to enable NN
 ```
 useAnnotation: true
 ```
+
+## More Trial Example
+* [Automatic Model Architecture Search for Reading Comprehension.](../examples/trials/ga_squad/README.md)

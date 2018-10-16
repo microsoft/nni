@@ -24,6 +24,7 @@ from .launcher import create_experiment, resume_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum
 from .nnictl_utils import *
 from .package_management import *
+from .constants import *
 
 def nni_help_info(*args):
     print('please run "nnictl {positional argument} --help" to see nnictl guidance')
@@ -39,14 +40,14 @@ def parse_args():
     # parse start command
     parser_start = subparsers.add_parser('create', help='create a new experiment')
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
-    parser_start.add_argument('--webuiport', '-w', default=8080, dest='webuiport')
+    parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_start.set_defaults(func=create_experiment)
 
     # parse resume command
     parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
     parser_resume.add_argument('--experiment', '-e', dest='id', help='ID of the experiment you want to resume')
     parser_resume.add_argument('--manager', '-m', default='nnimanager', dest='manager')
-    parser_resume.add_argument('--webuiport', '-w', default=8080, dest='webuiport')
+    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse update command
@@ -54,20 +55,21 @@ def parse_args():
     #add subparsers for parser_updater
     parser_updater_subparsers = parser_updater.add_subparsers()
     parser_updater_searchspace = parser_updater_subparsers.add_parser('searchspace', help='update searchspace')
+    parser_updater_searchspace.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_updater_searchspace.add_argument('--filename', '-f', required=True)
     parser_updater_searchspace.set_defaults(func=update_searchspace)
-    parser_updater_searchspace = parser_updater_subparsers.add_parser('concurrency', help='update concurrency')
-    parser_updater_searchspace.add_argument('--value', '-v', required=True)
-    parser_updater_searchspace.set_defaults(func=update_concurrency)
-    parser_updater_searchspace = parser_updater_subparsers.add_parser('duration', help='update duration')
-    parser_updater_searchspace.add_argument('--value', '-v', required=True)
-    parser_updater_searchspace.set_defaults(func=update_duration)
-    parser_updater_searchspace = parser_updater_subparsers.add_parser('trialnum', help='update maxtrialnum')
-    parser_updater_searchspace.add_argument('--value', '-v', required=True)
-    parser_updater_searchspace.set_defaults(func=update_trialnum)
+    parser_updater_concurrency = parser_updater_subparsers.add_parser('concurrency', help='update concurrency')
+    parser_updater_concurrency.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_updater_concurrency.add_argument('--value', '-v', required=True)
+    parser_updater_concurrency.set_defaults(func=update_concurrency)
+    parser_updater_duration = parser_updater_subparsers.add_parser('duration', help='update duration')
+    parser_updater_duration.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_updater_duration.add_argument('--value', '-v', required=True)
+    parser_updater_duration.set_defaults(func=update_duration)
 
     #parse stop command
     parser_stop = subparsers.add_parser('stop', help='stop the experiment')
+    parser_stop.add_argument('--port', '-p', required=True, dest='port', help='the port of restful server')
     parser_stop.set_defaults(func=stop_experiment)
 
     #parse trial command
@@ -75,37 +77,29 @@ def parse_args():
     #add subparsers for parser_trial
     parser_trial_subparsers = parser_trial.add_subparsers()
     parser_trial_ls = parser_trial_subparsers.add_parser('ls', help='list trial jobs')
+    parser_trial_ls.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_trial_ls.set_defaults(func=trial_ls)
     parser_trial_kill = parser_trial_subparsers.add_parser('kill', help='kill trial jobs')
+    parser_trial_kill.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_trial_kill.add_argument('--trialid', '-t', required=True, dest='trialid', help='the id of trial to be killed')
     parser_trial_kill.set_defaults(func=trial_kill)
-
-    #TODO:finish webui function
-    #parse board command
-    parser_webui = subparsers.add_parser('webui', help='get web ui information')
-    #add subparsers for parser_board
-    parser_webui_subparsers = parser_webui.add_subparsers()
-    parser_webui_start = parser_webui_subparsers.add_parser('start', help='start web ui')
-    parser_webui_start.add_argument('--port', '-p', dest='port', default=8080, help='the port of web ui')
-    parser_webui_start.set_defaults(func=start_webui)
-    parser_webui_stop = parser_webui_subparsers.add_parser('stop', help='stop web ui')
-    parser_webui_stop.set_defaults(func=stop_webui)
-    parser_webui_url = parser_webui_subparsers.add_parser('url', help='show the url of web ui')
-    parser_webui_url.set_defaults(func=webui_url)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
     #add subparsers for parser_experiment
     parser_experiment_subparsers = parser_experiment.add_subparsers()
     parser_experiment_show = parser_experiment_subparsers.add_parser('show', help='show the information of experiment')
+    parser_experiment_show.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_experiment_show.set_defaults(func=list_experiment)
     parser_experiment_status = parser_experiment_subparsers.add_parser('status', help='show the status of experiment')
+    parser_experiment_status.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_experiment_status.set_defaults(func=experiment_status)
 
     #parse config command
     parser_config = subparsers.add_parser('config', help='get config information')
     parser_config_subparsers = parser_config.add_subparsers()
     parser_config_show = parser_config_subparsers.add_parser('show', help='show the information of config')
+    parser_config_show.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_config_show.set_defaults(func=get_config)
 
     #parse log command
@@ -113,16 +107,19 @@ def parse_args():
     # add subparsers for parser_log
     parser_log_subparsers = parser_log.add_subparsers()
     parser_log_stdout = parser_log_subparsers.add_parser('stdout', help='get stdout information')
+    parser_log_stdout.add_argument('--port', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_log_stdout.add_argument('--tail', '-T', dest='tail', type=int, help='get tail -100 content of stdout')
     parser_log_stdout.add_argument('--head', '-H', dest='head', type=int, help='get head -100 content of stdout')
-    parser_log_stdout.add_argument('--path', '-p', action='store_true', default=False, help='get the path of stdout file')
+    parser_log_stdout.add_argument('--path', action='store_true', default=False, help='get the path of stdout file')
     parser_log_stdout.set_defaults(func=log_stdout)
     parser_log_stderr = parser_log_subparsers.add_parser('stderr', help='get stderr information')
+    parser_log_stderr.add_argument('--port', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_log_stderr.add_argument('--tail', '-T', dest='tail', type=int, help='get tail -100 content of stderr')
     parser_log_stderr.add_argument('--head', '-H', dest='head', type=int, help='get head -100 content of stderr')
-    parser_log_stderr.add_argument('--path', '-p', action='store_true', default=False, help='get the path of stderr file')
+    parser_log_stderr.add_argument('--path', action='store_true', default=False, help='get the path of stderr file')
     parser_log_stderr.set_defaults(func=log_stderr)
     parser_log_trial = parser_log_subparsers.add_parser('trial', help='get trial log path')
+    parser_log_trial.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_log_trial.add_argument('--id', '-I', dest='id', help='find trial log path by id')
     parser_log_trial.set_defaults(func=log_trial)
 

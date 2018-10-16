@@ -1,4 +1,4 @@
-authorName: default
+sauthorName: default
 experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 1h
@@ -9,7 +9,7 @@ searchSpacePath: ~/nni/examples/trials/mnist/search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution,
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner
   #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: TPE
   classArgs:

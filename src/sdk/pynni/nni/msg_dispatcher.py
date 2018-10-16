@@ -111,11 +111,24 @@ class MsgDispatcher(MsgDispatcherBase):
 
     def handle_report_metric_data(self, data):
         if data['type'] == 'FINAL':
+            value = None
             id_ = data['parameter_id']
-            if id_ in _customized_parameter_ids:
-                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], data['value'])
+            
+            if isinstance(data['value'], float) or isinstance(data['value'], int):
+                value = data['value']
+            elif isinstance(data['value'], dict) and 'default' in data['value']:
+                value = data['value']['default']
+                if isinstance(value, float) or isinstance(value, int):
+                    pass
+                else:
+                    raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.')
             else:
-                self.tuner.receive_trial_result(id_, _trial_params[id_], data['value'])
+                raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.') 
+            
+            if id_ in _customized_parameter_ids:
+                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value)
+            else:
+                self.tuner.receive_trial_result(id_, _trial_params[id_], value)
         elif data['type'] == 'PERIODICAL':
             if self.assessor is not None:
                 self._handle_intermediate_metric_data(data)

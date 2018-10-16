@@ -22,8 +22,8 @@
 import { ExperimentProfile, TrialJobStatistics } from './manager';
 import { TrialJobDetail, TrialJobStatus } from './trainingService';
 
-type TrialJobEvent = TrialJobStatus | 'USER_TO_CANCEL' | 'ADD_CUSTOMIZED';
-type MetricType = 'PERIODICAL' | 'FINAL' | 'CUSTOM';
+type TrialJobEvent = TrialJobStatus | 'USER_TO_CANCEL' | 'ADD_CUSTOMIZED' | 'ADD_HYPERPARAMETER';
+type MetricType = 'PERIODICAL' | 'FINAL' | 'CUSTOM' | 'REQUEST_PARAMETER';
 
 interface ExperimentProfileRecord {
     readonly timestamp: number;
@@ -62,7 +62,7 @@ interface TrialJobInfo {
     status: TrialJobStatus;
     startTime?: number;
     endTime?: number;
-    hyperParameters?: string;
+    hyperParameters?: string[];
     logPath?: string;
     finalMetricData?: string;
     stderrPath?: string;
@@ -78,7 +78,7 @@ abstract class DataStore {
     public abstract listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]>;
     public abstract getTrialJob(trialJobId: string): Promise<TrialJobInfo>;
     public abstract storeMetricData(trialJobId: string, data: string): Promise<void>;
-    public abstract getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]>;
+    public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
 }
 
 abstract class Database {

@@ -19,22 +19,32 @@ We will introduce some basic knowledge about tuner algorithm here. If you are an
 
 The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model. 
     
-The TPE approach models P(x|y) and P(y) where x represents hyperparameters and y the associated evalate matric. P(x|y) is modeled by transforming the generative process of hyperparameters, replacing the distributions of the configuration prior with non-parametric densities. This optimization approach is described in detail in [Algorithms for Hyper-Parameter Optimization][1].
+The TPE approach models P(x|y) and P(y) where x represents hyperparameters and y the associated evaluate matric. P(x|y) is modeled by transforming the generative process of hyperparameters, replacing the distributions of the configuration prior with non-parametric densities. This optimization approach is described in detail in [Algorithms for Hyper-Parameter Optimization][1].
     
 Comparing with other algorithm, TPE could be achieve better result when the number of trial experiment is small. Also TPE support continuous or discrete hyper-parameters. From a large amount of experiments, we could found that TPE is far better than Random Search.
 
 **Random Search**
 
-In [Random Search for Hyper-Parameter Optimization][2] show that Random Search might be surprsingly simple and effective. We suggests that we could use Random Search as basline when we have no knowledge about the prior distribution of hyper-parameters.
+In [Random Search for Hyper-Parameter Optimization][2] show that Random Search might be surprisingly simple and effective. We suggests that we could use Random Search as baseline when we have no knowledge about the prior distribution of hyper-parameters.
     
 **Anneal**
     
 **Naive Evolution**
 
-Naive Evolution comes from [Large-Scale Evolution of Image Classifiers][3]. Naive Evolution requir more experiments to works, but it's very simple and easily to expand new features. There are some tips for user: 
+Naive Evolution comes from [Large-Scale Evolution of Image Classifiers][3]. Naive Evolution require more experiments to works, but it's very simple and easily to expand new features. There are some tips for user: 
 
 1) large initial population could avoid to fall into local optimum
-2) use some strategies to keep the deversity of population could be better.
+2) use some strategies to keep the diversity of population could be better.
+
+**SMAC**
+
+[SMAC][4] is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on [the SMAC3 github repo][5]. 
+
+Note that SMAC only supports a subset of the types in [search space spec](../../../../docs/SearchSpaceSpec.md), including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
+
+**Batch**
+
+Batch allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done.
 
 **SMAC**
 
