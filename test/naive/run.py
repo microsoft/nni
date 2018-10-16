@@ -45,16 +45,15 @@ class Integration_test():
                 os.remove(file_path)
 
     def run(self, installed = True):
-        if not installed:
-            os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
-            sdk_path = os.path.abspath('../../src/sdk/pynni')
-            cmd_path = os.path.abspath('../../tools')
-            pypath = os.environ.get('PYTHONPATH')
-            if pypath:
-                pypath = ':'.join([pypath, sdk_path, cmd_path])
-            else:
-                pypath = ':'.join([sdk_path, cmd_path])
-            os.environ['PYTHONPATH'] = pypath
+        os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
+        sdk_path = os.path.abspath('../../src/sdk/pynni')
+        cmd_path = os.path.abspath('../../tools')
+        pypath = os.environ.get('PYTHONPATH')
+        if pypath:
+            pypath = ':'.join([pypath, sdk_path, cmd_path])
+        else:
+            pypath = ':'.join([sdk_path, cmd_path])
+        os.environ['PYTHONPATH'] = pypath
 
         to_remove = ['tuner_search_space.json', 'tuner_result.txt', 'assessor_result.txt']
         self.remove_files(to_remove)
@@ -95,8 +94,6 @@ class Integration_test():
         ss2 = json.load(open('tuner_search_space.json'))
         assert ss1 == ss2, 'Tuner got wrong search space'
 
-        # Waiting for naive_trial to report_final_result
-        time.sleep(2)
         tuner_result = set(open('tuner_result.txt'))
         expected = set(open('expected_tuner_result.txt'))
         # Trials may complete before NNI gets assessor's result,
@@ -108,7 +105,6 @@ class Integration_test():
         assert assessor_result == expected, 'Bad assessor result'
 
 if __name__ == '__main__':
-    installed = (sys.argv[-1] != '--preinstall')
 
     ic = Integration_test()
     try:
