@@ -8,11 +8,7 @@ trainingServicePlatform: pai
 #choice: true, false
 useAnnotation: true
 tuner:
-<<<<<<< HEAD
-  #choice: TPE, Random, Anneal, Evolution,
-=======
   #choice: TPE, Random, Anneal, Evolution, BatchTuner
->>>>>>> master
   #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: TPE
   classArgs:
