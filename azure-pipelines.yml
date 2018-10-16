@@ -1,12 +1,11 @@
-jobs:
-- job: Build
-  pool:
-    vmImage: ubuntu-16.04
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
-  steps:
+pool:
+  vmImage: 'Ubuntu 16.04'
+strategy:
+  matrix:
+    Python36:
+      PYTHON_VERSION: '3.6'
+
+steps:
   - script: python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
@@ -15,5 +14,5 @@ jobs:
     displayName: 'Install dependencies'
   - script: |
       cd test/naive
-      python3 run.py
+      PATH=$HOME/.local/nni/node/bin:$PATH python3 run.py
     displayName: 'Run tests'
