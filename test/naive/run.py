@@ -121,4 +121,4 @@ if __name__ == '__main__':
         traceback.print_exc()
         raise error
 
-    subprocess.run(['nnictl', 'stop', '--port', '51188'])
+    subprocess.run(['nnictl', 'stop'])

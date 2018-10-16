@@ -123,6 +123,11 @@ class NNIManager implements Manager {
         await this.storeExperimentProfile();
         this.log.debug('Setup tuner...');
 
+        // Set up multiphase config
+        if(expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
+            this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
+        }
+
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
         console.log(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
@@ -146,6 +151,11 @@ class NNIManager implements Manager {
         const experimentId: string = getExperimentId();
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
+
+        // Set up multiphase config
+        if(expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
+            this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
+        }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
         console.log(`dispatcher command: ${dispatcherCommand}`);
