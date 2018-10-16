@@ -70,6 +70,7 @@ interface TrialJobDetail {
     readonly url?: string;
     readonly workingDirectory: string;
     readonly form: JobApplicationForm;
+    readonly sequenceId: number;
 }
 
 interface HostJobDetail {

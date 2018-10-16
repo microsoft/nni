@@ -19,6 +19,7 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { EventEmitter } from 'events';
@@ -33,7 +34,7 @@ import {
     HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus, ICopyData
 } from '../../common/trainingService';
-import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
 import { file } from 'tmp';
 
 const tkill = require('tree-kill');
@@ -73,15 +74,18 @@ class LocalTrialJobDetail implements TrialJobDetail {
     public url?: string;
     public workingDirectory: string;
     public form: JobApplicationForm;
+    public sequenceId: number;
     public pid?: number;
 
-    constructor(id: string, status: TrialJobStatus, submitTime: number, workingDirectory: string, form: JobApplicationForm) {
+    constructor(id: string, status: TrialJobStatus, submitTime: number,
+                workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
         this.url = `file://localhost:${workingDirectory}`;
+        this.sequenceId = sequenceId;
     }
 }
 
@@ -95,6 +99,7 @@ class LocalTrainingService implements TrainingService {
     private initialized: boolean;
     private stopping: boolean;
     private rootDir!: string;
+    private trialSequenceId: number;
     protected log: Logger;
     protected localTrailConfig?: TrialConfig;
 
@@ -105,6 +110,7 @@ class LocalTrainingService implements TrainingService {
         this.initialized = false;
         this.stopping = false;
         this.log = getLogger();
+        this.trialSequenceId = 0;
     }
 
     public async run(): Promise<void> {
@@ -194,7 +200,9 @@ class LocalTrainingService implements TrainingService {
                 'WAITING',
                 Date.now(),
                 path.join(this.rootDir, 'trials', trialJobId),
-                form);
+                form,
+                this.generateSequenceId()
+            );
             this.jobQueue.push(trialJobId);
             this.jobMap.set(trialJobId, trialJobDetail);
 
@@ -344,6 +352,7 @@ class LocalTrainingService implements TrainingService {
         await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
         await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8' });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
+        await this.writeSequenceIdFile(trialJobId);
         const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
 
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
@@ -383,6 +392,7 @@ class LocalTrainingService implements TrainingService {
             submitTime: Date.now(),
             workingDirectory: workDir,
             form: form,
+            sequenceId: this.generateSequenceId(),
             pid: process.pid
         };
         this.jobMap.set(jobId, jobDetail);
@@ -412,8 +422,19 @@ class LocalTrainingService implements TrainingService {
     }
 
     private async writeParameterFile(directory: string, hyperParameters: HyperParameters): Promise<void> {
-        const filepath: string = path.join(directory, `parameter_${hyperParameters.index}.cfg`);
+        const filepath: string = path.join(directory, generateParamFileName(hyperParameters));
         await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
+    }
+
+    private generateSequenceId(): number {
+        return this.trialSequenceId++;
+    }
+
+    private async writeSequenceIdFile(trialJobId: string): Promise<void> {
+        const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
+        assert(trialJobDetail !== undefined);
+        const filepath: string = path.join(trialJobDetail.workingDirectory, '.nni', 'sequence_id');
+        await fs.promises.writeFile(filepath, trialJobDetail.sequenceId.toString(), { encoding: 'utf8' });
     }
 }
 
