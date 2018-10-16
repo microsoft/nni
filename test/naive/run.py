@@ -44,7 +44,7 @@ class Integration_test():
             with contextlib.suppress(FileNotFoundError):
                 os.remove(file_path)
 
-    def run(self, installed = True):
+    def run(self):
         os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
         sdk_path = os.path.abspath('../../src/sdk/pynni')
         cmd_path = os.path.abspath('../../tools')
@@ -108,7 +108,7 @@ if __name__ == '__main__':
 
     ic = Integration_test()
     try:
-        ic.run(installed)
+        ic.run()
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:
