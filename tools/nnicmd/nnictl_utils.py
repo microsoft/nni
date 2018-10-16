@@ -31,9 +31,11 @@ import time
 from .common_utils import print_normal, print_error, detect_process
 
 def get_experiment_port(args):
+    '''get the port of an experiment'''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-
+    #1.If there is an id specified, return the corresponding port
+    #2.If there is no id specified, and there is an experiment running, return it as default port, or return Error
     if not experiment_dict:
         print_normal('Experiment is not running...')
         return None
@@ -312,6 +314,7 @@ def webui_url(args):
     print_normal('{0} {1}'.format('Web UI url:', ' '.join(nni_config.get_config('webuiUrl'))))
 
 def experiment_id(args):
+    '''get the id of all experiments'''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:

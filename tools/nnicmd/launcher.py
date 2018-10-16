@@ -59,6 +59,7 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     stdout_file = open(stdout_full_path, 'a+')
     stderr_file = open(stderr_full_path, 'a+')
     time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+    #add time information in the header of log files
     log_header = LOG_HEADER % str(time_now)
     stdout_file.write(log_header)
     stderr_file.write(log_header)
