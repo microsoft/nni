@@ -21,6 +21,7 @@
 import json
 import yaml
 import psutil
+import socket
 from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO, COLOR_RED_FORMAT, COLOR_YELLOW_FORMAT
 
 def get_yml_content(file_path):
@@ -58,5 +59,15 @@ def detect_process(pid):
     try:
         process = psutil.Process(pid)
         return process.is_running()
+    except:
+        return False
+
+def detect_port(port):
+    '''Detect if the port is used'''
+    socket_test = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    try:
+        socket_test.connect(('127.0.0.1', int(port)))
+        socket_test.shutdown(2)
+        return True
     except:
         return False
