@@ -144,11 +144,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                             case 'qloguniform':
                                 const a = Math.pow(10, value[0]);
                                 const b = Math.pow(10, value[1]);
-                                if (a < b) {
-                                    value = [a, b];
-                                } else {
-                                    value = [b, a];
-                                }
+                                value = [a, b];
                                 searchSpace[item]._value = value;
                                 break;
 
