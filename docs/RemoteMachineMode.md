@@ -2,11 +2,11 @@
 ===
 NNI supports running an experiment on multiple machines, called remote machine mode. Let's say you have multiple machines with the account `bob` (Note: the account is not necessarily the same on multiple machines): 
 
-| IP  | Username| Password |
-| -------- |---------|-------|
-| 10.1.1.1 | bob | bob123    |
-| 10.1.1.2 | bob | bob123    |
-| 10.1.1.3 | bob | bob123    |
+| IP  | Username| Password | Port |
+| -------- |---------|-------|-------|
+| 10.1.1.1 | bob | bob123    |22|
+| 10.1.1.2 | bob | bob123    |22|
+| 10.1.1.3 | bob | bob123    |22|
 
 ## Setup environment
 Install NNI on each of your machines following the install guide [here](GetStarted.md).
@@ -34,7 +34,7 @@ trialConcurrency: 2
 maxExecDuration: 3h
 # empty means never stop
 maxTrialNum: 100
-# choice: local, remote  
+# choice: local, remote, pai
 trainingServicePlatform: local
 # choice: true, false  
 useAnnotation: true
@@ -51,12 +51,15 @@ machineList:
   - ip: 10.1.1.1
     username: bob
     passwd: bob123
+    port: 22
   - ip: 10.1.1.2
     username: bob
     passwd: bob123
+    port: 22
   - ip: 10.1.1.3
     username: bob
     passwd: bob123
+    port: 22
 ```
 Simply filling the `machineList` section. This yaml file is named `exp_remote.yaml`, then run:
 ```
