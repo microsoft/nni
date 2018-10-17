@@ -253,14 +253,10 @@ class PAITrainingService implements TrainingService {
                 "Authorization": 'Bearer ' + this.paiToken
             }
         };
-        this.log.info(`pai token is ${this.paiToken}`);
-        this.log.info(`pai job config is ${JSON.stringify(paiJobConfig)}`);
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
             if (error || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: Submit trial ${trialJobId} to PAI Cluster failed!`);
                 trialJobDetail.status = 'FAILED';
-                this.log.error(`error is ${error}`);
-                this.log.error(`respone status code is ${response.statusCode}`);
                 deferred.reject(error ? error.message : 'Submit trial failed, http code: ' + response.statusCode);                
             } else {
                 trialJobDetail.submitTime = Date.now();
