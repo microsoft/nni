@@ -25,8 +25,8 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
     TrialJobEvent, TrialJobEventRecord, TrialJobInfo } from '../common/datastore';
-import { isNewExperiment } from '../common/experimentStartupInfo';
-import { getExperimentId } from '../common/experimentStartupInfo';
+import { NNIError } from '../common/errors';
+import { getExperimentId, isNewExperiment } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile,  TrialJobStatistics } from '../common/manager';
 import { TrialJobStatus } from '../common/trainingService';
@@ -75,9 +75,7 @@ class NNIDataStore implements DataStore {
         try {
             await this.db.storeExperimentProfile(experimentProfile);
         } catch (err) {
-            const dsError: Error = new Error(`Datastore error: ${err.message}`);
-            dsError.stack = err.stack;
-            throw dsError;
+            throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
         }
     }
 
@@ -90,9 +88,7 @@ class NNIDataStore implements DataStore {
 
         return this.db.storeTrialJobEvent(event, trialJobId, data, logPath).catch(
                 (err: Error) => {
-                    const dsError: Error = new Error(`Datastore error: ${err.message}`);
-                    dsError.stack = err.stack;
-                    throw dsError;
+                    throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
                 }
             );
     }
@@ -150,9 +146,7 @@ class NNIDataStore implements DataStore {
                 timestamp: Date.now()
             }));
         } catch (err) {
-            const dsError: Error = new Error(`Datastore error: ${err.message}`);
-            dsError.stack = err.stack;
-            throw dsError;
+            throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
         }
     }
 

@@ -25,6 +25,7 @@ import { ChildProcess, spawn } from 'child_process';
 import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
+import { NNIError } from '../common/errors';
 import { getExperimentId } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
@@ -371,14 +372,10 @@ class NNIManager implements Manager {
         await Promise.all([
             this.periodicallyUpdateExecDuration(),
             this.trainingService.run().catch((err: Error) => {
-                const tsError: Error = new Error(`Training service error: ${err.message}`);
-                tsError.stack = err.stack;
-                throw tsError;
+                throw new NNIError('Training service error', `Training service error: ${err.message}`, err);
             }),
             this.trialJobsMaintainer.run().catch((err: Error) => {
-                const jmError: Error = new Error(`Job maintainer error: ${err.message}`);
-                jmError.stack = err.stack;
-                throw jmError;
+                throw new NNIError('Job maintainer error', `Job maintainer error: ${err.message}`, err);
             })]);
     }
 
@@ -389,25 +386,19 @@ class NNIManager implements Manager {
         }
         this.trainingService.addTrialJobMetricListener((metric: TrialJobMetric) => {
             this.onTrialJobMetrics(metric).catch((err: Error) => {
-                const metricError: Error = new Error(`Job metrics error: ${err.message}`);
-                metricError.stack = err.stack;
-                this.criticalError(metricError);
+                this.criticalError(new NNIError('Job metrics error', `Job metrics error: ${err.message}`, err));
             });
         });
 
         this.trialJobsMaintainer.on(async (event: TrialJobMaintainerEvent, trialJobDetail: TrialJobDetail) => {
             this.onTrialJobEvent(event, trialJobDetail).catch((err: Error) => {
-                const metricError: Error = new Error(`Trial job event error: ${err.message}`);
-                metricError.stack = err.stack;
-                this.criticalError(metricError);
+                this.criticalError(new NNIError('Trial job event error', `Trial job event error: ${err.message}`, err));
             });
         });
 
         this.dispatcher.onCommand((commandType: string, content: string) => {
             this.onTunerCommand(commandType, content).catch((err: Error) => {
-                const metricError: Error = new Error(`Tuner command event error: ${err.message}`);
-                metricError.stack = err.stack;
-                this.criticalError(metricError);
+                this.criticalError(new NNIError('Tuner command event error', `Tuner command event error: ${err.message}`, err));
             });
         });
     }

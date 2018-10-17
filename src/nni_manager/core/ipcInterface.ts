@@ -23,6 +23,7 @@ import * as assert from 'assert';
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import { Readable, Writable } from 'stream';
+import { NNIError } from '../common/errors';
 import { getLogger, Logger } from '../common/log';
 import * as CommandType from './commands';
 
@@ -105,9 +106,7 @@ class IpcInterface {
                 this.logger.error('Commands jammed in buffer!');
             }
         } catch (err) {
-            const dpError: Error = new Error(`Dispatcher Error: ${err.message}`);
-            dpError.stack = err.stack;
-            throw dpError;
+            throw new NNIError('Dispatcher Error', `Dispatcher Error: ${err.message}`, err);
         }
     }
 
