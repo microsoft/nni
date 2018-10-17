@@ -4,6 +4,9 @@ strategy:
   matrix:
     Python36:
       PYTHON_VERSION: '3.6'
+trigger:
+  - master
+  - dev-exp-stop-more
 
 steps:
   - script: python3 -m pip install --upgrade pip setuptools
