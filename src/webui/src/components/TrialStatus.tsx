@@ -405,7 +405,7 @@ class TrialStatus extends React.Component<{}, TabState> {
             // the sort of string
             sorter: (a: TableObj, b: TableObj): number => a.id.localeCompare(b.id)
         }, {
-            title: 'Duration/s',
+            title: 'Duration',
             dataIndex: 'duration',
             key: 'duration',
             width: '10%',

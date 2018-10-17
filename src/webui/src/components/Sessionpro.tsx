@@ -347,7 +347,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
             width: 150,
             className: 'tableHead',
         }, {
-            title: 'Duration/s',
+            title: 'Duration',
             dataIndex: 'duration',
             key: 'duration',
             width: '9%',
