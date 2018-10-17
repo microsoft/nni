@@ -113,7 +113,7 @@ if __name__ == '__main__':
     subprocess.run(['ls', os.path.join(os.environ['HOME'],'.local/bin')])
     subprocess.run(['cat', os.path.join(os.environ['HOME'],'.local/bin/nnictl')])
     subprocess.run(['cat', os.path.join(os.environ['HOME'],'.bashrc')])
-    exit(0)
+    subprocess.run(['echo', '$PATH'])
     try:
         ic.run(installed)
         # TODO: check the output of rest server
