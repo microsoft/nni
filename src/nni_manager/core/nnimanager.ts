@@ -122,7 +122,7 @@ class NNIManager implements Manager {
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
-        console.log(`dispatcher command: ${dispatcherCommand}`);
+        this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
             //expParams.tuner.tunerCommand,
             dispatcherCommand,
@@ -136,6 +136,7 @@ class NNIManager implements Manager {
         this.run().catch((err: Error) => {
             this.criticalError(err);
         });
+
         return this.experimentProfile.id;
     }
 
@@ -146,12 +147,12 @@ class NNIManager implements Manager {
         const expParams: ExperimentParams = this.experimentProfile.params;
 
         // Set up multiphase config
-        if(expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
+        if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
-        console.log(`dispatcher command: ${dispatcherCommand}`);
+        this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
             dispatcherCommand,
             undefined,
@@ -369,8 +370,16 @@ class NNIManager implements Manager {
 
         await Promise.all([
             this.periodicallyUpdateExecDuration(),
-            this.trainingService.run(),
-            this.trialJobsMaintainer.run()]);
+            this.trainingService.run().catch((err: Error) => {
+                const tsError: Error = new Error(`Training service error: ${err.message}`);
+                tsError.stack = err.stack;
+                throw tsError;
+            }),
+            this.trialJobsMaintainer.run().catch((err: Error) => {
+                const jmError: Error = new Error(`Job maintainer error: ${err.message}`);
+                jmError.stack = err.stack;
+                throw jmError;
+            })]);
     }
 
      private addEventListeners(): void {
@@ -380,26 +389,32 @@ class NNIManager implements Manager {
         }
         this.trainingService.addTrialJobMetricListener((metric: TrialJobMetric) => {
             this.onTrialJobMetrics(metric).catch((err: Error) => {
-                this.criticalError(err);
+                const metricError: Error = new Error(`Job metrics error: ${err.message}`);
+                metricError.stack = err.stack;
+                this.criticalError(metricError);
             });
         });
 
         this.trialJobsMaintainer.on(async (event: TrialJobMaintainerEvent, trialJobDetail: TrialJobDetail) => {
             this.onTrialJobEvent(event, trialJobDetail).catch((err: Error) => {
-                this.criticalError(err);
+                const metricError: Error = new Error(`Trial job event error: ${err.message}`);
+                metricError.stack = err.stack;
+                this.criticalError(metricError);
             });
         });
 
         this.dispatcher.onCommand((commandType: string, content: string) => {
             this.onTunerCommand(commandType, content).catch((err: Error) => {
-                this.criticalError(err);
+                const metricError: Error = new Error(`Tuner command event error: ${err.message}`);
+                metricError.stack = err.stack;
+                this.criticalError(metricError);
             });
         });
     }
 
     private sendInitTunerCommands(): void {
         if (this.dispatcher === undefined) {
-            throw new Error('Error: tuner has not been setup');
+            throw new Error('Dispatcher error: tuner has not been setup');
         }
         // TO DO: we should send INITIALIZE command to tuner if user's tuner needs to run init method in tuner
         this.log.debug(`Send tuner command: update search space: ${this.experimentProfile.params.searchSpace}`);

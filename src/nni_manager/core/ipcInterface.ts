@@ -98,9 +98,16 @@ class IpcInterface {
     public sendCommand(commandType: string, content: string = ''): void {
         this.logger.debug(`ipcInterface command type: [${commandType}], content:[${content}]`);
         assert.ok(this.acceptCommandTypes.has(commandType));
-        const data: Buffer = encodeCommand(commandType, content);
-        if (!this.outgoingStream.write(data)) {
-            this.logger.error('Commands jammed in buffer!');
+
+        try {
+            const data: Buffer = encodeCommand(commandType, content);
+            if (!this.outgoingStream.write(data)) {
+                this.logger.error('Commands jammed in buffer!');
+            }
+        } catch (err) {
+            const dpError: Error = new Error(`Dispatcher Error: ${err.message}`);
+            dpError.stack = err.stack;
+            throw dpError;
         }
     }
 

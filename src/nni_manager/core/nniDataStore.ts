@@ -72,7 +72,13 @@ class NNIDataStore implements DataStore {
     }
 
     public async storeExperimentProfile(experimentProfile: ExperimentProfile): Promise<void> {
-        await this.db.storeExperimentProfile(experimentProfile);
+        try {
+            await this.db.storeExperimentProfile(experimentProfile);
+        } catch (err) {
+            const dsError: Error = new Error(`Datastore error: ${err.message}`);
+            dsError.stack = err.stack;
+            throw dsError;
+        }
     }
 
     public getExperimentProfile(experimentId: string): Promise<ExperimentProfile> {
@@ -82,7 +88,13 @@ class NNIDataStore implements DataStore {
     public storeTrialJobEvent(event: TrialJobEvent, trialJobId: string, data?: string, logPath?: string): Promise<void> {
         this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${data}, logpath: ${logPath}`);
 
-        return this.db.storeTrialJobEvent(event, trialJobId, data, logPath);
+        return this.db.storeTrialJobEvent(event, trialJobId, data, logPath).catch(
+                (err: Error) => {
+                    const dsError: Error = new Error(`Datastore error: ${err.message}`);
+                    dsError.stack = err.stack;
+                    throw dsError;
+                }
+            );
     }
 
     public async getTrialJobStatistics(): Promise<any[]> {
@@ -128,14 +140,20 @@ class NNIDataStore implements DataStore {
             return;
         }
         assert(trialJobId === metrics.trial_job_id);
-        await this.db.storeMetricData(trialJobId, JSON.stringify({
-            trialJobId: metrics.trial_job_id,
-            parameterId: metrics.parameter_id,
-            type: metrics.type,
-            sequence: metrics.sequence,
-            data: metrics.value,
-            timestamp: Date.now()
-        }));
+        try {
+            await this.db.storeMetricData(trialJobId, JSON.stringify({
+                trialJobId: metrics.trial_job_id,
+                parameterId: metrics.parameter_id,
+                type: metrics.type,
+                sequence: metrics.sequence,
+                data: metrics.value,
+                timestamp: Date.now()
+            }));
+        } catch (err) {
+            const dsError: Error = new Error(`Datastore error: ${err.message}`);
+            dsError.stack = err.stack;
+            throw dsError;
+        }
     }
 
     public getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
