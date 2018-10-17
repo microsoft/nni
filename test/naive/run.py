@@ -44,16 +44,17 @@ class Integration_test():
             with contextlib.suppress(FileNotFoundError):
                 os.remove(file_path)
 
-    def run(self):
-        os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
-        sdk_path = os.path.abspath('../../src/sdk/pynni')
-        cmd_path = os.path.abspath('../../tools')
-        pypath = os.environ.get('PYTHONPATH')
-        if pypath:
-            pypath = ':'.join([pypath, sdk_path, cmd_path])
-        else:
-            pypath = ':'.join([sdk_path, cmd_path])
-        os.environ['PYTHONPATH'] = pypath
+    def run(self, installed = True):
+        if not installed:
+            os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
+            sdk_path = os.path.abspath('../../src/sdk/pynni')
+            cmd_path = os.path.abspath('../../tools')
+            pypath = os.environ.get('PYTHONPATH')
+            if pypath:
+                pypath = ':'.join([pypath, sdk_path, cmd_path])
+            else:
+                pypath = ':'.join([sdk_path, cmd_path])
+            os.environ['PYTHONPATH'] = pypath
 
         to_remove = ['tuner_search_space.json', 'tuner_result.txt', 'assessor_result.txt']
         self.remove_files(to_remove)
@@ -105,10 +106,10 @@ class Integration_test():
         assert assessor_result == expected, 'Bad assessor result'
 
 if __name__ == '__main__':
-
+    installed = (sys.argv[-1] != '--preinstall')
     ic = Integration_test()
     try:
-        ic.run()
+        ic.run(installed)
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:
