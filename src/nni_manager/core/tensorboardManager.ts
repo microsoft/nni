@@ -47,11 +47,11 @@ class TensorboardManager implements BoardManager {
     private platForm: string;
     private tensorBoardUtilInstance: ITensorBoardUtil;
 
-    constructor(platForm: string) {
-        this.platForm = platForm;
+    constructor() {
+        this.platForm = "pai";
         this.isRunning = false;
         let trainingService: undefined;
-        if(platForm === "pai") {
+        if(this.platForm === "pai") {
             trainingService = component.get(PAITrainingService);
         } else {
 
@@ -64,10 +64,9 @@ class TensorboardManager implements BoardManager {
         this.dataStore = component.get(DataStore);
     }
     
-    public async Run(): Promise<void>{
+    public async Run(trialJobId: string): Promise<void>{
         while(this.isRunning){
             console.log('----------in run------------');
-            console.log(this.platForm)
             await delay(5000);
         }
     }
@@ -79,16 +78,15 @@ class TensorboardManager implements BoardManager {
             tensorBoardPort = port;
         }
         const tbEndpoint: string = `http://localhost:${tensorBoardPort}`;
-        /*
+        
+        
         if(this.tbPid !== undefined){
             await this.stopTensorBoard();
         }
 
         const logDirs: string[] = [];
-
-        for (const id of trialJobIds) {
-            logDirs.push(await this.getLogDir(id));
-        }
+        const localDir = this.tensorBoardUtilInstance.getLocalDirectory(trialJobIds[0]);
+        logDirs.push(localDir);
 
         let tensorBoardCmd: string = this.TENSORBOARD_COMMAND;
         if (tbCmd !== undefined && tbCmd.trim().length > 0) {
@@ -96,9 +94,10 @@ class TensorboardManager implements BoardManager {
         }
         const cmd: string = `${tensorBoardCmd} --logdir ${logDirs.join(':')} --port ${tensorBoardPort}`;
         this.tbPid = await this.runTensorboardProcess(cmd);
-        */
+        
         console.log('--------------before run---------------')
-        this.Run().catch(()=>{
+        this.isRunning = true;
+        this.Run(trialJobIds[0]).catch(()=>{
 
         });     
         return tbEndpoint;
