@@ -479,7 +479,13 @@ class NNIManager implements Manager {
                     };
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
                     this.trialJobsMaintainer.setTrialJob(trialJobDetail.id, Object.assign({}, trialJobDetail));
-                    await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, content, trialJobDetail.url);
+                    const jobDetailSnapshot: TrialJobDetail | undefined = this.trialJobsMaintainer.getTrialJob(trialJobDetail.id);
+                    if (jobDetailSnapshot !== undefined) {
+                        await this.dataStore.storeTrialJobEvent(
+                            jobDetailSnapshot.status, jobDetailSnapshot.id, content, jobDetailSnapshot.url);
+                    } else {
+                        assert(false, `undefined jobdetail in job maintainer: ${trialJobDetail.id}`);
+                    }
                     if (this.currSubmittedTrialNum === this.experimentProfile.params.maxTrialNum) {
                         this.trialJobsMaintainer.setNoMoreTrials();
                     }
