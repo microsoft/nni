@@ -92,12 +92,12 @@ pai_config_schema = {
 machine_list_schima = {
 Optional('machineList'):[Or({
     'ip': str,
-    'port': And(int, lambda x: 0 < x < 65535),
+    Optional('port'): And(int, lambda x: 0 < x < 65535),
     'username': str,
     'passwd': str
     },{
     'ip': str,
-    'port': And(int, lambda x: 0 < x < 65535),
+    Optional('port'): And(int, lambda x: 0 < x < 65535),
     'username': str,
     'sshKeyPath': os.path.exists,
     Optional('passphrase'): str
