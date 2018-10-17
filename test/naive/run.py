@@ -17,7 +17,7 @@ class Integration_test():
     def __init__(self):
         self.experiment_url = 'http://localhost:8080/api/v1/nni/experiment'
         self.experiment_id = None
-        self.experiment_suspended_signal = '"Experiment suspended"'
+        self.experiment_done_signal = '"Experiment done"'
 
     def read_last_line(self, file_name):
         try:
@@ -34,7 +34,7 @@ class Integration_test():
 
     def check_experiment_status(self):
         assert os.path.exists(self.nnimanager_log_path), 'Experiment starts failed'
-        cmds = ['cat', self.nnimanager_log_path, '|', 'grep', self.experiment_suspended_signal]
+        cmds = ['cat', self.nnimanager_log_path, '|', 'grep', self.experiment_done_signal]
         completed_process = subprocess.run(' '.join(cmds), shell = True)
         
         return completed_process.returncode == 0

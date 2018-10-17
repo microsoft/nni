@@ -11,7 +11,7 @@ It will print `PASS` in green eventually if everything works well.
 * The naive tuner simply generates the sequence of natural numbers, and print received metrics to `tuner_result.txt`.
 * The naive assessor kills trials when `sum(metrics) % 11 == 1`, and print killed trials to `assessor_result.txt`.
 * When tuner and assessor exit with exception, they will append `ERROR` to corresponding result file.
-* When the experiment is suspended, meaning it is successfully done in this case, `Experiment suspended` can be detected in the nni_manager.log file.
+* When the experiment is done, meaning it is successfully done in this case, `Experiment done` can be detected in the nni_manager.log file.
 
 ## Issues
 * Private APIs are used to detect whether tuner and assessor have terminated successfully. 

@@ -397,7 +397,7 @@ class NNIManager implements Manager {
             allFinishedTrialJobNum += finishedTrialJobNum;
             if (allFinishedTrialJobNum >= this.experimentProfile.params.maxTrialNum) {
                 // write this log for travis CI
-                this.log.info('Experiment suspended.');
+                this.log.info('Experiment done.');
             }
 
             const requestTrialNum: number = this.trialConcurrencyChange + finishedTrialJobNum;
@@ -420,13 +420,13 @@ class NNIManager implements Manager {
             if ((Date.now() - startTime) / 1000 + this.experimentProfile.execDuration - this.suspendDuration 
                 > this.experimentProfile.params.maxExecDuration ||
                 this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
-                assert(this.status.status === 'EXPERIMENT_RUNNING' || this.status.status === 'SUSPENDED');
+                assert(this.status.status === 'EXPERIMENT_RUNNING' || this.status.status === 'DONE');
                 if (this.status.status === 'EXPERIMENT_RUNNING') {
                     suspendStartTime = Date.now();
                 }
-                this.status.status = 'SUSPENDED';
+                this.status.status = 'DONE';
             } else {
-                if (this.status.status === 'SUSPENDED') {
+                if (this.status.status === 'DONE') {
                     assert(suspendStartTime !== 0);
                     this.suspendDuration += (Date.now() - suspendStartTime) / 1000;
                 }
