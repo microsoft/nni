@@ -54,8 +54,13 @@ def main_loop(args):
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
             #copy local directory to hdfs
             nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
-            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
             try:
+                platform = os.environ['NNI_PLATFORM']
+                print('platform:', platform)
+                if platform == 'pai':
+                    hdfs_client = HdfsClient(hosts='{0}:80/webhdfs'.format(args.pai_hdfs_host), user_name=args.pai_user_name, timeout=5)
+                else:
+                    hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
                 if copyDirectoryToHdfs(nni_local_output_dir, args.pai_hdfs_output_dir, hdfs_client):
                     print('copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
                 else:
