@@ -7,6 +7,10 @@ import JSONTree from 'react-json-tree';
 require('../style/sessionpro.css');
 require('../style/logPath.css');
 
+interface ErrorPara {
+    error?: string;
+}
+
 interface TableObj {
     key: number;
     id: string;
@@ -19,7 +23,7 @@ interface TableObj {
 }
 
 interface Parameters {
-    parameters: object;
+    parameters: ErrorPara;
     logPath?: string;
     isLink?: boolean;
 }
@@ -88,6 +92,16 @@ class Sessionpro extends React.Component<{}, SessionState> {
         };
     }
 
+    convertTime = (num: number) => {
+        if (num % 3600 === 0) {
+            return num / 3600 + 'h';
+        } else {
+            const hour = Math.floor(num / 3600);
+            const min = Math.floor(num / 60 % 60);
+            return hour > 0 ? `${hour} h ${min} min` : `${min} min`;
+        }
+    }
+
     // show session
     showSessionPro = () => {
         axios(`${MANAGER_IP}/experiment`, {
@@ -124,7 +138,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                     const searchSpace = JSON.parse(sessionData.params.searchSpace);
                     Object.keys(searchSpace).map(item => {
                         const key = searchSpace[item]._type;
-                        if (key === 'loguniform') {
+                        if (key === 'loguniform' || key === 'qloguniform') {
                             let value = searchSpace[item]._value;
                             const a = Math.pow(10, value[0]);
                             const b = Math.pow(10, value[1]);
@@ -179,7 +193,11 @@ class Sessionpro extends React.Component<{}, SessionState> {
                             if (tableData[item].finalMetricData) {
                                 acc = parseFloat(tableData[item].finalMetricData.data);
                             }
-                            desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
+                            if (tableData[item].hyperParameters) {
+                                desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
+                            } else {
+                                desJobDetail.parameters = { error: 'This trial\'s parameters are not available.' };
+                            }
                             if (tableData[item].logPath !== undefined) {
                                 desJobDetail.logPath = tableData[item].logPath;
                                 const isSessionLink = /^http/gi.test(tableData[item].logPath);
@@ -227,21 +245,50 @@ class Sessionpro extends React.Component<{}, SessionState> {
         }
     }
 
+    // trial's duration, accurate to seconds
+    convertDuration = (num: number) => {
+        const hour = Math.floor(num / 3600);
+        const min = Math.floor(num / 60 % 60);
+        const second = Math.floor(num % 60);
+        const result = hour > 0 ? `${hour} h ${min} min ${second}s` : `${min} min ${second}s`;
+        if (hour <= 0 && min === 0 && second !== 0) {
+            return `${second}s`;
+        } else if (hour === 0 && min !== 0 && second === 0) {
+            return `${min}min`;
+        } else if (hour === 0 && min !== 0 && second !== 0) {
+            return `${min}min ${second}s`;
+        } else {
+            return result;
+        }
+    }
+    
     downExperimentContent = () => {
         axios
             .all([
                 axios.get(`${MANAGER_IP}/experiment`),
-                axios.get(`${MANAGER_IP}/trial-jobs`)
+                axios.get(`${MANAGER_IP}/trial-jobs`),
+                axios.get(`${MANAGER_IP}/metric-data`)
             ])
-            .then(axios.spread((res, res1) => {
-                if (res.status === 200 && res1.status === 200) {
+            .then(axios.spread((res, res1, res2) => {
+                if (res.status === 200 && res1.status === 200 && res2.status === 200) {
                     if (res.data.params.searchSpace) {
                         res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
                     }
+                    const interResultList = res2.data;
                     const contentOfExperiment = JSON.stringify(res.data, null, 2);
                     let trialMessagesArr = res1.data;
                     Object.keys(trialMessagesArr).map(item => {
+                        // transform hyperparameters as object to show elegantly
                         trialMessagesArr[item].hyperParameters = JSON.parse(trialMessagesArr[item].hyperParameters);
+                        const trialId = trialMessagesArr[item].id;
+                        // add intermediate result message
+                        trialMessagesArr[item].intermediate = [];
+                        Object.keys(interResultList).map(key => {
+                            const interId = interResultList[key].trialJobId;
+                            if (trialId === interId) {
+                                trialMessagesArr[item].intermediate.push(interResultList[key]);
+                            }
+                        });
                     });
                     const trialMessages = JSON.stringify(trialMessagesArr, null, 2);
                     const aTag = document.createElement('a');
@@ -291,7 +338,17 @@ class Sessionpro extends React.Component<{}, SessionState> {
             title: 'Duration/s',
             dataIndex: 'duration',
             key: 'duration',
-            width: '9%'
+            width: '9%',
+            sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
+            render: (text: string, record: TableObj) => {
+                let duration;
+                if (record.duration) {
+                    duration = this.convertDuration(record.duration);
+                }
+                return (
+                    <span>{duration}</span>
+                );
+            },
         }, {
             title: 'Start',
             dataIndex: 'start',
@@ -322,6 +379,10 @@ class Sessionpro extends React.Component<{}, SessionState> {
         }];
 
         const openRow = (record: TableObj) => {
+            let isHasParameters = true;
+            if (record.description.parameters.error) {
+                isHasParameters = false;
+            }
             const openRowDataSource = {
                 parameters: record.description.parameters
             };
@@ -332,12 +393,21 @@ class Sessionpro extends React.Component<{}, SessionState> {
             }
             return (
                 <pre id="description" className="jsontree">
-                    <JSONTree
-                        hideRoot={true}
-                        shouldExpandNode={() => true}  // default expandNode
-                        getItemString={() => (<span />)}  // remove the {} items
-                        data={openRowDataSource}
-                    />
+                    {
+                        isHasParameters
+                            ?
+                            <JSONTree
+                                hideRoot={true}
+                                shouldExpandNode={() => true}  // default expandNode
+                                getItemString={() => (<span />)}  // remove the {} items
+                                data={openRowDataSource}
+                            />
+                            :
+                            <div className="logpath">
+                                <span className="logName">Error: </span>
+                                <span className="error">'This trial's parameters are not available.'</span>
+                            </div>
+                    }
                     {
                         isLogLink
                             ?
@@ -358,11 +428,15 @@ class Sessionpro extends React.Component<{}, SessionState> {
         const {
             trialProfile, searchSpace, tunerAssessor, tableData, status
         } = this.state;
+
+        const maxRuntime = this.convertTime(trialProfile.maxDuration);
         let running;
+        let runningStr = '';
         if (trialProfile.endTime === 'not over') {
             running = trialProfile.maxDuration - trialProfile.execDuration;
+            runningStr = this.convertTime(running);
         } else {
-            running = 0;
+            runningStr = '0';
         }
         return (
             <div className="session" id="session">
@@ -389,11 +463,11 @@ class Sessionpro extends React.Component<{}, SessionState> {
                                 </div>
                                 <p>
                                     <span>Duration</span>
-                                    <span className="messcont">{trialProfile.maxDuration}s</span>
+                                    <span className="messcont">{maxRuntime}</span>
                                 </p>
                                 <p>
-                                    <span>Still&nbsp;running</span>
-                                    <span className="messcont">{running}s</span>
+                                    <span>Still&nbsp;run</span>
+                                    <span className="messcont">{runningStr}</span>
                                 </p>
                             </div>
                             <div className="logo">
@@ -459,7 +533,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                     <div className="selectInline">
                         <Row>
                             <Col span={18}>
-                                <h2>The trials that successed</h2>
+                                <h2>The trials that succeeded</h2>
                             </Col>
                             <Col span={6}>
                                 <span className="tabuser1">top</span>
@@ -492,7 +566,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         className="tableButton"
                         onClick={this.downExperimentContent}
                     >
-                        Down Experiment
+                        Download experiment summary
                     </Button>
                 </div>
             </div>

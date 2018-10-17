@@ -42,7 +42,8 @@ class MockedTrainingService extends TrainingService {
         workingDirectory: '/tmp/mocked',
         form: {
             jobType: 'TRIAL'
-        }
+        },
+        sequenceId: 0
     };
     public jobDetail2: TrialJobDetail = {
         id: '3456',
@@ -55,7 +56,8 @@ class MockedTrainingService extends TrainingService {
         workingDirectory: '/tmp/mocked',
         form: {
             jobType: 'TRIAL'
-        }
+        },
+        sequenceId: 0
     };
     
     public listTrialJobs(): Promise<TrialJobDetail[]> {

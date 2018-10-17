@@ -26,6 +26,7 @@ export enum TrialConfigMetadataKey {
     MACHINE_LIST = 'machine_list',
     TRIAL_CONFIG = 'trial_config',
     EXPERIMENT_ID = 'experimentId',
+    MULTI_PHASE = 'multiPhase',
     RANDOM_SCHEDULER = 'random_scheduler',
     PAI_CLUSTER_CONFIG = 'pai_config'
 }

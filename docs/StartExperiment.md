@@ -20,11 +20,11 @@ NNICTL need to set experiment config before start an experiment, experiment conf
 ### 2.5 Check experiment cofig
 NNICTL will ensure the request to set config is successfully executed.
 
-### 2.6 Start Web UI
-NNICTL will start a Web UI process to show Web UI information,the default port of Web UI is 8080.
+### 2.6 Start WebUI
+NNICTL will start a WebUI to show information,the default port of WebUI is 51188.
 
-### 2.7 Check Web UI
-If Web UI is not successfully started, nnictl will give a warning information, and will continue to start experiment.
+### 2.7 Check WebUI
+If WebUI is not successfully started, nnictl will give a warning information, and will continue to start experiment.
 
 ### 2.8 Start Experiment
 This is the most import step of starting an nni experiment, nnictl will call restful server process to setup an experiment.

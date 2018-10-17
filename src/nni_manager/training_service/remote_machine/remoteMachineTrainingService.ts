@@ -36,7 +36,7 @@ import { ObservableTimer } from '../../common/observableTimer';
 import {
     HostJobApplicationForm, HyperParameters, JobApplicationForm, TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
 import { GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -64,6 +64,8 @@ class RemoteMachineTrainingService implements TrainingService {
     private stopping: boolean = false;
     private metricsEmitter: EventEmitter;
     private log: Logger;
+    private isMultiPhase: boolean = false;
+    private trialSequenceId: number;
 
     constructor(@component.Inject timer: ObservableTimer) {
         this.metricsEmitter = new EventEmitter();
@@ -75,6 +77,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.remoteExpRootDir = this.getRemoteExperimentRootDir();
         this.timer = timer;
         this.log = getLogger();
+        this.trialSequenceId = 0;
     }
 
     /**
@@ -183,7 +186,9 @@ class RemoteMachineTrainingService implements TrainingService {
                 'WAITING',
                 Date.now(),
                 trialWorkingFolder,
-                form);
+                form,
+                this.generateSequenceId()
+            );
             this.jobQueue.push(trialJobId);
             this.trialJobsMap.set(trialJobId, trialJobDetail);
 
@@ -222,7 +227,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * Is multiphase job supported in current training service
      */
     public get isMultiPhaseJobSupported(): boolean {
-        return false;
+        return true;
     }
 
     /**
@@ -290,6 +295,9 @@ class RemoteMachineTrainingService implements TrainingService {
                     throw new Error(`codeDir ${remoteMachineTrailConfig.codeDir} is not a directory`);
                 }
                 this.trialConfig = remoteMachineTrailConfig;
+                break;
+            case TrialConfigMetadataKey.MULTI_PHASE:
+                this.isMultiPhase = (value === 'true' || value === 'True');
                 break;
             default:
                 //Reject for unknown keys
@@ -453,18 +461,21 @@ class RemoteMachineTrainingService implements TrainingService {
                 `CUDA_VISIBLE_DEVICES=${cuda_visible_device} ` : `CUDA_VISIBLE_DEVICES=" " `,
             this.trialConfig.command,
             path.join(trialWorkingFolder, 'stderr'),
-            path.join(trialWorkingFolder, '.nni', 'code'));
+            path.join(trialWorkingFolder, '.nni', 'code'),
+            /** Mark if the trial is multi-phase job */
+            this.isMultiPhase);
 
         //create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
+        await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
 
-        // Write file content ( run.sh and parameter_0.cfg ) to local tmp files
+        // Write file content ( run.sh and parameter.cfg ) to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run.sh'), runScriptContent, { encoding: 'utf8' });
 
         // Copy local tmp files to remote machine
         await SSHClientUtility.copyFileToRemote(
             path.join(trialLocalTempFolder, 'run.sh'), path.join(trialWorkingFolder, 'run.sh'), sshClient);
         await this.writeParameterFile(trialJobId, form.hyperParameters, rmScheduleInfo.rmMeta);
+        await this.writeSequenceIdFile(trialJobId, rmScheduleInfo.rmMeta);
 
         // Copy files in codeDir to remote working directory
         await SSHClientUtility.copyDirectoryToRemote(this.trialConfig.codeDir, trialWorkingFolder, sshClient);
@@ -491,7 +502,9 @@ class RemoteMachineTrainingService implements TrainingService {
             path.join(localDir, 'run.sh'), path.join(remoteDir, 'run.sh'), sshClient);
         SSHClientUtility.remoteExeCommand(`bash ${path.join(remoteDir, 'run.sh')}`, sshClient);
 
-        const jobDetail: RemoteMachineTrialJobDetail =  new RemoteMachineTrialJobDetail(jobId, 'RUNNING', Date.now(), remoteDir, form);
+        const jobDetail: RemoteMachineTrialJobDetail =  new RemoteMachineTrialJobDetail(
+            jobId, 'RUNNING', Date.now(), remoteDir, form, this.generateSequenceId()
+        );
         jobDetail.rmMeta = rmMeta;
         jobDetail.startTime = Date.now();
         this.trialJobsMap.set(jobId, jobDetail);
@@ -586,9 +599,38 @@ class RemoteMachineTrainingService implements TrainingService {
         const trialWorkingFolder: string = path.join(this.remoteExpRootDir, 'trials', trialJobId);
         const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);
 
-        const fileName: string = `parameter_${hyperParameters.index}.cfg`;
+        const fileName: string = generateParamFileName(hyperParameters);
         const localFilepath: string = path.join(trialLocalTempFolder, fileName);
         await fs.promises.writeFile(localFilepath, hyperParameters.value, { encoding: 'utf8' });
+
+        await SSHClientUtility.copyFileToRemote(localFilepath, path.join(trialWorkingFolder, fileName), sshClient);
+    }
+
+    private generateSequenceId(): number {
+        return this.trialSequenceId++;
+    }
+
+    private async writeSequenceIdFile(trialJobId: string, rmMeta: RemoteMachineMeta): Promise<void> {
+        const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        if (trialJobDetail === undefined) {
+            assert(false, `Can not get trial job detail for job: ${trialJobId}`);
+        } else {
+            await this.writeRemoteTrialFile(trialJobId, trialJobDetail.sequenceId.toString(), rmMeta, path.join('.nni', 'sequence_id'));
+        }
+    }
+
+    private async writeRemoteTrialFile(trialJobId: string, fileContent: string,
+                                       rmMeta: RemoteMachineMeta, fileName: string): Promise<void> {
+        const sshClient: Client | undefined = this.machineSSHClientMap.get(rmMeta);
+        if (sshClient === undefined) {
+            throw new Error('sshClient is undefined.');
+        }
+
+        const trialWorkingFolder: string = path.join(this.remoteExpRootDir, 'trials', trialJobId);
+        const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);
+
+        const localFilepath: string = path.join(trialLocalTempFolder, fileName);
+        await fs.promises.writeFile(localFilepath, fileContent, { encoding: 'utf8' });
 
         await SSHClientUtility.copyFileToRemote(localFilepath, path.join(trialWorkingFolder, fileName), sshClient);
     }

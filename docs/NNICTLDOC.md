@@ -11,7 +11,6 @@ nnictl stop
 nnictl update
 nnictl resume
 nnictl trial
-nnictl webui
 nnictl experiment
 nnictl config
 nnictl log
@@ -33,9 +32,7 @@ nnictl log
     
       | Name, shorthand | Required|Default | Description |
       | ------ | ------ | ------ |------ |
-    | --config, -c|  True| |yaml configure file of the experiment|
-	  | --webuiport, -w|  False| 8080|assign a port for webui|
-  
+      | --config, -c|  True| |yaml configure file of the experiment|
       
 
 * __nnictl resume__
@@ -139,44 +136,6 @@ nnictl log
      
       
           
-
-### Manage WebUI
-* __nnictl webui start__
-     * Description
-     
-           Start web ui function for nni, and will get a url list, you can open any of the url to see nni web page.
-      
-     * Usage    
-		  
-		    nnictl webui start [OPTIONS]        
-
-         Options:
-    
-         | Name, shorthand | Required|Default | Description |
-         | ------ | ------ | ------ |------ |
-       | --port, -p|  False| 8080|assign a port for webui|
-     
-
-
-* __nnictl webui stop__  
-    * Description
-             
-			 Stop web ui function, and release url occupied. If you want to start again, use 'nnictl start webui' command
-     * Usage
-		    
-			nnictl webui stop 
-			
-* __nnictl webui url__  
-    * Description
-             
-			 Show the urls of web ui.
-     * Usage
-		    
-			nnictl webui url
-
-        
-         
-
 
 ### Manage experiment information
 

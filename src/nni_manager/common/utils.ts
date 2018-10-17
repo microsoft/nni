@@ -31,7 +31,7 @@ import * as util from 'util';
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
-import { TrainingService } from './trainingService';
+import { HyperParameters, TrainingService } from './trainingService';
 
 function getExperimentRootDir(): string {
     return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
@@ -195,6 +195,23 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean 
 }
 
 /**
+ * Generate parameter file name based on HyperParameters object
+ * @param hyperParameters HyperParameters instance
+ */
+function generateParamFileName(hyperParameters : HyperParameters): string {
+    assert(hyperParameters !== undefined);
+    assert(hyperParameters.index >= 0);
+
+    let paramFileName : string;
+    if(hyperParameters.index == 0) {
+        paramFileName = 'parameter.cfg';
+    } else {
+        paramFileName = `parameter_${hyperParameters.index}.cfg`
+    }
+    return paramFileName;
+}
+
+/**
  * Initialize a pseudo experiment environment for unit test.
  * Must be paired with `cleanupUnitTest()`.
  */
@@ -228,19 +245,28 @@ function cleanupUnitTest(): void {
     Container.restore(ExperimentStartupInfo);
 }
 
+let cachedipv4Address : string = '';
 /**
  * Get IPv4 address of current machine
  */
 function getIPV4Address(): string {
-    let ipv4Address : string = '';
-
-    for(const item of os.networkInterfaces().eth0) {
-        if(item.family === 'IPv4') {
-            ipv4Address = item.address;
-        }
+    if (cachedipv4Address && cachedipv4Address.length > 0) {
+        return cachedipv4Address;
     }
-    return ipv4Address;
+
+    if(os.networkInterfaces().eth0) {
+        for(const item of os.networkInterfaces().eth0) {
+            if(item.family === 'IPv4') {
+                cachedipv4Address = item.address;
+                return cachedipv4Address;
+            }
+        }
+    } else {
+        throw Error('getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.');
+    }
+
+    throw Error('getIPV4Address() failed because no valid IPv4 address found.')
 }
 
-export { getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
+export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, 
+    getDefaultDatabaseDir, getIPV4Address, mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };

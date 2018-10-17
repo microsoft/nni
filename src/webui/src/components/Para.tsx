@@ -99,7 +99,7 @@ class Para extends React.Component<{}, ParaState> {
                                 speDimName.push(tem);
                             }
                             if (accParaData[item].status === 'SUCCEEDED') {
-                                if (accParaData[item].finalMetricData !== undefined) {
+                                if (accParaData[item].finalMetricData && accParaData[item].hyperParameters) {
                                     // get acc array
                                     accPara.push(parseFloat(accParaData[item].finalMetricData.data));
                                     // get dim and every line specific number
@@ -135,6 +135,15 @@ class Para extends React.Component<{}, ParaState> {
                                     });
                                     break;
 
+                                case 'randint':
+                                    parallelAxis.push({
+                                        dim: i,
+                                        name: dimName[i],
+                                        max: searchKey._value[0],
+                                        min: 0
+                                    });
+                                    break;
+
                                 case 'choice':
                                     const data: Array<string> = [];
                                     for (let j = 0; j < searchKey._value.length; j++) {
@@ -148,14 +157,12 @@ class Para extends React.Component<{}, ParaState> {
                                     });
                                     break;
 
-                                case 'loguniform':
+                                default:
                                     parallelAxis.push({
                                         dim: i,
                                         name: dimName[i]
                                     });
-                                    break;
 
-                                default:
                             }
                         }
                         // get data for every lines. if dim is choice type
@@ -438,7 +445,7 @@ class Para extends React.Component<{}, ParaState> {
                                 className="changeBtu"
                                 onClick={this.swapBtn}
                             >
-                                sure
+                                Confirm
                             </Button>
                         </div>
                     </div>

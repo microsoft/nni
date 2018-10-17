@@ -22,13 +22,14 @@
 import os
 import json
 import shutil
-from .constants import METADATA_DIR, METADATA_FULL_PATH
+from .constants import NNICTL_HOME_DIR
 
 class Config:
     '''a util class to load and save config'''
-    def __init__(self):
-        os.makedirs(METADATA_DIR, exist_ok=True)
-        self.config_file = METADATA_FULL_PATH
+    def __init__(self, port):
+        config_path = os.path.join(NNICTL_HOME_DIR, str(port))
+        os.makedirs(config_path, exist_ok=True)
+        self.config_file = os.path.join(config_path, '.config')
         self.config = self.read_file()
 
     def get_all_config(self):
@@ -44,12 +45,6 @@ class Config:
     def get_config(self, key):
         '''get a value according to key'''
         return self.config.get(key)
-
-    def copy_metadata_to_new_path(self, path):
-        '''copy metadata to a new path'''
-        if not os.path.exists(path):
-            os.mkdir(path)
-        shutil.copy(self.config_file, path)
 
     def write_file(self):
         '''save config to local file'''
@@ -70,3 +65,44 @@ class Config:
             except ValueError:
                 return {}
         return {}
+
+class Experiments:
+    '''Maintain experiment list'''
+    def __init__(self):
+        os.makedirs(NNICTL_HOME_DIR, exist_ok=True)
+        self.experiment_file = os.path.join(NNICTL_HOME_DIR, '.experiment')
+        self.experiments = self.read_file()
+
+    def add_experiment(self, id, port, time):
+        '''set {key:value} paris to self.experiment'''
+        self.experiments[id] = [port, time]
+        self.write_file()
+    
+    def remove_experiment(self, id):
+        '''remove an experiment by id'''
+        if id in self.experiments:
+            self.experiments.pop(id)
+        self.write_file()
+        
+    def get_all_experiments(self):
+        '''return all of experiments'''
+        return self.experiments
+    
+    def write_file(self):
+        '''save config to local file'''
+        try:
+            with open(self.experiment_file, 'w') as file:
+                json.dump(self.experiments, file)
+        except IOError as error:
+            print('Error:', error)
+            return
+
+    def read_file(self):
+        '''load config from local file'''
+        if os.path.exists(self.experiment_file):
+            try:
+                with open(self.experiment_file, 'r') as file:
+                    return json.load(file)
+            except ValueError:
+                return {}
+        return {} 

@@ -29,10 +29,12 @@ __all__ = [
     'get_parameters',
     'report_intermediate_result',
     'report_final_result',
+    'get_sequence_id'
 ]
 
 
 _params = None
+_sequence_id = platform.get_sequence_id()
 
 
 def get_parameters():
@@ -45,6 +47,8 @@ def get_parameters():
 def get_parameter(tag):
     return get_parameters()[tag]
 
+def get_sequence_id():
+    return _sequence_id
 
 _intermediate_seq = 0
 
