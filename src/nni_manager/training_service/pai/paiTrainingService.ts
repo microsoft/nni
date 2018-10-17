@@ -244,7 +244,7 @@ class PAITrainingService implements TrainingService {
         // Step 3. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
-            uri: `http://${this.paiClusterConfig.host}:9186/api/v1/jobs`,
+            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs`,
             method: 'POST',
             json: true,
             body: paiJobConfig,
@@ -253,10 +253,14 @@ class PAITrainingService implements TrainingService {
                 "Authorization": 'Bearer ' + this.paiToken
             }
         };
+        this.log.info(`pai token is ${this.paiToken}`);
+        this.log.info(`pai job config is ${JSON.stringify(paiJobConfig)}`);
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
             if (error || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: Submit trial ${trialJobId} to PAI Cluster failed!`);
                 trialJobDetail.status = 'FAILED';
+                this.log.error(`error is ${error}`);
+                this.log.error(`respone status code is ${response.statusCode}`);
                 deferred.reject(error ? error.message : 'Submit trial failed, http code: ' + response.statusCode);                
             } else {
                 trialJobDetail.submitTime = Date.now();
@@ -291,7 +295,7 @@ class PAITrainingService implements TrainingService {
         }
 
         const stopJobRequest: request.Options = {
-            uri: `http://${this.paiClusterConfig.host}:9186/api/v1/jobs/${trialJobDetail.paiJobName}/executionType`,
+            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs/${trialJobDetail.paiJobName}/executionType`,
             method: 'PUT',
             json: true,
             body: {'value' : 'STOP'},
@@ -322,13 +326,15 @@ class PAITrainingService implements TrainingService {
                 
                 this.hdfsClient = WebHDFS.createClient({
                     user: this.paiClusterConfig.userName,
-                    port: 50070,
+                    // Refer PAI document for Pylon mapping https://github.com/Microsoft/pai/tree/master/docs/pylon
+                    port: 80,
+                    path: '/webhdfs/webhdfs/v1',
                     host: this.paiClusterConfig.host
                 });
 
                 // Get PAI authentication token
                 const authentication_req: request.Options = {
-                    uri: `http://${this.paiClusterConfig.host}:9186/api/v1/token`,
+                    uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
                     method: 'POST',
                     json: true,
                     body: {
@@ -393,14 +399,19 @@ class PAITrainingService implements TrainingService {
                     this.hdfsBaseDir = "/";
                 }
                 
-                const hdfsClient = WebHDFS.createClient({
-                    user: this.paiClusterConfig.userName,
-                    port: 50070,
-                    host: this.hdfsOutputHost
-                });
+                let dataOutputHdfsClient; 
+                if (this.paiClusterConfig.host === this.hdfsOutputHost && this.hdfsClient) {
+                    dataOutputHdfsClient = this.hdfsClient
+                } else {
+                    dataOutputHdfsClient = WebHDFS.createClient({
+                        user: this.paiClusterConfig.userName,
+                        port: 50070,
+                        host: this.hdfsOutputHost
+                    });
+                }
 
                 try {
-                    const exist : boolean = await HDFSClientUtility.pathExists("/", hdfsClient);
+                    const exist : boolean = await HDFSClientUtility.pathExists("/", dataOutputHdfsClient);
                     if(!exist) {
                         deferred.reject(new Error(`Please check hdfsOutputDir host!`));
                     }
