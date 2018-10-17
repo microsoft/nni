@@ -13,6 +13,9 @@ steps:
     displayName: 'Install dependencies'
   - script: |
       cd test/naive
-      source ~/.bashrc
+      source $HOME/.bashrc
+      ls $HOME/.local/bin
+      cat $HOME/.local/bin/nnictl
+      export PATH=$HOME/.local/bin:$PATH
       python3 run.py
     displayName: 'Run tests'
