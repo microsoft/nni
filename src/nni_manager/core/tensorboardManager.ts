@@ -67,6 +67,7 @@ class TensorboardManager implements BoardManager {
     public async Run(trialJobId: string): Promise<void>{
         while(this.isRunning){
             console.log('----------in run------------');
+            this.tensorBoardUtilInstance.copyDataToLocal(trialJobId);
             await delay(5000);
         }
     }
