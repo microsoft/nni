@@ -17,5 +17,6 @@ steps:
       ls $HOME/.local/bin
       cat $HOME/.local/bin/nnictl
       export PATH=$HOME/.local/bin:$PATH
+      nnictl --help
       python3 run.py
     displayName: 'Run tests'

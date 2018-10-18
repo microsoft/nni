@@ -108,11 +108,7 @@ class Integration_test():
 if __name__ == '__main__':
     installed = (sys.argv[-1] != '--preinstall')
     ic = Integration_test()
-    print(os.environ['HOME'])
-    print(os.environ['PATH'])
     subprocess.run(['ls', os.path.join(os.environ['HOME'],'.local/bin')])
-    subprocess.run(['cat', os.path.join(os.environ['HOME'],'.local/bin/nnictl')])
-    subprocess.run(['cat', os.path.join(os.environ['HOME'],'.bashrc')])
     subprocess.run(['echo', '$PATH'])
     try:
         ic.run(installed)
