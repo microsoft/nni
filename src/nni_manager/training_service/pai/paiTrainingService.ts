@@ -341,9 +341,9 @@ class PAITrainingService implements TrainingService, ITensorBoardUtil {
                 
                 this.hdfsClient = WebHDFS.createClient({
                     user: this.paiClusterConfig.userName,
-                     // Refer PAI document for Pylon mapping https://github.com/Microsoft/pai/tree/master/docs/pylon
-                     port: 80,
-                     path: '/webhdfs/webhdfs/v1',
+                    // Refer PAI document for Pylon mapping https://github.com/Microsoft/pai/tree/master/docs/pylon
+                    port: 80,
+                    path: '/webhdfs/webhdfs/v1',
                     host: this.paiClusterConfig.host
                 });
 
