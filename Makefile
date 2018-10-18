@@ -28,13 +28,13 @@ else  # is normal user
 endif
 
 ## Dependency information
-NODE_VERSION ?= v10.12.0
-NODE_TARBALL ?= node-$(NODE_VERSION)-linux-x64.tar.xz
-NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
+NNI_NODE_VERSION ?= v10.12.0
+NNI_NODE_TARBALL ?= node-$(NNI_NODE_VERSION)-linux-x64.tar.xz
+NNI_NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
 
-YARN_VERSION ?= v1.10.1
-YARN_TARBALL ?= yarn-$(YARN_VERSION).tar.gz
-YARN_PATH ?= /tmp/nni-yarn
+NNI_YARN_VERSION ?= v1.10.1
+NNI_YARN_TARBALL ?= yarn-$(NNI_YARN_VERSION).tar.gz
+NNI_YARN_PATH ?= /tmp/nni-yarn
 
 ## Check if dependencies have been installed globally
 ifeq (, $(shell command -v node 2>/dev/null))
@@ -42,7 +42,7 @@ ifeq (, $(shell command -v node 2>/dev/null))
     _MISS_DEPS := 1  # node not found
 else
     _VER := $(shell node --version)
-    _NEWER := $(shell echo -e "$(NODE_VERSION)\n$(_VER)" | sort -Vr | head -n 1)
+    _NEWER := $(shell echo -e "$(NNI_NODE_VERSION)\n$(_VER)" | sort -Vr | head -n 1)
     ifneq ($(_VER), $(_NEWER))
         $(info $(_INFO) Node.js version not match $(_END))
         _MISS_DEPS := 1  # node outdated
@@ -55,12 +55,12 @@ endif
 
 ifdef _MISS_DEPS
     $(info $(_INFO) Missing dependencies, use local toolchain $(_END))
-    NODE := $(NODE_PATH)/bin/node
-    YARN := PATH=$(NODE_PATH)/bin:$${PATH} $(YARN_PATH)/bin/yarn
+    NNI_NODE := $(NNI_NODE_PATH)/bin/node
+    NNI_YARN := PATH=$(NNI_NODE_PATH)/bin:$${PATH} $(NNI_YARN_PATH)/bin/yarn
 else
     $(info $(_INFO) All dependencies found, use global toolchain $(_END))
-    NODE := node
-    YARN := yarnpkg
+    NNI_NODE := node
+    NNI_YARN := yarnpkg
 endif
 
 
@@ -72,10 +72,10 @@ endif
 .PHONY: build
 build:
 	#$(_INFO) Building NNI Manager $(_END)
-	cd src/nni_manager && $(YARN) && $(YARN) build
+	cd src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
 	
 	#$(_INFO) Building WebUI $(_END)
-	cd src/webui && $(YARN) && $(YARN) build
+	cd src/webui && $(NNI_YARN) && $(NNI_YARN) build
 	
 	#$(_INFO) Building Python SDK $(_END)
 	cd src/sdk/pynni && python3 setup.py build
@@ -150,29 +150,29 @@ uninstall:
 
 # Helper targets
 
-$(NODE_TARBALL):
+$(NNI_NODE_TARBALL):
 	#$(_INFO) Downloading Node.js $(_END)
-	wget https://nodejs.org/dist/$(NODE_VERSION)/$(NODE_TARBALL)
+	wget https://nodejs.org/dist/$(NNI_NODE_VERSION)/$(NNI_NODE_TARBALL)
 
-$(YARN_TARBALL):
+$(NNI_YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
-	wget https://github.com/yarnpkg/yarn/releases/download/$(YARN_VERSION)/$(YARN_TARBALL)
+	wget https://github.com/yarnpkg/yarn/releases/download/$(NNI_YARN_VERSION)/$(NNI_YARN_TARBALL)
 
 .PHONY: intall-dependencies
-install-dependencies: $(NODE_TARBALL) $(YARN_TARBALL)
+install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
 	#$(_INFO) Cleaning $(_END)
-	rm -rf $(NODE_PATH)
-	rm -rf $(YARN_PATH)
-	mkdir -p $(NODE_PATH)
-	mkdir -p $(YARN_PATH)
+	rm -rf $(NNI_NODE_PATH)
+	rm -rf $(NNI_YARN_PATH)
+	mkdir -p $(NNI_NODE_PATH)
+	mkdir -p $(NNI_YARN_PATH)
 	
 	#$(_INFO) Extracting Node.js $(_END)
-	tar -xf $(NODE_TARBALL)
-	mv -fT node-$(NODE_VERSION)-linux-x64 $(NODE_PATH)
+	tar -xf $(NNI_NODE_TARBALL)
+	mv -fT node-$(NNI_NODE_VERSION)-linux-x64 $(NNI_NODE_PATH)
 	
 	#$(_INFO) Extracting Yarn $(_END)
-	tar -xf $(YARN_TARBALL)
-	mv -fT yarn-$(YARN_VERSION) $(YARN_PATH)
+	tar -xf $(NNI_YARN_TARBALL)
+	mv -fT yarn-$(NNI_YARN_VERSION) $(NNI_YARN_PATH)
 
 .PHONY: install-python-modules
 install-python-modules:
@@ -220,7 +220,7 @@ install-scripts:
 	
 	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
 	echo 'cd $(INSTALL_PREFIX)/nni/nni_manager' >> $(BIN_PATH)/nnimanager
-	echo '$(NODE) main.js $$@' >> $(BIN_PATH)/nnimanager
+	echo '$(NNI_NODE) main.js $$@' >> $(BIN_PATH)/nnimanager
 	chmod +x $(BIN_PATH)/nnimanager
 	
 	echo '#!/bin/sh' > $(BIN_PATH)/nnictl
