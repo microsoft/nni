@@ -16,6 +16,6 @@ steps:
     displayName: 'Install dependencies'
   - script: |
       cd test/naive
-      source ~/.bashrc
+      source $HOME/.bashrc
       python3 run.py
     displayName: 'Run tests'
