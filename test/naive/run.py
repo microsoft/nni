@@ -108,7 +108,6 @@ class Integration_test():
 if __name__ == '__main__':
     installed = (sys.argv[-1] != '--preinstall')
     ci = Integration_test()
-    time.sleep(8)
     try:
         ci.run(installed)
         # TODO: check the output of rest server
