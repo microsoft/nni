@@ -1,9 +1,10 @@
 ## Usage
-To test before installing:
-    ./run.py --preinstall
-To test the integrity of installation:
-    ./run.py
-It will print `PASS` in green eventually if everything works well.
+
+* To test before installing:
+`./run.py --preinstall`
+* To test the integrity of installation:
+`./run.py`
+* It will print `PASS` in green eventually if everything works well.
 
 ## Details
 * This test case tests the communication between trials and tuner/assessor.

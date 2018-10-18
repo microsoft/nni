@@ -4,9 +4,6 @@ strategy:
   matrix:
     Python36:
       PYTHON_VERSION: '3.6'
-trigger:
-  - master
-  - dev-exp-stop-more
 
 steps:
   - script: python3 -m pip install --upgrade pip setuptools
@@ -16,7 +13,6 @@ steps:
     displayName: 'Install dependencies'
   - script: |
       cd test/naive
-      source $HOME/.bashrc
       export PATH=$HOME/.local/bin:$PATH
       python3 run.py
     displayName: 'Run tests'
