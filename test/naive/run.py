@@ -46,7 +46,7 @@ class Integration_test():
 
     def run(self, installed = True):
         if not installed:
-            os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
+            os.environ['PATH'] = os.environ['PATH'] + ':' + os.path.join(os.environ['PWD'], '..')
             sdk_path = os.path.abspath('../../src/sdk/pynni')
             cmd_path = os.path.abspath('../../tools')
             pypath = os.environ.get('PYTHONPATH')
