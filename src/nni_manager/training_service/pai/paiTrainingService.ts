@@ -113,8 +113,10 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
 
     public async copyDataFromHdfs(trialJobId: string): Promise<void>{
         console.log("-----------------115---------------")
-        const hdfsOutputDir = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
-        await HDFSClientUtility.readdir(hdfsOutputDir, this.hdfsClient);
+        if(this.hdfsBaseDir){
+            const hdfsOutputDir = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
+            await HDFSClientUtility.readdir(hdfsOutputDir, this.hdfsClient);
+        }
         return Promise.resolve();
     }
 

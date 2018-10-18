@@ -63,8 +63,9 @@ async function initContainer(platformMode: string): Promise<void> {
     Container.bind(BoardManager).to(TensorboardManager).scope(Scope.Singleton);
     console.log('----------------main.ts-------63')
     const ds: DataStore = component.get(DataStore);
-
+    console.log('----------------main.ts-------64')
     await ds.init();
+    console.log('----------------main.ts-------65')
 }
 
 function usage(): void {
