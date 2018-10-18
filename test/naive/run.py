@@ -107,9 +107,10 @@ class Integration_test():
 
 if __name__ == '__main__':
     installed = (sys.argv[-1] != '--preinstall')
-    ic = Integration_test()
+    ci = Integration_test()
+    time.sleep(8)
     try:
-        ic.run(installed)
+        ci.run(installed)
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:
