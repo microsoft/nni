@@ -400,6 +400,13 @@ class NNIManager implements Manager {
                 this.log.info('Experiment done.');
             }
 
+            // requestTrialNum is the number of trials that will be requested from tuner.
+            // If trialConcurrency does not change, requestTrialNum equals finishedTrialJobNum.
+            // If trialConcurrency changes, for example, trialConcurrency increases by 2 (trialConcurrencyChange=2), then
+            // requestTrialNum equals 2 + finishedTrialJobNum and trialConcurrencyChange becomes 0.
+            // If trialConcurrency changes, for example, trialConcurrency decreases by 4 (trialConcurrencyChange=-4) and 
+            // finishedTrialJobNum is 2, then requestTrialNum becomes -2. No trial will be requested from tuner,
+            // and trialConcurrencyChange becomes -2.
             const requestTrialNum: number = this.trialConcurrencyChange + finishedTrialJobNum;
             if (requestTrialNum >= 0) {
                 this.trialConcurrencyChange = 0;
