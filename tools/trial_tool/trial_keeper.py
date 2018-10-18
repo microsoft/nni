@@ -30,6 +30,7 @@ from pyhdfs import HdfsClient
 from .hdfsClientUtility import copyDirectoryToHdfs
 from .constants import HOME_DIR, LOG_DIR, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .metrics_reader import read_experiment_metrics
+from .log_utils import get_task_from_training_service, LogManager
 
 logger = logging.getLogger('trial_keeper')
 
@@ -45,17 +46,20 @@ def main_loop(args):
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     process = Popen(args.trial_command, shell = True, stdout = stdout_file, stderr = stderr_file)
     print('Subprocess pid is {}'.format(process.pid))
+    
+    nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
+    log_manager = LogManager(nni_local_output_dir, args.pai_hdfs_output_dir, args.pai_hdfs_host, args.pai_user_name)
     while True:
         retCode = process.poll()
         ## Read experiment metrics, to avoid missing metrics
         read_experiment_metrics(args.nnimanager_ip)
         
+
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
             #copy local directory to hdfs
-            nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
-            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
             try:
+                hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
                 if copyDirectoryToHdfs(nni_local_output_dir, args.pai_hdfs_output_dir, hdfs_client):
                     print('copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
                 else:

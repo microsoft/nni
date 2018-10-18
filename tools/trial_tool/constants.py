@@ -26,6 +26,8 @@ BASE_URL = 'http://{}'
 
 DEFAULT_REST_PORT = 51189
 
+DEFAULT_HDFS_PORT = 50070
+
 HOME_DIR = os.path.join(os.environ['HOME'], 'nni')
 
 LOG_DIR = os.environ['NNI_OUTPUT_DIR']
@@ -35,3 +37,7 @@ STDOUT_FULL_PATH = os.path.join(LOG_DIR, 'stdout')
 STDERR_FULL_PATH = os.path.join(LOG_DIR, 'stderr')
 
 UPDATE_METRICS_API = '/update-metrics'
+
+READ_TASK_API = '/task'
+
+REPORT_RESULT_API = '/report'
