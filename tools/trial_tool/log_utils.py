@@ -77,6 +77,7 @@ def report_result_to_training_service(log_manager, nnimanager_ip, task_list):
     information trainingService to copy data from hdfs
     '''
     while True:
+        '''
         if task_list:
             task_list.pop(0)
             if log_manager.copyDataToHdfs():
@@ -86,4 +87,5 @@ def report_result_to_training_service(log_manager, nnimanager_ip, task_list):
                     print('response code:', response.status_code)
                 except Exception as exception:
                     print(exception)
+        '''
         time.sleep(5)

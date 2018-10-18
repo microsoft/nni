@@ -94,7 +94,7 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
     }
 
     public getLocalDirectory(trialJobId: string): string{
-        const localLogDir = `/tmp/nni/logdata/${trialJobId}`
+        const localLogDir = `/tmp/nni/logdata/${this.experimentId}/${trialJobId}`
         return localLogDir;
     }
 
@@ -128,7 +128,11 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
         for (let entry of files) {
             console.log(entry);
         }
-        
+        const localDir = this.getLocalDirectory(trialJobId);
+        console.log('-------------paiTrainingService.ts--------------132')
+        await HDFSClientUtility.copyHdfsToLocalDirectory(hdfsOutputDir, localDir, this.hdfsClient).catch((err)=>{
+            console.log(err);
+        });
         console.log("--------paiTrainingService---------127---------------")
         return Promise.resolve();
     }

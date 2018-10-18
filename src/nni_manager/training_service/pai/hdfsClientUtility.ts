@@ -21,6 +21,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { Deferred } from 'ts-deferred';
 import { getLogger } from '../../common/log';
+import { mkDirP } from '../../common/utils';
 
 /**
  * HDFS client utility, including copy file/directory
@@ -100,24 +101,23 @@ export namespace HDFSClientUtility {
         const exist : boolean = await pathExists(hdfsPath, hdfsClient);
         if(!exist) {
             deferred.reject(`${hdfsPath} doesn't exists`);
+        }else{
+            const remoteFileStream = hdfsClient.createReadStream(hdfsPath);
+            remoteFileStream.on('error', (err : any) => {
+                // Reject with the error
+                deferred.reject(err);
+            });
+
+            remoteFileStream.on('data', (chunk : any) => {
+                // Concat the data chunk to buffer
+                buffer = Buffer.concat([buffer, chunk]);
+            });
+            
+            remoteFileStream.on('finish', function onFinish () {
+                // Upload is done, resolve
+                deferred.resolve(buffer);
+            });
         }
-
-        const remoteFileStream = hdfsClient.createReadStream(hdfsPath);
-        remoteFileStream.on('error', (err : any) => {
-            // Reject with the error
-            deferred.reject(err);
-        });
-
-        remoteFileStream.on('data', (chunk : any) => {
-            // Concat the data chunk to buffer
-            buffer = Buffer.concat([buffer, chunk]);
-        });
-        
-        remoteFileStream.on('finish', function onFinish () {
-            // Upload is done, resolve
-            deferred.resolve(buffer);
-        });
-
         return deferred.promise;
     }
 
@@ -168,8 +168,8 @@ export namespace HDFSClientUtility {
      * @param hdfsPath the path in HDFS. It could be either file or directory
      * @param hdfsClient 
      */
-    export async function readdir(hdfsPath : string, hdfsClient : any) : Promise<string[]> {
-        const deferred : Deferred<string[]> = new Deferred<string[]>();
+    export async function readdir(hdfsPath : string, hdfsClient : any) : Promise<any[]> {
+        const deferred : Deferred<string[]> = new Deferred<any[]>();
         console.log('-------------hdfsClientUtility.ts--------------173')
         const exist : boolean = await pathExists(hdfsPath, hdfsClient);
         console.log('-------------hdfsClientUtility.ts--------------175')
@@ -210,6 +210,35 @@ export namespace HDFSClientUtility {
                 deferred.reject(err.message);
             }
         });
+        return deferred.promise;
+    }
+
+    export async function copyHdfsToLocalDirectory(hdfsPath: string, localDirectory: string, hdfsClient: any): Promise<boolean>{
+        const deferred : Deferred<boolean> = new Deferred<boolean>();
+        try{
+            mkDirP(localDirectory)
+            console.log('-------------hdfsClientUtility.ts--------------219')
+            const files = await readdir(hdfsPath, hdfsClient);
+            for (let file of files) {
+                const localFullPath = path.join(localDirectory, file.pathSuffix);
+                const hdfsFullPath = path.join(hdfsPath, file.pathSuffix);
+                if(file.type === 'FILE'){
+                    console.log('-------------hdfsClientUtility.ts--------------225')
+                    console.log(file)
+                    const buffer = await readFileFromHDFS(hdfsFullPath, hdfsClient);
+                    console.log('-------------hdfsClientUtility.ts--------------228')
+                    await fs.promises.writeFile(localFullPath, buffer.toString(), { encoding: 'utf8' });
+                    console.log('-------------hdfsClientUtility.ts--------------229')
+                    console.log(localFullPath)
+                    console.log(hdfsFullPath)
+                }else{
+                    await copyDirectoryToHdfs(hdfsFullPath, localFullPath, hdfsClient);
+                }
+            }
+            deferred.resolve(true)
+        }catch (error){
+            deferred.reject(error)
+        }
         return deferred.promise;
     }
 }
