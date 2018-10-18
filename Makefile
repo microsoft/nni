@@ -71,7 +71,6 @@ endif
 
 .PHONY: build
 build:
-	export PATH = ""
 	#$(_INFO) Building NNI Manager $(_END)
 	cd src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
 	
