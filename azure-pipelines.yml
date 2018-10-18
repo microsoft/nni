@@ -17,5 +17,8 @@ steps:
   - script: |
       cd test/naive
       source $HOME/.bashrc
+      export PATH=$HOME/.local/bin:$PATH
+      nnictl --help
+      cat $HOME/.local/bin/nnictl
       python3 run.py
     displayName: 'Run tests'
