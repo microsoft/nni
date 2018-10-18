@@ -22,7 +22,7 @@ from .constants import API_ROOT_URL, UPDATE_METRICS_API, READ_TASK_API, REPORT_R
 
 def gen_update_metrics_url(base_url, port, exp_id, trial_job_id):
     '''Generate update trial metrics url'''
-    return '{0}:{1}{2}{3}/{4}/:{5}'.format(base_url, port, API_ROOT_URL, UPDATE_METRICS_API, exp_id, trial_job_id)
+    return '{0}:{1}{2}{3}/{4}/{5}'.format(base_url, port, API_ROOT_URL, UPDATE_METRICS_API, exp_id, trial_job_id)
 
 def gen_read_task_url(base_url, port, exp_id, trial_job_id):
     '''Read task from trainingService url'''

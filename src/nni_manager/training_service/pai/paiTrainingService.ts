@@ -121,7 +121,7 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
         console.log(this.hdfsBaseDir)
         console.log(this.experimentId)
         console.log(trialJobId)
-        console.log(hdfsOutputDir)
+        console.log(this.hdfsBaseDir)
         const files = await HDFSClientUtility.readdir(hdfsOutputDir, this.hdfsClient);
         console.log('-------------paiTrainingService.ts--------------120')
         console.log(files.length)

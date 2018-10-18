@@ -93,7 +93,7 @@ export class PAIJobRestServer extends RestServer{
             }
         });
 
-        router.get(`/task/${this.expId}/trialId`, (req: Request, res: Response) => {
+        router.get(`/task/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
                 
                 this.log.info(`Get task request, trial job id is ${req.params.trialId}`);
@@ -111,7 +111,7 @@ export class PAIJobRestServer extends RestServer{
             }
         });
 
-        router.get(`/report/${this.expId}/trialId`, (req: Request, res: Response) => {
+        router.get(`/report/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
                 console.log('--------------get report request----------')
                 console.log(req.params.trialId)
