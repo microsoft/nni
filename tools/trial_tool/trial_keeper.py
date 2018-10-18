@@ -27,6 +27,7 @@ import shlex
 import re
 from pyhdfs import HdfsClient
 from multiprocessing import Process
+import multiprocessing
 
 from .hdfsClientUtility import copyDirectoryToHdfs
 from .constants import HOME_DIR, LOG_DIR, STDOUT_FULL_PATH, STDERR_FULL_PATH
@@ -51,14 +52,15 @@ def main_loop(args):
     #Start tensorboard process
     nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
     log_manager = LogManager(nni_local_output_dir, args.pai_hdfs_output_dir, args.pai_hdfs_host, args.pai_user_name)
-    tensorboard_process = Process(target=report_result_to_training_service, args=(log_manager, args.nnimanager_ip))
+    task_list = multiprocessing.Manager().list()
+    tensorboard_process = Process(target=report_result_to_training_service, args=(log_manager, args.nnimanager_ip, task_list))
     tensorboard_process.start()
     
     while True:
         retCode = process.poll()
         ## Read experiment metrics, to avoid missing metrics
         read_experiment_metrics(args.nnimanager_ip)    
-        get_task_from_training_service(log_manager, args.nnimanager_ip)
+        get_task_from_training_service(args.nnimanager_ip, task_list)
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
             #copy local directory to hdfs

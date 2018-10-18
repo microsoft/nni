@@ -58,7 +58,7 @@ class LogManager():
         except:
             return False
     
-def get_task_from_training_service(log_manager, nnimanager_ip):
+def get_task_from_training_service(nnimanager_ip, task_list):
     '''
     Detect if it's time to copy data to hdfs
     '''
@@ -67,18 +67,18 @@ def get_task_from_training_service(log_manager, nnimanager_ip):
         result = json.loads(response.text)
         if result.get('task'):
             print(result['task'])
-            log_manager.task_queue.append(result['task'])
+            task_list.append(result['task'])
     except Exception as exception:
         print(exception)
         pass
 
-def report_result_to_training_service(log_manager, nnimanager_ip):
+def report_result_to_training_service(log_manager, nnimanager_ip, task_list):
     '''
     information trainingService to copy data from hdfs
     '''
     while True:
-        if log_manager.task_queue:
-            log_manager.task_queue.pop(0)
+        if task_list:
+            task_list.pop(0)
             if log_manager.copyDataToHdfs():
                 try:
                     print('Information training service to copy from hdfs')
