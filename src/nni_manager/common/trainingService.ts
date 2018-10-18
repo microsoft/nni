@@ -78,8 +78,9 @@ interface HostJobDetail {
     readonly status: string;
 }
 
-interface ITensorBoardUtil {
-    copyDataToLocal(trialJobId: string): void;
+interface ITensorBoardManager {
+    taskQueue: string[];
+    addCopyDataTask(trialJobId: string): void;
     getLocalDirectory(trialJobId: string): string;
 }
 
@@ -128,5 +129,5 @@ abstract class TrainingService {
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
-    HostJobApplicationForm, JobApplicationForm, JobType, ITensorBoardUtil
+    HostJobApplicationForm, JobApplicationForm, JobType, ITensorBoardManager
 };

@@ -36,7 +36,7 @@ import { getLogger, Logger } from '../../common/log';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, ITensorBoardUtil
+    TrialJobDetail, TrialJobMetric, ITensorBoardManager
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
@@ -52,7 +52,7 @@ var WebHDFS = require('webhdfs');
  * Refer https://github.com/Microsoft/pai for more info about OpenPAI
  */
 @component.Singleton
-class PAITrainingService implements TrainingService, ITensorBoardUtil {
+class PAITrainingService implements TrainingService, ITensorBoardManager {
     private readonly log!: Logger;
     private readonly metricsEmitter: EventEmitter;
     private readonly trialJobsMap: Map<string, PAITrialJobDetail>;
@@ -68,6 +68,7 @@ class PAITrainingService implements TrainingService, ITensorBoardUtil {
     private hdfsBaseDir: string | undefined;
     private hdfsOutputHost: string | undefined;
     private trialSequenceId: number;
+    public taskQueue: string[];
 
     constructor() {
         this.log = getLogger();
@@ -79,6 +80,7 @@ class PAITrainingService implements TrainingService, ITensorBoardUtil {
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.trialSequenceId = 0;
+        this.taskQueue = [];
     }
 
     public async run(): Promise<void> {
@@ -96,7 +98,7 @@ class PAITrainingService implements TrainingService, ITensorBoardUtil {
         return localLogDir;
     }
 
-    public async copyDataToLocal(trialJobId: string): Promise<void>{
+    public async addCopyDataTask(trialJobId: string): Promise<void>{
         console.log('-----------in pai copy data-------')
         //1. get local path and remote path
         //2. inform trial keeper to copy data to hdfs
@@ -105,7 +107,7 @@ class PAITrainingService implements TrainingService, ITensorBoardUtil {
         if(jobDetail === undefined){
             throw Error("trialJobId does not exist!");
         }
-        const hdfsDir = jobDetail.hdfsOutputDir;
+        this.taskQueue.push("Copy Data To HDFS");
         
     }
 

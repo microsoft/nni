@@ -93,6 +93,23 @@ export class PAIJobRestServer extends RestServer{
             }
         });
 
+        router.post(`/task/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            try {
+                console.log('--------------get task request----------')
+                this.log.info(`Get task request, trial job id is ${req.params.trialId}`);
+                if(this.paiTrainingService.taskQueue.length > 1){
+                    res.send({"task": this.paiTrainingService.taskQueue[0]});
+                    this.paiTrainingService.taskQueue.shift();
+                }
+                res.send({"task": null});
+            }
+            catch(err) {
+                this.log.error(`json parse metrics error: ${err}`);
+                res.status(500);
+                res.send(err.message);
+            }
+        });
+
         return router;
     }
 }

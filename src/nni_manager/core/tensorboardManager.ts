@@ -29,7 +29,7 @@ import { NNIErrorNames } from '../common/errors';
 import { getLogger, Logger } from '../common/log';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
-import { HostJobApplicationForm, TrainingService, TrialJobStatus, ITensorBoardUtil } from '../common/trainingService';
+import { HostJobApplicationForm, TrainingService, TrialJobStatus, ITensorBoardManager } from '../common/trainingService';
 import { PAITrainingService } from '../training_service/pai/paiTrainingService'
 import { MethodNotImplementedError, NNIError} from '../common/errors';
 
@@ -45,7 +45,7 @@ class TensorboardManager implements BoardManager {
     private tbPid?: number;
     private isRunning: boolean;
     private platForm: string;
-    private tensorBoardUtilInstance: ITensorBoardUtil;
+    private tensorBoardManagerInstance: ITensorBoardManager;
 
     constructor() {
         this.platForm = "pai";
@@ -59,7 +59,7 @@ class TensorboardManager implements BoardManager {
         if(trainingService === undefined){
             throw new Error("trainingService not initialized!");
         }
-        this.tensorBoardUtilInstance = trainingService as ITensorBoardUtil;
+        this.tensorBoardManagerInstance = trainingService as ITensorBoardManager;
         this.trainingService = trainingService as TrainingService;
         this.dataStore = component.get(DataStore);
     }
@@ -67,7 +67,7 @@ class TensorboardManager implements BoardManager {
     public async Run(trialJobId: string): Promise<void>{
         while(this.isRunning){
             console.log('----------in run------------');
-            this.tensorBoardUtilInstance.copyDataToLocal(trialJobId);
+            this.tensorBoardManagerInstance.addCopyDataTask(trialJobId);
             await delay(5000);
         }
     }
@@ -86,7 +86,7 @@ class TensorboardManager implements BoardManager {
         }
 
         const logDirs: string[] = [];
-        const localDir = this.tensorBoardUtilInstance.getLocalDirectory(trialJobIds[0]);
+        const localDir = this.tensorBoardManagerInstance.getLocalDirectory(trialJobIds[0]);
         logDirs.push(localDir);
 
         let tensorBoardCmd: string = this.TENSORBOARD_COMMAND;

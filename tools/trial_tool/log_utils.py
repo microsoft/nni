@@ -63,8 +63,9 @@ def get_task_from_training_service(log_manager, nnimanager_ip):
     '''
     try:
         response = rest_post(gen_read_task_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_EXP_ID, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
-        print('Response code is {}'.format(response.status_code))
         result = json.loads(response.text)
+        print('get task from training service')
+        print(result.text)
         if result.get('task'):
             log_manager.task_queue.append(1)
     except Exception as exception:

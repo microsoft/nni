@@ -52,9 +52,8 @@ def main_loop(args):
     while True:
         retCode = process.poll()
         ## Read experiment metrics, to avoid missing metrics
-        read_experiment_metrics(args.nnimanager_ip)
-        
-
+        read_experiment_metrics(args.nnimanager_ip)    
+        get_task_from_training_service(log_manager, args.nnimanager_ip)
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
             #copy local directory to hdfs
@@ -100,4 +99,3 @@ if __name__ == '__main__':
     except Exception as e:
         print('Exit trial keeper with code 1 because Exception: {} is catched'.format(str(e)))
         sys.exit(1)
-
