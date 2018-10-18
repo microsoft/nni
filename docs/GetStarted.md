@@ -34,7 +34,7 @@ An experiment is to run multiple trial jobs, each trial job tries a configuratio
 
 **Prepare trial**: Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example: 
 
-      python ~/nni/examples/trials/mnist-annotation/mnist.py
+      python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 
 This command will be filled in the yaml configure file below. Please refer to [here]() for how to write your own trial.
 
