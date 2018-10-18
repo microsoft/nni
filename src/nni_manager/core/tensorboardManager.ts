@@ -68,7 +68,7 @@ class TensorboardManager implements BoardManager {
         while(this.isRunning){
             console.log('----------in run------------');
             this.tensorBoardManagerInstance.addCopyDataTask(trialJobId);
-            await delay(5000);
+            await delay(10000);
         }
     }
 
@@ -79,7 +79,6 @@ class TensorboardManager implements BoardManager {
             tensorBoardPort = port;
         }
         const tbEndpoint: string = `http://localhost:${tensorBoardPort}`;
-        
         
         if(this.tbPid !== undefined){
             await this.stopTensorBoard();

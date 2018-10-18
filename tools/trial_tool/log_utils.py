@@ -67,9 +67,8 @@ def get_task_from_training_service(log_manager, nnimanager_ip):
         result = json.loads(response.text)
         print(68)
         print('get task from training service')
-        print(result.text)
         if result.get('task'):
-            log_manager.task_queue.append(1)
+            log_manager.task_queue.append(result['task'])
     except Exception as exception:
         print(exception)
         pass
