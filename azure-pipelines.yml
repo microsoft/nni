@@ -15,4 +15,9 @@ steps:
       cd test/naive
       export PATH=$HOME/.local/bin:$PATH
       python3 run.py
-    displayName: 'Run tests'
+    displayName: 'Integration tests'
+  - script: |
+      cd test/test_builtin_tuner
+      export PATH=$HOME/.local/bin:$PATH
+      python3 run.py
+    displayName: 'Built-in tuner tests'
