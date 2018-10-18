@@ -35,16 +35,7 @@
     margin-right: 1.4%;
     margin-bottom: 10px;
 }
-.session .head .headCon>div>div:first-child{
-    float: left;
-    width: 50%;
-}
-.session .head .headCon>div>div:last-child{
-    float: right;
-    width: 50%;
-}
 .session .head .headCon>div .message{
-    width: 30px;
     height: 100%;
     margin: 0 auto;
     padding-left: 6px;

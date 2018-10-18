@@ -1,6 +1,6 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Table, Select, Row, Col, Icon, Button } from 'antd';
+import { Table, Select, Row, Col, Button } from 'antd';
 import { MANAGER_IP, overviewItem } from '../const';
 const Option = Select.Option;
 import JSONTree from 'react-json-tree';
@@ -444,7 +444,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
             running = trialProfile.maxDuration - trialProfile.execDuration;
             runningStr = this.convertTime(running);
         } else {
-            runningStr = '0';
+            runningStr = '0s';
         }
         return (
             <div className="session" id="session">
@@ -453,60 +453,51 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         <div className="author">
                             <div className="message">
                                 <div className="proKey">
-                                    <span>Author</span>
+                                    <span>Author :</span>
                                     <span className="messcont">{trialProfile.author}</span>
                                 </div>
-                                <span>Experiment&nbsp;Name</span>
+                                <span>Experiment&nbsp;Name :</span>
                                 <p className="messcont">{trialProfile.experName}</p>
-                            </div>
-                            <div className="logo">
-                                <Icon className="bone" type="user" />
                             </div>
                         </div>
                         <div className="type">
                             <div className="message">
                                 <div className="proKey">
-                                    <span>id</span>
+                                    <span>id :</span>
                                     <span className="messcont">{trialProfile.id}</span>
                                 </div>
                                 <p>
-                                    <span>Duration</span>
+                                    <span>Duration :</span>
                                     <span className="messcont">{maxRuntime}</span>
                                 </p>
                                 <p>
-                                    <span>Still&nbsp;run</span>
+                                    <span>Still&nbsp;run :</span>
                                     <span className="messcont">{runningStr}</span>
                                 </p>
-                            </div>
-                            <div className="logo">
-                                <Icon className="tyellow" type="bulb" />
                             </div>
                         </div>
                         <div className="runtime message">
                             <p className="proTime">
-                                <span>Start Time</span><br />
+                                <span>Start Time :</span><br />
                                 <span className="messcont">{trialProfile.startTime}</span>
                             </p>
-                            <span>End Time</span>
+                            <span>End Time :</span>
                             <p className="messcont">{trialProfile.endTime}</p>
                         </div>
                         <div className="cdf">
                             <div className="message">
                                 <div className="proKey trialNum">
-                                    Concurrency&nbsp;Trial
+                                    Concurrency&nbsp;Trial :
                                     <span className="messcont">{trialProfile.runConcurren}</span>
                                 </div>
                                 <p>
-                                    Max&nbsp;Trial&nbsp;Number
+                                    Max&nbsp;Trial&nbsp;Number :
                                     <span className="messcont">{trialProfile.MaxTrialNum}</span>
                                 </p>
                                 <p className="experStatus">
-                                    Status
+                                    Status :
                                     <span className="messcont">{status}</span>
                                 </p>
-                            </div>
-                            <div className="logo">
-                                <Icon className="fogreen" type="picture" />
                             </div>
                         </div>
                     </div>
