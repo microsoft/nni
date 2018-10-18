@@ -54,7 +54,7 @@ def get_experiment_port(args):
     if not args.id:
         return list(experiment_dict.values())[0][0]
     if experiment_dict.get(args.id):
-        return experiment_dict[args.id]
+        return experiment_dict[args.id][0]
     else:
         print_error('Id not correct!')     
         return None
