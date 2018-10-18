@@ -97,6 +97,7 @@ class TensorboardManager implements BoardManager {
         
         console.log('--------------before run---------------')
         this.isRunning = true;
+        
         this.Run(trialJobIds[0]).catch(()=>{
 
         });     

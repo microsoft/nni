@@ -397,7 +397,7 @@ class TrialStatus extends React.Component<{}, TabState> {
         this.drawRunGraph();
         // the init of trials status in the table
         this.drawTable();
-        this.disTensorBoard();
+       // this.disTensorBoard();
         this.intervalID = window.setInterval(this.drawRunGraph, 10000);
         this.intervalIDS = window.setInterval(this.drawTable, 10000);
     }

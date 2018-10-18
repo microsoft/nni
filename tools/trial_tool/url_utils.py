@@ -26,8 +26,8 @@ def gen_update_metrics_url(base_url, port, exp_id, trial_job_id):
 
 def gen_read_task_url(base_url, port, exp_id, trial_job_id):
     '''Read task from trainingService url'''
-    return '{0}:{1}{2}{3}/{4}/:{5}'.format(base_url, port, API_ROOT_URL, READ_TASK_API, exp_id, trial_job_id)
+    return '{0}:{1}{2}{3}/{4}/{5}'.format(base_url, port, API_ROOT_URL, READ_TASK_API, exp_id, trial_job_id)
 
 def gen_report_result_url(base_url, port, exp_id, trial_job_id):
     '''Inform trainingService to copy data url'''
-    return '{0}:{1}{2}{3}/{4}/:{5}'.format(base_url, port, API_ROOT_URL, REPORT_RESULT_API, exp_id, trial_job_id)
+    return '{0}:{1}{2}{3}/{4}/{5}'.format(base_url, port, API_ROOT_URL, REPORT_RESULT_API, exp_id, trial_job_id)

@@ -173,22 +173,25 @@ export namespace HDFSClientUtility {
         console.log('-------------hdfsClientUtility.ts--------------173')
         const exist : boolean = await pathExists(hdfsPath, hdfsClient);
         console.log('-------------hdfsClientUtility.ts--------------175')
+        console.log(hdfsPath)
         console.log(exist)
         if(!exist) {
-            deferred.reject(`${hdfsPath} doesn't exists`);
-        }
-        console.log('-------------hdfsClientUtility.ts--------------179')
+            deferred.reject(`${hdfsPath} doesn't exists`);   
+        }else{
+            console.log('-------------hdfsClientUtility.ts--------------179')
 
-        hdfsClient.readdir(hdfsPath, (err : any, files : any[] ) => {
-            if(err) {
-                console.log(err);
-                deferred.reject(err);
-            }
-            console.log('-------------hdfsClientUtility.ts--------------185')
-            console.log(files.length)
-            deferred.resolve(files);
-        });
-        console.log('-------------hdfsClientUtility.ts--------------188')
+            hdfsClient.readdir(hdfsPath, (err : any, files : any[] ) => {
+                if(err) {
+                    console.log(err);
+                    deferred.reject(err);
+                }
+                console.log('-------------hdfsClientUtility.ts--------------185')
+                console.log(files.length)
+                deferred.resolve(files);
+            });
+            console.log('-------------hdfsClientUtility.ts--------------188')
+        }
+        
         return deferred.promise;
     }
 
