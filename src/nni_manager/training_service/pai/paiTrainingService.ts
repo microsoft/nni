@@ -116,10 +116,9 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
         if(!this.hdfsBaseDir){
             throw new Error('hdfsBaseDir is not initialized');
         }
-        console.log(this.hdfsBaseDir)
         console.log("--------paiTrainingService---------118---------------")
         const hdfsOutputDir = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
-        const files =await HDFSClientUtility.readdir(hdfsOutputDir, this.hdfsClient);
+        const files = await HDFSClientUtility.readdir(hdfsOutputDir, this.hdfsClient);
         console.log('-------------paiTrainingService.ts--------------120')
         console.log(files.length)
         for (let entry of files) {
