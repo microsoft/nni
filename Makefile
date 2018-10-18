@@ -186,6 +186,7 @@ install-python-modules:
 install-node-modules:
 	mkdir -p $(INSTALL_PREFIX)/nni
 	rm -rf src/nni_manager/dist/node_modules
+	rm -rf $(INSTALL_PREFIX)/nni/nni_manager
 	
 	#$(_INFO) Installing NNI Manager $(_END)
 	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager

@@ -9,10 +9,14 @@ steps:
   - script: python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
-      make easy-install
-      export PATH=$HOME/.nni/bin:$PATH
+      source install.sh
     displayName: 'Install dependencies'
   - script: |
       cd test/naive
-      PATH=$HOME/.local/nni/node/bin:$PATH python3 run.py
+      source $HOME/.bashrc
+      ls $HOME/.local/bin
+      cat $HOME/.local/bin/nnictl
+      export PATH=$HOME/.local/bin:$PATH
+      nnictl --help
+      python3 run.py
     displayName: 'Run tests'
