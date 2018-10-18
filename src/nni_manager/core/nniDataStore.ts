@@ -25,8 +25,8 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
     TrialJobEvent, TrialJobEventRecord, TrialJobInfo } from '../common/datastore';
-import { isNewExperiment } from '../common/experimentStartupInfo';
-import { getExperimentId } from '../common/experimentStartupInfo';
+import { NNIError } from '../common/errors';
+import { getExperimentId, isNewExperiment } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile,  TrialJobStatistics } from '../common/manager';
 import { TrialJobStatus } from '../common/trainingService';
@@ -72,7 +72,11 @@ class NNIDataStore implements DataStore {
     }
 
     public async storeExperimentProfile(experimentProfile: ExperimentProfile): Promise<void> {
-        await this.db.storeExperimentProfile(experimentProfile);
+        try {
+            await this.db.storeExperimentProfile(experimentProfile);
+        } catch (err) {
+            throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
+        }
     }
 
     public getExperimentProfile(experimentId: string): Promise<ExperimentProfile> {
@@ -82,7 +86,11 @@ class NNIDataStore implements DataStore {
     public storeTrialJobEvent(event: TrialJobEvent, trialJobId: string, data?: string, logPath?: string): Promise<void> {
         this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${data}, logpath: ${logPath}`);
 
-        return this.db.storeTrialJobEvent(event, trialJobId, data, logPath);
+        return this.db.storeTrialJobEvent(event, trialJobId, data, logPath).catch(
+                (err: Error) => {
+                    throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
+                }
+            );
     }
 
     public async getTrialJobStatistics(): Promise<any[]> {
@@ -128,14 +136,18 @@ class NNIDataStore implements DataStore {
             return;
         }
         assert(trialJobId === metrics.trial_job_id);
-        await this.db.storeMetricData(trialJobId, JSON.stringify({
-            trialJobId: metrics.trial_job_id,
-            parameterId: metrics.parameter_id,
-            type: metrics.type,
-            sequence: metrics.sequence,
-            data: metrics.value,
-            timestamp: Date.now()
-        }));
+        try {
+            await this.db.storeMetricData(trialJobId, JSON.stringify({
+                trialJobId: metrics.trial_job_id,
+                parameterId: metrics.parameter_id,
+                type: metrics.type,
+                sequence: metrics.sequence,
+                data: metrics.value,
+                timestamp: Date.now()
+            }));
+        } catch (err) {
+            throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
+        }
     }
 
     public getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
