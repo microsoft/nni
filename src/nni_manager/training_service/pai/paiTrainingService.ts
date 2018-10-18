@@ -112,11 +112,21 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
     }
 
     public async copyDataFromHdfs(trialJobId: string): Promise<void>{
-        console.log("-----------------115---------------")
-        if(this.hdfsBaseDir){
-            const hdfsOutputDir = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
-            await HDFSClientUtility.readdir(hdfsOutputDir, this.hdfsClient);
+        console.log("--------paiTrainingService---------115---------------")
+        if(!this.hdfsBaseDir){
+            throw new Error('hdfsBaseDir is not initialized');
         }
+        console.log(this.hdfsBaseDir)
+        console.log("--------paiTrainingService---------118---------------")
+        const hdfsOutputDir = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
+        const files =await HDFSClientUtility.readdir(hdfsOutputDir, this.hdfsClient);
+        console.log('-------------paiTrainingService.ts--------------120')
+        console.log(files.length)
+        for (let entry of files) {
+            console.log(entry);
+        }
+        
+        console.log("--------paiTrainingService---------127---------------")
         return Promise.resolve();
     }
 
