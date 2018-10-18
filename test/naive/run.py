@@ -67,7 +67,7 @@ class Integration_test():
         self.fetch_experiment_config()
         current_trial = 0
 
-        for _ in range(60):
+        for _ in range(100):
             time.sleep(1)
 
             tuner_status = self.read_last_line('tuner_result.txt')
@@ -89,7 +89,7 @@ class Integration_test():
                         current_trial = trial
                         print('Trial #%d done' % trial)
 
-        assert experiment_status, 'Failed to finish in 1 min'
+        assert experiment_status, 'Failed to finish in 100 sec'
 
         ss1 = json.load(open('search_space.json'))
         ss2 = json.load(open('tuner_search_space.json'))
