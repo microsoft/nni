@@ -1,10 +1,13 @@
 import logging
+import os
 
 from nni.assessor import Assessor, AssessResult
 
 _logger = logging.getLogger('NaiveAssessor')
 _logger.info('start')
-_result = open('/tmp/nni_assessor_result.txt', 'w')
+
+_pwd = os.path.dirname(__file__)
+_result = open(os.path.join(_pwd, 'assessor_result.txt'), 'w')
 
 class NaiveAssessor(Assessor):
     def __init__(self, optimize_mode):
@@ -30,7 +33,6 @@ class NaiveAssessor(Assessor):
         return AssessResult.Good
 
     def _on_exit(self):
-        _result.write('DONE\n')
         _result.close()
 
     def _on_error(self):
