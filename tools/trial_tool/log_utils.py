@@ -62,8 +62,10 @@ def get_task_from_training_service(log_manager, nnimanager_ip):
     Detect if it's time to copy data to hdfs
     '''
     try:
-        response = rest_post(gen_read_task_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_EXP_ID, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
+        response = rest_get(gen_read_task_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_EXP_ID, NNI_TRIAL_JOB_ID), 5)
+        print('----------------66---------------')
         result = json.loads(response.text)
+        print(68)
         print('get task from training service')
         print(result.text)
         if result.get('task'):

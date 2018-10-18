@@ -93,7 +93,7 @@ export class PAIJobRestServer extends RestServer{
             }
         });
 
-        router.post(`/task/${this.expId}/:trialId`, (req: Request, res: Response) => {
+        router.get(`/task/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
                 console.log('--------------get task request----------')
                 this.log.info(`Get task request, trial job id is ${req.params.trialId}`);
