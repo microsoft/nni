@@ -98,7 +98,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
         } else {
             const hour = Math.floor(num / 3600);
             const min = Math.floor(num / 60 % 60);
-            return hour > 0 ? `${hour} h ${min} min` : `${min} min`;
+            return hour > 0 ? `${hour}h ${min}min` : `${min}min`;
         }
     }
 
@@ -138,16 +138,24 @@ class Sessionpro extends React.Component<{}, SessionState> {
                     const searchSpace = JSON.parse(sessionData.params.searchSpace);
                     Object.keys(searchSpace).map(item => {
                         const key = searchSpace[item]._type;
-                        if (key === 'loguniform' || key === 'qloguniform') {
-                            let value = searchSpace[item]._value;
-                            const a = Math.pow(10, value[0]);
-                            const b = Math.pow(10, value[1]);
-                            if (a < b) {
+                        let value = searchSpace[item]._value;
+                        switch (key) {
+                            case 'loguniform':
+                            case 'qloguniform':
+                                const a = Math.pow(10, value[0]);
+                                const b = Math.pow(10, value[1]);
                                 value = [a, b];
-                            } else {
-                                value = [b, a];
-                            }
-                            searchSpace[item]._value = value;
+                                searchSpace[item]._value = value;
+                                break;
+
+                            case 'quniform':
+                            case 'qnormal':
+                            case 'qlognormal':
+                                searchSpace[item]._value = [value[0], value[1]];
+                                break;
+
+                            default:
+
                         }
                     });
                     if (this._isMounted) {
@@ -335,7 +343,7 @@ class Sessionpro extends React.Component<{}, SessionState> {
             width: 150,
             className: 'tableHead',
         }, {
-            title: 'Duration/s',
+            title: 'Duration',
             dataIndex: 'duration',
             key: 'duration',
             width: '9%',
