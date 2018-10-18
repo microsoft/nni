@@ -80,8 +80,9 @@ interface HostJobDetail {
 
 interface ITensorBoardManager {
     taskQueue: string[];
-    addCopyDataTask(trialJobId: string): void;
+    addCopyDataTask(trialJobId: string): Promise<void>;
     getLocalDirectory(trialJobId: string): string;
+    copyDataFromHdfs(trialJobId: string): Promise<void>;
 }
 
 /**

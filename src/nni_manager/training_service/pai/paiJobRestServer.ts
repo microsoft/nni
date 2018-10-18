@@ -110,6 +110,20 @@ export class PAIJobRestServer extends RestServer{
             }
         });
 
+        router.get(`/report/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            try {
+                console.log('--------------get report request----------')
+                this.paiTrainingService.copyDataFromHdfs(req.params.trialId).then(()=>{
+                    
+                });
+                res.send()
+            }
+            catch(err) {
+                res.status(500);
+                res.send(err.message);
+            }
+        });
+
         return router;
     }
 }

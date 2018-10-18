@@ -26,11 +26,12 @@ import logging
 import shlex
 import re
 from pyhdfs import HdfsClient
+from multiprocessing import Process
 
 from .hdfsClientUtility import copyDirectoryToHdfs
 from .constants import HOME_DIR, LOG_DIR, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .metrics_reader import read_experiment_metrics
-from .log_utils import get_task_from_training_service, LogManager
+from .log_utils import get_task_from_training_service, report_result_to_training_service, LogManager
 
 logger = logging.getLogger('trial_keeper')
 
@@ -46,9 +47,13 @@ def main_loop(args):
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     process = Popen(args.trial_command, shell = True, stdout = stdout_file, stderr = stderr_file)
     print('Subprocess pid is {}'.format(process.pid))
-    
+
+    #Start tensorboard process
     nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
     log_manager = LogManager(nni_local_output_dir, args.pai_hdfs_output_dir, args.pai_hdfs_host, args.pai_user_name)
+    tensorboard_process = Process(target=report_result_to_training_service, args=(log_manager, args.nnimanager_ip))
+    tensorboard_process.start()
+    
     while True:
         retCode = process.poll()
         ## Read experiment metrics, to avoid missing metrics

@@ -23,10 +23,11 @@ import json
 import os
 import re
 import requests
+import time
 
 from .constants import BASE_URL, DEFAULT_REST_PORT, DEFAULT_HDFS_PORT
 from .rest_utils import rest_get, rest_post, rest_put, rest_delete
-from .url_utils import gen_update_metrics_url, gen_read_task_url
+from .url_utils import gen_update_metrics_url, gen_read_task_url, gen_report_result_url
 from .hdfsClientUtility import copyDirectoryToHdfs
 from pyhdfs import HdfsClient
 
@@ -45,7 +46,7 @@ class LogManager():
         self.user_name = user_name
         self.task_queue = []
     
-    def copyData(self):
+    def copyDataToHdfs(self):
         try:
             hdfs_client = HdfsClient(hosts='{0}:{1}'.format(self.hdfs_host, DEFAULT_HDFS_PORT), user_name=self.user_name, timeout=5)
             if copyDirectoryToHdfs(self.local_dir, self.hdfs_dir, hdfs_client):
@@ -63,12 +64,26 @@ def get_task_from_training_service(log_manager, nnimanager_ip):
     '''
     try:
         response = rest_get(gen_read_task_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_EXP_ID, NNI_TRIAL_JOB_ID), 5)
-        print('----------------66---------------')
         result = json.loads(response.text)
-        print(68)
-        print('get task from training service')
         if result.get('task'):
+            print(result['task'])
             log_manager.task_queue.append(result['task'])
     except Exception as exception:
         print(exception)
         pass
+
+def report_result_to_training_service(log_manager, nnimanager_ip):
+    '''
+    information trainingService to copy data from hdfs
+    '''
+    while True:
+        if log_manager.task_queue:
+            log_manager.task_queue.pop(0)
+            if log_manager.copyDataToHdfs():
+                try:
+                    print('Information training service to copy from hdfs')
+                    response = rest_get(gen_report_result_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_EXP_ID, NNI_TRIAL_JOB_ID), 5)
+                    print('response code:', response.status_code)
+                except Exception as exception:
+                    print(exception)
+        time.sleep(5)
