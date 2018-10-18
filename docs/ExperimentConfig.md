@@ -12,7 +12,7 @@ experimentName:
 trialConcurrency: 
 maxExecDuration: 
 maxTrialNum: 
-#choice: local, remote
+#choice: local, remote, pai
 trainingServicePlatform: 
 searchSpacePath: 
 #choice: true, false
@@ -42,7 +42,7 @@ experimentName:
 trialConcurrency: 
 maxExecDuration: 
 maxTrialNum: 
-#choice: local, remote
+#choice: local, remote, pai
 trainingServicePlatform: 
 searchSpacePath: 
 #choice: true, false
@@ -79,7 +79,7 @@ experimentName:
 trialConcurrency: 
 maxExecDuration: 
 maxTrialNum: 
-#choice: local, remote
+#choice: local, remote, pai
 trainingServicePlatform: 
 #choice: true, false
 useAnnotation: 
@@ -145,6 +145,8 @@ machineList:
 	* __local__ mode means you run an experiment in your local linux machine.  
 	
 	* __remote__ mode means you submit trial jobs to remote linux machines. If you set platform as remote, you should complete __machineList__ field.  
+
+	* __pai__ mode means you submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
 	
 * __searchSpacePath__
   * Description
@@ -268,7 +270,7 @@ experimentName: test_experiment
 trialConcurrency: 3
 maxExecDuration: 1h
 maxTrialNum: 10
-#choice: local, remote
+#choice: local, remote, pai
 trainingServicePlatform: local
 #choice: true, false
 useAnnotation: true
@@ -292,7 +294,7 @@ experimentName: test_experiment
 trialConcurrency: 3
 maxExecDuration: 1h
 maxTrialNum: 10
-#choice: local, remote
+#choice: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: /nni/search_space.json
 #choice: true, false
@@ -324,7 +326,7 @@ experimentName: test_experiment
 trialConcurrency: 3
 maxExecDuration: 1h
 maxTrialNum: 10
-#choice: local, remote
+#choice: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: /nni/search_space.json
 #choice: true, false
@@ -360,7 +362,7 @@ experimentName: test_experiment
 trialConcurrency: 3
 maxExecDuration: 1h
 maxTrialNum: 10
-#choice: local, remote
+#choice: local, remote, pai
 trainingServicePlatform: remote
 searchSpacePath: /nni/search_space.json
 #choice: true, false

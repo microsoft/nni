@@ -69,7 +69,7 @@ export class PAIJobInfoCollector {
         // Rest call to get PAI job info and update status
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const getJobInfoRequest: request.Options = {
-            uri: `http://${paiClusterConfig.host}:9186/api/v1/jobs/${paiTrialJob.paiJobName}`,
+            uri: `http://${paiClusterConfig.host}/rest-server/api/v1/user/${paiClusterConfig.userName}/jobs/${paiTrialJob.paiJobName}`,
             method: 'GET',
             json: true,
             headers: {
