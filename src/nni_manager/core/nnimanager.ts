@@ -25,6 +25,7 @@ import { ChildProcess, spawn } from 'child_process';
 import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
+import { NNIError } from '../common/errors';
 import { getExperimentId } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
@@ -122,7 +123,7 @@ class NNIManager implements Manager {
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
-        console.log(`dispatcher command: ${dispatcherCommand}`);
+        this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
             //expParams.tuner.tunerCommand,
             dispatcherCommand,
@@ -136,6 +137,7 @@ class NNIManager implements Manager {
         this.run().catch((err: Error) => {
             this.criticalError(err);
         });
+
         return this.experimentProfile.id;
     }
 
@@ -146,12 +148,12 @@ class NNIManager implements Manager {
         const expParams: ExperimentParams = this.experimentProfile.params;
 
         // Set up multiphase config
-        if(expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
+        if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
-        console.log(`dispatcher command: ${dispatcherCommand}`);
+        this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
             dispatcherCommand,
             undefined,
@@ -369,8 +371,12 @@ class NNIManager implements Manager {
 
         await Promise.all([
             this.periodicallyUpdateExecDuration(),
-            this.trainingService.run(),
-            this.trialJobsMaintainer.run()]);
+            this.trainingService.run().catch((err: Error) => {
+                throw new NNIError('Training service error', `Training service error: ${err.message}`, err);
+            }),
+            this.trialJobsMaintainer.run().catch((err: Error) => {
+                throw new NNIError('Job maintainer error', `Job maintainer error: ${err.message}`, err);
+            })]);
     }
 
      private addEventListeners(): void {
@@ -380,26 +386,26 @@ class NNIManager implements Manager {
         }
         this.trainingService.addTrialJobMetricListener((metric: TrialJobMetric) => {
             this.onTrialJobMetrics(metric).catch((err: Error) => {
-                this.criticalError(err);
+                this.criticalError(new NNIError('Job metrics error', `Job metrics error: ${err.message}`, err));
             });
         });
 
         this.trialJobsMaintainer.on(async (event: TrialJobMaintainerEvent, trialJobDetail: TrialJobDetail) => {
             this.onTrialJobEvent(event, trialJobDetail).catch((err: Error) => {
-                this.criticalError(err);
+                this.criticalError(new NNIError('Trial job event error', `Trial job event error: ${err.message}`, err));
             });
         });
 
         this.dispatcher.onCommand((commandType: string, content: string) => {
             this.onTunerCommand(commandType, content).catch((err: Error) => {
-                this.criticalError(err);
+                this.criticalError(new NNIError('Tuner command event error', `Tuner command event error: ${err.message}`, err));
             });
         });
     }
 
     private sendInitTunerCommands(): void {
         if (this.dispatcher === undefined) {
-            throw new Error('Error: tuner has not been setup');
+            throw new Error('Dispatcher error: tuner has not been setup');
         }
         // TO DO: we should send INITIALIZE command to tuner if user's tuner needs to run init method in tuner
         this.log.debug(`Send tuner command: update search space: ${this.experimentProfile.params.searchSpace}`);
@@ -479,9 +485,13 @@ class NNIManager implements Manager {
                     };
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
                     this.trialJobsMaintainer.setTrialJob(trialJobDetail.id, Object.assign({}, trialJobDetail));
-                    // TO DO: to uncomment
-                    assert(trialJobDetail.status === 'WAITING');
-                    await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, content, trialJobDetail.url);
+                    const jobDetailSnapshot: TrialJobDetail | undefined = this.trialJobsMaintainer.getTrialJob(trialJobDetail.id);
+                    if (jobDetailSnapshot !== undefined) {
+                        await this.dataStore.storeTrialJobEvent(
+                            jobDetailSnapshot.status, jobDetailSnapshot.id, content, jobDetailSnapshot.url);
+                    } else {
+                        assert(false, `undefined jobdetail in job maintainer: ${trialJobDetail.id}`);
+                    }
                     if (this.currSubmittedTrialNum === this.experimentProfile.params.maxTrialNum) {
                         this.trialJobsMaintainer.setNoMoreTrials();
                     }
