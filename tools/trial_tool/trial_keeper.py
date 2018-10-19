@@ -52,14 +52,14 @@ def main_loop(args):
     #Start tensorboard process
     nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
     log_manager = LogManager(nni_local_output_dir, args.pai_hdfs_output_dir, args.pai_hdfs_host, args.pai_user_name)
-    #task_list = multiprocessing.Manager().list()
-    #tensorboard_process = Process(target=report_result_to_training_service, args=(log_manager, args.nnimanager_ip, task_list))
-    #tensorboard_process.start()
+    task_list = multiprocessing.Manager().list()
+    tensorboard_process = Process(target=report_result_to_training_service, args=(log_manager, args.nnimanager_ip, task_list))
+    tensorboard_process.start()
     
     while True:
         retCode = process.poll()
         ## Read experiment metrics, to avoid missing metrics
-        read_experiment_metrics(args.nnimanager_ip)    
+        read_experiment_metrics(args.nnimanager_ip)
         get_task_from_training_service(args.nnimanager_ip, task_list)
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
@@ -70,9 +70,8 @@ def main_loop(args):
                     print('copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
                 else:
                     print('copy directory from {0} to {1} failed!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
-                print('----going to report result to trainingService------')
+                
                 report_result_to_training_service(log_manager, args.nnimanager_ip, task_list)
-                print('----report succeed------')
             except Exception as exception:
                 print('HDFS copy directory got exception')
                 raise exception
