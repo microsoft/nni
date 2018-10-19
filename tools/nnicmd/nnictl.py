@@ -45,7 +45,7 @@ def parse_args():
 
     # parse resume command
     parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
-    parser_resume.add_argument('--id', '-i', dest='id', help='ID of the experiment you want to resume')
+    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='Rest port of the experiment you want to resume')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse update command
