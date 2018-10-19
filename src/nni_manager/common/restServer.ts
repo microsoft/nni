@@ -47,31 +47,24 @@ export abstract class RestServer {
     }
 
     public start(platForm: string, port?: number, hostName?: string): Promise<void> {
-        console.log('-----------------restServer.ts 50-------------')
         if (this.startTask !== undefined) {
             return this.startTask.promise;
         }
-        console.log('-----------------restServer.ts 54-------------')
         this.startTask = new Deferred<void>();
 
         this.registerRestHandler();
-        console.log('-----------------restServer.ts 58-------------')
         if (hostName) {
             this.hostName = hostName;
         }
         if (port) {
             this.port = port;
         }
-        console.log('--------------restServer.ts 65------------')
-        console.log(platForm);
         this.platForm = platForm;
-        console.log('-----------------restServer.ts 67-------------')
         this.server = this.app.listen(this.port as number, this.hostName).on('listening', () => {
             this.startTask.resolve();
         }).on('error', (e: Error) => {
             this.startTask.reject(e);
         });
-        console.log('-----------------restServer.ts 73-------------')
         return this.startTask.promise;
     }
 
