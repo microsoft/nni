@@ -86,7 +86,7 @@ export namespace ValidationSchemas {
     };
     export const UPDATEEXPERIMENT = {
         query: {
-            update_type: joi.string().required().valid('TRIAL_CONCURRENCY', 'MAX_EXEC_DURATION', 'SEARCH_SPACE')
+            update_type: joi.string().required().valid('TRIAL_CONCURRENCY', 'MAX_EXEC_DURATION', 'SEARCH_SPACE', 'MAX_TRIAL_NUM')
         },
         body: {
             id: joi.string().required(),
