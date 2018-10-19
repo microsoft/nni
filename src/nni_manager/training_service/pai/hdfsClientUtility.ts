@@ -170,26 +170,17 @@ export namespace HDFSClientUtility {
      */
     export async function readdir(hdfsPath : string, hdfsClient : any) : Promise<any[]> {
         const deferred : Deferred<string[]> = new Deferred<any[]>();
-        console.log('-------------hdfsClientUtility.ts--------------173')
         const exist : boolean = await pathExists(hdfsPath, hdfsClient);
-        console.log('-------------hdfsClientUtility.ts--------------175')
-        console.log(hdfsPath)
-        console.log(exist)
         if(!exist) {
             deferred.reject(`${hdfsPath} doesn't exists`);   
         }else{
-            console.log('-------------hdfsClientUtility.ts--------------179')
-
             hdfsClient.readdir(hdfsPath, (err : any, files : any[] ) => {
                 if(err) {
                     console.log(err);
                     deferred.reject(err);
                 }
-                console.log('-------------hdfsClientUtility.ts--------------185')
-                console.log(files.length)
                 deferred.resolve(files);
             });
-            console.log('-------------hdfsClientUtility.ts--------------188')
         }
         
         return deferred.promise;
@@ -212,25 +203,24 @@ export namespace HDFSClientUtility {
         });
         return deferred.promise;
     }
-
+    
+    /**
+     * Copy files from hdfs to local directory
+     * @param hdfsPath 
+     * @param localDirectory 
+     * @param hdfsClient 
+     */
     export async function copyHdfsToLocalDirectory(hdfsPath: string, localDirectory: string, hdfsClient: any): Promise<boolean>{
         const deferred : Deferred<boolean> = new Deferred<boolean>();
         try{
             mkDirP(localDirectory)
-            console.log('-------------hdfsClientUtility.ts--------------219')
             const files = await readdir(hdfsPath, hdfsClient);
             for (let file of files) {
                 const localFullPath = path.join(localDirectory, file.pathSuffix);
                 const hdfsFullPath = path.join(hdfsPath, file.pathSuffix);
                 if(file.type === 'FILE'){
-                    console.log('-------------hdfsClientUtility.ts--------------225')
-                    console.log(file)
                     const buffer = await readFileFromHDFS(hdfsFullPath, hdfsClient);
-                    console.log('-------------hdfsClientUtility.ts--------------228')
                     await fs.promises.writeFile(localFullPath, buffer, { encoding: 'utf8' });
-                    console.log('-------------hdfsClientUtility.ts--------------229')
-                    console.log(localFullPath)
-                    console.log(hdfsFullPath)
                 }else{
                     await copyDirectoryToHdfs(hdfsFullPath, localFullPath, hdfsClient);
                 }
