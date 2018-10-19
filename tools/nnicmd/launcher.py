@@ -34,17 +34,15 @@ from .common_utils import get_yml_content, get_json_content, print_error, print_
 from .constants import *
 from .webui_utils import *
 import time
+import random
+import string
+
+CONFIG_FILE_NAME = ''.join(random.sample(string.ascii_letters + string.digits, 8))
 
 def start_rest_server(port, platform, mode, experiment_id=None):
     '''Run nni manager process'''
+    global CONFIG_FILE_NAME
     print_normal('Checking environment...')
-    nni_config = Config(port)
-    rest_port = nni_config.get_config('restServerPort')
-    running, _ = check_rest_server_quick(rest_port)
-    if rest_port and running:
-        print_error(EXPERIMENT_START_FAILED_INFO % port)
-        exit(1)
-    
     if detect_port(port):
         print_error('Port %s is used by another process, please reset the port!' % port)
         exit(1)
@@ -54,8 +52,8 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     cmds = [manager, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
-    stdout_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stdout')
-    stderr_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+    stdout_full_path = os.path.join(NNICTL_HOME_DIR, CONFIG_FILE_NAME, 'stdout')
+    stderr_full_path = os.path.join(NNICTL_HOME_DIR, CONFIG_FILE_NAME, 'stderr')
     stdout_file = open(stdout_full_path, 'a+')
     stderr_file = open(stderr_full_path, 'a+')
     time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
@@ -89,7 +87,7 @@ def set_trial_config(experiment_config, port):
         return True
     else:
         print('Error message is {}'.format(response.text))
-        stderr_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+        stderr_full_path = os.path.join(NNICTL_HOME_DIR, CONFIG_FILE_NAME, 'stderr')
         with open(stderr_full_path, 'a+') as fout:
             fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         return False
@@ -108,7 +106,7 @@ def set_remote_config(experiment_config, port):
     if not response or not check_response(response):
         if response is not None:
             err_message = response.text
-            stderr_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+            stderr_full_path = os.path.join(NNICTL_HOME_DIR, CONFIG_FILE_NAME, 'stderr')
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
@@ -125,7 +123,7 @@ def set_pai_config(experiment_config, port):
     if not response or not response.status_code == 200:
         if response is not None:
             err_message = response.text
-            stderr_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+            stderr_full_path = os.path.join(NNICTL_HOME_DIR, CONFIG_FILE_NAME, 'stderr')
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
@@ -191,7 +189,7 @@ def set_experiment(experiment_config, mode, port):
     if check_response(response):
         return response
     else:
-        stderr_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+        stderr_full_path = os.path.join(NNICTL_HOME_DIR, CONFIG_FILE_NAME, 'stderr')
         with open(stderr_full_path, 'a+') as fout:
             fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         print_error('Setting experiment error, error message is {}'.format(response.text))
@@ -199,7 +197,8 @@ def set_experiment(experiment_config, mode, port):
 
 def launch_experiment(args, experiment_config, mode, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
-    nni_config = Config(args.port)
+    global CONFIG_FILE_NAME
+    nni_config = Config(CONFIG_FILE_NAME)
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, experiment_id)
     nni_config.set_config('restServerPid', rest_process.pid)
@@ -297,20 +296,29 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
     
     #save experiment information
     experiment_config = Experiments()
-    experiment_config.add_experiment(experiment_id, args.port, start_time)
+    experiment_config.add_experiment(experiment_id, args.port, start_time, CONFIG_FILE_NAME)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
 
 def resume_experiment(args):
     '''resume an experiment'''
-    nni_config = Config(args.port)
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    if experiment_dict.get(args.id) is None:
+        print_error('Id not exist!')
+        exit(1)
+    if experiment_dict[args.id]['status'] == 'running':
+        print_error('Experiment %s is running!' % args.id)
+        exit(1)
+    nni_config = Config(experiment_dict[args.id]['fileName'])
     experiment_config = nni_config.get_config('experimentConfig')
     experiment_id = nni_config.get_config('experimentId')
     launch_experiment(args, experiment_config, 'resume', experiment_id)
 
 def create_experiment(args):
     '''start a new experiment'''
-    nni_config = Config(args.port)
+    global CONFIG_FILE_NAME
+    nni_config = Config(CONFIG_FILE_NAME)
     config_path = os.path.abspath(args.config)
     if not os.path.exists(config_path):
         print_error('Please set correct config path!')

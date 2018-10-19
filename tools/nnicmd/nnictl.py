@@ -45,7 +45,8 @@ def parse_args():
 
     # parse resume command
     parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
-    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='Rest port of the experiment you want to resume')
+    parser_resume.add_argument('--id', '-i', dest='id', required=True, help='The id of the experiment you want to resume')
+    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse update command
@@ -93,7 +94,8 @@ def parse_args():
     parser_experiment_status.add_argument('--id', '-i', dest='id', help='the id of experiment')
     parser_experiment_status.set_defaults(func=experiment_status)
     parser_experiment_list = parser_experiment_subparsers.add_parser('list', help='list all of running experiment ids')
-    parser_experiment_list.set_defaults(func=experiment_id)
+    parser_experiment_list.add_argument('--all', action='store_true', default=False, help='list all of experiments')
+    parser_experiment_list.set_defaults(func=experiment_list)
 
     #TODO:finish webui function
     #parse board command

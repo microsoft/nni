@@ -22,42 +22,64 @@ import os
 import psutil
 import json
 import datetime
+import time
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
-from .constants import NNICTL_HOME_DIR, EXPERIMENT_ID_INFO
+from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT
 import time
-from .common_utils import print_normal, print_error, detect_process
+from .common_utils import print_normal, print_error, print_warning, detect_process
 
-def get_experiment_port(args):
-    '''get the port of an experiment'''
+def check_experiment_id(args):
+    '''check if the id is valid
+    1.If there is an id specified, return the corresponding port
+    2.If there is no id specified, and there is an experiment running, return it as default port, or return Error
+    3.If the id matches an experiment, nnictl will return the id.
+    4.If the id ends with *, nnictl will match all ids matchs the regular
+    5.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
+    6.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
+    7.Users could use 'nnictl stop all' to stop all experiments
+    '''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    #1.If there is an id specified, return the corresponding port
-    #2.If there is no id specified, and there is an experiment running, return it as default port, or return Error
-    #3.If the id matches an experiment, nnictl will return the id.
-    #4.If the id ends with *, nnictl will match all ids matchs the regular
-    #5.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
-    #6.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
-    #7.Users could use 'nnictl stop all' to stop all experiments  
     if not experiment_dict:
-        print_normal('Experiment is not running...')
-        return None
-    if not args.id and len(experiment_dict.keys()) > 1:
-        print_error('There are multiple experiments running, please set the experiment id...')
-        experiment_information = ""
-        for key in experiment_dict.keys():
-            experiment_information += ('Id: ' + key + '    StartTime: ' + experiment_dict[key][1] + '\n')
-        print(EXPERIMENT_ID_INFO % experiment_information)
-        return None
+        print_normal('There is no experiment running...')
+        exit(1)
     if not args.id:
-        return list(experiment_dict.values())[0][0]
+        running_experiment_list = []
+        for key in experiment_dict.keys():
+            if experiment_dict[key]['status'] == 'running':
+                running_experiment_list.append(key)
+        if len(running_experiment_list) > 1:
+            print_error('There are multiple experiments running, please set the experiment id...')
+            experiment_information = ""
+            for key in running_experiment_list:
+                experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
+                experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+            print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
+            exit(1)
+        else:
+            return None
     if experiment_dict.get(args.id):
-        return experiment_dict[args.id][0]
-    else:
-        print_error('Id not correct!')     
         return None
+    else:
+        print_error('Id not correct!')
+        exit(1)
+
+def get_config_filename(args):
+    '''get the file name of config file'''
+    check_experiment_id(args)
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    return experiment_dict[args.id]['fileName']
+
+def get_experiment_port(args):
+    '''get the port of experiment'''
+    check_experiment_id(args)
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    return experiment_dict[args.id]['port']
 
 def convert_time_stamp_to_date(content):
     '''Convert time stamp to date time format'''
@@ -73,10 +95,7 @@ def convert_time_stamp_to_date(content):
 
 def check_rest(args):
     '''check if restful server is running'''
-    port = get_experiment_port(args)
-    if port is None:
-        return None
-    nni_config = Config(port)
+    nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)
     if not running:
@@ -91,27 +110,32 @@ def parse_ids(args):
     if not experiment_dict:
         print_normal('Experiment is not running...')
         return None
-    experiment_id_list = list(experiment_dict.keys())
     result_list = []
+    running_experiment_list = []
+    for key in experiment_dict.keys():
+        if experiment_dict[key]['status'] == 'running':
+            running_experiment_list.append(key)
     if not args.id:
-        if len(experiment_id_list) > 1:
+        if len(running_experiment_list) > 1:
             print_error('There are multiple experiments running, please set the experiment id...')
             experiment_information = ""
-            for key in experiment_dict.keys():
-                experiment_information += ('Id: ' + key + '    StartTime: ' + experiment_dict[key][1] + '\n')
-            print(EXPERIMENT_ID_INFO % experiment_information)
-            return None
-        result_list = experiment_id_list
+            for key in running_experiment_list:
+                experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
+                experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+            print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
+            exit(1)
+        else:
+            result_list = running_experiment_list
     elif args.id == 'all':
-        result_list = experiment_id_list
+        result_list = running_experiment_list
     elif args.id.endswith('*'):
-        for id in experiment_id_list:
+        for id in running_experiment_list:
             if id.startswith(args.id[:-1]):
                 result_list.append(id)
-    elif args.id in experiment_id_list:
+    elif args.id in running_experiment_list:
         result_list.append(args.id)
     else:
-        for id in experiment_id_list:
+        for id in running_experiment_list:
             if id.startswith(args.id):
                 result_list.append(id)
         if len(result_list) > 1:
@@ -128,16 +152,13 @@ def stop_experiment(args):
         experiment_config = Experiments()
         experiment_dict = experiment_config.get_all_experiments()
         for experiment_id in experiment_id_list:
-            port = experiment_dict.get(experiment_id)[0]
-            if port is None:
-                return None
             print_normal('Stoping experiment %s' % experiment_id)
-            nni_config = Config(port)
+            nni_config = Config(experiment_dict[experiment_id]['fileName'])
             rest_port = nni_config.get_config('restServerPort')
             rest_pid = nni_config.get_config('restServerPid')
             if not detect_process(rest_pid):
                 print_normal('Experiment is not running...')
-                experiment_config.remove_experiment(experiment_id)
+                experiment_config.update_experiment(experiment_id, 'status', 'stopped')
                 return
             running, _ = check_rest_server_quick(rest_port)
             stop_rest_result = True
@@ -154,14 +175,13 @@ def stop_experiment(args):
                 call(cmds)
             if stop_rest_result:
                 print_normal('Stop experiment success!')
-            experiment_config.remove_experiment(experiment_id)
+            experiment_config.update_experiment(experiment_id, 'status', 'stopped')
+            time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+            experiment_config.update_experiment(experiment_id, 'endTime', str(time_now))
 
 def trial_ls(args):
     '''List trial'''
-    port = get_experiment_port(args)
-    if port is None:
-        return None
-    nni_config = Config(port)
+    nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
@@ -182,10 +202,7 @@ def trial_ls(args):
 
 def trial_kill(args):
     '''List trial'''
-    port = get_experiment_port(args)
-    if port is None:
-        return None
-    nni_config = Config(port)
+    nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
@@ -203,10 +220,7 @@ def trial_kill(args):
 
 def list_experiment(args):
     '''Get experiment information'''
-    port = get_experiment_port(args)
-    if port is None:
-        return None
-    nni_config = Config(port)
+    nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
@@ -225,10 +239,7 @@ def list_experiment(args):
 
 def experiment_status(args):
     '''Show the status of experiment'''
-    port = get_experiment_port(args)
-    if port is None:
-        return None
-    nni_config = Config(port)
+    nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     result, response = check_rest_server_quick(rest_port)
     if not result:
@@ -246,13 +257,11 @@ def get_log_content(file_name, cmds):
 
 def log_internal(args, filetype):
     '''internal function to call get_log_content'''
-    port = get_experiment_port(args)
-    if port is None:
-        return None
+    file_name = get_config_filename(args)
     if filetype == 'stdout':
-        file_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stdout')
+        file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'stdout')
     else:
-        file_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+        file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'stderr')
     if args.head:
         get_log_content(file_full_path, ['head', '-' + str(args.head), file_full_path])
     elif args.tail:
@@ -273,10 +282,7 @@ def log_stderr(args):
 def log_trial(args):
     ''''get trial log path'''
     trial_id_path_dict = {}
-    port = get_experiment_port(args)
-    if port is None:
-        return None
-    nni_config = Config(port)
+    nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
     if not detect_process(rest_pid):
@@ -304,28 +310,33 @@ def log_trial(args):
 
 def get_config(args):
     '''get config info'''
-    port = get_experiment_port(args)
-    if port is None:
-        return None
-    nni_config = Config(port)
+    nni_config = Config(get_config_filename(args))
     print(nni_config.get_all_config())
 
 def webui_url(args):
     '''show the url of web ui'''
-    port = get_experiment_port(args)
-    if port is None:
-        return None
-    nni_config = Config(port)
+    nni_config = Config(get_config_filename(args))
     print_normal('{0} {1}'.format('Web UI url:', ' '.join(nni_config.get_config('webuiUrl'))))
 
-def experiment_id(args):
-    '''get the id of all experiments'''
+def experiment_list(args):
+    '''get the information of all experiments'''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
         print('There is no experiment running...')
-    else:
-        experiment_information = ""
+        exit(1)
+    experiment_id_list = []
+    if args.all:
         for key in experiment_dict.keys():
-            experiment_information += ('Id: ' + key + '    StartTime: ' + experiment_dict[key][1] + '\n')
-        print(EXPERIMENT_ID_INFO % experiment_information)
+            experiment_id_list.append(key)
+    else:
+        for key in experiment_dict.keys():
+            if experiment_dict[key]['status'] == 'running':
+                experiment_id_list.append(key)
+        if not experiment_id_list:
+            print_warning('There is no experiment running...\nYou can use \'nnictl experiment list --all\' to list all stopped experiments!')
+    experiment_information = ""
+    for key in experiment_id_list:
+        experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
+        experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+    print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)

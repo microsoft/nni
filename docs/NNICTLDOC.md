@@ -50,6 +50,7 @@ nnictl webui
       | Name, shorthand | Required|Default | Description |
       | ------ | ------ | ------ |------ |
     | --port, -p|  False| |Rest port of the experiment you want to resume|
+    | --id, -i|  True| |The id of the experiment you want to resume|
   
      
       
@@ -192,10 +193,16 @@ nnictl webui
 * __nnictl experiment list__
   * Description
       
-	     Show the id and start time of all running experiments.
+	     Show the information of all running experiments.
    * Usage
      
 	     nnictl experiment list
+
+      Options:
+     
+      | Name, shorthand | Required|Default | Description |
+      | ------ | ------ | ------ |------ |
+     | --all|  False| False|Show all of experiments, including stopped experiments.|
 
  
 

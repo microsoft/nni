@@ -25,6 +25,7 @@ from .rest_utils import rest_put, rest_get, check_rest_server_quick, check_respo
 from .url_utils import experiment_url
 from .config_utils import Config
 from .common_utils import get_json_content
+from .nnictl_utils import check_experiment_id, get_experiment_port, get_config_filename
 
 def validate_digit(value, start, end):
     '''validate if a digit is valid'''
@@ -56,7 +57,7 @@ def get_query_type(key):
 
 def update_experiment_profile(args, key, value):
     '''call restful server to update experiment profile'''
-    nni_config = Config(args.port)
+    nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)
     if running:
@@ -95,7 +96,7 @@ def update_duration(args):
 
 def update_trialnum(args):
     validate_digit(args.value, 1, 999999999)
-    if update_experiment_profile('maxTrialNum', int(args.value)):
+    if update_experiment_profile(args, 'maxTrialNum', int(args.value)):
         print('INFO: update %s success!' % 'trialnum')
     else:
         print('ERROR: update %s failed!' % 'trialnum')
