@@ -58,7 +58,7 @@ if python3 -c 'import nni' > /dev/null 2>&1; then
   return
 else
   # Install nni
-  pip3 install -v --user git+https://github.com/SparkSnail/nni.git@dev-tensorboard
+  pip3 install -v --user git+https://github.com/Microsoft/nni.git@v0.2
 fi`;
 
 export const PAI_TRIAL_COMMAND_FORMAT: string =
