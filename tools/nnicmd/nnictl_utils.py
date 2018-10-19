@@ -60,26 +60,26 @@ def check_experiment_id(args):
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
-            return None
+            return running_experiment_list[0]
     if experiment_dict.get(args.id):
-        return None
+        return args.id
     else:
         print_error('Id not correct!')
         exit(1)
 
 def get_config_filename(args):
     '''get the file name of config file'''
-    check_experiment_id(args)
+    experiment_id = check_experiment_id(args)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    return experiment_dict[args.id]['fileName']
+    return experiment_dict[experiment_id]['fileName']
 
 def get_experiment_port(args):
     '''get the port of experiment'''
-    check_experiment_id(args)
+    experiment_id = check_experiment_id(args)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
-    return experiment_dict[args.id]['port']
+    return experiment_dict[experiment_id]['port']
 
 def convert_time_stamp_to_date(content):
     '''Convert time stamp to date time format'''
