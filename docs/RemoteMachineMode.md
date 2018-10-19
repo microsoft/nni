@@ -34,7 +34,7 @@ trialConcurrency: 2
 maxExecDuration: 3h
 # empty means never stop
 maxTrialNum: 100
-# choice: local, remote  
+# choice: local, remote, pai
 trainingServicePlatform: local
 # choice: true, false  
 useAnnotation: true

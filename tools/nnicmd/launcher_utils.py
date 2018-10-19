@@ -97,6 +97,11 @@ def validate_common_content(experiment_config):
             experiment_config['maxExecDuration'] = '999d'
         if experiment_config.get('maxTrialNum') is None:
             experiment_config['maxTrialNum'] = 99999
+        if experiment_config['trainingServicePlatform'] == 'remote':
+            for index in range(len(experiment_config['machineList'])):
+                if experiment_config['machineList'][index].get('port') is None:
+                    experiment_config['machineList'][index]['port'] = 22
+                
     except Exception as exception:
         raise Exception(exception)
 
