@@ -46,7 +46,7 @@ export abstract class RestServer {
         return `http://${this.hostName}:${this.port}`;
     }
 
-    public start(port?: number, hostName?: string): Promise<void> {
+    public start(platForm: string, port?: number, hostName?: string): Promise<void> {
         console.log('-----------------restServer.ts 50-------------')
         if (this.startTask !== undefined) {
             return this.startTask.promise;
@@ -62,8 +62,9 @@ export abstract class RestServer {
         if (port) {
             this.port = port;
         }
-        
-        this.platForm = "pai";
+        console.log('--------------restServer.ts 65------------')
+        console.log(platForm);
+        this.platForm = platForm;
         console.log('-----------------restServer.ts 67-------------')
         this.server = this.app.listen(this.port as number, this.hostName).on('listening', () => {
             this.startTask.resolve();

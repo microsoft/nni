@@ -31,6 +31,7 @@ import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { HostJobApplicationForm, TrainingService, TrialJobStatus, ITensorBoardManager } from '../common/trainingService';
 import { PAITrainingService } from '../training_service/pai/paiTrainingService'
+import { RemoteMachineTrainingService } from '../training_service/remote_machine/remoteMachineTrainingService'
 import { MethodNotImplementedError, NNIError} from '../common/errors';
 
 /**
@@ -40,35 +41,22 @@ class TensorboardManager implements BoardManager {
     
     private DEFAULT_PORT: number = 6006;
     private TENSORBOARD_COMMAND: string = 'PATH=$PATH:~/.local/bin:/usr/local/bin tensorboard';
-    private trainingService: TrainingService;
-    private dataStore: DataStore;
     private tbPid?: number;
     private isRunning: boolean;
-    private platForm: string;
     private tensorBoardManagerInstance: ITensorBoardManager;
+    private log: Logger;
 
     constructor() {
-        this.platForm = "pai";
+        this.log = getLogger();
         this.isRunning = false;
-        let trainingService: undefined;
-        if(this.platForm === "pai") {
-            trainingService = component.get(PAITrainingService);
-        } else {
-
-        }
-        if(trainingService === undefined){
-            throw new Error("trainingService not initialized!");
-        }
+        let trainingService: any = component.get(TrainingService);
         this.tensorBoardManagerInstance = trainingService as ITensorBoardManager;
-        this.trainingService = trainingService as TrainingService;
-        this.dataStore = component.get(DataStore);
     }
     
     public async Run(trialJobId: string): Promise<void>{
         while(this.isRunning){
-            console.log('----------in run------------');
             this.tensorBoardManagerInstance.addCopyDataTask(trialJobId);
-            await delay(10000);
+            await delay(60000);
         }
     }
 
@@ -85,33 +73,31 @@ class TensorboardManager implements BoardManager {
         }
 
         const logDirs: string[] = [];
-        const localDir = this.tensorBoardManagerInstance.getLocalDirectory(trialJobIds[0]);
-        logDirs.push(localDir);
+        for(let trialJobId of trialJobIds){
+            const localDir = this.tensorBoardManagerInstance.getLocalDirectory(trialJobId);
+            logDirs.push(localDir);
+        }
 
         let tensorBoardCmd: string = this.TENSORBOARD_COMMAND;
         if (tbCmd !== undefined && tbCmd.trim().length > 0) {
             tensorBoardCmd = tbCmd;
         }
         const cmd: string = `${tensorBoardCmd} --logdir ${logDirs.join(':')} --port ${tensorBoardPort}`;
-        this.tbPid = await this.runTensorboardProcess(cmd);
+        this.tbPid = await this.runTensorBoardProcess(cmd);
         
-        console.log('--------------before run---------------')
-        this.isRunning = true;
-        
-        this.Run(trialJobIds[0]).catch(()=>{
-
-        });     
+        for(let trialJobId of trialJobIds){
+            this.Run(trialJobId).catch((error)=>{
+                 this.log.error(`Run copy data error: ${error}`);
+            });  
+        }
+   
         return tbEndpoint;
     }
     
-    public async runTensorboardProcess(cmd: string): Promise<number>{
+    public async runTensorBoardProcess(cmd: string): Promise<number>{
         const process: cp.ChildProcess = cp.exec(cmd);
         this.isRunning = true;
         return Promise.resolve(process.pid);
-    }
-    
-    public async cleanUp(): Promise<void> {
-        
     }
     
     public async stopTensorBoard(): Promise<void> {
@@ -121,15 +107,6 @@ class TensorboardManager implements BoardManager {
             this.isRunning = false;
         }
         Promise.resolve();
-    }
-    
-    private async getLogDir(trialJobId: string): Promise<string> {
-        const jobInfo: TrialJobInfo = await this.dataStore.getTrialJob(trialJobId);
-        const logPath: string | undefined = jobInfo.logPath;
-        if (logPath === undefined) {
-            throw new Error(`Failed to find job logPath: ${jobInfo.id}`);
-        }
-        return logPath.split('://')[1].split(':')[1]; //TODO use url parse
     }
 }
 

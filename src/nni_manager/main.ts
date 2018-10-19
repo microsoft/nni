@@ -59,13 +59,9 @@ async function initContainer(platformMode: string): Promise<void> {
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(NNIDataStore).scope(Scope.Singleton);
-    console.log('----------------main.ts-------62')
     Container.bind(BoardManager).to(TensorboardManager).scope(Scope.Singleton);
-    console.log('----------------main.ts-------63')
     const ds: DataStore = component.get(DataStore);
-    console.log('----------------main.ts-------64')
     await ds.init();
-    console.log('----------------main.ts-------65')
 }
 
 function usage(): void {
@@ -103,14 +99,9 @@ initStartupInfo(startMode, experimentId);
 mkDirP(getLogDir()).then(async () => {
     const log: Logger = getLogger();
     try {
-        console.log('----------main.ts 105-------------')
         await initContainer(mode);
-        console.log('----------main.ts 107-------------')
         const restServer: NNIRestServer = component.get(NNIRestServer);
-        console.log('----------main.ts 109-------------')
-        console.log('----------main.ts 110-------------')
-        await restServer.start(port);
-        console.log('----------main.ts 112-------------')
+        await restServer.start(mode, port);
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {
         log.error(`${err.stack}`);

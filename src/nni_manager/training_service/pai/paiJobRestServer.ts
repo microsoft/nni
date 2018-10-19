@@ -98,7 +98,6 @@ export class PAIJobRestServer extends RestServer{
                 
                 this.log.info(`Get task request, trial job id is ${req.params.trialId}`);
                 if(this.paiTrainingService.taskQueue.length > 1){
-                    console.log('--------------get task request----------')
                     this.paiTrainingService.taskQueue.shift();
                     res.send({"task": this.paiTrainingService.taskQueue[0]});
                 }else{
@@ -113,8 +112,6 @@ export class PAIJobRestServer extends RestServer{
 
         router.get(`/report/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
-                console.log('--------------get report request----------')
-                console.log(req.params.trialId)
                 this.paiTrainingService.copyDataFromHdfs(req.params.trialId).then(()=>{
 
                 });

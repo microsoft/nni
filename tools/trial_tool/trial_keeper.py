@@ -32,7 +32,7 @@ import multiprocessing
 from .hdfsClientUtility import copyDirectoryToHdfs
 from .constants import HOME_DIR, LOG_DIR, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .metrics_reader import read_experiment_metrics
-from .log_utils import get_task_from_training_service, report_result_to_training_service, LogManager
+from .log_utils import get_task_from_training_service, report_result_to_training_service_loop, report_result_to_training_service, LogManager
 
 logger = logging.getLogger('trial_keeper')
 
@@ -53,7 +53,7 @@ def main_loop(args):
     nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
     log_manager = LogManager(nni_local_output_dir, args.pai_hdfs_output_dir, args.pai_hdfs_host, args.pai_user_name)
     task_list = multiprocessing.Manager().list()
-    tensorboard_process = Process(target=report_result_to_training_service, args=(log_manager, args.nnimanager_ip, task_list))
+    tensorboard_process = Process(target=report_result_to_training_service_loop, args=(log_manager, args.nnimanager_ip, task_list))
     tensorboard_process.start()
     
     while True:
@@ -70,8 +70,8 @@ def main_loop(args):
                     print('copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
                 else:
                     print('copy directory from {0} to {1} failed!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
-                
-                report_result_to_training_service(log_manager, args.nnimanager_ip, task_list)
+                tensorboard_process.terminate()
+                report_result_to_training_service(log_manager, args.nnimanager_ip)
             except Exception as exception:
                 print('HDFS copy directory got exception')
                 raise exception

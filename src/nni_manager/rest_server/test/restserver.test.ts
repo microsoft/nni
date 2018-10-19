@@ -45,7 +45,7 @@ describe('Unit test for rest server', () => {
         Container.bind(DataStore).to(MockedDataStore);
         Container.bind(TrainingService).to(MockedTrainingService);
         const restServer: NNIRestServer = component.get(NNIRestServer);
-        restServer.start().then(() => {
+        restServer.start('local').then(() => {
             ROOT_URL = `${restServer.endPoint}/api/v1/nni`;
             done();
         }).catch((e: Error) => {

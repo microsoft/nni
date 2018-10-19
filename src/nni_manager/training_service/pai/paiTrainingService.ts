@@ -85,7 +85,7 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
 
     public async run(): Promise<void> {
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
-        await restServer.start();
+        await restServer.start('pai');
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
             await this.paiJobCollector.updateTrialStatusFromPAI(this.paiToken, this.paiClusterConfig);
@@ -99,7 +99,6 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
     }
 
     public async addCopyDataTask(trialJobId: string): Promise<void>{
-        console.log('-----------in pai copy data-------')
         //1. get local path and remote path
         //2. inform trial keeper to copy data to hdfs
         //3. after copy data, trial keeper inform trainingService to copy data to local
@@ -112,28 +111,14 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
     }
 
     public async copyDataFromHdfs(trialJobId: string): Promise<void>{
-        console.log("--------paiTrainingService---------115---------------")
         if(!this.hdfsBaseDir){
             throw new Error('hdfsBaseDir is not initialized');
         }
-        console.log("--------paiTrainingService---------118---------------")
         const hdfsOutputDir = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
-        console.log(this.hdfsBaseDir)
-        console.log(this.experimentId)
-        console.log(trialJobId)
-        console.log(this.hdfsBaseDir)
-        const files = await HDFSClientUtility.readdir(hdfsOutputDir, this.hdfsClient);
-        console.log('-------------paiTrainingService.ts--------------120')
-        console.log(files.length)
-        for (let entry of files) {
-            console.log(entry);
-        }
         const localDir = this.getLocalDirectory(trialJobId);
-        console.log('-------------paiTrainingService.ts--------------132')
         await HDFSClientUtility.copyHdfsToLocalDirectory(hdfsOutputDir, localDir, this.hdfsClient).catch((err)=>{
             console.log(err);
         });
-        console.log("--------paiTrainingService---------127---------------")
         return Promise.resolve();
     }
 

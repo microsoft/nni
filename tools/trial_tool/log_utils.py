@@ -70,20 +70,22 @@ def get_task_from_training_service(nnimanager_ip, task_list):
             task_list.append(result['task'])
     except Exception as exception:
         print(exception)
-        pass
 
-def report_result_to_training_service(log_manager, nnimanager_ip, task_list):
+def report_result_to_training_service_loop(log_manager, nnimanager_ip, task_list):
     '''
-    information trainingService to copy data from hdfs
+    inform trainingService to copy data from hdfs
     '''
     while True:
         if task_list:
             task_list.pop(0)
-            if log_manager.copyDataToHdfs():
-                try:
-                    print('Information training service to copy from hdfs')
-                    response = rest_get(gen_report_result_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_EXP_ID, NNI_TRIAL_JOB_ID), 5)
-                    print('response code:', response.status_code)
-                except Exception as exception:
-                    print(exception)
+            report_result_to_training_service(log_manager, nnimanager_ip)
         time.sleep(5)
+
+def report_result_to_training_service(log_manager, nnimanager_ip):
+    if log_manager.copyDataToHdfs():
+        try:
+            print('Inform training service to copy data from hdfs')
+            response = rest_get(gen_report_result_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_EXP_ID, NNI_TRIAL_JOB_ID), 5)
+            print('response code:', response.status_code)
+        except Exception as exception:
+            print(exception)
