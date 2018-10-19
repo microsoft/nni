@@ -49,7 +49,7 @@ nnictl webui
      
       | Name, shorthand | Required|Default | Description |
       | ------ | ------ | ------ |------ |
-    | --experiment, -e|  False| |ID of the experiment you want to resume|
+    | --id, -i|  False| |ID of the experiment you want to resume|
   
      
       
