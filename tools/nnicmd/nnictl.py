@@ -21,7 +21,7 @@
 
 import argparse
 from .launcher import create_experiment, resume_experiment
-from .updater import update_searchspace, update_concurrency, update_duration
+from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum
 from .nnictl_utils import *
 from .package_management import *
 from .constants import *
