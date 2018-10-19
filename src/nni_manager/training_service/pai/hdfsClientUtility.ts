@@ -176,7 +176,6 @@ export namespace HDFSClientUtility {
         }else{
             hdfsClient.readdir(hdfsPath, (err : any, files : any[] ) => {
                 if(err) {
-                    console.log(err);
                     deferred.reject(err);
                 }
                 deferred.resolve(files);

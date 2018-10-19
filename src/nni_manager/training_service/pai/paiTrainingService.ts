@@ -117,7 +117,7 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
         const hdfsOutputDir = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
         const localDir = this.getLocalDirectory(trialJobId);
         await HDFSClientUtility.copyHdfsToLocalDirectory(hdfsOutputDir, localDir, this.hdfsClient).catch((err)=>{
-            console.log(err);
+            this.log.error(err);
         });
         return Promise.resolve();
     }
@@ -205,7 +205,7 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
         const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
         const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
         
-        const hdfsOutputDir = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
+        const hdfsOutputDir : string = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
         const hdfsLogPath : string = String.Format(
             PAI_LOG_PATH_FORMAT,
             this.hdfsOutputHost,
