@@ -227,7 +227,7 @@ export namespace HDFSClientUtility {
                     console.log(file)
                     const buffer = await readFileFromHDFS(hdfsFullPath, hdfsClient);
                     console.log('-------------hdfsClientUtility.ts--------------228')
-                    await fs.promises.writeFile(localFullPath, buffer.toString(), { encoding: 'utf8' });
+                    await fs.promises.writeFile(localFullPath, buffer, { encoding: 'utf8' });
                     console.log('-------------hdfsClientUtility.ts--------------229')
                     console.log(localFullPath)
                     console.log(hdfsFullPath)
