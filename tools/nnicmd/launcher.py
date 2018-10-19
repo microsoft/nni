@@ -297,7 +297,10 @@ def resume_experiment(args):
     '''resume an experiment'''
     nni_config = Config()
     experiment_config = nni_config.get_config('experimentConfig')
-    experiment_id = nni_config.get_config('experimentId')
+    if args.id:
+        experiment_id = args.id
+    else:
+        experiment_id = nni_config.get_config('experimentId')
     launch_experiment(args, experiment_config, 'resume', args.webuiport, experiment_id)
 
 def create_experiment(args):
