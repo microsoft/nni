@@ -34,6 +34,7 @@ from .common_utils import get_yml_content, get_json_content, print_error, print_
 from .constants import *
 from .webui_utils import *
 import time
+from .nnictl_utils import get_experiment_port
 
 def start_rest_server(port, platform, mode, experiment_id=None):
     '''Run nni manager process'''
@@ -303,12 +304,12 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
 
 def resume_experiment(args):
     '''resume an experiment'''
-    nni_config = Config(args.port)
+    port = get_experiment_port(args)
+    if port is None:
+        return None
+    nni_config = Config(port)
     experiment_config = nni_config.get_config('experimentConfig')
-    if args.id:
-        experiment_id = args.id
-    else:
-        experiment_id = nni_config.get_config('experimentId')
+    experiment_id = nni_config.get_config('experimentId')
     launch_experiment(args, experiment_config, 'resume', experiment_id)
 
 def create_experiment(args):

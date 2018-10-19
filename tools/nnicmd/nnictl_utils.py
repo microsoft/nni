@@ -137,6 +137,7 @@ def stop_experiment(args):
             rest_pid = nni_config.get_config('restServerPid')
             if not detect_process(rest_pid):
                 print_normal('Experiment is not running...')
+                experiment_config.remove_experiment(experiment_id)
                 return
             running, _ = check_rest_server_quick(rest_port)
             stop_rest_result = True
@@ -153,7 +154,6 @@ def stop_experiment(args):
                 call(cmds)
             if stop_rest_result:
                 print_normal('Stop experiment success!')
-            experiment_config = Experiments()
             experiment_config.remove_experiment(experiment_id)
 
 def trial_ls(args):
