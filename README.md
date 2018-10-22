@@ -46,16 +46,16 @@ source ~/.bashrc
 
 ## **Documentation**
 * [Overview](docs/Overview.md)
-* [Get started](docs/Overview.md)
+* [Get started](docs/GetStarted.md)
 ## **How to**
 * [Installation](docs/InstallNNI_Ubuntu.md)
-* [Use command line tool nnictl](docs/InstallNNI_Ubuntu.md)
-* [Use NNIBoard](docs/InstallNNI_Ubuntu.md)
-* [Define search space](docs/InstallNNI_Ubuntu.md)
-* [Use NNI sdk](docs/InstallNNI_Ubuntu.md)
-* [Config an experiment](docs/InstallNNI_Ubuntu.md)
-* [Use annotation](docs/InstallNNI_Ubuntu.md)
-* [Debug](docs/InstallNNI_Ubuntu.md)
+* [Use command line tool nnictl](docs/NNICTLDOC.md)
+* [Use NNIBoard](docs/WebUI.md)
+* [Define search space](docs/SearchSpaceSpec.md)
+* [Use NNI sdk] - *coming soon*
+* [Config an experiment](docs/ExperimentConfig.md)
+* [Use annotation]- *coming soon*
+* [Debug](docs/HowToDebug.md)
 ## **Tutorials**
 * [Try different tuners and assessors]()
 * [How to run an experiment on local (with multiple GPUs)?]()
@@ -66,18 +66,11 @@ source ~/.bashrc
 * [Implement a customized assessor]()
 * [Implement a custmoized weight sharing algorithm]()
 * [How to integrate NNI with your own custmoized training service]()
-
-
-
 ## **Best practice**
 1. [Create and Run your first experiement at local with NNI API](docs/tutorial_1_CR_exp_local_api.md)
 2. [Run an experiment on multiple machines](docs/tutorial_2_RemoteMachineMode.md)
 3. [Compare different AutoML algorithms] - *coming soon*
 4. [Serve NNI as a capability of a ML Platform] - *coming soon*
-
-## **For more information**
-* [NNI Overview](docs/Overview.md)
-* [Install NNI on Ubuntu](docs/InstallNNI_Ubuntu.md)
 
 ## **Contribute**
 This project welcomes contributions and suggestions, we are constructing the contribution guidelines, stay tuned =).
