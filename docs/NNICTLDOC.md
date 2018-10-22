@@ -49,8 +49,8 @@ nnictl webui
      
       | Name, shorthand | Required|Default | Description |
       | ------ | ------ | ------ |------ |
+    | --id, -i|  True| |The id of the experiment you want to resume|  
     | --port, -p|  False| |Rest port of the experiment you want to resume|
-    | --id, -i|  True| |The id of the experiment you want to resume|
   
      
       
@@ -193,7 +193,7 @@ nnictl webui
 * __nnictl experiment list__
   * Description
       
-	     Show the information of all running experiments.
+	     Show the information of all the (running) experiments.
    * Usage
      
 	     nnictl experiment list
