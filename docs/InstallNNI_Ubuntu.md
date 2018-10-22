@@ -25,16 +25,28 @@
       source install.sh
 
 
-## Further reading
-* [NNI Overview](docs/Overview.md)
-* [Tutorial: Create and Run your first experiement at local with NNI API](docs/tutorial_1_CR_exp_local_api.md)
-* [Tutorial: Run an experiment on multiple machines](docs/tutorial_2_RemoteMachineMode.md)
-* [How to write a Trial?](howto_1_WriteTrial.md)
-* [How to write a customized Tuner?](howto_2_CustomizedTuner.md)
-* [How to write a customized Assessor?](../examples/assessors/README.md)
-* [How to enable Assessor for early stop in an experiment?](EnableAssessor.md)
-
-* [Tutorial: Compare different AutoML algorithms] - *coming soon*
-* [Tutorial: Serve NNI as a capability of a ML Platform] - *coming soon*
-* [How to write an experiment?] - *coming soon*
-* [How to resume an experiment?] - *coming soon*
+## Learn More
+* [Get started](GetStarted.md)
+### **How to**
+* [Use command line tool nnictl](InstallNNI_Ubuntu.md)
+* [Use NNIBoard](InstallNNI_Ubuntu.md)
+* [Define search space](InstallNNI_Ubuntu.md)
+* [Use NNI sdk](InstallNNI_Ubuntu.md)
+* [Config an experiment](InstallNNI_Ubuntu.md)
+* [Use annotation](InstallNNI_Ubuntu.md)
+* [Debug](InstallNNI_Ubuntu.md)
+### **Tutorials**
+* [Try different tuners and assessors]()
+* [How to run an experiment on local (with multiple GPUs)?]()
+* [How to run an experiment on multiple machines?]()
+* [How to run an experiment on OpenPAI?]()
+* [How to run an experiment on K8S services?]()
+* [Implement a customized tuner]()
+* [Implement a customized assessor]()
+* [Implement a custmoized weight sharing algorithm]()
+* [How to integrate NNI with your own custmoized training service]()
+### **Best practice**
+1. [Create and Run your first experiement at local with NNI API](tutorial_1_CR_exp_local_api.md)
+2. [Run an experiment on multiple machines](tutorial_2_RemoteMachineMode.md)
+3. [Compare different AutoML algorithms] - *coming soon*
+4. [Serve NNI as a capability of a ML Platform] - *coming soon*
