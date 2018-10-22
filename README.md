@@ -57,20 +57,18 @@ source ~/.bashrc
 * [Use annotation]- *coming soon*
 * [Debug](docs/HowToDebug.md)
 ## **Tutorials**
-* [Try different tuners and assessors]()
-* [How to run an experiment on local (with multiple GPUs)?]()
-* [How to run an experiment on multiple machines?]()
-* [How to run an experiment on OpenPAI?]()
-* [How to run an experiment on K8S services?]()
-* [Implement a customized tuner]()
-* [Implement a customized assessor]()
-* [Implement a custmoized weight sharing algorithm]()
-* [How to integrate NNI with your own custmoized training service]()
-## **Best practice**
-1. [Create and Run your first experiement at local with NNI API](docs/tutorial_1_CR_exp_local_api.md)
-2. [Run an experiment on multiple machines](docs/tutorial_2_RemoteMachineMode.md)
-3. [Compare different AutoML algorithms] - *coming soon*
-4. [Serve NNI as a capability of a ML Platform] - *coming soon*
+* [How to run an experiment on local (with multiple GPUs)?](docs/tutorial_1_CR_exp_local_api.md)
+* [How to run an experiment on multiple machines?](docs/tutorial_2_RemoteMachineMode.md)
+* [How to run an experiment on OpenPAI?](docs/PAIMode.md)
+* [Try different tuners and assessors] - *coming soon*
+* [How to run an experiment on K8S services?] - *coming soon*
+* [Implement a customized tuner] - *coming soon*
+* [Implement a customized assessor] - *coming soon*
+* [Implement a custmoized weight sharing algorithm] - *coming soon*
+* [How to integrate NNI with your own custmoized training service] - *coming soon*
+### **Best practice**
+* [Compare different AutoML algorithms] - *coming soon*
+* [Serve NNI as a capability of a ML Platform] - *coming soon*
 
 ## **Contribute**
 This project welcomes contributions and suggestions, we are constructing the contribution guidelines, stay tuned =).

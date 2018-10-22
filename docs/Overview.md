@@ -40,25 +40,23 @@ NNI provides a set of examples in the package to get you familiar with the above
 * [Get started](GetStarted.md)
 ### **How to**
 * [Installation](InstallNNI_Ubuntu.md)
-* [Use command line tool nnictl](InstallNNI_Ubuntu.md)
-* [Use NNIBoard](InstallNNI_Ubuntu.md)
+* [Use command line tool nnictl](NNICTLDOC.md)
+* [Use NNIBoard](WebUI.md)
 * [Define search space](InstallNNI_Ubuntu.md)
-* [Use NNI sdk](InstallNNI_Ubuntu.md)
-* [Config an experiment](InstallNNI_Ubuntu.md)
-* [Use annotation](InstallNNI_Ubuntu.md)
-* [Debug](InstallNNI_Ubuntu.md)
+* [Use NNI sdk] - *coming soon*
+* [Config an experiment](SearchSpaceSpec.md)
+* [Use annotation](AnnotationSpec.md)
+* [Debug](HowToDebug.md)
 ### **Tutorials**
-* [Try different tuners and assessors]()
-* [How to run an experiment on local (with multiple GPUs)?]()
-* [How to run an experiment on multiple machines?]()
-* [How to run an experiment on OpenPAI?]()
-* [How to run an experiment on K8S services?]()
-* [Implement a customized tuner]()
-* [Implement a customized assessor]()
-* [Implement a custmoized weight sharing algorithm]()
-* [How to integrate NNI with your own custmoized training service]()
+* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
+* [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
+* [How to run an experiment on OpenPAI?](PAIMode.md)
+* [Try different tuners and assessors] - *coming soon*
+* [How to run an experiment on K8S services?] - *coming soon*
+* [Implement a customized tuner] - *coming soon*
+* [Implement a customized assessor] - *coming soon*
+* [Implement a custmoized weight sharing algorithm] - *coming soon*
+* [How to integrate NNI with your own custmoized training service] - *coming soon*
 ### **Best practice**
-1. [Create and Run your first experiement at local with NNI API](tutorial_1_CR_exp_local_api.md)
-2. [Run an experiment on multiple machines](tutorial_2_RemoteMachineMode.md)
-3. [Compare different AutoML algorithms] - *coming soon*
-4. [Serve NNI as a capability of a ML Platform] - *coming soon*
+* [Compare different AutoML algorithms] - *coming soon*
+* [Serve NNI as a capability of a ML Platform] - *coming soon*
