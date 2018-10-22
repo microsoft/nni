@@ -110,7 +110,7 @@ class PAITrainingService implements TrainingService, ITensorBoardManager {
         
     }
 
-    public async copyDataFromHdfs(trialJobId: string): Promise<void>{
+    public async copyData(trialJobId: string): Promise<void>{
         if(!this.hdfsBaseDir){
             throw new Error('hdfsBaseDir is not initialized');
         }
