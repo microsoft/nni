@@ -34,7 +34,7 @@ An experiment is to run multiple trial jobs, each trial job tries a configuratio
 
 **Prepare trial**: Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example: 
 
-      python ~/nni/examples/trials/mnist-annotation/mnist.py
+      python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 
 This command will be filled in the yaml configure file below. Please refer to [here]() for how to write your own trial.
 
@@ -89,12 +89,12 @@ You can refer to [here](NNICTLDOC.md) for more usage guide of *nnictl* command l
 The experiment has been running now, NNI provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features. The WebUI is opened by default by `nnictl create`.
 
 ## Further reading
-* [How to write a trial running on NNI (Mnist as an example)?](WriteYourTrial.md)
-* [Tutorial of NNI python annotation.](../tools/nni_annotation/README.md)
-* [Tuners supported by NNI.](../src/sdk/pynni/nni/README.md)
-* [How to enable early stop (i.e. assessor) in an experiment?](EnableAssessor.md)
-* [How to run an experiment on multiple machines?](RemoteMachineMode.md)
-* [How to write a customized tuner?](CustomizedTuner.md)
-* [How to write a customized assessor?](../examples/assessors/README.md)
-* [How to resume an experiment?](NNICTLDOC.md)
-* [Tutorial of the command tool *nnictl*.](NNICTLDOC.md)
+* [Overview](Overview.md)
+* [Installation](InstallNNI_Ubuntu.md)
+* [Use command line tool nnictl](NNICTLDOC.md)
+* [Use NNIBoard](WebUI.md)
+* [Define search space](SearchSpaceSpec.md)
+* [Config an experiment](ExperimentConfig.md)
+* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
+* [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
+* [How to run an experiment on OpenPAI?](PAIMode.md)
