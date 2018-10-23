@@ -2,7 +2,8 @@ Dockerfile
 ===
 ## 1.Description  
 This is the Dockerfile of nni project, including the most kinds of deeplearning frameworks and nni source code.  You can run your nni experiment in this docker container directly.
-Dockerfile could build docker image, users could build their customized docker image using this file.
+Dockerfile.build.base could build the base Docker image, users can get a docker image with Ubuntu and NNI environment after building this file. 
+Dockerfile could build the customized docker image, users could build their customized docker image using this file.
 ## 2.Including Libraries  
 
 ```
@@ -16,5 +17,6 @@ NNI v0.1
 
 ## 3 How to run  
     
+    docker build -f Dockerfile.build.base -t nni.build.base:cuda9.0-cudnn7-devel-ubuntu16.04 .
     docker build -t nni/nni .
-    nvidia-docker run -it nni/nni 
+    nvidia-docker run -it nni/nni
