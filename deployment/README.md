@@ -17,6 +17,5 @@ NNI v0.1
 
 ## 3 How to run  
     
-    docker build -f Dockerfile.build.base -t nni.build.base:cuda9.0-cudnn7-devel-ubuntu16.04 .
     docker build -t nni/nni .
     nvidia-docker run -it nni/nni
