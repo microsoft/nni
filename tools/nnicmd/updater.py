@@ -75,24 +75,30 @@ def update_experiment_profile(args, key, value):
 def update_searchspace(args):
     validate_file(args.filename)
     content = load_search_space(args.filename)
-    if update_experiment_profile(args, 'searchSpace', content):
-        print('INFO: update %s success!' % 'searchSpace')
-    else:
-        print('ERROR: update %s failed!' % 'searchSpace')
+    args.port = get_experiment_port(args)
+    if args.port is not None:
+        if update_experiment_profile(args, 'searchSpace', content):
+            print('INFO: update %s success!' % 'searchSpace')
+        else:
+            print('ERROR: update %s failed!' % 'searchSpace')
 
 def update_concurrency(args):
     validate_digit(args.value, 1, 1000)
-    if update_experiment_profile(args, 'trialConcurrency', int(args.value)):
-        print('INFO: update %s success!' % 'concurrency')
-    else:
-        print('ERROR: update %s failed!' % 'concurrency')
+    args.port = get_experiment_port(args)
+    if args.port is not None:
+        if update_experiment_profile(args, 'trialConcurrency', int(args.value)):
+            print('INFO: update %s success!' % 'concurrency')
+        else:
+            print('ERROR: update %s failed!' % 'concurrency')
 
 def update_duration(args):
     validate_digit(args.value, 1, 999999999)
-    if update_experiment_profile(args, 'maxExecDuration', int(args.value)):
-        print('INFO: update %s success!' % 'duration')
-    else:
-        print('ERROR: update %s failed!' % 'duration')
+    args.port = get_experiment_port(args)
+    if args.port is not None:
+        if update_experiment_profile(args, 'maxExecDuration', int(args.value)):
+            print('INFO: update %s success!' % 'duration')
+        else:
+            print('ERROR: update %s failed!' % 'duration')
 
 def update_trialnum(args):
     validate_digit(args.value, 1, 999999999)
