@@ -49,7 +49,6 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     cmds = [manager, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
-    print(cmds)
     stdout_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stdout')
     stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
     stdout_file = open(stdout_full_path, 'a+')
