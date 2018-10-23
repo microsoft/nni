@@ -343,3 +343,7 @@ def experiment_list(args):
         experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
         experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
+
+def start_tensorboard(args):
+    '''start tensorboard'''
+    pass

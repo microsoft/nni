@@ -148,6 +148,13 @@ def parse_args():
     parser_package_show = parser_package_subparsers.add_parser('show', help='show the information of packages')
     parser_package_show.set_defaults(func=package_show)
 
+    #parse tensorboard command
+    parser_tensorboard = subparsers.add_parser('tensorboard', help='manage tensorboard')
+    parser_tensorboard_subparsers = parser_tensorboard.add_subparsers()
+    parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('start', help='start tensorboard')
+    parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
+    parser_tensorboard_start.set_defaults(func=start_tensorboard)
+
     args = parser.parse_args()
     args.func(args)
 
