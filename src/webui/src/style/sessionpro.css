@@ -44,9 +44,7 @@
     width: 50%;
 }
 .session .head .headCon>div .message{
-    width: 30px;
     height: 100%;
-    margin: 0 auto;
     padding-left: 6px;
     box-sizing: border-box;
 }
@@ -71,8 +69,9 @@
     padding-top: 21px;
 }
 .session .head .headCon>div .logo{
-    width: 100%;
+    width: 113px;
     height: 100%;
+    margin-top: 6px;
 }
 .session .head .headCon>div .logo i{
     width: 60px;
@@ -122,6 +121,7 @@
 .messcont{
     padding-left: 10px;
     font-size: 14px;
+    white-space:nowrap;
 }
 .searchTitle {
     /* font-size: 30px; */
