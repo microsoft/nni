@@ -14,13 +14,15 @@ CLEAR = '\33[0m'
 
 EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
 
-def run(installed = True):
-    
+def run(mode = 'local'):
+    assert mode == 'local' or mode == 'remote', '`mode` must be `local` or `remote`'
+    config_file = str(mode) + '.yml'
+
     to_remove = ['tuner_search_space.json', 'tuner_result.txt', 'assessor_result.txt']
     to_remove = list(map(lambda file: 'naive_test/' + file, to_remove))
     remove_files(to_remove)
 
-    proc = subprocess.run(['nnictl', 'create', '--config', 'naive_test/local.yml'])
+    proc = subprocess.run(['nnictl', 'create', '--config', 'naive_test/' + config_file])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     print('Spawning trials...')
@@ -28,8 +30,9 @@ def run(installed = True):
     nnimanager_log_path = fetch_experiment_config(EXPERIMENT_URL)
     current_trial = 0
 
-    for _ in range(60):
+    for _ in range(180):
         time.sleep(1)
+        print(_)
 
         tuner_status = read_last_line('naive_test/tuner_result.txt')
         assessor_status = read_last_line('naive_test/assessor_result.txt')
@@ -50,7 +53,7 @@ def run(installed = True):
                     current_trial = trial
                     print('Trial #%d done' % trial)
 
-    assert experiment_status, 'Failed to finish in 1 min'
+    assert experiment_status, 'Failed to finish in 3 min'
 
     ss1 = json.load(open('naive_test/search_space.json'))
     ss2 = json.load(open('naive_test/tuner_search_space.json'))
@@ -70,7 +73,7 @@ if __name__ == '__main__':
     installed = (sys.argv[-1] != '--preinstall')
     setup_experiment(installed)
     try:
-        run()
+        run('remote')
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:
