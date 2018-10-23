@@ -66,6 +66,10 @@ def parse_args():
     parser_updater_duration.add_argument('--id', '-i', dest='id', help='the id of experiment')
     parser_updater_duration.add_argument('--value', '-v', required=True)
     parser_updater_duration.set_defaults(func=update_duration)
+    parser_updater_trialnum = parser_updater_subparsers.add_parser('trialnum', help='update maxtrialnum')
+    parser_updater_trialnum.add_argument('--id', '-i', dest='id', help='the id of experiment')
+    parser_updater_trialnum.add_argument('--value', '-v', required=True)
+    parser_updater_trialnum.set_defaults(func=update_trialnum)
 
     #parse stop command
     parser_stop = subparsers.add_parser('stop', help='stop the experiment')
