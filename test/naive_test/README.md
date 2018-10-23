@@ -1,9 +1,9 @@
 ## Usage
 
 * To test before installing:
-`./run.py --preinstall`
+`python3 run.py --preinstall`
 * To test the integrity of installation:
-`./run.py`
+`python3 run.py`
 * It will print `PASS` in green eventually if everything works well.
 
 ## Details

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-
 import json
 import subprocess
 import sys
 import time
+import traceback
 
 from utils import check_experiment_status, fetch_experiment_config, read_last_line, remove_files, setup_experiment
 
