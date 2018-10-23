@@ -175,7 +175,7 @@ def test(epoch):
 
 if __name__ == '__main__':
     try:
-        RCV_CONFIG = nni.get_parameters()
+        RCV_CONFIG = nni.get_next_parameter()
         #RCV_CONFIG = {'lr': 0.1, 'optimizer': 'Adam', 'model':'senet18'}
         _logger.debug(RCV_CONFIG)
 
