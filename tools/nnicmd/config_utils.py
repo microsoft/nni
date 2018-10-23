@@ -26,8 +26,8 @@ from .constants import NNICTL_HOME_DIR
 
 class Config:
     '''a util class to load and save config'''
-    def __init__(self, port):
-        config_path = os.path.join(NNICTL_HOME_DIR, str(port))
+    def __init__(self, file_path):
+        config_path = os.path.join(NNICTL_HOME_DIR, str(file_path))
         os.makedirs(config_path, exist_ok=True)
         self.config_file = os.path.join(config_path, '.config')
         self.config = self.read_file()

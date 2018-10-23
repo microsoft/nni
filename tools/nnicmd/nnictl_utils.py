@@ -33,13 +33,6 @@ from .common_utils import print_normal, print_error, print_warning, detect_proce
 
 def check_experiment_id(args):
     '''check if the id is valid
-    1.If there is an id specified, return the corresponding port
-    2.If there is no id specified, and there is an experiment running, return it as default port, or return Error
-    3.If the id matches an experiment, nnictl will return the id.
-    4.If the id ends with *, nnictl will match all ids matchs the regular
-    5.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
-    6.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
-    7.Users could use 'nnictl stop all' to stop all experiments
     '''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
@@ -59,6 +52,9 @@ def check_experiment_id(args):
                 experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
+        elif not running_experiment_list:
+            print_error('There is no experiment running!')
+            exit(1)
         else:
             return running_experiment_list[0]
     if experiment_dict.get(args.id):
@@ -67,44 +63,15 @@ def check_experiment_id(args):
         print_error('Id not correct!')
         exit(1)
 
-def get_config_filename(args):
-    '''get the file name of config file'''
-    experiment_id = check_experiment_id(args)
-    experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
-    return experiment_dict[experiment_id]['fileName']
-
-def get_experiment_port(args):
-    '''get the port of experiment'''
-    experiment_id = check_experiment_id(args)
-    experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
-    return experiment_dict[experiment_id]['port']
-
-def convert_time_stamp_to_date(content):
-    '''Convert time stamp to date time format'''
-    start_time_stamp = content.get('startTime')
-    end_time_stamp = content.get('endTime')
-    if start_time_stamp:
-        start_time = datetime.datetime.utcfromtimestamp(start_time_stamp // 1000).strftime("%Y/%m/%d %H:%M:%S")
-        content['startTime'] = str(start_time)
-    if end_time_stamp:
-        end_time = datetime.datetime.utcfromtimestamp(end_time_stamp // 1000).strftime("%Y/%m/%d %H:%M:%S")
-        content['endTime'] = str(end_time)
-    return content
-
-def check_rest(args):
-    '''check if restful server is running'''
-    nni_config = Config(get_config_filename(args))
-    rest_port = nni_config.get_config('restServerPort')
-    running, _ = check_rest_server_quick(rest_port)
-    if not running:
-        print_normal('Restful server is running...')
-    else:
-        print_normal('Restful server is not running...')
-
 def parse_ids(args):
-    '''Parse the arguments for nnictl stop'''
+    '''Parse the arguments for nnictl stop
+    1.If there is an id specified, return the corresponding id
+    2.If there is no id specified, and there is an experiment running, return the id, or return Error
+    3.If the id matches an experiment, nnictl will return the id.
+    4.If the id ends with *, nnictl will match all ids matchs the regular
+    5.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
+    6.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
+    '''
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
@@ -144,6 +111,42 @@ def parse_ids(args):
     if not result_list:
         print_error('There are no experiments matched, please check experiment id...')
     return result_list
+
+def get_config_filename(args):
+    '''get the file name of config file'''
+    experiment_id = check_experiment_id(args)
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    return experiment_dict[experiment_id]['fileName']
+
+def get_experiment_port(args):
+    '''get the port of experiment'''
+    experiment_id = check_experiment_id(args)
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    return experiment_dict[experiment_id]['port']
+
+def convert_time_stamp_to_date(content):
+    '''Convert time stamp to date time format'''
+    start_time_stamp = content.get('startTime')
+    end_time_stamp = content.get('endTime')
+    if start_time_stamp:
+        start_time = datetime.datetime.utcfromtimestamp(start_time_stamp // 1000).strftime("%Y/%m/%d %H:%M:%S")
+        content['startTime'] = str(start_time)
+    if end_time_stamp:
+        end_time = datetime.datetime.utcfromtimestamp(end_time_stamp // 1000).strftime("%Y/%m/%d %H:%M:%S")
+        content['endTime'] = str(end_time)
+    return content
+
+def check_rest(args):
+    '''check if restful server is running'''
+    nni_config = Config(get_config_filename(args))
+    rest_port = nni_config.get_config('restServerPort')
+    running, _ = check_rest_server_quick(rest_port)
+    if not running:
+        print_normal('Restful server is running...')
+    else:
+        print_normal('Restful server is not running...')
 
 def stop_experiment(args):
     '''Stop the experiment which is running'''
@@ -326,7 +329,7 @@ def experiment_list(args):
         print('There is no experiment running...')
         exit(1)
     experiment_id_list = []
-    if args.all:
+    if args.all and args.all == 'all':
         for key in experiment_dict.keys():
             experiment_id_list.append(key)
     else:
@@ -334,7 +337,7 @@ def experiment_list(args):
             if experiment_dict[key]['status'] == 'running':
                 experiment_id_list.append(key)
         if not experiment_id_list:
-            print_warning('There is no experiment running...\nYou can use \'nnictl experiment list --all\' to list all stopped experiments!')
+            print_warning('There is no experiment running...\nYou can use \'nnictl experiment list all\' to list all stopped experiments!')
     experiment_information = ""
     for key in experiment_id_list:
         experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
