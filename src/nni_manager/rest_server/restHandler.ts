@@ -77,7 +77,6 @@ class NNIRestHandler {
         this.getTriedParameters(router);
         this.startTensorBoard(router);
         this.stopTensorBoard(router);
-        this.getTrialLogPath(router);
 
         // Express-joi-validator configuration
         router.use((err: any, req: Request, res: Response, next: any) => {
