@@ -130,7 +130,7 @@ export class TensorBoard {
         return logPath.split('://')[1].split(':')[0]; //TODO use url parse
     }
 
-    public async getLogDir(trialJobId: string): Promise<string> {
+    private async getLogDir(trialJobId: string): Promise<string> {
         const jobInfo: TrialJobInfo = await this.dataStore.getTrialJob(trialJobId);
         const logPath: string | undefined = jobInfo.logPath;
         if (logPath === undefined) {
