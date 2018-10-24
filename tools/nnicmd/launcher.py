@@ -35,6 +35,8 @@ from .constants import *
 import time
 import random
 import string
+from os import path
+import site
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -65,7 +67,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
 
     print_normal('Starting restful server...')
     manager = os.environ.get('NNI_MANAGER', 'nnimanager')
-    cmds = [manager, '--port', str(port), '--mode', platform, '--start_mode', mode]
+    cmds = ['node', path.join(site.USER_BASE, 'nni_pkg', 'main.js'), '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
@@ -76,7 +78,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     log_header = LOG_HEADER % str(time_now)
     stdout_file.write(log_header)
     stderr_file.write(log_header)
-    process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
+    process = Popen(cmds, cwd=path.join(site.USER_BASE, 'nni_pkg'), stdout=stdout_file, stderr=stderr_file)
     return process, str(time_now)
 
 def set_trial_config(experiment_config, port, config_file_name):
