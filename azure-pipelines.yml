@@ -16,6 +16,8 @@ steps:
   - task: DownloadSecureFile@1
     inputs:
       secureFile: initialize_remote.sh
+  - task: DownloadSecureFile@1
+    inputs:
       secureFile: remote.yml
   - script: |
       cd test
