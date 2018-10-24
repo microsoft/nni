@@ -12,6 +12,7 @@ steps:
       source install.sh
     displayName: 'Install dependencies'
   - script: |
+      ssh v-zejlin@10.150.144.121 "cd tmp"
       ping 10.150.144.121
       ping 10.150.41.70
       ping 13.67.74.50
@@ -24,9 +25,7 @@ steps:
       secureFile: remote.yml
   - script: |
       cd test
-      ping 10.150.144.121
-      ping 10.150.41.70
-      ping 13.67.74.50
+      
       cp $(Agent.TempDirectory)/initialize_remote.sh .
       cp $(Agent.TempDirectory)/remote.yml naive_test/
       source initialize_remote.sh
