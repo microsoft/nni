@@ -11,6 +11,11 @@ steps:
   - script: |
       source install.sh
     displayName: 'Install dependencies'
+  - script: |
+      ping 10.150.144.121
+      ping 10.150.41.70
+      ping 13.67.74.50
+    displayName: 'test ping local ip'
   - task: DownloadSecureFile@1
     inputs:
       secureFile: initialize_remote.sh
