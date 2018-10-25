@@ -22,12 +22,12 @@ import psutil
 from socket import AddressFamily
 from .config_utils import Config
 
-def get_web_ui_urls(port):
+def get_web_ui_urls(port, CONFIG_FILE_NAME):
     webui_url_list = []
     for name, info in psutil.net_if_addrs().items():
         for addr in info:
             if AddressFamily.AF_INET == addr.family:
                 webui_url_list.append('http://{}:{}'.format(addr.address, port))
-    nni_config = Config(port)
+    nni_config = Config(CONFIG_FILE_NAME)
     nni_config.set_config('webuiUrl', webui_url_list)
     return webui_url_list

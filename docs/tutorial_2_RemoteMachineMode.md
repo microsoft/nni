@@ -1,4 +1,4 @@
-**Run an Experiment on Multiple Machines**
+**Tutorial: Run an experiment on multiple machines**
 ===
 NNI supports running an experiment on multiple machines, called remote machine mode. Let's say you have multiple machines with the account `bob` (Note: the account is not necessarily the same on multiple machines): 
 
@@ -35,7 +35,7 @@ maxExecDuration: 3h
 # empty means never stop
 maxTrialNum: 100
 # choice: local, remote, pai
-trainingServicePlatform: remote 
+trainingServicePlatform: local
 # choice: true, false  
 useAnnotation: true
 tuner:

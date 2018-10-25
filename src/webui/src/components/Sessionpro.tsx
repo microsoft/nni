@@ -453,10 +453,10 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         <div className="author">
                             <div className="message">
                                 <div className="proKey">
-                                    <span>Author</span>
+                                    <span>Author:</span>
                                     <span className="messcont">{trialProfile.author}</span>
                                 </div>
-                                <span>Experiment&nbsp;Name</span>
+                                <span>Experiment&nbsp;Name:</span>
                                 <p className="messcont">{trialProfile.experName}</p>
                             </div>
                             <div className="logo">
@@ -466,15 +466,15 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         <div className="type">
                             <div className="message">
                                 <div className="proKey">
-                                    <span>id</span>
+                                    id:
                                     <span className="messcont">{trialProfile.id}</span>
                                 </div>
                                 <p>
-                                    <span>Duration</span>
+                                    Duration:
                                     <span className="messcont">{maxRuntime}</span>
                                 </p>
                                 <p>
-                                    <span>Still&nbsp;run</span>
+                                    Still&nbsp;run:
                                     <span className="messcont">{runningStr}</span>
                                 </p>
                             </div>
@@ -484,24 +484,24 @@ class Sessionpro extends React.Component<{}, SessionState> {
                         </div>
                         <div className="runtime message">
                             <p className="proTime">
-                                <span>Start Time</span><br />
+                                <span>Start Time:</span><br />
                                 <span className="messcont">{trialProfile.startTime}</span>
                             </p>
-                            <span>End Time</span>
+                            <span>End Time:</span>
                             <p className="messcont">{trialProfile.endTime}</p>
                         </div>
                         <div className="cdf">
                             <div className="message">
                                 <div className="proKey trialNum">
-                                    Concurrency&nbsp;Trial
+                                    Concurrency&nbsp;Trial:
                                     <span className="messcont">{trialProfile.runConcurren}</span>
                                 </div>
                                 <p>
-                                    Max&nbsp;Trial&nbsp;Number
+                                    MaxTrial&nbsp;Number:
                                     <span className="messcont">{trialProfile.MaxTrialNum}</span>
                                 </p>
                                 <p className="experStatus">
-                                    Status
+                                    Status:
                                     <span className="messcont">{status}</span>
                                 </p>
                             </div>
