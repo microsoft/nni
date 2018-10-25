@@ -339,7 +339,7 @@ class NNIManager implements Manager {
         const startTime: number = Date.now();
         const execDuration: number = this.experimentProfile.execDuration;
         for (; ;) {
-            await delay(1000 * 60 * 10); // 10 minutes
+            await delay(1000 * 30); // 30 seconds
             if (this.status.status === 'EXPERIMENT_RUNNING') {
                 this.experimentProfile.execDuration = execDuration + (Date.now() - startTime) / 1000 - this.suspendDuration;
                 await this.storeExperimentProfile();
