@@ -340,8 +340,10 @@ class NNIManager implements Manager {
         const execDuration: number = this.experimentProfile.execDuration;
         for (; ;) {
             await delay(1000 * 60 * 10); // 10 minutes
-            this.experimentProfile.execDuration = execDuration + (Date.now() - startTime) / 1000 - this.suspendDuration;
-            await this.storeExperimentProfile();
+            if (this.status.status === 'EXPERIMENT_RUNNING') {
+                this.experimentProfile.execDuration = execDuration + (Date.now() - startTime) / 1000 - this.suspendDuration;
+                await this.storeExperimentProfile();
+            }
         }
     }
 
@@ -351,7 +353,6 @@ class NNIManager implements Manager {
         for (const trialJobId of Array.from(this.trialJobs.keys())) {
             const trialJobDetail: TrialJobDetail = await this.trainingService.getTrialJob(trialJobId);
             const oldTrialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
-            //assert(oldTrialJobDetail);
             if (oldTrialJobDetail !== undefined && oldTrialJobDetail.status !== trialJobDetail.status) {
                 this.trialJobs.set(trialJobId, Object.assign({}, trialJobDetail));
                 await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail.url);
@@ -432,12 +433,16 @@ class NNIManager implements Manager {
                 assert(this.status.status === 'EXPERIMENT_RUNNING' || this.status.status === 'DONE');
                 if (this.status.status === 'EXPERIMENT_RUNNING') {
                     suspendStartTime = Date.now();
+                    this.experimentProfile.endTime = Date.now();
+                    await this.storeExperimentProfile();
                 }
                 this.status.status = 'DONE';
             } else {
                 if (this.status.status === 'DONE') {
                     assert(suspendStartTime !== 0);
                     this.suspendDuration += (Date.now() - suspendStartTime) / 1000;
+                    delete this.experimentProfile.endTime;
+                    await this.storeExperimentProfile();
                 }
                 this.status.status = 'EXPERIMENT_RUNNING';
                 for (let i: number = this.trialJobs.size; i < this.experimentProfile.params.trialConcurrency; i++) {
