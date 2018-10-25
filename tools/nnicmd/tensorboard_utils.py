@@ -60,6 +60,7 @@ def copy_data_from_remote(args, nni_config, trial_content, path_list, host_list,
     for machine in machine_list:
         machine_dict[machine['ip']] = {'port': machine['port'], 'passwd': machine['passwd'], 'username': machine['username']}
     for index, host in enumerate(host_list):
+        print_normal('Copying log data from %s ...' % host)
         local_path = os.path.join(temp_nni_path, trial_content[index].get('id'))
         local_path_list.append(local_path)
         sftp = create_ssh_sftp_client(host, machine_dict[host]['port'], machine_dict[host]['username'], machine_dict[host]['passwd'])
