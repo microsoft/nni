@@ -35,7 +35,7 @@ maxExecDuration: 3h
 # empty means never stop
 maxTrialNum: 100
 # choice: local, remote, pai
-trainingServicePlatform: local
+trainingServicePlatform: remote 
 # choice: true, false  
 useAnnotation: true
 tuner:
