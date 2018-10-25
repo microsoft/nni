@@ -48,7 +48,7 @@ import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 class NNIManager implements Manager {
     private trainingService: TrainingService;
     private dispatcher: IpcInterface | undefined;
-    private currSubmittedTrialNum: number; // need to be recovered
+    private currSubmittedTrialNum: number;  // need to be recovered
     private trialConcurrencyChange: number; // >0: increase, <0: decrease
     private customizedTrials: string[]; // need to be recovered
     private log: Logger;
