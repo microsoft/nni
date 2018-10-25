@@ -58,7 +58,6 @@ class NNIManager implements Manager {
     private status: NNIManagerStatus;
     private waitingTrials: string[];
     private trialJobs: Map<string, TrialJobDetail>;
-    private suspendDuration: number;
 
     constructor() {
         this.currSubmittedTrialNum = 0;
@@ -69,7 +68,6 @@ class NNIManager implements Manager {
         this.dispatcherPid = 0;
         this.waitingTrials = [];
         this.trialJobs = new Map<string, TrialJobDetail>();
-        this.suspendDuration = 0;
 
         this.log = getLogger();
         this.dataStore = component.get(DataStore);
@@ -336,14 +334,16 @@ class NNIManager implements Manager {
     }
 
     private async periodicallyUpdateExecDuration(): Promise<void> {
-        const startTime: number = Date.now();
-        const execDuration: number = this.experimentProfile.execDuration;
+        let count: number = 1;
         for (; ;) {
-            await delay(1000 * 30); // 30 seconds
+            await delay(1000 * 1); // 1 seconds
             if (this.status.status === 'EXPERIMENT_RUNNING') {
-                this.experimentProfile.execDuration = execDuration + (Date.now() - startTime) / 1000 - this.suspendDuration;
-                await this.storeExperimentProfile();
+                this.experimentProfile.execDuration += 1;
+                if (count % 10 === 0) {
+                    await this.storeExperimentProfile();
+                }
             }
+            count += 1;
         }
     }
 
@@ -389,8 +389,6 @@ class NNIManager implements Manager {
             throw new Error('Error: tuner has not been setup');
         }
         let allFinishedTrialJobNum: number = 0;
-        const startTime: number = Date.now();
-        let suspendStartTime: number = 0;
         for (; ;) {
             if (this.status.status === 'STOPPING') {
                 break;
@@ -427,20 +425,16 @@ class NNIManager implements Manager {
             }
 
             // check maxtrialnum and maxduration here
-            if ((Date.now() - startTime) / 1000 + this.experimentProfile.execDuration - this.suspendDuration 
-                > this.experimentProfile.params.maxExecDuration ||
+            if (this.experimentProfile.execDuration > this.experimentProfile.params.maxExecDuration ||
                 this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
                 assert(this.status.status === 'EXPERIMENT_RUNNING' || this.status.status === 'DONE');
                 if (this.status.status === 'EXPERIMENT_RUNNING') {
-                    suspendStartTime = Date.now();
                     this.experimentProfile.endTime = Date.now();
                     await this.storeExperimentProfile();
                 }
                 this.status.status = 'DONE';
             } else {
                 if (this.status.status === 'DONE') {
-                    assert(suspendStartTime !== 0);
-                    this.suspendDuration += (Date.now() - suspendStartTime) / 1000;
                     delete this.experimentProfile.endTime;
                     await this.storeExperimentProfile();
                 }
