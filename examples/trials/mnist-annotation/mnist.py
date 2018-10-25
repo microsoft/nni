@@ -4,7 +4,6 @@ import logging
 import math
 import tempfile
 import tensorflow as tf
-import nni
 
 from tensorflow.examples.tutorials.mnist import input_data
 
