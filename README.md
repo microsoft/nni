@@ -72,10 +72,6 @@ source ~/.bashrc
 This project welcomes contributions and suggestions, we are constructing the contribution guidelines, stay tuned =).
 
 We use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
-<<<<<<< HEAD
 
 ## **License** 
 The entire codebase is under [MIT license](https://github.com/Microsoft/nni/blob/master/LICENSE)
-
-=======
->>>>>>> e2291005b8656a00cd2c592b2883cf493f7861c2
