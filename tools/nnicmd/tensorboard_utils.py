@@ -32,18 +32,63 @@ import time
 from .common_utils import print_normal, print_error, print_warning, detect_process, detect_port
 from .nnictl_utils import *
 import re
+from .ssh_utils import create_ssh_sftp_client, copy_remote_directory_to_local
+import tempfile
 
-def start_local_tensorboard_process(log_path, port, nni_config):
-    '''call cmds to start tensorboard process in local mode'''
-    if detect_port(port):
-        print_error('Port %s is used by another process, please reset port!' % str(port))
+def parse_log_path(args, trial_content):
+    '''parse log path'''
+    path_list = []
+    host_list = []
+    for trial in trial_content:
+        if args.trialid and trial.get(args.trialid) is None:
+            continue
+        pattern = r'(?P<head>.+)://(?P<host>.+):(?P<path>.*)'
+        match = re.search(pattern,trial['logPath'])
+        if match:
+            path_list.append(match.group('path'))
+            host_list.append(match.group('host'))
+    if not path_list:
+        print_error('Trial id %s error!' % args.trialid)
         exit(1)
-    temp_dir = os.environ['HOME']
-    stdout_file = open(os.path.join(temp_dir, 'tensorboard_stdout'), 'a+')
-    stderr_file = open(os.path.join(temp_dir, 'tensorboard_stderr'), 'a+')
-    cmds = ['tensorboard', '--logdir', log_path, '--port', str(port)]
+    return path_list, host_list
+
+def copy_data_from_remote(args, nni_config, trial_content, path_list, host_list, temp_nni_path):
+    '''use ssh client to copy data from remote machine to local machien'''
+    machine_list = nni_config.get_config('experimentConfig').get('machineList')
+    machine_dict = {}
+    local_path_list = []
+    for machine in machine_list:
+        machine_dict[machine['ip']] = {'port': machine['port'], 'passwd': machine['passwd'], 'username': machine['username']}
+    for index, host in enumerate(host_list):
+        local_path = os.path.join(temp_nni_path, trial_content[index].get('id'))
+        local_path_list.append(local_path)
+        sftp = create_ssh_sftp_client(host, machine_dict[host]['port'], machine_dict[host]['username'], machine_dict[host]['passwd'])
+        copy_remote_directory_to_local(sftp, path_list[index], local_path)
+    return local_path_list
+
+def get_path_list(args, nni_config, trial_content, temp_nni_path):
+    '''get path list according to different platform'''
+    path_list, host_list = parse_log_path(args, trial_content)
+    platform = nni_config.get_config('experimentConfig').get('trainingServicePlatform')
+    if platform == 'local':
+        return path_list
+    elif platform == 'remote':
+        return copy_data_from_remote(args, nni_config, trial_content, path_list, host_list, temp_nni_path)
+    else:
+        print_error('Not supported platform!')
+        exit(1)
+
+def start_tensorboard_process(args, nni_config, path_list, temp_nni_path):
+    '''call cmds to start tensorboard process in local machine'''
+    if detect_port(args.port):
+        print_error('Port %s is used by another process, please reset port!' % str(args.port))
+        exit(1)
+    
+    stdout_file = open(os.path.join(temp_nni_path, 'tensorboard_stdout'), 'a+')
+    stderr_file = open(os.path.join(temp_nni_path, 'tensorboard_stderr'), 'a+')
+    cmds = ['tensorboard', '--logdir', ':'.join(path_list), '--port', str(args.port)]
     tensorboard_process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
-    url_list = get_local_urls(port)
+    url_list = get_local_urls(args.port)
     print_normal('Start tensorboard success, you can visit tensorboard from:    ' + '     '.join(url_list))
     nni_config.set_config('tensorboardPid', tensorboard_process.pid)
 
@@ -85,20 +130,10 @@ def start_tensorboard(args):
     if not trial_content:
         print_error('No trial information!')
         exit(1)
-    path_list = []
-    if args.trialid is None:
-        for trial in trial_content:
-            pattern = r'(?P<head>.+)://(?P<host>.+):(?P<path>.*)'
-            match = re.search(pattern,trial['logPath'])
-            if match:
-                path_list.append(match.group('path'))
-    else:
-        for trial in trial_content:
-            if trial.get(args.trialid):
-                path_list.append(trial['logPath'])
-                break
-    if not path_list:
-        print_error('Trial id %s error!' % args.trialid)
-        exit(1)
     
-    start_local_tensorboard_process(':'.join(path_list), args.port, nni_config)
+    experiment_id = nni_config.get_config('experimentId')
+    temp_nni_path = os.path.join(tempfile.gettempdir(), 'nni', experiment_id)
+    os.makedirs(temp_nni_path, exist_ok=True)
+
+    path_list = get_path_list(args, nni_config, trial_content, temp_nni_path)
+    start_tensorboard_process(args, nni_config, path_list, temp_nni_path)
