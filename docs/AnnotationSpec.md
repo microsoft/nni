@@ -4,23 +4,26 @@ For good user experience and reduce user effort, we need to design a good annota
 
 If users use NNI system, they only need to:
 
- 1. Annotation variable in code as:
+ 1. Use nni.get_next_parameter() to retrieve hyper parameters from Tuner, before using other annotation, use following annotation at the begining of trial code:
+    '''@nni.get_next_parameter()'''
+
+ 2. Annotation variable in code as:
 
     '''@nni.variable(nni.choice(2,3,5,7),name=self.conv_size)'''
 
- 2. Annotation intermediate in code as:
+ 3. Annotation intermediate in code as:
 
     '''@nni.report_intermediate_result(test_acc)'''
 
- 3. Annotation output in code as:
+ 4. Annotation output in code as:
 
     '''@nni.report_final_result(test_acc)'''
 
- 4. Annotation `function_choice` in code as:
+ 5. Annotation `function_choice` in code as:
 
     '''@nni.function_choice(max_pool(h_conv1, self.pool_size),avg_pool(h_conv1, self.pool_size),name=max_pool)'''
 
-In this way, they can easily realize automatic tuning on NNI. 
+In this way, they can easily implement automatic tuning on NNI. 
 
 For `@nni.variable`, `nni.choice` is the type of search space and there are 10 types to express your search space as follows:
 
