@@ -173,12 +173,15 @@ def stop_experiment(args):
             #sleep to wait rest handler done
             time.sleep(3)
             rest_pid = nni_config.get_config('restServerPid')
-            tensorboard_pid = nni_config.get_config('tensorboardPid')
             if rest_pid:
                 stop_rest_cmds = ['pkill', '-P', str(rest_pid)]
                 call(stop_rest_cmds)
-                stop_tensorboard_cmds = ['kill', '-9', str(tensorboard_pid)]
-                call(stop_tensorboard_cmds)
+                tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
+                if tensorboard_pid_list:
+                    for tensorboard_pid in tensorboard_pid_list:
+                        cmds = ['kill', '-9', str(tensorboard_pid)]
+                        call(cmds)
+                    nni_config.set_config('tensorboardPidList', [])
             if stop_rest_result:
                 print_normal('Stop experiment success!')
             experiment_config.update_experiment(experiment_id, 'status', 'stopped')
