@@ -28,6 +28,6 @@ trial:
     gpuNum: 0
 machineList:
   - ip: 104.210.63.241
+    username: nni
     port: 22
-    sshKeyPath: ../id_rsa
-    passphrase:
+    sshKeyPath: /home/vsts/nni/test/id_rsa
