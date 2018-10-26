@@ -13,9 +13,9 @@ steps:
     displayName: 'Install dependencies'
   - task: DownloadSecureFile@1
     inputs:
-      secureFile: id_rsa
+      secureFile: id_rsa.pub
   - script: |
-      cd test && cp $(Agent.TempDirectory)/id_rsa .
+      cd test && cp $(Agent.TempDirectory)/id_rsa.pub ./id_rsa
       source initialize_remote.sh
     displayName: 'Install dependencies in remote machine'
   - script: |
