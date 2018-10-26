@@ -57,8 +57,10 @@ def get_next_parameter():
     else:
         if _param_index > 0:
             return None
-        else:
+        elif _param_index == 0:
             params_file_name = 'parameter.cfg'
+        else:
+            raise AssertionError('_param_index value ({}) should >=0'.format(_param_index))
     
     params_filepath = os.path.join(_sysdir, params_file_name)
     if not os.path.isfile(params_filepath):

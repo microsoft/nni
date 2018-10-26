@@ -247,7 +247,7 @@ def generate_defualt_params():
 
 
 if __name__ == '__main__':
-    """@nni.next_parameter"""
+    """@nni.next_parameter()"""
     try:
         main(generate_defualt_params())
     except Exception as exception:
