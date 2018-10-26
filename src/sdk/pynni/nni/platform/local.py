@@ -21,6 +21,7 @@
 
 import json
 import os
+import subprocess
 
 from ..common import init_logger
 
@@ -45,3 +46,4 @@ def send_metric(string):
     assert len(data) < 1000000, 'Metric too long'
     _metric_file.write(b'ME%06d%b' % (len(data), data))
     _metric_file.flush()
+    subprocess.run(['touch', _metric_file.name], check = True)
