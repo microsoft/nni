@@ -27,12 +27,12 @@ class CustomizedTuner(Tuner):
     def __init__(self, ...):
         ...
     
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, value):
     '''
     Record an observation of the objective function and Train
     parameter_id: int
     parameters: object created by 'generate_parameters()'
-    reward: object reported by trial
+    value: final metrics of the trial, including reward
     '''
     # your code implements here.
     ...
@@ -46,7 +46,7 @@ class CustomizedTuner(Tuner):
     return your_parameters
     ...
 ```
-```receive_trial_result``` will receive ```the parameter_id, parameters, reward``` as parameters input. Also, Tuner will receive the ```reward``` object are exactly same reward that Trial send.
+```receive_trial_result``` will receive ```the parameter_id, parameters, value``` as parameters input. Also, Tuner will receive the ```value``` object are exactly same value that Trial send.
 
 The ```your_parameters``` return from ```generate_parameters``` function, will be package as json object by NNI SDK. NNI SDK will unpack json object so the Trial will receive the exact same ```your_parameters``` from Tuner.
 
@@ -65,7 +65,7 @@ It's means your Tuner will always generate parameters ```{"dropout": 0.3, "learn
 ```
 parameter_id = 82347
 parameters = {"dropout": 0.3, "learning_rate": 0.4}
-reward = 0.93
+value = 0.93
 ```
 
 **Note that** if you want to access a file (e.g., ```data.txt```) in the directory of your own tuner, you cannot use ```open('data.txt', 'r')```. Instead, you should use the following:
