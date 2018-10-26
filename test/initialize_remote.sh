@@ -1,5 +1,5 @@
 #!/bin/bash
-
+echo $PWD
 pw="nniNNI123nniNNI"
 ip="nni@104.210.63.241"
 key="id_rsa"
