@@ -15,7 +15,7 @@ steps:
   #   inputs:
   #     secureFile: id_rsa.sh
   - script: |
-      cd test && cp $(Agent.TempDirectory)/id_rsa .
+      cd test
       source initialize_remote.sh
     displayName: 'Install dependencies in remote machine'
   - script: |
