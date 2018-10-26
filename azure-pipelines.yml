@@ -9,17 +9,15 @@ steps:
   - script: python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
-      cd test
-      pwd
-      echo $PWD
-      source initialize_remote.sh
-    displayName: 'Install dependencies in remote machine'
-  - script: |
       source install.sh
     displayName: 'Install dependencies'
-  # - task: DownloadSecureFile@1
-  #   inputs:
-  #     secureFile: id_rsa.sh
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: id_rsa.sh
+  - script: |
+      cd test && cp $(Agent.TempDirectory)/id_rsa .
+      source initialize_remote.sh
+    displayName: 'Install dependencies in remote machine'
   - script: |
       cd test
       export PATH=$HOME/.local/bin:$PATH
