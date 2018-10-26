@@ -118,8 +118,11 @@ def stop_tensorboard(args):
     tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
     if tensorboard_pid_list:
         for tensorboard_pid in tensorboard_pid_list:
-            cmds = ['kill', '-9', str(tensorboard_pid)]
-            call(cmds)
+            try:
+                cmds = ['kill', '-9', str(tensorboard_pid)]
+                call(cmds)
+            except Exception as exception:
+                print_error(exception)
         nni_config.set_config('tensorboardPidList', [])
         print_normal('Stop tensorboard success!')
     else:
