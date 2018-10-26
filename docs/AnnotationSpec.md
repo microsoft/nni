@@ -4,8 +4,8 @@ For good user experience and reduce user effort, we need to design a good annota
 
 If users use NNI system, they only need to:
 
- 1. Use nni.next_parameter() to retrieve hyper parameters from Tuner, before using other annotation, use following annotation the begining of trial code:
-    '''@nni.next_parameter()'''
+ 1. Use nni.get_next_parameter() to retrieve hyper parameters from Tuner, before using other annotation, use following annotation at the begining of trial code:
+    '''@nni.get_next_parameter()'''
 
  2. Annotation variable in code as:
 
