@@ -126,4 +126,4 @@ else:
         if name is None:
             name = '__line{:d}'.format(lineno)
         key = '{}/{}/{}'.format(module, name, func)
-        return trial.get_parameter(key)
+        return trial.get_current_parameter(key)

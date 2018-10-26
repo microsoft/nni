@@ -219,7 +219,7 @@ def generate_default_params():
 if __name__ == '__main__':
     try:
         # get parameters form tuner
-        RCV_PARAMS = nni.get_parameters()
+        RCV_PARAMS = nni.get_next_parameter()
         logger.debug(RCV_PARAMS)
         # run
         params = generate_default_params()
