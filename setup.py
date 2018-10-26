@@ -62,7 +62,8 @@ setup(
         'requests',
         'scipy',
         'schema',
-        'pyhdfs'
+        'pyhdfs',
+        'paramiko'
     ],
 
     cmdclass={
