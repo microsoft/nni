@@ -25,6 +25,7 @@ from .updater import update_searchspace, update_concurrency, update_duration, up
 from .nnictl_utils import *
 from .package_management import *
 from .constants import *
+from .tensorboard_utils import *
 
 def nni_help_info(*args):
     print('please run "nnictl {positional argument} --help" to see nnictl guidance')
@@ -147,6 +148,18 @@ def parse_args():
     parser_package_install.set_defaults(func=package_install) 
     parser_package_show = parser_package_subparsers.add_parser('show', help='show the information of packages')
     parser_package_show.set_defaults(func=package_show)
+
+    #parse tensorboard command
+    parser_tensorboard = subparsers.add_parser('tensorboard', help='manage tensorboard')
+    parser_tensorboard_subparsers = parser_tensorboard.add_subparsers()
+    parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('start', help='start tensorboard')
+    parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
+    parser_tensorboard_start.add_argument('--trialid', dest='trialid', help='the id of trial')
+    parser_tensorboard_start.add_argument('--port', dest='port', default=6006, help='the port to start tensorboard')
+    parser_tensorboard_start.set_defaults(func=start_tensorboard)
+    parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
+    parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
+    parser_tensorboard_start.set_defaults(func=stop_tensorboard)
 
     args = parser.parse_args()
     args.func(args)

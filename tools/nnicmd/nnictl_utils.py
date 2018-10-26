@@ -174,8 +174,17 @@ def stop_experiment(args):
             time.sleep(3)
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
-                cmds = ['pkill', '-P', str(rest_pid)]
-                call(cmds)
+                stop_rest_cmds = ['pkill', '-P', str(rest_pid)]
+                call(stop_rest_cmds)
+                tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
+                if tensorboard_pid_list:
+                    for tensorboard_pid in tensorboard_pid_list:
+                        try:
+                            cmds = ['kill', '-9', str(tensorboard_pid)]
+                            call(cmds)
+                        except Exception as exception:
+                            print_error(exception)
+                    nni_config.set_config('tensorboardPidList', [])
             if stop_rest_result:
                 print_normal('Stop experiment success!')
             experiment_config.update_experiment(experiment_id, 'status', 'stopped')
@@ -343,3 +352,4 @@ def experiment_list(args):
         experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
         experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
+
