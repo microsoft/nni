@@ -27,3 +27,5 @@ enable=F,
        bad-format-string,
        anomalous-backslash-in-string,
        bad-open-mode
+
+extension-pkg-whitelist=numpy
