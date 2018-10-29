@@ -110,6 +110,12 @@ class MsgDispatcher(MsgDispatcherBase):
         return True
 
     def handle_report_metric_data(self, data):
+        """
+        :param data: a dict received from nni_manager, which contains:
+                    - 'parameter_id': id of the trial
+                    - 'value': metric value reported by nni.report_final_result()
+                    - 'type': report type, support {'FINAL', 'PERIODICAL'}
+        """
         if data['type'] == 'FINAL':
             id_ = data['parameter_id']
             value = data['value']
