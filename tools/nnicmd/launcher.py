@@ -28,23 +28,17 @@ import tempfile
 from nni_annotation import *
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
-from .url_utils import cluster_metadata_url, experiment_url
+from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port
 from .constants import *
-from .webui_utils import *
 import time
+import random
+import string
 
-def start_rest_server(port, platform, mode, experiment_id=None):
+def start_rest_server(port, platform, mode, config_file_name, experiment_id=None):
     '''Run nni manager process'''
-    print_normal('Checking environment...')
-    nni_config = Config(port)
-    rest_port = nni_config.get_config('restServerPort')
-    running, _ = check_rest_server_quick(rest_port)
-    if rest_port and running:
-        print_error(EXPERIMENT_START_FAILED_INFO % port)
-        exit(1)
-    
+    nni_config = Config(config_file_name)
     if detect_port(port):
         print_error('Port %s is used by another process, please reset the port!' % port)
         exit(1)
@@ -54,8 +48,8 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     cmds = [manager, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
-    stdout_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stdout')
-    stderr_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+    stdout_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stdout')
+    stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
     stdout_file = open(stdout_full_path, 'a+')
     stderr_file = open(stderr_full_path, 'a+')
     time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
@@ -66,7 +60,7 @@ def start_rest_server(port, platform, mode, experiment_id=None):
     process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
     return process, str(time_now)
 
-def set_trial_config(experiment_config, port):
+def set_trial_config(experiment_config, port, config_file_name):
     '''set trial configuration'''
     request_data = dict()
     value_dict = dict()
@@ -89,16 +83,16 @@ def set_trial_config(experiment_config, port):
         return True
     else:
         print('Error message is {}'.format(response.text))
-        stderr_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+        stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
         with open(stderr_full_path, 'a+') as fout:
             fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         return False
 
-def set_local_config(experiment_config, port):
+def set_local_config(experiment_config, port, config_file_name):
     '''set local configuration'''
-    return set_trial_config(experiment_config, port)
+    return set_trial_config(experiment_config, port, config_file_name)
 
-def set_remote_config(experiment_config, port):
+def set_remote_config(experiment_config, port, config_file_name):
     '''Call setClusterMetadata to pass trial'''
     #set machine_list
     request_data = dict()
@@ -108,15 +102,15 @@ def set_remote_config(experiment_config, port):
     if not response or not check_response(response):
         if response is not None:
             err_message = response.text
-            stderr_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+            stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
 
     #set trial_config
-    return set_trial_config(experiment_config, port), err_message
+    return set_trial_config(experiment_config, port, config_file_name), err_message
 
-def set_pai_config(experiment_config, port):
+def set_pai_config(experiment_config, port, config_file_name):
     '''set pai configuration''' 
     pai_config_data = dict()
     pai_config_data['pai_config'] = experiment_config['paiConfig']
@@ -125,15 +119,15 @@ def set_pai_config(experiment_config, port):
     if not response or not response.status_code == 200:
         if response is not None:
             err_message = response.text
-            stderr_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+            stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
 
     #set trial_config
-    return set_trial_config(experiment_config, port), err_message
+    return set_trial_config(experiment_config, port, config_file_name), err_message
 
-def set_experiment(experiment_config, mode, port):
+def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
     request_data = dict()
     request_data['authorName'] = experiment_config['authorName']
@@ -191,17 +185,17 @@ def set_experiment(experiment_config, mode, port):
     if check_response(response):
         return response
     else:
-        stderr_full_path = os.path.join(NNICTL_HOME_DIR, str(port), 'stderr')
+        stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
         with open(stderr_full_path, 'a+') as fout:
             fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         print_error('Setting experiment error, error message is {}'.format(response.text))
         return None
 
-def launch_experiment(args, experiment_config, mode, experiment_id=None):
+def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
-    nni_config = Config(args.port)
+    nni_config = Config(config_file_name)
     # start rest server
-    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, experiment_id)
+    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
@@ -236,7 +230,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
     # set remote config
     if experiment_config['trainingServicePlatform'] == 'remote':
         print_normal('Setting remote config...')
-        config_result, err_msg = set_remote_config(experiment_config, args.port)
+        config_result, err_msg = set_remote_config(experiment_config, args.port, config_file_name)
         if config_result:
             print_normal('Successfully set remote config!')
         else:
@@ -251,7 +245,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
     # set local config
     if experiment_config['trainingServicePlatform'] == 'local':
         print_normal('Setting local config...')
-        if set_local_config(experiment_config, args.port):
+        if set_local_config(experiment_config, args.port, config_file_name):
             print_normal('Successfully set local config!')
         else:
             print_error('Failed!')
@@ -265,7 +259,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
     #set pai config
     if experiment_config['trainingServicePlatform'] == 'pai':
         print_normal('Setting pai config...')
-        config_result, err_msg = set_pai_config(experiment_config, args.port)
+        config_result, err_msg = set_pai_config(experiment_config, args.port, config_file_name)
         if config_result:
             print_normal('Successfully set pai config!')
         else:
@@ -280,7 +274,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
 
     # start a new experiment
     print_normal('Starting experiment...')
-    response = set_experiment(experiment_config, mode, args.port)
+    response = set_experiment(experiment_config, mode, args.port, config_file_name)
     if response:
         if experiment_id is None:
             experiment_id = json.loads(response.text).get('experiment_id')
@@ -293,24 +287,62 @@ def launch_experiment(args, experiment_config, mode, experiment_id=None):
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
-    web_ui_url_list = get_web_ui_urls(args.port)
+    web_ui_url_list = get_local_urls(args.port)
+    nni_config.set_config('webuiUrl', web_ui_url_list)
     
     #save experiment information
     experiment_config = Experiments()
-    experiment_config.add_experiment(experiment_id, args.port, start_time)
+    experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
 
+def cmp_time(time1, time2):
+    '''compare the time'''
+    try:
+        time1 = time.strptime(time1,'%Y-%m-%d %H:%M:%S')
+        time2 = time.strptime(time2,'%Y-%m-%d %H:%M:%S')
+        return int(time1) - int(time2)
+    except:
+        return 0
+
 def resume_experiment(args):
     '''resume an experiment'''
-    nni_config = Config(args.port)
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    experiment_id = None
+    experiment_endTime = None
+    #find the latest stopped experiment
+    if not args.id:
+        for key in experiment_dict.keys():
+            if experiment_dict[key]['status'] == 'stopped':
+                if experiment_id is None:
+                    experiment_id = key
+                    experiment_endTime = experiment_dict[key]['endTime']
+                else:
+                    if cmp_time(experiment_dict[key]['endTime'], experiment_endTime) > 0:
+                        experiment_id = key
+                        experiment_endTime = experiment_dict[key]['endTime']
+        if experiment_id is None:
+            print_error('There is no experiment stopped!')
+            exit(1)
+    else:
+        if experiment_dict.get(args.id) is None:
+            print_error('Id %s not exist!' % args.id)
+            exit(1)
+        if experiment_dict[args.id]['status'] == 'running':
+            print_error('Experiment %s is running!' % args.id)
+            exit(1)
+        experiment_id = args.id
+    print_normal('Resuming experiment %s...' % experiment_id)
+    nni_config = Config(experiment_dict[experiment_id]['fileName'])
     experiment_config = nni_config.get_config('experimentConfig')
     experiment_id = nni_config.get_config('experimentId')
-    launch_experiment(args, experiment_config, 'resume', experiment_id)
+    launch_experiment(args, experiment_config, 'resume', experiment_dict[experiment_id]['fileName'], experiment_id)
 
 def create_experiment(args):
     '''start a new experiment'''
-    nni_config = Config(args.port)
+    config_file_name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+    nni_config = Config(config_file_name)
     config_path = os.path.abspath(args.config)
     if not os.path.exists(config_path):
         print_error('Please set correct config path!')
@@ -319,5 +351,5 @@ def create_experiment(args):
     validate_all_content(experiment_config, config_path)
 
     nni_config.set_config('experimentConfig', experiment_config)
-    launch_experiment(args, experiment_config, 'new')
+    launch_experiment(args, experiment_config, 'new', config_file_name)
     nni_config.set_config('restServerPort', args.port)

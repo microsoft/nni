@@ -436,7 +436,7 @@ if __name__ == '__main__':
         qp_pairs, dev_qp_pairs = load_data()
         logger.debug('Init finish.')
 
-        original_params = nni.get_parameters()
+        original_params = nni.get_next_parameter()
         '''
         with open('data.json') as f:
             original_params = json.load(f)

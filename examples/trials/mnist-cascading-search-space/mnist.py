@@ -149,7 +149,7 @@ def parse_init_json(data):
 if __name__ == '__main__':
     try:
         # get parameters form tuner
-        data = nni.get_parameters()
+        data = nni.get_next_parameter()
         logger.debug(data)
 
         RCV_PARAMS = parse_init_json(data)

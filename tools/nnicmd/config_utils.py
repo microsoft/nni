@@ -26,8 +26,8 @@ from .constants import NNICTL_HOME_DIR
 
 class Config:
     '''a util class to load and save config'''
-    def __init__(self, port):
-        config_path = os.path.join(NNICTL_HOME_DIR, str(port))
+    def __init__(self, file_path):
+        config_path = os.path.join(NNICTL_HOME_DIR, str(file_path))
         os.makedirs(config_path, exist_ok=True)
         self.config_file = os.path.join(config_path, '.config')
         self.config = self.read_file()
@@ -73,10 +73,23 @@ class Experiments:
         self.experiment_file = os.path.join(NNICTL_HOME_DIR, '.experiment')
         self.experiments = self.read_file()
 
-    def add_experiment(self, id, port, time):
+    def add_experiment(self, id, port, time, file_name):
         '''set {key:value} paris to self.experiment'''
-        self.experiments[id] = [port, time]
+        self.experiments[id] = {}
+        self.experiments[id]['port'] = port
+        self.experiments[id]['startTime'] = time
+        self.experiments[id]['endTime'] = 'N/A'
+        self.experiments[id]['status'] = 'running'
+        self.experiments[id]['fileName'] = file_name
         self.write_file()
+    
+    def update_experiment(self, id, key, value):
+        '''Update experiment'''
+        if id not in self.experiments:
+            return False
+        self.experiments[id][key] = value
+        self.write_file()
+        return True
     
     def remove_experiment(self, id):
         '''remove an experiment by id'''

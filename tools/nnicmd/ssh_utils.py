@@ -18,16 +18,32 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import psutil
-from socket import AddressFamily
-from .config_utils import Config
+import paramiko
+import os
+from .common_utils import print_error
 
-def get_web_ui_urls(port):
-    webui_url_list = []
-    for name, info in psutil.net_if_addrs().items():
-        for addr in info:
-            if AddressFamily.AF_INET == addr.family:
-                webui_url_list.append('http://{}:{}'.format(addr.address, port))
-    nni_config = Config(port)
-    nni_config.set_config('webuiUrl', webui_url_list)
-    return webui_url_list
+def copy_remote_directory_to_local(sftp, remote_path, local_path):
+    '''copy remote directory to local machine'''
+    try:
+        os.makedirs(local_path, exist_ok=True)
+        files = sftp.listdir(remote_path)
+        for file in files:
+            remote_full_path = os.path.join(remote_path, file)
+            local_full_path = os.path.join(local_path, file)
+            try:
+                if sftp.listdir(remote_full_path):
+                    copy_remote_directory_to_local(sftp, remote_full_path, local_full_path)
+            except:
+                sftp.get(remote_full_path, local_full_path)
+    except Exception:
+        pass
+
+def create_ssh_sftp_client(host_ip, port, username, password):
+    '''create ssh client'''
+    try:
+        conn = paramiko.Transport(host_ip, port)
+        conn.connect(username=username, password=password)
+        sftp = paramiko.SFTPClient.from_transport(conn)
+        return sftp
+    except Exception as exception:
+        print_error('Create ssh client error %s\n' % exception)
