@@ -4,19 +4,30 @@ SHELL := /bin/bash
 PIP_INSTALL := python3 -m pip install
 PIP_UNINSTALL := python3 -m pip uninstall
 
-## Colorful output
-_INFO := $(shell echo -e '\e[1;36m')
-_WARNING := $(shell echo -e '\e[1;33m')
-_END := $(shell echo -e '\e[0m')
+# detect OS
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+	OS_SPEC := linux
+	ESC_CMD := \e
+else ifeq ($(UNAME_S), Darwin)
+	OS_SPEC := darwin
+	ESC_CMD := \x1B
+else
+	$(error platform $(UNAME_S) not supported)
+endif
 
+## Colorful output
+_INFO := $(shell echo -e '$(ESC_CMD)[1;36m')
+_WARNING := $(shell echo -e '$(ESC_CMD)[1;33m')
+_END := $(shell echo -e '$(ESC_CMD)[0m')
 
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
-    _ROOT := 1
+    _ROOT 1
     BIN_PATH ?= /usr/bin
     INSTALL_PREFIX ?= /usr/share
-    EXAMPLES_PATH ?= $(INSTALL_PREFIX)/nni/examples
-    BASH_COMP_SCRIPT ?= /usr/share/bash-completion/completions/nnictl
+    EXAMPLES_PATH ?= $(NNI_INSTALL_PATH)/examples
+    BASH_COMP_PREFIX ?= /usr/share/bash-completion/completions
 else  # is normal user
     BIN_PATH ?= ${HOME}/.local/bin
     INSTALL_PREFIX ?= ${HOME}/.local
@@ -24,17 +35,21 @@ else  # is normal user
     ifndef VIRTUAL_ENV
         PIP_MODE ?= --user
     endif
-    BASH_COMP_SCRIPT ?= ${HOME}/.bash_completion.d/nnictl
+    BASH_COMP_PREFIX ?= ${HOME}/.bash_completion.d
 endif
+BASH_COMP_SCRIPT := $(BASH_COMP_PREFIX)/nnictl
+
+NNI_INSTALL_PATH ?= $(INSTALL_PREFIX)/nni
+NNI_TMP_PATH ?= /tmp
 
 ## Dependency information
 NNI_NODE_VERSION ?= v10.12.0
-NNI_NODE_TARBALL ?= node-$(NNI_NODE_VERSION)-linux-x64.tar.xz
-NNI_NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
+NNI_NODE_TARBALL ?= node-$(NNI_NODE_VERSION)-$(OS_SPEC)-x64.tar.xz
+NNI_NODE_PATH ?= $(NNI_INSTALL_PATH)/node
 
 NNI_YARN_VERSION ?= v1.10.1
 NNI_YARN_TARBALL ?= yarn-$(NNI_YARN_VERSION).tar.gz
-NNI_YARN_PATH ?= /tmp/nni-yarn
+NNI_YARN_PATH ?= $(NNI_TMP_PATH)/nni-yarn
 
 ## Check if dependencies have been installed globally
 ifeq (, $(shell command -v node 2>/dev/null))
@@ -139,7 +154,7 @@ dev-install:
 uninstall:
 	-$(PIP_UNINSTALL) -y nni
 	-$(PIP_UNINSTALL) -y nnictl
-	-rm -rf $(INSTALL_PREFIX)/nni
+	-rm -rf $(NNI_INSTALL_PATH)
 	-rm -f $(BIN_PATH)/nnimanager
 	-rm -f $(BIN_PATH)/nnictl
 	-rm -f $(BASH_COMP_SCRIPT)
@@ -163,16 +178,16 @@ install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
 	#$(_INFO) Cleaning $(_END)
 	rm -rf $(NNI_NODE_PATH)
 	rm -rf $(NNI_YARN_PATH)
-	mkdir -p $(NNI_NODE_PATH)
-	mkdir -p $(NNI_YARN_PATH)
+	if [ ! -d $(NNI_INSTALL_PATH) ]; then mkdir -p $(NNI_INSTALL_PATH); fi
+	if [ ! -d $(NNI_TMP_PATH) ]; then mkdir -p $(NNI_TMP_PATH); fi
 	
 	#$(_INFO) Extracting Node.js $(_END)
 	tar -xf $(NNI_NODE_TARBALL)
-	mv -fT node-$(NNI_NODE_VERSION)-linux-x64 $(NNI_NODE_PATH)
+	mv -f node-$(NNI_NODE_VERSION)-$(OS_SPEC)-x64 $(NNI_NODE_PATH)
 	
 	#$(_INFO) Extracting Yarn $(_END)
 	tar -xf $(NNI_YARN_TARBALL)
-	mv -fT yarn-$(NNI_YARN_VERSION) $(NNI_YARN_PATH)
+	mv -f yarn-$(NNI_YARN_VERSION) $(NNI_YARN_PATH)
 
 .PHONY: install-python-modules
 install-python-modules:
@@ -184,16 +199,16 @@ install-python-modules:
 
 .PHONY: install-node-modules
 install-node-modules:
-	mkdir -p $(INSTALL_PREFIX)/nni
+	mkdir -p $(NNI_INSTALL_PATH)
 	rm -rf src/nni_manager/dist/node_modules
-	rm -rf $(INSTALL_PREFIX)/nni/nni_manager
+	rm -rf $(NNI_INSTALL_PATH)/nni_manager
 	
 	#$(_INFO) Installing NNI Manager $(_END)
-	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
-	cp -rT src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
+	cp -r src/nni_manager/dist $(NNI_INSTALL_PATH)/nni_manager
+	cp -r src/nni_manager/node_modules $(NNI_INSTALL_PATH)/nni_manager/node_modules
 	
 	#$(_INFO) Installing WebUI $(_END)
-	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/nni_manager/static
+	cp -r src/webui/build $(NNI_INSTALL_PATH)/nni_manager/static
 
 
 .PHONY: install-dev-modules
@@ -204,14 +219,14 @@ install-dev-modules:
 	#$(_INFO) Installing nnictl $(_END)
 	cd tools && $(PIP_INSTALL) $(PIP_MODE) -e .
 
-	mkdir -p $(INSTALL_PREFIX)/nni
+	mkdir -p $(NNI_INSTALL_PATH)
 	
 	#$(_INFO) Installing NNI Manager $(_END)
-	ln -sf ${PWD}/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
-	ln -sf ${PWD}/src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
+	ln -sf ${PWD}/src/nni_manager/dist $(NNI_INSTALL_PATH)/nni_manager
+	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_INSTALL_PATH)/nni_manager/node_modules
 	
 	#$(_INFO) Installing WebUI $(_END)
-	ln -sf ${PWD}/src/webui/build $(INSTALL_PREFIX)/nni/nni_manager/static
+	ln -sf ${PWD}/src/webui/build $(NNI_INSTALL_PATH)/nni_manager/static
 
 
 .PHONY: install-scripts
@@ -219,7 +234,7 @@ install-scripts:
 	mkdir -p $(BIN_PATH)
 	
 	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
-	echo 'cd $(INSTALL_PREFIX)/nni/nni_manager' >> $(BIN_PATH)/nnimanager
+	echo 'cd $(NNI_INSTALL_PATH)/nni_manager' >> $(BIN_PATH)/nnimanager
 	echo '$(NNI_NODE) main.js $$@' >> $(BIN_PATH)/nnimanager
 	chmod +x $(BIN_PATH)/nnimanager
 	
@@ -228,13 +243,14 @@ install-scripts:
 	echo 'python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
 	chmod +x $(BIN_PATH)/nnictl
 	
-	install -Dm644 tools/bash-completion $(BASH_COMP_SCRIPT)
+	if [ ! -d $(BASH_COMP_PREFIX) ]; then mkdir -p $(BASH_COMP_PREFIX); fi
+	install -m644 tools/bash-completion $(BASH_COMP_SCRIPT)
 
 
 .PHONY: install-examples
 install-examples:
 	mkdir -p $(EXAMPLES_PATH)
-	[ $(EXAMPLES_PATH) = ${PWD}/examples ] || cp -rT examples $(EXAMPLES_PATH)
+	[ $(EXAMPLES_PATH) = ${PWD}/examples ] || cp -r examples/* $(EXAMPLES_PATH)
 
 
 .PHONY: update-bash-config
