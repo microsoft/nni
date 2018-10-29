@@ -23,7 +23,7 @@ _END := $(shell echo -e '$(ESC_CMD)[0m')
 
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
-    _ROOT 1
+    _ROOT := 1
     BIN_PATH ?= /usr/bin
     INSTALL_PREFIX ?= /usr/share
     EXAMPLES_PATH ?= $(NNI_INSTALL_PATH)/examples
