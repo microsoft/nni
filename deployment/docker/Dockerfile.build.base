@@ -64,7 +64,7 @@ RUN wget -qO- http://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSI
 #
 #Install NNI
 #
-RUN pip3 install -v --user git+https://github.com/Microsoft/nni.git@v0.2
+RUN pip3 install --user nni-pkg
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
     HADOOP_INSTALL=/usr/local/hadoop \
