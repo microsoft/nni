@@ -33,10 +33,12 @@ Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
 'useAnnotation': bool,
 'tuner': Or({
-    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner'),
+    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'Hyperband'),
     'classArgs': {
         'optimize_mode': Or('maximize', 'minimize'),
-        Optional('speed'): int
+        Optional('speed'): int,
+        Optional('R'): int,
+        Optional('eta'): int
         },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{

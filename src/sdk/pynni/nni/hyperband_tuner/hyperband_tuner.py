@@ -59,10 +59,7 @@ def json2paramater(x, random_state):
             _value = x['_value']
             if _type == 'choice':
                 _index = random_state.randint(len(_value))
-                y = {
-                    '_index': _index,
-                    '_value': json2paramater(x['_value'][_index], random_state)
-                }
+                y = json2paramater(x['_value'][_index], random_state)
             else:
                 y = eval('parameter_expressions.' +
                             _type)(*(_value + [random_state]))
@@ -124,8 +121,8 @@ class Bracket():
         '''
         global _KEY # pylint: disable=global-statement
         self.num_finished_configs[i] += 1
-        if self.num_finished_configs[i] >= self.num_configs_to_run[i] and
-            self.no_more_trial == False:
+        if self.num_finished_configs[i] >= self.num_configs_to_run[i] \
+            and self.no_more_trial == False:
             # choose candidate configs from finished configs to run in the next round
             assert(self.i == i + 1)
             this_round_perf = self.configs_perf[i]
@@ -224,7 +221,7 @@ class Hyperband(MsgDispatcherBase):
         get one trial job, i.e., one hyperparameter configuration.
         '''
         if len(self.generated_hyper_configs) == 0:
-            if curr_s < 0:
+            if self.curr_s < 0:
                 # have tried all configurations
                 ret = {
                     'parameter_id': '-1_0_0',
@@ -261,6 +258,8 @@ class Hyperband(MsgDispatcherBase):
         self.searchspace_json = data
         self.random_state = np.random.RandomState()
 
+        return True
+
     def handle_trial_end(self, data):
         '''
         data: data['trial_job_id'] is id of the trial job which is finished (succeeded or failed or ...)
@@ -280,6 +279,8 @@ class Hyperband(MsgDispatcherBase):
                 }
                 send(CommandType.NewTrialJob, json_tricks.dumps(ret))
                 self.credit -= 1
+        
+        return True
 
     def handle_report_metric_data(self, data):
         '''

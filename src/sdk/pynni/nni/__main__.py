@@ -102,6 +102,17 @@ def main():
 
     args = parse_args()
 
+    # temporary
+    if args.tuner_class_name == 'Hyperband':
+        print('zql: test hyperband')
+        brain = create_builtin_class_instance(
+            args.tuner_class_name,
+            args.tuner_args)
+        brain.run()
+        return
+
+    print('zql: not hyperband')
+
     tuner = None
     assessor = None
 
