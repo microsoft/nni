@@ -36,19 +36,25 @@ import time
 import random
 import string
 
-def print_log_content(config_file_name):
-    '''print log information'''
+def get_log_path(config_file_name):
+    '''generate stdout and stderr log path'''
     stdout_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stdout')
     stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
-    print_normal(' Stderr:')
-    stderr_cmds = ['cat', stderr_full_path]
-    stderr_content = check_output(stderr_cmds)
-    print(stderr_content.decode('utf-8'))
-    print('\n\n')
+    return stdout_full_path, stderr_full_path
+
+def print_log_content(config_file_name):
+    '''print log information'''
+    stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     print_normal(' Stdout:')
     stdout_cmds = ['cat', stdout_full_path]
     stdout_content = check_output(stdout_cmds)
     print(stdout_content.decode('utf-8'))
+    print('\n\n')
+    print_normal(' Stderr:')
+    stderr_cmds = ['cat', stderr_full_path]
+    stderr_content = check_output(stderr_cmds)
+    print(stderr_content.decode('utf-8'))
+
 
 def start_rest_server(port, platform, mode, config_file_name, experiment_id=None):
     '''Run nni manager process'''
@@ -62,8 +68,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     cmds = [manager, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
-    stdout_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stdout')
-    stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
+    stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     stdout_file = open(stdout_full_path, 'a+')
     stderr_file = open(stderr_full_path, 'a+')
     time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
@@ -97,7 +102,7 @@ def set_trial_config(experiment_config, port, config_file_name):
         return True
     else:
         print('Error message is {}'.format(response.text))
-        stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
+        _, stderr_full_path = get_log_path(config_file_name)
         with open(stderr_full_path, 'a+') as fout:
             fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         return False
@@ -116,7 +121,7 @@ def set_remote_config(experiment_config, port, config_file_name):
     if not response or not check_response(response):
         if response is not None:
             err_message = response.text
-            stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
+            _, stderr_full_path = get_log_path(config_file_name)
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
@@ -133,7 +138,7 @@ def set_pai_config(experiment_config, port, config_file_name):
     if not response or not response.status_code == 200:
         if response is not None:
             err_message = response.text
-            stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
+            _, stderr_full_path = get_log_path(config_file_name)
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
@@ -199,7 +204,7 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     if check_response(response):
         return response
     else:
-        stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
+        _, stderr_full_path = get_log_path(config_file_name)
         with open(stderr_full_path, 'a+') as fout:
             fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         print_error('Setting experiment error, error message is {}'.format(response.text))
