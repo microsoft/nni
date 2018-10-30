@@ -1,0 +1,25 @@
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 100h
+maxTrialNum: 10000
+#choice: local, remote, pai
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: Hyperband
+  classArgs:
+    #R: the maximum STEPS
+    R: 10
+    #eta: proportion of discarded trials
+    eta: 2
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 0
