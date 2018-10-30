@@ -23,7 +23,7 @@ import json
 import os
 import shutil
 import string
-from subprocess import Popen, PIPE, call
+from subprocess import Popen, PIPE, call, check_output
 import tempfile
 from nni_annotation import *
 from .launcher_utils import validate_all_content
@@ -35,6 +35,20 @@ from .constants import *
 import time
 import random
 import string
+
+def print_log_content(config_file_name):
+    '''print log information'''
+    stdout_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stdout')
+    stderr_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stderr')
+    print_normal(' Stderr:')
+    stderr_cmds = ['cat', stderr_full_path]
+    stderr_content = check_output(stderr_cmds)
+    print(stderr_content.decode('utf-8'))
+    print('\n\n')
+    print_normal(' Stdout:')
+    stdout_cmds = ['cat', stdout_full_path]
+    stdout_content = check_output(stdout_cmds)
+    print(stdout_content.decode('utf-8'))
 
 def start_rest_server(port, platform, mode, config_file_name, experiment_id=None):
     '''Run nni manager process'''
@@ -220,6 +234,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         print_normal('Successfully started Restful server!')
     else:
         print_error('Restful server start failed!')
+        print_log_content(config_file_name)
         try:
             cmds = ['pkill', '-P', str(rest_process.pid)]
             call(cmds)
@@ -248,7 +263,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         if set_local_config(experiment_config, args.port, config_file_name):
             print_normal('Successfully set local config!')
         else:
-            print_error('Failed!')
+            print_error('Set local config failed!')
             try:
                 cmds = ['pkill', '-P', str(rest_process.pid)]
                 call(cmds)
@@ -280,7 +295,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             experiment_id = json.loads(response.text).get('experiment_id')
         nni_config.set_config('experimentId', experiment_id)
     else:
-        print_error('Failed!')
+        print_error('Start experiment failed!')
+        print_log_content(config_file_name)
         try:
             cmds = ['pkill', '-P', str(rest_process.pid)]
             call(cmds)
