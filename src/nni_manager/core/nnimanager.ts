@@ -587,6 +587,7 @@ class NNIManager implements Manager {
             id: getExperimentId(),
             revision: 0,
             execDuration: 0,
+            logDir: getLogDir(),
             params: {
                 authorName: '',
                 experimentName: '',
