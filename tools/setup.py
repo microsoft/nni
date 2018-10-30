@@ -20,4 +20,9 @@ setuptools.setup(
     description = 'NNI control for Neural Network Intelligence project',
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
+    entry_points = {
+        'console_scripts' : [
+            'nnictl = nnicmd.nnictl:parse_args'
+        ]
+    }
 )

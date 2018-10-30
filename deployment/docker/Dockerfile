@@ -47,23 +47,23 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     rm -rf /var/lib/apt/lists/*
 
 # numpy 1.14.3  scipy 1.1.0 
-RUN pip3 --no-cache-dir install \
+RUN python3 -m pip --no-cache-dir install \
     numpy==1.14.3 scipy==1.1.0 
 
 #
 #Install NNI
 #
-RUN pip3 install --user nni-pkg
+RUN python3 -m pip install --user nni-pkg
 
 #
 #Tensorflow 1.10.0
 #
-RUN pip3 --no-cache-dir install tensorflow-gpu==1.10.0
+RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
 
 #
 #Keras 2.1.6
 #
-RUN pip3 --no-cache-dir install Keras==2.1.6
+RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 
 ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:
 

@@ -29,7 +29,7 @@ def process_install(package_name):
         print_error('{0} is not supported!' % package_name)
     else:
         requirements_path = os.path.join(nni.__path__[0], PACKAGE_REQUIREMENTS[package_name])
-        cmds = 'cd ' + requirements_path + ' && pip3 install --user -r requirements.txt'
+        cmds = 'cd ' + requirements_path + ' && python3 -m pip install --user -r requirements.txt'
         call(cmds, shell=True)
 
 def package_install(args):

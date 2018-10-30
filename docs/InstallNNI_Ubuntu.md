@@ -14,7 +14,7 @@
 
 * __Install NNI through pip__
 
-      pip3 install --user nni-pkg
+      python3 -m pip install --user nni-pkg
 
 * __Install NNI through source code__
    

@@ -22,7 +22,12 @@ setuptools.setup(
     packages = setuptools.find_packages(),
     python_requires = '>=3.5',
     install_requires = [
-        'nni'
+        'nni',
+        'schema',
+        'pyyaml',
+        'psutil',
+        'requests',
+        'paramiko'
     ],
     classifiers = [
         'Programming Language :: Python :: 3',
