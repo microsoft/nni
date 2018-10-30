@@ -53,7 +53,7 @@ RUN pip3 --no-cache-dir install \
 #
 #Install NNI
 #
-RUN pip3 install -v --user git+https://github.com/Microsoft/nni.git@$(curl --silent "https://api.github.com/repos/Microsoft/nni/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+RUN pip3 install --user nni-pkg
 
 #
 #Tensorflow 1.10.0

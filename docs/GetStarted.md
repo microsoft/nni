@@ -15,13 +15,11 @@
 * __Install NNI through pip__
 
       python3 -m pip install --user nni-pkg
-      source ~/.bashrc
 
 * __Install NNI through source code__
    
       git clone -b v0.3 https://github.com/Microsoft/nni.git
       cd nni
-      chmod +x install.sh
       source install.sh
 
 ## **Quick start: run a customized experiment**

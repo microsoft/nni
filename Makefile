@@ -13,14 +13,12 @@ _END := $(shell echo -e '\e[0m')
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
-    BIN_PATH ?= /usr/bin
-    INSTALL_PREFIX ?= /usr/share
-    EXAMPLES_PATH ?= $(INSTALL_PREFIX)/nni/examples
+    BIN_FOLDER ?= /usr/local/bin
+    NNI_PKG_PATH ?= /usr/local/nni_pkg
     BASH_COMP_SCRIPT ?= /usr/share/bash-completion/completions/nnictl
 else  # is normal user
-    BIN_PATH ?= ${HOME}/.local/bin
-    INSTALL_PREFIX ?= ${HOME}/.local
-    EXAMPLES_PATH ?= ${HOME}/nni/examples
+    BIN_FOLDER ?= ${HOME}/.local/bin
+    NNI_PKG_PATH ?= ${HOME}/.local/nni_pkg
     ifndef VIRTUAL_ENV
         PIP_MODE ?= --user
     endif
@@ -28,44 +26,13 @@ else  # is normal user
 endif
 
 ## Dependency information
-NNI_NODE_VERSION ?= v10.12.0
-NNI_NODE_TARBALL ?= node-$(NNI_NODE_VERSION)-linux-x64.tar.xz
-NNI_NODE_PATH ?= $(INSTALL_PREFIX)/nni/node
-
-NNI_YARN_VERSION ?= v1.10.1
-NNI_YARN_TARBALL ?= yarn-$(NNI_YARN_VERSION).tar.gz
-NNI_YARN_PATH ?= /tmp/nni-yarn
-
-## Check if dependencies have been installed globally
-ifeq (, $(shell command -v node 2>/dev/null))
-    $(info $(_INFO) Node.js not found $(_END))
-    _MISS_DEPS := 1  # node not found
-else
-    _VER := $(shell node --version)
-    _NEWER := $(shell echo -e "$(NNI_NODE_VERSION)\n$(_VER)" | sort -Vr | head -n 1)
-    ifneq ($(_VER), $(_NEWER))
-        $(info $(_INFO) Node.js version not match $(_END))
-        _MISS_DEPS := 1  # node outdated
-    endif
-endif
-ifeq (, $(shell command -v yarnpkg 2>/dev/null))
-    $(info $(_INFO) Yarn not found $(_END))
-    _MISS_DEPS := 1  # yarn not found
-endif
-
-ifdef _MISS_DEPS
-    $(info $(_INFO) Missing dependencies, use local toolchain $(_END))
-    NNI_NODE := $(NNI_NODE_PATH)/bin/node
-    NNI_YARN := PATH=$(NNI_NODE_PATH)/bin:$${PATH} $(NNI_YARN_PATH)/bin/yarn
-else
-    $(info $(_INFO) All dependencies found, use global toolchain $(_END))
-    NNI_NODE := node
-    NNI_YARN := yarnpkg
-endif
-
-
-# Setting variables end
-
+$(info $(_INFO) Installing dependencies, use local toolchain $(_END))
+NNI_NODE_TARBALL ?= /tmp/nni-node-linux-x64.tar.xz
+NNI_NODE_FOLDER = /tmp/nni-node-linux-x64
+NNI_NODE ?= $(BIN_FOLDER)/node
+NNI_YARN_TARBALL ?= /tmp/nni-yarn.tar.gz
+NNI_YARN_FOLDER ?= /tmp/nni-yarn
+NNI_YARN := PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 
 # Main targets
 
@@ -89,9 +56,8 @@ build:
 install: install-python-modules
 install: install-node-modules
 install: install-scripts
-install: install-examples
 install:
-	#$(_INFO) Complete! You may want to add $(BIN_PATH) to your PATH environment $(_END)
+	#$(_INFO) Complete! You may want to add $(BIN_FOLDER) to your PATH environment $(_END)
 
 
 # Target for remote machine workers
@@ -121,7 +87,6 @@ pip-install: install-dependencies
 pip-install: build
 pip-install: install-node-modules
 pip-install: install-scripts
-pip-install: install-examples
 pip-install: update-bash-config
 
 
@@ -132,18 +97,17 @@ dev-install: check-dev-env
 dev-install: install-dev-modules
 dev-install: install-scripts
 dev-install:
-	#$(_INFO) Complete! You may want to add $(BIN_PATH) to your PATH environment $(_END)
+	#$(_INFO) Complete! You may want to add $(BIN_FOLDER) to your PATH environment $(_END)
 
 
 .PHONY: uninstall
 uninstall:
 	-$(PIP_UNINSTALL) -y nni
 	-$(PIP_UNINSTALL) -y nnictl
-	-rm -rf $(INSTALL_PREFIX)/nni
-	-rm -f $(BIN_PATH)/nnimanager
-	-rm -f $(BIN_PATH)/nnictl
+	-rm -rf $(NNI_PKG_PATH)
+	-rm -f $(BIN_FOLDER)/node
+	-rm -f $(BIN_FOLDER)/nnictl
 	-rm -f $(BASH_COMP_SCRIPT)
-	-[ $(EXAMPLES_PATH) = ${PWD}/examples ] || rm -rf $(EXAMPLES_PATH)
 
 # Main targets end
 
@@ -152,27 +116,26 @@ uninstall:
 
 $(NNI_NODE_TARBALL):
 	#$(_INFO) Downloading Node.js $(_END)
-	wget https://nodejs.org/dist/$(NNI_NODE_VERSION)/$(NNI_NODE_TARBALL)
+	wget https://aka.ms/nodejs-download -O $(NNI_NODE_TARBALL)
 
 $(NNI_YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
-	wget https://github.com/yarnpkg/yarn/releases/download/$(NNI_YARN_VERSION)/$(NNI_YARN_TARBALL)
+	wget https://aka.ms/yarn-download -O $(NNI_YARN_TARBALL)
 
 .PHONY: intall-dependencies
 install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
-	#$(_INFO) Cleaning $(_END)
-	rm -rf $(NNI_NODE_PATH)
-	rm -rf $(NNI_YARN_PATH)
-	mkdir -p $(NNI_NODE_PATH)
-	mkdir -p $(NNI_YARN_PATH)
-	
 	#$(_INFO) Extracting Node.js $(_END)
-	tar -xf $(NNI_NODE_TARBALL)
-	mv -fT node-$(NNI_NODE_VERSION)-linux-x64 $(NNI_NODE_PATH)
+	rm -rf $(NNI_NODE_FOLDER)
+	mkdir $(NNI_NODE_FOLDER)
+	tar -xf $(NNI_NODE_TARBALL) -C $(NNI_NODE_FOLDER) --strip-components 1
+	mkdir -p $(BIN_FOLDER)
+	rm -f $(NNI_NODE)
+	cp $(NNI_NODE_FOLDER)/bin/node $(NNI_NODE)
 	
 	#$(_INFO) Extracting Yarn $(_END)
-	tar -xf $(NNI_YARN_TARBALL)
-	mv -fT yarn-$(NNI_YARN_VERSION) $(NNI_YARN_PATH)
+	rm -rf $(NNI_YARN_FOLDER)
+	mkdir $(NNI_YARN_FOLDER)
+	tar -xf $(NNI_YARN_TARBALL) -C $(NNI_YARN_FOLDER) --strip-components 1
 
 .PHONY: install-python-modules
 install-python-modules:
@@ -184,17 +147,12 @@ install-python-modules:
 
 .PHONY: install-node-modules
 install-node-modules:
-	mkdir -p $(INSTALL_PREFIX)/nni
-	rm -rf src/nni_manager/dist/node_modules
-	rm -rf $(INSTALL_PREFIX)/nni/nni_manager
-	
-	#$(_INFO) Installing NNI Manager $(_END)
-	cp -rT src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
-	cp -rT src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
-	
-	#$(_INFO) Installing WebUI $(_END)
-	cp -rT src/webui/build $(INSTALL_PREFIX)/nni/nni_manager/static
-
+	#$(_INFO) Installing NNI Package $(_END)
+	rm -rf $(NNI_PKG_PATH)
+	cp -r src/nni_manager/dist $(NNI_PKG_PATH)
+	cp src/nni_manager/package.json $(NNI_PKG_PATH)
+	$(NNI_YARN) --prod --cwd $(NNI_PKG_PATH)
+	cp -r src/webui/build $(NNI_PKG_PATH)/static
 
 .PHONY: install-dev-modules
 install-dev-modules:
@@ -204,46 +162,38 @@ install-dev-modules:
 	#$(_INFO) Installing nnictl $(_END)
 	cd tools && $(PIP_INSTALL) $(PIP_MODE) -e .
 
-	mkdir -p $(INSTALL_PREFIX)/nni
+	rm -rf $(NNI_PKG_PATH)
 	
-	#$(_INFO) Installing NNI Manager $(_END)
-	ln -sf ${PWD}/src/nni_manager/dist $(INSTALL_PREFIX)/nni/nni_manager
-	ln -sf ${PWD}/src/nni_manager/node_modules $(INSTALL_PREFIX)/nni/nni_manager/node_modules
-	
-	#$(_INFO) Installing WebUI $(_END)
-	ln -sf ${PWD}/src/webui/build $(INSTALL_PREFIX)/nni/nni_manager/static
+	#$(_INFO) Installing NNI Package $(_END)
+	ln -sf ${PWD}/src/nni_manager/dist $(NNI_PKG_PATH)
+	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_PATH)/node_modules
+	ln -sf ${PWD}/src/webui/build $(NNI_PKG_PATH)/static
 
 
 .PHONY: install-scripts
 install-scripts:
-	mkdir -p $(BIN_PATH)
-	
-	echo '#!/bin/sh' > $(BIN_PATH)/nnimanager
-	echo 'cd $(INSTALL_PREFIX)/nni/nni_manager' >> $(BIN_PATH)/nnimanager
-	echo '$(NNI_NODE) main.js $$@' >> $(BIN_PATH)/nnimanager
-	chmod +x $(BIN_PATH)/nnimanager
-	
-	echo '#!/bin/sh' > $(BIN_PATH)/nnictl
-	echo 'NNI_MANAGER=$(BIN_PATH)/nnimanager \' >> $(BIN_PATH)/nnictl
-	echo 'python3 -m nnicmd.nnictl $$@' >> $(BIN_PATH)/nnictl
-	chmod +x $(BIN_PATH)/nnictl
-	
+	mkdir -p $(BIN_FOLDER)
+
+	touch $(BIN_FOLDER)/nnictl
+	echo "#!/usr/bin/python3" >>$(BIN_FOLDER)/nnictl
+	echo "# -*- coding: utf-8 -*-" >>$(BIN_FOLDER)/nnictl
+	echo "import re" >>$(BIN_FOLDER)/nnictl
+	echo "import sys" >>$(BIN_FOLDER)/nnictl
+	echo "from nnicmd.nnictl import parse_args" >>$(BIN_FOLDER)/nnictl
+	echo "if __name__ == '__main__':" >>$(BIN_FOLDER)/nnictl
+	echo "    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$$', '', sys.argv[0])" >>$(BIN_FOLDER)/nnictl
+	echo "    sys.exit(parse_args())" >>$(BIN_FOLDER)/nnictl
+
+	chmod +x $(BIN_FOLDER)/nnictl
 	install -Dm644 tools/bash-completion $(BASH_COMP_SCRIPT)
-
-
-.PHONY: install-examples
-install-examples:
-	mkdir -p $(EXAMPLES_PATH)
-	[ $(EXAMPLES_PATH) = ${PWD}/examples ] || cp -rT examples $(EXAMPLES_PATH)
-
 
 .PHONY: update-bash-config
 ifndef _ROOT
 update-bash-config:
 	#$(_INFO) Updating bash configurations $(_END)
-    ifeq (, $(shell echo $$PATH | tr ':' '\n' | grep -x '$(BIN_PATH)'))  # $(BIN_PATH) not in PATH
-	#$(_WARNING) NOTE: adding $(BIN_PATH) to PATH in bashrc $(_END)
-	echo 'export PATH="$$PATH:$(BIN_PATH)"' >> ~/.bashrc
+    ifeq (, $(shell echo $$PATH | tr ':' '\n' | grep -x '$(BIN_FOLDER)'))  # $(BIN_FOLDER) not in PATH
+	#$(_WARNING) NOTE: adding $(BIN_FOLDER) to PATH in bashrc $(_END)
+	echo 'export PATH="$$PATH:$(BIN_FOLDER)"' >> ~/.bashrc
     endif
     ifeq (, $(shell (source ~/.bash_completion ; command -v _nnictl) 2>/dev/null))  # completion not installed
 	#$(_WARNING) NOTE: adding $(BASH_COMP_SCRIPT) to ~/.bash_completion $(_END)
@@ -271,9 +221,6 @@ check-dev-env:
 	#$(_INFO) Checking developing environment... $(_END)
 ifdef _ROOT
 	$(error You should not develop NNI as root)
-endif
-ifdef _MISS_DEPS
-#	$(error Please install Node.js and Yarn to develop NNI)
 endif
 	#$(_INFO) Pass! $(_END)
 
