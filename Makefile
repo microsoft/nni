@@ -1,8 +1,7 @@
 # Setting variables
 
-SHELL := /bin/bash
-PIP_INSTALL := pip3 install
-PIP_UNINSTALL := pip3 uninstall
+PIP_INSTALL := python3 -m pip install
+PIP_UNINSTALL := python3 -m pip uninstall
 
 ## Colorful output
 _INFO := $(shell echo -e '\e[1;36m')
@@ -12,17 +11,18 @@ _END := $(shell echo -e '\e[0m')
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
-    BIN_FOLDER ?= /usr/local/bin
-    NNI_PKG_FOLDER ?= /usr/local/nni_pkg
+    ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
     BASH_COMP_SCRIPT ?= /usr/share/bash-completion/completions/nnictl
 else  # is normal user
-    BIN_FOLDER ?= ${HOME}/.local/bin
-    NNI_PKG_FOLDER ?= ${HOME}/.local/nni_pkg
+    ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getusersitepackages()).parents[2])')
     ifndef VIRTUAL_ENV
         PIP_MODE ?= --user
     endif
     BASH_COMP_SCRIPT ?= ${HOME}/.bash_completion.d/nnictl
 endif
+
+BIN_FOLDER ?= $(ROOT_FOLDER)/bin
+NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni_pkg
 
 ## Dependency information
 $(info $(_INFO) Installing dependencies, use local toolchain $(_END))
@@ -39,15 +39,34 @@ NNI_YARN := PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 build:
 	#$(_INFO) Building NNI Manager $(_END)
 	cd src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
-	
 	#$(_INFO) Building WebUI $(_END)
 	cd src/webui && $(NNI_YARN) && $(NNI_YARN) build
-	
 	#$(_INFO) Building Python SDK $(_END)
 	cd src/sdk/pynni && python3 setup.py build
-	
 	#$(_INFO) Building nnictl $(_END)
 	cd tools && python3 setup.py build
+
+# All-in-one target for non-expert users
+# Installs NNI as well as its dependencies, and update bashrc to set PATH
+.PHONY: easy-install
+easy-install: check-perm
+easy-install: install-dependencies
+easy-install: build
+easy-install: install
+easy-install: update-bash-config
+easy-install:
+	#$(_INFO) Complete! $(_END)
+
+# All-in-one target for developer users
+# Install NNI as well as its dependencies, and update bashrc to set PATH
+.PHONY: dev-easy-install
+dev-easy-install: dev-check-perm
+dev-easy-install: install-dependencies
+dev-easy-install: build
+dev-easy-install: dev-install
+dev-easy-install: update-bash-config
+dev-easy-install:
+	#$(_INFO) Complete! $(_END)
 
 # Standard installation target
 # Must be invoked after building
@@ -58,26 +77,14 @@ install: install-scripts
 install:
 	#$(_INFO) Complete! You may want to add $(BIN_FOLDER) to your PATH environment $(_END)
 
-
-# Target for remote machine workers
-# Only installs core SDK module
-.PHONY: remote-machine-install
-remote-machine-install:
-	cd src/sdk/pynni && python3 setup.py install $(PIP_MODE)
-
-
-# All-in-one target for non-expert users
-# Installs NNI as well as its dependencies, and update bashrc to set PATH
-.PHONY: easy-install
-easy-install: check-perm
-easy-install: install-dependencies
-easy-install: build
-easy-install: install
-easy-install: update-bash-config
-
-easy-install:
-	#$(_INFO) Complete! $(_END)
-
+# Target for NNI developers
+# Creates symlinks instead of copying files
+.PHONY: dev-install
+dev-install: dev-install-python-modules
+dev-install: dev-install-node-modules
+dev-install: install-scripts
+dev-install:
+	#$(_INFO) Complete! You may want to add $(BIN_FOLDER) to your PATH environment $(_END)
 
 # Target for setup.py
 # Do not invoke this manually
@@ -87,17 +94,6 @@ pip-install: build
 pip-install: install-node-modules
 pip-install: install-scripts
 pip-install: update-bash-config
-
-
-# Target for NNI developers
-# Creates symlinks instead of copying files
-.PHONY: dev-install
-dev-install: check-dev-env
-dev-install: install-dev-modules
-dev-install: install-scripts
-dev-install:
-	#$(_INFO) Complete! You may want to add $(BIN_FOLDER) to your PATH environment $(_END)
-
 
 .PHONY: uninstall
 uninstall:
@@ -109,7 +105,6 @@ uninstall:
 	-rm -f $(BASH_COMP_SCRIPT)
 
 # Main targets end
-
 
 # Helper targets
 
@@ -144,6 +139,14 @@ install-python-modules:
 	#$(_INFO) Installing nnictl $(_END)
 	cd tools && $(PIP_INSTALL) $(PIP_MODE) .
 
+.PHONY: dev-install-python-modules
+dev-install-python-modules:
+	#$(_INFO) Installing Python SDK $(_END)
+	cd src/sdk/pynni && $(PIP_INSTALL) $(PIP_MODE) -e .
+	
+	#$(_INFO) Installing nnictl $(_END)
+	cd tools && $(PIP_INSTALL) $(PIP_MODE) -e .
+
 .PHONY: install-node-modules
 install-node-modules:
 	#$(_INFO) Installing NNI Package $(_END)
@@ -153,36 +156,16 @@ install-node-modules:
 	$(NNI_YARN) --prod --cwd $(NNI_PKG_FOLDER)
 	cp -r src/webui/build $(NNI_PKG_FOLDER)/static
 
-.PHONY: install-dev-modules
-install-dev-modules:
-	#$(_INFO) Installing Python SDK $(_END)
-	cd src/sdk/pynni && $(PIP_INSTALL) $(PIP_MODE) -e .
-	
-	#$(_INFO) Installing nnictl $(_END)
-	cd tools && $(PIP_INSTALL) $(PIP_MODE) -e .
-	
+.PHONY: dev-install-node-modules
+dev-install-node-modules:
 	#$(_INFO) Installing NNI Package $(_END)
 	rm -rf $(NNI_PKG_FOLDER)
 	ln -sf ${PWD}/src/nni_manager/dist $(NNI_PKG_FOLDER)
 	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_FOLDER)/node_modules
 	ln -sf ${PWD}/src/webui/build $(NNI_PKG_FOLDER)/static
 
-
 .PHONY: install-scripts
 install-scripts:
-	mkdir -p $(BIN_FOLDER)
-
-	touch $(BIN_FOLDER)/nnictl
-	echo "#!/usr/bin/python3" >>$(BIN_FOLDER)/nnictl
-	echo "# -*- coding: utf-8 -*-" >>$(BIN_FOLDER)/nnictl
-	echo "import re" >>$(BIN_FOLDER)/nnictl
-	echo "import sys" >>$(BIN_FOLDER)/nnictl
-	echo "from nnicmd.nnictl import parse_args" >>$(BIN_FOLDER)/nnictl
-	echo "if __name__ == '__main__':" >>$(BIN_FOLDER)/nnictl
-	echo "    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$$', '', sys.argv[0])" >>$(BIN_FOLDER)/nnictl
-	echo "    sys.exit(parse_args())" >>$(BIN_FOLDER)/nnictl
-
-	chmod +x $(BIN_FOLDER)/nnictl
 	install -Dm644 tools/bash-completion $(BASH_COMP_SCRIPT)
 
 .PHONY: update-bash-config
@@ -201,7 +184,6 @@ else
 update-bash-config: ;
 endif
 
-
 .PHONY: check-perm
 ifdef _ROOT
 check-perm:
@@ -213,13 +195,12 @@ else
 check-perm: ;
 endif
 
-
-.PHONY: check-dev-env
-check-dev-env:
-	#$(_INFO) Checking developing environment... $(_END)
+.PHONY: dev-check-perm
 ifdef _ROOT
+dev-check-perm:
 	$(error You should not develop NNI as root)
+else
+dev-check-perm: ;
 endif
-	#$(_INFO) Pass! $(_END)
 
 # Helper targets end

@@ -2,7 +2,7 @@ CWD := $(PWD)/
 
 .PHONY: build
 build:
-	pip3 install --user --upgrade setuptools wheel
+	python3 -m pip install --user --upgrade setuptools wheel
 	wget https://aka.ms/nodejs-download -O $(CWD)node-linux-x64.tar.xz
 	rm -rf $(CWD)node-linux-x64
 	mkdir $(CWD)node-linux-x64
@@ -25,5 +25,5 @@ build:
 
 .PHONY: upload
 upload:
-	pip3 install --user --upgrade twine
-	twine upload dist/*
+	python3 -m pip install --user --upgrade twine
+	python3 -m twine upload dist/*

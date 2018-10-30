@@ -8,13 +8,13 @@
       git
       wget
 
-    python pip should also be correctly installed. You could use "pip3 -v" to check in Linux.
+    python pip should also be correctly installed. You could use "python3 -m pip -v" to check in Linux.
     
     * Note: we don't support virtual environment in current releases.
 
 * __Install NNI through pip__
 
-      pip3 install --user nni-pkg
+      python3 -m pip install --user nni-pkg
 
 * __Install NNI through source code__
    
