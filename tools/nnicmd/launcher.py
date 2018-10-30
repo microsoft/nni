@@ -28,11 +28,10 @@ import tempfile
 from nni_annotation import *
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
-from .url_utils import cluster_metadata_url, experiment_url
+from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port
 from .constants import *
-from .webui_utils import *
 import time
 import random
 import string
@@ -288,7 +287,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
-    web_ui_url_list = get_web_ui_urls(args.port, config_file_name)
+    web_ui_url_list = get_local_urls(args.port)
+    nni_config.set_config('webuiUrl', web_ui_url_list)
     
     #save experiment information
     experiment_config = Experiments()

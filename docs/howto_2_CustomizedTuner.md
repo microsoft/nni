@@ -61,7 +61,7 @@ If the you implement the ```generate_parameters``` like this:
         # your code implements here.
         return {"dropout": 0.3, "learning_rate": 0.4}
 ```
-It's means your Tuner will always generate parameters ```{"dropout": 0.3, "learning_rate": 0.4}```. Then Trial will receive ```{"dropout": 0.3, "learning_rate": 0.4}``` this object will using ```nni.get_parameters()``` API from NNI SDK. After training of Trial, it will send result to Tuner by calling ```nni.report_final_result(0.93)```. Then ```receive_trial_result``` will function will receied these parameters like：
+ It means your Tuner will always generate parameters ```{"dropout": 0.3, "learning_rate": 0.4}```. Then Trial will receive ```{"dropout": 0.3, "learning_rate": 0.4}``` by calling API ```nni.get_next_parameter()```. Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API ```nni.report_final_result()```, for example ```nni.report_final_result(0.93)```. Then your Tuner's ```receive_trial_result``` function will receied the result like：
 ```
 parameter_id = 82347
 parameters = {"dropout": 0.3, "learning_rate": 0.4}
