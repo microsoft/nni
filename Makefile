@@ -1,24 +1,23 @@
 # Setting variables
 
 SHELL := /bin/bash
-PIP_INSTALL := python3 -m pip install
-PIP_UNINSTALL := python3 -m pip uninstall
+PIP_INSTALL := pip3 install
+PIP_UNINSTALL := pip3 uninstall
 
 ## Colorful output
 _INFO := $(shell echo -e '\e[1;36m')
 _WARNING := $(shell echo -e '\e[1;33m')
 _END := $(shell echo -e '\e[0m')
 
-
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
     BIN_FOLDER ?= /usr/local/bin
-    NNI_PKG_PATH ?= /usr/local/nni_pkg
+    NNI_PKG_FOLDER ?= /usr/local/nni_pkg
     BASH_COMP_SCRIPT ?= /usr/share/bash-completion/completions/nnictl
 else  # is normal user
     BIN_FOLDER ?= ${HOME}/.local/bin
-    NNI_PKG_PATH ?= ${HOME}/.local/nni_pkg
+    NNI_PKG_FOLDER ?= ${HOME}/.local/nni_pkg
     ifndef VIRTUAL_ENV
         PIP_MODE ?= --user
     endif
@@ -104,7 +103,7 @@ dev-install:
 uninstall:
 	-$(PIP_UNINSTALL) -y nni
 	-$(PIP_UNINSTALL) -y nnictl
-	-rm -rf $(NNI_PKG_PATH)
+	-rm -rf $(NNI_PKG_FOLDER)
 	-rm -f $(BIN_FOLDER)/node
 	-rm -f $(BIN_FOLDER)/nnictl
 	-rm -f $(BASH_COMP_SCRIPT)
@@ -148,11 +147,11 @@ install-python-modules:
 .PHONY: install-node-modules
 install-node-modules:
 	#$(_INFO) Installing NNI Package $(_END)
-	rm -rf $(NNI_PKG_PATH)
-	cp -r src/nni_manager/dist $(NNI_PKG_PATH)
-	cp src/nni_manager/package.json $(NNI_PKG_PATH)
-	$(NNI_YARN) --prod --cwd $(NNI_PKG_PATH)
-	cp -r src/webui/build $(NNI_PKG_PATH)/static
+	rm -rf $(NNI_PKG_FOLDER)
+	cp -r src/nni_manager/dist $(NNI_PKG_FOLDER)
+	cp src/nni_manager/package.json $(NNI_PKG_FOLDER)
+	$(NNI_YARN) --prod --cwd $(NNI_PKG_FOLDER)
+	cp -r src/webui/build $(NNI_PKG_FOLDER)/static
 
 .PHONY: install-dev-modules
 install-dev-modules:
@@ -161,13 +160,12 @@ install-dev-modules:
 	
 	#$(_INFO) Installing nnictl $(_END)
 	cd tools && $(PIP_INSTALL) $(PIP_MODE) -e .
-
-	rm -rf $(NNI_PKG_PATH)
 	
 	#$(_INFO) Installing NNI Package $(_END)
-	ln -sf ${PWD}/src/nni_manager/dist $(NNI_PKG_PATH)
-	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_PATH)/node_modules
-	ln -sf ${PWD}/src/webui/build $(NNI_PKG_PATH)/static
+	rm -rf $(NNI_PKG_FOLDER)
+	ln -sf ${PWD}/src/nni_manager/dist $(NNI_PKG_FOLDER)
+	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_FOLDER)/node_modules
+	ln -sf ${PWD}/src/webui/build $(NNI_PKG_FOLDER)/static
 
 
 .PHONY: install-scripts
