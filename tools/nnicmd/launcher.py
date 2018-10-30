@@ -46,7 +46,6 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         exit(1)
 
     print_normal('Starting restful server...')
-    manager = os.environ.get('NNI_MANAGER', 'nnimanager')
     cmds = ['node', path.join(site.USER_BASE, 'nni_pkg', 'main.js'), '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]

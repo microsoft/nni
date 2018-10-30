@@ -6,7 +6,7 @@ strategy:
       PYTHON_VERSION: '3.6'
 
 steps:
-  - script: python3 -m pip install --upgrade pip setuptools
+  - script: pip3 install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
       source install.sh
