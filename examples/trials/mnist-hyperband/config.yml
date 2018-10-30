@@ -14,7 +14,7 @@ tuner:
   builtinTunerName: Hyperband
   classArgs:
     #R: the maximum STEPS
-    R: 10
+    R: 100
     #eta: proportion of discarded trials
     eta: 2
     #choice: maximize, minimize
