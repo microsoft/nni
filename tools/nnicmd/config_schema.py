@@ -32,13 +32,26 @@ Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
 Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
 'useAnnotation': bool,
-'tuner': Or({
+Optional('advisor'): Or({
+    'builtinAdvisorName': Or('Hyperband'),
+    'classArgs': {
+        'optimize_mode': Or('maximize', 'minimize'),
+        Optional('R'): int,
+        Optional('eta'): int
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'codeDir': os.path.exists,
+    'classFileName': str,
+    'className': str,
+    Optional('classArgs'): dict,
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+}),
+Optional('tuner'): Or({
     'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'Hyperband'),
     'classArgs': {
         'optimize_mode': Or('maximize', 'minimize'),
         Optional('speed'): int,
-        Optional('R'): int,
-        Optional('eta'): int
         },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
