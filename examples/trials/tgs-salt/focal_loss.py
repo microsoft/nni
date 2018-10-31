@@ -72,9 +72,6 @@ class FocalLoss2d(nn.Module):
 if __name__ == '__main__':
     L = FocalLoss2d()
     out = torch.randn(2, 3, 3).cuda()
-    #target = torch.ones(2, 3, 3).cuda()
     target = (torch.sigmoid(out) > 0.5).float()
-    #print(target, out)
     loss = L(out, target)
     print(loss)
-    #pass

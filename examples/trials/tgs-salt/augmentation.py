@@ -161,7 +161,6 @@ def test_transform():
     img = Image.open(os.path.join(r'D:\data\ship\train_v2', img_id)).convert('RGB')
     mask = Image.open(os.path.join(r'D:\data\ship\train_masks', img_id)).convert('L').point(lambda x: 0 if x < 128 else 1, 'L')
 
-    #trans = RandomResizedCropWithMask(768, scale=(0.6, 1))
     trans = Compose([
         RandomHFlipWithMask(),
         RandomVFlipWithMask(),
@@ -171,7 +170,6 @@ def test_transform():
     ])
 
     trans2 = RandomAffineWithMask(45, (0.2,0.2), (0.9, 1.1))
-    #trans = RandomRotateWithMask([0, 90, 180, 270])
     trans3, trans4 = get_img_mask_augments(True, 'edge')
 
     img, mask = trans4(img, mask)
@@ -239,29 +237,5 @@ def test_tta():
     img_back = F.to_pil_image(img_np)
     img_back.show()
 
-
-def test_rotate():
-    img_f = os.path.join(settings.TEST_IMG_DIR, '0c2637aa9.jpg')
-    img = Image.open(img_f)
-    img = img.convert('RGB')
-    #img_np = np.array(img)
-    #img_np_r90 = np.rot90(img_np,1)
-    #img_np_r90 = np.rot90(img_np_r90,3)
-    #img_2 = F.to_pil_image(img_np_r90)
-    #img = F.rotate(img, 90, False, False)
-    #ImageDraw.Draw(img_2)
-    #img_2.show()
-    #img.show()
-
-    img_aug = tta_7(img)
-    #img_aug = tta_7_back(img_aug)
-    img_aug = tta_back_np(img_aug, 7)
-    img_aug.show()
-
-
 if __name__ == '__main__':
-    #test_augment()
-    #test_rotate()
-    #test_tta()
     test_transform()
-    #test_color_trans()

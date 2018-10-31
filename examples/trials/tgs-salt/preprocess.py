@@ -90,8 +90,4 @@ def test():
     print(meta_train_split[settings.X_COLUMN].values[:10])
 
 if __name__ == '__main__':
-    #prepare_metadata()
-    #convert_model2()
-    #get_mask_existence()
     generate_stratified_metadata()
-    #get_nfold_split2(0)

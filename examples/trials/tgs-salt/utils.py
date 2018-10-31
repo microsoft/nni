@@ -82,7 +82,6 @@ def get_salt_existence():
     train_mask = pd.read_csv(settings.LABEL_FILE)
     salt_exists_dict = {}
     for row in train_mask.values:
-        #print(row[1] is np.nan)
         salt_exists_dict[row[0]] = 0 if (row[1] is np.nan or len(row[1]) < 1) else 1
     return salt_exists_dict
 
@@ -157,9 +156,6 @@ def get_nfold_split(ifold, nfold=10, meta_version=1):
     for i, (train_index, valid_index) in enumerate(kf.split(meta_train[settings.ID_COLUMN].values.reshape(-1))):
         if i == ifold:
             break
-    #print(train_index[:10], train_index[-10:])
-    #print(valid_index[:10], valid_index[-10:])
-
     return meta_train.iloc[train_index], meta_train.iloc[valid_index]
 
 def get_nfold_split2(ifold, nfold=10):
@@ -169,9 +165,6 @@ def get_nfold_split2(ifold, nfold=10):
         train_splits = json.load(f)
     train_index = train_splits[str(ifold)]['train_index']
     valid_index = train_splits[str(ifold)]['val_index']
-    #print(train_index[:10], train_index[-10:])
-    #print(valid_index[:10], valid_index[-10:])
-    #print(meta_train.iloc[train_index].head())
 
     return meta_train.iloc[train_index], meta_train.iloc[valid_index] 
 
@@ -183,5 +176,4 @@ def get_test_meta():
     return test_meta
 
 if __name__ == '__main__':
-    #get_test_meta()
     get_nfold_split(2)

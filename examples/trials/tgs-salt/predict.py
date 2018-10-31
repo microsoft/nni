@@ -123,7 +123,6 @@ def ensemble_np(args, np_files, save_np=None):
     meta = get_test_loader(args.batch_size, index=0, dev_mode=False, pad_mode=args.pad_mode).meta
 
     submission = create_submission(meta, y_pred_test)
-    #submission_filepath = 'v4_1378.csv'
     submission.to_csv(args.sub_file, index=None, encoding='utf-8')
 
 def generate_preds(outputs, target_size, pad_mode, threshold=0.5):
@@ -144,24 +143,6 @@ def generate_preds(outputs, target_size, pad_mode, threshold=0.5):
 def ensemble_predict(args):
     model = eval(args.model_name)(args.layers, num_filters=args.nf)
     
-    #checkpoints = [
-    #    r'G:\salt\models\152_new\best_0.pth', r'G:\salt\models\152_new\best_1.pth',
-    #    r'G:\salt\models\152_new\best_2.pth'
-    #]
-    #checkpoints = [ LB841
-    #    r'D:\data\salt\models\UNetResNetV4_34\best_0.pth', r'D:\data\salt\models\UNetResNetV4_34\best_1.pth',
-    #    r'D:\data\salt\models\UNetResNetV4_34\best_2.pth'#, r'D:\data\salt\models\UNetResNetV4_34\best_3.pth'
-    #]
-    
-    # LB861
-    #checkpoints = [
-    #    r'D:\data\salt\models\depths\UNetResNetV4_34\edge\best_0.pth', 
-    #    r'D:\data\salt\models\depths\UNetResNetV4_34\edge\best_1.pth',
-    #    r'D:\data\salt\models\depths\UNetResNetV4_34\edge\best_2.pth',
-    #    r'D:\data\salt\models\depths\UNetResNetV4_34\edge\best_3.pth'
-    #]
-
-    #checkpoints= glob.glob(r'D:\data\salt\models\pseudo\UNetResNetV4_34\edge\best*.pth')
     checkpoints = [
         r'D:\data\salt\models\pseudo\UNetResNetV4_34\edge\best_5.pth', 
         r'D:\data\salt\models\pseudo\UNetResNetV4_34\edge\best_6.pth',
@@ -169,7 +150,6 @@ def ensemble_predict(args):
         r'D:\data\salt\models\pseudo\UNetResNetV4_34\edge\best_9.pth'
     ]
     print(checkpoints)
-    #ensemble(checkpoints)
 
     ensemble(args, model, checkpoints)
 
@@ -177,13 +157,10 @@ def ensemble_np_results(args):
     np_files1 = glob.glob(r'D:\data\salt\models\depths\UNetResNetV5_50\edge\*pth_out\*.npy')
     np_files2 = glob.glob(r'D:\data\salt\models\depths\UNetResNetV4_34\edge\*pth_out\*.npy')
     np_files3 = glob.glob(r'D:\data\salt\models\depths\UNetResNetV6_34\edge\*pth_out\*.npy')
-    #np_files4 = glob.glob(r'D:\data\salt\models\pseudo\UNetResNetV4_34\edge\*pth_out\*.npy')
-    #np_files5 = glob.glob(r'D:\data\salt\models\pseudo\UNetResNetV6_34\edge\*pth_out\*.npy')
     np_files6 = glob.glob(r'D:\data\salt\models\ensemble\*.npy')
-    np_files = np_files6 #np_files1 + np_files2 + np_files3 #+ np_files4 + np_files5
-    #np_files = 
+    np_files = np_files1 + np_files2 + np_files3 + np_files6
     print(np_files)
-    ensemble_np(args, np_files) #, save_np=os.path.join(settings.MODEL_DIR, 'ensemble', 'v456_lb864.npy'))
+    ensemble_np(args, np_files) 
 
 def predict_model(args):
     model = eval(args.model_name)(args.layers, num_filters=args.nf)
