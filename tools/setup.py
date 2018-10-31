@@ -12,8 +12,7 @@ setuptools.setup(
         'psutil',
         'astor',
         'schema',
-        'pyhdfs',
-        'paramiko'
+        'pyhdfs'
     ],
 
     author = 'Microsoft NNI Team',
