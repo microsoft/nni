@@ -1,4 +1,4 @@
-**How to contribute**
+**Set up NNI developer environment**
 ===
 ## Best practice for debug NNI source code
 
