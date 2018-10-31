@@ -53,6 +53,8 @@ def parse_path(experiment_config, config_path):
         expand_path(experiment_config['tuner'], 'codeDir')
     if experiment_config.get('assessor'):
         expand_path(experiment_config['assessor'], 'codeDir')
+    if experiment_config.get('advisor'):
+        expand_path(experiment_config['advisor'], 'codeDir')
     
     #if users use relative path, convert it to absolute path
     root_path = os.path.dirname(config_path)
@@ -64,6 +66,8 @@ def parse_path(experiment_config, config_path):
         parse_relative_path(root_path, experiment_config['tuner'], 'codeDir')
     if experiment_config.get('assessor'):
         parse_relative_path(root_path, experiment_config['assessor'], 'codeDir')
+    if experiment_config.get('advisor'):
+        parse_relative_path(root_path, experiment_config['advisor'], 'codeDir')
 
 def validate_search_space_content(experiment_config):
     '''Validate searchspace content, 
@@ -105,43 +109,55 @@ def validate_common_content(experiment_config):
     except Exception as exception:
         raise Exception(exception)
 
+def validate_customized_file(experiment_config, spec_key):
+    '''
+    check whether the file of customized tuner/assessor/advisor exists
+    spec_key: 'tuner', 'assessor', 'advisor'
+    '''
+    if experiment_config[spec_key].get('codeDir') and \
+        experiment_config[spec_key].get('classFileName') and \
+        experiment_config[spec_key].get('className'):
+        if not os.path.exists(os.path.join(
+                experiment_config[spec_key]['codeDir'],
+                experiment_config[spec_key]['classFileName'])):
+            raise ValueError('%s file directory is not valid'%(spec_key))
+    else:
+        raise ValueError('%s format is not valid!'%(spec_key))
+
 def parse_tuner_content(experiment_config):
     '''Validate whether tuner in experiment_config is valid'''
     if experiment_config['tuner'].get('builtinTunerName'):
         experiment_config['tuner']['className'] = experiment_config['tuner']['builtinTunerName']
-    elif experiment_config['tuner'].get('codeDir') and \
-        experiment_config['tuner'].get('classFileName') and \
-        experiment_config['tuner'].get('className'):
-        if not os.path.exists(os.path.join(
-                experiment_config['tuner']['codeDir'],
-                experiment_config['tuner']['classFileName'])):
-            raise ValueError('Tuner file directory is not valid!')
     else:
-        raise ValueError('Tuner format is not valid!')
+        validate_customized_file(experiment_config, 'tuner')
 
 def parse_assessor_content(experiment_config):
     '''Validate whether assessor in experiment_config is valid'''
     if experiment_config.get('assessor'):
         if experiment_config['assessor'].get('builtinAssessorName'):
             experiment_config['assessor']['className'] = experiment_config['assessor']['builtinAssessorName']
-        elif experiment_config['assessor'].get('codeDir') and \
-            experiment_config['assessor'].get('classFileName') and \
-            experiment_config['assessor'].get('className'):
-            if not os.path.exists(os.path.join(
-                    experiment_config['assessor']['codeDir'],
-                    experiment_config['assessor']['classFileName'])):
-                raise ValueError('Assessor file directory is not valid!')
         else:
-            raise ValueError('Assessor format is not valid!')
+            validate_customized_file(experiment_config, 'assessor')
 
-def validate_annotation_content(experiment_config):
-    '''Valid whether useAnnotation and searchSpacePath is coexist'''
+def parse_advisor_content(experiment_config):
+    '''Validate whether advisor in experiment_config is valid'''
+    if experiment_config['advisor'].get('builtinAdvisorName'):
+        experiment_config['advisor']['className'] = experiment_config['advisor']['builtinAdvisorName']
+    else:
+        validate_customized_file(experiment_config, 'advisor')
+
+def validate_annotation_content(experiment_config, spec_key, builtin_name):
+    '''
+    Valid whether useAnnotation and searchSpacePath is coexist
+    spec_key: 'advisor' or 'tuner'
+    builtin_name: 'builtinAdvisorName' or 'builtinTunerName'
+    '''
     if experiment_config.get('useAnnotation'):
         if experiment_config.get('searchSpacePath'):
             raise Exception('If you set useAnnotation=true, please leave searchSpacePath empty')
     else:
         # validate searchSpaceFile
-        if experiment_config['tuner'].get('tunerName') and experiment_config['tuner'].get('optimizationMode'):
+        if experiment_config[spec_key].get(builtin_name):
             if experiment_config.get('searchSpacePath') is None:
                 raise Exception('Please set searchSpace!')
             validate_search_space_content(experiment_config)
@@ -156,6 +172,12 @@ def validate_all_content(experiment_config, config_path):
     parse_path(experiment_config, config_path)
     validate_common_content(experiment_config)
     parse_time(experiment_config)
-    parse_tuner_content(experiment_config)
-    parse_assessor_content(experiment_config)
-    validate_annotation_content(experiment_config)
+    if experiment_config.get('advisor'):
+        parse_advisor_content(experiment_config)
+        validate_annotation_content(experiment_config, 'advisor', 'builtinAdvisorName')
+    else:
+        if not experiment_config.get('tuner'):
+            raise Exception('Please provide tuner spec!')
+        parse_tuner_content(experiment_config)
+        parse_assessor_content(experiment_config)
+        validate_annotation_content(experiment_config, 'tuner', 'builtinTunerName')
