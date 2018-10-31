@@ -1,7 +1,7 @@
 How to start an experiment
 ===
 ## 1.Introduce
-There are few steps to start an new experiment of nni, here are the  process.
+There are few steps to start an new experiment of nni, here are the process.
 <img src="./img/experiment_process.jpg" width="50%" height="50%" />
 ## 2.Details
 ### 2.1 Check environment
@@ -9,7 +9,7 @@ The first step to start an experiment is to check whether the environment is rea
 NNICTL will also validate the content of config yaml file, to ensure the experiment config is in correct format.
 
 ### 2.2 Start restful server
-After check environment, nnictl will start an restful server process to manage nni experiment, the devault port is 51188.
+After check environment, nnictl will start an restful server process to manage nni experiment, the default port is `51188`.
 
 ### 2.3 Check restful server
 Before next steps, nnictl will check whether restful server is successfully started, or the starting process will stop and show error message.
@@ -21,7 +21,7 @@ NNICTL need to set experiment config before start an experiment, experiment conf
 NNICTL will ensure the request to set config is successfully executed.
 
 ### 2.6 Start WebUI
-NNICTL will start a WebUI to show information,the default port of WebUI is 51188.
+NNICTL will start a WebUI to show information,the default port of WebUI is `51188`.
 
 ### 2.7 Check WebUI
 If WebUI is not successfully started, nnictl will give a warning information, and will continue to start experiment.
