@@ -355,7 +355,7 @@ class NNIManager implements Manager {
             const oldTrialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
             if (oldTrialJobDetail !== undefined && oldTrialJobDetail.status !== trialJobDetail.status) {
                 this.trialJobs.set(trialJobId, Object.assign({}, trialJobDetail));
-                await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail.url);
+                await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail);
             }
             switch (trialJobDetail.status) {
                 case 'SUCCEEDED':
@@ -461,7 +461,7 @@ class NNIManager implements Manager {
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
                         await this.dataStore.storeTrialJobEvent(
-                            trialJobDetailSnapshot.status, trialJobDetailSnapshot.id, hyperParams, trialJobDetailSnapshot.url);
+                            trialJobDetailSnapshot.status, trialJobDetailSnapshot.id, hyperParams, trialJobDetailSnapshot);
                     } else {
                         assert(false, `undefined trialJobDetail in trialJobs: ${trialJobDetail.id}`);
                     }
@@ -587,6 +587,7 @@ class NNIManager implements Manager {
             id: getExperimentId(),
             revision: 0,
             execDuration: 0,
+            logDir: getLogDir(),
             params: {
                 authorName: '',
                 experimentName: '',

@@ -22,9 +22,6 @@ FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
 
 LABEL maintainer='Microsoft NNI Team<nni@microsoft.com>'
 
-ENV HADOOP_VERSION=2.7.2
-LABEL HADOOP_VERSION=2.7.2
-
 RUN DEBIAN_FRONTEND=noninteractive && \
     apt-get -y update && \
     apt-get -y install sudo \
@@ -38,7 +35,6 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     cmake \
     libopenblas-dev \
     automake \
-    openjdk-8-jdk \
     openssh-client \
     openssh-server \
     lsof \
@@ -51,33 +47,24 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     rm -rf /var/lib/apt/lists/*
 
 # numpy 1.14.3  scipy 1.1.0 
-RUN pip3 --no-cache-dir install \
+RUN python3 -m pip --no-cache-dir install \
     numpy==1.14.3 scipy==1.1.0 
-
-#
-#Install hadoop
-#
-RUN wget -qO- http://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz | \
-    tar xz -C /usr/local && \
-    mv /usr/local/hadoop-${HADOOP_VERSION} /usr/local/hadoop
 
 #
 #Install NNI
 #
-RUN pip3 install -v --user git+https://github.com/Microsoft/nni.git@$(curl --silent "https://api.github.com/repos/Microsoft/nni/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+RUN python3 -m pip install --user nni-pkg
 
-ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
-    HADOOP_INSTALL=/usr/local/hadoop \
-    NVIDIA_VISIBLE_DEVICES=all
+#
+#Tensorflow 1.10.0
+#
+RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
 
-ENV HADOOP_PREFIX=${HADOOP_INSTALL} \
-    HADOOP_BIN_DIR=${HADOOP_INSTALL}/bin \
-    HADOOP_SBIN_DIR=${HADOOP_INSTALL}/sbin \
-    HADOOP_HDFS_HOME=${HADOOP_INSTALL} \
-    HADOOP_COMMON_LIB_NATIVE_DIR=${HADOOP_INSTALL}/lib/native \
-    HADOOP_OPTS="-Djava.library.path=${HADOOP_INSTALL}/lib/native"
+#
+#Keras 2.1.6
+#
+RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 
-ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/sbin:/bin:${HADOOP_BIN_DIR}:${HADOOP_SBIN_DIR} \
-    LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/local/cuda/lib64:/usr/local/cuda/targets/x86_64-linux/lib/stubs:${JAVA_HOME}/jre/lib/amd64/server
+ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:
 
 WORKDIR /root
