@@ -44,10 +44,12 @@ class NaiveTuner(Tuner):
             'search_space': self.search_space
         }
 
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, value):
+        reward = self.extract_scalar_reward(value)
         self.trial_results.append((parameter_id, parameters['param'], reward, False))
 
-    def receive_customized_trial_result(self, parameter_id, parameters, reward):
+    def receive_customized_trial_result(self, parameter_id, parameters, value):
+        reward = self.extract_scalar_reward(value)
         self.trial_results.append((parameter_id, parameters['param'], reward, True))
 
     def update_search_space(self, search_space):

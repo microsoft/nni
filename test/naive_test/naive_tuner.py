@@ -20,7 +20,8 @@ class NaiveTuner(Tuner):
         _logger.info('generate parameters: %s' % self.cur)
         return { 'x': self.cur }
 
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, value):
+        reward = self.extract_scalar_reward(value)
         _logger.info('receive trial result: %s, %s, %s' % (parameter_id, parameters, reward))
         _result.write('%d %d\n' % (parameters['x'], reward))
         _result.flush()
