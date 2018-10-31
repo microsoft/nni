@@ -62,3 +62,8 @@ typings/
 
 # Pycharm Project files
 .idea
+
+# Python cache files
+__pycache__
+build
+*.egg-info

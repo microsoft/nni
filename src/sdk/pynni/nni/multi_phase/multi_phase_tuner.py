@@ -44,19 +44,19 @@ class MultiPhaseTuner(Recoverable):
         """
         return [self.generate_parameters(parameter_id) for parameter_id in parameter_id_list]
 
-    def receive_trial_result(self, parameter_id, parameters, reward, trial_job_id):
+    def receive_trial_result(self, parameter_id, parameters, value, trial_job_id):
         """Invoked when a trial reports its final result. Must override.
         parameter_id: int
         parameters: object created by 'generate_parameters()'
-        reward: object reported by trial
+        value: object reported by trial
         """
         raise NotImplementedError('Tuner: receive_trial_result not implemented')
 
-    def receive_customized_trial_result(self, parameter_id, parameters, reward, trial_job_id):
+    def receive_customized_trial_result(self, parameter_id, parameters, value, trial_job_id):
         """Invoked when a trial added by WebUI reports its final result. Do nothing by default.
         parameter_id: int
         parameters: object created by user
-        reward: object reported by trial
+        value: object reported by trial
         """
         _logger.info('Customized trial job %s ignored by tuner', parameter_id)
 

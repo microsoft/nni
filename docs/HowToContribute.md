@@ -38,7 +38,7 @@ to install the distribution content to development environment, and create cli s
 
 **5. Check if the environment is ready**
 
-Now, you can try to start an experiment to check if your environment is ready
+Now, you can try to start an experiment to check if your environment is ready.
 For example, run the command
 ```
 nnictl create --config ~/nni/examples/trials/mnist/config.yml

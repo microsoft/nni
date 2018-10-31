@@ -71,6 +71,7 @@ interface ExperimentProfile {
     params: ExperimentParams;
     id: string;
     execDuration: number;
+    logDir?: string;
     startTime?: number;
     endTime?: number;
     revision: number;

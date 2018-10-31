@@ -15,11 +15,11 @@ For remote machines that are used only to run trials but not the nnictl, you can
 
 * __Install python SDK through pip__
 
-      python3 -m pip install --user git+https://github.com/Microsoft/NeuralNetworkIntelligence.git#subdirectory=src/sdk/pynni
+      python3 -m pip install --user nni
 
 * __Install python SDK through source code__
 
-      git clone https://github.com/Microsoft/NeuralNetworkIntelligence
+      git clone https://github.com/Microsoft/nni.git
       cd src/sdk/pynni
       python3 setup.py install
 
