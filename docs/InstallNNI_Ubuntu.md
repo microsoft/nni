@@ -12,12 +12,7 @@
 
 * __Install NNI through pip__
 
-<<<<<<< HEAD
-      pip3 install -v --user git+https://github.com/Microsoft/nni.git@v0.2
-      source ~/.bashrc
-=======
       python3 -m pip install --user nni-pkg
->>>>>>> upstream/master
 
 * __Install NNI through source code__
    
