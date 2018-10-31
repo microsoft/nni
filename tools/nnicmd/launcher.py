@@ -103,8 +103,9 @@ def set_trial_config(experiment_config, port, config_file_name):
     else:
         print('Error message is {}'.format(response.text))
         _, stderr_full_path = get_log_path(config_file_name)
-        with open(stderr_full_path, 'a+') as fout:
-            fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+        if response:
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         return False
 
 def set_local_config(experiment_config, port, config_file_name):
@@ -326,7 +327,8 @@ def resume_experiment(args):
     experiment_endTime = None
     #find the latest stopped experiment
     if not args.id:
-        print_error('Please set experiment id! You could use \'nnictl resume {id}\' to resume a stopped experiment!')
+        print_error('Please set experiment id! \nYou could use \'nnictl resume {id}\' to resume a stopped experiment!\n' \
+        'You could use \'nnictl experiment list all\' to show all of stopped experiments!')
         exit(1)
     else:
         if experiment_dict.get(args.id) is None:
