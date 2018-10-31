@@ -18,9 +18,17 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import paramiko
 import os
 from .common_utils import print_error
+from subprocess import call
+
+def check_environment():
+    '''check if paramiko is installed'''
+    try:
+        import paramiko
+    except:
+        cmds = 'python3 -m pip install --user paramiko'
+        call(cmds, shell=True)
 
 def copy_remote_directory_to_local(sftp, remote_path, local_path):
     '''copy remote directory to local machine'''
@@ -41,6 +49,8 @@ def copy_remote_directory_to_local(sftp, remote_path, local_path):
 def create_ssh_sftp_client(host_ip, port, username, password):
     '''create ssh client'''
     try:
+        check_environment()
+        import paramiko
         conn = paramiko.Transport(host_ip, port)
         conn.connect(username=username, password=password)
         sftp = paramiko.SFTPClient.from_transport(conn)
