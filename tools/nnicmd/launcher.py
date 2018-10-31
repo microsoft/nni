@@ -169,9 +169,12 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['description'] = experiment_config['description']
     if experiment_config.get('multiPhase'):
         request_data['multiPhase'] = experiment_config.get('multiPhase')
-    request_data['tuner'] = experiment_config['tuner']
-    if 'assessor' in experiment_config:
-        request_data['assessor'] = experiment_config['assessor']
+    if experiment_config.get('advisor'):
+        request_data['advisor'] = experiment_config['advisor']
+    else:
+        request_data['tuner'] = experiment_config['tuner']
+        if 'assessor' in experiment_config:
+            request_data['assessor'] = experiment_config['assessor']
 
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
