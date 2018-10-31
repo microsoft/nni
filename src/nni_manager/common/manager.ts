@@ -34,7 +34,7 @@ interface ExperimentParams {
     searchSpace: string;
     trainingServicePlatform: string;
     multiPhase?: boolean;
-    tuner: {
+    tuner?: {
         className: string;
         builtinTunerName?: string;
         codeDir?: string;
@@ -46,6 +46,15 @@ interface ExperimentParams {
     assessor?: {
         className: string;
         builtinAssessorName?: string;
+        codeDir?: string;
+        classArgs?: any;
+        classFileName?: string;
+        checkpointDir: string;
+        gpuNum?: number;
+    };
+    advisor?: {
+        className: string;
+        builtinAdvisorName?: string;
         codeDir?: string;
         classArgs?: any;
         classFileName?: string;

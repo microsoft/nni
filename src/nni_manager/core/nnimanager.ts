@@ -127,14 +127,17 @@ class NNIManager implements Manager {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
+        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor,
+                                                                expParams.advisor, expParams.multiPhase);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
+        const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(
             //expParams.tuner.tunerCommand,
             dispatcherCommand,
             undefined,
             'start',
-            expParams.tuner.checkpointDir);
+            //expParams.tuner.checkpointDir);
+            checkpointDir);
 
         this.experimentProfile.startTime = Date.now();
         this.status.status = 'EXPERIMENT_RUNNING';
@@ -157,13 +160,16 @@ class NNIManager implements Manager {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
+        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor,
+                                                                expParams.advisor, expParams.multiPhase);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
+        const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(
             dispatcherCommand,
             undefined,
             'resume',
-            expParams.tuner.checkpointDir);
+            //expParams.tuner.checkpointDir);
+            checkpointDir);
 
         const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
 
@@ -594,14 +600,15 @@ class NNIManager implements Manager {
                 maxExecDuration: 0, // unit: second
                 maxTrialNum: 0, // maxTrialNum includes all the submitted trial jobs
                 trainingServicePlatform: '',
-                searchSpace: '',
-                tuner: {
-                    className: '',
-                    classArgs: {},
-                    checkpointDir: ''
-                }
+                searchSpace: ''
             }
         };
+    }
+
+    private async createCheckpointDir(): Promise<string> {
+        // create checkpoint directory
+        // assign the directory to checkpointDir
+        return Promise.resolve('');
     }
 }
 
