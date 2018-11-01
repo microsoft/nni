@@ -1,37 +1,16 @@
 import * as React from 'react';
 import axios from 'axios';
-import { MANAGER_IP } from '../const';
+import { MANAGER_IP } from '../../static/const';
 import ReactEcharts from 'echarts-for-react';
-import { Select, Button, message } from 'antd';
+import { Row, Col, Select, Button, message } from 'antd';
+import { HoverName, ParaObj, VisualMapValue, Dimobj } from '../../static/interface';
 const Option = Select.Option;
 require('echarts/lib/chart/parallel');
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
 require('echarts/lib/component/visualMap');
-require('../style/para.css');
-
-interface Dimobj {
-    dim: number;
-    name: string;
-    max?: number;
-    min?: number;
-    type?: string;
-    data?: string[];
-}
-
-interface HoverName {
-    name: string;
-}
-
-interface ParaObj {
-    data: number[][];
-    parallelAxis: Array<Dimobj>;
-}
-
-interface VisualMapValue {
-    maxAccuracy: number;
-    minAccuracy: number;
-}
+require('../../static/style/para.scss');
+require('../../static/style/button.scss');
 
 interface ParaState {
     option: object;
@@ -50,7 +29,7 @@ message.config({
 
 class Para extends React.Component<{}, ParaState> {
 
-    public intervalIDPara = 4;
+    static intervalIDPara = 4;
     public _isMounted = false;
 
     constructor(props: {}) {
@@ -224,7 +203,7 @@ class Para extends React.Component<{}, ParaState> {
     // get percent value number
     percentNum = (value: string) => {
 
-        window.clearInterval(this.intervalIDPara);
+        window.clearInterval(Para.intervalIDPara);
         let vals = parseFloat(value);
         if (this._isMounted) {
             this.setState(() => ({
@@ -232,7 +211,7 @@ class Para extends React.Component<{}, ParaState> {
             }));
         }
         this.hyperParaPic();
-        this.intervalIDPara = window.setInterval(this.hyperParaPic, 10000);
+        Para.intervalIDPara = window.setInterval(this.hyperParaPic, 10000);
     }
 
     // deal with response data into pic data
@@ -321,13 +300,12 @@ class Para extends React.Component<{}, ParaState> {
 
     swapBtn = () => {
 
-        window.clearInterval(this.intervalIDPara);
+        window.clearInterval(Para.intervalIDPara);
         this.hyperParaPic();
-        this.intervalIDPara = window.setInterval(this.hyperParaPic, 10000);
+        Para.intervalIDPara = window.setInterval(this.hyperParaPic, 10000);
     }
 
     sortDimY = (a: Dimobj, b: Dimobj) => {
-
         return a.dim - b.dim;
     }
 
@@ -389,33 +367,32 @@ class Para extends React.Component<{}, ParaState> {
         this._isMounted = true;
         // default draw all data pic
         this.hyperParaPic();
-        this.intervalIDPara = window.setInterval(this.hyperParaPic, 10000);
+        Para.intervalIDPara = window.setInterval(this.hyperParaPic, 10000);
     }
 
     componentWillUnmount() {
 
         this._isMounted = false;
-        window.clearInterval(this.intervalIDPara);
+        window.clearInterval(Para.intervalIDPara);
     }
 
     render() {
         const { option, paraNodata, dimName } = this.state;
         const chartMulineStyle = {
             width: '100%',
-            height: 600,
+            height: 392,
             margin: '0 auto',
-            padding: 15
+            padding: '0 15 10 15'
         };
         return (
-            <div className="para">
-                <div className="paraCon">
-                    <div className="paraTitle">
-                        <div className="paraLeft">Hyper Parameter</div>
-                        <div className="paraRight">
+            <Row className="parameter">
+                <Row>
+                    <Col span={6} />
+                    <Col span={18}>
+                        <Row className="meline">
                             <span>top</span>
                             <Select
-                                className="parapercent"
-                                style={{ width: '15%' }}
+                                style={{ width: '20%', marginRight: 10 }}
                                 placeholder="100%"
                                 optionFilterProp="children"
                                 onSelect={this.percentNum}
@@ -426,7 +403,7 @@ class Para extends React.Component<{}, ParaState> {
                                 <Option value="1">100%</Option>
                             </Select>
                             <Select
-                                style={{ width: '50%' }}
+                                style={{ width: '60%' }}
                                 mode="multiple"
                                 placeholder="Please select two items to swap"
                                 onChange={this.getSwapArr}
@@ -447,20 +424,19 @@ class Para extends React.Component<{}, ParaState> {
                             >
                                 Confirm
                             </Button>
-                        </div>
-                    </div>
-                    <div className="paraGra">
-                        <ReactEcharts
-                            className="testt"
-                            option={option}
-                            style={chartMulineStyle}
-                            // lazyUpdate={true}
-                            notMerge={true} // update now
-                        />
-                        <div className="paraNodata">{paraNodata}</div>
-                    </div>
-                </div>
-            </div>
+                        </Row>
+                    </Col>
+                </Row>
+                <Row className="searcHyper">
+                    <ReactEcharts
+                        option={option}
+                        style={chartMulineStyle}
+                        // lazyUpdate={true}
+                        notMerge={true} // update now
+                    />
+                    <div className="noneData">{paraNodata}</div>
+                </Row>
+            </Row>
         );
     }
 }

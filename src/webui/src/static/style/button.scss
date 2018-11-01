@@ -1,0 +1,21 @@
+Button.changeBtu, Button.changeBtu:hover, Button.changeBtu:focus{
+    background-color: #3c8dbc;
+    border-color: #3c8dbc;
+    line-height: 30px;
+    font-size: 16px;
+}
+
+Button.tableButton{
+    background:	#3c8dbc;
+    border-color: #3c8dbc;
+    height: 26px;
+    line-height: 26px;
+    margin-top: 2px;
+}
+
+/* kill btn style: delete its own hover style */
+/* after button click the color not change */
+Button.tableButton:hover, Button.tableButton:focus{
+    background-color: #3c8dbc;
+    border-color: #3c8dbc;
+}
