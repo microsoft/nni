@@ -45,7 +45,7 @@ def check_experiment_id(args):
             if isinstance(experiment_dict[key], dict):
                 if experiment_dict[key].get('status') == 'running':
                     running_experiment_list.append(key)
-            elif isinstance(experiment_dict[key], dict):
+            elif isinstance(experiment_dict[key], list):
                 # if the config file is old version, remove the configuration from file
                 experiment_config.remove_experiment(key)
         if len(running_experiment_list) > 1:
@@ -87,7 +87,7 @@ def parse_ids(args):
             if isinstance(experiment_dict[key], dict):
                 if experiment_dict[key].get('status') == 'running':
                     running_experiment_list.append(key)
-            elif isinstance(experiment_dict[key], dict):
+            elif isinstance(experiment_dict[key], list):
                 # if the config file is old version, remove the configuration from file
                 experiment_config.remove_experiment(key)
     if not args.id:
