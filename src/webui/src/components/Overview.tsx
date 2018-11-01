@@ -1,7 +1,7 @@
 import * as React from 'react';
 import axios from 'axios';
 import { Row, Col } from 'antd';
-import { MANAGER_IP, overviewItem } from '../static/const';
+import { MANAGER_IP } from '../static/const';
 import {
     Experiment, TableObj,
     Parameters, AccurPoint, TrialNumber
@@ -28,7 +28,6 @@ interface SessionState {
     searchSpace: object;
     status: string;
     trialProfile: Experiment;
-    selNum: number;
     option: object;
     noData: string;
     accuracyData: object;
@@ -72,7 +71,6 @@ class Overview extends React.Component<{}, SessionState> {
                     parameters: {}
                 }
             }],
-            selNum: overviewItem,
             option: {},
             noData: '',
             // accuracy
@@ -173,7 +171,6 @@ class Overview extends React.Component<{}, SessionState> {
         })
             .then(res => {
                 if (res.status === 200) {
-                    const { selNum } = this.state;
                     const tableData = res.data;
                     const topTableData: Array<TableObj> = [];
                     const profile: TrialNumber = {
@@ -248,7 +245,7 @@ class Overview extends React.Component<{}, SessionState> {
                             return NaN;
                         }
                     });
-                    topTableData.length = Math.min(selNum, topTableData.length);
+                    topTableData.length = Math.min(10, topTableData.length);
                     if (this._isMounted) {
                         this.setState({
                             tableData: topTableData,

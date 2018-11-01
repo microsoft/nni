@@ -70,14 +70,25 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             dataIndex: 'acc',
             key: 'acc',
             render: (text: string, record: TableObj) => {
+                const accuracy = record.acc;
+                let wei = 0;
+                if (accuracy) {
+                    if (accuracy.toString().indexOf('.') !== -1) {
+                        wei = accuracy.toString().length - accuracy.toString().indexOf('.') - 1;
+                    }
+                }
                 return (
                     <div>
                         {
                             record.acc
                                 ?
-                                record.acc.toFixed(6)
+                                wei > 6
+                                    ?
+                                    record.acc.toFixed(6)
+                                    :
+                                    record.acc
                                 :
-                                record.acc
+                                'NaN'
                         }
                     </div>
                 );

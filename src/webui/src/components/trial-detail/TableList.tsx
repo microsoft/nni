@@ -227,14 +227,25 @@ class TableList extends React.Component<TableListProps, TableListState> {
             width: 200,
             sorter: (a: TableObj, b: TableObj) => (a.acc as number) - (b.acc as number),
             render: (text: string, record: TableObj) => {
-                return(
+                const accuracy = record.acc;
+                let wei = 0;
+                if (accuracy) {
+                    if (accuracy.toString().indexOf('.') !== -1) {
+                        wei = accuracy.toString().length - accuracy.toString().indexOf('.') - 1;
+                    }
+                }
+                return (
                     <div>
                         {
                             record.acc
                                 ?
-                                record.acc.toFixed(6)
+                                wei > 6
+                                    ?
+                                    record.acc.toFixed(6)
+                                    :
+                                    record.acc
                                 :
-                                record.acc
+                                'NaN'
                         }
                     </div>
                 );
@@ -309,7 +320,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             }
             return (
                 <pre id="allList" className="hyperpar">
-                     {
+                    {
                         isHasParameters
                             ?
                             < JSONTree
