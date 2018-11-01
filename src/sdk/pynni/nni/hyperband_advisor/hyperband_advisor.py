@@ -21,17 +21,17 @@
 hyperband_tuner.py
 '''
 
-from nni.protocol import CommandType, send
-from nni.msg_dispatcher_base import MsgDispatcherBase
-from . import parameter_expressions
-from nni.common import init_logger
-
 from enum import Enum, unique
 import math
-import json_tricks
-import numpy as np
 import copy
 import logging
+import numpy as np
+import json_tricks
+
+from nni.protocol import CommandType, send
+from nni.msg_dispatcher_base import MsgDispatcherBase
+from nni.common import init_logger
+from . import parameter_expressions
 
 init_logger('dispatcher2.log')
 _logger = logging.getLogger(__name__)
@@ -47,61 +47,85 @@ class OptimizeMode(Enum):
     Minimize = 'minimize'
     Maximize = 'maximize'
 
-def _create_parameter_id():
+def create_parameter_id():
+    '''
+    Create an id
+    '''
     global _next_parameter_id  # pylint: disable=global-statement
     _next_parameter_id += 1
     return _next_parameter_id - 1
 
-def json2paramater(x, random_state):
+def create_bracket_parameter_id(brackets_id, brackets_curr_decay):
+    '''
+    Create a full id for a specific bracket's hyperparameter configuration
+    '''
+    params_id = '_'.join([str(brackets_id),
+                          str(brackets_curr_decay),
+                          str(create_parameter_id())])
+    return params_id
+
+def json2paramater(ss_spec, random_state):
     '''
     Randomly generate values for hyperparameters from hyperparameter space i.e., x.
-    x: hyperparameter space
+    ss_spec: hyperparameter space
     random_state: random operator to generate random values
     '''
-    if isinstance(x, dict):
-        if '_type' in x.keys():
-            _type = x['_type']
-            _value = x['_value']
+    if isinstance(ss_spec, dict):
+        if '_type' in ss_spec.keys():
+            _type = ss_spec['_type']
+            _value = ss_spec['_value']
             if _type == 'choice':
                 _index = random_state.randint(len(_value))
-                y = json2paramater(x['_value'][_index], random_state)
+                chosen_params = json2paramater(ss_spec['_value'][_index], random_state)
             else:
-                y = eval('parameter_expressions.' +
-                            _type)(*(_value + [random_state]))
+                chosen_params = eval('parameter_expressions.' + # pylint: disable=eval-used
+                                     _type)(*(_value + [random_state]))
         else:
-            y = dict()
-            for key in x.keys():
-                y[key] = json2paramater(x[key], random_state)
-    elif isinstance(x, list):
-        y = list()
-        for _, x_i in enumerate(x):
-            y.append(json2paramater(x_i, random_state))
+            chosen_params = dict()
+            for key in ss_spec.keys():
+                chosen_params[key] = json2paramater(ss_spec[key], random_state)
+    elif isinstance(ss_spec, list):
+        chosen_params = list()
+        for _, subspec in enumerate(ss_spec):
+            chosen_params.append(json2paramater(subspec, random_state))
     else:
-        y = copy.deepcopy(x)
-    return y
+        chosen_params = copy.deepcopy(ss_spec)
+    return chosen_params
 
 class Bracket():
+    '''
+    A bracket in Hyperband, all the information of a bracket is managed by an instance of this class
+    '''
     def __init__(self, s, s_max, eta, R, optimize_mode):
         self.bracket_id = s
         self.s_max = s_max
         self.eta = eta
-        self.n = math.ceil((s_max + 1) * (eta**s) / (s + 1))
-        self.r = math.ceil(R / eta**s)
+        self.n = math.ceil((s_max + 1) * (eta**s) / (s + 1)) # pylint: disable=invalid-name
+        self.r = math.ceil(R / eta**s)                       # pylint: disable=invalid-name
         self.i = 0
-        self.hyper_configs = [] # [ {id: params}, {}, ... ]
-        self.configs_perf = []  # [ {id: [seq, acc]}, {}, ... ]
-        self.num_configs_to_run = []   # [ n, n, n, ... ]
-        self.num_finished_configs = [] # [ n, n, n, ... ]
+        self.hyper_configs = []         # [ {id: params}, {}, ... ]
+        self.configs_perf = []          # [ {id: [seq, acc]}, {}, ... ]
+        self.num_configs_to_run = []    # [ n, n, n, ... ]
+        self.num_finished_configs = []  # [ n, n, n, ... ]
         self.optimize_mode = optimize_mode
         self.no_more_trial = False
 
     def is_completed(self):
+        '''
+        check whether this bracket has sent out all the hyperparameter configurations
+        '''
         return self.no_more_trial
 
     def get_n_r(self):
+        '''
+        return the values of n and r for the next round
+        '''
         return math.floor(self.n / self.eta**self.i), self.r * self.eta**self.i
 
     def increase_i(self):
+        '''
+        i means the ith round. Increase i by 1
+        '''
         self.i += 1
         if self.i > self.s_max:
             self.no_more_trial = True
@@ -116,11 +140,11 @@ class Bracket():
         '''
         if parameter_id in self.configs_perf[i]:
             # this should always be true if there is no retry in training service
-            _logger.debug('assertion: %d %d\n'%(self.configs_perf[i][parameter_id][0], seq))
-            assert(self.configs_perf[i][parameter_id][0] < seq)
+            _logger.debug('assertion: %d %d\n', self.configs_perf[i][parameter_id][0], seq)
+            assert self.configs_perf[i][parameter_id][0] < seq
         self.configs_perf[i][parameter_id] = [seq, value]
 
-    def inform_trial_end(self, i, parameter_id):
+    def inform_trial_end(self, i):
         '''
         If the trial is finished and the corresponding round (i.e., i) has all its trials finished,
         it will choose the top k trials for the next round (i.e., i+1)
@@ -128,9 +152,9 @@ class Bracket():
         global _KEY # pylint: disable=global-statement
         self.num_finished_configs[i] += 1
         if self.num_finished_configs[i] >= self.num_configs_to_run[i] \
-            and self.no_more_trial == False:
+            and self.no_more_trial is False:
             # choose candidate configs from finished configs to run in the next round
-            assert(self.i == i + 1)
+            assert self.i == i + 1
             this_round_perf = self.configs_perf[i]
             if self.optimize_mode is OptimizeMode.Maximize:
                 sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1], reverse=True) # reverse
@@ -147,28 +171,22 @@ class Bracket():
             return [[key, value] for key, value in hyper_configs.items()]
         return None
 
-    def get_hyperparameter_configurations(self, num, r, searchspace_json, random_state):
+    def get_hyperparameter_configurations(self, num, r, searchspace_json, random_state): # pylint: disable=invalid-name
         '''
         Randomly generate num hyperparameter configurations from search space
         num: the number of hyperparameter configurations
         '''
         global _KEY # pylint: disable=global-statement
-        assert(self.i == 0)
+        assert self.i == 0
         hyperparameter_configs = dict()
         for _ in range(num):
-            params_id = self._create_parameter_id(self.bracket_id, self.i)
+            params_id = create_bracket_parameter_id(self.bracket_id, self.i)
             params = json2paramater(searchspace_json, random_state)
             params[_KEY] = r
             hyperparameter_configs[params_id] = params
         self._record_hyper_configs(hyperparameter_configs)
         return [[key, value] for key, value in hyperparameter_configs.items()]
 
-    def _create_parameter_id(self, brackets_id, brackets_curr_decay):
-        params_id = '_'.join([str(brackets_id), 
-                            str(brackets_curr_decay), 
-                            str(_create_parameter_id())])
-        return params_id
-    
     def _record_hyper_configs(self, hyper_configs):
         self.hyper_configs.append(hyper_configs)
         self.configs_perf.append(dict())
@@ -179,21 +197,21 @@ class Bracket():
 
 class Hyperband(MsgDispatcherBase):
     '''
-    Hyperband inherit from MsgDispatcherBase rather than Tuner, 
+    Hyperband inherit from MsgDispatcherBase rather than Tuner,
     because it integrates both tuner's functions and assessor's functions.
     This is an implementation that could fully leverage available resources, i.e., high parallelism.
     A single execution of Hyperband takes a finite budget of (s_max + 1)B.
     '''
-    def __init__(self, R, eta = 3, optimize_mode = 'maximize'):
+    def __init__(self, R, eta=3, optimize_mode='maximize'):
         '''
         R: the maximum amount of resource that can be allocated to a single configuration
         eta: the variable that controls the proportion of configurations discarded in each round of SuccessiveHalving
         B = (s_max + 1)R
         '''
         super()
-        self.R = R
+        self.R = R                        # pylint: disable=invalid-name
         self.eta = eta
-        self.brackets = dict() # dict of Bracket
+        self.brackets = dict()            # dict of Bracket
         self.generated_hyper_configs = [] # all the configs waiting for run
         self.completed_hyper_configs = [] # all the completed configs
         self.s_max = math.floor(math.log(self.R, self.eta))
@@ -226,7 +244,7 @@ class Hyperband(MsgDispatcherBase):
         '''
         get one trial job, i.e., one hyperparameter configuration.
         '''
-        if len(self.generated_hyper_configs) == 0:
+        if not self.generated_hyper_configs:
             if self.curr_s < 0:
                 # have tried all configurations
                 ret = {
@@ -239,14 +257,14 @@ class Hyperband(MsgDispatcherBase):
                 return True
             self.brackets[self.curr_s] = Bracket(self.curr_s, self.s_max, self.eta, self.R, self.optimize_mode)
             next_n, next_r = self.brackets[self.curr_s].get_n_r()
-            assert(self.searchspace_json != None and self.random_state != None)
-            generated_hyper_configs = self.brackets[self.curr_s].get_hyperparameter_configurations(next_n, next_r, 
-                                                                                                    self.searchspace_json,
-                                                                                                    self.random_state)
+            assert self.searchspace_json is not None and self.random_state is not None
+            generated_hyper_configs = self.brackets[self.curr_s].get_hyperparameter_configurations(next_n, next_r,
+                                                                                                   self.searchspace_json,
+                                                                                                   self.random_state)
             self.generated_hyper_configs = generated_hyper_configs.copy()
             self.curr_s -= 1
-        
-        assert(len(self.generated_hyper_configs) > 0)
+
+        assert self.generated_hyper_configs
         params = self.generated_hyper_configs.pop()
         ret = {
             'parameter_id': params[0],
@@ -271,11 +289,11 @@ class Hyperband(MsgDispatcherBase):
         data: data['trial_job_id'] is id of the trial job which is finished (succeeded or failed or ...)
         '''
         bracket_id, i, _ = data['parameter_id'].split('_')
-        hyper_configs = self.brackets[bracket_id].inform_trial_end(int(i), data['parameter_id'])
-        if hyper_configs != None:
+        hyper_configs = self.brackets[bracket_id].inform_trial_end(int(i))
+        if hyper_configs is not None:
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
-            for k in range(self.credit):
-                if len(self.generated_hyper_configs) <= 0:
+            for _ in range(self.credit):
+                if not self.generated_hyper_configs:
                     break
                 params = self.generated_hyper_configs.pop()
                 ret = {
@@ -285,7 +303,7 @@ class Hyperband(MsgDispatcherBase):
                 }
                 send(CommandType.NewTrialJob, json_tricks.dumps(ret))
                 self.credit -= 1
-        
+
         return True
 
     def handle_report_metric_data(self, data):
@@ -305,4 +323,3 @@ class Hyperband(MsgDispatcherBase):
 
     def handle_add_customized_trial(self, data):
         pass
-
