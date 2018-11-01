@@ -11,9 +11,9 @@ The following is a summary of the NNI team's backlog for the next 6 months. Some
 * Web UX refactor
 * V0.4.0 (November 2018)
 
-# Release 0.3.0 11/2/2018
+# Release 0.3.0 - 11/2/2018
 ## Major Features
-* Support running multiple experiments simultaneously. You can run multiple experiments by specifying unique port for each experiment:
+* Support running multiple experiments simultaneously. You can run multiple experiments by specifying a unique port for each experiment:
       ```
       nnictl create --port 8081 --config <config file path>
       ```
@@ -25,7 +25,7 @@ You can still run the first experiment without '--port' parameter:
 * nni.report_final_result(result) API supports more data types for result parameter, it can be of following types:
     * int
     * float
-    * A python dict containing 'default' key, the value of 'default' key should be of type int or float. The dict can contain key value pairs.
+    * A python dict containing 'default' key, the value of 'default' key should be of type int or float. The dict can contain any other key value pairs.
 * Continuous Integration
     * Switched to Azure pipelines
 * Others
