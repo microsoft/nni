@@ -206,13 +206,14 @@ class HyperoptTuner(Tuner):
         params = _split_index(total_params)
         return params
 
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, value):
         '''
         Record an observation of the objective function
         parameter_id : int
         parameters : dict of parameters
-        reward : reward of one trial
+        value: final metrics of the trial, including reward
         '''
+        reward = self.extract_scalar_reward(value)
         # restore the paramsters contains '_index'
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')
