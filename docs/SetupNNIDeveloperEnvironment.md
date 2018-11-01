@@ -1,4 +1,4 @@
-**How to contribute**
+**Set up NNI developer environment**
 ===
 ## Best practice for debug NNI source code
 
@@ -38,7 +38,7 @@ to install the distribution content to development environment, and create cli s
 
 **5. Check if the environment is ready**
 
-Now, you can try to start an experiment to check if your environment is ready
+Now, you can try to start an experiment to check if your environment is ready.
 For example, run the command
 ```
 nnictl create --config ~/nni/examples/trials/mnist/config.yml
@@ -51,4 +51,4 @@ After you change some code, just use **step 4** to rebuild your code, then the c
 
 ---
 At last, wish you have a wonderful day.
-For more contribution guidelines on making PR's or issues to NNI source code, you can refer to our [CONTRIBUTING](./docs/CONTRIBUTING.md) document. 
+For more contribution guidelines on making PR's or issues to NNI source code, you can refer to our [CONTRIBUTING](./CONTRIBUTING.md) document. 

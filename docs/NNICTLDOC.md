@@ -285,3 +285,45 @@ nnictl webui
        | Name, shorthand | Required|Default | Description |
        | ------ | ------ | ------ |------ |
      | id|  False| |ID of the experiment you want to set|
+
+
+### Manage tensorboard
+* __nnictl tensorboard start__
+   * Description
+     
+	     Start the tensorboard process. 
+   
+   * Usage
+         
+		    nnictl tensorboard start
+        
+    	Options:
+    	
+       | Name, shorthand | Required|Default | Description |
+       | ------ | ------ | ------ |------ |
+     | id|  False| |ID of the experiment you want to set|
+     | --trialid|  False| |ID of the trial|
+     | --port|  False| 6006|The port of the tensorboard process|
+
+   * Detail
+     
+	     1. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later.   
+         2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path.  
+         3. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
+         4. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
+         5. If there is only one trial job, you don't need to set trialid. If there are multiple trial jobs running, you should set the trialid, or you could use [nnictl tensorboard start --trialid all] to map --logdir to all trial log paths.
+
+* __nnictl tensorboard stop__
+   * Description
+     
+	     Stop all of the tensorboard process. 
+   
+   * Usage
+         
+		    nnictl tensorboard stop
+        
+    	Options:
+    	
+       | Name, shorthand | Required|Default | Description |
+       | ------ | ------ | ------ |------ |
+     | id|  False| |ID of the experiment you want to set|

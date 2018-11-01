@@ -196,8 +196,9 @@ class Transformer(ast.NodeTransformer):
         else:
             return node  # not an annotation, ignore it
 
-        if string.startswith('@nni.report_intermediate_result(') \
-                or string.startswith('@nni.report_final_result('):
+        if string.startswith('@nni.report_intermediate_result(')  \
+                or string.startswith('@nni.report_final_result(') \
+                or string.startswith('@nni.get_next_parameter('):
             return parse_annotation(string[1:])  # expand annotation string to code
 
         if string.startswith('@nni.variable(') \
