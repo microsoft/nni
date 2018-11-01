@@ -44,7 +44,6 @@ def check_experiment_id(args):
         for key in experiment_dict.keys():
             if experiment_dict[key]['status'] == 'running':
                 running_experiment_list.append(key)
-            
         if len(running_experiment_list) > 1:
             print_error('There are multiple experiments running, please set the experiment id...')
             experiment_information = ""
@@ -83,7 +82,6 @@ def parse_ids(args):
     for key in experiment_dict.keys():
         if experiment_dict[key]['status'] == 'running':
             running_experiment_list.append(key)
-        
     if not args.id:
         if len(running_experiment_list) > 1:
             print_error('There are multiple experiments running, please set the experiment id...')
