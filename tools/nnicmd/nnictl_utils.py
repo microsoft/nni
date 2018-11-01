@@ -42,11 +42,12 @@ def check_experiment_id(args):
     if not args.id:
         running_experiment_list = []
         for key in experiment_dict.keys():
-            try:
-                if experiment_dict[key]['status'] == 'running':
+            if isinstance(experiment_dict[key], dict):
+                if experiment_dict[key].get('status') == 'running':
                     running_experiment_list.append(key)
-            except:
-                pass
+            elif isinstance(experiment_dict[key], list):
+                # if the config file is old version, remove the configuration from file
+                experiment_config.remove_experiment(key)
         if len(running_experiment_list) > 1:
             print_error('There are multiple experiments running, please set the experiment id...')
             experiment_information = ""
@@ -83,11 +84,12 @@ def parse_ids(args):
     result_list = []
     running_experiment_list = []
     for key in experiment_dict.keys():
-        try:
-            if experiment_dict[key]['status'] == 'running':
+        if isinstance(experiment_dict[key], dict):
+            if experiment_dict[key].get('status') == 'running':
                 running_experiment_list.append(key)
-        except:
-            pass
+        elif isinstance(experiment_dict[key], list):
+            # if the config file is old version, remove the configuration from file
+            experiment_config.remove_experiment(key)
     if not args.id:
         if len(running_experiment_list) > 1:
             print_error('There are multiple experiments running, please set the experiment id...')
