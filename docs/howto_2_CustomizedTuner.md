@@ -1,4 +1,4 @@
-# Customized Tuner for Experts
+# **How To** - Customize Your Own Tuner
 
 *Tuner receive result from Trial as a matric to evaluate the performance of a specific parameters/architecture configure. And tuner send next hyper-parameter or architecture configure to Trial.*
 
