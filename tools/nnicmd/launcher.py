@@ -352,7 +352,11 @@ def resume_experiment(args):
     nni_config = Config(experiment_dict[experiment_id]['fileName'])
     experiment_config = nni_config.get_config('experimentConfig')
     experiment_id = nni_config.get_config('experimentId')
-    launch_experiment(args, experiment_config, 'resume', experiment_dict[experiment_id]['fileName'], experiment_id)
+    new_config_file_name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
+    new_nni_config = Config(new_config_file_name)
+    new_nni_config.set_config('experimentConfig', experiment_config)
+    launch_experiment(args, experiment_config, 'resume', new_config_file_name, experiment_id)
+    new_nni_config.set_config('restServerPort', args.port)
 
 def create_experiment(args):
     '''start a new experiment'''
