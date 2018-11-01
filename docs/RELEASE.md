@@ -1,3 +1,51 @@
+# Development Road Map
+The following is a summary of the NNI team's backlog for the next 6 months. Some completed items (either in a release or master branch) are included to provide the context and progress of the work.
+## New Tuners Supports
+* New MSRA research Algo
+* Hyperband
+* Grid search
+## New Training Services Supports
+* Kubeflow
+## User Interface and Experiences
+* Design nni APIs for users to specify search space in their code
+* Web UX refactor
+* V0.4.0 (November 2018)
+
+# Release 0.3.0 11/2/2018
+## Major Features
+* Support running multiple experiments simultaneously. You can run multiple experiments by specifying unique port for each experiment:
+      ```
+      nnictl create --port 8081 --config <config file path>
+      ```
+You can still run the first experiment without '--port' parameter:
+      ```
+      nnictl create --config <config file path>
+      ```
+* A builtin Batch Tuner which iterates all parameter combination, can be used to submit batch trial jobs.
+* nni.report_final_result(result) API supports more data types for result parameter, it can be of following types:
+    * int
+    * float
+    * A python dict containing 'default' key, the value of 'default' key should be of type int or float. The dict can contain key value pairs.
+* Continuous Integration
+    * Switched to Azure pipelines
+* Others
+    * <span style="color:red">API nn.get_parameters() is renamed to nni.get_next_parameter(), this is a broken change, all examples of prior releases can not run on v0.3, please clone nni repo to get new examples.</span>
+    ```
+    git clone -b v0.3 https://github.com/Microsoft/nni.git
+    ```
+    * New nni.get_sequence_id() API. Each trial job is allocated a unique sequence number, which can be retrieved by nni.get_sequence_id() API.
+    * Download experiment result from WebUI
+    * Add trial examples using sklearn and NNI together
+    * Support updating max trial number
+    * Kaggle competition TGS Salt code as an example
+    * NNI Docker image:
+      ```
+      docker pull msranni/nni:latest
+      ```
+
+## Know issues
+[Known Issues in release 0.3.0](https://github.com/Microsoft/nni/labels/nni030knownissues).
+
 # Release 0.2.0 - 9/29/2018
 ## Major Features
    * Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
