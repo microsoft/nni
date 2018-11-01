@@ -35,6 +35,9 @@ from .constants import *
 import time
 import random
 import string
+import site
+from pathlib import Path
+
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -64,8 +67,12 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         exit(1)
 
     print_normal('Starting restful server...')
-    manager = os.environ.get('NNI_MANAGER', 'nnimanager')
-    cmds = [manager, '--port', str(port), '--mode', platform, '--start_mode', mode]
+    if os.geteuid() == 0:
+        site_dir = site.getsitepackages()[0]
+    else:
+        site_dir = site.getusersitepackages()
+    python_dir = str(Path(site_dir).parents[2])
+    cmds = ['node', os.path.join(python_dir, 'nni_pkg', 'main.js'), '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
@@ -76,7 +83,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     log_header = LOG_HEADER % str(time_now)
     stdout_file.write(log_header)
     stderr_file.write(log_header)
-    process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
+    process = Popen(cmds, cwd=os.path.join(python_dir, 'nni_pkg'), stdout=stdout_file, stderr=stderr_file)
     return process, str(time_now)
 
 def set_trial_config(experiment_config, port, config_file_name):
@@ -103,8 +110,9 @@ def set_trial_config(experiment_config, port, config_file_name):
     else:
         print('Error message is {}'.format(response.text))
         _, stderr_full_path = get_log_path(config_file_name)
-        with open(stderr_full_path, 'a+') as fout:
-            fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+        if response:
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         return False
 
 def set_local_config(experiment_config, port, config_file_name):
@@ -205,8 +213,9 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         return response
     else:
         _, stderr_full_path = get_log_path(config_file_name)
-        with open(stderr_full_path, 'a+') as fout:
-            fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
+        if response:
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         print_error('Setting experiment error, error message is {}'.format(response.text))
         return None
 
@@ -317,15 +326,6 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
 
-def cmp_time(time1, time2):
-    '''compare the time'''
-    try:
-        time1 = time.strptime(time1,'%Y-%m-%d %H:%M:%S')
-        time2 = time.strptime(time2,'%Y-%m-%d %H:%M:%S')
-        return int(time1) - int(time2)
-    except:
-        return 0
-
 def resume_experiment(args):
     '''resume an experiment'''
     experiment_config = Experiments()
@@ -334,18 +334,9 @@ def resume_experiment(args):
     experiment_endTime = None
     #find the latest stopped experiment
     if not args.id:
-        for key in experiment_dict.keys():
-            if experiment_dict[key]['status'] == 'stopped':
-                if experiment_id is None:
-                    experiment_id = key
-                    experiment_endTime = experiment_dict[key]['endTime']
-                else:
-                    if cmp_time(experiment_dict[key]['endTime'], experiment_endTime) > 0:
-                        experiment_id = key
-                        experiment_endTime = experiment_dict[key]['endTime']
-        if experiment_id is None:
-            print_error('There is no experiment stopped!')
-            exit(1)
+        print_error('Please set experiment id! \nYou could use \'nnictl resume {id}\' to resume a stopped experiment!\n' \
+        'You could use \'nnictl experiment list all\' to show all of stopped experiments!')
+        exit(1)
     else:
         if experiment_dict.get(args.id) is None:
             print_error('Id %s not exist!' % args.id)

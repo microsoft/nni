@@ -35,10 +35,10 @@ class NaiveMultiPhaseTuner(MultiPhaseTuner):
         return generated_parameters
 
 
-    def receive_trial_result(self, parameter_id, parameters, reward, trial_job_id):
-        logging.getLogger(__name__).debug('receive_trial_result: {},{},{},{}'.format(parameter_id, parameters, reward, trial_job_id))
+    def receive_trial_result(self, parameter_id, parameters, value, trial_job_id):
+        logging.getLogger(__name__).debug('receive_trial_result: {},{},{},{}'.format(parameter_id, parameters, value, trial_job_id))
 
-    def receive_customized_trial_result(self, parameter_id, parameters, reward, trial_job_id):
+    def receive_customized_trial_result(self, parameter_id, parameters, value, trial_job_id):
         pass
 
     def update_search_space(self, search_space):
