@@ -14,8 +14,11 @@ The following is a summary of the NNI team's backlog for the next 6 months. Some
 # Release 0.3.0 - 11/2/2018
 ## Major Features
 * Support running multiple experiments simultaneously. You can run multiple experiments by specifying a unique port for each experiment:
+
     ```nnictl create --port 8081 --config <config file path>```
+
     You can still run the first experiment without '--port' parameter:
+
     ```nnictl create --config <config file path>```
 * A builtin Batch Tuner which iterates all parameter combination, can be used to submit batch trial jobs.
 * nni.report_final_result(result) API supports more data types for result parameter, it can be of following types:
