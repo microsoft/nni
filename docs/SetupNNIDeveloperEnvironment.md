@@ -24,6 +24,8 @@ to install the dependent tools for the environment
 
 Run the command
 ```
+sudo apt-get install -y python3-setuptools
+sudo apt-get install python3-pip
 make build
 ```
 to build the source code
@@ -34,12 +36,13 @@ Run the command
 ```
 make dev-install
 ```
-to install the distribution content to development environment, and create cli scripts
+to install the distribution content to development environment, and create cli scripts. The default installation path is at ~/.local.
 
 **5. Check if the environment is ready**
 
 Now, you can try to start an experiment to check if your environment is ready.
 For example, run the command
+* The following example is an experiment built on TensorFlow. Make sure you have `TensorFlow installed` before running it.
 ```
 nnictl create --config ~/nni/examples/trials/mnist/config.yml
 ```
