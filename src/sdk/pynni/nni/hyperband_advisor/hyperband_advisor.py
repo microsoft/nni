@@ -24,12 +24,17 @@ hyperband_tuner.py
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from . import parameter_expressions
+from nni.common import init_logger
 
 from enum import Enum, unique
 import math
 import json_tricks
 import numpy as np
 import copy
+import logging
+
+init_logger('dispatcher2.log')
+_logger = logging.getLogger(__name__)
 
 _next_parameter_id = 0
 _KEY = 'STEPS'
@@ -111,6 +116,7 @@ class Bracket():
         '''
         if parameter_id in self.configs_perf[i]:
             # this should always be true if there is no retry in training service
+            _logger.debug('assertion: %d %d\n'%(self.configs_perf[i][parameter_id][0], seq))
             assert(self.configs_perf[i][parameter_id][0] < seq)
         self.configs_perf[i][parameter_id] = [seq, value]
 

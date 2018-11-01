@@ -219,7 +219,7 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         if response:
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
-        print_error('Setting experiment error, error message is {}'.format(response.text))
+            print_error('Setting experiment error, error message is {}'.format(response.text))
         return None
 
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):

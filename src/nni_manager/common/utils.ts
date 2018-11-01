@@ -45,6 +45,10 @@ function getDefaultDatabaseDir(): string {
     return path.join(getExperimentRootDir(), 'db');
 }
 
+function getCheckpointDir(): string {
+    return path.join(getExperimentRootDir(), 'checkpoint');
+}
+
 function mkDirP(dirPath: string): Promise<void> {
     const deferred: Deferred<void> = new Deferred<void>();
     fs.exists(dirPath, (exists: boolean) => {
@@ -285,5 +289,5 @@ function getIPV4Address(): string {
     throw Error('getIPV4Address() failed because no valid IPv4 address found.')
 }
 
-export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, 
+export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getCheckpointDir, getExperimentRootDir, 
     getDefaultDatabaseDir, getIPV4Address, mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
