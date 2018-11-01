@@ -35,7 +35,7 @@ import {
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
-import { delay , getLogDir, getCheckpointDir, getMsgDispatcherCommand} from '../common/utils';
+import { delay , getLogDir, getCheckpointDir, getMsgDispatcherCommand, mkDirP} from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, REPORT_METRIC_DATA,
     REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
@@ -132,11 +132,9 @@ class NNIManager implements Manager {
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(
-            //expParams.tuner.tunerCommand,
             dispatcherCommand,
             undefined,
             'start',
-            //expParams.tuner.checkpointDir);
             checkpointDir);
 
         this.experimentProfile.startTime = Date.now();
@@ -168,7 +166,6 @@ class NNIManager implements Manager {
             dispatcherCommand,
             undefined,
             'resume',
-            //expParams.tuner.checkpointDir);
             checkpointDir);
 
         const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
@@ -607,9 +604,21 @@ class NNIManager implements Manager {
     }
 
     private async createCheckpointDir(): Promise<string> {
+        // TODO: test
+        const chkpDir: string = getCheckpointDir();
         // create checkpoint directory
-        // assign the directory to checkpointDir
-        return Promise.resolve('');
+        await mkDirP(chkpDir);
+        // assign this directory to exp profile's checkpointDir
+        if (this.experimentProfile.params.advisor) {
+            this.experimentProfile.params.advisor.checkpointDir = chkpDir;
+        }
+        if (this.experimentProfile.params.tuner) {
+            this.experimentProfile.params.tuner.checkpointDir = chkpDir;
+        }
+        if (this.experimentProfile.params.assessor) {
+            this.experimentProfile.params.assessor.checkpointDir = chkpDir;
+        }
+        return Promise.resolve(chkpDir);
     }
 }
 

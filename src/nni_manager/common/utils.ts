@@ -139,7 +139,8 @@ function parseArg(names: string[]): string {
 }
 
 /**
- * Generate command line to start advisor process which runs tuner and assessor
+ * Generate command line to start automl algorithm(s), 
+ * either start advisor or start a process which runs tuner and assessor
  * @param tuner : For builtin tuner:
  *     {
  *         className: 'EvolutionTuner'
@@ -160,6 +161,7 @@ function parseArg(names: string[]): string {
  *     }
  *
  * @param assessor: similiar as tuner
+ * @param advisor: similar as tuner
  *
  */
 function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiPhase: boolean = false): string {
