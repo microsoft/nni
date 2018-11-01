@@ -35,7 +35,7 @@ import {
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
-import { delay , getLogDir, getMsgDispatcherCommand} from '../common/utils';
+import { delay, getLogDir, getMsgDispatcherCommand } from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, REPORT_METRIC_DATA,
     REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
@@ -123,7 +123,7 @@ class NNIManager implements Manager {
         this.log.debug('Setup tuner...');
 
         // Set up multiphase config
-        if(expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
+        if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
@@ -217,10 +217,9 @@ class NNIManager implements Manager {
         return this.dataStore.getTrialJobStatistics();
     }
 
-    public stopExperiment(): Promise<void> {
+    public async stopExperiment(): Promise<void> {
         this.status.status = 'STOPPING';
-
-        return Promise.resolve();
+        await this.experimentDoneCleanUp();
     }
 
     public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
@@ -342,7 +341,7 @@ class NNIManager implements Manager {
 
     private async periodicallyUpdateExecDuration(): Promise<void> {
         let count: number = 1;
-        for (; ;) {
+        while (this.status.status !== 'STOPPING') {
             await delay(1000 * 1); // 1 seconds
             if (this.status.status === 'EXPERIMENT_RUNNING') {
                 this.experimentProfile.execDuration += 1;
@@ -396,10 +395,7 @@ class NNIManager implements Manager {
             throw new Error('Error: tuner has not been setup');
         }
         let allFinishedTrialJobNum: number = 0;
-        for (; ;) {
-            if (this.status.status === 'STOPPING') {
-                break;
-            }
+        while (this.status.status !== 'STOPPING') {
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
 
             allFinishedTrialJobNum += finishedTrialJobNum;
@@ -477,7 +473,7 @@ class NNIManager implements Manager {
             }
             await delay(1000 * 5); // 5 seconds
         }
-        
+
         this.log.info('Experiment done, cleaning up...');
         await this.experimentDoneCleanUp();
         this.log.info('Experiment done.');
@@ -563,7 +559,7 @@ class NNIManager implements Manager {
                 };
                 await this.trainingService.updateTrialJob(tunerCommand.trial_job_id, trialJobForm);
                 await this.dataStore.storeTrialJobEvent(
-                        'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
+                    'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
                 break;
             case NO_MORE_TRIAL_JOBS:
                 //this.trialJobsMaintainer.setNoMoreTrials();

@@ -50,7 +50,7 @@ async function initContainer(platformMode: string): Promise<void> {
         Container.bind(TrainingService).to(LocalTrainingServiceForGPU).scope(Scope.Singleton);
     } else if (platformMode === 'remote') {
         Container.bind(TrainingService).to(RemoteMachineTrainingService).scope(Scope.Singleton);
-    } else if (platformMode === 'pai'){
+    } else if (platformMode === 'pai') {
         Container.bind(TrainingService).to(PAITrainingService).scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${mode}`);
@@ -108,3 +108,12 @@ mkDirP(getLogDir()).then(async () => {
 }).catch((err: Error) => {
     console.error(`Failed to create log dir: ${err.stack}`);
 });
+
+process.on('SIGTERM', async () => {
+    const ds: DataStore = component.get(DataStore);
+    await ds.close();
+    const restServer: NNIRestServer = component.get(NNIRestServer);
+    await restServer.stop();
+    const log: Logger = getLogger();
+    log.close();
+})
