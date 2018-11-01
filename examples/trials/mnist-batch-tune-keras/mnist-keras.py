@@ -122,7 +122,7 @@ if __name__ == '__main__':
     try:
         # get parameters from tuner
         # RECEIVED_PARAMS = {"optimizer": "Adam", "learning_rate": 0.00001}
-        RECEIVED_PARAMS = nni.get_parameters()
+        RECEIVED_PARAMS = nni.get_next_parameter()
         LOG.debug(RECEIVED_PARAMS)
         PARAMS = generate_default_params()
         PARAMS.update(RECEIVED_PARAMS)

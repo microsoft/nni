@@ -1,0 +1,8 @@
+nni_pkg/
+nni_annotation/
+nnicmd/
+dist/
+build/
+*.egg-info/
+node-*.tar.xz
+node-*/
