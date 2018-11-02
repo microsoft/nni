@@ -30,12 +30,12 @@ import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common
 import { getLogger, Logger } from '../../common/log';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
+import { getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import {
     HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
-import { file } from 'tmp';
 
 const tkill = require('tree-kill');
 
@@ -111,7 +111,7 @@ class LocalTrainingService implements TrainingService {
         this.initialized = false;
         this.stopping = false;
         this.log = getLogger();
-        this.trialSequenceId = 0;
+        this.trialSequenceId = -1;
     }
 
     public async run(): Promise<void> {
@@ -432,6 +432,10 @@ class LocalTrainingService implements TrainingService {
     }
 
     private generateSequenceId(): number {
+        if (this.trialSequenceId === -1) {
+            this.trialSequenceId = getInitTrialSequenceId();
+        }
+
         return this.trialSequenceId++;
     }
 

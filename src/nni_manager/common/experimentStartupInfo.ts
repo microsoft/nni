@@ -27,6 +27,7 @@ class ExperimentStartupInfo {
     private experimentId: string = '';
     private newExperiment: boolean = true;
     private initialized: boolean = false;
+    private initTrialSequenceID: number = 0;
 
     public setStartupInfo(newExperiment: boolean, experimentId: string): void {
         assert(!this.initialized);
@@ -48,6 +49,17 @@ class ExperimentStartupInfo {
 
         return this.newExperiment;
     }
+
+    public setInitTrialSequenceId(initSequenceId: number): void {
+        assert(this.initialized);
+        this.initTrialSequenceID = initSequenceId;
+    }
+
+    public getInitTrialSequenceId(): number {
+        assert(this.initialized);
+
+        return this.initTrialSequenceID;
+    }
 }
 
 function getExperimentId(): string {
@@ -58,8 +70,17 @@ function isNewExperiment(): boolean {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).isNewExperiment();
 }
 
+function setInitTrialSequenceId(initSequenceId: number): void {
+    component.get<ExperimentStartupInfo>(ExperimentStartupInfo).setInitTrialSequenceId(initSequenceId);
+}
+
+function getInitTrialSequenceId(): number {
+    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getInitTrialSequenceId();
+}
+
 function setExperimentStartupInfo(newExperiment: boolean, experimentId: string): void {
     component.get<ExperimentStartupInfo>(ExperimentStartupInfo).setStartupInfo(newExperiment, experimentId);
 }
 
-export { ExperimentStartupInfo, getExperimentId, isNewExperiment, setExperimentStartupInfo };
+export { ExperimentStartupInfo, getExperimentId, isNewExperiment,
+    setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId };

@@ -29,7 +29,7 @@ import * as request from 'request';
 
 import { Deferred } from 'ts-deferred';
 import { EventEmitter } from 'events';
-import { getExperimentId } from '../../common/experimentStartupInfo';
+import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { HDFSClientUtility } from './hdfsClientUtility'
 import { MethodNotImplementedError } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
@@ -78,7 +78,7 @@ class PAITrainingService implements TrainingService {
         this.experimentId = getExperimentId();      
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
-        this.trialSequenceId = 0;
+        this.trialSequenceId = -1;
     }
 
     public async run(): Promise<void> {
@@ -454,6 +454,10 @@ class PAITrainingService implements TrainingService {
     }
 
     private generateSequenceId(): number {
+        if (this.trialSequenceId === -1) {
+            this.trialSequenceId = getInitTrialSequenceId();
+        }
+
         return this.trialSequenceId++;
     }
 }
