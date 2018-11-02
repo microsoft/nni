@@ -55,7 +55,7 @@ def check_experiment_id(args):
                 experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
                 experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
-            return exit(1)
+            exit(1)
         elif not running_experiment_list:
             print_error('There is no experiment running!')
             return None
