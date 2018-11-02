@@ -26,7 +26,7 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId } from '../common/experimentStartupInfo';
+import { getExperimentId, setInitTrialSequenceId } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
     ExperimentParams, ExperimentProfile, Manager,
@@ -151,6 +151,8 @@ class NNIManager implements Manager {
         const experimentId: string = getExperimentId();
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
+
+        setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
 
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
@@ -457,6 +459,7 @@ class NNIManager implements Manager {
                         }
                     };
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
+                    await this.storeMaxSequenceId(trialJobDetail.sequenceId);
                     this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
@@ -588,6 +591,7 @@ class NNIManager implements Manager {
             revision: 0,
             execDuration: 0,
             logDir: getLogDir(),
+            maxSequenceId: 0,
             params: {
                 authorName: '',
                 experimentName: '',
@@ -603,6 +607,13 @@ class NNIManager implements Manager {
                 }
             }
         };
+    }
+
+    private async storeMaxSequenceId(sequenceId: number): Promise<void> {
+        if (sequenceId > this.experimentProfile.maxSequenceId) {
+            this.experimentProfile.maxSequenceId = sequenceId;
+            await this.storeExperimentProfile();
+        }
     }
 }
 
