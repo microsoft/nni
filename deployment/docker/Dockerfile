@@ -65,6 +65,9 @@ RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
 #
 RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 
+#sklearn
+RUN python3 -m pip --no-cache-dir install scikit-learn
+
 ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:
 
 WORKDIR /root
