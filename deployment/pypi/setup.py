@@ -11,7 +11,7 @@ with open('../../README.md', 'r') as fh:
 
 setuptools.setup(
     name = 'nni',
-    version = '0.3.1',
+    version = '0.3.2',
     author = 'Microsoft NNI team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence package',
@@ -27,7 +27,8 @@ setuptools.setup(
         'pyyaml',
         'psutil',
         'requests',
-        'astor'
+        'astor',
+        'pyhdfs'
     ],
     classifiers = [
         'Programming Language :: Python :: 3',
