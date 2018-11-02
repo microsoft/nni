@@ -34,7 +34,7 @@ class CustomInstallCommand(install):
         subprocess.run(['make', 'pip-install'], check=True)
 
 setup(
-    name = 'NNI',
+    name = 'nni',
     version = '0.3.0',
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
