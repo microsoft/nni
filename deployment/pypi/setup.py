@@ -10,7 +10,7 @@ with open('../../README.md', 'r') as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name = 'nni-pkg',
+    name = 'nni',
     version = '0.3.0',
     author = 'Microsoft NNI team',
     author_email = 'nni@microsoft.com',
@@ -22,7 +22,7 @@ setuptools.setup(
     packages = setuptools.find_packages(),
     python_requires = '>=3.5',
     install_requires = [
-        'nni',
+        'nni-sdk',
         'schema',
         'pyyaml',
         'psutil',

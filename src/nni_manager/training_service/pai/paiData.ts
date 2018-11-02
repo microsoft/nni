@@ -56,7 +56,7 @@ if python3 -c 'import nni' > /dev/null 2>&1; then
   return
 else
   # Install nni
-  python3 -m pip install --user nni-pkg
+  python3 -m pip install --user nni
 fi`;
 
 export const PAI_TRIAL_COMMAND_FORMAT: string =
