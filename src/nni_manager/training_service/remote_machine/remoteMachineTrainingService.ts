@@ -30,7 +30,7 @@ import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
 import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
-import { getExperimentId } from '../../common/experimentStartupInfo';
+import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
 import {
@@ -77,7 +77,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.remoteExpRootDir = this.getRemoteExperimentRootDir();
         this.timer = timer;
         this.log = getLogger();
-        this.trialSequenceId = 0;
+        this.trialSequenceId = -1;
     }
 
     /**
@@ -607,6 +607,10 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private generateSequenceId(): number {
+        if (this.trialSequenceId === -1) {
+            this.trialSequenceId = getInitTrialSequenceId();
+        }
+
         return this.trialSequenceId++;
     }
 

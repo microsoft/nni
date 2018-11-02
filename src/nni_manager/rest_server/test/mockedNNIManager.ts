@@ -147,6 +147,7 @@ export class MockedNNIManager extends Manager {
             execDuration: 0,
             startTime: Date.now(),
             endTime: Date.now(),
+            maxSequenceId: 0,
             revision: 0
         };
 

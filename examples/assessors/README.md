@@ -1,4 +1,4 @@
-# Customized Assessor for Experts
+# Define your own Assessor
 
 *Assessor receive intermediate result from Trial and decide whether the Trial should be killed. Once the Trial experiment meets the early stop conditions, the assessor will kill the Trial.*
 

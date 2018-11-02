@@ -53,7 +53,7 @@ RUN python3 -m pip --no-cache-dir install \
 #
 #Install NNI
 #
-RUN python3 -m pip install --user nni-pkg
+RUN python3 -m pip install nni
 
 #
 #Tensorflow 1.10.0
