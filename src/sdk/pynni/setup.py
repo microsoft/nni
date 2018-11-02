@@ -26,7 +26,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 setuptools.setup(
-    name = 'nni',
+    name = 'nni-sdk',
     version = '0.3.0',
     packages = setuptools.find_packages(exclude=['tests']),
 

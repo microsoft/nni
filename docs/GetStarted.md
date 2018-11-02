@@ -14,11 +14,11 @@
 
 * __Install NNI through pip__
 
-      python3 -m pip install --user nni-pkg
+      python3 -m pip install --user nni
 
 * __Install NNI through source code__
    
-      git clone -b v0.3 https://github.com/Microsoft/nni.git
+      git clone -b v0.3.1 https://github.com/Microsoft/nni.git
       cd nni
       source install.sh
 

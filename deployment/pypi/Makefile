@@ -18,6 +18,7 @@ build:
 	rm -rf $(CWD)nni_annotation
 	cp -r $(CWD)../../tools/nnicmd $(CWD)nnicmd
 	cp -r $(CWD)../../tools/nni_annotation $(CWD)nni_annotation
+	cp -r $(CWD)../../tools/trial_tool $(CWD)trial_tool
 	cd $(CWD) && python3 setup.py bdist_wheel
 	cd $(CWD)../../src/sdk/pynni && python3 setup.py bdist_wheel
 	cp -r $(CWD)../../src/sdk/pynni/dist/*.whl $(CWD)dist

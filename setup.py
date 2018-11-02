@@ -34,8 +34,8 @@ class CustomInstallCommand(install):
         subprocess.run(['make', 'pip-install'], check=True)
 
 setup(
-    name = 'NNI',
-    version = '0.3.0',
+    name = 'nni',
+    version = '0.3.1',
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
