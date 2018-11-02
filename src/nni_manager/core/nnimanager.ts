@@ -152,10 +152,6 @@ class NNIManager implements Manager {
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
 
-        if (this.experimentProfile.endTime) {
-            delete this.experimentProfile.endTime;
-        }
-
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
@@ -179,7 +175,13 @@ class NNIManager implements Manager {
             .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
             .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
 
-        this.status.status = 'EXPERIMENT_RUNNING';
+        if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
+            this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum) {
+            if(this.experimentProfile.endTime) {
+                delete this.experimentProfile.endTime;
+            }
+            this.status.status = 'EXPERIMENT_RUNNING';
+        }
 
         // TO DO: update database record for resume event
         this.run().catch(console.error);
