@@ -181,6 +181,11 @@ class NNIManager implements Manager {
                 delete this.experimentProfile.endTime;
             }
             this.status.status = 'EXPERIMENT_RUNNING';
+        } else {
+            if (!this.experimentProfile.endTime) {
+                this.experimentProfile.endTime = Date.now();
+            }
+            this.status.status = 'DONE';
         }
 
         // TO DO: update database record for resume event
