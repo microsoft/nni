@@ -140,7 +140,11 @@ class Bracket():
         '''
         if parameter_id in self.configs_perf[i]:
             # this should always be true if there is no retry in training service
-            _logger.debug('assertion: %d %d\n', self.configs_perf[i][parameter_id][0], seq)
+            _logger.debug('assertion: %d %d, %s %s\n',
+                          self.configs_perf[i][parameter_id][0],
+                          seq,
+                          str(type(self.configs_perf[i][parameter_id][0])),
+                          str(type(seq)))
             assert self.configs_perf[i][parameter_id][0] < seq
         self.configs_perf[i][parameter_id] = [seq, value]
 
