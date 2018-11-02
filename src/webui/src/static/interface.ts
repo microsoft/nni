@@ -37,7 +37,8 @@ interface Experiment {
 
 // trial accuracy
 interface AccurPoint {
-    yAxis: Array<number>;
+    acc: number;
+    index: number;
 }
 
 interface TrialNumber {

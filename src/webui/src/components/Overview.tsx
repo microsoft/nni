@@ -4,11 +4,8 @@ import { Row, Col } from 'antd';
 import { MANAGER_IP, overviewItem } from '../static/const';
 import {
     Experiment, TableObj,
-    Parameters, AccurPoint, TrialNumber
+    Parameters, TrialNumber
 } from '../static/interface';
-import {
-    getAccuracyData
-} from '../static/function';
 import SuccessTable from './overview/SuccessTable';
 import Title1 from './overview/Title1';
 import Progressed from './overview/Progress';
@@ -42,7 +39,6 @@ class Overview extends React.Component<{}, SessionState> {
     public _isMounted = false;
     public intervalID = 0;
     public intervalProfile = 1;
-    public intervalAccuracy = 2;
 
     constructor(props: {}) {
         super(props);
@@ -212,8 +208,14 @@ class Overview extends React.Component<{}, SessionState> {
                                 };
                                 const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
                                 let acc;
+                                let tableAcc = 0;
                                 if (tableData[item].finalMetricData) {
-                                    acc = parseFloat(tableData[item].finalMetricData.data);
+                                    acc = JSON.parse(tableData[item].finalMetricData.data);
+                                    if (typeof(acc) === 'object') {
+                                        tableAcc = acc.default;
+                                    } else {
+                                        tableAcc = acc;
+                                    }
                                 }
                                 // if hyperparameters is undefine, show error message, else, show parameters value
                                 if (tableData[item].hyperParameters) {
@@ -234,7 +236,7 @@ class Overview extends React.Component<{}, SessionState> {
                                     id: tableData[item].id,
                                     duration: duration,
                                     status: tableData[item].status,
-                                    acc: acc,
+                                    acc: tableAcc,
                                     description: desJobDetail
                                 });
                                 break;
@@ -255,6 +257,8 @@ class Overview extends React.Component<{}, SessionState> {
                             trialNumber: profile
                         });
                     }
+                    // draw accuracy
+                    this.drawPointGraph();
                 }
             });
     }
@@ -311,46 +315,61 @@ class Overview extends React.Component<{}, SessionState> {
     // trial accuracy graph
     drawPointGraph = () => {
 
-        axios(`${MANAGER_IP}/trial-jobs`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200 && this._isMounted) {
-                    const accData = res.data;
-                    const accArr: Array<number> = [];
-                    const accY: Array<AccurPoint> = [];
-                    Object.keys(accData).map(item => {
-                        if (accData[item].status === 'SUCCEEDED' && accData[item].finalMetricData) {
-                            accArr.push(parseFloat(accData[item].finalMetricData.data));
-                        }
-                    });
-                    accArr.sort((a, b) => { return a - b; });
-                    accArr.length = Math.min(10, accArr.length);
-                    accY.push({ yAxis: accArr });
-                    let optionObj = getAccuracyData(accY[0]);
-                    const bestAccnum = Math.max(...accArr);
-                    this.setState({ accuracyData: optionObj }, () => {
-                        if (accArr.length === 0) {
-                            this.setState({
-                                accNodata: 'No data'
-                            });
-                        } else {
-                            this.setState({
-                                accNodata: '',
-                                bestAccuracy: bestAccnum.toFixed(6)
-                            });
-                        }
-                    });
-                }
-            });
+        const { tableData } = this.state;
+        const sourcePoint = JSON.parse(JSON.stringify(tableData));
+        sourcePoint.sort((a: TableObj, b: TableObj) => {
+            if (a.sequenceId && b.sequenceId) {
+                return a.sequenceId - b.sequenceId;
+            } else {
+                return NaN;
+            }
+        });
+        const accarr: Array<number> = [];
+        const indexarr: Array<number> = [];
+        Object.keys(sourcePoint).map(item => {
+            const items = sourcePoint[item];
+            accarr.push(items.acc);
+            indexarr.push(items.sequenceId);
+        });
+        const bestAccnum = Math.max(...accarr);
+        const accOption = {
+            tooltip: {
+                trigger: 'item'
+            },
+            xAxis: {
+                name: 'Trial',
+                type: 'category',
+                data: indexarr
+            },
+            yAxis: {
+                name: 'Accuracy',
+                type: 'value',
+                data: accarr
+            },
+            series: [{
+                symbolSize: 6,
+                type: 'scatter',
+                data: accarr
+            }]
+        };
+        this.setState({ accuracyData: accOption }, () => {
+            if (accarr.length === 0) {
+                this.setState({
+                    accNodata: 'No data'
+                });
+            } else {
+                this.setState({
+                    accNodata: '',
+                    bestAccuracy: bestAccnum.toFixed(6)
+                });
+            }
+        });
     }
 
     componentDidMount() {
+        this._isMounted = true;
         this.showSessionPro();
         this.showTrials();
-        this.drawPointGraph();
-        this.intervalAccuracy = window.setInterval(this.drawPointGraph, 10000);
-        this._isMounted = true;
         this.intervalID = window.setInterval(this.showTrials, 10000);
         this.intervalProfile = window.setInterval(this.showSessionPro, 60000);
     }
@@ -359,7 +378,6 @@ class Overview extends React.Component<{}, SessionState> {
         this._isMounted = false;
         window.clearInterval(this.intervalID);
         window.clearInterval(this.intervalProfile);
-        window.clearInterval(this.intervalAccuracy);
     }
 
     render() {

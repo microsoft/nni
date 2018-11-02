@@ -12,7 +12,19 @@
     }
 
 }
-
+#succeTable, #tableList{
+    .commonTableStyle .idtitle div{
+        text-align: left;
+    }
+    .durationsty{
+        width: 80%;
+        margin: 0 auto;
+        div{
+            text-align: right;
+            margin-right: 9px;
+        }
+    }
+}
 /* add the brother selector to increase the priority */
 #succeTable .commonTableStyle, #tableList .commonTableStyle {
 
