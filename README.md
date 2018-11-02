@@ -72,7 +72,6 @@ You can use these commands to get more information about the experiment
 6. nnictl trial kill             kill a trial job by id
 7. nnictl --help                 get help information about nnictl
 -----------------------------------------------------------------------
-
 ## **Documentation**
 * [Overview](docs/Overview.md)
 * [Get started](docs/GetStarted.md)
