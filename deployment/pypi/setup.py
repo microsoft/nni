@@ -26,7 +26,8 @@ setuptools.setup(
         'schema',
         'pyyaml',
         'psutil',
-        'requests'
+        'requests',
+        'astor'
     ],
     classifiers = [
         'Programming Language :: Python :: 3',
