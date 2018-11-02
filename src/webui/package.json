@@ -9,24 +9,24 @@
     "echarts": "^4.1.0",
     "echarts-for-react": "^2.0.14",
     "react": "^16.4.2",
-    "react-app-rewired": "^1.5.2",
     "react-dom": "^16.4.2",
     "react-json-tree": "^0.11.0",
-    "react-router": "3.2.1"
+    "react-router": "3.2.1",
+    "react-scripts-ts-antd": "2.17.0"
   },
   "scripts": {
-    "start": "react-app-rewired start --scripts-version react-scripts-ts",
-    "build": "react-app-rewired build --scripts-version react-scripts-ts",
-    "test": "react-app-rewired test --env=jsdom --scripts-version react-scripts-ts",
-    "eject": "react-scripts-ts eject"
+    "start": "react-scripts-ts-antd start",
+    "build": "react-scripts-ts-antd build",
+    "test": "react-scripts-ts-antd test --env=jsdom",
+    "eject": "react-scripts-ts-antd eject"
   },
   "devDependencies": {
+    "@types/jest": "^23.3.5",
     "@types/node": "^10.7.0",
-    "@types/react-router": "3.0.15",
-    "@types/react-json-tree": "^0.6.8",
+    "@types/react": "^16.4.17",
     "@types/react-dom": "^16.0.7",
-    "react-scripts-ts": "^2.17.0",
-    "ts-import-plugin": "^1.5.4",
+    "@types/react-json-tree": "^0.6.8",
+    "@types/react-router": "3.0.15",
     "typescript": "^3.0.1"
   }
 }

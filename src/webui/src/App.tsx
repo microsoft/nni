@@ -1,18 +1,22 @@
 import * as React from 'react';
+import { Row, Col } from 'antd';
 import './App.css';
 import SlideBar from './components/SlideBar';
 
-class App extends React.Component<{}, {}> {  
-  render () {
+class App extends React.Component<{}, {}> {
+  render() {
     return (
-      <div className="App">
-        {/* <header className="header_title"><img src={require('./logo.jpg')} alt=""/></header> */}
-        <header className="header_title">Neural Network Intelligence</header>
-        <div className="content">
-          <SlideBar />
-          <div className="right">{this.props.children}</div>
-        </div>
-      </div>
+      <Row className="nni">
+        <Row className="header">
+          <Col span={2} />
+          <Col className="headerCon" span={22}> 
+            <SlideBar />
+          </Col>
+        </Row>
+        <Row className="content">
+            {this.props.children}
+        </Row>
+      </Row>
     );
   }
 }
