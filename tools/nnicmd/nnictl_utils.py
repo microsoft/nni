@@ -55,7 +55,7 @@ def check_experiment_id(args):
                 experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
                 experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
-            return None
+            return exit(1)
         elif not running_experiment_list:
             print_error('There is no experiment running!')
             return None
@@ -116,8 +116,10 @@ def parse_ids(args):
         if len(result_list) > 1:
             print_error(args.id + ' is ambiguous, please choose ' + ' '.join(result_list) )
             return None
-    if not result_list:
-        print_error('There are no experiments matched, please check experiment id...')
+    if not result_list and args.id:
+        print_error('There are no experiments matched, please set correct experiment id...')
+    elif not result_list:
+        print_error('There is no experiment running...')
     return result_list
 
 def get_config_filename(args):
