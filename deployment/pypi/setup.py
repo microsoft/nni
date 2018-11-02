@@ -26,8 +26,7 @@ setuptools.setup(
         'schema',
         'pyyaml',
         'psutil',
-        'requests',
-        'paramiko'
+        'requests'
     ],
     classifiers = [
         'Programming Language :: Python :: 3',
