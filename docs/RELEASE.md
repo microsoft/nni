@@ -47,6 +47,7 @@ The following is a summary of the NNI team's backlog for the next 6 months. Some
       ```
 ## Breaking changes
 *   <span style="color:red">API nn.get_parameters() is renamed to nni.get_next_parameter(), this is a broken change, all examples of prior releases can not run on v0.3, please clone nni repo to get new examples.</span>
+
     ```git clone -b v0.3 https://github.com/Microsoft/nni.git```
 
 ## Know issues
