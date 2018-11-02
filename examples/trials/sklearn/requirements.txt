@@ -1,4 +1,2 @@
-python3 -m pip install numpy
 sudo apt-get install libblas-dev liblapack-dev libatlas-base-dev gfortran
-sudo python3 -m pip install scipy
-sudo python3 -m pip install sklearn
+python3 -m pip install --user numpy scipy sklearn
