@@ -49,7 +49,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             if (accData[item].finalMetricData) {
                                 acc = JSON.parse(accData[item].finalMetricData.data);
                                 if (typeof (acc) === 'object') {
-                                    tableAcc = acc.default;
+                                    if (acc.default) {
+                                        tableAcc = acc.default;
+                                    }
                                 } else {
                                     tableAcc = acc;
                                 }
@@ -150,7 +152,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         if (trialJobs[item].finalMetricData !== undefined) {
                             acc = JSON.parse(trialJobs[item].finalMetricData.data);
                             if (typeof (acc) === 'object') {
-                                tableAcc = acc.default;
+                                if (acc.default) {
+                                    tableAcc = acc.default;
+                                }
                             } else {
                                 tableAcc = acc;
                             }

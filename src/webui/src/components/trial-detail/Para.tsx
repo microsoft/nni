@@ -84,7 +84,9 @@ class Para extends React.Component<{}, ParaState> {
                                     let accReal;
                                     acc = JSON.parse(accParaData[item].finalMetricData.data);
                                     if (typeof (acc) === 'object') {
-                                        accReal = acc.default;
+                                        if (acc.default) {
+                                            accReal = acc.default;
+                                        }
                                     } else {
                                         accReal = acc;
                                     }

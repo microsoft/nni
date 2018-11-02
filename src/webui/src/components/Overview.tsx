@@ -211,8 +211,10 @@ class Overview extends React.Component<{}, SessionState> {
                                 let tableAcc = 0;
                                 if (tableData[item].finalMetricData) {
                                     acc = JSON.parse(tableData[item].finalMetricData.data);
-                                    if (typeof(acc) === 'object') {
-                                        tableAcc = acc.default;
+                                    if (typeof (acc) === 'object') {
+                                        if (acc.default) {
+                                            tableAcc = acc.default;
+                                        }
                                     } else {
                                         tableAcc = acc;
                                     }
