@@ -175,6 +175,11 @@ class NNIManager implements Manager {
             .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
             .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
 
+        if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
+            this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
+            this.experimentProfile.endTime) {
+            delete this.experimentProfile.endTime;
+        }
         this.status.status = 'EXPERIMENT_RUNNING';
 
         // TO DO: update database record for resume event

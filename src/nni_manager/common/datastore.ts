@@ -66,7 +66,7 @@ interface TrialJobInfo {
     endTime?: number;
     hyperParameters?: string[];
     logPath?: string;
-    finalMetricData?: string;
+    finalMetricData?: MetricDataRecord;
     stderrPath?: string;
 }
 

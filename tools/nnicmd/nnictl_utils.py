@@ -38,7 +38,7 @@ def check_experiment_id(args):
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
         print_normal('There is no experiment running...')
-        exit(1)
+        return None
     if not args.id:
         running_experiment_list = []
         for key in experiment_dict.keys():
@@ -58,14 +58,14 @@ def check_experiment_id(args):
             exit(1)
         elif not running_experiment_list:
             print_error('There is no experiment running!')
-            exit(1)
+            return None
         else:
             return running_experiment_list[0]
     if experiment_dict.get(args.id):
         return args.id
     else:
         print_error('Id not correct!')
-        exit(1)
+        return None
 
 def parse_ids(args):
     '''Parse the arguments for nnictl stop
@@ -116,13 +116,18 @@ def parse_ids(args):
         if len(result_list) > 1:
             print_error(args.id + ' is ambiguous, please choose ' + ' '.join(result_list) )
             return None
-    if not result_list:
-        print_error('There are no experiments matched, please check experiment id...')
+    if not result_list and args.id:
+        print_error('There are no experiments matched, please set correct experiment id...')
+    elif not result_list:
+        print_error('There is no experiment running...')
     return result_list
 
 def get_config_filename(args):
     '''get the file name of config file'''
     experiment_id = check_experiment_id(args)
+    if experiment_id is None:
+        print_error('Please set the experiment id!')
+        exit(1)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     return experiment_dict[experiment_id]['fileName']
@@ -130,6 +135,9 @@ def get_config_filename(args):
 def get_experiment_port(args):
     '''get the port of experiment'''
     experiment_id = check_experiment_id(args)
+    if experiment_id is None:
+        print_error('Please set the experiment id!')
+        exit(1)
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     return experiment_dict[experiment_id]['port']
