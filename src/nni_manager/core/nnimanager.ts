@@ -152,6 +152,10 @@ class NNIManager implements Manager {
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
 
+        if (this.experimentProfile.endTime) {
+            delete this.experimentProfile.endTime;
+        }
+
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
