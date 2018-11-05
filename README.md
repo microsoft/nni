@@ -77,26 +77,11 @@ You can use these commands to get more information about the experiment
 
 * Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
 
-<style>
-table{
-    border-collapse: collapse;
-    border-spacing: 0;
-    border:none;
-}
 
-th{
-    border:none;
-}
-
-td{
-    border:none;
-}
-</style>
-
-|||
-:-------------------------:|:-------------------------:
-![alt-text-1](./docs/img/webui_overview_page.png "title-1") | ![alt-text-2](./docs/img/webui_trialdetail_page.png "title-2")
-
+<table style="border: none">
+    <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="400"/></th>
+    <th><img src="./docs/img/webui_trialdetail_page.png" alt="drawing" width="400"/></th>
+</table>
 
 
 ## **Documentation**
