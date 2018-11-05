@@ -341,7 +341,7 @@ class NNIManager implements Manager {
 
     private async periodicallyUpdateExecDuration(): Promise<void> {
         let count: number = 1;
-        while (this.status.status !== 'STOPPING') {
+        while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
             await delay(1000 * 1); // 1 seconds
             if (this.status.status === 'EXPERIMENT_RUNNING') {
                 this.experimentProfile.execDuration += 1;
@@ -354,7 +354,6 @@ class NNIManager implements Manager {
     }
 
     private async requestTrialJobsStatus(): Promise<number> {
-        const deferred: Deferred<number> = new Deferred<number>();
         let finishedTrialJobNum: number = 0;
         for (const trialJobId of Array.from(this.trialJobs.keys())) {
             const trialJobDetail: TrialJobDetail = await this.trainingService.getTrialJob(trialJobId);
@@ -385,9 +384,8 @@ class NNIManager implements Manager {
                 // TO DO: add warning in log
             }
         }
-        deferred.resolve(finishedTrialJobNum);
-
-        return deferred.promise;
+        
+        return finishedTrialJobNum;
     }
 
     private async manageTrials(): Promise<void> {
@@ -395,7 +393,7 @@ class NNIManager implements Manager {
             throw new Error('Error: tuner has not been setup');
         }
         let allFinishedTrialJobNum: number = 0;
-        while (this.status.status !== 'STOPPING') {
+        while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
 
             allFinishedTrialJobNum += finishedTrialJobNum;
