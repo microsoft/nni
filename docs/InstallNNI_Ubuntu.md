@@ -16,7 +16,7 @@
 
 * __Install NNI through source code__
    
-      git clone -b v0.3.1 https://github.com/Microsoft/nni.git
+      git clone -b v0.3.2 https://github.com/Microsoft/nni.git
       cd nni
       chmod +x install.sh
       source install.sh
