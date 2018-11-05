@@ -35,7 +35,7 @@ class CustomInstallCommand(install):
 
 setup(
     name = 'nni',
-    version = '0.3.2',
+    version = '0.3.3',
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
