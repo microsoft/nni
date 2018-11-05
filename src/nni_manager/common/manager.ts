@@ -74,6 +74,7 @@ interface ExperimentProfile {
     logDir?: string;
     startTime?: number;
     endTime?: number;
+    maxSequenceId: number;
     revision: number;
 }
 

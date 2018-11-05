@@ -80,7 +80,17 @@ class Para extends React.Component<{}, ParaState> {
                             if (accParaData[item].status === 'SUCCEEDED') {
                                 if (accParaData[item].finalMetricData && accParaData[item].hyperParameters) {
                                     // get acc array
-                                    accPara.push(parseFloat(accParaData[item].finalMetricData.data));
+                                    let acc;
+                                    let accReal;
+                                    acc = JSON.parse(accParaData[item].finalMetricData.data);
+                                    if (typeof (acc) === 'object') {
+                                        if (acc.default) {
+                                            accReal = acc.default;
+                                        }
+                                    } else {
+                                        accReal = acc;
+                                    }
+                                    accPara.push(accReal);
                                     // get dim and every line specific number
                                     const temp = JSON.parse(accParaData[item].hyperParameters).parameters;
                                     speValue.push(temp);

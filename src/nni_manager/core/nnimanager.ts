@@ -26,7 +26,7 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId } from '../common/experimentStartupInfo';
+import { getExperimentId, setInitTrialSequenceId } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
     ExperimentParams, ExperimentProfile, Manager,
@@ -153,6 +153,8 @@ class NNIManager implements Manager {
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
 
+        setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
+
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
@@ -178,6 +180,11 @@ class NNIManager implements Manager {
             .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
             .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
 
+        if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
+            this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
+            this.experimentProfile.endTime) {
+            delete this.experimentProfile.endTime;
+        }
         this.status.status = 'EXPERIMENT_RUNNING';
 
         // TO DO: update database record for resume event
@@ -460,6 +467,7 @@ class NNIManager implements Manager {
                         }
                     };
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
+                    await this.storeMaxSequenceId(trialJobDetail.sequenceId);
                     this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
@@ -591,6 +599,7 @@ class NNIManager implements Manager {
             revision: 0,
             execDuration: 0,
             logDir: getLogDir(),
+            maxSequenceId: 0,
             params: {
                 authorName: '',
                 experimentName: '',
@@ -618,7 +627,15 @@ class NNIManager implements Manager {
         if (this.experimentProfile.params.assessor) {
             this.experimentProfile.params.assessor.checkpointDir = chkpDir;
         }
+
         return Promise.resolve(chkpDir);
+    }
+    
+    private async storeMaxSequenceId(sequenceId: number): Promise<void> {
+        if (sequenceId > this.experimentProfile.maxSequenceId) {
+            this.experimentProfile.maxSequenceId = sequenceId;
+            await this.storeExperimentProfile();
+        }
     }
 }
 

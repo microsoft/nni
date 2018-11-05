@@ -21,34 +21,34 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
 
         let bgColor = '';
         const columns = [{
-            title: 'Number',
+            title: 'Trial No.',
             dataIndex: 'sequenceId',
             key: 'sequenceId',
-            width: 60,
-            className: 'tableHead',
-            render: (text: string, record: TableObj) => {
-                return (
-                    <span>#{record.sequenceId}</span>
-                );
-            }
+            width: 140,
+            className: 'tableHead'
         }, {
             title: 'Id',
             dataIndex: 'id',
             key: 'id',
-            width: 150,
-            className: 'tableHead'
+            width: 60,
+            className: 'tableHead idtitle',
+            render: (text: string, record: TableObj) => {
+                return (
+                    <div>{record.id}</div>
+                );
+            },
         }, {
             title: 'Duration',
             dataIndex: 'duration',
             key: 'duration',
-            width: 150,
+            width: 140,
             render: (text: string, record: TableObj) => {
                 let duration;
                 if (record.duration) {
                     duration = convertDuration(record.duration);
                 }
                 return (
-                    <div>{duration}</div>
+                    <div className="durationsty"><div>{duration}</div></div>
                 );
             },
         }, {
@@ -70,14 +70,25 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             dataIndex: 'acc',
             key: 'acc',
             render: (text: string, record: TableObj) => {
+                const accuracy = record.acc;
+                let wei = 0;
+                if (accuracy) {
+                    if (accuracy.toString().indexOf('.') !== -1) {
+                        wei = accuracy.toString().length - accuracy.toString().indexOf('.') - 1;
+                    }
+                }
                 return (
                     <div>
                         {
                             record.acc
                                 ?
-                                record.acc.toFixed(6)
+                                wei > 6
+                                    ?
+                                    record.acc.toFixed(6)
+                                    :
+                                    record.acc
                                 :
-                                record.acc
+                                'NaN'
                         }
                     </div>
                 );
