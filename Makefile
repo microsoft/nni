@@ -22,7 +22,7 @@ else  # is normal user
 endif
 
 BIN_FOLDER ?= $(ROOT_FOLDER)/bin
-NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni_pkg
+NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
 
 ## Dependency information
 $(info $(_INFO) Installing dependencies, use local toolchain $(_END))
