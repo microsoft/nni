@@ -167,34 +167,33 @@ class TableList extends React.Component<TableListProps, TableListState> {
             });
         });
         const columns = [{
-            title: 'Number',
+            title: 'Trial No.',
             dataIndex: 'sequenceId',
             key: 'sequenceId',
             width: 120,
             className: 'tableHead',
-            sorter: (a: TableObj, b: TableObj) => (a.sequenceId as number) - (b.sequenceId as number),
-            render: (text: string, record: TableObj) => {
-                return (
-                    <span>#{record.sequenceId}</span>
-                );
-            }
+            sorter: (a: TableObj, b: TableObj) => (a.sequenceId as number) - (b.sequenceId as number)
         }, {
             title: 'Id',
             dataIndex: 'id',
             key: 'id',
-            width: 150,
-            className: 'tableHead',
+            width: 60,
+            className: 'tableHead idtitle',
             // the sort of string
-            sorter: (a: TableObj, b: TableObj): number => a.id.localeCompare(b.id)
+            sorter: (a: TableObj, b: TableObj): number => a.id.localeCompare(b.id),
+            render: (text: string, record: TableObj) => {
+                return (
+                    <div>{record.id}</div>
+                );
+            }
         }, {
             title: 'Duration',
             dataIndex: 'duration',
             key: 'duration',
-            width: 150,
+            width: 140,
             // the sort of number
             sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
             render: (text: string, record: TableObj) => {
-                const bg = record.color;
                 let duration;
                 if (record.duration !== undefined && record.duration > 0) {
                     duration = convertDuration(record.duration);
@@ -202,7 +201,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     duration = 0;
                 }
                 return (
-                    <div style={{ background: bg }}>{duration}</div>
+                    <div className="durationsty"><div>{duration}</div></div>
                 );
             },
         }, {
@@ -227,14 +226,25 @@ class TableList extends React.Component<TableListProps, TableListState> {
             width: 200,
             sorter: (a: TableObj, b: TableObj) => (a.acc as number) - (b.acc as number),
             render: (text: string, record: TableObj) => {
-                return(
+                const accuracy = record.acc;
+                let wei = 0;
+                if (accuracy) {
+                    if (accuracy.toString().indexOf('.') !== -1) {
+                        wei = accuracy.toString().length - accuracy.toString().indexOf('.') - 1;
+                    }
+                }
+                return (
                     <div>
                         {
                             record.acc
                                 ?
-                                record.acc.toFixed(6)
+                                wei > 6
+                                    ?
+                                    record.acc.toFixed(6)
+                                    :
+                                    record.acc
                                 :
-                                record.acc
+                                'NaN'
                         }
                     </div>
                 );
@@ -309,7 +319,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             }
             return (
                 <pre id="allList" className="hyperpar">
-                     {
+                    {
                         isHasParameters
                             ?
                             < JSONTree
