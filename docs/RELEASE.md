@@ -31,6 +31,7 @@
 * New competition example: [Kaggle Competition TGS Salt Example](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
     
 ## Others
+* UI refactoring, refer to [WebUI doc](WebUI.md) for how to work with the new UI.
 * Continuous Integration: NNI had switched to Azure pipelines
 * [Known Issues in release 0.3.0](https://github.com/Microsoft/nni/labels/nni030knownissues).
 
