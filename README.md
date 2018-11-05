@@ -1,5 +1,6 @@
-
+<p align="center">
 <img src="./docs/img/nni_logo.png" alt="drawing" width="300"/>
+</p>
 
 -----------
 
