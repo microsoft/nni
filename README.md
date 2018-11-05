@@ -79,7 +79,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
+* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](docs/WebUI.md) are more Web UI pages.
 
 <table style="border: none">
     <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
