@@ -1,4 +1,7 @@
-# Neural Network Intelligence
+
+<img src="./docs/img/nni_logo.png" alt="drawing" width="300"/>
+
+-----------
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-yellow.svg)](https://github.com/Microsoft/nni/blob/master/LICENSE)
 [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6)
