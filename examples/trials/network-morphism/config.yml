@@ -1,0 +1,21 @@
+authorName: default
+experimentName: example_fashion-network-morphism
+trialConcurrency: 1
+maxExecDuration: 24h
+maxTrialNum: 10
+#choice: local, remote, pai
+trainingServicePlatform: local
+#searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, Medianstop, NetworkMorphismTuner
+  #SMAC (SMAC should be installed through nnictl) 
+  builtinTunerName: NetworkMorphismTuner
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  command: python3 cifar10-network-morphism.py
+  codeDir: .
+  gpuNum: 0
