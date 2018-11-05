@@ -78,7 +78,7 @@ class LocalTrialJobDetail implements TrialJobDetail {
     public pid?: number;
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
-                workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
+        workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
@@ -283,13 +283,13 @@ class LocalTrainingService implements TrainingService {
     public getClusterMetadata(key: string): Promise<string> {
         switch (key) {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                let getResult : Promise<string>;
-                if(!this.localTrailConfig) {
+                let getResult: Promise<string>;
+                if (!this.localTrailConfig) {
                     getResult = Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, `${key} is never set yet`));
                 } else {
-                    getResult = Promise.resolve(!this.localTrailConfig? '' : JSON.stringify(this.localTrailConfig));
+                    getResult = Promise.resolve(!this.localTrailConfig ? '' : JSON.stringify(this.localTrailConfig));
                 }
-                return getResult;     
+                return getResult;
             default:
                 return Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, 'Key not found'));
         }
@@ -297,7 +297,7 @@ class LocalTrainingService implements TrainingService {
 
     public cleanUp(): Promise<void> {
         this.stopping = true;
-        for(const stream of this.streams) {
+        for (const stream of this.streams) {
             stream.destroy();
         }
         return Promise.resolve();
@@ -359,7 +359,7 @@ class LocalTrainingService implements TrainingService {
         await cpp.exec(`mkdir -p ${trialJobDetail.workingDirectory}`);
         await cpp.exec(`mkdir -p ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
         await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
-        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
         await this.writeSequenceIdFile(trialJobId);
         const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
