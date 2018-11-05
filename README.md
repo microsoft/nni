@@ -75,6 +75,14 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
+* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
+<p align="center">
+<img src="./docs/img/webui_overview_page.png" alt="drawing" width="800"/>
+</p>
+<p align="center">
+<img src="./docs/img/webui_trialdetail_page.png" alt="drawing" width="800"/>
+</p>
+
 ## **Documentation**
 * [Overview](docs/Overview.md)
 * [Get started](docs/GetStarted.md)
