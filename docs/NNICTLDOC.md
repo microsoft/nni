@@ -15,6 +15,7 @@ nnictl experiment
 nnictl config
 nnictl log
 nnictl webui
+nnictl tensorboard
 ```
 ### Manage an experiment
 * __nnictl create__ 
