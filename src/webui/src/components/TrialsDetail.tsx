@@ -2,7 +2,6 @@ import * as React from 'react';
 import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
 import { Row, Tabs } from 'antd';
-import { getAccuracyData } from '../static/function';
 import { TableObj, Parameters, AccurPoint } from '../static/interface';
 import Accuracy from './overview/Accuracy';
 import Duration from './trial-detail/Duration';
@@ -42,17 +41,57 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             .then(res => {
                 if (res.status === 200 && this._isMounted) {
                     const accData = res.data;
-                    const accArr: Array<number> = [];
-                    const accY: Array<AccurPoint> = [];
+                    const accSource: Array<AccurPoint> = [];
                     Object.keys(accData).map(item => {
                         if (accData[item].status === 'SUCCEEDED' && accData[item].finalMetricData) {
-                            accArr.push(parseFloat(accData[item].finalMetricData.data));
+                            let acc;
+                            let tableAcc;
+                            if (accData[item].finalMetricData) {
+                                acc = JSON.parse(accData[item].finalMetricData.data);
+                                if (typeof (acc) === 'object') {
+                                    if (acc.default) {
+                                        tableAcc = acc.default;
+                                    }
+                                } else {
+                                    tableAcc = acc;
+                                }
+                            }
+                            accSource.push({
+                                acc: tableAcc,
+                                index: accData[item].sequenceId
+                            });
                         }
                     });
-                    accY.push({ yAxis: accArr });
-                    const optionObj = getAccuracyData(accY[0]);
-                    this.setState({ accSource: optionObj }, () => {
-                        if (accArr.length === 0) {
+                    const accarr: Array<number> = [];
+                    const indexarr: Array<number> = [];
+                    Object.keys(accSource).map(item => {
+                        const items = accSource[item];
+                        accarr.push(items.acc);
+                        indexarr.push(items.index);
+                    });
+                    const allAcuracy = {
+                        tooltip: {
+                            trigger: 'item'
+                        },
+                        xAxis: {
+                            name: 'Trial',
+                            type: 'category',
+                            data: indexarr
+                        },
+                        yAxis: {
+                            name: 'Accuracy',
+                            type: 'value',
+                            data: accarr
+                        },
+                        series: [{
+                            symbolSize: 6,
+                            type: 'scatter',
+                            data: accarr
+                        }]
+                    };
+
+                    this.setState({ accSource: allAcuracy }, () => {
+                        if (accarr.length === 0) {
                             this.setState({
                                 accNodata: 'No data'
                             });
@@ -80,7 +119,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         let desc: Parameters = {
                             parameters: {}
                         };
-                        let acc = 0;
+                        let acc;
+                        let tableAcc = 0;
                         let duration = 0;
                         const id = trialJobs[item].id !== undefined
                             ? trialJobs[item].id
@@ -110,7 +150,14 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             }
                         }
                         if (trialJobs[item].finalMetricData !== undefined) {
-                            acc = parseFloat(trialJobs[item].finalMetricData.data);
+                            acc = JSON.parse(trialJobs[item].finalMetricData.data);
+                            if (typeof (acc) === 'object') {
+                                if (acc.default) {
+                                    tableAcc = acc.default;
+                                }
+                            } else {
+                                tableAcc = acc;
+                            }
                         }
                         trialTable.push({
                             key: trialTable.length,
@@ -118,7 +165,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             id: id,
                             status: status,
                             duration: duration,
-                            acc: acc,
+                            acc: tableAcc,
                             description: desc
                         });
                     });

@@ -23,10 +23,13 @@
         }
     }
     .panelTitle{
-        font-size: 18px;
-        font-family: 'Segoe';
-        padding: 0 10px;
+        margin-right: 14px;
         border-right: 2px solid #e8e8e8;
+        
+        span{
+            font-size: 18px;
+            font-family: 'Segoe';
+        }
     }
 }
 

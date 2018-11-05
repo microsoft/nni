@@ -72,7 +72,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     else:
         site_dir = site.getusersitepackages()
     python_dir = str(Path(site_dir).parents[2])
-    cmds = ['node', os.path.join(python_dir, 'nni_pkg', 'main.js'), '--port', str(port), '--mode', platform, '--start_mode', mode]
+    cmds = ['node', os.path.join(python_dir, 'nni', 'main.js'), '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
@@ -83,7 +83,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     log_header = LOG_HEADER % str(time_now)
     stdout_file.write(log_header)
     stderr_file.write(log_header)
-    process = Popen(cmds, cwd=os.path.join(python_dir, 'nni_pkg'), stdout=stdout_file, stderr=stderr_file)
+    process = Popen(cmds, cwd=os.path.join(python_dir, 'nni'), stdout=stdout_file, stderr=stderr_file)
     return process, str(time_now)
 
 def set_trial_config(experiment_config, port, config_file_name):
@@ -250,7 +250,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         print_error('Restful server start failed!')
         print_log_content(config_file_name)
         try:
-            cmds = ['pkill', '-P', str(rest_process.pid)]
+            cmds = ['kill', str(rest_process.pid)]
             call(cmds)
         except Exception:
             raise Exception(ERROR_INFO % 'Rest server stopped!')
@@ -265,7 +265,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         else:
             print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['pkill', '-P', str(rest_process.pid)]
+                cmds = ['kill', str(rest_process.pid)]
                 call(cmds)
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
@@ -279,7 +279,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         else:
             print_error('Set local config failed!')
             try:
-                cmds = ['pkill', '-P', str(rest_process.pid)]
+                cmds = ['kill', str(rest_process.pid)]
                 call(cmds)
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
@@ -295,7 +295,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['pkill', '-P', str(rest_process.pid)]
+                cmds = ['kill', str(rest_process.pid)]
                 call(cmds)
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
@@ -312,7 +312,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         print_error('Start experiment failed!')
         print_log_content(config_file_name)
         try:
-            cmds = ['pkill', '-P', str(rest_process.pid)]
+            cmds = ['kill', str(rest_process.pid)]
             call(cmds)
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')

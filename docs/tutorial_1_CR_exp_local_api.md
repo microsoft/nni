@@ -17,7 +17,7 @@ To enable NNI API, make the following changes:
 1.2 Get predefined parameters
     Use the following code snippet: 
 
-        RECEIVED_PARAMS = nni.get_parameters()
+        RECEIVED_PARAMS = nni.get_next_parameter()
 
     to get hyper-parameters' values assigned by tuner. `RECEIVED_PARAMS` is an object, for example: 
 
