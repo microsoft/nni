@@ -32,7 +32,7 @@ class MnistNetwork(object):
         """@nni.variable(nni.choice(124, 512, 1024), name=self.hidden_size)"""
         self.hidden_size = hidden_size
         self.pool_size = pool_size
-        """@nni.variable(nni.uniform(0.0001, 0.1), name=self.learning_rate)"""
+        """@nni.variable(nni.loguniform(0.0001, 0.1), name=self.learning_rate)"""
         self.learning_rate = learning_rate
         self.x_dim = x_dim
         self.y_dim = y_dim
@@ -184,7 +184,7 @@ def main(params):
         batch_size = params['batch_size']
         for i in range(params['batch_num']):
             batch = mnist.train.next_batch(batch_size)
-            """@nni.variable(nni.choice(1, 5), name=dropout_rate)"""
+            """@nni.variable(nni.choice(0.1, 0.5, 1), name=dropout_rate)"""
             dropout_rate = params['dropout_rate']
             mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
                                                     mnist_network.labels: batch[1],
