@@ -180,7 +180,7 @@ def main(params):
     test_acc = 0.0
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        batch_size = nni.choice(50, 250, 500, name='batch_size')
+        batch_size = nni.choice(1, 4, 8, 16, 32, name='batch_size')
         for i in range(2000):
             batch = mnist.train.next_batch(batch_size)
             dropout_rate = nni.choice(1, 5, name='dropout_rate')
