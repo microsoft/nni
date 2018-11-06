@@ -173,7 +173,7 @@ def main(params):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(params['batch_num']):
-            batch = mnist.train.next_batch(params['batch_num'])
+            batch = mnist.train.next_batch(params['batch_size'])
             mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
                                                     mnist_network.labels: batch[1],
                                                     mnist_network.keep_prob: params['dropout_rate']}
@@ -212,7 +212,8 @@ def generate_default_params():
         'pool_size': 2,
         'hidden_size': 1024,
         'learning_rate': 1e-4,
-        'batch_num': 200}
+        'batch_num': 2000,
+        'batch_size': 32}
     return params
 
 
