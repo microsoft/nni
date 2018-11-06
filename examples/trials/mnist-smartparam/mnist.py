@@ -180,9 +180,9 @@ def main(params):
     test_acc = 0.0
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        batch_num = nni.choice(50, 250, 500, name='batch_num')
-        for i in range(batch_num):
-            batch = mnist.train.next_batch(batch_num)
+        batch_size = nni.choice(50, 250, 500, name='batch_size')
+        for i in range(2000):
+            batch = mnist.train.next_batch(batch_size)
             dropout_rate = nni.choice(1, 5, name='dropout_rate')
             mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
                                                     mnist_network.labels: batch[1],
