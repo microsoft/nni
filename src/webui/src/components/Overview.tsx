@@ -1,6 +1,6 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Row, Col } from 'antd';
+import { Row, Col, Button } from 'antd';
 import { MANAGER_IP } from '../static/const';
 import {
     Experiment, TableObj,
@@ -31,6 +31,7 @@ interface SessionState {
     bestAccuracy: string;
     accNodata: string;
     trialNumber: TrialNumber;
+    downBool: boolean;
 }
 
 class Overview extends React.Component<{}, SessionState> {
@@ -81,7 +82,8 @@ class Overview extends React.Component<{}, SessionState> {
                 runTrial: 0,
                 unknowTrial: 0,
                 totalCurrentTrial: 0
-            }
+            },
+            downBool: false
         };
     }
 
@@ -263,6 +265,9 @@ class Overview extends React.Component<{}, SessionState> {
     }
 
     downExperimentContent = () => {
+        this.setState(() => ({
+            downBool: true
+        }));
         axios
             .all([
                 axios.get(`${MANAGER_IP}/experiment`),
@@ -307,6 +312,9 @@ class Overview extends React.Component<{}, SessionState> {
                         eventMouse.initEvent('click', false, false);
                         downTag.dispatchEvent(eventMouse);
                     }
+                    this.setState(() => ({
+                        downBool: false
+                    }));
                 }
             }));
     }
@@ -389,14 +397,28 @@ class Overview extends React.Component<{}, SessionState> {
             accNodata,
             status,
             trialNumber,
-            bestAccuracy
+            bestAccuracy,
+            downBool
         } = this.state;
 
         return (
             <div className="overview">
                 {/* status and experiment block */}
-                <Row className="basicExperiment">
-                    <Title1 text="Experiment" icon="11.png" />
+                <Row>
+                    <Row className="exbgcolor">
+                        <Col span={4}><Title1 text="Experiment" icon="11.png" /></Col>
+                        <Col span={4}>
+                            <Button
+                                type="primary"
+                                className="changeBtu download"
+                                onClick={this.downExperimentContent}
+                                disabled={downBool}
+                            >
+                                <span>Download</span> 
+                                <img src={require('../static/img/icon/download.png')} alt="icon" />
+                            </Button>
+                        </Col>
+                    </Row>
                     <BasicInfo trialProfile={trialProfile} status={status} />
                 </Row>
                 <Row className="overMessage">
