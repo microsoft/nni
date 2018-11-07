@@ -33,7 +33,6 @@ from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger
 from . import parameter_expressions
 
-init_logger('dispatcher2.log')
 _logger = logging.getLogger(__name__)
 
 _next_parameter_id = 0
