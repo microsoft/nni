@@ -23,7 +23,7 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
             clusterMetaData: tiralProInfo.clusterMetaData ? tiralProInfo.clusterMetaData : undefined
         });
         return (
-            <div style={{ paddingLeft: 20 }}>
+            <div className="profile">
                 <pre>
                     {JSON.stringify(showProInfo[0], null, 4)}
                 </pre>

@@ -136,7 +136,7 @@ export namespace HDFSClientUtility {
         let timeoutId : NodeJS.Timer
         const delayTimeout : Promise<boolean> = new Promise<boolean>((resolve : Function, reject : Function) : void => {
             // Set timeout and reject the promise once reach timeout (5 seconds)        
-            setTimeout(() => deferred.reject(`Check HDFS path ${hdfsPath} exists timeout`), 5000);
+            timeoutId = setTimeout(() => deferred.reject(`Check HDFS path ${hdfsPath} exists timeout`), 5000);
         });
 
         return Promise.race([deferred.promise, delayTimeout]).finally(() => clearTimeout(timeoutId));

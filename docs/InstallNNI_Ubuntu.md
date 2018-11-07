@@ -12,7 +12,7 @@
 
 * __Install NNI through pip__
 
-      python3 -m pip install --user nni
+      python3 -m pip install --user --upgrade nni
 
 * __Install NNI through source code__
    

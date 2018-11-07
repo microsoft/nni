@@ -49,9 +49,6 @@ table {
 	border-collapse: collapse;
 	border-spacing: 0;
 }
-pre{
-	overflow: hidden;
-}
 @font-face { 
 	font-family: 'Segoe'; 
 	src: url('./static/font/SegoePro-Regular.ttf');

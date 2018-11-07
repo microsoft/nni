@@ -47,7 +47,7 @@ And open WebUI to check if everything is OK
 
 **6. Redeploy**
 
-After you change some code, just use **step 4** to rebuild your code, then the change will take effect immediately
+After the code changes, use **step 3** to rebuild your codes, then the changes will take effect immediately.
 
 ---
 At last, wish you have a wonderful day.
