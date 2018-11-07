@@ -183,7 +183,7 @@ def main(params):
         batch_size = nni.choice(1, 4, 8, 16, 32, name='batch_size')
         for i in range(2000):
             batch = mnist.train.next_batch(batch_size)
-            dropout_rate = nni.choice(0.1, 0.2, 0.5, 0.8, name='dropout_rate')
+            dropout_rate = nni.choice(0.5, 0.9, name='dropout_rate')
             mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
                                                     mnist_network.labels: batch[1],
                                                     mnist_network.keep_prob: 1 - dropout_rate}
