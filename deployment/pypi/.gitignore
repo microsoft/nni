@@ -1,6 +1,4 @@
-nni_pkg/
-nni_annotation/
-nnicmd/
+nni/
 dist/
 build/
 *.egg-info/

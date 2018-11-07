@@ -164,8 +164,6 @@ class NNIRestHandler {
                 await this.tb.cleanUp();
                 await this.nniManager.stopExperiment();
                 res.send();
-                this.log.debug('Stopping rest server');
-                await this.restServer.stop();
             } catch (err) {
                 this.handle_error(err, res);
             }
