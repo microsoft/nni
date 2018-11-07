@@ -2,7 +2,7 @@ authorName: default
 experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 1h
-maxTrialNum: 100
+maxTrialNum: 20
 #choice: local, remote
 trainingServicePlatform: local
 searchSpacePath: ~/nni/examples/trials/mnist/search_space.json
