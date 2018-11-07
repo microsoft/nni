@@ -51,7 +51,6 @@ class Progressed extends React.Component<ProgressProps, {}> {
                         <span className={status}>{status}</span>
                         {
                             status === 'ERROR'
-                            // status === 'DONE'
                                 ?
                                 <Popover
                                     placement="rightTop"
@@ -71,7 +70,6 @@ class Progressed extends React.Component<ProgressProps, {}> {
                     who="Duration"
                     percent={percent}
                     description={runDuration}
-                    // bgclass="Running"
                     bgclass={status}
                     maxString={`MaxDuration: ${convertTime(trialProfile.maxDuration)}`}
                 />
