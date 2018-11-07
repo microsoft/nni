@@ -35,8 +35,8 @@ class ProgressBar extends React.Component<ProItemProps, {}> {
                                 />
                             </div>
                             <Row className="description">
-                                <Col span={12}>0</Col>
-                                <Col className="right" span={12}>{maxString}</Col>
+                                <Col span={9}>0</Col>
+                                <Col className="right" span={15}>{maxString}</Col>
                             </Row>
                         </Col>
                     </Row>
