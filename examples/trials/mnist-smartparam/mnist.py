@@ -223,6 +223,7 @@ def generate_defualt_params():
 
 if __name__ == '__main__':
     try:
+        nni.get_next_parameter()
         main(generate_defualt_params())
     except Exception as exception:
         logger.exception(exception)

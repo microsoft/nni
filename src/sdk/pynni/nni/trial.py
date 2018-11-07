@@ -47,6 +47,7 @@ def get_next_parameter():
     return _params['parameters']
 
 def get_current_parameter(tag):
+    global _params
     if _params is None:
         return None
     return _params['parameters'][tag]
