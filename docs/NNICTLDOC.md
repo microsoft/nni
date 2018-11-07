@@ -15,6 +15,7 @@ nnictl experiment
 nnictl config
 nnictl log
 nnictl webui
+nnictl tensorboard
 ```
 ### Manage an experiment
 * __nnictl create__ 
@@ -122,6 +123,23 @@ nnictl webui
           | ------ | ------ | ------ |------ |
           | id|  False| |ID of the experiment you want to set|
           | --value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|  
+
+ 	* __nnictl update trialnum__  
+        * Description
+          
+		      You can use this command to update an experiment's maxtrialnum.     
+	  
+	     * Usage
+        
+		       nnictl update trialnum [OPTIONS] 
+
+            Options:
+    
+            | Name, shorthand | Required|Default | Description |
+            | ------ | ------ | ------ |------ |
+           | id|  False| |ID of the experiment you want to set|
+           | --value, -v|  True| |the new number of maxtrialnum you want to set|
+
      
 
 * __nnictl trial__
