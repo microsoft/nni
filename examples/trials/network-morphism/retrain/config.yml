@@ -1,5 +1,5 @@
 authorName: default
-experimentName: example_cifar10-network-morphism
+experimentName: example_model_retrain
 trialConcurrency: 1
 maxExecDuration: 24h
 maxTrialNum: 10
@@ -11,13 +11,11 @@ useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, Medianstop, NetworkMorphism
   #SMAC (SMAC should be installed through nnictl) 
-  builtinTunerName: NetworkMorphismTuner
+  builtinTunerName: TPE
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
-    n_output_node: 10
-    input_shape: (32, 32, 3)
 trial:
-  command: python3 cifar10-network-morphism.py
+  command: python3 model_retrain.py
   codeDir: .
   gpuNum: 0

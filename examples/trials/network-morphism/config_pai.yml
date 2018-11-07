@@ -1,5 +1,5 @@
 authorName: default
-experimentName: example_fashion-network-morphism
+experimentName: example_cifar10-network-morphism
 trialConcurrency: 1
 maxExecDuration: 24h
 maxTrialNum: 10

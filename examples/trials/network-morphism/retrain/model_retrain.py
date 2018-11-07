@@ -15,24 +15,29 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+
+# to do 
+# retrain network morphism model in nni frameworks by search the best hyperparameter
+
+
 import argparse
 import logging
 import os
 import sys
 import time
-import onnx
 
-import utils
 import nni
 import numpy as np
 import torch
-import torch.onnx
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
+
+sys.path.append('../')
+import utils
 
 # set the logger format
 logger = logging.getLogger('cifar10-network-morphism')
@@ -60,12 +65,9 @@ def get_args():
     parser.add_argument('--cutout_length', type=int, default=16, help='cutout length')
     args = parser.parse_args()
     return args
-
-def build_graph(onnx_model_path):
-    onnx_model = onnx.load(onnx_model_path)
-    onnx.checker.check_model(onnx_model)
-    onnx.helper.printable_graph(onnx_model.graph)
-    return onnx_model
+def build_graph(graph):
+    net = graph
+    return net
 
 
 def prepare(graph,args):
