@@ -184,7 +184,10 @@ def stop_experiment(args):
             if running:
                 response = rest_delete(experiment_url(rest_port), 20)
                 if not response or not check_response(response):
-                    print_error('Stop experiment failed!')
+                    if response:
+                        print_error(response.text)
+                    else:
+                        print_error('No response from restful server!')
                     stop_rest_result = False
             #sleep to wait rest handler done
             time.sleep(3)

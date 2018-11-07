@@ -120,13 +120,16 @@ class LocalTrainingService implements TrainingService {
         while (!this.stopping) {
             while (this.jobQueue.length !== 0) {
                 const trialJobId: string = this.jobQueue[0];
-                const [success, resource] = this.tryGetAvailableResource();
-                if (!success) {
-                    break;
+                const trialJobDeatil = this.jobMap.get(trialJobId)
+                if (trialJobDeatil !== undefined && trialJobDeatil.status === 'WAITING'){
+                    const [success, resource] = this.tryGetAvailableResource();
+                    if (!success) {
+                        break;
+                    }
+                    this.occupyResource(resource);
+                    this.jobQueue.shift();
+                    await this.runTrialJob(trialJobId, resource);
                 }
-                this.occupyResource(resource);
-                this.jobQueue.shift();
-                await this.runTrialJob(trialJobId, resource);
             }
             await delay(5000);
         }
@@ -249,9 +252,14 @@ class LocalTrainingService implements TrainingService {
         if (trialJob === undefined) {
             throw new NNIError(NNIErrorNames.NOT_FOUND, 'Trial job not found');
         }
+        if (trialJob.pid === undefined){
+            this.setTrialJobStatus(trialJob, 'USER_CANCELED');
+            return;
+        }
         if (trialJob.form.jobType === 'TRIAL') {
             await tkill(trialJob.pid, 'SIGKILL');
-        } else if (trialJob.form.jobType === 'HOST') {
+        }
+        else if (trialJob.form.jobType === 'HOST') {
             await cpp.exec(`pkill -9 -P ${trialJob.pid}`);
         } else {
             throw new Error(`Job type not supported: ${trialJob.form.jobType}`);
