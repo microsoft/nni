@@ -1,8 +1,8 @@
 import * as React from 'react';
 import axios from 'axios';
 import { message } from 'antd';
-import { MANAGER_IP } from '../const';
-import '../style/tensor.css';
+import { MANAGER_IP } from '../static/const';
+import '../static/style/tensor.scss';
 
 interface TensorState {
     urlTensor: string;

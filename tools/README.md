@@ -11,7 +11,7 @@ python >= 3.5
 
  1. Enter tools directory  
  
- 2. Use pip3 to install packages
+ 2. Use pip to install packages
     * Install for current user:
 
           python3 -m pip install --user -e .
