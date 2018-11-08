@@ -22,10 +22,11 @@ from copy import deepcopy
 from operator import itemgetter
 from random import randrange, sample
 
-from nni.networkmorphism_tuner.nn.graph import NetworkDescriptor
-
 from nni.networkmorphism_tuner.utils import Constant
-from nni.networkmorphism_tuner.nn.layers import is_layer
+from nni.networkmorphism_tuner.nn import is_layer,NetworkDescriptor
+
+
+
 
 
 def to_wider_graph(graph):

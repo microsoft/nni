@@ -20,13 +20,11 @@ import logging
 import os
 import sys
 import time
-import onnx
 
 import utils
 import nni
 import numpy as np
 import torch
-import torch.onnx
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.nn.functional as F
@@ -34,8 +32,12 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 
+import onnx
+import mmdnn
+from mmdnn.conversion.pytorch.pytorch_emitter import PytorchEmitter
+
 # set the logger format
-logger = logging.getLogger('cifar10-network-morphism')
+logger = logging.getLogger('fashion_mnist-network-morphism')
 log_format = '%(asctime)s %(message)s'
 logger.basicConfig(stream=sys.stdout, level=logging.INFO,
     format=log_format, datefmt='%m/%d %I:%M:%S %p')
@@ -50,7 +52,7 @@ best_acc = 0.0
 
 
 def get_args():
-    parser = argparse.ArgumentParser("cifar10")
+    parser = argparse.ArgumentParser("fashion_mnist")
     parser.add_argument('--batch_size', type=int, default=96, help='batch size')
     parser.add_argument('--optimizer', type=str, default="Adam", help='optimizer')
     parser.add_argument('--epoches', type=int, default=200, help='epoch limit')
@@ -58,17 +60,28 @@ def get_args():
     parser.add_argument('--time_limit', type=int, default=0, help='gpu device id')
     parser.add_argument('--cutout', action='store_true', default=False, help='use cutout')
     parser.add_argument('--cutout_length', type=int, default=16, help='cutout length')
+    parser.add_argument('--model_path', type=str, default="./", help='Path to save the destination model')
     args = parser.parse_args()
     return args
 
-def build_graph(onnx_model_path):
+def build_graph_from_onnx(onnx_model_path,onnx_weight_path,args):
+    ''' build model from onnx intermedia represtation 
+    '''
     onnx_model = onnx.load(onnx_model_path)
     onnx.checker.check_model(onnx_model)
-    onnx.helper.printable_graph(onnx_model.graph)
+    onnx.helper.printable_graph(onnx_model)
     return onnx_model
 
+def build_graph_from_mmdnn(ir_model_path,ir_weight_path,args):
+    ''' build model from mmdnn intermedia represtation 
+    '''
+    emitter = PytorchEmitter((ir_model_path, ir_weight_path))
+    emitter.run(args.model_path)
+    model = torch.load(args.model_path)
+    return model
 
-def prepare(graph,args):
+
+def prepare(receive_msg,args):
     global trainloader
     global testloader
     global net
@@ -78,18 +91,19 @@ def prepare(graph,args):
     # Data
     logger.info('Preparing data..')
 
-    transform_train, transform_test = utils._data_transforms_cifar10(args)
+    transform_train, transform_test = utils._data_transforms_fashion(args)
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
+    trainset = torchvision.datasets.FashionMNIST(root='./data', train=True, download=True, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+    testset = torchvision.datasets.FashionMNIST(root='./data', train=False, download=True, transform=transform_test)
     testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
 
     # Model
     logger.info('Building model..')
-    net = build_graph(graph)
+    model_path , weight_path = receive_msg
+    net = build_graph_from_onnx(model_path, weight_path,args)
 
     net = net.to(device)
     if device == 'cuda':
@@ -108,7 +122,9 @@ def prepare(graph,args):
     if args.optimizer == 'Adam':
         optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
     if args.optimizer == 'Adamax':
-        optimizer = optim.Adam(net.parameters(), lr=args.learning_rate) 
+        optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
+
+    return 0
          
 
 
@@ -182,7 +198,7 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/cifar10_best_model.pt')
+        torch.save(state, './checkpoint/fashion_best_model.pt')
         best_acc = acc
     return acc, best_acc
 
@@ -206,3 +222,4 @@ if __name__ == '__main__':
     except Exception as exception:
         logger.exception(exception)
         raise
+

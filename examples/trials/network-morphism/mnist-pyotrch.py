@@ -32,6 +32,10 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 
+import onnx
+import mmdnn
+from mmdnn.conversion.pytorch.pytorch_emitter import PytorchEmitter
+
 # set the logger format
 logger = logging.getLogger('mnist-network-morphism')
 log_format = '%(asctime)s %(message)s'
@@ -56,15 +60,28 @@ def get_args():
     parser.add_argument('--time_limit', type=int, default=0, help='gpu device id')
     parser.add_argument('--cutout', action='store_true', default=False, help='use cutout')
     parser.add_argument('--cutout_length', type=int, default=16, help='cutout length')
+    parser.add_argument('--model_path', type=str, default="./", help='Path to save the destination model')
     args = parser.parse_args()
     return args
 
-def build_graph(graph):
-    net = graph
-    return net
+def build_graph_from_onnx(onnx_model_path,onnx_weight_path,args):
+    ''' build model from onnx intermedia represtation 
+    '''
+    onnx_model = onnx.load(onnx_model_path)
+    onnx.checker.check_model(onnx_model)
+    onnx.helper.printable_graph(onnx_model.graph)
+    return onnx_model
+
+def build_graph_from_mmdnn(ir_model_path,ir_weight_path,args):
+    ''' build model from mmdnn intermedia represtation 
+    '''
+    emitter = PytorchEmitter((ir_model_path, ir_weight_path))
+    emitter.run(args.model_path)
+    model = torch.load(args.model_path)
+    return model
 
 
-def prepare(graph,args):
+def parse_rev_args(receive_msg,args):
     global trainloader
     global testloader
     global net
@@ -74,7 +91,7 @@ def prepare(graph,args):
     # Data
     logger.info('Preparing data..')
 
-    transform_train, transform_test = utils._data_transforms_cifar10(args)
+    transform_train, transform_test = utils._data_transforms_mnisr(args)
 
     trainset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform_train)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
@@ -85,7 +102,8 @@ def prepare(graph,args):
 
     # Model
     logger.info('Building model..')
-    net = build_graph(graph)
+    model_path , weight_path = receive_msg
+    net = build_graph_from_onnx(model_path, weight_path,args)
 
     net = net.to(device)
     if device == 'cuda':
@@ -104,7 +122,10 @@ def prepare(graph,args):
     if args.optimizer == 'Adam':
         optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
     if args.optimizer == 'Adamax':
-        optimizer = optim.Adam(net.parameters(), lr=args.learning_rate) 
+        optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
+
+    return 0
+         
          
 
 
@@ -189,7 +210,7 @@ if __name__ == '__main__':
         RCV_CONFIG = nni.get_next_parameter()
         logger.debug(RCV_CONFIG)
 
-        prepare(RCV_CONFIG,args)
+        parse_rev_args(RCV_CONFIG,args)
         acc = 0.0
         best_acc = 0.0
         for epoch in range(args.epoches):

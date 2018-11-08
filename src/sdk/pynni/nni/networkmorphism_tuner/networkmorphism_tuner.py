@@ -32,8 +32,9 @@ from nni.tuner import Tuner
 
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
 from nni.networkmorphism_tuner.metric import Accuracy
-from nni.networkmorphism_tuner.utils import pickle_to_file, pickle_from_file,Constant
+from nni.networkmorphism_tuner.utils import pickle_to_file, pickle_from_file, Constant
 from nni.networkmorphism_tuner.net_transformer import default_transform
+from nni.networkmorphism_tuner.nn import CnnGenerator
 import onnx
 
 logger = logging.getLogger('NetworkMorphism_AutoML')
@@ -79,7 +80,7 @@ class NetworkMorphismTuner(Tuner):
     '''
 
     def __init__(self, algorithm_name, optimize_mode, n_output_node, input_shape, path=None, verbose=True, metric=Accuracy, beta=Constant.BETA,
-                 kernel_lambda=Constant.KERNEL_LAMBDA, t_min=None, max_model_size=Constant.MAX_MODEL_SIZE,default_model_len=Constant.MODEL_LEN,default_model_width=Constant.MODEL_WIDTH):
+                 kernel_lambda=Constant.KERNEL_LAMBDA, t_min=None, max_model_size=Constant.MAX_MODEL_SIZE, default_model_len=Constant.MODEL_LEN, default_model_width=Constant.MODEL_WIDTH):
         if path is None:
             os.makedirs("model_path")
             path = "model_path"
@@ -112,6 +113,8 @@ class NetworkMorphismTuner(Tuner):
         self.default_model_len = default_model_len
         self.default_model_width = default_model_width
 
+        self.search_space = []
+
     def _choose_tuner(self, algorithm_name):
         ''' choose algorithm of tuner
 
@@ -125,44 +128,46 @@ class NetworkMorphismTuner(Tuner):
         if algorithm_name == 'micro-level':
             return BayesianOptimizer(self, self.t_min, self.metric, self.kernel_lambda, self.beta)
         if algorithm_name == 'meso-level':
-            return 
+            return
         if algorithm_name == 'macro-level':
-            return 
+            return
         raise RuntimeError('Not support tuner algorithm in Network Morphism.')
 
     def update_search_space(self, search_space):
         '''
-        Update search space definition in tuner by search_space in parameters.
+        Update search space definition in tuner by search_space in neural architecture.
         '''
+        self.search_space = search_space
         pass
 
     def generate_parameters(self, parameter_id):
         '''
-        Returns a set of trial (hyper-)parameters, as a serializable object.
+        Returns a set of trial neural architecture, as a serializable object.
         parameter_id : int
         '''
         if not self.history:
             self.init_search()
-    
+
         new_graph = None
         new_father_id = None
         if not self.training_queue:
             while new_father_id is None:
-                new_graph, new_father_id = self.bo.optimize_acq(self.search_tree.adj_list.keys(),self.descriptors)
+                new_graph, new_father_id = self.bo.optimize_acq(
+                    self.search_tree.adj_list.keys(), self.descriptors)
             new_model_id = self.model_count
             self.model_count += 1
             self.training_queue.append(
                 (new_graph, new_father_id, new_model_id))
             self.descriptors.append(new_graph.extract_descriptor())
-            graph, father_id, model_id =  new_graph, new_father_id, new_model_id
-        else:
-            graph, father_id, model_id = self.training_queue.pop(0)
 
+        graph, father_id, model_id = self.training_queue.pop(0)
 
-        self.total_data[parameter_id] = graph
-        # from gragh to params
-        onnx_model_path = str(parameter_id)+".onnx"
-        onnx.save(graph,onnx_model_path)
+        # from gragh to onnx_model_path
+        onnx_model_path = os.path.join(self.path, str(model_id) + '.onnx')
+        onnx.save(graph, onnx_model_path)
+
+        self.total_data[parameter_id] = (onnx_model_path, father_id, model_id)
+
         return onnx_model_path
 
     def receive_trial_result(self, parameter_id, parameters, value):
@@ -182,11 +187,12 @@ class NetworkMorphismTuner(Tuner):
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')
 
-        onnx_model_path = self.total_data[parameter_id]
+        (onnx_model_path, father_id, model_id) = self.total_data[parameter_id]
 
         if self.optimize_mode is OptimizeMode.Maximize:
             reward = -reward
-        # from params to graph
+
+        # from onnx_model_path to gragh
         graph = onnx.load(onnx_model_path)
 
         # to use the reward and graph
@@ -203,9 +209,9 @@ class NetworkMorphismTuner(Tuner):
     def init_search(self):
         if self.verbose:
             logger.info('Initializing search.')
-        graph = CnnGenerator(self.n_classes,
-                             self.input_shape).generate(self.default_model_len,
-                                                        self.default_model_width)
+        graph = CnnGenerator(self.n_classes, self.input_shape).generate(
+            self.default_model_len, self.default_model_width)
+
         model_id = self.model_count
         self.model_count += 1
         self.training_queue.append((graph, -1, model_id))
@@ -232,9 +238,6 @@ class NetworkMorphismTuner(Tuner):
 
         if self.verbose:
             logger.info('Saving model.')
-
-        pickle_to_file(graph, os.path.join(
-            self.path, str(model_id) + '.graph'))
 
         # Update best_model text file
         ret = {'model_id': model_id, 'metric_value': metric_value}
@@ -273,3 +276,9 @@ class NetworkMorphismTuner(Tuner):
         if self.metric.higher_better():
             return max(self.history, key=lambda x: x['metric_value'])['model_id']
         return min(self.history, key=lambda x: x['metric_value'])['model_id']
+
+    def load_model_by_id(self, model_id):
+        return onnx.load(os.path.join(self.path, str(model_id) + '.onnx'))
+
+    def load_best_model(self):
+        return self.load_model_by_id(self.get_best_model_id())

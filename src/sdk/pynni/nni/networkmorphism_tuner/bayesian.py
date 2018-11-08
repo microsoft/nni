@@ -31,7 +31,7 @@ from scipy.linalg import cholesky, cho_solve, solve_triangular, LinAlgError
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import rbf_kernel
 
-from net_transformer import transform
+from nni.networkmorphism_tuner.net_transformer import transform
 
 
 def layer_distance(a, b):
@@ -107,6 +107,7 @@ class IncrementalGaussianProcess:
                 "The first_fit function needs to be called first.")
 
         train_x, train_y = np.array(train_x), np.array(train_y)
+        
 
         # Incrementally compute K
         up_right_k = self.edit_distance_matrix(
