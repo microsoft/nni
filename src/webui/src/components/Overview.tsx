@@ -20,10 +20,11 @@ require('../static/style/accuracy.css');
 require('../static/style/table.scss');
 require('../static/style/overviewTitle.scss');
 
-interface SessionState {
+interface OverviewState {
     tableData: Array<TableObj>;
     searchSpace: object;
     status: string;
+    errorStr: string;
     trialProfile: Experiment;
     option: object;
     noData: string;
@@ -34,7 +35,7 @@ interface SessionState {
     downBool: boolean;
 }
 
-class Overview extends React.Component<{}, SessionState> {
+class Overview extends React.Component<{}, OverviewState> {
 
     public _isMounted = false;
     public intervalID = 0;
@@ -45,6 +46,7 @@ class Overview extends React.Component<{}, SessionState> {
         this.state = {
             searchSpace: {},
             status: '',
+            errorStr: '',
             trialProfile: {
                 id: '',
                 author: '',
@@ -126,8 +128,8 @@ class Overview extends React.Component<{}, SessionState> {
                         switch (key) {
                             case 'loguniform':
                             case 'qloguniform':
-                                const a = Math.pow(10, value[0]);
-                                const b = Math.pow(10, value[1]);
+                                const a = Math.pow(Math.E, value[0]);
+                                const b = Math.pow(Math.E, value[1]);
                                 value = [a, b];
                                 searchSpace[item]._value = value;
                                 break;
@@ -150,17 +152,30 @@ class Overview extends React.Component<{}, SessionState> {
                     }
                 }
             });
+        this.checkStatus();
 
+    }
+
+    checkStatus = () => {
         axios(`${MANAGER_IP}/check-status`, {
             method: 'GET'
         })
             .then(res => {
                 if (res.status === 200 && this._isMounted) {
-                    this.setState({
-                        status: res.data.status
-                    });
+                    const errors = res.data.errors;
+                    if (errors.length !== 0) {
+                        this.setState({
+                            status: res.data.status,
+                            errorStr: res.data.errors[0]
+                        });
+                    } else {
+                        this.setState({
+                            status: res.data.status,
+                        });
+                    }
                 }
             });
+
     }
 
     showTrials = () => {
@@ -396,6 +411,7 @@ class Overview extends React.Component<{}, SessionState> {
             accuracyData,
             accNodata,
             status,
+            errorStr,
             trialNumber,
             bestAccuracy,
             downBool
@@ -414,7 +430,7 @@ class Overview extends React.Component<{}, SessionState> {
                                 onClick={this.downExperimentContent}
                                 disabled={downBool}
                             >
-                                <span>Download</span> 
+                                <span>Download</span>
                                 <img src={require('../static/img/icon/download.png')} alt="icon" />
                             </Button>
                         </Col>
@@ -430,6 +446,7 @@ class Overview extends React.Component<{}, SessionState> {
                             trialProfile={trialProfile}
                             bestAccuracy={bestAccuracy}
                             status={status}
+                            errors={errorStr}
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}
