@@ -1,0 +1,36 @@
+
+.nav{
+    list-style: none;
+    width: 100%;
+    height: 80px;
+    li{
+        float: left;
+        margin-right: 40px;
+        font-family: 'Segoe';
+        a{
+            display: block;
+            padding: 0 10px;
+            font-size: 18px;
+            color: #b8c7ce;
+            text-decoration: none;
+        }
+    }
+    .logo{
+        height: 80px;
+        line-height: 80px;  
+    }
+    .tab{
+        position: relative;
+        top: 36px;
+        line-height: 30px;
+
+    }
+    .last{
+        margin-right: 0;
+    }
+}
+
+.nav li a:hover, .nav a.high{
+    color: white;
+    border-bottom: 1px solid white;
+}

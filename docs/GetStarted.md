@@ -14,11 +14,11 @@
 
 * __Install NNI through pip__
 
-      python3 -m pip install --user nni-pkg
+      python3 -m pip install --user --upgrade nni
 
 * __Install NNI through source code__
    
-      git clone -b v0.3 https://github.com/Microsoft/nni.git
+      git clone -b v0.3.3 https://github.com/Microsoft/nni.git
       cd nni
       source install.sh
 
@@ -36,7 +36,7 @@ An experiment is to run multiple trial jobs, each trial job tries a configuratio
 
 This command will be filled in the yaml configure file below. Please refer to [here]() for how to write your own trial.
 
-**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](CustomizedTuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
+**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](howto_2_CustomizedTuner.md), but for simplicity, here we choose a tuner provided by NNI as below:
 
       tuner:
         builtinTunerName: TPE

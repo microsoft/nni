@@ -8,20 +8,17 @@
       git
       wget
 
-    python pip should also be correctly installed. You could use "which pip" or "pip -V" to check in Linux.
-    
-    * Note: we don't support virtual environment in current releases.
+    python pip should also be correctly installed. You could use "python3 -m pip -v" to check in Linux.
 
 * __Install NNI through pip__
 
-      python3 -m pip install --user nni-pkg
+      python3 -m pip install --user --upgrade nni
 
 * __Install NNI through source code__
    
-      git clone -b v0.3 https://github.com/Microsoft/nni.git
+      git clone -b v0.3.3 https://github.com/Microsoft/nni.git
       cd nni
       source install.sh
-
 
 ## Further reading
 * [Overview](Overview.md)

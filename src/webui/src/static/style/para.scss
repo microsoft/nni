@@ -1,0 +1,27 @@
+
+.parameter{
+    height: 100%;
+
+    .meline{
+        margin-top: 15px;
+
+        span{
+            font-size: 14px;
+            margin-right: 6px;
+        }
+    }
+
+}
+
+.searcHyper{
+    position: relative;
+    margin: 0 19px;
+    
+    .noneData{
+        position: absolute;
+        left: 49%;
+        top: 2.5%;
+        font-size: 13px;
+        color: #999;
+    }    
+}

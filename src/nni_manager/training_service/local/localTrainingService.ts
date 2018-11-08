@@ -26,16 +26,16 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'tail-stream';
-import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
+import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
+import { getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import {
     HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
-import { file } from 'tmp';
 
 const tkill = require('tree-kill');
 
@@ -103,6 +103,7 @@ class LocalTrainingService implements TrainingService {
     protected log: Logger;
     protected localTrailConfig?: TrialConfig;
     private isMultiPhase: boolean = false;
+    private streams: Array<ts.Stream>;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -111,7 +112,8 @@ class LocalTrainingService implements TrainingService {
         this.initialized = false;
         this.stopping = false;
         this.log = getLogger();
-        this.trialSequenceId = 0;
+        this.trialSequenceId = -1;
+        this.streams = new Array<ts.Stream>();
     }
 
     public async run(): Promise<void> {
@@ -295,7 +297,9 @@ class LocalTrainingService implements TrainingService {
 
     public cleanUp(): Promise<void> {
         this.stopping = true;
-
+        for(const stream of this.streams) {
+            stream.destroy();
+        }
         return Promise.resolve();
     }
 
@@ -382,6 +386,7 @@ class LocalTrainingService implements TrainingService {
                 buffer = remain;
             }
         });
+        this.streams.push(stream);
     }
 
     private async runHostJob(form: HostJobApplicationForm): Promise<TrialJobDetail> {
@@ -432,6 +437,10 @@ class LocalTrainingService implements TrainingService {
     }
 
     private generateSequenceId(): number {
+        if (this.trialSequenceId === -1) {
+            this.trialSequenceId = getInitTrialSequenceId();
+        }
+
         return this.trialSequenceId++;
     }
 

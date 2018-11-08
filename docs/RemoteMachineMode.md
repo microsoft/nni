@@ -15,7 +15,7 @@ For remote machines that are used only to run trials but not the nnictl, you can
 
 * __Install python SDK through pip__
 
-      python3 -m pip install --user nni
+      python3 -m pip install --user --upgrade nni-sdk
 
 * __Install python SDK through source code__
 
