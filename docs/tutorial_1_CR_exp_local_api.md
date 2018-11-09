@@ -149,7 +149,7 @@ trialConcurrency: 4
 ...
 
 trial:
-  command: python mnist_gpu.py
+  command: python mnist.py
   codeDir: ~/nni/examples/trials/mnist-annotation
   gpuNum: 1
 ``` 
