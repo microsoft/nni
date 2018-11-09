@@ -15,6 +15,6 @@ tuner:
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:
-  command: python3 mnist_gpu.py
+  command: python3 mnist.py
   codeDir: .
   gpuNum: 1
