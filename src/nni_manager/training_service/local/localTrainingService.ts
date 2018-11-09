@@ -127,9 +127,9 @@ class LocalTrainingService implements TrainingService {
                         break;
                     }
                     this.occupyResource(resource);
-                    this.jobQueue.shift();
                     await this.runTrialJob(trialJobId, resource);
                 }
+                this.jobQueue.shift();
             }
             await delay(5000);
         }
