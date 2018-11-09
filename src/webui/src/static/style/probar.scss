@@ -1,0 +1,61 @@
+#barBack{
+    /* status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' */
+    .EXPERIMENT_RUNNING, .STOPPING, .INITIALIZED{
+        /* specific status color */
+        color: #0071bc;
+        .ant-progress-bg {
+            background-color: #0071bc;
+        }
+        .ant-progress-text{
+            color: #0071bc;
+        }
+    }
+    .DONE, .STOPPED{
+        color: #009245;
+        .ant-progress-bg {
+            background-color: #009245;
+        }
+        .ant-progress-text{
+            color: #009245;
+        }
+    }
+    .ERROR{
+        color: #eb0716;
+        .ant-progress-bg {
+            background-color: #eb0716;
+        }
+        .ant-progress-text{
+            color: #eb0716;
+        }
+
+    }
+    .ant-progress-bg{
+        border-radius: 0 !important;
+    }
+    .ant-progress-status-success .ant-progress-bg{
+        border-radius: 0 12px 12px 0 !important;
+    }
+}
+
+.errorBtn{
+    margin-left: 15px;
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    text-align: center;
+    font-size: 14px;
+    border: 1px solid #4d4d4d;
+    border-radius: 50%;
+    background-color: #4d4d4d;
+    color: #fff;
+}
+.errorBtn:hover{
+    cursor: pointer;
+}
+
+.errors{
+    width: 240px;
+    font-size: 14px;
+    color: #212121;
+}

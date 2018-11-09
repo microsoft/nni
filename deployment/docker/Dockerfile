@@ -18,7 +18,7 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
+FROM nvidia/cuda:9.0-cudnn7-runtime-ubuntu16.04
 
 LABEL maintainer='Microsoft NNI Team<nni@microsoft.com>'
 
@@ -53,7 +53,7 @@ RUN python3 -m pip --no-cache-dir install \
 #
 #Install NNI
 #
-RUN python3 -m pip install --user nni
+RUN python3 -m pip install nni
 
 #
 #Tensorflow 1.10.0
@@ -68,6 +68,6 @@ RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 #sklearn
 RUN python3 -m pip --no-cache-dir install scikit-learn
 
-ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:
+ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/bin:/sbin
 
 WORKDIR /root

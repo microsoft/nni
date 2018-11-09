@@ -1,6 +1,6 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Row, Col } from 'antd';
+import { Row, Col, Button } from 'antd';
 import { MANAGER_IP } from '../static/const';
 import {
     Experiment, TableObj,
@@ -20,10 +20,11 @@ require('../static/style/accuracy.css');
 require('../static/style/table.scss');
 require('../static/style/overviewTitle.scss');
 
-interface SessionState {
+interface OverviewState {
     tableData: Array<TableObj>;
     searchSpace: object;
     status: string;
+    errorStr: string;
     trialProfile: Experiment;
     option: object;
     noData: string;
@@ -31,9 +32,10 @@ interface SessionState {
     bestAccuracy: string;
     accNodata: string;
     trialNumber: TrialNumber;
+    downBool: boolean;
 }
 
-class Overview extends React.Component<{}, SessionState> {
+class Overview extends React.Component<{}, OverviewState> {
 
     public _isMounted = false;
     public intervalID = 0;
@@ -44,6 +46,7 @@ class Overview extends React.Component<{}, SessionState> {
         this.state = {
             searchSpace: {},
             status: '',
+            errorStr: '',
             trialProfile: {
                 id: '',
                 author: '',
@@ -81,7 +84,8 @@ class Overview extends React.Component<{}, SessionState> {
                 runTrial: 0,
                 unknowTrial: 0,
                 totalCurrentTrial: 0
-            }
+            },
+            downBool: false
         };
     }
 
@@ -124,8 +128,8 @@ class Overview extends React.Component<{}, SessionState> {
                         switch (key) {
                             case 'loguniform':
                             case 'qloguniform':
-                                const a = Math.pow(10, value[0]);
-                                const b = Math.pow(10, value[1]);
+                                const a = Math.pow(Math.E, value[0]);
+                                const b = Math.pow(Math.E, value[1]);
                                 value = [a, b];
                                 searchSpace[item]._value = value;
                                 break;
@@ -148,17 +152,30 @@ class Overview extends React.Component<{}, SessionState> {
                     }
                 }
             });
+        this.checkStatus();
 
+    }
+
+    checkStatus = () => {
         axios(`${MANAGER_IP}/check-status`, {
             method: 'GET'
         })
             .then(res => {
                 if (res.status === 200 && this._isMounted) {
-                    this.setState({
-                        status: res.data.status
-                    });
+                    const errors = res.data.errors;
+                    if (errors.length !== 0) {
+                        this.setState({
+                            status: res.data.status,
+                            errorStr: res.data.errors[0]
+                        });
+                    } else {
+                        this.setState({
+                            status: res.data.status,
+                        });
+                    }
                 }
             });
+
     }
 
     showTrials = () => {
@@ -263,6 +280,9 @@ class Overview extends React.Component<{}, SessionState> {
     }
 
     downExperimentContent = () => {
+        this.setState(() => ({
+            downBool: true
+        }));
         axios
             .all([
                 axios.get(`${MANAGER_IP}/experiment`),
@@ -307,6 +327,9 @@ class Overview extends React.Component<{}, SessionState> {
                         eventMouse.initEvent('click', false, false);
                         downTag.dispatchEvent(eventMouse);
                     }
+                    this.setState(() => ({
+                        downBool: false
+                    }));
                 }
             }));
     }
@@ -388,15 +411,30 @@ class Overview extends React.Component<{}, SessionState> {
             accuracyData,
             accNodata,
             status,
+            errorStr,
             trialNumber,
-            bestAccuracy
+            bestAccuracy,
+            downBool
         } = this.state;
 
         return (
             <div className="overview">
                 {/* status and experiment block */}
-                <Row className="basicExperiment">
-                    <Title1 text="Experiment" icon="11.png" />
+                <Row>
+                    <Row className="exbgcolor">
+                        <Col span={4}><Title1 text="Experiment" icon="11.png" /></Col>
+                        <Col span={4}>
+                            <Button
+                                type="primary"
+                                className="changeBtu download"
+                                onClick={this.downExperimentContent}
+                                disabled={downBool}
+                            >
+                                <span>Download</span>
+                                <img src={require('../static/img/icon/download.png')} alt="icon" />
+                            </Button>
+                        </Col>
+                    </Row>
                     <BasicInfo trialProfile={trialProfile} status={status} />
                 </Row>
                 <Row className="overMessage">
@@ -408,6 +446,7 @@ class Overview extends React.Component<{}, SessionState> {
                             trialProfile={trialProfile}
                             bestAccuracy={bestAccuracy}
                             status={status}
+                            errors={errorStr}
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}

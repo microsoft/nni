@@ -103,7 +103,9 @@ export namespace ValidationSchemas {
             params: joi.object(STARTEXPERIMENT.body).required(),
             execDuration: joi.number().required(),
             startTime: joi.number(),
-            endTime: joi.number()
+            endTime: joi.number(),
+            logDir: joi.string(),
+            maxSequenceId: joi.number()
         }
     };
     export const STARTTENSORBOARD = {
