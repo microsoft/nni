@@ -258,8 +258,7 @@ class LocalTrainingService implements TrainingService {
         }
         if (trialJob.form.jobType === 'TRIAL') {
             await tkill(trialJob.pid, 'SIGKILL');
-        }
-        else if (trialJob.form.jobType === 'HOST') {
+        } else if (trialJob.form.jobType === 'HOST') {
             await cpp.exec(`pkill -9 -P ${trialJob.pid}`);
         } else {
             throw new Error(`Job type not supported: ${trialJob.form.jobType}`);
