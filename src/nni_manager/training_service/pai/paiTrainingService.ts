@@ -68,6 +68,7 @@ class PAITrainingService implements TrainingService {
     private hdfsBaseDir: string | undefined;
     private hdfsOutputHost: string | undefined;
     private trialSequenceId: number;
+    private restServer: PAIJobRestServer;
 
     constructor() {
         this.log = getLogger();
@@ -79,12 +80,12 @@ class PAITrainingService implements TrainingService {
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.trialSequenceId = -1;
+        this.restServer = component.get(PAIJobRestServer);
     }
 
     public async run(): Promise<void> {
-        const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
-        await restServer.start();
-        this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
+        await this.restServer.start();
+        this.log.info(`PAI Training service rest server listening on: ${this.restServer.endPoint}`);
         while (!this.stopping) {
             await this.paiJobCollector.updateTrialStatusFromPAI(this.paiToken, this.paiClusterConfig);
             await delay(3000);
@@ -200,6 +201,7 @@ class PAITrainingService implements TrainingService {
             this.experimentId,
             this.paiTrialConfig.command, 
             getIPV4Address(),
+            this.restServer.paiRestServerPort,
             hdfsOutputDir,
             this.hdfsOutputHost,
             this.paiClusterConfig.userName

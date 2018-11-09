@@ -24,8 +24,6 @@ API_ROOT_URL = '/api/v1/nni-pai'
 
 BASE_URL = 'http://{}'
 
-DEFAULT_REST_PORT = 51189
-
 HOME_DIR = os.path.join(os.environ['HOME'], 'nni')
 
 LOG_DIR = os.environ['NNI_OUTPUT_DIR']
