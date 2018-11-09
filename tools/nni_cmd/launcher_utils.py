@@ -103,7 +103,8 @@ def validate_common_content(experiment_config):
                     experiment_config['machineList'][index]['port'] = 22
                 
     except Exception as exception:
-        raise Exception(exception)
+        print_error('Your config file is not correct, please check your config file content!\n%s' % exception)
+        exit(1)
 
 def parse_tuner_content(experiment_config):
     '''Validate whether tuner in experiment_config is valid'''

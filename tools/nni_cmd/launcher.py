@@ -62,7 +62,14 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     '''Run nni manager process'''
     nni_config = Config(config_file_name)
     if detect_port(port):
-        print_error('Port %s is used by another process, please reset the port!' % port)
+        print_error('Port %s is used by another process, please reset the port!\n' \
+        'You could use \'nnictl create --help\' to get help information' % port)
+        exit(1)
+    
+    if platform == 'pai' and detect_port(int(port) + 1):
+        print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
+        'You could set another port to start experiment!\n' \
+        'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
         exit(1)
 
     print_normal('Starting restful server...')

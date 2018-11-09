@@ -59,7 +59,7 @@ EXPERIMENT_INFORMATION_FORMAT = '-----------------------------------------------
                      '%s\n' \
                      '-----------------------------------------------------------------------\n'
 
-EXPERIMENT_DETAIL_FORMAT = 'Id: %s    Status: %s    StartTime: %s    EndTime: %s    \n'
+EXPERIMENT_DETAIL_FORMAT = 'Id: %s    Status: %s    Port: %s    StartTime: %s    EndTime: %s    \n'
 
 PACKAGE_REQUIREMENTS = {
     'SMAC': 'smac_tuner'
