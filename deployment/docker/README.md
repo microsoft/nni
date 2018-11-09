@@ -11,6 +11,7 @@ CUDA 9.0, CuDNN 7.0
 numpy 1.14.3,scipy 1.1.0
 TensorFlow 1.5.0
 Keras 2.1.6
+scikit-learn 0.20.0
 NNI v0.1
 ```
 
