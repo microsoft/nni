@@ -37,9 +37,11 @@ NNI_YARN := PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 
 .PHONY: build
 build:
+	rm -rf src/nni_manager/dist
 	#$(_INFO) Building NNI Manager $(_END)
 	cd src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
 	#$(_INFO) Building WebUI $(_END)
+	rm -rf src/webui/build
 	cd src/webui && $(NNI_YARN) && $(NNI_YARN) build
 	#$(_INFO) Building Python SDK $(_END)
 	cd src/sdk/pynni && python3 setup.py build
@@ -161,7 +163,8 @@ dev-install-node-modules:
 	#$(_INFO) Installing NNI Package $(_END)
 	rm -rf $(NNI_PKG_FOLDER)
 	ln -sf ${PWD}/src/nni_manager/dist $(NNI_PKG_FOLDER)
-	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_FOLDER)/node_modules
+	cp src/nni_manager/package.json $(NNI_PKG_FOLDER)
+	$(NNI_YARN) --prod --cwd $(NNI_PKG_FOLDER)
 	ln -sf ${PWD}/src/webui/build $(NNI_PKG_FOLDER)/static
 
 .PHONY: install-scripts
