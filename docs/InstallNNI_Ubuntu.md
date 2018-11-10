@@ -20,6 +20,10 @@
       cd nni
       source install.sh
 
+* __Install NNI in docker image__
+
+    You can also install NNI in a docker image. Please follow the instructions [here](../deployment/docker/README.md) to build NNI docker image.
+
 ## Further reading
 * [Overview](Overview.md)
 * [Use command line tool nnictl](NNICTLDOC.md)
