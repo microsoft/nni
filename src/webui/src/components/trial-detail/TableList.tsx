@@ -27,7 +27,6 @@ interface TableListProps {
 interface TableListState {
     intermediateOption: object;
     modalVisible: boolean;
-    searchText: string;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -38,8 +37,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
         this.state = {
             intermediateOption: {},
-            modalVisible: false,
-            searchText: '3'
+            modalVisible: false
         };
     }
 
@@ -148,9 +146,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     render() {
 
         const { tableSource } = this.props;
-        const { intermediateOption, modalVisible,
-            // searchText 
-        } = this.state;
+        const { intermediateOption, modalVisible } = this.state;
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
         trialJobStatus.map(item => {
