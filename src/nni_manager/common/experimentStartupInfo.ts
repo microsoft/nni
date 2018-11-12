@@ -26,15 +26,17 @@ import * as component from '../common/component';
 class ExperimentStartupInfo {
     private experimentId: string = '';
     private newExperiment: boolean = true;
+    private basePort: number = -1;
     private initialized: boolean = false;
     private initTrialSequenceID: number = 0;
 
-    public setStartupInfo(newExperiment: boolean, experimentId: string): void {
+    public setStartupInfo(newExperiment: boolean, experimentId: string, basePort: number): void {
         assert(!this.initialized);
         assert(experimentId.trim().length > 0);
 
         this.newExperiment = newExperiment;
         this.experimentId = experimentId;
+        this.basePort = basePort;
         this.initialized = true;
     }
 
@@ -42,6 +44,12 @@ class ExperimentStartupInfo {
         assert(this.initialized);
 
         return this.experimentId;
+    }
+
+    public getBasePort(): number {
+        assert(this.initialized);
+
+        return this.basePort;
     }
 
     public isNewExperiment(): boolean {
@@ -66,6 +74,10 @@ function getExperimentId(): string {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getExperimentId();
 }
 
+function getBasePort(): number {
+    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getBasePort();
+}
+
 function isNewExperiment(): boolean {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).isNewExperiment();
 }
@@ -78,9 +90,9 @@ function getInitTrialSequenceId(): number {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getInitTrialSequenceId();
 }
 
-function setExperimentStartupInfo(newExperiment: boolean, experimentId: string): void {
-    component.get<ExperimentStartupInfo>(ExperimentStartupInfo).setStartupInfo(newExperiment, experimentId);
+function setExperimentStartupInfo(newExperiment: boolean, experimentId: string, basePort: number): void {
+    component.get<ExperimentStartupInfo>(ExperimentStartupInfo).setStartupInfo(newExperiment, experimentId, basePort);
 }
 
-export { ExperimentStartupInfo, getExperimentId, isNewExperiment,
+export { ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment,
     setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId };

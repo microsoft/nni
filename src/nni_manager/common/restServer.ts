@@ -19,10 +19,12 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import * as express from 'express';
 import * as http from 'http';
 import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from './log';
+import { getBasePort } from './experimentStartupInfo';
 
 /**
  * Abstraction class to create a RestServer
@@ -39,13 +41,20 @@ export abstract class RestServer {
     protected port?: number;
     protected app: express.Application = express();
     protected log: Logger = getLogger();
+    protected basePort?: number;
     
+    constructor() {
+        this.port = getBasePort();
+        assert(this.port && this.port > 1024);
+    }
+
     get endPoint(): string {
         // tslint:disable-next-line:no-http-string
         return `http://${this.hostName}:${this.port}`;
     }
 
-    public start(port?: number, hostName?: string): Promise<void> {
+    public start(hostName?: string): Promise<void> {
+        this.log.info(`RestServer start`);
         if (this.startTask !== undefined) {
             return this.startTask.promise;
         }
@@ -56,9 +65,8 @@ export abstract class RestServer {
         if (hostName) {
             this.hostName = hostName;
         }
-        if (port) {
-            this.port = port;
-        }
+
+        this.log.info(`RestServer base port is ${this.port}`);
 
         this.server = this.app.listen(this.port as number, this.hostName).on('listening', () => {
             this.startTask.resolve();

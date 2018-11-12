@@ -68,6 +68,7 @@ class PAITrainingService implements TrainingService {
     private hdfsBaseDir: string | undefined;
     private hdfsOutputHost: string | undefined;
     private trialSequenceId: number;
+    private paiRestServerPort?: number;
 
     constructor() {
         this.log = getLogger();
@@ -145,6 +146,11 @@ class PAITrainingService implements TrainingService {
             throw new Error('hdfsOutputHost is not initialized');
         }
 
+        if(!this.paiRestServerPort) {
+            const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
+            this.paiRestServerPort = restServer.paiRestServerPort;
+        }
+
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
         const trialJobId: string = uniqueString(5);
@@ -200,6 +206,7 @@ class PAITrainingService implements TrainingService {
             this.experimentId,
             this.paiTrialConfig.command, 
             getIPV4Address(),
+            this.paiRestServerPort,
             hdfsOutputDir,
             this.hdfsOutputHost,
             this.paiClusterConfig.userName
