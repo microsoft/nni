@@ -148,7 +148,7 @@ class PAITrainingService implements TrainingService {
 
         if(!this.paiRestServerPort) {
             const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
-            this.paiRestServerPort = restServer.paiRestServerPort;
+            this.paiRestServerPort = restServer.clusterRestServerPort;
         }
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);

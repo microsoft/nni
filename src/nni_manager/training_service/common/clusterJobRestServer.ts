@@ -50,7 +50,7 @@ export abstract class ClusterJobRestServer extends RestServer{
         this.port = basePort + 1;         
     }
 
-    public get paiRestServerPort(): number {
+    public get clusterRestServerPort(): number {
         if(!this.port) {
             throw new Error('PAI Rest server port is undefined');
         }

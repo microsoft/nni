@@ -27,7 +27,6 @@ import * as component from '../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { KubeflowTrainingService } from '../kubeflow/kubeflowTrainingService';
-import { KubeflowTrialConfig } from 'training_service/kubeflow/kubeflowConfig';
 
 // TODO: copy mockedTrail.py to local folder
 const localCodeDir: string = tmp.dirSync().name
@@ -86,17 +85,7 @@ describe('Unit Test for KubeflowTrainingService', () => {
             const trialDetail = await kubeflowTrainingService.submitTrialJob({jobType : 'TRIAL'});
         } catch(error) {
             console.log('Submit job failed:' + error);
-            //chai.assert(error)            
-        }
-        //console.log(`paiCluster is ${paiCluster}`)
-        // await paiTrainingService.setClusterMetadata(TrialConfigMetadataKey.PAI_CLUSTER_CONFIG, paiCluster);
-        // await paiTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, paiTrialConfig);
-        // try {
-        //     const trialDetail = await paiTrainingService.submitTrialJob({jobType : 'TRIAL'});
-        //     chai.expect(trialDetail.status).to.be.equals('WAITING');
-        // } catch(error) {
-        //     console.log('Submit job failed:' + error);
-        //     chai.assert(error)            
-        // }
+            chai.assert(error)            
+        }        
     });
 });
