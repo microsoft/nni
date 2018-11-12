@@ -1,7 +1,8 @@
 import * as React from 'react';
 import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
-import { Row, Tabs } from 'antd';
+import { Row, Col, Button, Tabs, Input } from 'antd';
+const Search = Input.Search;
 import { TableObj, Parameters, AccurPoint } from '../static/interface';
 import Accuracy from './overview/Accuracy';
 import Duration from './trial-detail/Duration';
@@ -22,6 +23,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     public _isMounted = false;
     public interAccuracy = 0;
     public interTableList = 1;
+
     constructor(props: {}) {
         super(props);
 
@@ -30,7 +32,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             accNodata: '',
             tableListSource: []
         };
-
     }
     // trial accuracy graph
     drawPointGraph = () => {
@@ -202,11 +203,38 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         }
     }
 
+    // search a specific trial by trial No.
+    searchTrialNo = (value: string) => {
+
+        const { tableListSource } = this.state;
+        const searchResultList: Array<TableObj> = [];
+        Object.keys(tableListSource).map(key => {
+            const item = tableListSource[key];
+            if (item.sequenceId.toString() === value) {
+                searchResultList.push(item);
+            }
+        });
+        window.clearInterval(this.interTableList);
+        this.setState(() => ({
+            tableListSource: searchResultList
+        }));
+    }
+
+    // reset btn click: rerender table
+    resetRenderTable = () => {
+
+        const searchInput = document.getElementById('searchTrial') as HTMLInputElement;
+        if (searchInput !== null) {
+            searchInput.value = '';
+        }
+        this.drawTableList();
+        this.interTableList = window.setInterval(this.drawTableList, 10000);
+    }
     componentDidMount() {
 
         this._isMounted = true;
-        this.drawPointGraph();
         this.drawTableList();
+        this.drawPointGraph();
         this.interAccuracy = window.setInterval(this.drawPointGraph, 10000);
         this.interTableList = window.setInterval(this.drawTableList, 10000);
     }
@@ -253,6 +281,26 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     </Tabs>
                 </div>
                 {/* trial table list */}
+                <Row className="allList">
+                    <Col span={12}>
+                        <Title1 text="All Trials" icon="6.png" />
+                    </Col>
+                    <Col span={12} className="btns">
+                        <Search
+                            placeholder="input search Trial No."
+                            onSearch={value => this.searchTrialNo(value)}
+                            style={{ width: 200 }}
+                            id="searchTrial"
+                        />
+                        <Button
+                            type="primary"
+                            className="tableButton resetBtn"
+                            onClick={this.resetRenderTable}
+                        >
+                            Reset
+                        </Button>
+                    </Col>
+                </Row>
                 <TableList
                     tableSource={tableListSource}
                     updateList={this.drawTableList}

@@ -1,15 +1,14 @@
 import * as React from 'react';
 import axios from 'axios';
 import JSONTree from 'react-json-tree';
-import { browserHistory } from 'react-router';
 import ReactEcharts from 'echarts-for-react';
 import { Row, Table, Button, Popconfirm, Modal, message } from 'antd';
 import { MANAGER_IP, trialJobStatus } from '../../static/const';
 import { convertDuration } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
-import Title1 from '../overview/Title1';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
+require('../../static/style/search.scss');
 require('../../static/style/table.scss');
 require('../../static/style/button.scss');
 const echarts = require('echarts/lib/echarts');
@@ -28,6 +27,7 @@ interface TableListProps {
 interface TableListState {
     intermediateOption: object;
     modalVisible: boolean;
+    searchText: string;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -38,7 +38,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
         this.state = {
             intermediateOption: {},
-            modalVisible: false
+            modalVisible: false,
+            searchText: '3'
         };
     }
 
@@ -136,17 +137,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
             });
     }
 
-    // get tensorflow address
-    getTensorpage = (id: string) => {
-
-        let path = {
-            pathname: '/tensor',
-            state: id
-        };
-
-        browserHistory.push(path);
-    }
-
     componentDidMount() {
         this._isMounted = true;
     }
@@ -156,8 +146,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     render() {
+
         const { tableSource } = this.props;
-        const { intermediateOption, modalVisible } = this.state;
+        const { intermediateOption, modalVisible,
+            // searchText 
+        } = this.state;
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
         trialJobStatus.map(item => {
@@ -172,7 +165,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             key: 'sequenceId',
             width: 120,
             className: 'tableHead',
-            sorter: (a: TableObj, b: TableObj) => (a.sequenceId as number) - (b.sequenceId as number)
+            sorter: (a: TableObj, b: TableObj) => (a.sequenceId as number) - (b.sequenceId as number),
         }, {
             title: 'Id',
             dataIndex: 'id',
@@ -286,18 +279,18 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 );
             },
         }, {
-            title: 'Tensor',
-            dataIndex: 'tensor',
-            key: 'tensor',
+            title: 'Intermediate Result',
+            dataIndex: 'intermediate',
+            key: 'intermediate',
             width: '16%',
             render: (text: string, record: TableObj) => {
                 return (
                     <Button
                         type="primary"
                         className="tableButton"
-                        onClick={this.getTensorpage.bind(this, record.id)}
+                        onClick={this.showIntermediateModal.bind(this, record.id)}
                     >
-                        TensorBoard
+                        Intermediate
                     </Button>
                 );
             },
@@ -347,20 +340,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 <span className="logContent">{logPathRow}</span>
                             </div>
                     }
-                    <Button
-                        type="primary"
-                        className="tableButton"
-                        onClick={this.showIntermediateModal.bind(this, record.id)}
-                    >
-                        Intermediate Result
-                    </Button>
                 </pre>
             );
         };
 
         return (
             <Row className="tableList">
-                <Row><Title1 text="All Trials" icon="6.png" /></Row>
                 <div id="tableList">
                     <Table
                         columns={columns}
