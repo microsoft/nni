@@ -16,9 +16,13 @@
 
 * __Install NNI through source code__
    
-      git clone -b v0.3.3 https://github.com/Microsoft/nni.git
+      git clone -b v0.3.4 https://github.com/Microsoft/nni.git
       cd nni
       source install.sh
+
+* __Install NNI in docker image__
+
+    You can also install NNI in a docker image. Please follow the instructions [here](../deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
 ## Further reading
 * [Overview](Overview.md)
