@@ -20,13 +20,13 @@
 
 'use strict'
 
-import * as assert from 'assert';
 import * as component from '../../common/component';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as request from 'request';
 
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { Deferred } from 'ts-deferred';
 import { EventEmitter } from 'events';
 import { getExperimentId } from '../../common/experimentStartupInfo';
@@ -40,7 +40,7 @@ import {
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
-import { PAITrialJobDetail, PAI_INSTALL_NNI_SHELL_FORMAT, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
+import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
@@ -86,7 +86,7 @@ class PAITrainingService implements TrainingService {
         await restServer.start();
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
-            await this.paiJobCollector.updateTrialStatusFromPAI(this.paiToken, this.paiClusterConfig);
+            await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
             await delay(3000);
         }
     }
@@ -158,7 +158,7 @@ class PAITrainingService implements TrainingService {
         await cpp.exec(`cp -r ${this.paiTrialConfig.codeDir} ${trialLocalTempFolder}`);
         await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
 
-        const runScriptContent : string = PAI_INSTALL_NNI_SHELL_FORMAT;
+        const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
 

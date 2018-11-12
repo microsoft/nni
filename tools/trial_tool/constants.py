@@ -30,6 +30,8 @@ HOME_DIR = os.path.join(os.environ['HOME'], 'nni')
 
 LOG_DIR = os.environ['NNI_OUTPUT_DIR']
 
+NNI_PLATFORM = os.environ['NNI_PLATFORM']
+
 STDOUT_FULL_PATH = os.path.join(LOG_DIR, 'stdout')
 
 STDERR_FULL_PATH = os.path.join(LOG_DIR, 'stderr')

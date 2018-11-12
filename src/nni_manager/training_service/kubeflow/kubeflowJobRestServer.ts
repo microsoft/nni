@@ -21,7 +21,7 @@
 
 import * as component from '../../common/component';
 import { Inject } from 'typescript-ioc';
-import { PAITrainingService } from './paiTrainingService';
+import { KubeflowTrainingService } from './kubeflowTrainingService';
 import { ClusterJobRestServer } from '../common/clusterJobRestServer'
 
 /**
@@ -29,23 +29,23 @@ import { ClusterJobRestServer } from '../common/clusterJobRestServer'
  * 
  */
 @component.Singleton
-export class PAIJobRestServer extends ClusterJobRestServer{
+export class KubeflowJobRestServer extends ClusterJobRestServer{
     @Inject
-    private readonly paiTrainingService : PAITrainingService;
+    private readonly kubeflowTrainingService : KubeflowTrainingService;
 
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
     constructor() {
         super();
-        this.paiTrainingService = component.get(PAITrainingService);
+        this.kubeflowTrainingService = component.get(KubeflowTrainingService);
     }
 
     protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
         // Split metrics array into single metric, then emit
-        // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
+        // Warning: If not split metrics into single ones, the behavior will  be UNKNOWN
         for (const singleMetric of metrics) {
-            this.paiTrainingService.MetricsEmitter.emit('metric', {
+            this.kubeflowTrainingService.MetricsEmitter.emit('metric', {
                 id : jobId,
                 data : singleMetric
             });

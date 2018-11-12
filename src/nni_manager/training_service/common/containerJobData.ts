@@ -19,36 +19,12 @@
 
 'use strict';
 
-import * as component from '../../common/component';
-import { Inject } from 'typescript-ioc';
-import { PAITrainingService } from './paiTrainingService';
-import { ClusterJobRestServer } from '../common/clusterJobRestServer'
-
-/**
- * PAI Training service Rest server, provides rest API to support pai job metrics update
- * 
- */
-@component.Singleton
-export class PAIJobRestServer extends ClusterJobRestServer{
-    @Inject
-    private readonly paiTrainingService : PAITrainingService;
-
-    /**
-     * constructor to provide NNIRestServer's own rest property, e.g. port
-     */
-    constructor() {
-        super();
-        this.paiTrainingService = component.get(PAITrainingService);
-    }
-
-    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
-        // Split metrics array into single metric, then emit
-        // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
-        for (const singleMetric of metrics) {
-            this.paiTrainingService.MetricsEmitter.emit('metric', {
-                id : jobId,
-                data : singleMetric
-            });
-        }
-    }   
-}
+export const CONTAINER_INSTALL_NNI_SHELL_FORMAT: string = 
+`#!/bin/bash
+if python3 -c 'import nni' > /dev/null 2>&1; then
+  # nni module is already installed, skip
+  return
+else
+  # Install nni
+  pip3 install -v --user git+https://github.com/Microsoft/nni.git@v0.2
+fi`;

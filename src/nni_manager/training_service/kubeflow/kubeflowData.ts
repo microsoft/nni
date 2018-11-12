@@ -19,36 +19,37 @@
 
 'use strict';
 
-import * as component from '../../common/component';
-import { Inject } from 'typescript-ioc';
-import { PAITrainingService } from './paiTrainingService';
-import { ClusterJobRestServer } from '../common/clusterJobRestServer'
+import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 
 /**
- * PAI Training service Rest server, provides rest API to support pai job metrics update
- * 
+ * KubeflowTrialJobDetail
  */
-@component.Singleton
-export class PAIJobRestServer extends ClusterJobRestServer{
-    @Inject
-    private readonly paiTrainingService : PAITrainingService;
-
-    /**
-     * constructor to provide NNIRestServer's own rest property, e.g. port
-     */
-    constructor() {
-        super();
-        this.paiTrainingService = component.get(PAITrainingService);
+// tslint:disable-next-line:max-classes-per-file
+export class KubeflowTrialJobDetail implements TrialJobDetail {
+    public id: string;
+    public status: TrialJobStatus;
+    public submitTime: number;
+    public startTime?: number;
+    public endTime?: number;
+    public tags?: string[];
+    public url?: string;
+    public workingDirectory: string;
+    public form: JobApplicationForm;
+    public kubeflowJobName: string;
+    public sequenceId: number;
+    
+    constructor(id: string, status: TrialJobStatus, submitTime: number,
+                workingDirectory: string, form: JobApplicationForm, 
+                kubeflowJobName: string, sequenceId: number) {
+        this.id = id;
+        this.status = status;
+        this.submitTime = submitTime;
+        this.workingDirectory = workingDirectory;
+        this.form = form;
+        this.kubeflowJobName = kubeflowJobName;
+        this.sequenceId = sequenceId;
+        this.tags = [];
     }
-
-    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
-        // Split metrics array into single metric, then emit
-        // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
-        for (const singleMetric of metrics) {
-            this.paiTrainingService.MetricsEmitter.emit('metric', {
-                id : jobId,
-                data : singleMetric
-            });
-        }
-    }   
 }
+
+export type KubeflowTFJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
