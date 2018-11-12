@@ -206,6 +206,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     // search a specific trial by trial No.
     searchTrialNo = (value: string) => {
 
+        window.clearInterval(this.interTableList);
         const { tableListSource } = this.state;
         const searchResultList: Array<TableObj> = [];
         Object.keys(tableListSource).map(key => {
@@ -214,7 +215,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 searchResultList.push(item);
             }
         });
-        window.clearInterval(this.interTableList);
         this.setState(() => ({
             tableListSource: searchResultList
         }));
