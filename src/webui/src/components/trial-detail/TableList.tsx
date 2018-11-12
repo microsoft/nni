@@ -348,7 +348,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         expandedRowRender={openRow}
                         dataSource={tableSource}
                         className="commonTableStyle"
-                        pagination={{ pageSize: 10 }}
+                        pagination={{ pageSize: 20 }}
                     />
                     <Modal
                         title="Intermediate Result"
