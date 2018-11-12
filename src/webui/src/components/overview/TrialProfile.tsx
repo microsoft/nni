@@ -20,6 +20,7 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
             trialConcurrency: tiralProInfo.runConcurren,
             tuner: tiralProInfo.tuner,
             assessor: tiralProInfo.assessor ? tiralProInfo.assessor : undefined,
+            advisor: tiralProInfo.advisor ? tiralProInfo.advisor : undefined,
             clusterMetaData: tiralProInfo.clusterMetaData ? tiralProInfo.clusterMetaData : undefined
         });
         return (
