@@ -24,7 +24,7 @@ import os
 import re
 import requests
 
-from .constants import BASE_URL, DEFAULT_REST_PORT
+from .constants import BASE_URL
 from .rest_utils import rest_get, rest_post, rest_put, rest_delete
 from .url_utils import gen_update_metrics_url
 
@@ -40,11 +40,10 @@ class TrialMetricsReader():
     '''
     Read metrics data from a trial job
     '''
-    def __init__(self, rest_port = DEFAULT_REST_PORT):
+    def __init__(self):
         metrics_base_dir = os.path.join(NNI_SYS_DIR, '.nni')
         self.offset_filename = os.path.join(metrics_base_dir, 'metrics_offset')
         self.metrics_filename = os.path.join(metrics_base_dir, 'metrics')
-        self.rest_port = rest_port
         if not os.path.exists(metrics_base_dir):
             os.makedirs(metrics_base_dir)
 
@@ -107,7 +106,7 @@ class TrialMetricsReader():
         offset = self._get_offset()
         return self._read_all_available_records(offset)
 
-def read_experiment_metrics(nnimanager_ip):
+def read_experiment_metrics(nnimanager_ip, nnimanager_port):
     '''
     Read metrics data for specified trial jobs
     '''
@@ -118,7 +117,7 @@ def read_experiment_metrics(nnimanager_ip):
         result['metrics'] = reader.read_trial_metrics()
         print('Result metrics is {}'.format(json.dumps(result)))
         if len(result['metrics']) > 0:            
-            response = rest_post(gen_update_metrics_url(BASE_URL.format(nnimanager_ip), DEFAULT_REST_PORT, NNI_EXP_ID, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
+            response = rest_post(gen_update_metrics_url(BASE_URL.format(nnimanager_ip), nnimanager_port, NNI_EXP_ID, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
             print('Response code is {}'.format(response.status_code))
     except Exception:
         #TODO error logging to file
