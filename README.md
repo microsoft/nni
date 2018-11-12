@@ -88,16 +88,17 @@ You can use these commands to get more information about the experiment
 </table>
 
 ## **Documentation**
-* [Overview](docs/Overview.md)
-* [Get started](docs/GetStarted.md)
+* [NNI overview](docs/Overview.md)
+* [Quick start](docs/GetStarted.md)
+
 ## **How to**
-* [Installation](docs/InstallNNI_Ubuntu.md)
+* [Install NNI](docs/InstallNNI_Ubuntu.md)
 * [Use command line tool nnictl](docs/NNICTLDOC.md)
 * [Use NNIBoard](docs/WebUI.md)
 * [How to define search space](docs/SearchSpaceSpec.md)
+* [How to define a trial](docs/howto_1_WriteTrial.md)
 * [Config an experiment](docs/ExperimentConfig.md)
-* [Use annotation](docs/AnnotationSpec.md)
-* [Debug](docs/HowToDebug.md)
+* [How to use annotation](docs/howto_1_WriteTrial.md#nni-python-annotation)
 ## **Tutorials**
 * [Run an experiment on local (with multiple GPUs)?](docs/tutorial_1_CR_exp_local_api.md)
 * [Run an experiment on multiple machines?](docs/tutorial_2_RemoteMachineMode.md)
