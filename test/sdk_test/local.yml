@@ -1,5 +1,5 @@
 authorName: nni
-experimentName: test_builtin_tuner
+experimentName: test_sdk
 maxExecDuration: 1h
 maxTrialNum: 2
 searchSpacePath: search_space.json
@@ -10,7 +10,7 @@ trial:
   gpuNum: 0
 trialConcurrency: 2
 tuner:
-  builtinTunerName: Evolution
+  builtinTunerName: BatchTuner
   classArgs:
     optimize_mode: maximize
 useAnnotation: false
