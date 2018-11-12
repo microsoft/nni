@@ -65,7 +65,15 @@ RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
 #
 RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 
+#
+#PyTorch 
+#
+RUN python3 -m pip --no-cache-dir install http://download.pytorch.org/whl/cu90/torch-0.4.1-cp35-cp35m-linux_x86_64.whl
+RUN python3 -m pip install torchvision
+
+#
 #sklearn 0.20.0
+#
 RUN python3 -m pip --no-cache-dir install scikit-learn==0.20.0
 
 ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/bin:/sbin
