@@ -35,7 +35,6 @@ from .constants import *
 import time
 import random
 import string
-import site
 from pathlib import Path
 
 
@@ -63,16 +62,19 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     '''Run nni manager process'''
     nni_config = Config(config_file_name)
     if detect_port(port):
-        print_error('Port %s is used by another process, please reset the port!' % port)
+        print_error('Port %s is used by another process, please reset the port!\n' \
+        'You could use \'nnictl create --help\' to get help information' % port)
+        exit(1)
+    
+    if platform == 'pai' and detect_port(int(port) + 1):
+        print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
+        'You could set another port to start experiment!\n' \
+        'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
         exit(1)
 
     print_normal('Starting restful server...')
-    if os.geteuid() == 0:
-        site_dir = site.getsitepackages()[0]
-    else:
-        site_dir = site.getusersitepackages()
-    python_dir = str(Path(site_dir).parents[2])
-    cmds = ['node', os.path.join(python_dir, 'nni_pkg', 'main.js'), '--port', str(port), '--mode', platform, '--start_mode', mode]
+    base_dir = str(Path(os.path.dirname(__file__)).parents[3])
+    cmds = ['node', os.path.join(base_dir, 'nni', 'main.js'), '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
@@ -83,7 +85,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     log_header = LOG_HEADER % str(time_now)
     stdout_file.write(log_header)
     stderr_file.write(log_header)
-    process = Popen(cmds, cwd=os.path.join(python_dir, 'nni_pkg'), stdout=stdout_file, stderr=stderr_file)
+    process = Popen(cmds, cwd=os.path.join(base_dir, 'nni'), stdout=stdout_file, stderr=stderr_file)
     return process, str(time_now)
 
 def set_trial_config(experiment_config, port, config_file_name):
@@ -250,7 +252,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         print_error('Restful server start failed!')
         print_log_content(config_file_name)
         try:
-            cmds = ['pkill', '-P', str(rest_process.pid)]
+            cmds = ['kill', str(rest_process.pid)]
             call(cmds)
         except Exception:
             raise Exception(ERROR_INFO % 'Rest server stopped!')
@@ -265,7 +267,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         else:
             print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['pkill', '-P', str(rest_process.pid)]
+                cmds = ['kill', str(rest_process.pid)]
                 call(cmds)
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
@@ -279,7 +281,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         else:
             print_error('Set local config failed!')
             try:
-                cmds = ['pkill', '-P', str(rest_process.pid)]
+                cmds = ['kill', str(rest_process.pid)]
                 call(cmds)
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
@@ -295,7 +297,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['pkill', '-P', str(rest_process.pid)]
+                cmds = ['kill', str(rest_process.pid)]
                 call(cmds)
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
@@ -312,7 +314,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         print_error('Start experiment failed!')
         print_log_content(config_file_name)
         try:
-            cmds = ['pkill', '-P', str(rest_process.pid)]
+            cmds = ['kill', str(rest_process.pid)]
             call(cmds)
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')

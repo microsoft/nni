@@ -70,17 +70,23 @@ class Logger {
     private DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
     private level: number = DEBUG;
     private bufferSerialEmitter: BufferSerialEmitter;
+    private writable: Writable;
 
     constructor(fileName?: string) {
         let logFile: string | undefined = fileName;
         if (logFile === undefined) {
             logFile = this.DEFAULT_LOGFILE;
         }
-        this.bufferSerialEmitter = new BufferSerialEmitter(fs.createWriteStream(logFile, {
+        this.writable = fs.createWriteStream(logFile, {
             flags: 'a+',
             encoding: 'utf8',
             autoClose: true
-        }));
+        });
+        this.bufferSerialEmitter = new BufferSerialEmitter(this.writable);
+    }
+
+    public close() {
+        this.writable.destroy();
     }
 
     public debug(...param: any[]): void {
