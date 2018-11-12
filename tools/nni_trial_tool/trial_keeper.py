@@ -48,7 +48,7 @@ def main_loop(args):
     while True:
         retCode = process.poll()
         ## Read experiment metrics, to avoid missing metrics
-        read_experiment_metrics(args.nnimanager_ip)
+        read_experiment_metrics(args.nnimanager_ip, args.nnimanager_port)
         
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
@@ -80,7 +80,8 @@ if __name__ == '__main__':
     PARSER = argparse.ArgumentParser()
     PARSER.set_defaults(func=trial_keeper_help_info)
     PARSER.add_argument('--trial_command', type=str, help='Command to launch trial process')
-    PARSER.add_argument('--nnimanager_ip', type=str, default='localhost', help='NNI manager IP')
+    PARSER.add_argument('--nnimanager_ip', type=str, default='localhost', help='NNI manager rest server IP')
+    PARSER.add_argument('--nnimanager_port', type=str, default='8081', help='NNI manager rest server port')
     PARSER.add_argument('--pai_hdfs_output_dir', type=str, help='the output dir of hdfs')
     PARSER.add_argument('--pai_hdfs_host', type=str, help='the host of hdfs')
     PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
