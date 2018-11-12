@@ -368,12 +368,21 @@ class NNIManager implements Manager {
                 this.trialJobs.set(trialJobId, Object.assign({}, trialJobDetail));
                 await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail);
             }
+            let hyperParams: string | undefined = undefined;
             switch (trialJobDetail.status) {
                 case 'SUCCEEDED':
                 case 'USER_CANCELED':
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
-                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: trialJobDetail.status}));
+                    if (trialJobDetail.form.jobType === 'TRIAL') {
+                        hyperParams = (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters.value;
+                    } else {
+                        throw new Error('Error: jobType error, not TRIAL');
+                    }
+                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
+                        trial_job_id: trialJobDetail.id,
+                        event: trialJobDetail.status,
+                        hyper_params: hyperParams }));
                     break;
                 case 'FAILED':
                 case 'SYS_CANCELED':
@@ -381,7 +390,15 @@ class NNIManager implements Manager {
                     // TO DO: push this job to queue for retry
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
-                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: trialJobDetail.status}));
+                    if (trialJobDetail.form.jobType === 'TRIAL') {
+                        hyperParams = (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters.value;
+                    } else {
+                        throw new Error('Error: jobType error, not TRIAL');
+                    }
+                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
+                        trial_job_id: trialJobDetail.id,
+                        event: trialJobDetail.status,
+                        hyper_params: hyperParams}));
                     break;
                 case 'WAITING':
                 case 'RUNNING':
