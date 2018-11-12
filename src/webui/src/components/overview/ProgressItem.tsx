@@ -6,6 +6,7 @@ interface ProItemProps {
     percent: number;
     description: string;
     maxString: string;
+    bgclass: string;
 }
 
 class ProgressBar extends React.Component<ProItemProps, {}> {
@@ -16,11 +17,11 @@ class ProgressBar extends React.Component<ProItemProps, {}> {
     }
 
     render() {
-        const { who, percent, description, maxString  } = this.props;
+        const { who, percent, description, maxString, bgclass } = this.props;
 
         return (
             <div>
-                <Row className="probar">
+                <Row className={`probar ${bgclass}`}>
                         <Col span={6}>
                             <div className="name">{who}</div>
                         </Col>
@@ -34,8 +35,8 @@ class ProgressBar extends React.Component<ProItemProps, {}> {
                                 />
                             </div>
                             <Row className="description">
-                                <Col span={12}>0</Col>
-                                <Col className="right" span={12}>{maxString}</Col>
+                                <Col span={9}>0</Col>
+                                <Col className="right" span={15}>{maxString}</Col>
                             </Row>
                         </Col>
                     </Row>
