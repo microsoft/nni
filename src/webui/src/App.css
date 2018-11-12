@@ -1,26 +1,28 @@
-.header_title{
-  width: 100%;
-  height: 60px;
-  line-height: 60px;
-  font-size: 24px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: white;
-  background-color:	rgb(60,141,188) ;
-  user-select: none;
-  text-align: center;
+.nni{
+  font-family: 'Segoe';
+  color: #212121;
+  font-size: 14px;
+}
+
+.header{
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 999;
+  width: 100%;
+  height: 80px; 
+  background: #0071BC;
+  border-right: 1px solid #ccc;
+  z-index: 1000;
 }
-.header_title img{
-  height: 60px;
+.headerCon{
+  min-width: 600px
 }
-.right{
-  position: absolute;
-  left: 250px;
-  top: 50px;
-  width: calc(100% - 250px);
-  /* padding-left: 20px; */
-  /* background: rgb(236,240,245); */
+.content{
+  width: 86%;
+  min-width: 1024px;
+  margin: 0 auto;
+  margin-top: 90px;
+  margin-bottom: 30px;
 }
+
+

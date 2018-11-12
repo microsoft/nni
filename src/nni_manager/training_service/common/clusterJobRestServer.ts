@@ -19,10 +19,11 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import { Request, Response, Router } from 'express';
 import * as bodyParser from 'body-parser';
 import * as component from '../../common/component';
-import { getExperimentId } from '../../common/experimentStartupInfo';
+import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 import { RestServer } from '../../common/restServer'
 
 /**
@@ -43,7 +44,17 @@ export abstract class ClusterJobRestServer extends RestServer{
      */
     constructor() {
         super();
-        this.port = ClusterJobRestServer.DEFAULT_PORT;
+        const basePort: number = getBasePort();
+        assert(basePort && basePort > 1024);
+        
+        this.port = basePort + 1;         
+    }
+
+    public get paiRestServerPort(): number {
+        if(!this.port) {
+            throw new Error('PAI Rest server port is undefined');
+        }
+        return this.port;
     }
 
     /**

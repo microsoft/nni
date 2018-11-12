@@ -50,5 +50,5 @@ export class PAIJobRestServer extends ClusterJobRestServer{
                 data : singleMetric
             });
         }
-    }   
+    }
 }

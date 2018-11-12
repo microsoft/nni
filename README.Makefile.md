@@ -14,7 +14,7 @@ The targets will be detailed later.
 
 ## Dependencies
 
-NNI requires at least Node.js, Yarn, and PIP to build, while TypeScript is also recommended.
+NNI requires at least Node.js, Yarn, and pip to build, while TypeScript is also recommended.
 
 NNI requires Node.js, and all dependency libraries to run.
 Required Node.js libraries (including TypeScript) can be installed by Yarn, and required Python libraries can be installed by setuptools or PIP.

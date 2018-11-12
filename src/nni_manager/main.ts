@@ -39,10 +39,10 @@ import {
 import { PAITrainingService } from './training_service/pai/paiTrainingService'
 
 
-function initStartupInfo(startExpMode: string, resumeExperimentId: string) {
+function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number) {
     const createNew: boolean = (startExpMode === 'new');
     const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
-    setExperimentStartupInfo(createNew, expId);
+    setExperimentStartupInfo(createNew, expId, basePort);
 }
 
 async function initContainer(platformMode: string): Promise<void> {
@@ -50,7 +50,7 @@ async function initContainer(platformMode: string): Promise<void> {
         Container.bind(TrainingService).to(LocalTrainingServiceForGPU).scope(Scope.Singleton);
     } else if (platformMode === 'remote') {
         Container.bind(TrainingService).to(RemoteMachineTrainingService).scope(Scope.Singleton);
-    } else if (platformMode === 'pai'){
+    } else if (platformMode === 'pai') {
         Container.bind(TrainingService).to(PAITrainingService).scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${mode}`);
@@ -93,14 +93,14 @@ if (startMode === 'resume' && experimentId.trim().length < 1) {
     process.exit(1);
 }
 
-initStartupInfo(startMode, experimentId);
+initStartupInfo(startMode, experimentId, port);
 
 mkDirP(getLogDir()).then(async () => {
     const log: Logger = getLogger();
     try {
         await initContainer(mode);
         const restServer: NNIRestServer = component.get(NNIRestServer);
-        await restServer.start(port);
+        await restServer.start();
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {
         log.error(`${err.stack}`);
@@ -108,3 +108,12 @@ mkDirP(getLogDir()).then(async () => {
 }).catch((err: Error) => {
     console.error(`Failed to create log dir: ${err.stack}`);
 });
+
+process.on('SIGTERM', async () => {
+    const ds: DataStore = component.get(DataStore);
+    await ds.close();
+    const restServer: NNIRestServer = component.get(NNIRestServer);
+    await restServer.stop();
+    const log: Logger = getLogger();
+    log.close();
+})

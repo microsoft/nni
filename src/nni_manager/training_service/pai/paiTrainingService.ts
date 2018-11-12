@@ -29,7 +29,7 @@ import * as request from 'request';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { Deferred } from 'ts-deferred';
 import { EventEmitter } from 'events';
-import { getExperimentId } from '../../common/experimentStartupInfo';
+import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { HDFSClientUtility } from './hdfsClientUtility'
 import { MethodNotImplementedError } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
@@ -68,6 +68,7 @@ class PAITrainingService implements TrainingService {
     private hdfsBaseDir: string | undefined;
     private hdfsOutputHost: string | undefined;
     private trialSequenceId: number;
+    private paiRestServerPort?: number;
 
     constructor() {
         this.log = getLogger();
@@ -78,7 +79,7 @@ class PAITrainingService implements TrainingService {
         this.experimentId = getExperimentId();      
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
-        this.trialSequenceId = 0;
+        this.trialSequenceId = -1;
     }
 
     public async run(): Promise<void> {
@@ -145,6 +146,11 @@ class PAITrainingService implements TrainingService {
             throw new Error('hdfsOutputHost is not initialized');
         }
 
+        if(!this.paiRestServerPort) {
+            const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
+            this.paiRestServerPort = restServer.paiRestServerPort;
+        }
+
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
         const trialJobId: string = uniqueString(5);
@@ -200,6 +206,7 @@ class PAITrainingService implements TrainingService {
             this.experimentId,
             this.paiTrialConfig.command, 
             getIPV4Address(),
+            this.paiRestServerPort,
             hdfsOutputDir,
             this.hdfsOutputHost,
             this.paiClusterConfig.userName
@@ -454,6 +461,10 @@ class PAITrainingService implements TrainingService {
     }
 
     private generateSequenceId(): number {
+        if (this.trialSequenceId === -1) {
+            this.trialSequenceId = getInitTrialSequenceId();
+        }
+
         return this.trialSequenceId++;
     }
 }

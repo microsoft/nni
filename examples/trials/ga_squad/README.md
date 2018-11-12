@@ -90,11 +90,11 @@ The evolution-algorithm based architecture for question answering has two differ
 
 The trial has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
 
-* `attention.py` contains an implementaion for attention mechanism in Tensorflow.
+* `attention.py` contains an implementation for attention mechanism in Tensorflow.
 * `data.py` contains functions for data preprocessing.
 * `evaluate.py` contains the evaluation script.
 * `graph.py` contains the definition of the computation graph.
-* `rnn.py` contains an implementaion for GRU in Tensorflow.
+* `rnn.py` contains an implementation for GRU in Tensorflow.
 * `train_model.py` is a wrapper for the whole question answering model.
 
 Among those files, `trial.py` and `graph_to_tf.py` is special.
