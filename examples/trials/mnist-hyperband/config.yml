@@ -13,7 +13,7 @@ advisor:
   builtinAdvisorName: Hyperband
   classArgs:
     #R: the maximum STEPS
-    R: 100
+    R: 200
     #eta: proportion of discarded trials
     eta: 2
     #choice: maximize, minimize

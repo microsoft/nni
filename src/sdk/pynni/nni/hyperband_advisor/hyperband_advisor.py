@@ -163,7 +163,9 @@ class Bracket():
                 sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1], reverse=True) # reverse
             else:
                 sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1])
+            _logger.debug('bracket %s next round %s, sorted hyper configs: %s', self.bracket_id, self.i, sorted_perf)
             next_n, next_r = self.get_n_r()
+            _logger.debug('bracket %s next round %s, next_n=%d, next_r=%d', self.bracket_id, self.i, next_n, next_r)
             hyper_configs = dict()
             for k in range(next_n):
                 params_id = sorted_perf[k][0]
@@ -258,8 +260,10 @@ class Hyperband(MsgDispatcherBase):
                 send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
                 self.credit += 1
                 return True
+            _logger.debug('create a new bracket, self.curr_s=%d', self.curr_s)
             self.brackets[self.curr_s] = Bracket(self.curr_s, self.s_max, self.eta, self.R, self.optimize_mode)
             next_n, next_r = self.brackets[self.curr_s].get_n_r()
+            _logger.debug('new bracket, next_n=%d, next_r=%d', next_n, next_r)
             assert self.searchspace_json is not None and self.random_state is not None
             generated_hyper_configs = self.brackets[self.curr_s].get_hyperparameter_configurations(next_n, next_r,
                                                                                                    self.searchspace_json,
@@ -294,6 +298,7 @@ class Hyperband(MsgDispatcherBase):
         bracket_id, i, _ = data['parameter_id'].split('_')
         hyper_configs = self.brackets[bracket_id].inform_trial_end(int(i))
         if hyper_configs is not None:
+            _logger.debug('bracket %s next round %s, hyper_configs: %s', bracket_id, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
             for _ in range(self.credit):
                 if not self.generated_hyper_configs:
