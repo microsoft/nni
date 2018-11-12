@@ -33,4 +33,4 @@ or
 ```
 
 ## 3.Directly retrieve the docker image
-If you do not want to build docker image, you can retrieve the NNI docker image from dockerhub through the command `docker pull msranni/nni:latest`.
+If you do not want to build docker image, you can retrieve the NNI docker image from Docker Hub through the command `docker pull msranni/nni:latest`.
