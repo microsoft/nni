@@ -37,7 +37,7 @@ Note: If you are in docker container (as root), please remove `--user` from the 
 * We only support Linux (Ubuntu 16.04 or higher) in our current stage. 
 * Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
 ```bash	
-    git clone -b v0.3.3 https://github.com/Microsoft/nni.git
+    git clone -b v0.3.4 https://github.com/Microsoft/nni.git
     cd nni	
     source install.sh	
 ```
@@ -47,7 +47,7 @@ Note: If you are in docker container (as root), please remove `--user` from the 
 The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.	
 * Download the examples via clone the source code.	
 ```bash	
-    git clone -b v0.3.3 https://github.com/Microsoft/nni.git
+    git clone -b v0.3.4 https://github.com/Microsoft/nni.git
 ```
 * Run the mnist example.
 ```bash
