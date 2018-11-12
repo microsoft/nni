@@ -25,7 +25,6 @@ BIN_FOLDER ?= $(ROOT_FOLDER)/bin
 NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
 
 ## Dependency information
-$(info $(_INFO) Installing dependencies, use local toolchain $(_END))
 NNI_NODE_TARBALL ?= /tmp/nni-node-linux-x64.tar.xz
 NNI_NODE_FOLDER = /tmp/nni-node-linux-x64
 NNI_NODE ?= $(BIN_FOLDER)/node
@@ -104,6 +103,17 @@ uninstall:
 	-rm -f $(BIN_FOLDER)/nnictl
 	-rm -f $(BASH_COMP_SCRIPT)
 
+.PHONY: clean
+clean:
+	-rm -rf tools/build
+	-rm -rf tools/nnictl.egg-info
+	-rm -rf src/nni_manager/dist
+	-rm -rf src/nni_manager/node_modules
+	-rm -rf src/sdk/pynni/build
+	-rm -rf src/sdk/pynni/nni_sdk.egg-info
+	-rm -rf src/webui/build
+	-rm -rf src/webui/node_modules
+
 # Main targets end
 
 # Helper targets
@@ -116,7 +126,7 @@ $(NNI_YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
 	wget https://aka.ms/yarn-download -O $(NNI_YARN_TARBALL)
 
-.PHONY: intall-dependencies
+.PHONY: install-dependencies
 install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
 	#$(_INFO) Extracting Node.js $(_END)
 	rm -rf $(NNI_NODE_FOLDER)
