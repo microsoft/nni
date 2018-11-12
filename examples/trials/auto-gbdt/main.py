@@ -87,7 +87,7 @@ def run(lgb_train, lgb_eval, params, X_test, y_test):
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
     # eval 
-    rmse = mean_squared_error(y_test, y_pred) ** 0.5
+    rmse = mean_squared_error(y_test, y_pred) ** 0.5 * -1
     print('The rmse of prediction is:', rmse)
 
     nni.report_final_result(rmse)
