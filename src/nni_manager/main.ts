@@ -39,10 +39,10 @@ import {
 import { PAITrainingService } from './training_service/pai/paiTrainingService'
 
 
-function initStartupInfo(startExpMode: string, resumeExperimentId: string) {
+function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number) {
     const createNew: boolean = (startExpMode === 'new');
     const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
-    setExperimentStartupInfo(createNew, expId);
+    setExperimentStartupInfo(createNew, expId, basePort);
 }
 
 async function initContainer(platformMode: string): Promise<void> {
@@ -93,14 +93,14 @@ if (startMode === 'resume' && experimentId.trim().length < 1) {
     process.exit(1);
 }
 
-initStartupInfo(startMode, experimentId);
+initStartupInfo(startMode, experimentId, port);
 
 mkDirP(getLogDir()).then(async () => {
     const log: Logger = getLogger();
     try {
         await initContainer(mode);
         const restServer: NNIRestServer = component.get(NNIRestServer);
-        await restServer.start(port);
+        await restServer.start();
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {
         log.error(`${err.stack}`);
