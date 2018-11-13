@@ -29,7 +29,7 @@ import { NNIError } from '../common/errors';
 import { getExperimentId, isNewExperiment } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile,  TrialJobStatistics } from '../common/manager';
-import { TrialJobStatus } from '../common/trainingService';
+import { TrialJobDetail, TrialJobStatus } from '../common/trainingService';
 import { getDefaultDatabaseDir, mkDirP } from '../common/utils';
 
 class NNIDataStore implements DataStore {
@@ -83,10 +83,11 @@ class NNIDataStore implements DataStore {
         return this.db.queryLatestExperimentProfile(experimentId);
     }
 
-    public storeTrialJobEvent(event: TrialJobEvent, trialJobId: string, data?: string, logPath?: string): Promise<void> {
-        this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${data}, logpath: ${logPath}`);
+    public storeTrialJobEvent(
+        event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
+        this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${hyperParameter}, jobDetail: ${JSON.stringify(jobDetail)}`);
 
-        return this.db.storeTrialJobEvent(event, trialJobId, data, logPath).catch(
+        return this.db.storeTrialJobEvent(event, trialJobId, hyperParameter, jobDetail).catch(
                 (err: Error) => {
                     throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
                 }
@@ -155,21 +156,23 @@ class NNIDataStore implements DataStore {
     }
 
     private async queryTrialJobs(status?: TrialJobStatus, trialJobId?: string): Promise<TrialJobInfo[]> {
-        const result: TrialJobInfo[]= [];
+        const result: TrialJobInfo[] = [];
         const trialJobEvents: TrialJobEventRecord[] = await this.db.queryTrialJobEvent(trialJobId);
         if (trialJobEvents === undefined) {
             return result;
         }
         const map: Map<string, TrialJobInfo> = this.getTrialJobsByReplayEvents(trialJobEvents);
 
-        for (let key of map.keys()) {
-            const jobInfo = map.get(key);
+        const finalMetricsMap: Map<string, MetricDataRecord> = await this.getFinalMetricData(trialJobId);
+
+        for (const key of map.keys()) {
+            const jobInfo: TrialJobInfo | undefined = map.get(key);
             if (jobInfo === undefined) {
                 continue;
             }
             if (!(status !== undefined && jobInfo.status !== status)) {
                 if (jobInfo.status === 'SUCCEEDED') {
-                    jobInfo.finalMetricData = await this.getFinalMetricData(jobInfo.id);
+                    jobInfo.finalMetricData = finalMetricsMap.get(jobInfo.id);
                 }
                 result.push(jobInfo);
             }
@@ -178,16 +181,20 @@ class NNIDataStore implements DataStore {
         return result;
     }
 
-    private async getFinalMetricData(trialJobId: string): Promise<any> {
+    private async getFinalMetricData(trialJobId?: string): Promise<Map<string, MetricDataRecord>> {
+        const map: Map<string, MetricDataRecord> = new Map();
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
 
         const multiPhase: boolean = await this.isMultiPhase();
 
-        if (metrics.length > 1 && !multiPhase) {
-            this.log.error(`Found multiple FINAL results for trial job ${trialJobId}`);
+        for (const metric of metrics) {
+            if (map.has(metric.trialJobId) && !multiPhase) {
+                this.log.error(`Found multiple FINAL results for trial job ${trialJobId}`);
+            }
+            map.set(metric.trialJobId, metric);
         }
 
-        return metrics[metrics.length - 1];
+        return map;
     }
 
     private async isMultiPhase(): Promise<boolean> {
@@ -280,6 +287,9 @@ class NNIDataStore implements DataStore {
                 } else {
                     assert(false, 'jobInfo.hyperParameters is undefined');
                 }
+            }
+            if (record.sequenceId !== undefined && jobInfo.sequenceId === undefined) {
+                jobInfo.sequenceId = record.sequenceId;
             }
             map.set(record.trialJobId, jobInfo);
         }

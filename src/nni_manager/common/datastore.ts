@@ -38,6 +38,7 @@ interface TrialJobEventRecord {
     readonly event: TrialJobEvent;
     readonly data?: string;
     readonly logPath?: string;
+    readonly sequenceId?: number;
 }
 
 interface MetricData {
@@ -59,12 +60,13 @@ interface MetricDataRecord {
 
 interface TrialJobInfo {
     id: string;
+    sequenceId?: number;
     status: TrialJobStatus;
     startTime?: number;
     endTime?: number;
     hyperParameters?: string[];
     logPath?: string;
-    finalMetricData?: string;
+    finalMetricData?: MetricDataRecord;
     stderrPath?: string;
 }
 
@@ -73,7 +75,8 @@ abstract class DataStore {
     public abstract close(): Promise<void>;
     public abstract storeExperimentProfile(experimentProfile: ExperimentProfile): Promise<void>;
     public abstract getExperimentProfile(experimentId: string): Promise<ExperimentProfile>;
-    public abstract storeTrialJobEvent(event: TrialJobEvent, trialJobId: string, data?: string, logPath?: string): Promise<void>;
+    public abstract storeTrialJobEvent(
+        event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void>;
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]>;
     public abstract getTrialJob(trialJobId: string): Promise<TrialJobInfo>;
@@ -87,7 +90,8 @@ abstract class Database {
     public abstract storeExperimentProfile(experimentProfile: ExperimentProfile): Promise<void>;
     public abstract queryExperimentProfile(experimentId: string, revision?: number): Promise<ExperimentProfile[]>;
     public abstract queryLatestExperimentProfile(experimentId: string): Promise<ExperimentProfile>;
-    public abstract storeTrialJobEvent(event: TrialJobEvent, trialJobId: string, data?: string, logPath?: string): Promise<void>;
+    public abstract storeTrialJobEvent(
+        event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void>;
     public abstract queryTrialJobEvent(trialJobId?: string, event?: TrialJobEvent): Promise<TrialJobEventRecord[]>;
     public abstract storeMetricData(trialJobId: string, data: string): Promise<void>;
     public abstract queryMetricData(trialJobId?: string, type?: MetricType): Promise<MetricDataRecord[]>;

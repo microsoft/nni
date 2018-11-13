@@ -8,20 +8,18 @@
       git
       wget
 
-    python pip should also be correctly installed. You could use "python3 -m pip -V" to check in Linux.
+    python pip should also be correctly installed. You could use "python3 -m pip -v" to check in Linux.
     
     * Note: we don't support virtual environment in current releases.
 
 * __Install NNI through pip__
 
-      python3 -m pip install -v --user git+https://github.com/Microsoft/nni.git@v0.2
-      source ~/.bashrc
+      python3 -m pip install --user --upgrade nni
 
 * __Install NNI through source code__
    
-      git clone -b v0.2 https://github.com/Microsoft/nni.git
+      git clone -b v0.3.4 https://github.com/Microsoft/nni.git
       cd nni
-      chmod +x install.sh
       source install.sh
 
 ## **Quick start: run a customized experiment**
@@ -38,7 +36,7 @@ An experiment is to run multiple trial jobs, each trial job tries a configuratio
 
 This command will be filled in the yaml configure file below. Please refer to [here]() for how to write your own trial.
 
-**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](CustomizedTuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
+**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](howto_2_CustomizedTuner.md), but for simplicity, here we choose a tuner provided by NNI as below:
 
       tuner:
         builtinTunerName: TPE

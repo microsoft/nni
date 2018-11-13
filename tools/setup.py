@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name = 'nnictl',
-    version = '0.2.0',
+    version = '0.3.4',
     packages = setuptools.find_packages(exclude=['*test*']),
 
     python_requires = '>=3.5',
@@ -12,8 +12,7 @@ setuptools.setup(
         'psutil',
         'astor',
         'schema',
-        'pyhdfs',
-        'paramiko'
+        'pyhdfs'
     ],
 
     author = 'Microsoft NNI Team',
@@ -21,4 +20,9 @@ setuptools.setup(
     description = 'NNI control for Neural Network Intelligence project',
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
+    entry_points = {
+        'console_scripts' : [
+            'nnictl = nni_cmd.nnictl:parse_args'
+        ]
+    }
 )

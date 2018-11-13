@@ -180,13 +180,13 @@ def main(params):
     test_acc = 0.0
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        batch_num = nni.choice(50, 250, 500, name='batch_num')
-        for i in range(batch_num):
-            batch = mnist.train.next_batch(batch_num)
-            dropout_rate = nni.choice(1, 5, name='dropout_rate')
+        batch_size = nni.choice(1, 4, 8, 16, 32, name='batch_size')
+        for i in range(2000):
+            batch = mnist.train.next_batch(batch_size)
+            dropout_rate = nni.choice(0.5, 0.9, name='dropout_rate')
             mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
                                                     mnist_network.labels: batch[1],
-                                                    mnist_network.keep_prob: dropout_rate}
+                                                    mnist_network.keep_prob: 1 - dropout_rate}
                                         )
 
             if i % 100 == 0:
@@ -223,6 +223,7 @@ def generate_defualt_params():
 
 if __name__ == '__main__':
     try:
+        nni.get_next_parameter()
         main(generate_defualt_params())
     except Exception as exception:
         logger.exception(exception)

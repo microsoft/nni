@@ -147,6 +147,7 @@ export class MockedNNIManager extends Manager {
             execDuration: 0,
             startTime: Date.now(),
             endTime: Date.now(),
+            maxSequenceId: 0,
             revision: 0
         };
 
@@ -158,14 +159,28 @@ export class MockedNNIManager extends Manager {
             status: 'SUCCEEDED',
             startTime: Date.now(),
             endTime: Date.now(),
-            finalMetricData: 'lr: 0.01, val accuracy: 0.89, batch size: 256'
+            finalMetricData: {
+                timestamp: 0,
+                trialJobId: '3456',
+                parameterId: '123',
+                type: 'FINAL',
+                sequence: 0,
+                data: '0.2'
+            }
         };
         const job2: TrialJobInfo = {
             id: '3456',
             status: 'FAILED',
             startTime: Date.now(),
             endTime: Date.now(),
-            finalMetricData: ''
+            finalMetricData: {
+                timestamp: 0,
+                trialJobId: '3456',
+                parameterId: '123',
+                type: 'FINAL',
+                sequence: 0,
+                data: '0.2'
+            }
         };
 
         return Promise.resolve([job1, job2]);
