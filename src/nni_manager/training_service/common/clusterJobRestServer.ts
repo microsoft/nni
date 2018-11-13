@@ -32,9 +32,6 @@ import { RestServer } from '../../common/restServer'
  */
 @component.Singleton
 export abstract class ClusterJobRestServer extends RestServer{
-    /** NNI main rest service default port */
-    private static readonly DEFAULT_PORT: number = 51189;
-
     private readonly API_ROOT_URL: string = '/api/v1/nni-pai';
 
     private readonly expId: string = getExperimentId();
