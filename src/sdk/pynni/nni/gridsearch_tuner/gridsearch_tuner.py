@@ -18,13 +18,9 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 '''
-batch_tuner.py including:
-    class BatchTuner
+gridsearch_tuner.py including:
+    class GridSearchTuner
 '''
-
-import copy
-from enum import Enum, unique
-import random
 
 import numpy as np
 
