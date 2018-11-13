@@ -68,8 +68,8 @@ RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 #
 #PyTorch 
 #
-RUN python3 -m pip --no-cache-dir install http://download.pytorch.org/whl/cu90/torch-0.4.1-cp35-cp35m-linux_x86_64.whl
-RUN python3 -m pip install torchvision
+RUN python3 -m pip --no-cache-dir install torch==0.4.1
+RUN python3 -m pip install torchvision==0.2.1
 
 #
 #sklearn 0.20.0
