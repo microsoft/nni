@@ -41,7 +41,7 @@ class GridSearchTuner(Tuner):
     GridSearchTuner will search all the possible configures that the user define in the searchSpace.
     '''
     
-    def __init__(self):
+    def __init__(self, optimize_mode):
         self.count = -1
         self.expanded_search_space = []
 
@@ -87,7 +87,7 @@ class GridSearchTuner(Tuner):
             if param_type == CHOICE:
                ss[param] = param_value
             elif param_type[0] == 'q':
-                ss[param] = parse_parameter(param_type, param_value)
+                ss[param] = self.parse_parameter(param_type, param_value)
             else:
                 raise RuntimeError("GridSearchTuner only supprt the 'choice' type or other types beginnning with the letter 'q'")
 
