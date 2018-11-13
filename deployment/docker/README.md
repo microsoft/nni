@@ -9,6 +9,8 @@ numpy 1.14.3,scipy 1.1.0
 TensorFlow 1.5.0
 PyTorch (Stable)
 Keras 2.1.6
+PyTorch 0.4.1
+scikit-learn 0.20.0
 NNI v0.3
 ```
 You can take this Dockerfile as a reference for your own customized Dockerfile. 
