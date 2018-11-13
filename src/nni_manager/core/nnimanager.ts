@@ -355,6 +355,9 @@ class NNIManager implements Manager {
 
     private async requestTrialJobsStatus(): Promise<number> {
         let finishedTrialJobNum: number = 0;
+        if (this.dispatcher === undefined) {
+            throw new Error('Error: tuner has not been setup');
+        }
         for (const trialJobId of Array.from(this.trialJobs.keys())) {
             const trialJobDetail: TrialJobDetail = await this.trainingService.getTrialJob(trialJobId);
             const oldTrialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
@@ -367,6 +370,7 @@ class NNIManager implements Manager {
                 case 'USER_CANCELED':
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
+                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: trialJobDetail.status}));
                     break;
                 case 'FAILED':
                 case 'SYS_CANCELED':
@@ -374,6 +378,7 @@ class NNIManager implements Manager {
                     // TO DO: push this job to queue for retry
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
+                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: trialJobDetail.status}));
                     break;
                 case 'WAITING':
                 case 'RUNNING':
