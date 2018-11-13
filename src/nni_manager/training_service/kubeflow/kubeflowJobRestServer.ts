@@ -25,7 +25,7 @@ import { KubeflowTrainingService } from './kubeflowTrainingService';
 import { ClusterJobRestServer } from '../common/clusterJobRestServer'
 
 /**
- * PAI Training service Rest server, provides rest API to support pai job metrics update
+ * Kubeflow Training service Rest server, provides rest API to support kubeflow job metrics update
  * 
  */
 @component.Singleton

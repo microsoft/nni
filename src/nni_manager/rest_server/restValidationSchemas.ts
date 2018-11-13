@@ -46,6 +46,14 @@ export namespace ValidationSchemas {
                 userName: joi.string().min(1).required(),
                 passWord: joi.string().min(1).required(),
                 host: joi.string().min(1).required()
+            }),
+            kubeflow_config: joi.object({
+                operator: joi.string().min(1).required(),
+                nfs: joi.object({
+                    server: joi.string().min(1).required(),
+                    path: joi.string().min(1).required()
+                }).required(),
+                kubernetesServer: joi.string().min(1).required()
             })
         }
     };

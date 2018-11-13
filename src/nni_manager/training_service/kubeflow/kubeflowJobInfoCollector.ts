@@ -20,26 +20,22 @@
 'use strict';
 
 import * as cpp from 'child-process-promise';
-import { EventEmitter } from 'events';
-import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from '../../common/log';
-import { NNIError, NNIErrorNames } from '../../common/errors';
 import { KubeflowTrialJobDetail, KubeflowTFJobType} from './kubeflowData';
+import { NNIError, NNIErrorNames } from '../../common/errors';
 import { TrialJobStatus } from '../../common/trainingService';
 
 /**
- * Collector PAI jobs info from PAI cluster, and update pai job status locally
+ * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally
  */
 export class KubeflowJobInfoCollector {
     private readonly trialJobsMap : Map<string, KubeflowTrialJobDetail>;
     private readonly log: Logger = getLogger();
-    private readonly statusesNeedToCheck : TrialJobStatus[];
-    private readonly finalStatuses : TrialJobStatus[];
+    private readonly statusesNeedToCheck : TrialJobStatus[];    
 
     constructor(jobMap: Map<string, KubeflowTrialJobDetail>) {
         this.trialJobsMap = jobMap;
         this.statusesNeedToCheck = ['RUNNING', 'UNKNOWN', 'WAITING'];
-        this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED'];
     }
 
     public async retrieveTrialStatus() : Promise<void> {
@@ -59,17 +55,21 @@ export class KubeflowJobInfoCollector {
             return Promise.resolve();
         }
 
-        const result = await cpp.exec(`kubectl get tfjobs ${kubeflowTrialJob.kubeflowJobName} -o json`);
-        if(!result.stderr) {
-            this.log.error(`Get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed`);
-            kubeflowTrialJob.status = 'UNKNOWN';
+        let result : cpp.childProcessPromise.Result;
+        try {
+            result = await cpp.exec(`kubectl get tfjobs ${kubeflowTrialJob.kubeflowJobName} -o json`);
+            if(!result.stderr) {
+                this.log.error(`Get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed`);
+                kubeflowTrialJob.status = 'UNKNOWN';
+            }
+        } catch(error) {
+            this.log.error(`kubectl get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed, error is ${error}`);
+            return Promise.resolve();
         }
-        console.log(`Kubectl get tfjobs info is ${result.stdout}`);
-        
+
         const kubeflowJobInfo = JSON.parse(result.stdout);
         if(kubeflowJobInfo.status && kubeflowJobInfo.status.conditions) {
             const latestCondition = kubeflowJobInfo.status.conditions[kubeflowJobInfo.status.conditions.length - 1];
-            console.log(`tfjobs ${kubeflowTrialJob.kubeflowJobName} latest status is ${latestCondition.type}`);
             const tfJobType : KubeflowTFJobType = <KubeflowTFJobType>latestCondition.type;
             switch(tfJobType) {
                 case 'Created':

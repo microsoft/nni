@@ -20,17 +20,15 @@
 'use strict'
 
 import * as component from '../../common/component';
-import * as cp from 'child_process';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
 
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { Deferred } from 'ts-deferred';
 import { EventEmitter } from 'events';
 import { getExperimentId } from '../../common/experimentStartupInfo';
-import { MethodNotImplementedError } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
+import { MethodNotImplementedError } from '../../common/errors';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
@@ -62,7 +60,7 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowTrialConfig?: KubeflowTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
 
-    constructor() {
+    constructor() {        
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, KubeflowTrialJobDetail>();
@@ -79,8 +77,8 @@ class KubeflowTrainingService implements TrainingService {
         this.log.info(`Kubeflow Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
             // collect metrics by calling 'kubectl get' command on Kubeflow jobs 
-            await this.kubeflowJobInfoCollector.retrieveTrialStatus();
             await delay(3000);
+            await this.kubeflowJobInfoCollector.retrieveTrialStatus();            
         }
     }
 
@@ -141,10 +139,12 @@ class KubeflowTrainingService implements TrainingService {
             kubeflowJobName,
             trialSequenceId
             );
-        this.trialJobsMap.set(trialJobId, trialJobDetail);
-
+        
         // Create kubeflow training jobs
         await cpp.exec(`kubectl create -f ${kubeflowJobYamlPath}`);
+
+        // Set trial job detail until kubectl create resource successfully 
+        this.trialJobsMap.set(trialJobId, trialJobDetail);
 
         return Promise.resolve(trialJobDetail);
     }
@@ -162,13 +162,13 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
 
-        const paiTrialJob: TrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        const kubeflowTrialJob: TrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
-        if (!paiTrialJob) {
+        if (!kubeflowTrialJob) {
             return Promise.reject(`trial job ${trialJobId} not found`)
         }        
 
-        return Promise.resolve(paiTrialJob);
+        return Promise.resolve(kubeflowTrialJob);
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void) {
@@ -195,10 +195,11 @@ class KubeflowTrainingService implements TrainingService {
                 console.log(`nfs path is ${this.kubeflowClusterConfig.nfs.path}`);
                 //TODO: check NFS mount point here? 
                 break;
+
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 if (!this.kubeflowClusterConfig){
                     this.log.error('kubeflow cluster config is not initialized');
-                    return Promise.reject(new Error('pai cluster config is not initialized'));                    
+                    return Promise.reject(new Error('kubeflow cluster config is not initialized'));                    
                 }
 
                 this.kubeflowTrialConfig = <KubeflowTrialConfig>JSON.parse(value);
