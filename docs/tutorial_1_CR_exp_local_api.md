@@ -101,7 +101,7 @@ authorName: your_name
 experimentName: auto_mnist
 
 # how many trials could be concurrently running
-trialConcurrency: 2
+trialConcurrency: 1
 
 # maximum experiment running duration
 maxExecDuration: 3h
@@ -133,4 +133,29 @@ With all these steps done, we can run the experiment with the following command:
 You can refer to [here](NNICTLDOC.md) for more usage guide of *nnictl* command line tool.
 
 ## View experiment results
-The experiment has been running now, NNI provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features. The WebUI is opened by default by `nnictl create`.
+The experiment has been running now. Oher than *nnictl*, NNI also provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features.
+
+## Using multiple local GPUs to speed up search
+The following steps assume that you have 4 NVIDIA GPUs installed at local and [tensorflow with GPU support](https://www.tensorflow.org/install/gpu). The demo enables 4 concurrent trail jobs and each trail job uses 1 GPU. 
+
+**Prepare configure file**: NNI provides a demo configuration file for the setting above, `cat ~/nni/examples/trials/mnist-annotation/config_gpu.yml` to see it. The trailConcurrency and gpuNum are different from the basic configure file:
+
+```
+...
+
+# how many trials could be concurrently running
+trialConcurrency: 4
+
+...
+
+trial:
+  command: python mnist.py
+  codeDir: ~/nni/examples/trials/mnist-annotation
+  gpuNum: 1
+``` 
+
+We can run the experiment with the following command:
+
+      nnictl create --config ~/nni/examples/trials/mnist-annotation/config_gpu.yml
+
+You can use *nnictl* command line tool or WebUI to trace the training progress. *nvidia_smi* command line tool can also help you to monitor the GPU usage during training.
