@@ -20,14 +20,12 @@ def switch(dispatch_type, dispatch_name):
     '''Change dispatch in config.yml'''
     config_path = 'sdk_test/local.yml'
     experiment_config = get_yml_content(config_path)
-    print(dispatch_type.lower())
     experiment_config[dispatch_type.lower()] = {
         'builtin' + dispatch_type + 'Name': dispatch_name,
         'classArgs': {
             'optimize_mode': 'maximize'
         }
     }
-    print(experiment_config)
     dump_yml_content(config_path, experiment_config)
 
 def test_builtin_dispatcher(dispatch_type, dispatch_name):
