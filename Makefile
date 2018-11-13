@@ -3,10 +3,23 @@
 PIP_INSTALL := python3 -m pip install
 PIP_UNINSTALL := python3 -m pip uninstall
 
+# detect OS
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+	OS_SPEC := linux
+	ESC_CMD := \e
+else ifeq ($(UNAME_S), Darwin)
+	OS_SPEC := darwin
+	ESC_CMD := \x1B
+else
+	$(error platform $(UNAME_S) not supported)
+endif
+
+
 ## Colorful output
-_INFO := $(shell echo -e '\e[1;36m')
-_WARNING := $(shell echo -e '\e[1;33m')
-_END := $(shell echo -e '\e[0m')
+_INFO := $(shell echo -e '$(ESC_CMD)[1;36m')
+_WARNING := $(shell echo -e '$(ESC_CMD)[1;33m')
+_END := $(shell echo -e '$(ESC_CMD)[0m')
 
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
@@ -18,8 +31,12 @@ else  # is normal user
     ifndef VIRTUAL_ENV
         PIP_MODE ?= --user
     endif
-    BASH_COMP_SCRIPT ?= ${HOME}/.bash_completion.d/nnictl
+    BASH_COMP_PREFIX ?= ${HOME}/.bash_completion.d
 endif
+BASH_COMP_SCRIPT := $(BASH_COMP_PREFIX)/nnictl
+
+NNI_INSTALL_PATH ?= $(INSTALL_PREFIX)/nni
+NNI_TMP_PATH ?= /tmp
 
 BIN_FOLDER ?= $(ROOT_FOLDER)/bin
 NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
