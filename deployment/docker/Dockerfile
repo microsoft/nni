@@ -61,6 +61,11 @@ RUN python3 -m pip install nni
 RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
 
 #
+#PyTorch
+#
+RUN python3 -m pip --no-cache-dir install torch torchvision
+
+#
 #Keras 2.1.6
 #
 RUN python3 -m pip --no-cache-dir install Keras==2.1.6
