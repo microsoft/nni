@@ -46,6 +46,9 @@ Note that SMAC only supports a subset of the types in [search space spec](../../
 
 Batch allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done.
 
+**Gridsearch**
+
+Gridsearch performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file
 
  ## 2. How to use the tuner algorithm in NNI?
 
