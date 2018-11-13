@@ -7,19 +7,17 @@ PIP_UNINSTALL := python3 -m pip uninstall
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
 	OS_SPEC := linux
-	ESC_CMD := \e
+	## Colorful output
+	_INFO := $(shell echo -e '$(ESC_CMD)[1;36m')
+	_WARNING := $(shell echo -e '$(ESC_CMD)[1;33m')
+	_END := $(shell echo -e '$(ESC_CMD)[0m')
 else ifeq ($(UNAME_S), Darwin)
 	OS_SPEC := darwin
-	ESC_CMD := \x1B
 else
 	$(error platform $(UNAME_S) not supported)
 endif
 
 
-## Colorful output
-_INFO := $(shell echo -e '$(ESC_CMD)[1;36m')
-_WARNING := $(shell echo -e '$(ESC_CMD)[1;33m')
-_END := $(shell echo -e '$(ESC_CMD)[0m')
 
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
@@ -42,8 +40,8 @@ BIN_FOLDER ?= $(ROOT_FOLDER)/bin
 NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
 
 ## Dependency information
-NNI_NODE_TARBALL ?= /tmp/nni-node-linux-x64.tar.xz
-NNI_NODE_FOLDER = /tmp/nni-node-linux-x64
+NNI_NODE_TARBALL ?= /tmp/nni-node-$(OS_SPEC)-x64.tar.xz
+NNI_NODE_FOLDER = /tmp/nni-node-$(OS_SPEC)-x64
 NNI_NODE ?= $(BIN_FOLDER)/node
 NNI_YARN_TARBALL ?= /tmp/nni-yarn.tar.gz
 NNI_YARN_FOLDER ?= /tmp/nni-yarn
