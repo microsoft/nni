@@ -44,3 +44,36 @@
 .main{
     margin: 9px 0;
 }
+
+.profile{
+    padding: 0 20px;
+    pre{
+        overflow: inherit;
+    }
+}
+
+.exbgcolor {
+    background: #b3b3b3;
+
+    .download{
+        height: 30px;
+        border: 1px solid #fff;
+        border-radius: 0;
+        margin-top: 4px;
+        background-color: #0071BC;
+
+        span{
+            font-family: 'Segoe';
+            font-size: 14px;
+        }
+        
+        img{
+            height: 14px;
+            margin-left: 10px;
+            margin-top: -6px;
+        }
+    }
+}
+.exbgcolor .download:hover{
+    border: 1px solid #fff;
+}

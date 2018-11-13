@@ -1,13 +1,12 @@
 authorName: default
 experimentName: example_mnist
-trialConcurrency: 1
+trialConcurrency: 4
 maxExecDuration: 1h
-maxTrialNum: 20
-#choice: local, remote
+maxTrialNum: 10
+#choice: local, remote, pai
 trainingServicePlatform: local
-searchSpacePath: search_space.json
 #choice: true, false
-useAnnotation: false
+useAnnotation: true
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner
   #SMAC (SMAC should be installed through nnictl)
@@ -15,13 +14,7 @@ tuner:
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
-assessor:
-  #choice: Medianstop
-  builtinAssessorName: Medianstop
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
 trial:
   command: python3 mnist.py
   codeDir: .
-  gpuNum: 0
+  gpuNum: 1

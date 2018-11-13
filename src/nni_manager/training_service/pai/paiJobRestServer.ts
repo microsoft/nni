@@ -19,9 +19,11 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import { Request, Response, Router } from 'express';
 import * as bodyParser from 'body-parser';
 import * as component from '../../common/component';
+import { getBasePort } from '../../common/experimentStartupInfo';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { Inject } from 'typescript-ioc';
 import { PAITrainingService } from './paiTrainingService';
@@ -48,8 +50,18 @@ export class PAIJobRestServer extends RestServer{
      */
     constructor() {
         super();
-        this.port = PAIJobRestServer.DEFAULT_PORT;
+        const basePort: number = getBasePort();
+        assert(basePort && basePort > 1024);
+        
+        this.port = basePort + 1; // PAIJobRestServer.DEFAULT_PORT;
         this.paiTrainingService = component.get(PAITrainingService);
+    }
+
+    public get paiRestServerPort(): number {
+        if(!this.port) {
+            throw new Error('PAI Rest server port is undefined');
+        }
+        return this.port;
     }
 
     /**

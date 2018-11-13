@@ -53,7 +53,7 @@ def check_experiment_id(args):
             experiment_information = ""
             for key in running_experiment_list:
                 experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+                experiment_dict[key]['port'], experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         elif not running_experiment_list:
@@ -96,7 +96,7 @@ def parse_ids(args):
             experiment_information = ""
             for key in running_experiment_list:
                 experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+                experiment_dict[key]['port'], experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
@@ -184,7 +184,10 @@ def stop_experiment(args):
             if running:
                 response = rest_delete(experiment_url(rest_port), 20)
                 if not response or not check_response(response):
-                    print_error('Stop experiment failed!')
+                    if response:
+                        print_error(response.text)
+                    else:
+                        print_error('No response from restful server!')
                     stop_rest_result = False
             #sleep to wait rest handler done
             time.sleep(3)
@@ -365,7 +368,7 @@ def experiment_list(args):
             print_warning('There is no experiment running...\nYou can use \'nnictl experiment list all\' to list all stopped experiments!')
     experiment_information = ""
     for key in experiment_id_list:
-        experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
+        experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], experiment_dict[key]['port'],\
         experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
 
