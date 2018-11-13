@@ -11,7 +11,7 @@ GREEN = '\33[32m'
 RED = '\33[31m'
 CLEAR = '\33[0m'
 
-TUNER_LIST = ['BatchTuner']
+TUNER_LIST = ['BatchTuner', 'TPE', 'Random', 'Anneal', 'Evolution']
 ASSESSOR_LIST = ['Medianstop']
 EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
 
