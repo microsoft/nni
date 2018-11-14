@@ -36,7 +36,7 @@ class GridSearchTuner(Tuner):
     '''
     GridSearchTuner will search all the possible configures that the user define in the searchSpace.
     The only acceptable types of search space are 'quniform', 'qloguniform' and 'choice'
-    
+
     Type 'choice' will select one of the options. Note that it can also be nested.
 
     Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range
@@ -47,7 +47,7 @@ class GridSearchTuner(Tuner):
     Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log10(low), log10(high)]
     and sample and then change the sampled value back.
     '''
-    
+
     def __init__(self, optimize_mode):
         self.count = -1
         self.expanded_search_space = []
@@ -95,7 +95,6 @@ class GridSearchTuner(Tuner):
         return [float(low + interval * i) for i in range(q)]
 
     def parse_parameter(self, param_type, param_value):
-        parse = lambda para: [para[3]]
         if param_type == 'quniform':
             return self.parse(param_value)
         elif param_type == 'qloguniform':
@@ -111,8 +110,8 @@ class GridSearchTuner(Tuner):
         '''
         if len(para) == 1:
             for key, values in para.items():
-                return list(map(lambda v:{key:v}, values))
-        
+                return list(map(lambda v: {key: v}, values))
+
         key = list(para)[0]
         values = para.pop(key)
         rest_para = self.expand_parameters(para)
@@ -127,10 +126,10 @@ class GridSearchTuner(Tuner):
         '''
         Check if the search space is valid and expand it: only contains 'choice' type or other types beginnning with the letter 'q'
         '''
-        self.expand_parameters = self.json2paramater(search_space)
+        self.expanded_search_space = self.json2paramater(search_space)
 
     def generate_parameters(self, parameter_id):
-        self.count +=1
+        self.count += 1
         if self.count > len(self.expanded_search_space)-1:
             raise nni.NoMoreTrialError('no more parameters now.')
         return self.expanded_search_space[self.count]
