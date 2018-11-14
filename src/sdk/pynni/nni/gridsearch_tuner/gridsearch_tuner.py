@@ -41,23 +41,63 @@ class GridSearchTuner(Tuner):
         self.count = -1
         self.expanded_search_space = []
 
+    def json2paramater(self, ss_spec):
+        '''
+        Randomly generate values for hyperparameters from hyperparameter space i.e., x.
+        ss_spec: hyperparameter space
+        '''
+        if isinstance(ss_spec, dict):
+            if '_type' in ss_spec.keys():
+                _type = ss_spec['_type']
+                _value = ss_spec['_value']
+                chosen_params = list()
+                if _type == 'choice':
+                    for value in _value:
+                        choice = self.json2paramater(value)
+                        if isinstance(choice, list):
+                            chosen_params.extend(choice)
+                        else:
+                            chosen_params.append(choice)
+                else:
+                    chosen_params = self.parse_parameter(_type, _value)
+            else:
+                chosen_params = dict()
+                for key in ss_spec.keys():
+                    chosen_params[key] = self.json2paramater(ss_spec[key])
+                return self.expand_parameters(chosen_params)
+        elif isinstance(ss_spec, list):
+            chosen_params = list()
+            for subspec in ss_spec[1:]:
+                choice = self.json2paramater(subspec)
+                if isinstance(choice, list):
+                    chosen_params.extend(choice)
+                else:
+                    chosen_params.append(choice)
+            chosen_params = list(map(lambda v: {ss_spec[0]: v}, chosen_params))
+        else:
+            chosen_params = copy.deepcopy(ss_spec)
+        return chosen_params
+
     def parse(self, param_value):
-        q = param_value[2]
-        func = lambda x:int(round(x/q))
-        lower, upper = func(param_value[0]), func(param_value[1])
-        return [float(i*q) for i in range(lower, upper+1)]
+        low, high, q = param_value[0], param_value[1], max(2, param_value[2])
+        interval = (high - low) / (q - 1)
+        return [float(low + interval * i) for i in range(q)]
 
     def parse_parameter(self, param_type, param_value):
+        parse = lambda para: [para[3]]
         if param_type in ['quniform', 'qnormal']:
-            return self.parse(param_value, lambda v:v)
-        elif param_type in ['qloguniform', 'qlognormal']:
-            param_value[0] = np.exp(param_value[0])
-            param_value[1] = np.exp(param_value[1])
             return self.parse(param_value)
+        elif param_type in ['qloguniform', 'qlognormal']:
+            param_value[:2] = np.log10(param_value[:2])
+            return list(np.power(10, self.parse(param_value)))
         else:
             raise RuntimeError("Not supported type: %s" % param_type)
 
     def expand_parameters(self, para):
+        '''
+        para: {key1: [v11, v12, ...], key2: [v21, v22, ...], ...}
+        return: {{key1: v11, key2: v21, ...}, {key1: v11, key2: v22, ...}, ...}
+        '''
         if len(para) == 1:
             for key, values in para.items():
                 return list(map(lambda v:{key:v}, values))
@@ -76,18 +116,7 @@ class GridSearchTuner(Tuner):
         '''
         Check if the search space is valid and expand it: only contains 'choice' type or other types beginnning with the letter 'q'
         '''
-        ss = dict()
-        for param in search_space:
-            param_type = search_space[param][TYPE]
-            param_value = search_space[param][VALUE]
-            if param_type == CHOICE:
-               ss[param] = param_value
-            elif param_type[0] == 'q':
-                ss[param] = self.parse_parameter(param_type, param_value)
-            else:
-                raise RuntimeError("GridSearchTuner only supprt the 'choice' type or other types beginnning with the letter 'q'")
-
-        self.expanded_search_space = self.expand_parameters(ss)
+        self.expand_parameters = self.json2paramater(search_space)
 
     def generate_parameters(self, parameter_id):
         self.count +=1
