@@ -110,10 +110,13 @@ mkDirP(getLogDir()).then(async () => {
 });
 
 process.on('SIGTERM', async () => {
-    const ds: DataStore = component.get(DataStore);
-    await ds.close();
-    const restServer: NNIRestServer = component.get(NNIRestServer);
-    await restServer.stop();
-    const log: Logger = getLogger();
-    log.close();
+    try{
+        const nniManager: Manager = component.get(Manager);
+        await nniManager.stopExperiment();
+        const ds: DataStore = component.get(DataStore);
+        await ds.close();
+        process.exit(0);
+    }catch{
+        process.exit(1);
+    }
 })
