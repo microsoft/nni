@@ -429,7 +429,7 @@ class Para extends React.Component<{}, ParaState> {
                             </Select>
                             <Button
                                 type="primary"
-                                className="changeBtu"
+                                className="changeBtu tableButton"
                                 onClick={this.swapBtn}
                             >
                                 Confirm
