@@ -43,7 +43,7 @@ class GridSearchTuner(Tuner):
 
     def json2paramater(self, ss_spec):
         '''
-        Randomly generate values for hyperparameters from hyperparameter space i.e., x.
+        generate all possible config for hyperparameters from hyperparameter space.
         ss_spec: hyperparameter space
         '''
         if isinstance(ss_spec, dict):
