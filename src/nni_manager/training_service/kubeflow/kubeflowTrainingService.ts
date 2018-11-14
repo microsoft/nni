@@ -166,7 +166,7 @@ class KubeflowTrainingService implements TrainingService {
 
         //TODO: refactor
         await cpp.exec(`mkdir -p ${trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
-        await cpp.exec(`cp -rT ${trialLocalTempFolder}/* ${trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
+        await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
 
         const trialJobDetail: KubeflowTrialJobDetail = new KubeflowTrialJobDetail(
             trialJobId,
