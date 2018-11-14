@@ -106,7 +106,14 @@ class KubeflowTrainingService implements TrainingService {
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
         await cpp.exec(`cp -r ${this.kubeflowTrialConfig.codeDir} ${trialLocalTempFolder}`);
-        
+        const trialLocalNFSTempFolder: string = path.join(getExperimentRootDir(), 'trials-nfs-tmp', trialJobId);
+        await cpp.exec(`mkdir -p ${trialLocalNFSTempFolder}`);
+        try {
+            await cpp.exec(`sudo mount ${this.kubeflowClusterConfig.nfs.server}:${this.kubeflowClusterConfig.nfs.path} ${trialLocalNFSTempFolder}`);
+        } catch(error) {
+            this.log.error(`Mount NFS ${this.kubeflowClusterConfig.nfs.server}:${this.kubeflowClusterConfig.nfs.path} to ${trialLocalNFSTempFolder} failed, error is ${error}`);
+        }
+
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
@@ -156,6 +163,10 @@ class KubeflowTrainingService implements TrainingService {
             this.generateKubeflowJobConfig(trialJobId, kubeflowJobName, podResources),
             'utf-8'
         );
+
+        //TODO: refactor
+        await cpp.exec(`mkdir -p ${trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
+        await cpp.exec(`cp -rT ${trialLocalTempFolder}/* ${trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
 
         const trialJobDetail: KubeflowTrialJobDetail = new KubeflowTrialJobDetail(
             trialJobId,
