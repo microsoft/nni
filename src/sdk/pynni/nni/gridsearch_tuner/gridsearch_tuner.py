@@ -35,6 +35,17 @@ VALUE = '_value'
 class GridSearchTuner(Tuner):
     '''
     GridSearchTuner will search all the possible configures that the user define in the searchSpace.
+    The only acceptable types of search space are 'quniform', 'qloguniform' and 'choice'
+    
+    Type 'choice' will select one of the options. Note that it can also be nested.
+
+    Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range
+    and 'q' specifies the number of values that will be sampled evenly.
+    It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q
+    larger that the value in front of it.
+
+    Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log10(low), log10(high)]
+    and sample and then change the sampled value back.
     '''
     
     def __init__(self, optimize_mode):
@@ -85,9 +96,9 @@ class GridSearchTuner(Tuner):
 
     def parse_parameter(self, param_type, param_value):
         parse = lambda para: [para[3]]
-        if param_type in ['quniform', 'qnormal']:
+        if param_type == 'quniform':
             return self.parse(param_value)
-        elif param_type in ['qloguniform', 'qlognormal']:
+        elif param_type == 'qloguniform':
             param_value[:2] = np.log10(param_value[:2])
             return list(np.power(10, self.parse(param_value)))
         else:
