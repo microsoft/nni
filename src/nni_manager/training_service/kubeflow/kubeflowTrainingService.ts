@@ -29,14 +29,15 @@ import { EventEmitter } from 'events';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
+import { String } from 'typescript-string-operations';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { KubeflowClusterConfig, KubeflowTrialConfig } from './kubeflowConfig';
-import { KubeflowTrialJobDetail } from './kubeflowData';
+import { KubeflowTrialJobDetail, KUBEFLOW_RUN_SHELL_FORMAT } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 
@@ -59,6 +60,7 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowClusterConfig?: KubeflowClusterConfig;
     private kubeflowTrialConfig?: KubeflowTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
+    private kubeflowRestServerPort?: number;
 
     constructor() {        
         this.log = getLogger();
@@ -91,6 +93,11 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
+        if(!this.kubeflowRestServerPort) {
+            const restServer: KubeflowJobRestServer = component.get(KubeflowJobRestServer);
+            this.kubeflowRestServerPort = restServer.clusterRestServerPort;
+        }
+
         const trialJobId: string = uniqueString(5);
         const trialSequenceId: number = this.generateSequenceId();
         //TODO: use NFS working folder instead        
@@ -98,12 +105,30 @@ class KubeflowTrainingService implements TrainingService {
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
-        //await cpp.exec(`cp -r ${this.paiTrialConfig.codeDir} ${trialLocalTempFolder}`);
-        await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
-    
+        await cpp.exec(`cp -r ${this.kubeflowTrialConfig.codeDir} ${trialLocalTempFolder}`);
+        
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
+
+        const kubeflowRunScriptContent: string = String.Format(
+            KUBEFLOW_RUN_SHELL_FORMAT,
+            `$PWD/nni/${trialJobId}`,
+            `$PWD/nni/${trialJobId}`,
+            trialJobId,
+            getExperimentId(),
+            //TODO: Remove hard-coded /tmp/nni?
+            `/tmp/nni/${trialJobId}`,
+            this.kubeflowTrialConfig.command,
+            getIPV4Address(),
+            this.kubeflowRestServerPort
+            );            
+
+        //create tmp trial working folder locally.
+        await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
+
+        // Write file content ( run.sh and parameter.cfg ) to local tmp files
+        await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run.sh'), kubeflowRunScriptContent, { encoding: 'utf8' });
 
         // Write file content ( parameter.cfg ) to local tmp folders
         const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
@@ -111,22 +136,24 @@ class KubeflowTrainingService implements TrainingService {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
                             trialForm.hyperParameters.value, { encoding: 'utf8' });
             await fs.promises.writeFile(path.join(trialLocalTempFolder, '.nni', 'sequence_id'), trialSequenceId.toString(), { encoding: 'utf8' });
-        }
+        }               
 
         const kubeflowJobYamlPath = path.join(trialLocalTempFolder, `kubeflow-job-${trialJobId}.yaml`);
         console.log(`kubeflow yaml config path is ${kubeflowJobYamlPath}`);
         const kubeflowJobName = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
         const podResources : any = {};
-        podResources.limits = {
+        podResources.requests = {
             'memory': `${this.kubeflowTrialConfig.memoryMB}Mi`,
             'cpu': `${this.kubeflowTrialConfig.cpuNum}`,
             'nvidia.com/gpu': `${this.kubeflowTrialConfig.gpuNum}`
         }
 
+        podResources.limits = Object.assign({}, podResources.requests);
+
         // Generate tfjobs resource yaml file for K8S
         yaml.write(
             kubeflowJobYamlPath,
-            this.generateKubeflowJobConfig(kubeflowJobName, podResources),
+            this.generateKubeflowJobConfig(trialJobId, kubeflowJobName, podResources),
             'utf-8'
         );
 
@@ -227,7 +254,7 @@ class KubeflowTrainingService implements TrainingService {
         return this.metricsEmitter;
     }
 
-    private generateKubeflowJobConfig(kubeflowJobName : string, podResources : any) : any {
+    private generateKubeflowJobConfig(trialJobId: string, kubeflowJobName : string, podResources : any) : any {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -261,16 +288,15 @@ class KubeflowTrainingService implements TrainingService {
                                     // Kubeflow tensorflow operator requires that containers' name must be tensorflow
                                     // TODO: change the name based on operator's type
                                     name: 'tensorflow',
-                                    //TODO: use image specified in user's trial config file
                                     image: this.kubeflowTrialConfig.image,
-                                    args: ["sh", "run.sh"],
+                                    //TODO: change to real code dir
+                                    args: ["sh", "/tmp/nni/nuDEP/run.sh"],                                    
                                     volumeMounts: [{
                                         name: 'nni-nfs-vol',
                                         mountPath: '/tmp/nni'
                                     }],
-                                    //TODO: Add GPU resources
-                                    resources: podResources,
-                                    workingDir: '/tmp/nni/nuDEP'
+                                    resources: podResources//,
+                                    //workingDir: '/tmp/nni/nuDEP'
                                 }],
                                 restartPolicy: 'ExitCode',
                                 volumes: [{
