@@ -106,7 +106,7 @@ class KubeflowTrainingService implements TrainingService {
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
         await cpp.exec(`cp -r ${this.kubeflowTrialConfig.codeDir} ${trialLocalTempFolder}`);
-        const trialLocalNFSTempFolder: string = path.join(getExperimentRootDir(), 'trials-nfs-tmp', trialJobId);
+        const trialLocalNFSTempFolder: string = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
         await cpp.exec(`mkdir -p ${trialLocalNFSTempFolder}`);
         try {
             await cpp.exec(`sudo mount ${this.kubeflowClusterConfig.nfs.server}:${this.kubeflowClusterConfig.nfs.path} ${trialLocalNFSTempFolder}`);
