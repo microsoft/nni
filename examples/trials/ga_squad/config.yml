@@ -8,7 +8,7 @@ trainingServicePlatform: local
 #choice: true, false
 useAnnotation: false
 tuner:
-  codeDir: ../tuners/ga_customer_tuner
+  codeDir: ../../tuners/ga_customer_tuner
   classFileName: customer_tuner.py
   className: CustomerTuner
   classArgs:

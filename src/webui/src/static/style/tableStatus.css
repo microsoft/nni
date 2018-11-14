@@ -1,0 +1,21 @@
+.RUNNING{
+    color: #3c8dbc;
+}
+.FAILED{
+    color: #dd4b39;
+}
+.USER_CANCELED{
+    color:	#FF4500;
+}
+.SUCCEEDED{
+    color: #009245;
+}
+.UNKNOWN{
+    color:	#FF8C00;
+}
+.SYS_CANCELED{
+    color:	red;
+}
+.WAITING{
+    color:	#008B8B;
+}

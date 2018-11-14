@@ -134,10 +134,11 @@ class SMACTuner(Tuner):
         else:
             self.logger.warning('update search space is not supported.')
 
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, value):
         '''
         receive_trial_result
         '''
+        reward = self.extract_scalar_reward(value)
         if self.optimize_mode is OptimizeMode.Maximize:
             reward = -reward
 

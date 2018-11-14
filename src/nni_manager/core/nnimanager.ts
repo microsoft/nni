@@ -26,7 +26,7 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId } from '../common/experimentStartupInfo';
+import { getExperimentId, setInitTrialSequenceId } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
     ExperimentParams, ExperimentProfile, Manager,
@@ -35,7 +35,7 @@ import {
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
-import { delay , getLogDir, getMsgDispatcherCommand} from '../common/utils';
+import { delay, getLogDir, getMsgDispatcherCommand } from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, REPORT_METRIC_DATA,
     REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
@@ -48,7 +48,7 @@ import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 class NNIManager implements Manager {
     private trainingService: TrainingService;
     private dispatcher: IpcInterface | undefined;
-    private currSubmittedTrialNum: number; // need to be recovered
+    private currSubmittedTrialNum: number;  // need to be recovered
     private trialConcurrencyChange: number; // >0: increase, <0: decrease
     private customizedTrials: string[]; // need to be recovered
     private log: Logger;
@@ -58,7 +58,6 @@ class NNIManager implements Manager {
     private status: NNIManagerStatus;
     private waitingTrials: string[];
     private trialJobs: Map<string, TrialJobDetail>;
-    private suspendDuration: number;
 
     constructor() {
         this.currSubmittedTrialNum = 0;
@@ -69,7 +68,6 @@ class NNIManager implements Manager {
         this.dispatcherPid = 0;
         this.waitingTrials = [];
         this.trialJobs = new Map<string, TrialJobDetail>();
-        this.suspendDuration = 0;
 
         this.log = getLogger();
         this.dataStore = component.get(DataStore);
@@ -125,7 +123,7 @@ class NNIManager implements Manager {
         this.log.debug('Setup tuner...');
 
         // Set up multiphase config
-        if(expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
+        if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
@@ -154,6 +152,8 @@ class NNIManager implements Manager {
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         const expParams: ExperimentParams = this.experimentProfile.params;
 
+        setInitTrialSequenceId(this.experimentProfile.maxSequenceId + 1);
+
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
@@ -177,6 +177,11 @@ class NNIManager implements Manager {
             .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
             .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
 
+        if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
+            this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
+            this.experimentProfile.endTime) {
+            delete this.experimentProfile.endTime;
+        }
         this.status.status = 'EXPERIMENT_RUNNING';
 
         // TO DO: update database record for resume event
@@ -212,10 +217,9 @@ class NNIManager implements Manager {
         return this.dataStore.getTrialJobStatistics();
     }
 
-    public stopExperiment(): Promise<void> {
+    public async stopExperiment(): Promise<void> {
         this.status.status = 'STOPPING';
-
-        return Promise.resolve();
+        await this.experimentDoneCleanUp();
     }
 
     public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
@@ -336,31 +340,37 @@ class NNIManager implements Manager {
     }
 
     private async periodicallyUpdateExecDuration(): Promise<void> {
-        const startTime: number = Date.now();
-        const execDuration: number = this.experimentProfile.execDuration;
-        for (; ;) {
-            await delay(1000 * 60 * 10); // 10 minutes
-            this.experimentProfile.execDuration = execDuration + (Date.now() - startTime) / 1000 - this.suspendDuration;
-            await this.storeExperimentProfile();
+        let count: number = 1;
+        while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
+            await delay(1000 * 1); // 1 seconds
+            if (this.status.status === 'EXPERIMENT_RUNNING') {
+                this.experimentProfile.execDuration += 1;
+                if (count % 10 === 0) {
+                    await this.storeExperimentProfile();
+                }
+            }
+            count += 1;
         }
     }
 
     private async requestTrialJobsStatus(): Promise<number> {
-        const deferred: Deferred<number> = new Deferred<number>();
         let finishedTrialJobNum: number = 0;
+        if (this.dispatcher === undefined) {
+            throw new Error('Error: tuner has not been setup');
+        }
         for (const trialJobId of Array.from(this.trialJobs.keys())) {
             const trialJobDetail: TrialJobDetail = await this.trainingService.getTrialJob(trialJobId);
             const oldTrialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
-            //assert(oldTrialJobDetail);
             if (oldTrialJobDetail !== undefined && oldTrialJobDetail.status !== trialJobDetail.status) {
                 this.trialJobs.set(trialJobId, Object.assign({}, trialJobDetail));
-                await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail.url);
+                await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail);
             }
             switch (trialJobDetail.status) {
                 case 'SUCCEEDED':
                 case 'USER_CANCELED':
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
+                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: trialJobDetail.status}));
                     break;
                 case 'FAILED':
                 case 'SYS_CANCELED':
@@ -368,6 +378,7 @@ class NNIManager implements Manager {
                     // TO DO: push this job to queue for retry
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
+                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: trialJobDetail.status}));
                     break;
                 case 'WAITING':
                 case 'RUNNING':
@@ -378,9 +389,8 @@ class NNIManager implements Manager {
                 // TO DO: add warning in log
             }
         }
-        deferred.resolve(finishedTrialJobNum);
-
-        return deferred.promise;
+        
+        return finishedTrialJobNum;
     }
 
     private async manageTrials(): Promise<void> {
@@ -388,12 +398,7 @@ class NNIManager implements Manager {
             throw new Error('Error: tuner has not been setup');
         }
         let allFinishedTrialJobNum: number = 0;
-        const startTime: number = Date.now();
-        let suspendStartTime: number = 0;
-        for (; ;) {
-            if (this.status.status === 'STOPPING') {
-                break;
-            }
+        while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
 
             allFinishedTrialJobNum += finishedTrialJobNum;
@@ -426,18 +431,18 @@ class NNIManager implements Manager {
             }
 
             // check maxtrialnum and maxduration here
-            if ((Date.now() - startTime) / 1000 + this.experimentProfile.execDuration - this.suspendDuration 
-                > this.experimentProfile.params.maxExecDuration ||
+            if (this.experimentProfile.execDuration > this.experimentProfile.params.maxExecDuration ||
                 this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
                 assert(this.status.status === 'EXPERIMENT_RUNNING' || this.status.status === 'DONE');
                 if (this.status.status === 'EXPERIMENT_RUNNING') {
-                    suspendStartTime = Date.now();
+                    this.experimentProfile.endTime = Date.now();
+                    await this.storeExperimentProfile();
                 }
                 this.status.status = 'DONE';
             } else {
                 if (this.status.status === 'DONE') {
-                    assert(suspendStartTime !== 0);
-                    this.suspendDuration += (Date.now() - suspendStartTime) / 1000;
+                    delete this.experimentProfile.endTime;
+                    await this.storeExperimentProfile();
                 }
                 this.status.status = 'EXPERIMENT_RUNNING';
                 for (let i: number = this.trialJobs.size; i < this.experimentProfile.params.trialConcurrency; i++) {
@@ -458,11 +463,12 @@ class NNIManager implements Manager {
                         }
                     };
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
+                    await this.storeMaxSequenceId(trialJobDetail.sequenceId);
                     this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
                         await this.dataStore.storeTrialJobEvent(
-                            trialJobDetailSnapshot.status, trialJobDetailSnapshot.id, hyperParams, trialJobDetailSnapshot.url);
+                            trialJobDetailSnapshot.status, trialJobDetailSnapshot.id, hyperParams, trialJobDetailSnapshot);
                     } else {
                         assert(false, `undefined trialJobDetail in trialJobs: ${trialJobDetail.id}`);
                     }
@@ -470,7 +476,7 @@ class NNIManager implements Manager {
             }
             await delay(1000 * 5); // 5 seconds
         }
-        
+
         this.log.info('Experiment done, cleaning up...');
         await this.experimentDoneCleanUp();
         this.log.info('Experiment done.');
@@ -556,7 +562,7 @@ class NNIManager implements Manager {
                 };
                 await this.trainingService.updateTrialJob(tunerCommand.trial_job_id, trialJobForm);
                 await this.dataStore.storeTrialJobEvent(
-                        'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
+                    'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
                 break;
             case NO_MORE_TRIAL_JOBS:
                 //this.trialJobsMaintainer.setNoMoreTrials();
@@ -588,6 +594,8 @@ class NNIManager implements Manager {
             id: getExperimentId(),
             revision: 0,
             execDuration: 0,
+            logDir: getLogDir(),
+            maxSequenceId: 0,
             params: {
                 authorName: '',
                 experimentName: '',
@@ -603,6 +611,13 @@ class NNIManager implements Manager {
                 }
             }
         };
+    }
+
+    private async storeMaxSequenceId(sequenceId: number): Promise<void> {
+        if (sequenceId > this.experimentProfile.maxSequenceId) {
+            this.experimentProfile.maxSequenceId = sequenceId;
+            await this.storeExperimentProfile();
+        }
     }
 }
 

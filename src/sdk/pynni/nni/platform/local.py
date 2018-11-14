@@ -49,13 +49,18 @@ def request_next_parameter():
     })
     send_metric(metric)
 
-def get_parameters():
+def get_next_parameter():
     global _param_index
     params_file_name = ''
     if _multiphase and (_multiphase == 'true' or _multiphase == 'True'):
         params_file_name = ('parameter_{}.cfg'.format(_param_index), 'parameter.cfg')[_param_index == 0]
     else:
-        params_file_name = 'parameter.cfg'
+        if _param_index > 0:
+            return None
+        elif _param_index == 0:
+            params_file_name = 'parameter.cfg'
+        else:
+            raise AssertionError('_param_index value ({}) should >=0'.format(_param_index))
     
     params_filepath = os.path.join(_sysdir, params_file_name)
     if not os.path.isfile(params_filepath):

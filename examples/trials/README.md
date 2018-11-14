@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
 **2)Get configure from Tuner**
 
-User import ```nni``` and use ```nni.get_parameters()``` to recive configure. Please noted **10**, **24** and **25** line in the following code.
+User import ```nni``` and use ```nni.get_next_parameter()``` to recive configure. Please noted **10**, **24** and **25** line in the following code.
 
 
 ```python
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     ARGS, UNKNOWN = PARSER.parse_known_args()
 
     PARAMS = generate_default_params()
-    RECEIVED_PARAMS = nni.get_parameters()
+    RECEIVED_PARAMS = nni.get_next_parameter()
     PARAMS.update(RECEIVED_PARAMS)
     train(ARGS, PARAMS)
 ```
@@ -271,7 +271,7 @@ if __name__ == '__main__':
 
     try:
         # get parameters from tuner
-        RECEIVED_PARAMS = nni.get_parameters()
+        RECEIVED_PARAMS = nni.get_next_parameter()
         LOG.debug(RECEIVED_PARAMS)
         PARAMS = generate_default_params()
         PARAMS.update(RECEIVED_PARAMS)

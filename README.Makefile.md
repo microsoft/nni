@@ -5,15 +5,16 @@ NNI uses GNU make for building and installing.
 The `Makefile` offers standard targets `build`, `install`, and `uninstall`, as well as alternative installation targets for different setup:
 
 * `easy-install`: target for non-expert users, which handles everything automatically;
-* `pip-install`: target in favor of `setup.py`;
+* `dev-easy-install`: target for developer users, which handles everything automatically;
+* `install`: target for NNI normal users, which installs NNI by copying files;
 * `dev-install`: target for NNI contributors, which installs NNI as symlinks instead of copying files;
-* `remote-machine-install`: target that only installs core Python library for remote machine workers.
+* `pip-install`: target in favor of `setup.py`;
 
 The targets will be detailed later.
 
 ## Dependencies
 
-NNI requires at least Node.js, Yarn, and PIP to build, while TypeScript is also recommended.
+NNI requires at least Node.js, Yarn, and pip to build, while TypeScript is also recommended.
 
 NNI requires Node.js, and all dependency libraries to run.
 Required Node.js libraries (including TypeScript) can be installed by Yarn, and required Python libraries can be installed by setuptools or PIP.
@@ -56,7 +57,6 @@ Available variables are listed below:
 |--------------------|---------------------------------------------------------|-----------------------------------|-------------------------------------------------|
 | `BIN_PATH`         | Path for executables                                    | `~/.local/bin`                    | `/usr/bin`                                      |
 | `INSTALL_PREFIX`   | Path for Node.js modules (a suffix `nni` will be added) | `~/.local`                        | `/usr/share`                                    |
-| `EXAMPLES_PATH`    | Path for NNI examples                                   | `~/nni/examples`                  | `$INSTALL_PREFIX/nni/examples`                  |
 | `BASH_COMP_SCRIPT` | Path of bash completion script                          | `~/.bash_completion.d/nnictl`     | `/usr/share/bash-completion/completions/nnictl` |
 | `PIP_MODE`         | Arguments for `python3 setup.py install`                | `--user` if `VIRTUAL_ENV` not set | (empty)                                         |
 | `NODE_PATH`        | Path to install Node.js runtime                         | `$INSTALL_PREFIX/nni/node`        | `$INSTALL_PREFIX/nni/node`                      |
@@ -71,19 +71,18 @@ If the path to copy files is different from where they will run (e.g. when creat
 
 The workflow of each installation targets is listed below:
 
-| Target                   | Workflow                                                             |
-|--------------------------|----------------------------------------------------------------------|
-| `install`                | Install Python packages, Node.js modules, NNI scripts, and examples  |
-| `easy-install`           | Install dependencies, build, install NNI, and edit `~/.bashrc`       |
-| `pip-install`            | Install dependencies, build, install NNI excluding Python packages   |
-| `dev-install`            | Install Python and Node.js modules as symlinks, then install scripts |
-| `remote-machine-install` | Install `nni` Python package                                         |
+| Target                   | Workflow                                                                   |
+|--------------------------|----------------------------------------------------------------------------|
+| `easy-install`           | Install dependencies, build, install NNI, and edit `~/.bashrc`             |
+| `dev-easy-install`       | Install dependencies, build, install NNI as symlinks, and edit `~/.bashrc` |
+| `install`                | Install Python packages, Node.js modules, NNI scripts, and examples        |
+| `dev-install`            | Install Python and Node.js modules as symlinks, then install scripts       |
+| `pip-install`            | Install dependencies, build, install NNI excluding Python packages         |
 
 ## TODO
 
 * `clean` target
 * `test` target
 * `lint` target
-* Exclude tuners and their dependencies from `remote-machine-install`
 * Test cases for each target
 * Review variables

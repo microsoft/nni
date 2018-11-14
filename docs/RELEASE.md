@@ -1,3 +1,41 @@
+# Release 0.3.0 - 11/2/2018
+## NNICTL new features and updates
+* Support running multiple experiments simultaneously. 
+
+    Before v0.3, NNI only supports running single experiment once a time. After this realse, users are able to run multiple experiments simultaneously. Each experiment will require a unique port, the 1st experiment will be set to the default port as previous versions. You can specify a unique port for the rest experiments as below:
+
+    ```nnictl create --port 8081 --config <config file path>```
+* Support updating max trial number.
+    use ```nnictl update --help``` to learn more. Or refer to [NNICTL Spec](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md) for the fully usage of NNICTL.
+
+## API new features and updates
+* <span style="color:red">**breaking change**</span>: nn.get_parameters() is refactored to nni.get_next_parameter. All examples of prior releases can not run on v0.3, please clone nni repo to get new examples. If you had applied NNI to your own codes, please update the API accordingly.
+
+* New API **nni.get_sequence_id()**. 
+    Each trial job is allocated a unique sequence number, which can be retrieved by nni.get_sequence_id() API.
+
+    ```git clone -b v0.3 https://github.com/Microsoft/nni.git```
+* **nni.report_final_result(result)** API supports more data types for result parameter. 
+    It can be of following types:
+    * int
+    * float
+    * A python dict containing 'default' key, the value of 'default' key should be of type int or float. The dict can contain any other key value pairs.
+
+## New tuner support
+* **Batch Tuner** which iterates all parameter combination, can be used to submit batch trial jobs.
+
+## New examples
+* A NNI Docker image for public usage:
+      ```docker pull msranni/nni:latest```
+* New trial example: [NNI Sklearn Example](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
+* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
+    
+## Others
+* UI refactoring, refer to [WebUI doc](WebUI.md) for how to work with the new UI.
+* Continuous Integration: NNI had switched to Azure pipelines
+* [Known Issues in release 0.3.0](https://github.com/Microsoft/nni/labels/nni030knownissues).
+
+
 # Release 0.2.0 - 9/29/2018
 ## Major Features
    * Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)

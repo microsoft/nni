@@ -34,8 +34,8 @@ class CustomInstallCommand(install):
         subprocess.run(['make', 'pip-install'], check=True)
 
 setup(
-    name = 'NNI',
-    version = '0.2.0',
+    name = 'nni',
+    version = '0.3.4',
     author = 'Microsoft NNI Team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence project',
@@ -45,10 +45,10 @@ setup(
 
     packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools'),
     package_dir = {
-        'nni_annotation': 'tools/nni_annotation',
         'nni': 'src/sdk/pynni/nni',
-        'nnicmd': 'tools/nnicmd',
-        'trial_tool':'tools/trial_tool'
+        'nni_annotation': 'tools/nni_annotation',
+        'nni_cmd': 'tools/nni_cmd',
+        'nni_trial_tool':'tools/nni_trial_tool'
     },
     package_data = {'nni': ['**/requirements.txt']},
     python_requires = '>=3.5',

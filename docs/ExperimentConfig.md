@@ -1,4 +1,4 @@
-Experiment config reference
+# Experiment config reference
 ===
 
 If you want to create a new nni experiment, you need to prepare a config file in your local machine, and provide the path of this file to nnictl.

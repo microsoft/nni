@@ -173,10 +173,10 @@ def main(params):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(params['batch_num']):
-            batch = mnist.train.next_batch(params['batch_num'])
+            batch = mnist.train.next_batch(params['batch_size'])
             mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
                                                     mnist_network.labels: batch[1],
-                                                    mnist_network.keep_prob: params['dropout_rate']}
+                                                    mnist_network.keep_prob: 1 - params['dropout_rate']}
                                         )
 
             if i % 100 == 0:
@@ -212,14 +212,15 @@ def generate_default_params():
         'pool_size': 2,
         'hidden_size': 1024,
         'learning_rate': 1e-4,
-        'batch_num': 200}
+        'batch_num': 2000,
+        'batch_size': 32}
     return params
 
 
 if __name__ == '__main__':
     try:
         # get parameters form tuner
-        RCV_PARAMS = nni.get_parameters()
+        RCV_PARAMS = nni.get_next_parameter()
         logger.debug(RCV_PARAMS)
         # run
         params = generate_default_params()
