@@ -22,6 +22,7 @@ gridsearch_tuner.py including:
     class GridSearchTuner
 '''
 
+import copy
 import numpy as np
 
 import nni
@@ -70,7 +71,7 @@ class GridSearchTuner(Tuner):
                         else:
                             chosen_params.append(choice)
                 else:
-                    chosen_params = self.parse_parameter(_type, _value)
+                    chosen_params = self._parse_parameter(_type, _value)
             else:
                 chosen_params = dict()
                 for key in ss_spec.keys():
@@ -89,19 +90,19 @@ class GridSearchTuner(Tuner):
             chosen_params = copy.deepcopy(ss_spec)
         return chosen_params
 
-    def parse(self, param_value):
-        low, high, q = param_value[0], param_value[1], max(2, param_value[2])
-        interval = (high - low) / (q - 1)
-        return [float(low + interval * i) for i in range(q)]
+    def _parse(self, param_value):
+        low, high, count = param_value[0], param_value[1], max(2, param_value[2])
+        interval = (high - low) / (count - 1)
+        return [float(low + interval * i) for i in range(count)]
 
-    def parse_parameter(self, param_type, param_value):
+    def _parse_parameter(self, param_type, param_value):
         if param_type == 'quniform':
-            return self.parse(param_value)
-        elif param_type == 'qloguniform':
+            return self._parse(param_value)
+        if param_type == 'qloguniform':
             param_value[:2] = np.log10(param_value[:2])
-            return list(np.power(10, self.parse(param_value)))
-        else:
-            raise RuntimeError("Not supported type: %s" % param_type)
+            return list(np.power(10, self._parse(param_value)))
+
+        raise RuntimeError("Not supported type: %s" % param_type)
 
     def expand_parameters(self, para):
         '''
@@ -119,7 +120,7 @@ class GridSearchTuner(Tuner):
         for val in values:
             for config in rest_para:
                 config[key] = val
-                ret_para.append(dict(config))
+                ret_para.append(copy.deepcopy(config))
         return ret_para
 
     def update_search_space(self, search_space):
