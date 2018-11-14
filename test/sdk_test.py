@@ -29,7 +29,6 @@ def switch(dispatch_type, dispatch_name):
     dump_yml_content(config_path, experiment_config)
 
 def test_builtin_dispatcher(dispatch_type, dispatch_name):
-    remove_files(['sdk_test/nni_tuner_result.txt'])
     switch(dispatch_type, dispatch_name)
 
     print('Testing %s...' % dispatch_name)
@@ -48,9 +47,6 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name):
     assert experiment_status, 'Failed to finish in 30 sec'
 
 def run(dispatch_type):
-    to_remove = ['sdk_test/tuner_search_space.json', 'sdk_test/tuner_result.txt', 'sdk_test/assessor_result.txt']
-    remove_files(to_remove)
-
     LIST = TUNER_LIST if dispatch_type == 'Tuner' else ASSESSOR_LIST
     for dispatcher_name in LIST:
         try:
