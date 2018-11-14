@@ -124,8 +124,8 @@ class KubeflowTrainingService implements TrainingService {
             `$PWD/nni/${trialJobId}`,
             trialJobId,
             getExperimentId(),
-            //TODO: Remove hard-coded /tmp/nni?
-            `/tmp/nni/${trialJobId}`,
+            //TODO: Remove hard-coded /tmp/nni? PATH.join
+            `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}/run.sh`,
             this.kubeflowTrialConfig.command,
             getIPV4Address(),
             this.kubeflowRestServerPort
@@ -301,10 +301,10 @@ class KubeflowTrainingService implements TrainingService {
                                     name: 'tensorflow',
                                     image: this.kubeflowTrialConfig.image,
                                     //TODO: change to real code dir
-                                    args: ["sh", "/tmp/nni/nuDEP/run.sh"],                                    
+                                    args: ["sh", `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}/run.sh`],
                                     volumeMounts: [{
                                         name: 'nni-nfs-vol',
-                                        mountPath: '/tmp/nni'
+                                        mountPath: '/tmp/nfs'
                                     }],
                                     resources: podResources//,
                                     //workingDir: '/tmp/nni/nuDEP'
