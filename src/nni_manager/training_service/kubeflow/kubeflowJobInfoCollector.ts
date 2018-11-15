@@ -63,7 +63,7 @@ export class KubeflowJobInfoCollector {
         let result : cpp.childProcessPromise.Result;
         try {
             result = await cpp.exec(`kubectl get tfjobs ${kubeflowTrialJob.kubeflowJobName} -o json`);
-            if(!result.stderr) {
+            if(result.stderr) {
                 this.log.error(`Get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed. Error is ${result.stderr}, failed checking number is ${kubeflowTrialJob.queryJobFailedCount}`);
                 kubeflowTrialJob.queryJobFailedCount++;
                 if(kubeflowTrialJob.queryJobFailedCount >= this.MAX_FAILED_QUERY_JOB_NUMBER) {

@@ -232,7 +232,7 @@ class KubeflowTrainingService implements TrainingService {
         }
 
         const result: cpp.childProcessPromise.Result = await cpp.exec(`kubectl delete tfjobs -l app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()},trialId=${trialJobId}`);
-        if(!result.stderr) {
+        if(result.stderr) {
             const errorMessage: string = `kubectl delete tfjobs for trial ${trialJobId} failed: ${result.stderr}`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
