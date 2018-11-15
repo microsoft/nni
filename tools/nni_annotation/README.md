@@ -4,21 +4,25 @@ For good user experience and reduce user effort, we need to design a good annota
 
 If users use NNI system, they only need to:
 
- 1. Annotation variable in code as:
+ 1. Annotation `variable` in code as:
 
     '''@nni.variable(nni.choice(2,3,5,7),name=self.conv_size)'''
 
- 2. Annotation intermediate in code as:
+ 2. Annotation `function_choice` in code as:
+
+    '''@nni.function_choice(max_pool(h_conv1, self.pool_size),avg_pool(h_conv1, self.pool_size),name=max_pool)'''
+
+ 3. Annotation intermediate in code as:
 
     '''@nni.report_intermediate_result(test_acc)'''
 
- 3. Annotation output in code as:
+ 4. Annotation output in code as:
 
     '''@nni.report_final_result(test_acc)'''
 
- 4. Annotation `function_choice` in code as:
 
-    '''@nni.function_choice(max_pool(h_conv1, self.pool_size),avg_pool(h_conv1, self.pool_size),name=max_pool)'''
+
+For the first two cases, in the line after nni annotation, you can either assign a value to the variable whose name is specified by the key 'name' in the annotation line just as if there is no annotation, or invoke the function whose name is specified in the same way.
 
 In this way, they can easily realize automatic tuning on NNI. 
 
