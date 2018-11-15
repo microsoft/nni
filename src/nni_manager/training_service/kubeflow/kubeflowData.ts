@@ -61,11 +61,12 @@ export MULTI_PHASE=false
 export NNI_TRIAL_JOB_ID={2} #nuDEP
 export NNI_EXP_ID={3} #NOaf1g9a
 export NNI_CODE_DIR={4} #/tmp/nni/nuDEP
+export NNI_TRIAL_SEQ_ID={5}
 mkdir -p $NNI_SYS_DIR
 mkdir -p $NNI_OUTPUT_DIR
 cp -rT $NNI_CODE_DIR $NNI_SYS_DIR
 cd $NNI_SYS_DIR
-python3 -m nni_trial_tool.trial_keeper --trial_command '{5}' --nnimanager_ip '{6}' --nnimanager_port '{7}' #1>./tk_stdout 2>./tk_stderr
+python3 -m nni_trial_tool.trial_keeper --trial_command '{6}' --nnimanager_ip '{7}' --nnimanager_port '{8}' #1>./tk_stdout 2>./tk_stderr
 # TODO: copy output to NFS (including NNI_OUTPUT_DIR and tk_stdout/tk_stderr)`
 
 export type KubeflowTFJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';

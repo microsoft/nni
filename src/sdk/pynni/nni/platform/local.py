@@ -79,5 +79,4 @@ def send_metric(string):
     _metric_file.flush()
 
 def get_sequence_id():
-    with open(os.path.join(_sysdir, '.nni', 'sequence_id'), 'r') as f:
-        return int(f.read().strip())
+    return os.environ['NNI_TRIAL_SEQ_ID']

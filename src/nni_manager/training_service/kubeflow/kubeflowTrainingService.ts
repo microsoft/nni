@@ -125,11 +125,12 @@ class KubeflowTrainingService implements TrainingService {
             trialJobId,
             getExperimentId(),
             //TODO: Remove hard-coded /tmp/nni? PATH.join
-            `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}/run.sh`,
+            `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}`,
+            trialSequenceId.toString(),
             this.kubeflowTrialConfig.command,
             getIPV4Address(),
             this.kubeflowRestServerPort
-            );            
+            );
 
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
