@@ -79,7 +79,7 @@ class NetworkMorphismTuner(Tuner):
     NetworkMorphismTuner is a tuner which using network morphism techniques.
     '''
 
-    def __init__(self, algorithm_name, optimize_mode, n_output_node, input_shape, path=None, verbose=True, metric=Accuracy, beta=Constant.BETA,
+    def __init__(self, input_shape=(32,32,3), n_output_node=10, algorithm_name="Bayesian",optimize_mode="minimize", path=None, verbose=True, metric=Accuracy, beta=Constant.BETA,
                  kernel_lambda=Constant.KERNEL_LAMBDA, t_min=None, max_model_size=Constant.MAX_MODEL_SIZE, default_model_len=Constant.MODEL_LEN, default_model_width=Constant.MODEL_WIDTH):
         if path is None:
             os.makedirs("model_path")
@@ -102,7 +102,7 @@ class NetworkMorphismTuner(Tuner):
         self.verbose = verbose
         self.model_count = 0
 
-        self.bo = self._choose_tuner("micro-level")
+        self.bo = BayesianOptimizer(self, self.t_min, self.metric, self.kernel_lambda, self.beta)
         self.training_queue = []
         self.x_queue = []
         self.y_queue = []
@@ -124,21 +124,14 @@ class NetworkMorphismTuner(Tuner):
         Raises:
             RuntimeError -- Not support tuner algorithm in Network Morphism.
         '''
-
-        if algorithm_name == 'micro-level':
-            return BayesianOptimizer(self, self.t_min, self.metric, self.kernel_lambda, self.beta)
-        if algorithm_name == 'meso-level':
-            return
-        if algorithm_name == 'macro-level':
-            return
-        raise RuntimeError('Not support tuner algorithm in Network Morphism.')
+        pass
 
     def update_search_space(self, search_space):
         '''
         Update search space definition in tuner by search_space in neural architecture.
         '''
         self.search_space = search_space
-        pass
+        
 
     def generate_parameters(self, parameter_id):
         '''

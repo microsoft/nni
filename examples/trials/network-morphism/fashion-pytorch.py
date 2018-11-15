@@ -81,7 +81,7 @@ def build_graph_from_mmdnn(ir_model_path,ir_weight_path,args):
     return model
 
 
-def prepare(receive_msg,args):
+def parse_rev_args(receive_msg,args):
     global trainloader
     global testloader
     global net
@@ -209,7 +209,7 @@ if __name__ == '__main__':
         RCV_CONFIG = nni.get_next_parameter()
         logger.debug(RCV_CONFIG)
 
-        prepare(RCV_CONFIG,args)
+        parse_rev_args(RCV_CONFIG,args)
         acc = 0.0
         best_acc = 0.0
         for epoch in range(args.epoches):
