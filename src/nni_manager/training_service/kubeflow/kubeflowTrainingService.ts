@@ -274,9 +274,35 @@ class KubeflowTrainingService implements TrainingService {
         throw new MethodNotImplementedError();
     }
 
-    public cleanUp(): Promise<void> {
+    public async cleanUp(): Promise<void> {
         this.stopping = true;
-        //TODO: stop all running kubeflow jobs?? 
+
+        // First, cancel all running kubeflow jobs
+        for(let [trialJobId, kubeflowTrialJob] of this.trialJobsMap) {
+            if(['RUNNING', 'WAITING', 'UNKNOWN'].includes(kubeflowTrialJob.status)) {
+                try {
+                    await this.cancelTrialJob(trialJobId);
+                } catch(error) {} // DONT throw error during cleanup
+                kubeflowTrialJob.status = 'SYS_CANCELED';
+            }
+        }
+        // Delete all tfjobs whose expId label is current experiment id 
+        try {
+            await cpp.exec(`kubectl delete tfjobs -l app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()}`);
+        } catch(error) {
+            this.log.error(`Delete tfjobs with label: app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
+        }
+
+        // Stop Kubeflow rest server 
+        const restServer: KubeflowJobRestServer = component.get(KubeflowJobRestServer);
+        try {
+            await restServer.stop();
+            this.log.info('Kubeflow Training service rest server stopped successfully.');
+        } catch (error) {
+            this.log.error(`Kubeflow Training service rest server stopped failed, error: ${error.message}`);
+            Promise.reject(error);
+        }
+
         return Promise.resolve();
     }
 
