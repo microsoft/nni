@@ -53,8 +53,8 @@ class KubeflowTrainingService implements TrainingService {
     private readonly log!: Logger;
     private readonly metricsEmitter: EventEmitter;
     private readonly trialJobsMap: Map<string, KubeflowTrialJobDetail>;
-    // TODO: experiment root dir in NFS
-    //private readonly expRootDir: string;
+    /**  experiment root dir in NFS */
+    private readonly trialLocalNFSTempFolder: string = path.join(getExperimentRootDir(), 'trials-nfs-tmp');    
     private stopping: boolean = false;
     private experimentId! : string;
     private trialSequenceId: number;
@@ -68,6 +68,7 @@ class KubeflowTrainingService implements TrainingService {
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, KubeflowTrialJobDetail>();
         this.kubeflowJobInfoCollector = new KubeflowJobInfoCollector(this.trialJobsMap);
+        this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
         // TODO: Root dir on NFS
         //this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
         this.experimentId = getExperimentId();      
@@ -107,13 +108,6 @@ class KubeflowTrainingService implements TrainingService {
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
         await cpp.exec(`cp -r ${this.kubeflowTrialConfig.codeDir} ${trialLocalTempFolder}`);
-        const trialLocalNFSTempFolder: string = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
-        await cpp.exec(`mkdir -p ${trialLocalNFSTempFolder}`);
-        try {
-            await cpp.exec(`sudo mount ${this.kubeflowClusterConfig.nfs.server}:${this.kubeflowClusterConfig.nfs.path} ${trialLocalNFSTempFolder}`);
-        } catch(error) {
-            this.log.error(`Mount NFS ${this.kubeflowClusterConfig.nfs.server}:${this.kubeflowClusterConfig.nfs.path} to ${trialLocalNFSTempFolder} failed, error is ${error}`);
-        }
 
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
@@ -167,8 +161,8 @@ class KubeflowTrainingService implements TrainingService {
         );
 
         //TODO: refactor
-        await cpp.exec(`mkdir -p ${trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
-        await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
+        await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
+        await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
 
         const trialJobDetail: KubeflowTrialJobDetail = new KubeflowTrialJobDetail(
             trialJobId,
@@ -244,13 +238,19 @@ class KubeflowTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    public setClusterMetadata(key: string, value: string): Promise<void> {
+    public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
                 this.kubeflowClusterConfig = <KubeflowClusterConfig>JSON.parse(value);
-                console.log(`nfs server is ${this.kubeflowClusterConfig.nfs.server}`);
-                console.log(`nfs path is ${this.kubeflowClusterConfig.nfs.path}`);
-                //TODO: check NFS mount point here? 
+                //Check and mount NFS mount point here
+                await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
+                const nfsServer: string = this.kubeflowClusterConfig.nfs.server;
+                const nfsPath: string = this.kubeflowClusterConfig.nfs.path;
+                try {
+                    await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalNFSTempFolder}`);
+                } catch(error) {
+                    this.log.error(`Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`);
+                }
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -260,8 +260,6 @@ class KubeflowTrainingService implements TrainingService {
                 }
 
                 this.kubeflowTrialConfig = <KubeflowTrialConfig>JSON.parse(value);
-                console.log(`kubeflow trial gpunumber is ${this.kubeflowTrialConfig.gpuNum}`);
-                console.log(`kubeflow trial image is ${this.kubeflowTrialConfig.image}`);
                 break;
             default:
                 break;
@@ -291,6 +289,13 @@ class KubeflowTrainingService implements TrainingService {
             await cpp.exec(`kubectl delete tfjobs -l app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()}`);
         } catch(error) {
             this.log.error(`Delete tfjobs with label: app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
+        }
+
+        // Unmount NFS
+        try {
+            await cpp.exec(`sudo umount ${this.trialLocalNFSTempFolder}`);
+        } catch(error) {
+            this.log.error(`Unmount ${this.trialLocalNFSTempFolder} failed, error is ${error}`);
         }
 
         // Stop Kubeflow rest server 
