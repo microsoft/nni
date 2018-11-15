@@ -37,6 +37,7 @@ export class KubeflowTrialJobDetail implements TrialJobDetail {
     public form: JobApplicationForm;
     public kubeflowJobName: string;
     public sequenceId: number;
+    public queryJobFailedCount: number;
     
     constructor(id: string, status: TrialJobStatus, submitTime: number,
                 workingDirectory: string, form: JobApplicationForm, 
@@ -49,6 +50,7 @@ export class KubeflowTrialJobDetail implements TrialJobDetail {
         this.kubeflowJobName = kubeflowJobName;
         this.sequenceId = sequenceId;
         this.tags = [];
+        this.queryJobFailedCount = 0;
     }
 }
 

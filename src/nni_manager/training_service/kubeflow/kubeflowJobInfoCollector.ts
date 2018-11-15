@@ -31,11 +31,12 @@ import { TrialJobStatus } from '../../common/trainingService';
 export class KubeflowJobInfoCollector {
     private readonly trialJobsMap : Map<string, KubeflowTrialJobDetail>;
     private readonly log: Logger = getLogger();
-    private readonly statusesNeedToCheck : TrialJobStatus[];    
+    private readonly statusesNeedToCheck: TrialJobStatus[];
+    private readonly MAX_FAILED_QUERY_JOB_NUMBER: number = 30;
 
     constructor(jobMap: Map<string, KubeflowTrialJobDetail>) {
         this.trialJobsMap = jobMap;
-        this.statusesNeedToCheck = ['RUNNING', 'UNKNOWN', 'WAITING'];
+        this.statusesNeedToCheck = ['RUNNING', 'WAITING'];
     }
 
     public async retrieveTrialStatus() : Promise<void> {
@@ -59,8 +60,11 @@ export class KubeflowJobInfoCollector {
         try {
             result = await cpp.exec(`kubectl get tfjobs ${kubeflowTrialJob.kubeflowJobName} -o json`);
             if(!result.stderr) {
-                this.log.error(`Get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed`);
-                kubeflowTrialJob.status = 'UNKNOWN';
+                this.log.error(`Get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed. Error is ${result.stderr}`);
+
+                if(++kubeflowTrialJob.queryJobFailedCount >= this.MAX_FAILED_QUERY_JOB_NUMBER) {
+                    kubeflowTrialJob.status = 'UNKNOWN';
+                }
             }
         } catch(error) {
             this.log.error(`kubectl get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed, error is ${error}`);

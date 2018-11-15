@@ -49,6 +49,7 @@ var yaml = require('node-yaml');
  */
 @component.Singleton
 class KubeflowTrainingService implements TrainingService {
+    private readonly NNI_KUBEFLOW_TRIAL_LABEL = 'nni-kubeflow-trial';
     private readonly log!: Logger;
     private readonly metricsEmitter: EventEmitter;
     private readonly trialJobsMap: Map<string, KubeflowTrialJobDetail>;
@@ -61,7 +62,7 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowTrialConfig?: KubeflowTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
     private kubeflowRestServerPort?: number;
-
+    
     constructor() {        
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
@@ -222,8 +223,25 @@ class KubeflowTrainingService implements TrainingService {
         return false;
     }
 
-    public cancelTrialJob(trialJobId: string): Promise<void> {
-        throw new MethodNotImplementedError();
+    public async cancelTrialJob(trialJobId: string): Promise<void> {
+        const trialJobDetail : KubeflowTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
+        if(!trialJobDetail) {
+            const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} not found`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }
+
+        const result: cpp.childProcessPromise.Result = await cpp.exec(`kubectl delete tfjobs -l app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()},trialId=${trialJobId}`);
+        if(!result.stderr) {
+            const errorMessage: string = `kubectl delete tfjobs for trial ${trialJobId} failed: ${result.stderr}`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }
+
+        trialJobDetail.endTime = Date.now();
+        trialJobDetail.status = 'USER_CANCELED';        
+
+        return Promise.resolve();
     }
 
     public setClusterMetadata(key: string, value: string): Promise<void> {
@@ -283,7 +301,9 @@ class KubeflowTrainingService implements TrainingService {
                 name: kubeflowJobName,
                 namespace: 'default',
                 labels: {
-                    app: 'nni-kubeflow-trial'
+                    app: this.NNI_KUBEFLOW_TRIAL_LABEL,
+                    expId: getExperimentId(),
+                    trialId: trialJobId
                 }
             },
             spec: {
