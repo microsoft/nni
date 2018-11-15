@@ -47,6 +47,7 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name):
     assert experiment_status, 'Failed to finish in 30 sec'
 
 def run(dispatch_type):
+    assert dispatch_type in ['Tuner', 'Assessor'], 'Unsupported dispatcher type: %s' % (dispatch_type)
     LIST = TUNER_LIST if dispatch_type == 'Tuner' else ASSESSOR_LIST
     for dispatcher_name in LIST:
         try:
