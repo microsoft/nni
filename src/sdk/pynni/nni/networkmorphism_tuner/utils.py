@@ -31,6 +31,12 @@ class Constant:
     MLP_MODEL_WIDTH = 5
     MODEL_LEN = 3
     MODEL_WIDTH = 64
+    POOLING_KERNEL_SIZE=2
+    DENSE_DROPOUT_RATE = 0.5
+    CONV_DROPOUT_RATE = 0.25
+    MLP_DROPOUT_RATE = 0.25
+    CONV_BLOCK_DISTANCE = 2
+    BATCH_SIZE = 128
 
 
 def pickle_from_file(path):

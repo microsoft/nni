@@ -20,6 +20,7 @@ import logging
 import os
 import sys
 import time
+import math
 
 import utils
 import nni

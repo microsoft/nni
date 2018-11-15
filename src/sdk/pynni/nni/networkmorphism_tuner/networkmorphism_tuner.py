@@ -35,7 +35,9 @@ from nni.networkmorphism_tuner.metric import Accuracy
 from nni.networkmorphism_tuner.utils import pickle_to_file, pickle_from_file, Constant
 from nni.networkmorphism_tuner.net_transformer import default_transform
 from nni.networkmorphism_tuner.nn import CnnGenerator
+from nni.networkmorphism_tuner.graph import onnx_to_graph
 import onnx
+import torch
 
 logger = logging.getLogger('NetworkMorphism_AutoML')
 
@@ -157,7 +159,10 @@ class NetworkMorphismTuner(Tuner):
 
         # from gragh to onnx_model_path
         onnx_model_path = os.path.join(self.path, str(model_id) + '.onnx')
-        onnx.save(graph, onnx_model_path)
+        torch_model = graph.produce_model()
+        x = torch.randn(Constant.BATCH_SIZE, self.input_shape[2], self.input_shape[0], self.input_shape[1], requires_grad=True)
+        torch_out = torch.onnx.export(torch_model, x , onnx_model_path,export_params=True)    
+        # onnx.save(graph, onnx_model_path)
 
         self.total_data[parameter_id] = (onnx_model_path, father_id, model_id)
 
@@ -186,7 +191,8 @@ class NetworkMorphismTuner(Tuner):
             reward = -reward
 
         # from onnx_model_path to gragh
-        graph = onnx.load(onnx_model_path)
+        onnx_graph = onnx.load(onnx_model_path)
+        graph = onnx_to_graph(onnx_graph,self.input_shape)
 
         # to use the reward and graph
         self.add_model(reward, graph, model_id)
@@ -204,7 +210,7 @@ class NetworkMorphismTuner(Tuner):
             logger.info('Initializing search.')
         graph = CnnGenerator(self.n_classes, self.input_shape).generate(
             self.default_model_len, self.default_model_width)
-
+            
         model_id = self.model_count
         self.model_count += 1
         self.training_queue.append((graph, -1, model_id))

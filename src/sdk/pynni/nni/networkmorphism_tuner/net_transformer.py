@@ -23,11 +23,8 @@ from operator import itemgetter
 from random import randrange, sample
 
 from nni.networkmorphism_tuner.utils import Constant
-from nni.networkmorphism_tuner.nn import is_layer,NetworkDescriptor
-
-
-
-
+from nni.networkmorphism_tuner.layers import is_layer
+from nni.networkmorphism_tuner.graph import NetworkDescriptor
 
 def to_wider_graph(graph):
     weighted_layer_ids = graph.wide_layer_ids()
