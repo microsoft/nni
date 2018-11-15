@@ -45,6 +45,10 @@ export class KubeflowJobInfoCollector {
             if (!kubeflowTrialJob) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
+            // Since Kubeflow needs some delay to schedule jobs, we provide 20 seconds buffer time to check tfjobs' status
+            if( Date.now() - kubeflowTrialJob.submitTime < 20 * 1000) {
+                return Promise.resolve();
+            }
             updatePaiTrialJobs.push(this.retrieveSingleTrialJobInfo(kubeflowTrialJob))
         }
 
@@ -60,9 +64,9 @@ export class KubeflowJobInfoCollector {
         try {
             result = await cpp.exec(`kubectl get tfjobs ${kubeflowTrialJob.kubeflowJobName} -o json`);
             if(!result.stderr) {
-                this.log.error(`Get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed. Error is ${result.stderr}`);
-
-                if(++kubeflowTrialJob.queryJobFailedCount >= this.MAX_FAILED_QUERY_JOB_NUMBER) {
+                this.log.error(`Get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed. Error is ${result.stderr}, failed checking number is ${kubeflowTrialJob.queryJobFailedCount}`);
+                kubeflowTrialJob.queryJobFailedCount++;
+                if(kubeflowTrialJob.queryJobFailedCount >= this.MAX_FAILED_QUERY_JOB_NUMBER) {
                     kubeflowTrialJob.status = 'UNKNOWN';
                 }
             }
