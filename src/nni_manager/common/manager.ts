@@ -34,6 +34,7 @@ interface ExperimentParams {
     searchSpace: string;
     trainingServicePlatform: string;
     multiPhase?: boolean;
+    multiThread?: boolean;
     tuner: {
         className: string;
         builtinTunerName?: string;
