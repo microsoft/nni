@@ -6,6 +6,7 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
  - Random Search
  - Anneal
  - Naive Evolution
+ - Grid Search
  - SMAC (to install through `nnictl`)
  - ENAS (ongoing)
  - Batch (ongoing)
