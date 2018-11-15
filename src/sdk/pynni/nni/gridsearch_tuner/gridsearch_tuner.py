@@ -40,10 +40,9 @@ class GridSearchTuner(Tuner):
 
     Type 'choice' will select one of the options. Note that it can also be nested.
 
-    Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range
-    and 'q' specifies the number of values that will be sampled evenly.
-    It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q
-    larger that the value in front of it.
+    Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly.
+    Note that q should be at least 2.
+    It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
 
     Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log10(low), log10(high)]
     and sample and then change the sampled value back.
@@ -55,7 +54,7 @@ class GridSearchTuner(Tuner):
 
     def json2paramater(self, ss_spec):
         '''
-        generate all possible config for hyperparameters from hyperparameter space.
+        generate all possible configs for hyperparameters from hyperparameter space.
         ss_spec: hyperparameter space
         '''
         if isinstance(ss_spec, dict):
@@ -71,7 +70,7 @@ class GridSearchTuner(Tuner):
                         else:
                             chosen_params.append(choice)
                 else:
-                    chosen_params = self._parse_parameter(_type, _value)
+                    chosen_params = self.parse_qtype(_type, _value)
             else:
                 chosen_params = dict()
                 for key in ss_spec.keys():
@@ -90,22 +89,27 @@ class GridSearchTuner(Tuner):
             chosen_params = copy.deepcopy(ss_spec)
         return chosen_params
 
-    def _parse(self, param_value):
-        low, high, count = param_value[0], param_value[1], max(2, param_value[2])
+    def _parse_quniform(self, param_value):
+        '''parse type of quniform parameter and return a list'''
+        if param_value[2] < 2:
+            raise RuntimeError("The number of values sampled (q) should be at least 2")
+        low, high, count = param_value[0], param_value[1], param_value[2]
         interval = (high - low) / (count - 1)
         return [float(low + interval * i) for i in range(count)]
 
-    def _parse_parameter(self, param_type, param_value):
+    def parse_qtype(self, param_type, param_value):
+        '''parse type of quniform or qloguniform'''
         if param_type == 'quniform':
-            return self._parse(param_value)
+            return self._parse_quniform(param_value)
         if param_type == 'qloguniform':
             param_value[:2] = np.log10(param_value[:2])
-            return list(np.power(10, self._parse(param_value)))
+            return list(np.power(10, self._parse_quniform(param_value)))
 
         raise RuntimeError("Not supported type: %s" % param_type)
 
     def expand_parameters(self, para):
         '''
+        Enumerate all possible combinations of all parameters
         para: {key1: [v11, v12, ...], key2: [v21, v22, ...], ...}
         return: {{key1: v11, key2: v21, ...}, {key1: v11, key2: v22, ...}, ...}
         '''
