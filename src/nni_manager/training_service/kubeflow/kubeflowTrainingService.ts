@@ -62,6 +62,7 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowTrialConfig?: KubeflowTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
     private kubeflowRestServerPort?: number;
+    private readonly CONTAINER_MOUNT_PATH: string;
     
     constructor() {        
         this.log = getLogger();
@@ -69,10 +70,9 @@ class KubeflowTrainingService implements TrainingService {
         this.trialJobsMap = new Map<string, KubeflowTrialJobDetail>();
         this.kubeflowJobInfoCollector = new KubeflowJobInfoCollector(this.trialJobsMap);
         this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
-        // TODO: Root dir on NFS
-        //this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
         this.experimentId = getExperimentId();      
         this.nextTrialSequenceId = -1;
+        this.CONTAINER_MOUNT_PATH = '/tmp/nfs';
     }
 
     public async run(): Promise<void> {
@@ -102,8 +102,8 @@ class KubeflowTrainingService implements TrainingService {
 
         const trialJobId: string = uniqueString(5);
         const curTrialSequenceId: number = this.generateSequenceId();
-        //TODO: use NFS working folder instead        
-        const trialWorkingFolder: string = '';
+        // Set trial's NFS working folder
+        const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
@@ -113,16 +113,13 @@ class KubeflowTrainingService implements TrainingService {
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
 
-        //TODO: Remove hard-coded /tmp/nni? PATH.join            
-        const remoteFileServerLogPath: string = `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}/output`;
         const kubeflowRunScriptContent: string = String.Format(
             KUBEFLOW_RUN_SHELL_FORMAT,
             `$PWD/nni/${trialJobId}`,
-            remoteFileServerLogPath,
+            path.join(trialWorkingFolder, 'output'),
             trialJobId,
             getExperimentId(),
-            //TODO: Remove hard-coded /tmp/nni? PATH.join
-            `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}`,
+            trialWorkingFolder,
             curTrialSequenceId,
             this.kubeflowTrialConfig.command,
             getIPV4Address(),
@@ -143,7 +140,6 @@ class KubeflowTrainingService implements TrainingService {
         }               
 
         const kubeflowJobYamlPath = path.join(trialLocalTempFolder, `kubeflow-job-${trialJobId}.yaml`);
-        console.log(`kubeflow yaml config path is ${kubeflowJobYamlPath}`);
         const kubeflowJobName = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
         const podResources : any = {};
         podResources.requests = {
@@ -157,12 +153,13 @@ class KubeflowTrainingService implements TrainingService {
         // Generate tfjobs resource yaml file for K8S
         yaml.write(
             kubeflowJobYamlPath,
-            this.generateKubeflowJobConfig(trialJobId, kubeflowJobName, podResources),
+            this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, podResources),
             'utf-8'
         );
 
-        //TODO: refactor
+        // Creat work dir for current trial in NFS directory 
         await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
+        // Copy code files from local dir to NFS mounted dir
         await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
 
         const nfsConfig: NFSConfig = this.kubeflowClusterConfig.nfs;
@@ -318,7 +315,7 @@ class KubeflowTrainingService implements TrainingService {
         return this.metricsEmitter;
     }
 
-    private generateKubeflowJobConfig(trialJobId: string, kubeflowJobName : string, podResources : any) : any {
+    private generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, podResources : any) : any {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -331,7 +328,6 @@ class KubeflowTrainingService implements TrainingService {
             apiVersion: 'kubeflow.org/v1alpha2',
             kind: 'TFJob',
             metadata: { 
-                // TODO: use random number for NNI pod name
                 name: kubeflowJobName,
                 namespace: 'default',
                 labels: {
@@ -355,11 +351,10 @@ class KubeflowTrainingService implements TrainingService {
                                     // TODO: change the name based on operator's type
                                     name: 'tensorflow',
                                     image: this.kubeflowTrialConfig.image,
-                                    //TODO: change to real code dir
-                                    args: ["sh", `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}/run.sh`],
+                                    args: ["sh", `${path.join(trialWorkingFolder, 'run.sh')}`],
                                     volumeMounts: [{
                                         name: 'nni-nfs-vol',
-                                        mountPath: '/tmp/nfs'
+                                        mountPath: this.CONTAINER_MOUNT_PATH
                                     }],
                                     resources: podResources//,
                                     //workingDir: '/tmp/nni/nuDEP'
