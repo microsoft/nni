@@ -24,7 +24,7 @@ import sys
 import time
 import traceback
 
-from utils import check_experiment_status, fetch_experiment_config, read_last_line, remove_files, setup_experiment
+from utils import check_experiment_status, fetch_nni_log_path, read_last_line, remove_files, setup_experiment
 
 GREEN = '\33[32m'
 RED = '\33[31m'
