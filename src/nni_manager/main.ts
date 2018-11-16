@@ -115,8 +115,12 @@ process.on('SIGTERM', async () => {
         await nniManager.stopExperiment();
         const ds: DataStore = component.get(DataStore);
         await ds.close();
+        const log: Logger = getLogger();
+        await log.close();
+        const restServer: NNIRestServer = component.get(NNIRestServer);
+        await restServer.stop();
         process.exit(0);
-    }catch{
+    }catch(err){
         process.exit(1);
     }
 })

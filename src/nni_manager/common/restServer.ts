@@ -26,6 +26,7 @@ import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from './log';
 import { getBasePort } from './experimentStartupInfo';
 
+
 /**
  * Abstraction class to create a RestServer
  * The module who wants to use a RestServer could <b>extends</b> this abstract class 
@@ -90,6 +91,7 @@ export abstract class RestServer {
         } else {
             this.startTask.promise.then(
                 () => { // Started
+                    //server.close() will not be executed
                     this.server.close().on('close', () => {
                         this.log.info('Rest server stopped.');
                         this.stopTask.resolve();
@@ -103,7 +105,7 @@ export abstract class RestServer {
                 }
             );
         }
-
+        this.stopTask.resolve()
         return this.stopTask.promise;
     }
 
