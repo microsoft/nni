@@ -23,7 +23,6 @@ import os
 import logging
 import json_tricks
 from multiprocessing.dummy import Pool as ThreadPool
-import time
 from .common import init_logger, multi_thread_enabled
 from .recoverable import Recoverable
 from .protocol import CommandType, receive

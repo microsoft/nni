@@ -562,9 +562,6 @@ class NNIManager implements Manager {
 
     private async onTunerCommand(commandType: string, content: string): Promise<void> {
         this.log.info(`Command from tuner: ${commandType}, ${content}`);
-        if (this.dispatcher === undefined) {
-            throw new Error('Dispatcher error: tuner has not been setup');
-        }
         switch (commandType) {
             case INITIALIZED:
                 // Tuner is intialized, search space is set, request tuner to generate hyper parameters

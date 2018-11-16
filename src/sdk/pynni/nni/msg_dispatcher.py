@@ -26,7 +26,6 @@ import threading
 from .protocol import CommandType, send
 from .msg_dispatcher_base import MsgDispatcherBase
 from .assessor import AssessResult
-from . import NoMoreTrialError
 
 _logger = logging.getLogger(__name__)
 
