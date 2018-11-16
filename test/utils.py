@@ -64,7 +64,7 @@ def setup_experiment(installed=True):
             pypath = ':'.join([sdk_path, cmd_path])
         os.environ['PYTHONPATH'] = pypath
 
-def fetch_experiment_config(experiment_url):
+def fetch_nni_log_path(experiment_url):
     '''get nni's log path from nni's experiment url'''
     experiment_profile = requests.get(experiment_url)
     experiment_id = json.loads(experiment_profile.text)['id']

@@ -23,7 +23,7 @@ import sys
 import time
 import traceback
 
-from utils import get_yml_content, dump_yml_content, setup_experiment, fetch_experiment_config, check_experiment_status
+from utils import get_yml_content, dump_yml_content, setup_experiment, fetch_nni_log_path, check_experiment_status
 
 GREEN = '\33[32m'
 RED = '\33[31m'
@@ -54,7 +54,7 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name):
     proc = subprocess.run(['nnictl', 'create', '--config', 'sdk_test/local.yml'])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
-    nnimanager_log_path = fetch_experiment_config(EXPERIMENT_URL)
+    nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
 
     for _ in range(10):
         time.sleep(3)

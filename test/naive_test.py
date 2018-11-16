@@ -43,7 +43,7 @@ def run():
 
     print('Spawning trials...')
 
-    nnimanager_log_path = fetch_experiment_config(EXPERIMENT_URL)
+    nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
     current_trial = 0
 
     for _ in range(60):
