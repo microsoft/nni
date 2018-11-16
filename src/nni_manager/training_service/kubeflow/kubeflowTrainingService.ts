@@ -174,7 +174,7 @@ class KubeflowTrainingService implements TrainingService {
             form,
             kubeflowJobName,
             curTrialSequenceId,
-            `nfs://${nfsConfig.server}:${nfsConfig.path}/${remoteFileServerLogPath}`
+            `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`
             );
 
         // Create kubeflow training jobs
