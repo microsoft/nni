@@ -36,7 +36,7 @@ import {
     TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
-import { KubeflowClusterConfig, KubeflowTrialConfig } from './kubeflowConfig';
+import { KubeflowClusterConfig, KubeflowTrialConfig, NFSConfig } from './kubeflowConfig';
 import { KubeflowTrialJobDetail, KUBEFLOW_RUN_SHELL_FORMAT } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
@@ -113,11 +113,12 @@ class KubeflowTrainingService implements TrainingService {
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
 
+        //TODO: Remove hard-coded /tmp/nni? PATH.join            
+        const remoteFileServerLogPath: string = `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}/output`;
         const kubeflowRunScriptContent: string = String.Format(
             KUBEFLOW_RUN_SHELL_FORMAT,
             `$PWD/nni/${trialJobId}`,
-            //TODO: Remove hard-coded /tmp/nni? PATH.join
-            `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}/output`,
+            remoteFileServerLogPath,
             trialJobId,
             getExperimentId(),
             //TODO: Remove hard-coded /tmp/nni? PATH.join
@@ -164,6 +165,7 @@ class KubeflowTrainingService implements TrainingService {
         await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
         await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
 
+        const nfsConfig: NFSConfig = this.kubeflowClusterConfig.nfs;
         const trialJobDetail: KubeflowTrialJobDetail = new KubeflowTrialJobDetail(
             trialJobId,
             'WAITING',
@@ -171,9 +173,10 @@ class KubeflowTrainingService implements TrainingService {
             trialWorkingFolder,
             form,
             kubeflowJobName,
-            curTrialSequenceId
+            curTrialSequenceId,
+            `nfs://${nfsConfig.server}:${nfsConfig.path}/${remoteFileServerLogPath}`
             );
-        
+
         // Create kubeflow training jobs
         await cpp.exec(`kubectl create -f ${kubeflowJobYamlPath}`);
 
