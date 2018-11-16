@@ -127,7 +127,7 @@ class KubeflowTrainingService implements TrainingService {
             );
 
         //create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
+        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
         // Write file content ( run.sh and parameter.cfg ) to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run.sh'), kubeflowRunScriptContent, { encoding: 'utf8' });
