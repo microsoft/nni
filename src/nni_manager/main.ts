@@ -110,17 +110,20 @@ mkDirP(getLogDir()).then(async () => {
 });
 
 process.on('SIGTERM', async () => {
+    const log: Logger = getLogger();
+    let hasError: boolean = false;
     try{
         const nniManager: Manager = component.get(Manager);
         await nniManager.stopExperiment();
         const ds: DataStore = component.get(DataStore);
         await ds.close();
-        const log: Logger = getLogger();
-        await log.close();
         const restServer: NNIRestServer = component.get(NNIRestServer);
         await restServer.stop();
-        process.exit(0);
     }catch(err){
-        process.exit(1);
+        hasError = true;
+        log.error(`${err.stack}`);
+    }finally{
+        await log.close();
+        process.exit(hasError?1:0);
     }
 })
