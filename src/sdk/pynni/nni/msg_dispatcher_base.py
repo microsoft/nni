@@ -87,7 +87,7 @@ class MsgDispatcherBase(Recoverable):
         return command_handlers[command](data)
 
     def handle_initialize(self, data):
-        raise NotImplementedError('handle_request_trial_jobs not implemented')
+        raise NotImplementedError('handle_initialize not implemented')
 
     def handle_request_trial_jobs(self, data):
         raise NotImplementedError('handle_request_trial_jobs not implemented')
