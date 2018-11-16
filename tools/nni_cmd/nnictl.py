@@ -73,7 +73,7 @@ def parse_args():
 
     #parse stop command
     parser_stop = subparsers.add_parser('stop', help='stop the experiment')
-    parser_stop.add_argument('id', nargs='?', help='the id of experiment, use "all" for all experiments')
+    parser_stop.add_argument('id', nargs='?', help='the id of experiment, use \'all\' to stop all running experiments')
     parser_stop.set_defaults(func=stop_experiment)
 
     #parse trial command

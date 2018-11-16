@@ -34,7 +34,7 @@ Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 'useAnnotation': bool,
 'tuner': Or({
-    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner'),
+    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch'),
     'classArgs': {
         'optimize_mode': Or('maximize', 'minimize'),
         Optional('speed'): int

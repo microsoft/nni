@@ -62,7 +62,7 @@ export namespace ValidationSchemas {
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),

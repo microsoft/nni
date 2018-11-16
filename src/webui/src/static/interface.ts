@@ -32,6 +32,7 @@ interface Experiment {
     trainingServicePlatform: string;
     tuner: object;
     assessor?: object;
+    advisor?: object;
     clusterMetaData?: object;
 }
 
