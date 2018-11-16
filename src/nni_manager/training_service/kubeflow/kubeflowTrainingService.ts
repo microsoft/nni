@@ -26,7 +26,7 @@ import * as path from 'path';
 
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { EventEmitter } from 'events';
-import { getExperimentId } from '../../common/experimentStartupInfo';
+import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
 import { String } from 'typescript-string-operations';
@@ -57,7 +57,7 @@ class KubeflowTrainingService implements TrainingService {
     private readonly trialLocalNFSTempFolder: string = path.join(getExperimentRootDir(), 'trials-nfs-tmp');    
     private stopping: boolean = false;
     private experimentId! : string;
-    private trialSequenceId: number;
+    private nextTrialSequenceId: number;
     private kubeflowClusterConfig?: KubeflowClusterConfig;
     private kubeflowTrialConfig?: KubeflowTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
@@ -72,7 +72,7 @@ class KubeflowTrainingService implements TrainingService {
         // TODO: Root dir on NFS
         //this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
         this.experimentId = getExperimentId();      
-        this.trialSequenceId = 0;
+        this.nextTrialSequenceId = -1;
     }
 
     public async run(): Promise<void> {
@@ -101,7 +101,7 @@ class KubeflowTrainingService implements TrainingService {
         }
 
         const trialJobId: string = uniqueString(5);
-        const trialSequenceId: number = this.generateSequenceId();
+        const curTrialSequenceId: number = this.generateSequenceId();
         //TODO: use NFS working folder instead        
         const trialWorkingFolder: string = '';
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
@@ -121,7 +121,7 @@ class KubeflowTrainingService implements TrainingService {
             getExperimentId(),
             //TODO: Remove hard-coded /tmp/nni? PATH.join
             `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}`,
-            trialSequenceId.toString(),
+            curTrialSequenceId,
             this.kubeflowTrialConfig.command,
             getIPV4Address(),
             this.kubeflowRestServerPort
@@ -138,7 +138,6 @@ class KubeflowTrainingService implements TrainingService {
         if(trialForm && trialForm.hyperParameters) {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
                             trialForm.hyperParameters.value, { encoding: 'utf8' });
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, '.nni', 'sequence_id'), trialSequenceId.toString(), { encoding: 'utf8' });
         }               
 
         const kubeflowJobYamlPath = path.join(trialLocalTempFolder, `kubeflow-job-${trialJobId}.yaml`);
@@ -171,7 +170,7 @@ class KubeflowTrainingService implements TrainingService {
             trialWorkingFolder,
             form,
             kubeflowJobName,
-            trialSequenceId
+            curTrialSequenceId
             );
         
         // Create kubeflow training jobs
@@ -378,7 +377,11 @@ class KubeflowTrainingService implements TrainingService {
     }
 
     private generateSequenceId(): number {
-        return this.trialSequenceId++;
+        if (this.nextTrialSequenceId === -1) {
+            this.nextTrialSequenceId = getInitTrialSequenceId();
+        }
+
+        return this.nextTrialSequenceId++;
     }
 }
 

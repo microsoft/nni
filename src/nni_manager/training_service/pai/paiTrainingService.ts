@@ -67,7 +67,7 @@ class PAITrainingService implements TrainingService {
     private readonly hdfsDirPattern: string;
     private hdfsBaseDir: string | undefined;
     private hdfsOutputHost: string | undefined;
-    private trialSequenceId: number;
+    private nextTrialSequenceId: number;
     private paiRestServerPort?: number;
 
     constructor() {
@@ -79,7 +79,7 @@ class PAITrainingService implements TrainingService {
         this.experimentId = getExperimentId();      
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
-        this.trialSequenceId = -1;
+        this.nextTrialSequenceId = -1;
     }
 
     public async run(): Promise<void> {
@@ -162,7 +162,6 @@ class PAITrainingService implements TrainingService {
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
         await cpp.exec(`cp -r ${this.paiTrialConfig.codeDir} ${trialLocalTempFolder}`);
-        await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
 
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
@@ -173,7 +172,6 @@ class PAITrainingService implements TrainingService {
         if(trialForm) {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
                             trialForm.hyperParameters.value, { encoding: 'utf8' });
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, '.nni', 'sequence_id'), trialSequenceId.toString(), { encoding: 'utf8' });
         }
         
         // Step 1. Prepare PAI job configuration
@@ -204,6 +202,7 @@ class PAITrainingService implements TrainingService {
             `$PWD/${trialJobId}/nnioutput`,
             trialJobId,
             this.experimentId,
+            trialSequenceId,
             this.paiTrialConfig.command, 
             getIPV4Address(),
             this.paiRestServerPort,
@@ -461,11 +460,11 @@ class PAITrainingService implements TrainingService {
     }
 
     private generateSequenceId(): number {
-        if (this.trialSequenceId === -1) {
-            this.trialSequenceId = getInitTrialSequenceId();
+        if (this.nextTrialSequenceId === -1) {
+            this.nextTrialSequenceId = getInitTrialSequenceId();
         }
 
-        return this.trialSequenceId++;
+        return this.nextTrialSequenceId++;
     }
 }
 
