@@ -116,7 +116,8 @@ class KubeflowTrainingService implements TrainingService {
         const kubeflowRunScriptContent: string = String.Format(
             KUBEFLOW_RUN_SHELL_FORMAT,
             `$PWD/nni/${trialJobId}`,
-            `$PWD/nni/${trialJobId}`,
+            //TODO: Remove hard-coded /tmp/nni? PATH.join
+            `/tmp/nfs/nni/${getExperimentId()}/${trialJobId}/output`,
             trialJobId,
             getExperimentId(),
             //TODO: Remove hard-coded /tmp/nni? PATH.join
