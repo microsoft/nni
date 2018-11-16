@@ -6,6 +6,7 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
  - Random Search
  - Anneal
  - Naive Evolution
+ - Grid Search
  - SMAC (to install through `nnictl`)
  - ENAS (ongoing)
  - Batch (ongoing)
@@ -46,6 +47,15 @@ Note that SMAC only supports a subset of the types in [search space spec](../../
 
 Batch allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done.
 
+**Gridsearch**
+
+Gridsearch performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file
+
+Note that the only acceptable types of search space are 'quniform', 'qloguniform' and 'choice':
+
+* Type 'choice' will select one of the options. Note that it can also be nested.
+* Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
+* Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log10(low), log10(high)] and sample and then change the sampled value back.
 
  ## 2. How to use the tuner algorithm in NNI?
 
