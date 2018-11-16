@@ -91,7 +91,10 @@ export abstract class RestServer {
         } else {
             this.startTask.promise.then(
                 () => { // Started
-                    //server.close() will not be executed
+                    //Stops the server from accepting new connections and keeps existing connections. 
+                    //This function is asynchronous, the server is finally closed when all connections 
+                    //are ended and the server emits a 'close' event. 
+                    //Refer https://nodejs.org/docs/latest/api/net.html#net_server_close_callback
                     this.server.close().on('close', () => {
                         this.log.info('Rest server stopped.');
                         this.stopTask.resolve();
