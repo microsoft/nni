@@ -179,18 +179,6 @@ def stop_experiment(args):
                 print_normal('Experiment is not running...')
                 experiment_config.update_experiment(experiment_id, 'status', 'stopped')
                 return
-            running, _ = check_rest_server_quick(rest_port)
-            stop_rest_result = True
-            if running:
-                response = rest_delete(experiment_url(rest_port), 20)
-                if not response or not check_response(response):
-                    if response:
-                        print_error(response.text)
-                    else:
-                        print_error('No response from restful server!')
-                    stop_rest_result = False
-            #sleep to wait rest handler done
-            time.sleep(3)
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
                 stop_rest_cmds = ['kill', str(rest_pid)]
@@ -204,8 +192,7 @@ def stop_experiment(args):
                         except Exception as exception:
                             print_error(exception)
                     nni_config.set_config('tensorboardPidList', [])
-            if stop_rest_result:
-                print_normal('Stop experiment success!')
+            print_normal('Stop experiment success!')
             experiment_config.update_experiment(experiment_id, 'status', 'stopped')
             time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
             experiment_config.update_experiment(experiment_id, 'endTime', str(time_now))

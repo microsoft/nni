@@ -26,6 +26,7 @@ import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from './log';
 import { getBasePort } from './experimentStartupInfo';
 
+
 /**
  * Abstraction class to create a RestServer
  * The module who wants to use a RestServer could <b>extends</b> this abstract class 
@@ -90,6 +91,10 @@ export abstract class RestServer {
         } else {
             this.startTask.promise.then(
                 () => { // Started
+                    //Stops the server from accepting new connections and keeps existing connections. 
+                    //This function is asynchronous, the server is finally closed when all connections 
+                    //are ended and the server emits a 'close' event. 
+                    //Refer https://nodejs.org/docs/latest/api/net.html#net_server_close_callback
                     this.server.close().on('close', () => {
                         this.log.info('Rest server stopped.');
                         this.stopTask.resolve();
@@ -103,7 +108,7 @@ export abstract class RestServer {
                 }
             );
         }
-
+        this.stopTask.resolve()
         return this.stopTask.promise;
     }
 
