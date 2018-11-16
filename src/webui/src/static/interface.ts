@@ -42,6 +42,16 @@ interface AccurPoint {
     index: number;
 }
 
+interface DetailAccurPoint {
+    acc: number;
+    index: number;
+    searchSpace: string;
+}
+
+interface TooltipForAccuracy {
+    data: Array<number | object>;
+}
+
 interface TrialNumber {
     succTrial: number;
     failTrial: number;
@@ -82,5 +92,6 @@ interface VisualMapValue {
 
 export {TableObj, Parameters, Experiment, 
     AccurPoint, TrialNumber, TrialJob,
+    DetailAccurPoint, TooltipForAccuracy,
     HoverName, ParaObj, VisualMapValue, Dimobj
 };
