@@ -8,9 +8,9 @@ UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
 	OS_SPEC := linux
 	## Colorful output
-	_INFO := $(shell echo -e '$(ESC_CMD)[1;36m')
-	_WARNING := $(shell echo -e '$(ESC_CMD)[1;33m')
-	_END := $(shell echo -e '$(ESC_CMD)[0m')
+	_INFO := $(shell echo -e '\e[1;36m')
+	_WARNING := $(shell echo -e '\e[1;33m')
+	_END := $(shell echo -e '\e[0m')
 else ifeq ($(UNAME_S), Darwin)
 	OS_SPEC := darwin
 else
