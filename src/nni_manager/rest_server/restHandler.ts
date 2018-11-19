@@ -90,9 +90,7 @@ class NNIRestHandler {
         return router;
     }
 
-    private handle_error(err: Error, res: Response): void {
-        this.log.info(err);
-
+    private handle_error(err: Error, res: Response, isFatal: boolean = false): void {
         if (err instanceof NNIError && err.name === NNIErrorNames.NOT_FOUND) {
             res.status(404);
         } else {
@@ -101,6 +99,14 @@ class NNIRestHandler {
         res.send({
             error: err.message
         });
+
+        // If it's a fatal error, exit process
+        if(isFatal) {
+            this.log.critical(err);
+            process.exit(1);
+        }
+
+        this.log.error(err);
     }
 
     // TODO add validators for request params, query, body
@@ -146,12 +152,14 @@ class NNIRestHandler {
                         experiment_id: eid
                     });
                 }).catch((err: Error) => {
+                    // Start experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
             } else {
                 this.nniManager.resumeExperiment().then(() => {
                     res.send();
                 }).catch((err: Error) => {
+                    // Resume experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
             }
@@ -193,7 +201,8 @@ class NNIRestHandler {
                 }
                 res.send();
             } catch (err) {
-                this.handle_error(err, res);
+                // setClusterMetata is a step of initialization, so any exception thrown is a fatal
+                this.handle_error(err, res, true);
             }
         });
     }
