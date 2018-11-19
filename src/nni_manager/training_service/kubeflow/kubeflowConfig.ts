@@ -1,4 +1,4 @@
-import { TrialConfig } from "training_service/common/trialConfig";
+import { TrialConfig } from "../common/trialConfig";
 
 /**
  * Copyright (c) Microsoft Corporation
