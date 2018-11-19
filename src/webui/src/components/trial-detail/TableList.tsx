@@ -130,7 +130,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
             })
             .catch(error => {
                 if (error.response.status === 500) {
-                    message.error('500 error, fail to cancel the job');
+                    if (error.response.data.error) {
+                        message.error(error.response.data.error);
+                    } else {
+                        message.error('500 error, fail to cancel the job');
+                    }
                 }
             });
     }

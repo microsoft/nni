@@ -17,8 +17,7 @@
             background-color: #999;
             span{
                 color: #fff;
-                font-size: 18px;
-                font-family: 'Segoe';
+                font-weight: normal;
             }
         }
     }
@@ -51,5 +50,19 @@
 #tableList{
     .commonTableStyle{
         overflow: hidden;
+    }
+}
+
+.tooldetailAccuracy{
+    user-select: text;
+    min-width: 245px;
+    max-width: 350px;
+    max-height: 350px;
+    padding: 10px 10px;
+    white-space: normal;
+    overflow: auto;
+    pre{
+        overflow: inherit;
+        margin-bottom: 10px;
     }
 }

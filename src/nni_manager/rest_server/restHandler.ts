@@ -65,7 +65,6 @@ class NNIRestHandler {
         this.getExperimentProfile(router);
         this.updateExperimentProfile(router);
         this.startExperiment(router);
-        this.stopExperiment(router);
         this.getTrialJobStatistics(router);
         this.setClusterMetaData(router);
         this.listTrialJobs(router);
@@ -154,18 +153,6 @@ class NNIRestHandler {
                 }).catch((err: Error) => {
                     this.handle_error(err, res);
                 });
-            }
-        });
-    }
-
-    private stopExperiment(router: Router): void {
-        router.delete('/experiment', async (req: Request, res: Response) => {
-            try {
-                await this.tb.cleanUp();
-                await this.nniManager.stopExperiment();
-                res.send();
-            } catch (err) {
-                this.handle_error(err, res);
             }
         });
     }

@@ -42,6 +42,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             dataIndex: 'duration',
             key: 'duration',
             width: 140,
+            sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
             render: (text: string, record: TableObj) => {
                 let duration;
                 if (record.duration) {
@@ -69,6 +70,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             title: 'Default Metric',
             dataIndex: 'acc',
             key: 'acc',
+            sorter: (a: TableObj, b: TableObj) => (a.acc as number) - (b.acc as number),
             render: (text: string, record: TableObj) => {
                 const accuracy = record.acc;
                 let wei = 0;
