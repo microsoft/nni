@@ -34,10 +34,7 @@ Optional('multiPhase'): bool,
 'useAnnotation': bool,
 'tuner': Or({
     'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch'),
-    'classArgs': {
-        'optimize_mode': Or('maximize', 'minimize'),
-        Optional('speed'): int
-        },
+    Optional('classArgs'): dict,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'codeDir': os.path.exists,
@@ -48,8 +45,7 @@ Optional('multiPhase'): bool,
 }),
 Optional('assessor'): Or({
     'builtinAssessorName': lambda x: x in ['Medianstop'],
-    'classArgs': {
-        'optimize_mode': lambda x: x in ['maximize', 'minimize']},
+    Optional('classArgs'): dict,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
 },{
     'codeDir': os.path.exists,
