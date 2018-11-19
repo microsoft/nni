@@ -261,19 +261,11 @@ class KubeflowTrainingService implements TrainingService {
                     await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
                     const nfsServer: string = this.kubeflowClusterConfig.nfs.server;
                     const nfsPath: string = this.kubeflowClusterConfig.nfs.path;
-                    let mountError: string | undefined;
 
                     try {
-                        const mountResult: cpp.childProcessPromise.Result = await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalNFSTempFolder}`);
-                        if(mountResult.stderr) {
-                            mountError = `Exec Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${mountResult.stderr}`;
-
-                        }
+                        await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalNFSTempFolder}`);
                     } catch(error) {
-                        mountError = `Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`;
-                    }
-
-                    if(mountError) {
+                        const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`;
                         this.log.error(mountError);
                         throw new Error(mountError);
                     }
