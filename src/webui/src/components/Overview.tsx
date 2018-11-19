@@ -103,6 +103,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     const clusterMetaData = sessionData.params.clusterMetaData;
                     const endTimenum = sessionData.endTime;
                     const assessor = sessionData.params.assessor;
+                    const advisor = sessionData.params.advisor;
                     trialPro.push({
                         id: sessionData.id,
                         author: sessionData.params.authorName,
@@ -118,6 +119,7 @@ class Overview extends React.Component<{}, OverviewState> {
                         trainingServicePlatform: trainingPlatform,
                         tuner: sessionData.params.tuner,
                         assessor: assessor ? assessor : undefined,
+                        advisor: advisor ? advisor : undefined,
                         clusterMetaData: clusterMetaData ? clusterMetaData : undefined
                     });
                     // search space format loguniform max and min
