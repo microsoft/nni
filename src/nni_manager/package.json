@@ -15,6 +15,7 @@
     "express": "^4.16.3",
     "express-joi-validator": "^2.0.0",
     "node-nvidia-smi": "^1.0.0",
+    "node-yaml": "^3.1.1",
     "rx": "^4.1.0",
     "sqlite3": "^4.0.2",
     "ssh2": "^0.6.1",

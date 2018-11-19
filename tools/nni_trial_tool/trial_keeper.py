@@ -28,7 +28,7 @@ import re
 from pyhdfs import HdfsClient
 
 from .hdfsClientUtility import copyDirectoryToHdfs
-from .constants import HOME_DIR, LOG_DIR, STDOUT_FULL_PATH, STDERR_FULL_PATH
+from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .metrics_reader import read_experiment_metrics
 
 logger = logging.getLogger('trial_keeper')
@@ -52,17 +52,18 @@ def main_loop(args):
         
         if retCode is not None:
             print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
-            #copy local directory to hdfs
-            nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
-            try:
-                hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
-                if copyDirectoryToHdfs(nni_local_output_dir, args.pai_hdfs_output_dir, hdfs_client):
-                    print('copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
-                else:
-                    print('copy directory from {0} to {1} failed!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
-            except Exception as exception:
-                print('HDFS copy directory got exception')
-                raise exception
+            if NNI_PLATFORM == 'pai':
+                # Copy local directory to hdfs for OpenPAI
+                nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
+                try:
+                    hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
+                    if copyDirectoryToHdfs(nni_local_output_dir, args.pai_hdfs_output_dir, hdfs_client):
+                        print('copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
+                    else:
+                        print('copy directory from {0} to {1} failed!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
+                except Exception as exception:
+                    print('HDFS copy directory got exception')
+                    raise exception
 
             ## Exit as the retCode of subprocess(trial)
             exit(retCode)
