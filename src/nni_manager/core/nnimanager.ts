@@ -552,6 +552,9 @@ class NNIManager implements Manager {
             throw new Error('Dispatcher error: tuner has not been setup');
         }
         if (this.experimentProfile.params.multiThread) {
+            // Send multiple requests to ensure multiple hyper parameters are generated in non-blocking way.
+            // For a single REQUEST_TRIAL_JOBS request, hyper parameters are generated one by one
+            // sequentially.
             for (let i: number = 0; i < jobNum; i++) {
                 this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, '1');
             }
