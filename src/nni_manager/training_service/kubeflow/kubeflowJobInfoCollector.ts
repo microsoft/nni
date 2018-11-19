@@ -40,19 +40,19 @@ export class KubeflowJobInfoCollector {
     }
 
     public async retrieveTrialStatus() : Promise<void> {
-        const updatePaiTrialJobs : Promise<void>[] = [];
+        const updateKubeflowTrialJobs : Promise<void>[] = [];
         for(let [trialJobId, kubeflowTrialJob] of this.trialJobsMap) {
             if (!kubeflowTrialJob) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
-            // Since Kubeflow needs some delay to schedule jobs, we provide 20 seconds buffer time to check tfjobs' status
+            // Since Kubeflow needs some delay to schedule jobs, we provide 20 seconds buffer time to check kubeflow job's status
             if( Date.now() - kubeflowTrialJob.submitTime < 20 * 1000) {
                 return Promise.resolve();
             }
-            updatePaiTrialJobs.push(this.retrieveSingleTrialJobInfo(kubeflowTrialJob))
+            updateKubeflowTrialJobs.push(this.retrieveSingleTrialJobInfo(kubeflowTrialJob))
         }
 
-        await Promise.all(updatePaiTrialJobs);
+        await Promise.all(updateKubeflowTrialJobs);
     }
 
     private async retrieveSingleTrialJobInfo(kubeflowTrialJob : KubeflowTrialJobDetail) : Promise<void> {
@@ -62,16 +62,16 @@ export class KubeflowJobInfoCollector {
 
         let result : cpp.childProcessPromise.Result;
         try {
-            result = await cpp.exec(`kubectl get tfjobs ${kubeflowTrialJob.kubeflowJobName} -o json`);
+            result = await cpp.exec(`kubectl get ${kubeflowTrialJob.k8sPluralName} ${kubeflowTrialJob.kubeflowJobName} -o json`);
             if(result.stderr) {
-                this.log.error(`Get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed. Error is ${result.stderr}, failed checking number is ${kubeflowTrialJob.queryJobFailedCount}`);
+                this.log.error(`Get ${kubeflowTrialJob.k8sPluralName} ${kubeflowTrialJob.kubeflowJobName} failed. Error is ${result.stderr}, failed checking number is ${kubeflowTrialJob.queryJobFailedCount}`);
                 kubeflowTrialJob.queryJobFailedCount++;
                 if(kubeflowTrialJob.queryJobFailedCount >= this.MAX_FAILED_QUERY_JOB_NUMBER) {
                     kubeflowTrialJob.status = 'UNKNOWN';
                 }
             }
         } catch(error) {
-            this.log.error(`kubectl get tfjobs ${kubeflowTrialJob.kubeflowJobName} failed, error is ${error}`);
+            this.log.error(`kubectl get ${kubeflowTrialJob.k8sPluralName} ${kubeflowTrialJob.kubeflowJobName} failed, error is ${error}`);
             return Promise.resolve();
         }
 

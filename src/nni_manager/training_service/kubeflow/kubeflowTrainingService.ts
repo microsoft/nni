@@ -19,6 +19,7 @@
 
 'use strict'
 
+import * as assert from 'assert';
 import * as component from '../../common/component';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
@@ -36,7 +37,7 @@ import {
     TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
-import { KubeflowClusterConfig, KubeflowTrialConfig, NFSConfig } from './kubeflowConfig';
+import { KubeflowClusterConfig, kubeflowOperatorMap, KubeflowTrialConfig, NFSConfig } from './kubeflowConfig';
 import { KubeflowTrialJobDetail, KUBEFLOW_RUN_SHELL_FORMAT } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
@@ -62,6 +63,7 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowTrialConfig?: KubeflowTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
     private kubeflowRestServerPort?: number;
+    private kubeflowJobPlural?: string;
     private readonly CONTAINER_MOUNT_PATH: string;
     
     constructor() {        
@@ -93,6 +95,10 @@ class KubeflowTrainingService implements TrainingService {
 
         if(!this.kubeflowTrialConfig) {
             throw new Error('Kubeflow trial config is not initialized');
+        }
+
+        if(!this.kubeflowJobPlural) {
+            throw new Error('Kubeflow job plural name is undefined');
         }
 
         if(!this.kubeflowRestServerPort) {
@@ -150,7 +156,7 @@ class KubeflowTrainingService implements TrainingService {
 
         podResources.limits = Object.assign({}, podResources.requests);
 
-        // Generate tfjobs resource yaml file for K8S
+        // Generate kubeflow job resource yaml file for K8S
         yaml.write(
             kubeflowJobYamlPath,
             this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, podResources),
@@ -171,7 +177,8 @@ class KubeflowTrainingService implements TrainingService {
             form,
             kubeflowJobName,
             curTrialSequenceId,
-            `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`
+            `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`,
+            this.kubeflowJobPlural
             );
 
         // Create kubeflow training jobs
@@ -224,10 +231,15 @@ class KubeflowTrainingService implements TrainingService {
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }
+        if(!this.kubeflowJobPlural) {
+            const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} failed because kubeflowJobPlural is undefined`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }
 
-        const result: cpp.childProcessPromise.Result = await cpp.exec(`kubectl delete tfjobs -l app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()},trialId=${trialJobId}`);
+        const result: cpp.childProcessPromise.Result = await cpp.exec(`kubectl delete ${this.kubeflowJobPlural} -l app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()},trialId=${trialJobId}`);
         if(result.stderr) {
-            const errorMessage: string = `kubectl delete tfjobs for trial ${trialJobId} failed: ${result.stderr}`;
+            const errorMessage: string = `kubectl delete ${this.kubeflowJobPlural} for trial ${trialJobId} failed: ${result.stderr}`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }
@@ -251,6 +263,8 @@ class KubeflowTrainingService implements TrainingService {
                 } catch(error) {
                     this.log.error(`Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`);
                 }
+
+                this.kubeflowJobPlural = kubeflowOperatorMap.get(this.kubeflowClusterConfig.operator);
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -284,11 +298,14 @@ class KubeflowTrainingService implements TrainingService {
                 kubeflowTrialJob.status = 'SYS_CANCELED';
             }
         }
-        // Delete all tfjobs whose expId label is current experiment id 
+
+        assert(this.kubeflowJobPlural !== undefined);
+        
+        // Delete all kubeflow jobs whose expId label is current experiment id 
         try {
-            await cpp.exec(`kubectl delete tfjobs -l app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()}`);
+            await cpp.exec(`kubectl delete ${this.kubeflowJobPlural} -l app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()}`);
         } catch(error) {
-            this.log.error(`Delete tfjobs with label: app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
+            this.log.error(`Delete ${this.kubeflowJobPlural} with label: app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
         }
 
         // Unmount NFS
