@@ -254,14 +254,21 @@ class KubeflowTrainingService implements TrainingService {
         switch (key) {
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
                 this.kubeflowClusterConfig = <KubeflowClusterConfig>JSON.parse(value);
-                //Check and mount NFS mount point here
-                await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
-                const nfsServer: string = this.kubeflowClusterConfig.nfs.server;
-                const nfsPath: string = this.kubeflowClusterConfig.nfs.path;
-                try {
-                    await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalNFSTempFolder}`);
-                } catch(error) {
-                    this.log.error(`Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`);
+
+                // If NFS config section is valid in config file, proceed to mount and config NFS
+                if(this.kubeflowClusterConfig.nfs) {
+                    //Check and mount NFS mount point here
+                    await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
+                    const nfsServer: string = this.kubeflowClusterConfig.nfs.server;
+                    const nfsPath: string = this.kubeflowClusterConfig.nfs.path;
+
+                    try {
+                        await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalNFSTempFolder}`);
+                    } catch(error) {
+                        const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`;
+                        this.log.error(mountError);
+                        throw new Error(mountError);
+                    }
                 }
 
                 this.kubeflowJobPlural = kubeflowOperatorMap.get(this.kubeflowClusterConfig.operator);
