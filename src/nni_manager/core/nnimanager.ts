@@ -219,7 +219,6 @@ class NNIManager implements Manager {
 
     public async stopExperiment(): Promise<void> {
         this.status.status = 'STOPPING';
-        await this.experimentDoneCleanUp();
     }
 
     public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
