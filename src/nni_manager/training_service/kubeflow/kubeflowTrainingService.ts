@@ -55,7 +55,7 @@ class KubeflowTrainingService implements TrainingService {
     private readonly metricsEmitter: EventEmitter;
     private readonly trialJobsMap: Map<string, KubeflowTrialJobDetail>;
     /**  experiment root dir in NFS */
-    private readonly trialLocalNFSTempFolder: string = path.join(getExperimentRootDir(), 'trials-nfs-tmp');    
+    private readonly trialLocalNFSTempFolder: string;
     private stopping: boolean = false;
     private experimentId! : string;
     private nextTrialSequenceId: number;

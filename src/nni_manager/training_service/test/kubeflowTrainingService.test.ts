@@ -35,12 +35,10 @@ fs.copyFileSync(mockedTrialPath, localCodeDir + '/mockedTrial.py')
 
 describe('Unit Test for KubeflowTrainingService', () => {
     let skip: boolean = false;
-    let testKubeflowClusterInfo: any;
     let testKubeflowConfig: any;
     let testKubeflowTrialConfig : any;
     try {
-        //testKubeflowClusterInfo = JSON.parse(fs.readFileSync('../../.vscode/paiCluster.json', 'utf8'));
-        testKubeflowConfig = `{\"operator\":\"tf-operator\",\"nfs\":{\"server\":\"10.139.139.68\",\"path\":\"/var/nfs/general\"}, \"kubernetesServer\":\"1.2.3.4\"}`;
+        testKubeflowConfig = JSON.parse(fs.readFileSync('../../.vscode/kubeflowCluster.json', 'utf8'));
         testKubeflowTrialConfig = `{\"command\":\"python3 mnist-keras.py\",\"codeDir\":\"/home/desy/nni/examples/trials/mnist",\"gpuNum\":\"1\",\"cpuNum\":\"2\",\"memoryMB\":\"8196\",\"image\":\"msranni/nni:v0.3.3\"}`;
     } catch (err) {
         console.log('Please configure rminfo.json to enable remote machine unit test.');

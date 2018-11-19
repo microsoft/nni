@@ -50,9 +50,9 @@ export class KubeflowClusterConfig {
 
     /**
      * Constructor
-     * @param userName User name of PAI Cluster
-     * @param passWord password of PAI Cluster
-     * @param host Host IP of PAI Cluster
+     * @param userName User name of Kubeflow Cluster
+     * @param passWord password of Kubeflow Cluster
+     * @param host Host IP of Kubeflow Cluster
      */
     constructor(operator: KubeflowOperator, nfs : NFSConfig, kubernetesServer : string) {
         this.operator = operator;
