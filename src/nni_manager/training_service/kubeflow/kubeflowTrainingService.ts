@@ -211,10 +211,8 @@ class KubeflowTrainingService implements TrainingService {
                 return Promise.reject(error);
             }
         }
-        console.log('----------------214')
         // Create kubeflow training jobs
         await cpp.exec(`kubectl create -f ${kubeflowJobYamlPath}`);
-
         // Set trial job detail until kubectl create resource successfully 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 

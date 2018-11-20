@@ -26,7 +26,12 @@ import { getLogger } from '../../common/log';
 import { mkDirP } from '../../common/utils';
 
 export namespace AzureStorageClientUtility {
-
+    
+    /**
+     * create azure share
+     * @param fileServerClient 
+     * @param azureShare 
+     */
     export async function createShare(fileServerClient: any, azureShare: any){
         const deferred: Deferred<void> = new Deferred<void>();
         fileServerClient.createShareIfNotExists(azureShare, function(error: any, result: any, response: any) {
@@ -77,20 +82,36 @@ export namespace AzureStorageClientUtility {
         return deferred.promise;
     }
     
+    /**
+     * upload a file to azure storage
+     * @param fileServerClient 
+     * @param azureDirectory 
+     * @param azureFileName 
+     * @param azureShare 
+     * @param localFilePath 
+     */
     async function uploadFileToAzure(fileServerClient: any, azureDirectory: any, azureFileName: any, azureShare: any, localFilePath: any){
         const deferred: Deferred<void> = new Deferred<void>();
         await fileServerClient.createFileFromLocalFile(azureShare, azureDirectory, azureFileName, localFilePath, function(error: any, result: any, response: any) {
-            const deferred: Deferred<void> = new Deferred<void>();
             if(error){
+                console.log(error)
                 getLogger().error(`Upload file failed:, ${error}`);
                 deferred.reject(error);
-            }else{
+            }else{          
                 deferred.resolve();
             }
         })
         return deferred.promise;
     }
     
+    /**
+     * download a file from azure storage
+     * @param fileServerClient 
+     * @param azureDirectory 
+     * @param azureFileName 
+     * @param azureShare 
+     * @param localFilePath 
+     */
     async function downloadFile(fileServerClient: any, azureDirectory: any, azureFileName: any, azureShare: any, localFilePath: any){
         const deferred: Deferred<void> = new Deferred<void>();
         await fileServerClient.getFileToStream(azureShare, azureDirectory, azureFileName, fs.createWriteStream(localFilePath), function(error: any, result: any, response: any) {
@@ -114,7 +135,6 @@ export namespace AzureStorageClientUtility {
         await createDirectory(fileServerClient, azureDirectory, azureShare);
         for(let fileName of fileNameArray){
             const fullFilePath: string = path.join(localDirectory, fileName);
-            console.log(fullFilePath + ' to '  + azureDirectory + '/' + fileName)
             try {
                 if (fs.lstatSync(fullFilePath).isFile()) {
                     await uploadFileToAzure(fileServerClient, azureDirectory, fileName, azureShare, fullFilePath);
@@ -124,14 +144,21 @@ export namespace AzureStorageClientUtility {
                 }
             } catch(error) {
                 deferred.reject(error);
+                return deferred.promise;
             }
         }
-        console.log('-----------------128--------------')
         // All files/directories are copied successfully, resolve
         deferred.resolve();
         return deferred.promise;
     }
     
+    /**
+     * downlod a directory from azure
+     * @param fileServerClient 
+     * @param azureDirectory 
+     * @param azureShare 
+     * @param localDirectory 
+     */
     export async function downloadDirectory(fileServerClient: any, azureDirectory:any, azureShare: any, localDirectory: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
         mkDirP(localDirectory);
