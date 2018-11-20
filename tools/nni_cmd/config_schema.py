@@ -97,14 +97,24 @@ kubeflow_trial_schema = {
 }
 
 kubeflow_config_schema = {
-    'kubeflowConfig':{
+    'kubeflowConfig':Or({
         'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operato'),
         'nfs': {
             'server': str,
             'path': str
         },
         'kubernetesServer': str
-    }
+    },{
+        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operato'),
+        'keyVault': {
+            'vaultName': str,
+            'name': str
+        },
+        'azureStorage': {
+            'accountName': str,
+            'azureShare': str
+        }
+    })
 }
 
 machine_list_schima = {
