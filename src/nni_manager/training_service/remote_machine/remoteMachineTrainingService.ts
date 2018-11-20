@@ -442,6 +442,11 @@ class RemoteMachineTrainingService implements TrainingService {
             // for lint
             return;
         }
+        const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        if (trialJobDetail === undefined) {
+            throw new Error(`Can not get trial job detail for job: ${trialJobId}`);
+        }
+
         const trialLocalTempFolder: string = path.join(this.expRootDir, 'trials-local', trialJobId);
 
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${trialWorkingFolder}`, sshClient);
@@ -463,7 +468,9 @@ class RemoteMachineTrainingService implements TrainingService {
             path.join(trialWorkingFolder, 'stderr'),
             path.join(trialWorkingFolder, '.nni', 'code'),
             /** Mark if the trial is multi-phase job */
-            this.isMultiPhase);
+            this.isMultiPhase,
+            trialJobDetail.sequenceId.toString()
+            );
 
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
@@ -475,7 +482,6 @@ class RemoteMachineTrainingService implements TrainingService {
         await SSHClientUtility.copyFileToRemote(
             path.join(trialLocalTempFolder, 'run.sh'), path.join(trialWorkingFolder, 'run.sh'), sshClient);
         await this.writeParameterFile(trialJobId, form.hyperParameters, rmScheduleInfo.rmMeta);
-        await this.writeSequenceIdFile(trialJobId, rmScheduleInfo.rmMeta);
 
         // Copy files in codeDir to remote working directory
         await SSHClientUtility.copyDirectoryToRemote(this.trialConfig.codeDir, trialWorkingFolder, sshClient);
@@ -612,15 +618,6 @@ class RemoteMachineTrainingService implements TrainingService {
         }
 
         return this.trialSequenceId++;
-    }
-
-    private async writeSequenceIdFile(trialJobId: string, rmMeta: RemoteMachineMeta): Promise<void> {
-        const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
-        if (trialJobDetail === undefined) {
-            assert(false, `Can not get trial job detail for job: ${trialJobId}`);
-        } else {
-            await this.writeRemoteTrialFile(trialJobId, trialJobDetail.sequenceId.toString(), rmMeta, path.join('.nni', 'sequence_id'));
-        }
     }
 
     private async writeRemoteTrialFile(trialJobId: string, fileContent: string,
