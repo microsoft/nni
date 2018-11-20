@@ -32,26 +32,15 @@ import onnx
 import mmdnn
 import warnings
 from onnx_tf.backend import prepare, TensorflowRep
-from onnx_tf.common import get_output_node_names
 from onnx_tf.frontend import tensorflow_graph_to_onnx_model
 
-# set the logger format
-logger = logging.getLogger('cifar10-network-morphism')
-log_format = '%(asctime)s %(message)s'
-logger.basicConfig(stream=sys.stdout, level=logging.INFO,
-                   format=log_format, datefmt='%m/%d %I:%M:%S %p')
 
-optimizer = None
-train_init_op = None
-test_init_op = None
-train_features = None
-train_labels = None
-test_features = None
-test_labels = None
-train_step = 0
-test_step = 0
-best_acc = 0.0
-args = get_args()
+log_format = '%(asctime)s %(message)s'
+logging.basicConfig(filename="networkmorphism.log",filemode='a', level=logging.INFO,
+                   format=log_format, datefmt='%m/%d %I:%M:%S %p')
+# set the logger format
+_logger = logging.getLogger('cifar10-network-morphism')
+
 
 
 def get_args():
@@ -74,6 +63,21 @@ def get_args():
     args = parser.parse_args()
     return args
 
+optimizer = None
+train_init_op = None
+test_init_op = None
+train_features = None
+train_labels = None
+test_features = None
+test_labels = None
+train_step = 0
+test_step = 0
+best_acc = 0.0
+args = get_args()
+
+
+
+
 
 def build_graph_from_onnx(onnx_model_path):
     ''' build model from onnx intermedia represtation 
@@ -91,11 +95,23 @@ def build_graph_from_onnx(onnx_model_path):
     warnings.filterwarnings('ignore')
 
     # Import the ONNX model to Tensorflow
-    tf_rep = prepare(onnx_model)
+    tf_rep = prepare(onnx_model,strict=False)
     # tf_rep.export_graph(args.model_path)
     graph_def = tf_rep.graph.as_graph_def()
     return graph_def
 
+def get_output_node_names(graph_def):
+  """Get output node names from GraphDef.
+  Args:
+    graph_def: GraphDef object.
+  Returns:
+    List of output node names.
+  """
+  nodes, input_names = dict(), set()
+  for node in graph_def.node:
+    nodes[node.name] = node
+    input_names.update(set(node.input))
+  return list(set(nodes) - input_names)
 
 def save_graph_to_onnx(onnx_model_path):
     ''' save model to onnx intermedia represtation 
@@ -112,6 +128,7 @@ def save_graph_to_onnx(onnx_model_path):
     output = get_output_node_names(graph_def)
 
     # convert tf graph to onnx model
+    # below the function is not enough for all the tensorflow opsets
     model = tensorflow_graph_to_onnx_model(graph_def, output)
     with open(onnx_model_path, 'wb') as f:
         f.write(model.SerializeToString())
@@ -129,12 +146,12 @@ def parse_rev_args(receive_msg):
     global optimizer
 
     # Data
-    logger.info('Preparing data..')
+    _logger.info('Preparing data..')
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     (trainX, trainY) = (x_train.astype(np.uint8), y_train.astype(np.int32))
     (testX, testY) = (x_test.astype(np.uint8), y_test.astype(np.int32))
-    train_step = np.ceil(len(trainX) / args.bacch_size)
-    test_step = np.ceil(len(testX) / args.bacch_size)
+    train_step = np.ceil(len(trainX) / args.batch_size)
+    test_step = np.ceil(len(testX) / args.batch_size)
     train_dataset = tf.data.Dataset.from_tensor_slices((trainX, trainY))
     test_dataset = tf.data.Dataset.from_tensor_slices((testX, testY))
     train_dataset = train_dataset.repeat().shuffle(10000)
@@ -155,10 +172,10 @@ def parse_rev_args(receive_msg):
     test_features, test_labels = test_iterator.get_next()
     train_init_op = train_iterator.make_initializer(train_dataset)
     test_init_op = test_iterator.make_initializer(test_dataset)
-    logger.info('Preparing successfully.')
+    _logger.info('Preparing successfully.')
 
     # Model
-    logger.info('Building model..')
+    _logger.info('Building model..')
     model_path = receive_msg
     graph_def = build_graph_from_onnx(model_path)
 
@@ -190,7 +207,7 @@ def train(sess, epoch):
     global train_step
     global optimizer
 
-    logger.info('Epoch: %d' % epoch)
+    _logger.info('Epoch: %d' % epoch)
     # Placeholders
     x = tf.get_default_graph().get_tensor_by_name('x:0')
     y = tf.get_default_graph().get_tensor_by_name('y:0')
@@ -252,25 +269,25 @@ def test(sess, epoch, onnx_model_path):
     # Save checkpoint.
     acc = 100.*correct/total
     if acc > best_acc:
-        logger.info('Saving..')
-        save_graph_to_onnx(onnx_model_path)
+        _logger.info('Saving..')
+        # save_graph_to_onnx(onnx_model_path)
         best_acc = acc
     return acc, best_acc
 
 
 def map_single(x, y):
-    print('Map single:')
-    print('x shape: %s' % str(x.shape))
-    print('y shape: %s' % str(y.shape))
+    # print('Map single:')
+    # print('x shape: %s' % str(x.shape))
+    # print('y shape: %s' % str(y.shape))
     x = tf.image.per_image_standardization(x)
     # Consider: x = tf.image.random_flip_left_right(x)
     return x, y
 
 
 def map_batch(x, y):
-    print('Map batch:')
-    print('x shape: %s' % str(x.shape))
-    print('y shape: %s' % str(y.shape))
+    # print('Map batch:')
+    # print('x shape: %s' % str(x.shape))
+    # print('y shape: %s' % str(y.shape))
     # Note: this flips ALL images left to right. Not sure this is what you want
     # UPDATE: looks like tf documentation is wrong and you need a 3D tensor?
     # return tf.image.flip_left_right(x), y
@@ -389,7 +406,8 @@ def main():
     try:
         # trial get next parameter from network morphism tuner
         RCV_CONFIG = nni.get_next_parameter()
-        logger.debug(RCV_CONFIG)
+        _logger.info(RCV_CONFIG)
+        _logger.info(type(RCV_CONFIG))
 
         graph_def = parse_rev_args(RCV_CONFIG)
 
@@ -406,7 +424,7 @@ def main():
         # trial report best_acc to tuner
         nni.report_final_result(best_acc)
     except Exception as exception:
-        logger.exception(exception)
+        _logger.exception(exception)
         raise
 
 

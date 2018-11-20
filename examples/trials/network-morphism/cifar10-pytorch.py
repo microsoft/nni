@@ -41,10 +41,11 @@ from mmdnn.conversion.pytorch.pytorch_emitter import PytorchEmitter
         
 
 # set the logger format
-logger = logging.getLogger('cifar10-network-morphism')
 log_format = '%(asctime)s %(message)s'
-logger.basicConfig(stream=sys.stdout, level=logging.INFO,
-    format=log_format, datefmt='%m/%d %I:%M:%S %p')
+logging.basicConfig(filename="networkmorphism.log",filemode='a', level=logging.INFO,
+                   format=log_format, datefmt='%m/%d %I:%M:%S %p')
+# set the logger format
+logger = logging.getLogger('cifar10-network-morphism')
 
 trainloader = None
 testloader = None
@@ -93,7 +94,7 @@ def parse_rev_args(receive_msg,args):
     global optimizer
 
     # Data
-    logger.info('Preparing data..')
+    logger.debug('Preparing data..')
 
     transform_train, transform_test = utils._data_transforms_cifar10(args)
 
@@ -105,7 +106,7 @@ def parse_rev_args(receive_msg,args):
 
 
     # Model
-    logger.info('Building model..')
+    logger.debug('Building model..')
     model_path , weight_path = receive_msg
     net = build_graph_from_onnx(model_path, weight_path,args)
 
@@ -140,7 +141,7 @@ def train(epoch):
     global criterion
     global optimizer
 
-    logger.info('Epoch: %d' % epoch)
+    logger.debug('Epoch: %d' % epoch)
     net.train()
     train_loss = 0
     correct = 0
@@ -194,7 +195,7 @@ def test(epoch):
     # Save checkpoint.
     acc = 100.*correct/total
     if acc > best_acc:
-        logger.info('Saving..')
+        logger.debug('Saving..')
         state = {
             'net': net.state_dict(),
             'acc': acc,

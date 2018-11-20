@@ -662,9 +662,16 @@ class ONNXModel:
     def __init__(self, graph):
         pass
 
+
+def graph_to_onnx(graph,onnx_model_path,input_shape):
+
+    torch_model = graph.produce_model()
+    x = torch.randn(Constant.BATCH_SIZE, input_shape[2], input_shape[0], input_shape[1], requires_grad=True)
+    torch_out = torch.onnx.export(torch_model, x , onnx_model_path,export_params=True)
+
+    return torch_out
+
 def onnx_to_graph(onnx_model,input_shape):
-    graph=Graph(input_shape)
-    for item in onnx_model:
-        # to restore the Graph 
-        pass
+    graph = Graph(input_shape, False)
+    
     return graph

@@ -1,7 +1,10 @@
 authorName: default
 experimentName: example_cifar10-network-morphism
+# how many trials could be concurrently running
 trialConcurrency: 1
+# maximum experiment running duration
 maxExecDuration: 24h
+# empty means never stop
 maxTrialNum: 10
 #choice: local, remote, pai
 trainingServicePlatform: local
@@ -11,13 +14,11 @@ useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, Medianstop, NetworkMorphism
   #SMAC (SMAC should be installed through nnictl) 
-  builtinTunerName: NetworkMorphismTuner
+  builtinTunerName: NetworkMorphism
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
-    n_output_node: 10
-    input_shape: (32, 32, 3)
 trial:
-  command: python3 cifar10-network-morphism.py
+  command: python cifar10-tensorflow.py
   codeDir: .
   gpuNum: 0

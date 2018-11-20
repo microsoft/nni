@@ -35,7 +35,7 @@ from nni.networkmorphism_tuner.metric import Accuracy
 from nni.networkmorphism_tuner.utils import pickle_to_file, pickle_from_file, Constant
 from nni.networkmorphism_tuner.net_transformer import default_transform
 from nni.networkmorphism_tuner.nn import CnnGenerator
-from nni.networkmorphism_tuner.graph import onnx_to_graph
+from nni.networkmorphism_tuner.graph import onnx_to_graph,graph_to_onnx
 import onnx
 import torch
 
@@ -110,6 +110,7 @@ class NetworkMorphismTuner(Tuner):
         self.y_queue = []
         self.search_tree = SearchTree()
         self.descriptors = []
+        self.history = []
 
         self.max_model_size = max_model_size
         self.default_model_len = default_model_len
@@ -159,13 +160,12 @@ class NetworkMorphismTuner(Tuner):
 
         # from gragh to onnx_model_path
         onnx_model_path = os.path.join(self.path, str(model_id) + '.onnx')
-        torch_model = graph.produce_model()
-        x = torch.randn(Constant.BATCH_SIZE, self.input_shape[2], self.input_shape[0], self.input_shape[1], requires_grad=True)
-        torch_out = torch.onnx.export(torch_model, x , onnx_model_path,export_params=True)    
-        # onnx.save(graph, onnx_model_path)
+        torch_out=graph_to_onnx(graph,onnx_model_path,self.input_shape)
 
         self.total_data[parameter_id] = (onnx_model_path, father_id, model_id)
-
+        
+        self.update_search_space(onnx_model_path)
+        
         return onnx_model_path
 
     def receive_trial_result(self, parameter_id, parameters, value):
@@ -191,8 +191,10 @@ class NetworkMorphismTuner(Tuner):
             reward = -reward
 
         # from onnx_model_path to gragh
-        onnx_graph = onnx.load(onnx_model_path)
-        graph = onnx_to_graph(onnx_graph,self.input_shape)
+        # onnx_graph = onnx.load(onnx_model_path)
+        # graph = onnx_to_graph(onnx_graph,self.input_shape)
+
+        graph = self.bo.searcher.load_model_by_id(model_id)
 
         # to use the reward and graph
         self.add_model(reward, graph, model_id)
