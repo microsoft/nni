@@ -20,7 +20,6 @@
 'use strict';
 
 import * as request from 'request';
-import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from '../../common/log';
 import { NNIError, NNIErrorNames } from '../../common/errors';
@@ -43,7 +42,7 @@ export class PAIJobInfoCollector {
         this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED'];
     }
 
-    public async updateTrialStatusFromPAI(paiToken? : string, paiClusterConfig?: PAIClusterConfig) : Promise<void> {
+    public async retrieveTrialStatus(paiToken? : string, paiClusterConfig?: PAIClusterConfig) : Promise<void> {
         if (!paiClusterConfig || !paiToken) {
             return Promise.resolve();            
         }
