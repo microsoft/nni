@@ -32,6 +32,7 @@ interface Experiment {
     trainingServicePlatform: string;
     tuner: object;
     assessor?: object;
+    advisor?: object;
     clusterMetaData?: object;
 }
 
@@ -39,6 +40,16 @@ interface Experiment {
 interface AccurPoint {
     acc: number;
     index: number;
+}
+
+interface DetailAccurPoint {
+    acc: number;
+    index: number;
+    searchSpace: string;
+}
+
+interface TooltipForAccuracy {
+    data: Array<number | object>;
 }
 
 interface TrialNumber {
@@ -81,5 +92,6 @@ interface VisualMapValue {
 
 export {TableObj, Parameters, Experiment, 
     AccurPoint, TrialNumber, TrialJob,
+    DetailAccurPoint, TooltipForAccuracy,
     HoverName, ParaObj, VisualMapValue, Dimobj
 };

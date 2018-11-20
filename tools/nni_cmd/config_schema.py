@@ -28,12 +28,12 @@ Optional('description'): str,
 'trialConcurrency': And(int, lambda n: 1 <=n <= 999999),
 Optional('maxExecDuration'): Regex(r'^[1-9][0-9]*[s|m|h|d]$'),
 Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
-'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai']),
+'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai', 'kubeflow']),
 Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
 'useAnnotation': bool,
 'tuner': Or({
-    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner'),
+    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch'),
     'classArgs': {
         'optimize_mode': Or('maximize', 'minimize'),
         Optional('speed'): int
@@ -89,6 +89,28 @@ pai_config_schema = {
 }
 }
 
+kubeflow_trial_schema = {
+'trial':{
+    'command': str,
+    'codeDir': os.path.exists,
+    'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+    'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+    'memoryMB': int,
+    'image': str
+    }
+}
+
+kubeflow_config_schema = {
+    'kubeflowConfig':{
+        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operato'),
+        'nfs': {
+            'server': str,
+            'path': str
+        },
+        'kubernetesServer': str
+    }
+}
+
 machine_list_schima = {
 Optional('machineList'):[Or({
     'ip': str,
@@ -109,3 +131,5 @@ LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
 REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine_list_schima})
 
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
+
+KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})

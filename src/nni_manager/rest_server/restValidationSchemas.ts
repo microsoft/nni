@@ -46,6 +46,14 @@ export namespace ValidationSchemas {
                 userName: joi.string().min(1).required(),
                 passWord: joi.string().min(1).required(),
                 host: joi.string().min(1).required()
+            }),
+            kubeflow_config: joi.object({
+                operator: joi.string().min(1).required(),
+                nfs: joi.object({
+                    server: joi.string().min(1).required(),
+                    path: joi.string().min(1).required()
+                }).required(),
+                kubernetesServer: joi.string().min(1).required()
             })
         }
     };
@@ -61,7 +69,7 @@ export namespace ValidationSchemas {
             maxExecDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),

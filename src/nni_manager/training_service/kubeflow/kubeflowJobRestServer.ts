@@ -19,15 +19,36 @@
 
 'use strict';
 
+import * as component from '../../common/component';
+import { Inject } from 'typescript-ioc';
+import { KubeflowTrainingService } from './kubeflowTrainingService';
+import { ClusterJobRestServer } from '../common/clusterJobRestServer'
+
 /**
- * Enum of metadata keys for configuration
+ * Kubeflow Training service Rest server, provides rest API to support kubeflow job metrics update
+ * 
  */
-export enum TrialConfigMetadataKey {
-    MACHINE_LIST = 'machine_list',
-    TRIAL_CONFIG = 'trial_config',
-    EXPERIMENT_ID = 'experimentId',
-    MULTI_PHASE = 'multiPhase',
-    RANDOM_SCHEDULER = 'random_scheduler',
-    PAI_CLUSTER_CONFIG = 'pai_config',
-    KUBEFLOW_CLUSTER_CONFIG = 'kubeflow_config'
+@component.Singleton
+export class KubeflowJobRestServer extends ClusterJobRestServer{
+    @Inject
+    private readonly kubeflowTrainingService : KubeflowTrainingService;
+
+    /**
+     * constructor to provide NNIRestServer's own rest property, e.g. port
+     */
+    constructor() {
+        super();
+        this.kubeflowTrainingService = component.get(KubeflowTrainingService);
+    }
+
+    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
+        // Split metrics array into single metric, then emit
+        // Warning: If not split metrics into single ones, the behavior will  be UNKNOWN
+        for (const singleMetric of metrics) {
+            this.kubeflowTrainingService.MetricsEmitter.emit('metric', {
+                id : jobId,
+                data : singleMetric
+            });
+        }
+    }   
 }

@@ -320,6 +320,7 @@ class LocalTrainingService implements TrainingService {
             { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
             { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
             { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
+            { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.sequenceId.toString() },
             { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
     }
@@ -368,7 +369,6 @@ class LocalTrainingService implements TrainingService {
         await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
         await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
-        await this.writeSequenceIdFile(trialJobId);
         const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
 
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
@@ -449,13 +449,6 @@ class LocalTrainingService implements TrainingService {
         }
 
         return this.trialSequenceId++;
-    }
-
-    private async writeSequenceIdFile(trialJobId: string): Promise<void> {
-        const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
-        assert(trialJobDetail !== undefined);
-        const filepath: string = path.join(trialJobDetail.workingDirectory, '.nni', 'sequence_id');
-        await fs.promises.writeFile(filepath, trialJobDetail.sequenceId.toString(), { encoding: 'utf8' });
     }
 }
 
