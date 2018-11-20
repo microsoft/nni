@@ -175,6 +175,8 @@ class KubeflowTrainingService implements TrainingService {
             // Creat work dir for current trial in NFS directory 
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
             // Copy code files from local dir to NFS mounted dir
+
+            
             await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
         
             const nfsConfig: NFSConfig = this.kubeflowClusterConfig.nfs;
@@ -191,9 +193,8 @@ class KubeflowTrainingService implements TrainingService {
             );
         }else{
             try{
-                //copy local directory to azure file storage
+                //upload local files to azure storage
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient, `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare, `${trialLocalTempFolder}`);
-                console.log('----------------copy finished------------')
                 trialJobDetail = new KubeflowTrialJobDetail(
                     trialJobId,
                     'WAITING',
@@ -210,7 +211,7 @@ class KubeflowTrainingService implements TrainingService {
                 return Promise.reject(error);
             }
         }
-
+        console.log('----------------214')
         // Create kubeflow training jobs
         await cpp.exec(`kubectl create -f ${kubeflowJobYamlPath}`);
 
