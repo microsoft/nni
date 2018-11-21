@@ -271,6 +271,7 @@ class NNIDataStore implements DataStore {
                 case 'FAILED':
                 case 'USER_CANCELED':
                 case 'SYS_CANCELED':
+                case 'EARLY_STOPPED':
                     if (record.logPath !== undefined) {
                         jobInfo.logPath = record.logPath;
                     }

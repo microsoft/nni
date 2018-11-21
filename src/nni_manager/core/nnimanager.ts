@@ -367,6 +367,7 @@ class NNIManager implements Manager {
             switch (trialJobDetail.status) {
                 case 'SUCCEEDED':
                 case 'USER_CANCELED':
+                case 'EARLY_STOPPED':
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: trialJobDetail.status}));
