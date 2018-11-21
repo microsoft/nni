@@ -25,4 +25,4 @@ make
 ```bash
 make upload
 ```
-You may need to input the account and password of htts://pypi.org during this process.
+You may need to input the account and password of https://pypi.org during this process.

@@ -19,15 +19,12 @@
 
 'use strict';
 
-/**
- * Enum of metadata keys for configuration
- */
-export enum TrialConfigMetadataKey {
-    MACHINE_LIST = 'machine_list',
-    TRIAL_CONFIG = 'trial_config',
-    EXPERIMENT_ID = 'experimentId',
-    MULTI_PHASE = 'multiPhase',
-    RANDOM_SCHEDULER = 'random_scheduler',
-    PAI_CLUSTER_CONFIG = 'pai_config',
-    KUBEFLOW_CLUSTER_CONFIG = 'kubeflow_config'
-}
+export const CONTAINER_INSTALL_NNI_SHELL_FORMAT: string = 
+`#!/bin/bash
+if python3 -c 'import nni' > /dev/null 2>&1; then
+  # nni module is already installed, skip
+  return
+else
+  # Install nni
+  python3 -m pip install --user --upgrade nni  
+fi`;
