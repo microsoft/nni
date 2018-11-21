@@ -80,7 +80,7 @@ class KubeflowTrainingService implements TrainingService {
         this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
         this.experimentId = getExperimentId();      
         this.nextTrialSequenceId = -1;
-        this.CONTAINER_MOUNT_PATH = '/tmp/nfs';
+        this.CONTAINER_MOUNT_PATH = '/tmp/mount';
     }
 
     public async run(): Promise<void> {
