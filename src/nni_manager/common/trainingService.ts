@@ -22,7 +22,7 @@
 /**
  * define TrialJobStatus
  */
-type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED';
+type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED' | 'EARLY_STOPPED';
 type JobType = 'TRIAL' | 'HOST';
 
 interface TrainingServiceMetadata {
@@ -113,7 +113,7 @@ abstract class TrainingService {
     public abstract submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail>;
     public abstract updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail>;
     public abstract get isMultiPhaseJobSupported(): boolean;
-    public abstract cancelTrialJob(trialJobId: string): Promise<void>;
+    public abstract cancelTrialJob(trialJobId: string, byAssessor: boolean = false): Promise<void>;
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
     public abstract getClusterMetadata(key: string): Promise<string>;
     public abstract cleanUp(): Promise<void>;

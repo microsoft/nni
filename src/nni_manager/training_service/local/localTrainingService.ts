@@ -246,7 +246,7 @@ class LocalTrainingService implements TrainingService {
         return true;
     }
 
-    public async cancelTrialJob(trialJobId: string): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, byAssessor: boolean = false): Promise<void> {
         this.log.info(`cancelTrialJob: ${trialJobId}`);
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
         if (trialJob === undefined) {
@@ -263,7 +263,11 @@ class LocalTrainingService implements TrainingService {
         } else {
             throw new Error(`Job type not supported: ${trialJob.form.jobType}`);
         }
-        this.setTrialJobStatus(trialJob, 'USER_CANCELED');
+        if (byAssessor) {
+            this.setTrialJobStatus(trialJob, 'EARLY_STOPPED');
+        } else {
+            this.setTrialJobStatus(trialJob, 'USER_CANCELED');
+        }
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {

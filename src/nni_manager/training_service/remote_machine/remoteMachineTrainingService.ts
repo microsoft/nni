@@ -234,7 +234,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * Cancel trial job
      * @param trialJobId ID of trial job
      */
-    public async cancelTrialJob(trialJobId: string): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, byAssessor: boolean = false): Promise<void> {
         this.log.info(`cancelTrialJob: jobId: ${trialJobId}`);
         const deferred: Deferred<void> = new Deferred<void>();
         const trialJob: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
@@ -261,14 +261,22 @@ class RemoteMachineTrainingService implements TrainingService {
             const jobpidPath: string = this.getJobPidPath(trialJob.id);
             try {
                 await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, sshClient);
-                trialJob.status = 'USER_CANCELED';
+                if (byAssessor) {
+                    trialJob.status = 'EARLY_STOPPED';
+                } else {
+                    trialJob.status = 'USER_CANCELED';
+                }
             } catch (error) {
                 // Not handle the error since pkill failed will not impact trial job's current status
                 this.log.error(`remoteTrainingService.cancelTrialJob: ${error.message}`);
             }
         } else {
             // Job is not scheduled yet, set status to 'USER_CANCELLED' directly
-            trialJob.status = 'USER_CANCELED';
+            if (byAssessor) {
+                trialJob.status = 'EARLY_STOPPED';
+            } else {
+                trialJob.status = 'USER_CANCELED';
+            }
         }
     }
 

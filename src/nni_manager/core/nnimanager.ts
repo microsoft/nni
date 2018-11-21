@@ -568,7 +568,7 @@ class NNIManager implements Manager {
                 // ignore this event for now
                 break;
             case KILL_TRIAL_JOB:
-                await this.trainingService.cancelTrialJob(JSON.parse(content));
+                await this.trainingService.cancelTrialJob(JSON.parse(content), true);
                 break;
             default:
                 throw new Error('Error: unsupported command type from tuner');

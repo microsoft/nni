@@ -224,7 +224,7 @@ class KubeflowTrainingService implements TrainingService {
         return false;
     }
 
-    public async cancelTrialJob(trialJobId: string): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, byAssessor: boolean = false): Promise<void> {
         const trialJobDetail : KubeflowTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         if(!trialJobDetail) {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} not found`;
@@ -245,7 +245,11 @@ class KubeflowTrainingService implements TrainingService {
         }
 
         trialJobDetail.endTime = Date.now();
-        trialJobDetail.status = 'USER_CANCELED';        
+        if (byAssessor) {
+            trialJobDetail.status = 'EARLY_STOPPED';
+        } else {
+            trialJobDetail.status = 'USER_CANCELED';
+        }
 
         return Promise.resolve();
     }
