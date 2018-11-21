@@ -268,5 +268,13 @@ function getIPV4Address(): string {
     throw Error('getIPV4Address() failed because no valid IPv4 address found.')
 }
 
-export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, 
+function getRemoteTmpDir(os_spec: string): string {
+    if (os_spec == 'linux') {
+        return '/tmp';
+    } else {
+        throw Error(`remote OS ${os_spec} not supported`);
+    }
+}
+
+export {getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, 
     getDefaultDatabaseDir, getIPV4Address, mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
