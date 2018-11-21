@@ -54,13 +54,15 @@ def create_parameter_id():
     _next_parameter_id += 1
     return _next_parameter_id - 1
 
-def create_bracket_parameter_id(brackets_id, brackets_curr_decay):
+def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-1):
     '''
     Create a full id for a specific bracket's hyperparameter configuration
     '''
+    if increased_id == -1:
+        increased_id = str(create_parameter_id())
     params_id = '_'.join([str(brackets_id),
                           str(brackets_curr_decay),
-                          str(create_parameter_id())])
+                          increased_id])
     return params_id
 
 def json2paramater(ss_spec, random_state):
@@ -126,7 +128,7 @@ class Bracket():
         i means the ith round. Increase i by 1
         '''
         self.i += 1
-        if self.i > self.s_max:
+        if self.i > self.bracket_id:
             self.no_more_trial = True
 
     def set_config_perf(self, i, parameter_id, seq, value):
@@ -154,6 +156,7 @@ class Bracket():
         '''
         global _KEY # pylint: disable=global-statement
         self.num_finished_configs[i] += 1
+        _logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d', self.bracket_id, self.i, i, self.num_finished_configs[i], self.num_configs_to_run[i])
         if self.num_finished_configs[i] >= self.num_configs_to_run[i] \
             and self.no_more_trial is False:
             # choose candidate configs from finished configs to run in the next round
@@ -171,7 +174,10 @@ class Bracket():
                 params_id = sorted_perf[k][0]
                 params = self.hyper_configs[i][params_id]
                 params[_KEY] = next_r # modify r
-                hyper_configs[params_id] = params
+                # generate new id
+                increased_id = params_id.split('_')[-1]
+                new_id = create_bracket_parameter_id(self.bracket_id, self.i, increased_id)
+                hyper_configs[new_id] = params
             self._record_hyper_configs(hyper_configs)
             return [[key, value] for key, value in hyper_configs.items()]
         return None
@@ -193,6 +199,11 @@ class Bracket():
         return [[key, value] for key, value in hyperparameter_configs.items()]
 
     def _record_hyper_configs(self, hyper_configs):
+        '''
+        after generating one round of hyperconfigs, this function records the generated hyperconfigs,
+        creates a dict to record the performance when those hyperconifgs are running, set the number of finished configs
+        in this round to be 0, and increase the round number.
+        '''
         self.hyper_configs.append(hyper_configs)
         self.configs_perf.append(dict())
         self.num_finished_configs.append(0)

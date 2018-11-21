@@ -1,6 +1,6 @@
 authorName: default
 experimentName: example_mnist
-trialConcurrency: 1
+trialConcurrency: 2
 maxExecDuration: 100h
 maxTrialNum: 10000
 #choice: local, remote, pai
@@ -15,7 +15,7 @@ advisor:
     #R: the maximum STEPS
     R: 100
     #eta: proportion of discarded trials
-    eta: 4
+    eta: 3
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:

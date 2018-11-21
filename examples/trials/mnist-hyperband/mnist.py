@@ -176,7 +176,7 @@ def main(params):
             batch = mnist.train.next_batch(params['batch_size'])
             mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
                                                     mnist_network.labels: batch[1],
-                                                    mnist_network.keep_prob: params['dropout_rate']}
+                                                    mnist_network.keep_prob: 1 - params['dropout_rate']}
                                         )
 
             if i % 10 == 0:
