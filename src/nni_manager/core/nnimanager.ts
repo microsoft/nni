@@ -416,22 +416,24 @@ class NNIManager implements Manager {
             // If trialConcurrency changes, for example, trialConcurrency decreases by 4 (trialConcurrencyChange=-4) and 
             // finishedTrialJobNum is 2, then requestTrialNum becomes -2. No trial will be requested from tuner,
             // and trialConcurrencyChange becomes -2.
-            let requestTrialNum: number = this.trialConcurrencyChange + finishedTrialJobNum;
+            const requestTrialNum: number = this.trialConcurrencyChange + finishedTrialJobNum;
             if (requestTrialNum >= 0) {
                 this.trialConcurrencyChange = 0;
             } else {
                 this.trialConcurrencyChange = requestTrialNum;
             }
-            for (let i: number = 0; i < requestTrialNum; i++) {
+
+            const requestCustomTrialNum: number = Math.min(requestTrialNum, this.customizedTrials.length);
+            for (let i: number = 0; i < requestCustomTrialNum; i++) {
                 // ask tuner for more trials
                 if (this.customizedTrials.length > 0) {
                     const hyperParams: string | undefined = this.customizedTrials.shift();
                     this.dispatcher.sendCommand(ADD_CUSTOMIZED_TRIAL_JOB, hyperParams);
-                    requestTrialNum --;
                 }
             }
-            if (requestTrialNum > 0) {
-                this.requestTrialJobs(requestTrialNum);
+
+            if (requestTrialNum - requestCustomTrialNum > 0) {
+                this.requestTrialJobs(requestTrialNum - requestCustomTrialNum);
             }
 
             // check maxtrialnum and maxduration here
