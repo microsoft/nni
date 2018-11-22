@@ -31,7 +31,7 @@ import * as util from 'util';
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
-import { HyperParameters, TrainingService } from './trainingService';
+import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
     return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
@@ -271,7 +271,7 @@ function getIPV4Address(): string {
 /**
  * Get the status of canceled jobs according to the hint isEarlyStopped
  */
-function getJobCancelStatus(isEarlyStopped: boolean): string {
+function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
     return isEarlyStopped ? 'EARLY_STOPPED' : 'USER_CANCELED';
 }
 
