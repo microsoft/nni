@@ -92,12 +92,23 @@ pai_config_schema = {
 
 kubeflow_trial_schema = {
 'trial':{
-    'command': str,
-    'codeDir': os.path.exists,
-    'gpuNum': And(int, lambda x: 0 <= x <= 99999),
-    'cpuNum': And(int, lambda x: 0 <= x <= 99999),
-    'memoryMB': int,
-    'image': str
+        'codeDir':  os.path.exists,
+        Optional('ps'): {
+            'replicas': int,
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        },
+        'worker':{
+            'replicas': int,
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        } 
     }
 }
 

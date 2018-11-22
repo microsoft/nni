@@ -39,8 +39,26 @@ export namespace ValidationSchemas {
                 outputDir: joi.string(),
                 cpuNum: joi.number().min(1),
                 memoryMB: joi.number().min(100),
-                gpuNum: joi.number().min(0).required(),
-                command: joi.string().min(1).required()                
+                gpuNum: joi.number().min(0),
+                command: joi.string().min(1),
+                worker: joi.object({
+                    replicas: joi.number().min(1).required(),
+                    image: joi.string().min(1),
+                    outputDir: joi.string(),
+                    cpuNum: joi.number().min(1),
+                    memoryMB: joi.number().min(100),
+                    gpuNum: joi.number().min(0).required(),
+                    command: joi.string().min(1).required()
+                }),
+                ps: joi.object({
+                        replicas: joi.number().min(1).required(),
+                        image: joi.string().min(1),
+                        outputDir: joi.string(),
+                        cpuNum: joi.number().min(1),
+                        memoryMB: joi.number().min(100),
+                        gpuNum: joi.number().min(0).required(),
+                        command: joi.string().min(1).required()
+                })
             }),
             pai_config: joi.object({
                 userName: joi.string().min(1).required(),
