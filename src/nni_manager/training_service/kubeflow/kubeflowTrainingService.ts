@@ -88,21 +88,6 @@ class KubeflowTrainingService implements TrainingService {
         }
     }
 
-    private genereateRunScript(trialJobId: string, trialWorkingFolder: string, command: string, trialSequenceId: string): string {
-        return String.Format(
-            KUBEFLOW_RUN_SHELL_FORMAT,
-            `$PWD/nni/${trialJobId}`,
-            path.join(trialWorkingFolder, 'output'),
-            trialJobId,
-            getExperimentId(),
-            trialWorkingFolder,
-            trialSequenceId,
-            command,
-            getIPV4Address(),
-            this.kubeflowRestServerPort
-            );
-    }
-
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
@@ -365,6 +350,14 @@ class KubeflowTrainingService implements TrainingService {
         return this.metricsEmitter;
     }
 
+    /**
+     * Generate kubeflow resource config file
+     * @param trialJobId trial job id
+     * @param trialWorkingFolder working folder
+     * @param kubeflowJobName job name
+     * @param workerPodResources worker pod template
+     * @param psPodResources ps pod template
+     */
     private generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, workerPodResources : any, psPodResources?: any) : any {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
@@ -449,6 +442,28 @@ class KubeflowTrainingService implements TrainingService {
                 }
             }
         };
+    }
+
+    /**
+     * Genereate run script for different roles(like worker or ps)
+     * @param trialJobId trial job id
+     * @param trialWorkingFolder working folder
+     * @param command 
+     * @param trialSequenceId sequence id
+     */
+    private genereateRunScript(trialJobId: string, trialWorkingFolder: string, command: string, trialSequenceId: string): string {
+        return String.Format(
+            KUBEFLOW_RUN_SHELL_FORMAT,
+            `$PWD/nni/${trialJobId}`,
+            path.join(trialWorkingFolder, 'output'),
+            trialJobId,
+            getExperimentId(),
+            trialWorkingFolder,
+            trialSequenceId,
+            command,
+            getIPV4Address(),
+            this.kubeflowRestServerPort
+            );
     }
 
     private generateSequenceId(): number {
