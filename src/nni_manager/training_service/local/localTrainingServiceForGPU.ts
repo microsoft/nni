@@ -94,7 +94,7 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
         if (this.gpuScheduler !== undefined) {
             variables.push({
                 key: 'CUDA_VISIBLE_DEVICES',
-                value: resource.gpuIndices.join(',')
+                value: this.gpuScheduler === undefined ? '' : resource.gpuIndices.join(',')
             });
         }
 
