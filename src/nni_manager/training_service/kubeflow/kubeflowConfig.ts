@@ -111,12 +111,12 @@ export class KubeflowTrialConfigTemplate {
 
 export class KubeflowTrialConfig {
     public readonly codeDir: string;
-    public readonly psConfig?: KubeflowTrialConfigTemplate;
-    public readonly workerConfig: KubeflowTrialConfigTemplate;
+    public readonly ps?: KubeflowTrialConfigTemplate;
+    public readonly worker: KubeflowTrialConfigTemplate;
 
-    constructor(codeDir: string, workerConfig: KubeflowTrialConfigTemplate, psConfig?: KubeflowTrialConfigTemplate) {
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate, ps?: KubeflowTrialConfigTemplate) {
         this.codeDir = codeDir;
-        this.workerConfig = workerConfig;
-        this.psConfig = psConfig;
+        this.worker = worker;
+        this.ps = ps;
     }
 }

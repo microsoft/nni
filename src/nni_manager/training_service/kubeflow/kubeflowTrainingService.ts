@@ -108,7 +108,7 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
 
-        if(!this.kubeflowTrialConfig || !this.kubeflowTrialConfig.workerConfig) {
+        if(!this.kubeflowTrialConfig || !this.kubeflowTrialConfig.worker) {
             throw new Error('Kubeflow trial config or worker config is not initialized');
         }
 
@@ -138,17 +138,17 @@ class KubeflowTrainingService implements TrainingService {
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
         // Write worker file content run_worker.sh to local tmp folders
-        if(this.kubeflowTrialConfig.workerConfig) {
+        if(this.kubeflowTrialConfig.worker) {
             const workerRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
-                    this.kubeflowTrialConfig.workerConfig.command, curTrialSequenceId.toString());
+                    this.kubeflowTrialConfig.worker.command, curTrialSequenceId.toString());
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
         }
 
         // Write parameter server file content run_ps.sh to local tmp folders
-        if(this.kubeflowTrialConfig.psConfig) {
+        if(this.kubeflowTrialConfig.ps) {
             const psRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
-                this.kubeflowTrialConfig.psConfig.command, curTrialSequenceId.toString());
+                this.kubeflowTrialConfig.ps.command, curTrialSequenceId.toString());
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
         }
@@ -164,19 +164,19 @@ class KubeflowTrainingService implements TrainingService {
         const kubeflowJobName = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
         const workerPodResources : any = {};
         workerPodResources.requests = {
-            'memory': `${this.kubeflowTrialConfig.workerConfig.memoryMB}Mi`,
-            'cpu': `${this.kubeflowTrialConfig.workerConfig.cpuNum}`,
-            'nvidia.com/gpu': `${this.kubeflowTrialConfig.workerConfig.gpuNum}`
+            'memory': `${this.kubeflowTrialConfig.worker.memoryMB}Mi`,
+            'cpu': `${this.kubeflowTrialConfig.worker.cpuNum}`,
+            'nvidia.com/gpu': `${this.kubeflowTrialConfig.worker.gpuNum}`
         }
         workerPodResources.limits = Object.assign({}, workerPodResources.requests);
 
         let psPodResources : any = undefined;
-        if(this.kubeflowTrialConfig.psConfig) {
+        if(this.kubeflowTrialConfig.ps) {
             psPodResources = {};
             psPodResources.requests = {
-                'memory': `${this.kubeflowTrialConfig.psConfig.memoryMB}Mi`,
-                'cpu': `${this.kubeflowTrialConfig.psConfig.cpuNum}`,
-                'nvidia.com/gpu': `${this.kubeflowTrialConfig.psConfig.gpuNum}`
+                'memory': `${this.kubeflowTrialConfig.ps.memoryMB}Mi`,
+                'cpu': `${this.kubeflowTrialConfig.ps.cpuNum}`,
+                'nvidia.com/gpu': `${this.kubeflowTrialConfig.ps.gpuNum}`
             }
             psPodResources.limits = Object.assign({}, psPodResources.requests);
         }        
@@ -306,7 +306,7 @@ class KubeflowTrainingService implements TrainingService {
                 }
 
                 this.kubeflowTrialConfig = <KubeflowTrialConfig>JSON.parse(value);
-                assert(this.kubeflowClusterConfig !== undefined && this.kubeflowTrialConfig.workerConfig !== undefined);
+                assert(this.kubeflowClusterConfig !== undefined && this.kubeflowTrialConfig.worker !== undefined);
                 break;
             default:
                 break;
@@ -375,12 +375,12 @@ class KubeflowTrainingService implements TrainingService {
         }
 
         const tfReplicaSpecsObj: any = {};
-        tfReplicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.workerConfig.replicas, 
-            this.kubeflowTrialConfig.workerConfig.image, 'run_worker.sh', workerPodResources);
+        tfReplicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.worker.replicas, 
+            this.kubeflowTrialConfig.worker.image, 'run_worker.sh', workerPodResources);
 
-        if(this.kubeflowTrialConfig.psConfig) {
-            tfReplicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.psConfig.replicas, 
-                this.kubeflowTrialConfig.psConfig.image, 'run_ps.sh', psPodResources);
+        if(this.kubeflowTrialConfig.ps) {
+            tfReplicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.ps.replicas, 
+                this.kubeflowTrialConfig.ps.image, 'run_ps.sh', psPodResources);
         }
 
         return {
