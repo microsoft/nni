@@ -22,8 +22,8 @@
 import os
 import logging
 import json_tricks
-
-from .common import init_logger
+from multiprocessing.dummy import Pool as ThreadPool
+from .common import init_logger, multi_thread_enabled
 from .recoverable import Recoverable
 from .protocol import CommandType, receive
 
@@ -31,6 +31,10 @@ init_logger('dispatcher.log')
 _logger = logging.getLogger(__name__)
 
 class MsgDispatcherBase(Recoverable):
+    def __init__(self):
+        if multi_thread_enabled():
+            self.pool = ThreadPool()
+
     def run(self):
         """Run the tuner.
         This function will never return unless raise.
@@ -39,17 +43,24 @@ class MsgDispatcherBase(Recoverable):
         if mode == 'resume':
             self.load_checkpoint()
 
-        while self.handle_request():
-            pass
+        while True:
+            _logger.debug('waiting receive_message')
+            command, data = receive()
+            if command is None:
+                break
+            if multi_thread_enabled():
+                self.pool.map_async(self.handle_request, [(command, data)])
+            else:
+                self.handle_request((command, data))
+
+        if multi_thread_enabled():
+            self.pool.close()
+            self.pool.join()
 
         _logger.info('Terminated by NNI manager')
 
-    def handle_request(self):
-        _logger.debug('waiting receive_message')
-
-        command, data = receive()
-        if command is None:
-            return False
+    def handle_request(self, request):
+        command, data = request
 
         _logger.debug('handle request: command: [{}], data: [{}]'.format(command, data))
 
@@ -60,6 +71,7 @@ class MsgDispatcherBase(Recoverable):
 
         command_handlers = {
             # Tunner commands:
+            CommandType.Initialize: self.handle_initialize,
             CommandType.RequestTrialJobs: self.handle_request_trial_jobs,
             CommandType.UpdateSearchSpace: self.handle_update_search_space,
             CommandType.AddCustomizedTrialJob: self.handle_add_customized_trial,
@@ -73,6 +85,9 @@ class MsgDispatcherBase(Recoverable):
             raise AssertionError('Unsupported command: {}'.format(command))
 
         return command_handlers[command](data)
+
+    def handle_initialize(self, data):
+        raise NotImplementedError('handle_initialize not implemented')
 
     def handle_request_trial_jobs(self, data):
         raise NotImplementedError('handle_request_trial_jobs not implemented')
