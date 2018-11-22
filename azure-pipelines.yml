@@ -20,7 +20,7 @@ jobs:
     displayName: 'Integration tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 sdk_tuner_test.py
+      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
     displayName: 'Built-in tuner tests'
 
 - job: 'Install_through_source_code'
@@ -43,5 +43,5 @@ jobs:
     displayName: 'Integration tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 sdk_tuner_test.py
+      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
     displayName: 'Built-in tuner tests'
