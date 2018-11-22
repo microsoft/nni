@@ -281,7 +281,7 @@ class PAITrainingService implements TrainingService {
         return false;
     }
 
-    public cancelTrialJob(trialJobId: string, byAssessor: boolean = false): Promise<void> {
+    public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trialJobDetail : PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         const deferred : Deferred<void> = new Deferred<void>();
         if(!trialJobDetail) {
@@ -311,7 +311,7 @@ class PAITrainingService implements TrainingService {
                 this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
                 deferred.reject(error ? error.message : 'Stop trial failed, http code: ' + response.statusCode);                
             } else {
-                if (byAssessor) {
+                if (isEarlyStopped) {
                     trialJobDetail.status = 'EARLY_STOPPED';
                 }
                 deferred.resolve();

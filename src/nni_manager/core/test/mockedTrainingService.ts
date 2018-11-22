@@ -102,7 +102,7 @@ class MockedTrainingService extends TrainingService {
         return false;
     }
 
-    public cancelTrialJob(trialJobId: string, byAssessor: boolean = false): Promise<void> {
+    public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const deferred = new Deferred<void>();
         if(trialJobId === '1234' || trialJobId === '3456'){
             deferred.resolve();

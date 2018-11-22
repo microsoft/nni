@@ -36,7 +36,7 @@ import { ObservableTimer } from '../../common/observableTimer';
 import {
     HostJobApplicationForm, HyperParameters, JobApplicationForm, TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus } from '../../common/utils';
 import { GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -234,7 +234,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * Cancel trial job
      * @param trialJobId ID of trial job
      */
-    public async cancelTrialJob(trialJobId: string, byAssessor: boolean = false): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         this.log.info(`cancelTrialJob: jobId: ${trialJobId}`);
         const deferred: Deferred<void> = new Deferred<void>();
         const trialJob: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
@@ -261,22 +261,15 @@ class RemoteMachineTrainingService implements TrainingService {
             const jobpidPath: string = this.getJobPidPath(trialJob.id);
             try {
                 await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, sshClient);
-                if (byAssessor) {
-                    trialJob.status = 'EARLY_STOPPED';
-                } else {
-                    trialJob.status = 'USER_CANCELED';
-                }
+                trialJob.status = getJobCancelStatus(isEarlyStopped);
             } catch (error) {
                 // Not handle the error since pkill failed will not impact trial job's current status
                 this.log.error(`remoteTrainingService.cancelTrialJob: ${error.message}`);
             }
         } else {
             // Job is not scheduled yet, set status to 'USER_CANCELLED' directly
-            if (byAssessor) {
-                trialJob.status = 'EARLY_STOPPED';
-            } else {
-                trialJob.status = 'USER_CANCELED';
-            }
+            assert(isEarlyStopped === false, 'isEarlyStopped is not supposed to be true here.');
+            trialJob.status = getJobCancelStatus(isEarlyStopped);
         }
     }
 

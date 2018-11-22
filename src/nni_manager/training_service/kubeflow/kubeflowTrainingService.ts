@@ -36,7 +36,7 @@ import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
 import { KubeflowClusterConfig, kubeflowOperatorMap, KubeflowTrialConfig, NFSConfig } from './kubeflowConfig';
 import { KubeflowTrialJobDetail, KUBEFLOW_RUN_SHELL_FORMAT } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
@@ -224,7 +224,7 @@ class KubeflowTrainingService implements TrainingService {
         return false;
     }
 
-    public async cancelTrialJob(trialJobId: string, byAssessor: boolean = false): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trialJobDetail : KubeflowTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         if(!trialJobDetail) {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} not found`;
@@ -245,11 +245,7 @@ class KubeflowTrainingService implements TrainingService {
         }
 
         trialJobDetail.endTime = Date.now();
-        if (byAssessor) {
-            trialJobDetail.status = 'EARLY_STOPPED';
-        } else {
-            trialJobDetail.status = 'USER_CANCELED';
-        }
+        trialJobDetail.status = getJobCancelStatus(isEarlyStopped);
 
         return Promise.resolve();
     }

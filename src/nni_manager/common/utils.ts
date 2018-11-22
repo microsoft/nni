@@ -268,5 +268,12 @@ function getIPV4Address(): string {
     throw Error('getIPV4Address() failed because no valid IPv4 address found.')
 }
 
-export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, 
+/**
+ * Get the status of canceled jobs according to the hint isEarlyStopped
+ */
+function getJobCancelStatus(isEarlyStopped: boolean): string {
+    return isEarlyStopped ? 'EARLY_STOPPED' : 'USER_CANCELED';
+}
+
+export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getJobCancelStatus,
     getDefaultDatabaseDir, getIPV4Address, mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
