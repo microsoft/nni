@@ -44,6 +44,8 @@ import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 
 var yaml = require('node-yaml');
 
+type DistTrainRole = 'worker' | 'ps';
+
 /**
  * Training Service implementation for Kubeflow
  * Refer https://github.com/kubeflow/kubeflow for more info about Kubeflow
@@ -64,7 +66,7 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
     private kubeflowRestServerPort?: number;
     private kubeflowJobPlural?: string;
-    private readonly CONTAINER_MOUNT_PATH: string;
+    private readonly CONTAINER_MOUNT_PATH: string;    
     
     constructor() {        
         this.log = getLogger();
@@ -125,7 +127,7 @@ class KubeflowTrainingService implements TrainingService {
         // Write worker file content run_worker.sh to local tmp folders
         if(this.kubeflowTrialConfig.worker) {
             const workerRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
-                    this.kubeflowTrialConfig.worker.command, curTrialSequenceId.toString());
+                    this.kubeflowTrialConfig.worker.command, curTrialSequenceId.toString(), 'worker');
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
         }
@@ -133,7 +135,7 @@ class KubeflowTrainingService implements TrainingService {
         // Write parameter server file content run_ps.sh to local tmp folders
         if(this.kubeflowTrialConfig.ps) {
             const psRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
-                this.kubeflowTrialConfig.ps.command, curTrialSequenceId.toString());
+                this.kubeflowTrialConfig.ps.command, curTrialSequenceId.toString(), 'ps');
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
         }
@@ -451,11 +453,12 @@ class KubeflowTrainingService implements TrainingService {
      * @param command 
      * @param trialSequenceId sequence id
      */
-    private genereateRunScript(trialJobId: string, trialWorkingFolder: string, command: string, trialSequenceId: string): string {
+    private genereateRunScript(trialJobId: string, trialWorkingFolder: string, 
+                command: string, trialSequenceId: string, roleType: DistTrainRole): string {
         return String.Format(
             KUBEFLOW_RUN_SHELL_FORMAT,
             `$PWD/nni/${trialJobId}`,
-            path.join(trialWorkingFolder, 'output'),
+            path.join(trialWorkingFolder, `${roleType}_output`),
             trialJobId,
             getExperimentId(),
             trialWorkingFolder,
