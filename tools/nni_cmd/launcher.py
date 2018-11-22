@@ -99,21 +99,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
 def set_trial_config(experiment_config, port, config_file_name):
     '''set trial configuration'''
     request_data = dict()
-    value_dict = dict()
-    value_dict['command'] = experiment_config['trial']['command']
-    value_dict['codeDir'] = experiment_config['trial']['codeDir']
-    value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
-    if experiment_config['trial'].get('cpuNum'):
-        value_dict['cpuNum'] = experiment_config['trial']['cpuNum']
-    if experiment_config['trial'].get('memoryMB'):
-        value_dict['memoryMB'] = experiment_config['trial']['memoryMB']
-    if experiment_config['trial'].get('image'):
-        value_dict['image'] = experiment_config['trial']['image']
-    if experiment_config['trial'].get('dataDir'):
-        value_dict['dataDir'] = experiment_config['trial']['dataDir']
-    if experiment_config['trial'].get('outputDir'):
-        value_dict['outputDir'] = experiment_config['trial']['outputDir']
-    request_data['trial_config'] = value_dict
+    request_data['trial_config'] = experiment_config['trial']
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
     if check_response(response):
         return True
@@ -209,31 +195,18 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     elif experiment_config['trainingServicePlatform'] == 'remote':
         request_data['clusterMetaData'].append(
             {'key': 'machine_list', 'value': experiment_config['machineList']})
-        value_dict = dict()
-        value_dict['command'] = experiment_config['trial']['command']
-        value_dict['codeDir'] = experiment_config['trial']['codeDir']
-        value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
         request_data['clusterMetaData'].append(
-            {'key': 'trial_config', 'value': value_dict})
+            {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'pai':
         request_data['clusterMetaData'].append(
-            {'key': 'pai_config', 'value': experiment_config['paiConfig']})
-        value_dict = dict()
-        value_dict['command'] = experiment_config['trial']['command']
-        value_dict['codeDir'] = experiment_config['trial']['codeDir']
-        value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
-        if experiment_config['trial'].get('cpuNum'):
-            value_dict['cpuNum'] = experiment_config['trial']['cpuNum']
-        if experiment_config['trial'].get('memoryMB'):
-            value_dict['memoryMB'] = experiment_config['trial']['memoryMB']
-        if experiment_config['trial'].get('image'):
-            value_dict['image'] = experiment_config['trial']['image']
-        if experiment_config['trial'].get('dataDir'):
-            value_dict['dataDir'] = experiment_config['trial']['dataDir']
-        if experiment_config['trial'].get('outputDir'):
-            value_dict['outputDir'] = experiment_config['trial']['outputDir']
+            {'key': 'pai_config', 'value': experiment_config['paiConfig']})        
         request_data['clusterMetaData'].append(
-            {'key': 'trial_config', 'value': value_dict})
+            {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'kubeflow':
+        request_data['clusterMetaData'].append(
+            {'key': 'kubeflow_config', 'value': experiment_config['kubeflowConfig']})
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
 
     response = rest_post(experiment_url(port), json.dumps(request_data), 20)
     if check_response(response):
