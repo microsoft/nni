@@ -467,6 +467,42 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
+        let volumeSpecMap = new Map<string, any>();
+        if(this.kubeflowClusterConfig.nfs){
+            volumeSpecMap.set('nfsVolumeMounts', [
+            {
+                name: 'nni-nfs-vol',
+                mountPath: this.CONTAINER_MOUNT_PATH
+            }])
+            volumeSpecMap.set('nfsVolumes', [
+            {
+                name: 'nni-nfs-vol',
+                nfs: {
+                    server: `${this.kubeflowClusterConfig.nfs.server}`,
+                    path: `${this.kubeflowClusterConfig.nfs.path}`
+                }
+            }])
+        }else if(this.kubeflowClusterConfig.azureStorage && this.kubeflowClusterConfig.keyVault){
+            volumeSpecMap.set('azureVolumeMounts', [
+            {
+                name: 'nni-azure-vol',
+                mountPath: this.CONTAINER_MOUNT_PATH
+            }])
+            volumeSpecMap.set('azureVolumes', [
+            {
+                name: 'nni-azure-vol',
+                azureFile: {
+                    secretName: `${this.azureStorageSecretName}`,
+                    shareName: `${this.azureStorageShare}`,
+                    readonly: false
+                }
+            }])
+        }else{
+            const clusterConfigError: string = 'kubeflow cluster config format error!';
+            this.log.error(clusterConfigError);
+            throw new Error(clusterConfigError);
+        }
+
         return {
             replicas: replicaNumber,
             template: {
@@ -481,20 +517,11 @@ class KubeflowTrainingService implements TrainingService {
                         name: 'tensorflow',
                         image: replicaImage,
                         args: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
-                        volumeMounts: [{
-                            name: 'nni-nfs-vol',
-                            mountPath: this.CONTAINER_MOUNT_PATH
-                        }],
+                        volumeMounts: this.kubeflowClusterConfig.nfs?volumeSpecMap.get('nfsVolumeMounts'):volumeSpecMap.get('azureVolumeMounts'),
                         resources: podResources
                     }],
                     restartPolicy: 'ExitCode',
-                    volumes: [{
-                        name: 'nni-nfs-vol',
-                        nfs: {
-                            server: `${this.kubeflowClusterConfig.nfs.server}`,
-                            path: `${this.kubeflowClusterConfig.nfs.path}`
-                        }
-                    }]
+                    volumes: this.kubeflowClusterConfig.nfs?volumeSpecMap.get('nfsVolumes'):volumeSpecMap.get('azureVolumes')
                 }
             }
         };
