@@ -158,10 +158,14 @@ function parseArg(names: string[]): string {
  * @param assessor: similiar as tuner
  *
  */
-function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean = false): string {
+function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean = false, multiThread: boolean = false): string {
     let command: string = `python3 -m nni --tuner_class_name ${tuner.className}`;
     if (multiPhase) {
         command += ' --multi_phase';
+    }
+
+    if (multiThread) {
+        command += ' --multi_thread';
     }
 
     if (tuner.classArgs !== undefined) {
