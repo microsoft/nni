@@ -71,6 +71,7 @@ def run(dispatch_type):
     dipsatcher_list = TUNER_LIST if dispatch_type == 'Tuner' else ASSESSOR_LIST
     for dispatcher_name in dipsatcher_list:
         try:
+            time.sleep(5)
             test_builtin_dispatcher(dispatch_type, dispatcher_name)
             print(GREEN + 'Test %s %s: TEST PASS' % (dispatcher_name, dispatch_type) + CLEAR)
         except Exception as error:
@@ -80,8 +81,6 @@ def run(dispatch_type):
             raise error
         finally:
             subprocess.run(['nnictl', 'stop'])
-            time.sleep(5)
-
 
 if __name__ == '__main__':
     installed = (sys.argv[-1] != '--preinstall')
