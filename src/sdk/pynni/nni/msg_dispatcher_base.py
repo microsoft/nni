@@ -65,7 +65,9 @@ class MsgDispatcherBase(Recoverable):
         _logger.debug('handle request: command: [{}], data: [{}]'.format(command, data))
 
         if command is CommandType.Terminate:
-            return False
+            # if receive Terminate command, exit process
+            _logger.info('Receive Terminate command from NNI manager, terminating')
+            exit(0)
 
         data = json_tricks.loads(data)
 
