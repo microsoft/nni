@@ -221,6 +221,9 @@ class NNIManager implements Manager {
 
     public async stopExperiment(): Promise<void> {
         this.status.status = 'STOPPING';
+        this.log.info('Experiment done, cleaning up...');
+        await this.experimentDoneCleanUp();
+        this.log.info('Experiment done.');
     }
 
     public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
@@ -481,10 +484,6 @@ class NNIManager implements Manager {
             }
             await delay(1000 * 5); // 5 seconds
         }
-
-        this.log.info('Experiment done, cleaning up...');
-        await this.experimentDoneCleanUp();
-        this.log.info('Experiment done.');
     }
 
     private storeExperimentProfile(): Promise<void> {

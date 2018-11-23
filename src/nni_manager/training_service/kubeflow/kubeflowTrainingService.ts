@@ -206,7 +206,15 @@ class KubeflowTrainingService implements TrainingService {
     }
 
     public listTrialJobs(): Promise<TrialJobDetail[]> {
-        throw new MethodNotImplementedError();
+        const jobs: TrialJobDetail[] = [];
+        
+        this.trialJobsMap.forEach(async (value: KubeflowTrialJobDetail, key: string) => {
+            if (value.form.jobType === 'TRIAL') {
+                jobs.push(await this.getTrialJob(key));
+            }
+        });
+
+        return Promise.resolve(jobs);
     }
 
     public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
@@ -302,7 +310,7 @@ class KubeflowTrainingService implements TrainingService {
     }
 
     public getClusterMetadata(key: string): Promise<string> {
-        throw new MethodNotImplementedError();
+        return Promise.resolve('');
     }
 
     public async cleanUp(): Promise<void> {
