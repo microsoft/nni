@@ -80,6 +80,7 @@ def run(dispatch_type):
             raise error
         finally:
             subprocess.run(['nnictl', 'stop'])
+            time.sleep(5)
 
 
 if __name__ == '__main__':
