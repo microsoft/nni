@@ -31,10 +31,16 @@ Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
 'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai', 'kubeflow']),
 Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
+Optional('multiThread'): bool,
 'useAnnotation': bool,
 'tuner': Or({
-    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch'),
-    Optional('classArgs'): dict,
+    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'SMAC', 'Evolution'),
+    Optional('classArgs'): {
+        'optimize_mode': Or('maximize', 'minimize')
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'builtinTunerName': Or('BatchTuner', 'GridSearch'),
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'codeDir': os.path.exists,
@@ -45,7 +51,10 @@ Optional('multiPhase'): bool,
 }),
 Optional('assessor'): Or({
     'builtinAssessorName': lambda x: x in ['Medianstop'],
-    Optional('classArgs'): dict,
+    Optional('classArgs'): {
+        Optional('optimize_mode'): Or('maximize', 'minimize'),
+        Optional('start_step'): And(int, lambda x: 0 <= x <= 9999)
+    },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
 },{
     'codeDir': os.path.exists,
@@ -87,12 +96,23 @@ pai_config_schema = {
 
 kubeflow_trial_schema = {
 'trial':{
-    'command': str,
-    'codeDir': os.path.exists,
-    'gpuNum': And(int, lambda x: 0 <= x <= 99999),
-    'cpuNum': And(int, lambda x: 0 <= x <= 99999),
-    'memoryMB': int,
-    'image': str
+        'codeDir':  os.path.exists,
+        Optional('ps'): {
+            'replicas': int,
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        },
+        'worker':{
+            'replicas': int,
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        } 
     }
 }
 

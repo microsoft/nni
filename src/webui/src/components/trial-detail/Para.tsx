@@ -3,7 +3,7 @@ import axios from 'axios';
 import { MANAGER_IP } from '../../static/const';
 import ReactEcharts from 'echarts-for-react';
 import { Row, Col, Select, Button, message } from 'antd';
-import { HoverName, ParaObj, VisualMapValue, Dimobj } from '../../static/interface';
+import { ParaObj, VisualMapValue, Dimobj } from '../../static/interface';
 const Option = Select.Option;
 require('echarts/lib/chart/parallel');
 require('echarts/lib/component/tooltip');
@@ -243,30 +243,19 @@ class Para extends React.Component<{}, ParaState> {
             };
         } else {
             visualMapObj = {
+                bottom: '20px',
                 type: 'continuous',
                 precision: 3,
                 min: visualValue.minAccuracy,
                 max: visualValue.maxAccuracy,
-                color: ['#CA0000', '#FFC400', '#90EE90']
+                color: ['#CA0000', '#FFC400', '#90EE90'],
+                calculable: true
             };
         }
         let optionown = {
             parallelAxis,
             tooltip: {
-                trigger: 'item',
-                formatter: function (params: HoverName) {
-                    return params.name;
-                }
-            },
-            toolbox: {
-                show: true,
-                left: 'right',
-                iconStyle: {
-                    normal: {
-                        borderColor: '#ddd'
-                    }
-                },
-                z: 202
+                trigger: 'item'
             },
             parallel: {
                 parallelAxisDefault: {
@@ -276,9 +265,6 @@ class Para extends React.Component<{}, ParaState> {
                 }
             },
             visualMap: visualMapObj,
-            highlight: {
-                type: 'highlight'
-            },
             series: {
                 type: 'parallel',
                 smooth: true,

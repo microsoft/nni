@@ -44,14 +44,6 @@ class Duration extends React.Component<{}, DurationState> {
                     type: 'shadow'
                 }
             },
-            // title: {
-            //     left: 'center',
-            //     text: 'Trial Duration',
-            //     textStyle: {
-            //         fontSize: 18,
-            //         color: '#333'
-            //     }
-            // },
             grid: {
                 bottom: '3%',
                 containLabel: true,
@@ -108,7 +100,7 @@ class Duration extends React.Component<{}, DurationState> {
                             } else {
                                 duration = (new Date().getTime() - start) / 1000;
                             }
-                            trialId.push(trialJobs[item].id);
+                            trialId.push(trialJobs[item].sequenceId);
                             trialTime.push(duration);
                         }
                     });

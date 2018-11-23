@@ -48,7 +48,7 @@ class GridSearchTuner(Tuner):
     and sample and then change the sampled value back.
     '''
 
-    def __init__(self, optimize_mode):
+    def __init__(self):
         self.count = -1
         self.expanded_search_space = []
 
