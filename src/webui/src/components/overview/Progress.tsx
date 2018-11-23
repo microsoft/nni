@@ -29,12 +29,16 @@ class Progressed extends React.Component<ProgressProps, {}> {
             trialNumber, bestAccuracy,
             status, errors
         } = this.props;
-        // remaining time
         const bar2 = trialNumber.totalCurrentTrial - trialNumber.waitTrial - trialNumber.unknowTrial;
         const bar2Percent = (bar2 / trialProfile.MaxTrialNum) * 100;
         const percent = (trialProfile.execDuration / trialProfile.maxDuration) * 100;
         const runDuration = convertTime(trialProfile.execDuration);
-        const remaining = convertTime(trialProfile.maxDuration - trialProfile.execDuration);
+        let remaining;
+        if (status === 'DONE') {
+            remaining = '0';
+        } else {
+            remaining = convertTime(trialProfile.maxDuration - trialProfile.execDuration);
+        }
         let errorContent;
         if (errors !== '') {
             errorContent = (
@@ -81,7 +85,7 @@ class Progressed extends React.Component<ProgressProps, {}> {
                     maxString={`MaxTrialNumber: ${trialProfile.MaxTrialNum}`}
                 />
                 <Row className="basic colorOfbasic mess">
-                    <p>Best Accuracy</p>
+                    <p>Best Default Metric</p>
                     <div>{bestAccuracy}</div>
                 </Row>
                 <Row className="mess">
@@ -99,7 +103,7 @@ class Progressed extends React.Component<ProgressProps, {}> {
                     </Col>
                     <Col span={7}>
                         <Row className="basic colorOfbasic">
-                            <p>Duration</p>
+                            <p>MaxDuration</p>
                             <div>{convertTime(trialProfile.maxDuration)}</div>
                         </Row>
                     </Col>

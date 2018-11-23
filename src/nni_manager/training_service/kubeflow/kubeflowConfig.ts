@@ -79,15 +79,44 @@ export class NFSConfig {
 /**
  * Trial job configuration for Kubeflow
  */
-export class KubeflowTrialConfig extends TrialConfig {
+export class KubeflowTrialConfigTemplate {
+    /** replication number of current role */
+    public readonly replicas: number;
+
+    /** CPU number */
     public readonly cpuNum: number;
+
+    /** Memory  */
     public readonly memoryMB: number;
+
+    /** Docker image */
     public readonly image: string;
+
+    /** Trail command */
+    public readonly command : string;
+
+    /** Required GPU number for trial job. The number should be in [0,100] */
+    public readonly gpuNum : number;
     
-    constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number, image: string) {
-        super(command, codeDir, gpuNum);
+    constructor(replicas: number, command : string, gpuNum : number, 
+        cpuNum: number, memoryMB: number, image: string) {
+        this.replicas = replicas;
+        this.command = command;
+        this.gpuNum = gpuNum;
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
         this.image = image;
+    }
+}
+
+export class KubeflowTrialConfig {
+    public readonly codeDir: string;
+    public readonly ps?: KubeflowTrialConfigTemplate;
+    public readonly worker: KubeflowTrialConfigTemplate;
+
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate, ps?: KubeflowTrialConfigTemplate) {
+        this.codeDir = codeDir;
+        this.worker = worker;
+        this.ps = ps;
     }
 }

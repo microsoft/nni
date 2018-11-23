@@ -91,6 +91,14 @@ class MultiPhaseMsgDispatcher(MsgDispatcherBase):
         if self.assessor is not None:
             self.assessor.save_checkpoint()
 
+    def handle_initialize(self, data):
+        '''
+        data is search space
+        '''
+        self.tuner.update_search_space(data)
+        send(CommandType.Initialized, '')
+        return True
+
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
         ids = [_create_parameter_id() for _ in range(data)]
