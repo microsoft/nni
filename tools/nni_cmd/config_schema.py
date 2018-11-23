@@ -34,8 +34,13 @@ Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 'useAnnotation': bool,
 'tuner': Or({
-    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch'),
-    Optional('classArgs'): dict,
+    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'SMAC', 'Evolution'),
+    Optional('classArgs'): {
+        'optimize_mode': Or('maximize', 'minimize')
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'builtinTunerName': Or('BatchTuner', 'GridSearch'),
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'codeDir': os.path.exists,
@@ -46,7 +51,10 @@ Optional('multiThread'): bool,
 }),
 Optional('assessor'): Or({
     'builtinAssessorName': lambda x: x in ['Medianstop'],
-    Optional('classArgs'): dict,
+    Optional('classArgs'): {
+        Optional('optimize_mode'): Or('maximize', 'minimize'),
+        Optional('start_step'): And(int, lambda x: 0 <= x <= 9999)
+    },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
 },{
     'codeDir': os.path.exists,
