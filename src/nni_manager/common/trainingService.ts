@@ -120,8 +120,20 @@ abstract class TrainingService {
     public abstract run(): Promise<void>;
 }
 
+/**
+ * the ip of nni manager
+ */
+class NNIManagerIpConfig {
+    public readonly nniManagerIp: string;
+    constructor(nniManagerIp: string){
+        this.nniManagerIp = nniManagerIp;
+    }
+}
+
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
-    HostJobApplicationForm, JobApplicationForm, JobType
+    HostJobApplicationForm, JobApplicationForm, JobType, NNIManagerIpConfig
 };
+
+

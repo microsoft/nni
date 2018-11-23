@@ -121,3 +121,4 @@ export class NNIPAITrialConfig extends TrialConfig{
         this.outputDir = outputDir;
     }
 }
+

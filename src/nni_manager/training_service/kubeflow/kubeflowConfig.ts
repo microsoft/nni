@@ -120,3 +120,4 @@ export class KubeflowTrialConfig {
         this.ps = ps;
     }
 }
+

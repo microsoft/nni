@@ -32,6 +32,7 @@ Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
 Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
+Optional('nniManagerIp'): str,
 'useAnnotation': bool,
 'tuner': Or({
     'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'SMAC', 'Evolution'),

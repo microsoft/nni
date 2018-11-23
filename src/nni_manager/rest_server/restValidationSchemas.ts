@@ -72,6 +72,9 @@ export namespace ValidationSchemas {
                     path: joi.string().min(1).required()
                 }).required(),
                 kubernetesServer: joi.string().min(1).required()
+            }),
+            nni_manager_ip: joi.object({
+                nniManagerIp: joi.string().min(1) 
             })
         }
     };
