@@ -221,6 +221,11 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     elif experiment_config['trainingServicePlatform'] == 'pai':
         request_data['clusterMetaData'].append(
             {'key': 'pai_config', 'value': experiment_config['paiConfig']})
+        request_data['clusterMetaData'].append(	
+            {'key': 'trial_config', 'value': experiment_config['trial']})	
+    elif experiment_config['trainingServicePlatform'] == 'kubeflow':	
+        request_data['clusterMetaData'].append(	
+            {'key': 'kubeflow_config', 'value': experiment_config['kubeflowConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
 
