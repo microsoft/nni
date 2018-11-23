@@ -8,7 +8,9 @@ class SlideBar extends React.Component<{}, {}> {
     return (
       <ul className="nav">
         <li className="logo">
-          <img src={require('../static/img/logo.png')} style={{ width: 156 }} alt="NNI logo" />
+          <Link to={'/oview'}>
+            <img src={require('../static/img/logo.png')} style={{ width: 156 }} alt="NNI logo" />
+          </Link>
         </li>
         <li className="tab">
           <Link to={'/oview'} activeClassName="high">

@@ -3,7 +3,7 @@ import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
 import { Row, Col, Button, Tabs, Input } from 'antd';
 const Search = Input.Search;
-import { TableObj, Parameters, DetailAccurPoint, TooltipForAccuracy, } from '../static/interface';
+import { TableObj, Parameters, DetailAccurPoint, TooltipForAccuracy } from '../static/interface';
 import Accuracy from './overview/Accuracy';
 import Duration from './trial-detail/Duration';
 import Title1 from './overview/Title1';
@@ -16,6 +16,7 @@ interface TrialDetailState {
     accSource: object;
     accNodata: string;
     tableListSource: Array<TableObj>;
+    tableBaseSource: Array<TableObj>;
 }
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
@@ -30,7 +31,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         this.state = {
             accSource: {},
             accNodata: '',
-            tableListSource: []
+            tableListSource: [],
+            tableBaseSource: []
         };
     }
     // trial accuracy graph
@@ -129,17 +131,21 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
     drawTableList = () => {
 
-        axios(`${MANAGER_IP}/trial-jobs`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
+        axios
+            .all([
+                axios.get(`${MANAGER_IP}/trial-jobs`),
+                axios.get(`${MANAGER_IP}/metric-data`)
+            ])
+            .then(axios.spread((res, res1) => {
+                if (res.status === 200 && res1.status === 200) {
                     const trialJobs = res.data;
+                    const metricSource = res1.data;
                     const trialTable: Array<TableObj> = [];
                     Object.keys(trialJobs).map(item => {
                         // only succeeded trials have finalMetricData
                         let desc: Parameters = {
-                            parameters: {}
+                            parameters: {},
+                            intermediate: []
                         };
                         let acc;
                         let tableAcc = 0;
@@ -171,6 +177,14 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 desc.isLink = true;
                             }
                         }
+                        let mediate: Array<string> = [];
+                        Object.keys(metricSource).map(key => {
+                            const items = metricSource[key];
+                            if (items.trialJobId === id) {
+                                mediate.push(items.data);
+                            }
+                        });
+                        desc.intermediate = mediate;
                         if (trialJobs[item].finalMetricData !== undefined) {
                             acc = JSON.parse(trialJobs[item].finalMetricData.data);
                             if (typeof (acc) === 'object') {
@@ -193,11 +207,12 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     });
                     if (this._isMounted) {
                         this.setState(() => ({
-                            tableListSource: trialTable
+                            tableListSource: trialTable,
+                            tableBaseSource: trialTable
                         }));
                     }
                 }
-            });
+            }));
     }
 
     callback = (key: string) => {
@@ -228,10 +243,10 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     searchTrialNo = (value: string) => {
 
         window.clearInterval(this.interTableList);
-        const { tableListSource } = this.state;
+        const { tableBaseSource } = this.state;
         const searchResultList: Array<TableObj> = [];
-        Object.keys(tableListSource).map(key => {
-            const item = tableListSource[key];
+        Object.keys(tableBaseSource).map(key => {
+            const item = tableBaseSource[key];
             if (item.sequenceId.toString() === value) {
                 searchResultList.push(item);
             }
@@ -271,7 +286,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             accSource, accNodata,
             tableListSource
         } = this.state;
-        
+
         const titleOfacc = (
             <Title1 text="Default Metric" icon="3.png" />
         );

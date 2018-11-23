@@ -37,8 +37,8 @@ import {
 } from '../common/trainingService';
 import { delay, getLogDir, getMsgDispatcherCommand } from '../common/utils';
 import {
-    ADD_CUSTOMIZED_TRIAL_JOB, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, REPORT_METRIC_DATA,
-    REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
+    ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS,
+    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 
@@ -127,7 +127,8 @@ class NNIManager implements Manager {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
+        const dispatcherCommand: string = getMsgDispatcherCommand(
+            expParams.tuner, expParams.assessor, expParams.multiPhase, expParams.multiThread);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
             //expParams.tuner.tunerCommand,
@@ -159,7 +160,8 @@ class NNIManager implements Manager {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.multiPhase);
+        const dispatcherCommand: string = getMsgDispatcherCommand(
+            expParams.tuner, expParams.assessor, expParams.multiPhase, expParams.multiThread);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         this.setupTuner(
             dispatcherCommand,
@@ -422,14 +424,18 @@ class NNIManager implements Manager {
             } else {
                 this.trialConcurrencyChange = requestTrialNum;
             }
-            for (let i: number = 0; i < requestTrialNum; i++) {
+
+            const requestCustomTrialNum: number = Math.min(requestTrialNum, this.customizedTrials.length);
+            for (let i: number = 0; i < requestCustomTrialNum; i++) {
                 // ask tuner for more trials
                 if (this.customizedTrials.length > 0) {
                     const hyperParams: string | undefined = this.customizedTrials.shift();
                     this.dispatcher.sendCommand(ADD_CUSTOMIZED_TRIAL_JOB, hyperParams);
-                } else {
-                    this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, '1');
                 }
+            }
+
+            if (requestTrialNum - requestCustomTrialNum > 0) {
+                this.requestTrialJobs(requestTrialNum - requestCustomTrialNum);
             }
 
             // check maxtrialnum and maxduration here
@@ -525,11 +531,9 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Dispatcher error: tuner has not been setup');
         }
-        // TO DO: we should send INITIALIZE command to tuner if user's tuner needs to run init method in tuner
-        this.log.debug(`Send tuner command: update search space: ${this.experimentProfile.params.searchSpace}`);
-        this.dispatcher.sendCommand(UPDATE_SEARCH_SPACE, this.experimentProfile.params.searchSpace);
-        this.log.debug(`Send tuner command: ${this.experimentProfile.params.trialConcurrency}`);
-        this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, String(this.experimentProfile.params.trialConcurrency));
+        this.log.debug(`Send tuner command: INITIALIZE: ${this.experimentProfile.params.searchSpace}`);
+        // Tuner need to be initialized with search space before generating any hyper parameters
+        this.dispatcher.sendCommand(INITIALIZE, this.experimentProfile.params.searchSpace);
     }
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
@@ -540,9 +544,32 @@ class NNIManager implements Manager {
         this.dispatcher.sendCommand(REPORT_METRIC_DATA, metric.data);
     }
 
+    private requestTrialJobs(jobNum: number): void {
+        if (jobNum < 1) {
+            return;
+        }
+        if (this.dispatcher === undefined) {
+            throw new Error('Dispatcher error: tuner has not been setup');
+        }
+        if (this.experimentProfile.params.multiThread) {
+            // Send multiple requests to ensure multiple hyper parameters are generated in non-blocking way.
+            // For a single REQUEST_TRIAL_JOBS request, hyper parameters are generated one by one
+            // sequentially.
+            for (let i: number = 0; i < jobNum; i++) {
+                this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, '1');
+            }
+        } else {
+            this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, String(jobNum));
+        }
+    }
+
     private async onTunerCommand(commandType: string, content: string): Promise<void> {
         this.log.info(`Command from tuner: ${commandType}, ${content}`);
         switch (commandType) {
+            case INITIALIZED:
+                // Tuner is intialized, search space is set, request tuner to generate hyper parameters
+                this.requestTrialJobs(this.experimentProfile.params.trialConcurrency);
+                break;
             case NEW_TRIAL_JOB:
                 this.waitingTrials.push(content);
                 break;
