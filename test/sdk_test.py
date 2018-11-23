@@ -29,7 +29,7 @@ GREEN = '\33[32m'
 RED = '\33[31m'
 CLEAR = '\33[0m'
 
-TUNER_LIST = ['BatchTuner', 'TPE', 'Random', 'Anneal', 'Evolution']
+TUNER_LIST = ['GridSearch', 'BatchTuner', 'TPE', 'Random', 'Anneal', 'Evolution']
 ASSESSOR_LIST = ['Medianstop']
 EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
 
@@ -38,12 +38,17 @@ def switch(dispatch_type, dispatch_name):
     '''Change dispatch in config.yml'''
     config_path = 'sdk_test/local.yml'
     experiment_config = get_yml_content(config_path)
-    experiment_config[dispatch_type.lower()] = {
-        'builtin' + dispatch_type + 'Name': dispatch_name,
-        'classArgs': {
-            'optimize_mode': 'maximize'
+    if dispatch_name in ['GridSearch', 'BatchTuner']:
+        experiment_config[dispatch_type.lower()] = {
+            'builtin' + dispatch_type + 'Name': dispatch_name
         }
-    }
+    else:
+        experiment_config[dispatch_type.lower()] = {
+            'builtin' + dispatch_type + 'Name': dispatch_name,
+            'classArgs': {
+                'optimize_mode': 'maximize'
+            }
+        }
     dump_yml_content(config_path, experiment_config)
 
 def test_builtin_dispatcher(dispatch_type, dispatch_name):
