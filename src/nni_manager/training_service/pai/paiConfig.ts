@@ -121,3 +121,13 @@ export class NNIPAITrialConfig extends TrialConfig{
         this.outputDir = outputDir;
     }
 }
+
+/**
+ * the ip of nni manager
+ */
+export class NNIManagerIpConfig {
+    public readonly nniManagerIp: string;
+    constructor(nniManagerIp: string){
+        this.nniManagerIp = nniManagerIp;
+    }
+} 	} 

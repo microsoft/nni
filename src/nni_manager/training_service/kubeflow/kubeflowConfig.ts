@@ -120,3 +120,13 @@ export class KubeflowTrialConfig {
         this.ps = ps;
     }
 }
+
+/**
+ * the ip of nni manager
+ */
+export class NNIManagerIpConfig {
+    public readonly nniManagerIp: string;
+    constructor(nniManagerIp: string){
+        this.nniManagerIp = nniManagerIp;
+    }
+} 	} 
