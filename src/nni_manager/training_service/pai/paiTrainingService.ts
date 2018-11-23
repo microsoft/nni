@@ -36,7 +36,7 @@ import { getLogger, Logger } from '../../common/log';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric
+    TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
@@ -69,6 +69,7 @@ class PAITrainingService implements TrainingService {
     private hdfsOutputHost: string | undefined;
     private nextTrialSequenceId: number;
     private paiRestServerPort?: number;
+    private nniManagerIpConfig?: NNIManagerIpConfig;
 
     constructor() {
         this.log = getLogger();
@@ -194,7 +195,7 @@ class PAITrainingService implements TrainingService {
             trialSequenceId,
             hdfsLogPath);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
-
+        const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
         const nniPaiTrialCommand : string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
             // PAI will copy job's codeDir into /root directory
@@ -204,7 +205,7 @@ class PAITrainingService implements TrainingService {
             this.experimentId,
             trialSequenceId,
             this.paiTrialConfig.command, 
-            getIPV4Address(),
+            nniManagerIp,
             this.paiRestServerPort,
             hdfsOutputDir,
             this.hdfsOutputHost,
@@ -322,6 +323,11 @@ class PAITrainingService implements TrainingService {
         const deferred : Deferred<void> = new Deferred<void>();
 
         switch (key) {
+            case TrialConfigMetadataKey.NNI_MANAGER_IP:
+                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
+                deferred.resolve();
+                break;
+
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
                 //TODO: try catch exception when setting up HDFS client and get PAI token
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);

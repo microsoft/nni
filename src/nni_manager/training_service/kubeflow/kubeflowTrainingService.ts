@@ -33,7 +33,7 @@ import { MethodNotImplementedError } from '../../common/errors';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric
+    TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { KubeflowClusterConfig, kubeflowOperatorMap, KubeflowTrialConfig, NFSConfig } from './kubeflowConfig';
@@ -72,6 +72,7 @@ class KubeflowTrainingService implements TrainingService {
     private azureStorageShare: any;
     private azureStorageSecretName: any;
     private azureStorageAccountName: any;
+    private nniManagerIpConfig?: NNIManagerIpConfig;
     
     constructor() {        
         this.log = getLogger();
@@ -235,7 +236,15 @@ class KubeflowTrainingService implements TrainingService {
     }
 
     public listTrialJobs(): Promise<TrialJobDetail[]> {
-        throw new MethodNotImplementedError();
+        const jobs: TrialJobDetail[] = [];
+        
+        this.trialJobsMap.forEach(async (value: KubeflowTrialJobDetail, key: string) => {
+            if (value.form.jobType === 'TRIAL') {
+                jobs.push(await this.getTrialJob(key));
+            }
+        });
+
+        return Promise.resolve(jobs);
     }
 
     public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
@@ -292,6 +301,10 @@ class KubeflowTrainingService implements TrainingService {
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {
+            case TrialConfigMetadataKey.NNI_MANAGER_IP:
+                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
+                break;
+            
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
                 this.kubeflowClusterConfig = <KubeflowClusterConfig>JSON.parse(value);
                 // If NFS config section is valid in config file, proceed to mount and config NFS
@@ -357,7 +370,7 @@ class KubeflowTrainingService implements TrainingService {
     }
 
     public getClusterMetadata(key: string): Promise<string> {
-        throw new MethodNotImplementedError();
+        return Promise.resolve('');
     }
 
     public async cleanUp(): Promise<void> {
@@ -567,13 +580,13 @@ class KubeflowTrainingService implements TrainingService {
                     break;
             }
         }
-
+        const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
         runScriptLines.push('mkdir -p $NNI_SYS_DIR');
         runScriptLines.push('mkdir -p $NNI_OUTPUT_DIR');
         runScriptLines.push('cp -rT $NNI_CODE_DIR $NNI_SYS_DIR');
         runScriptLines.push('cd $NNI_SYS_DIR');
         runScriptLines.push('sh install_nni.sh # Check and install NNI pkg');
-        runScriptLines.push(`python3 -m nni_trial_tool.trial_keeper --trial_command '${command}' --nnimanager_ip '${getIPV4Address()}' --nnimanager_port '${this.kubeflowRestServerPort}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`);
+        runScriptLines.push(`python3 -m nni_trial_tool.trial_keeper --trial_command '${command}' --nnimanager_ip '${nniManagerIp}' --nnimanager_port '${this.kubeflowRestServerPort}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`);
 
         return runScriptLines.join('\n');
     }
