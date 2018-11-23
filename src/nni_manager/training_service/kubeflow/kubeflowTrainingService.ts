@@ -30,15 +30,14 @@ import { EventEmitter } from 'events';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
-import { String } from 'typescript-string-operations';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
-import { KubeflowClusterConfig, kubeflowOperatorMap, KubeflowTrialConfig, KubeflowTrialConfigTemplate, NFSConfig } from './kubeflowConfig';
-import { KubeflowTrialJobDetail, KUBEFLOW_RUN_SHELL_FORMAT } from './kubeflowData';
+import { KubeflowClusterConfig, kubeflowOperatorMap, KubeflowTrialConfig, NFSConfig } from './kubeflowConfig';
+import { KubeflowTrialJobDetail } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 
@@ -455,18 +454,46 @@ class KubeflowTrainingService implements TrainingService {
      */
     private genereateRunScript(trialJobId: string, trialWorkingFolder: string, 
                 command: string, trialSequenceId: string, roleType: DistTrainRole): string {
-        return String.Format(
-            KUBEFLOW_RUN_SHELL_FORMAT,
-            `$PWD/nni/${trialJobId}`,
-            path.join(trialWorkingFolder, `${roleType}_output`),
-            trialJobId,
-            getExperimentId(),
-            trialWorkingFolder,
-            trialSequenceId,
-            command,
-            getIPV4Address(),
-            this.kubeflowRestServerPort
-            );
+        const runScriptLines: string[] = [];
+
+        runScriptLines.push('#!/bin/bash');
+        runScriptLines.push('export NNI_PLATFORM=kubeflow');
+        runScriptLines.push(`export NNI_SYS_DIR=$PWD/nni/${trialJobId}`);
+        runScriptLines.push(`export NNI_OUTPUT_DIR=${path.join(trialWorkingFolder, 'output', `${roleType}_output`)}`);
+        runScriptLines.push('export MULTI_PHASE=false');
+        runScriptLines.push(`export NNI_TRIAL_JOB_ID=${trialJobId}`);
+        runScriptLines.push(`export NNI_EXP_ID=${getExperimentId()}`);
+        runScriptLines.push(`export NNI_CODE_DIR=${trialWorkingFolder}`);
+        runScriptLines.push(`export NNI_TRIAL_SEQ_ID=${trialSequenceId}`);
+
+        // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
+        // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
+        // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file
+        if(this.kubeflowTrialConfig) {
+            switch(roleType) {
+                case 'ps':
+                    if(this.kubeflowTrialConfig.ps && this.kubeflowTrialConfig.ps.gpuNum == 0) {
+                        runScriptLines.push(`export CUDA_VISIBLE_DEVICES=''`);
+                    }
+                    break;
+                case 'worker':
+                    if(this.kubeflowTrialConfig.worker && this.kubeflowTrialConfig.worker.gpuNum == 0) {
+                        runScriptLines.push(`export CUDA_VISIBLE_DEVICES=''`);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        runScriptLines.push('mkdir -p $NNI_SYS_DIR');
+        runScriptLines.push('mkdir -p $NNI_OUTPUT_DIR');
+        runScriptLines.push('cp -rT $NNI_CODE_DIR $NNI_SYS_DIR');
+        runScriptLines.push('cd $NNI_SYS_DIR');
+        runScriptLines.push('sh install_nni.sh # Check and install NNI pkg');
+        runScriptLines.push(`python3 -m nni_trial_tool.trial_keeper --trial_command '${command}' --nnimanager_ip '${getIPV4Address()}' --nnimanager_port '${this.kubeflowRestServerPort}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`);
+
+        return runScriptLines.join('\n');
     }
 
     private generateSequenceId(): number {

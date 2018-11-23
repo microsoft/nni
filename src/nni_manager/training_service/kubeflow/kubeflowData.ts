@@ -57,22 +57,4 @@ export class KubeflowTrialJobDetail implements TrialJobDetail {
     }
 }
 
-export const KUBEFLOW_RUN_SHELL_FORMAT: string = 
-`#!/bin/bash
-export NNI_PLATFORM=kubeflow
-export NNI_SYS_DIR={0} 
-export NNI_OUTPUT_DIR={1} 
-export MULTI_PHASE=false
-export NNI_TRIAL_JOB_ID={2} 
-export NNI_EXP_ID={3} 
-export NNI_CODE_DIR={4} 
-export NNI_TRIAL_SEQ_ID={5}
-mkdir -p $NNI_SYS_DIR
-mkdir -p $NNI_OUTPUT_DIR
-cp -rT $NNI_CODE_DIR $NNI_SYS_DIR
-cd $NNI_SYS_DIR
-sh install_nni.sh # Check and install NNI pkg
-python3 -m nni_trial_tool.trial_keeper --trial_command '{6}' --nnimanager_ip '{7}' --nnimanager_port '{8}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
-`
-
 export type KubeflowTFJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
