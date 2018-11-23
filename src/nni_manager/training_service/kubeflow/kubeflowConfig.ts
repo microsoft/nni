@@ -129,4 +129,4 @@ export class NNIManagerIpConfig {
     constructor(nniManagerIp: string){
         this.nniManagerIp = nniManagerIp;
     }
-} 	} 
+}
