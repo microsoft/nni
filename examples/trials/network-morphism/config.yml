@@ -19,6 +19,6 @@ tuner:
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:
-  command: python cifar10-tensorflow.py
+  command: python cifar10-pytorch.py
   codeDir: .
-  gpuNum: 0
+  gpuNum: 1

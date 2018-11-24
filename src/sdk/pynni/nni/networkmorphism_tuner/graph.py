@@ -24,7 +24,7 @@ from queue import Queue
 import numpy as np
 import torch
 import onnx
-
+import json
 from nni.networkmorphism_tuner.utils import Constant
 from nni.networkmorphism_tuner.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense,wider_pre_conv, deeper_conv_block, dense_to_deeper_block, add_noise
 from nni.networkmorphism_tuner.layers import StubConcatenate, StubAdd, is_layer, layer_width,  set_torch_weight_to_stub, set_stub_weight_to_torch, StubReLU, get_conv_class, get_batch_norm_class
@@ -581,9 +581,23 @@ class Graph:
         for layer in self.layer_list:
             layer.weights = None
 
-    def produce_model(self):
-        """Build a new model based on the current graph."""
+    def produce_torch_model(self):
+        """Build a new Torch model based on the current graph."""
         return TorchModel(self)
+
+    def produce_onnx_model(self):
+        """Build a new ONNX model based on the current graph."""
+        return ONNXModel(self)
+
+    def parsing_onnx_model(self, onnx_model):
+        return self
+
+    def produce_json_model(self):
+        """Build a new Json model based on the current graph."""
+        return JSONModel(self)
+    
+    def parsing_json_model(self, json_model):
+        return self
 
     def _layer_ids_in_order(self, layer_ids):
         node_id_to_order_index = {}
@@ -662,16 +676,28 @@ class ONNXModel:
     def __init__(self, graph):
         pass
 
+class JSONModel:
+    def __init__(self, graph):
+        return 
+
 
 def graph_to_onnx(graph,onnx_model_path,input_shape):
 
-    torch_model = graph.produce_model()
-    x = torch.randn(Constant.BATCH_SIZE, input_shape[2], input_shape[0], input_shape[1], requires_grad=True)
-    torch_out = torch.onnx.export(torch_model, x , onnx_model_path,export_params=True)
-
-    return torch_out
+    onnx_out = graph.produce_onnx_model(Constant.BATCH_SIZE,input_shape)
+    onnx.save(onnx_out,onnx_model_path)
+    return onnx_out
 
 def onnx_to_graph(onnx_model,input_shape):
     graph = Graph(input_shape, False)
-    
+    graph.parsing_onnx_model(onnx_model)
+    return graph
+
+def graph_to_json(graph,json_model_path,input_shape):
+    json_out = graph.produce_json_model(Constant.BATCH_SIZE,input_shape)
+    with open(json_model_path, 'w') as outfile:
+        json.dump(json_out, outfile)
+    return json_out
+
+def json_to_graph(json_model,input_shape):
+    graph = Graph(input_shape, False)
     return graph

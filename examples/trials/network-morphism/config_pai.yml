@@ -17,8 +17,8 @@ tuner:
 trial:
   command: python3 cifar10-network-morphism.py
   codeDir: .
-  gpuNum: 0
-  cpuNum: 1
+  gpuNum: 1
+  cpuNum: 0
   memoryMB: 8196
   #The docker image to run nni job on pai
   image: openpai/pai.example.tensorflow

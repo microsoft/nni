@@ -37,15 +37,37 @@ import onnx
 import mmdnn
 from mmdnn.conversion.pytorch.pytorch_emitter import PytorchEmitter
 
-        
-        
+import pickle
+
 
 # set the logger format
 log_format = '%(asctime)s %(message)s'
-logging.basicConfig(filename="networkmorphism.log",filemode='a', level=logging.INFO,
-                   format=log_format, datefmt='%m/%d %I:%M:%S %p')
+logging.basicConfig(filename="networkmorphism.log", filemode='a', level=logging.INFO,
+                    format=log_format, datefmt='%m/%d %I:%M:%S %p')
 # set the logger format
 logger = logging.getLogger('cifar10-network-morphism')
+
+
+def get_args():
+    parser = argparse.ArgumentParser("cifar10")
+    parser.add_argument('--batch_size', type=int,
+                        default=96, help='batch size')
+    parser.add_argument('--optimizer', type=str,
+                        default="Adam", help='optimizer')
+    parser.add_argument('--epoches', type=int, default=10, help='epoch limit')
+    parser.add_argument('--learning_rate', type=float,
+                        default=1e-3, help='epoch limit')
+    parser.add_argument('--time_limit', type=int,
+                        default=0, help='gpu device id')
+    parser.add_argument('--cutout', action='store_true',
+                        default=False, help='use cutout')
+    parser.add_argument('--cutout_length', type=int,
+                        default=16, help='cutout length')
+    parser.add_argument('--model_path', type=str, default="./",
+                        help='Path to save the destination model')
+    args = parser.parse_args()
+    return args
+
 
 trainloader = None
 testloader = None
@@ -53,23 +75,11 @@ net = None
 criterion = None
 optimizer = None
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-best_acc = 0.0 
+best_acc = 0.0
+args = get_args()
 
 
-def get_args():
-    parser = argparse.ArgumentParser("cifar10")
-    parser.add_argument('--batch_size', type=int, default=96, help='batch size')
-    parser.add_argument('--optimizer', type=str, default="Adam", help='optimizer')
-    parser.add_argument('--epoches', type=int, default=200, help='epoch limit')
-    parser.add_argument('--learning_rate', type=float, default=1e-3, help='epoch limit')
-    parser.add_argument('--time_limit', type=int, default=0, help='gpu device id')
-    parser.add_argument('--cutout', action='store_true', default=False, help='use cutout')
-    parser.add_argument('--cutout_length', type=int, default=16, help='cutout length')
-    parser.add_argument('--model_path', type=str, default="./", help='Path to save the destination model')
-    args = parser.parse_args()
-    return args
-
-def build_graph_from_onnx(onnx_model_path,onnx_weight_path,args):
+def build_graph_from_onnx(onnx_model_path, onnx_weight_path):
     ''' build model from onnx intermedia represtation 
     '''
     onnx_model = onnx.load(onnx_model_path)
@@ -77,7 +87,8 @@ def build_graph_from_onnx(onnx_model_path,onnx_weight_path,args):
     onnx.helper.printable_graph(onnx_model)
     return onnx_model
 
-def build_graph_from_mmdnn(ir_model_path,ir_weight_path,args):
+
+def build_graph_from_mmdnn(ir_model_path, ir_weight_path):
     ''' build model from mmdnn intermedia represtation 
     '''
     emitter = PytorchEmitter((ir_model_path, ir_weight_path))
@@ -86,7 +97,15 @@ def build_graph_from_mmdnn(ir_model_path,ir_weight_path,args):
     return model
 
 
-def parse_rev_args(receive_msg,args):
+def build_graph_from_pickle(ir_model_path):
+    ''' build model from pickle represtation 
+    '''
+    graph = pickle.load(open(ir_model_path, 'rb'))
+    model = graph.produce_torch_model()
+    return model
+
+
+def parse_rev_args(receive_msg):
     global trainloader
     global testloader
     global net
@@ -98,17 +117,20 @@ def parse_rev_args(receive_msg,args):
 
     transform_train, transform_test = utils._data_transforms_cifar10(args)
 
-    trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    trainset = torchvision.datasets.CIFAR10(
+        root='./data', train=True, download=True, transform=transform_train)
+    trainloader = torch.utils.data.DataLoader(
+        trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
-    testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=2)
-
+    testset = torchvision.datasets.CIFAR10(
+        root='./data', train=False, download=True, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(
+        testset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     # Model
     logger.debug('Building model..')
-    model_path , weight_path = receive_msg
-    net = build_graph_from_onnx(model_path, weight_path,args)
+    model_path = receive_msg
+    net = build_graph_from_pickle(model_path)
 
     net = net.to(device)
     if device == 'cuda':
@@ -117,9 +139,9 @@ def parse_rev_args(receive_msg,args):
 
     criterion = nn.CrossEntropyLoss()
 
-
     if args.optimizer == 'SGD':
-        optimizer = optim.SGD(net.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=5e-4)
+        optimizer = optim.SGD(
+            net.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=5e-4)
     if args.optimizer == 'Adadelta':
         optimizer = optim.Adadelta(net.parameters(), lr=args.learning_rate)
     if args.optimizer == 'Adagrad':
@@ -130,7 +152,6 @@ def parse_rev_args(receive_msg,args):
         optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
 
     return 0
-         
 
 
 # Training
@@ -162,7 +183,8 @@ def train(epoch):
         acc = 100.*correct/total
 
         utils.progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-            % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+                           % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+
 
 def test(epoch):
     global best_acc
@@ -190,7 +212,7 @@ def test(epoch):
             acc = 100.*correct/total
 
             utils.progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+                               % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
     # Save checkpoint.
     acc = 100.*correct/total
@@ -207,14 +229,14 @@ def test(epoch):
         best_acc = acc
     return acc, best_acc
 
+
 if __name__ == '__main__':
     try:
-        args = get_args()
         # trial get next parameter from network morphism tuner
         RCV_CONFIG = nni.get_next_parameter()
         logger.debug(RCV_CONFIG)
 
-        parse_rev_args(RCV_CONFIG,args)
+        parse_rev_args(RCV_CONFIG)
         acc = 0.0
         best_acc = 0.0
         for epoch in range(args.epoches):

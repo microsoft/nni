@@ -35,9 +35,10 @@ from nni.networkmorphism_tuner.metric import Accuracy
 from nni.networkmorphism_tuner.utils import pickle_to_file, pickle_from_file, Constant
 from nni.networkmorphism_tuner.net_transformer import default_transform
 from nni.networkmorphism_tuner.nn import CnnGenerator
-from nni.networkmorphism_tuner.graph import onnx_to_graph,graph_to_onnx
+from nni.networkmorphism_tuner.graph import onnx_to_graph,graph_to_onnx,graph_to_json,json_to_graph
 import onnx
 import torch
+import json
 
 logger = logging.getLogger('NetworkMorphism_AutoML')
 
@@ -85,10 +86,11 @@ class NetworkMorphismTuner(Tuner):
                  kernel_lambda=Constant.KERNEL_LAMBDA, t_min=None, max_model_size=Constant.MAX_MODEL_SIZE, default_model_len=Constant.MODEL_LEN, default_model_width=Constant.MODEL_WIDTH):
         if path is None:
             os.makedirs("model_path")
-            path = "model_path"
+            path = os.path.join(os.getcwd(),"model_path")
         else:
             if not os.path.exists(path):
                 os.makedirs(path)
+            path = os.path.join(os.getcwd(),path)
         self.path = path
         self.n_classes = n_output_node
         self.input_shape = input_shape
@@ -116,7 +118,7 @@ class NetworkMorphismTuner(Tuner):
         self.default_model_len = default_model_len
         self.default_model_width = default_model_width
 
-        self.search_space = []
+        self.search_space = dict()
 
     def _choose_tuner(self, algorithm_name):
         ''' choose algorithm of tuner
@@ -129,11 +131,24 @@ class NetworkMorphismTuner(Tuner):
         '''
         pass
 
-    def update_search_space(self, search_space):
+    def update_search_space(self):
         '''
         Update search space definition in tuner by search_space in neural architecture.
         '''
-        self.search_space = search_space
+        export_path = os.path.join(self.path,"history.json")
+        data = dict()
+
+        networks = []
+        for model_id in range(self.model_count - len(self.training_queue)):
+            networks.append(self.load_model_by_id(model_id).extract_descriptor().to_json())
+
+        tree = self.search_tree.get_dict()
+
+        # Saving the data to file.
+        data['networks'] = networks
+        data['tree'] = tree
+
+        self.search_space = data
         
 
     def generate_parameters(self, parameter_id):
@@ -158,15 +173,27 @@ class NetworkMorphismTuner(Tuner):
 
         graph, father_id, model_id = self.training_queue.pop(0)
 
-        # from gragh to onnx_model_path
-        onnx_model_path = os.path.join(self.path, str(model_id) + '.onnx')
-        torch_out=graph_to_onnx(graph,onnx_model_path,self.input_shape)
+        # from gragh to onnx
+        # onnx_model_path = os.path.join(self.path, str(model_id) + '.onnx')
+        # onnx_out = graph_to_onnx(graph,onnx_model_path,self.input_shape)
 
-        self.total_data[parameter_id] = (onnx_model_path, father_id, model_id)
+        # self.total_data[parameter_id] = (onnx_model_path, father_id, model_id)
         
-        self.update_search_space(onnx_model_path)
+        # self.update_search_space(onnx_model_path)
+
+        # from graph to json
+        # json_model_path = os.path.join(self.path, str(model_id) + '.json')
+        # json_out = graph_to_json(graph,json_model_path,self.input_shape)
+
+        # self.total_data[parameter_id] = (json_model_path, father_id, model_id)
+
+        pickle_path=os.path.join(self.path, str(model_id) + '.graph')
+        pickle_to_file(graph, pickle_path)
+        self.update_search_space(pickle_path)
+
+        self.total_data[parameter_id] = (pickle_path, father_id, model_id)
         
-        return onnx_model_path
+        return pickle_path
 
     def receive_trial_result(self, parameter_id, parameters, value):
         ''' Record an observation of the objective function
@@ -185,14 +212,18 @@ class NetworkMorphismTuner(Tuner):
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')
 
-        (onnx_model_path, father_id, model_id) = self.total_data[parameter_id]
+        (model_path, father_id, model_id) = self.total_data[parameter_id]
 
         if self.optimize_mode is OptimizeMode.Maximize:
             reward = -reward
 
         # from onnx_model_path to gragh
-        # onnx_graph = onnx.load(onnx_model_path)
+        # onnx_graph = onnx.load(model_path)
         # graph = onnx_to_graph(onnx_graph,self.input_shape)
+
+        # from json_model_path to gragh
+        # json_graph = json.loads(model_path)
+        # graph = json_to_graph(json_graph,self.input_shape)
 
         graph = self.bo.searcher.load_model_by_id(model_id)
 
@@ -239,6 +270,8 @@ class NetworkMorphismTuner(Tuner):
 
         if self.verbose:
             logger.info('Saving model.')
+        
+        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
 
         # Update best_model text file
         ret = {'model_id': model_id, 'metric_value': metric_value}
@@ -279,7 +312,7 @@ class NetworkMorphismTuner(Tuner):
         return min(self.history, key=lambda x: x['metric_value'])['model_id']
 
     def load_model_by_id(self, model_id):
-        return onnx.load(os.path.join(self.path, str(model_id) + '.onnx'))
+        return pickle_from_file(os.path.join(self.path, str(model_id) + '.graph'))
 
     def load_best_model(self):
         return self.load_model_by_id(self.get_best_model_id())

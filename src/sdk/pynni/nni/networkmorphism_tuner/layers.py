@@ -37,17 +37,17 @@ class GlobalAvgPool(nn.Module):
 
 class GlobalAvgPool1d(GlobalAvgPool):
     def forward(self, input_tensor):
-        return functional.avg_pool1d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
+        return functional.avg_pool1d(input_tensor, input_tensor.size()[2:],ceil_mode=False).view(input_tensor.size()[:2])
 
 
 class GlobalAvgPool2d(GlobalAvgPool):
     def forward(self, input_tensor):
-        return functional.avg_pool2d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
+        return functional.avg_pool2d(input_tensor, input_tensor.size()[2:],ceil_mode=False).view(input_tensor.size()[:2])
 
 
 class GlobalAvgPool3d(GlobalAvgPool):
     def forward(self, input_tensor):
-        return functional.avg_pool3d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
+        return functional.avg_pool3d(input_tensor, input_tensor.size()[2:],ceil_mode=False).view(input_tensor.size()[:2])
 
 
 class StubLayer:
