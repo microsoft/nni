@@ -5,7 +5,7 @@ trialConcurrency: 1
 # maximum experiment running duration
 maxExecDuration: 24h
 # empty means never stop
-maxTrialNum: 10
+maxTrialNum: 200
 #choice: local, remote, pai
 trainingServicePlatform: local
 #searchSpacePath: search_space.json

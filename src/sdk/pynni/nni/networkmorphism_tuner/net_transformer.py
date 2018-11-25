@@ -119,5 +119,11 @@ def transform(graph):
 
 def default_transform(graph):
     graph = deepcopy(graph)
-
+    graph.to_conv_deeper_model(1, 3)
+    graph.to_conv_deeper_model(1, 3)
+    graph.to_conv_deeper_model(5, 3)
+    graph.to_conv_deeper_model(9, 3)
+    graph.to_add_skip_model(1, 18)
+    graph.to_add_skip_model(18, 24)
+    graph.to_add_skip_model(24, 27)
     return [graph]

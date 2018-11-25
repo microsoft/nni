@@ -662,7 +662,11 @@ class TorchModel(torch.nn.Module):
                                                  self.graph.layer_id_to_input_node_ids[layer_id]))
                 else:
                     edge_input_tensor = node_list[u]
-
+                # print("current_device:{}".format(torch.cuda.current_device()))
+                # if hasattr(torch_layer,"get_device"):
+                #     print("{}:{}".format(torch_layer.get_deivce(),torch_layer))
+                # else:
+                #     print("{}".format(torch_layer))
                 temp_tensor = torch_layer(edge_input_tensor)
                 node_list[v] = temp_tensor
         return node_list[output_id]

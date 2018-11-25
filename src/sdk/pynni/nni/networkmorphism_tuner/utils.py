@@ -37,11 +37,15 @@ class Constant:
     MLP_DROPOUT_RATE = 0.25
     CONV_BLOCK_DISTANCE = 2
     BATCH_SIZE = 128
+    T_MIN = 0.0001
 
 
 def pickle_from_file(path):
-    return pickle.load(open(path, 'rb'))
+    with open(path,'rb') as f:
+        graph = pickle.load(f)
+    return graph
 
 
 def pickle_to_file(obj, path):
-    pickle.dump(obj, open(path, 'wb'))
+    with open(path,'wb') as f:
+        pickle.dump(obj, f)

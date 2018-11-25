@@ -69,4 +69,6 @@ build
 *.egg-info
 
 # vscode file
+.vscode
 .vscode/*
+

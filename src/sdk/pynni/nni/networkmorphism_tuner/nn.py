@@ -66,7 +66,7 @@ class CnnGenerator(NetworkGenerator):
         # model.ir_version = IR_VERSION
 
         pooling_len = int(model_len / 4)
-        graph = Graph(self.input_shape, False)
+        graph = Graph(self.input_shape, True)
         temp_input_channel = self.input_shape[-1]
         output_node_id = 0
         for i in range(model_len):

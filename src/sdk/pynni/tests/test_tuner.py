@@ -22,7 +22,7 @@
 import nni.protocol
 from nni.protocol import CommandType, send, receive
 from nni.tuner import Tuner
-
+from nni.msg_dispatcher import MsgDispatcher
 from io import BytesIO
 import json
 from unittest import TestCase, main
@@ -87,8 +87,9 @@ class TunerTestCase(TestCase):
         _restore_io()
 
         tuner = NaiveTuner()
+        dispatcher = MsgDispatcher(tuner)
         try:
-            tuner.run()
+            dispatcher.run()
         except Exception as e:
             self.assertIs(type(e), AssertionError)
             self.assertEqual(e.args[0], 'Unsupported command: CommandType.KillTrialJob')

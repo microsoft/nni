@@ -83,9 +83,10 @@ class NetworkMorphismTuner(Tuner):
     '''
 
     def __init__(self, input_shape=(32,32,3), n_output_node=10, algorithm_name="Bayesian",optimize_mode="minimize", path=None, verbose=True, metric=Accuracy, beta=Constant.BETA,
-                 kernel_lambda=Constant.KERNEL_LAMBDA, t_min=None, max_model_size=Constant.MAX_MODEL_SIZE, default_model_len=Constant.MODEL_LEN, default_model_width=Constant.MODEL_WIDTH):
+                 kernel_lambda=Constant.KERNEL_LAMBDA, t_min=Constant.T_MIN, max_model_size=Constant.MAX_MODEL_SIZE, default_model_len=Constant.MODEL_LEN, default_model_width=Constant.MODEL_WIDTH):
         if path is None:
-            os.makedirs("model_path")
+            if not os.path.exists("model_path"):
+                os.makedirs("model_path")
             path = os.path.join(os.getcwd(),"model_path")
         else:
             if not os.path.exists(path):
@@ -131,31 +132,19 @@ class NetworkMorphismTuner(Tuner):
         '''
         pass
 
-    def update_search_space(self):
+    def update_search_space(self,search_space):
         '''
         Update search space definition in tuner by search_space in neural architecture.
         '''
-        export_path = os.path.join(self.path,"history.json")
-        data = dict()
-
-        networks = []
-        for model_id in range(self.model_count - len(self.training_queue)):
-            networks.append(self.load_model_by_id(model_id).extract_descriptor().to_json())
-
-        tree = self.search_tree.get_dict()
-
-        # Saving the data to file.
-        data['networks'] = networks
-        data['tree'] = tree
-
-        self.search_space = data
         
+        self.search_space = search_space
 
     def generate_parameters(self, parameter_id):
         '''
         Returns a set of trial neural architecture, as a serializable object.
         parameter_id : int
         '''
+        logger.info(self.history)
         if not self.history:
             self.init_search()
 
@@ -189,7 +178,6 @@ class NetworkMorphismTuner(Tuner):
 
         pickle_path=os.path.join(self.path, str(model_id) + '.graph')
         pickle_to_file(graph, pickle_path)
-        self.update_search_space(pickle_path)
 
         self.total_data[parameter_id] = (pickle_path, father_id, model_id)
         
@@ -227,14 +215,11 @@ class NetworkMorphismTuner(Tuner):
 
         graph = self.bo.searcher.load_model_by_id(model_id)
 
-        # to use the reward and graph
-        self.add_model(reward, graph, model_id)
+        # to use the value and graph
+        self.add_model(value, graph, model_id)
         self.search_tree.add_child(father_id, model_id)
 
         self.bo.fit(self.x_queue, self.y_queue)
-        self.x_queue = []
-        self.y_queue = []
-        self.history = []
 
         pickle_to_file(self, os.path.join(self.path, 'searcher'))
 
@@ -316,3 +301,9 @@ class NetworkMorphismTuner(Tuner):
 
     def load_best_model(self):
         return self.load_model_by_id(self.get_best_model_id())
+    
+    def get_metric_value_by_id(self, model_id):
+        for item in self.history:
+            if item['model_id'] == model_id:
+                return item['metric_value']
+        return None

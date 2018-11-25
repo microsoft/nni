@@ -32,6 +32,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
+import torch.nn as nn
+from torch.autograd import Variable
 
 import onnx
 import mmdnn
@@ -54,7 +56,7 @@ def get_args():
                         default=96, help='batch size')
     parser.add_argument('--optimizer', type=str,
                         default="Adam", help='optimizer')
-    parser.add_argument('--epoches', type=int, default=10, help='epoch limit')
+    parser.add_argument('--epoches', type=int, default=30, help='epoch limit')
     parser.add_argument('--learning_rate', type=float,
                         default=1e-3, help='epoch limit')
     parser.add_argument('--time_limit', type=int,
@@ -101,6 +103,8 @@ def build_graph_from_pickle(ir_model_path):
     ''' build model from pickle represtation 
     '''
     graph = pickle.load(open(ir_model_path, 'rb'))
+    logging.debug(graph.operation_history)
+    logger.debug("Weighted model: {} ".format(graph.weighted))
     model = graph.produce_torch_model()
     return model
 
@@ -133,11 +137,10 @@ def parse_rev_args(receive_msg):
     net = build_graph_from_pickle(model_path)
 
     net = net.to(device)
-    if device == 'cuda':
-        net = torch.nn.DataParallel(net)
-        cudnn.benchmark = True
-
     criterion = nn.CrossEntropyLoss()
+    if device == 'cuda' and torch.cuda.device_count() > 1:
+        net = torch.nn.DataParallel(net)
+
 
     if args.optimizer == 'SGD':
         optimizer = optim.SGD(
@@ -168,7 +171,7 @@ def train(epoch):
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        inputs, targets = inputs.to(device), targets.to(device)
+        inputs, targets= inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, targets)
@@ -182,8 +185,7 @@ def train(epoch):
 
         acc = 100.*correct/total
 
-        utils.progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                           % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        logger.debug('Loss: %.3f | Acc: %.3f%% (%d/%d)'% (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
 
 def test(epoch):
@@ -200,7 +202,7 @@ def test(epoch):
     total = 0
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
-            inputs, targets = inputs.to(device), targets.to(device)
+            inputs, targets= inputs.to(device), targets.to(device)
             outputs = net(inputs)
             loss = criterion(outputs, targets)
 
@@ -211,8 +213,7 @@ def test(epoch):
 
             acc = 100.*correct/total
 
-            utils.progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-                               % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+            logger.debug('Loss: %.3f | Acc: %.3f%% (%d/%d)'% (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
     # Save checkpoint.
     acc = 100.*correct/total
