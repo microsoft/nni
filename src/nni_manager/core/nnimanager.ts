@@ -372,6 +372,7 @@ class NNIManager implements Manager {
             switch (trialJobDetail.status) {
                 case 'SUCCEEDED':
                 case 'USER_CANCELED':
+                case 'EARLY_STOPPED':
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: trialJobDetail.status}));
@@ -594,7 +595,7 @@ class NNIManager implements Manager {
                 // ignore this event for now
                 break;
             case KILL_TRIAL_JOB:
-                await this.trainingService.cancelTrialJob(JSON.parse(content));
+                await this.trainingService.cancelTrialJob(JSON.parse(content), true);
                 break;
             default:
                 throw new Error('Error: unsupported command type from tuner');
