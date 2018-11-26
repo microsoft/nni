@@ -149,12 +149,12 @@ class KubeflowTrainingService implements TrainingService {
 
         // Write parameter server file content run_master.sh to local tmp folders
         if(this.kubeflowTrialConfig.master) {
-            const psRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
+            const masterRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
                 this.kubeflowTrialConfig.master.command, curTrialSequenceId.toString(), 'master');
 
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), psRunScriptContent, { encoding: 'utf8' });
+            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), masterRunScriptContent, { encoding: 'utf8' });
         }
-
+        
         // Write file content ( parameter.cfg ) to local tmp folders
         const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
         if(trialForm && trialForm.hyperParameters) {
@@ -181,7 +181,15 @@ class KubeflowTrainingService implements TrainingService {
                 'nvidia.com/gpu': `${this.kubeflowTrialConfig.ps.gpuNum}`
             }
             psOrMasterPodResources.limits = Object.assign({}, psOrMasterPodResources.requests);
-        }        
+        }else if(this.kubeflowTrialConfig.master){
+            psOrMasterPodResources = {};
+            psOrMasterPodResources.requests = {
+                'memory': `${this.kubeflowTrialConfig.master.memoryMB}Mi`,
+                'cpu': `${this.kubeflowTrialConfig.master.cpuNum}`,
+                'nvidia.com/gpu': `${this.kubeflowTrialConfig.master.gpuNum}`
+            }
+            psOrMasterPodResources.limits = Object.assign({}, psOrMasterPodResources.requests);
+        }       
 
         // Generate kubeflow job resource yaml file for K8S
         yaml.write(
@@ -588,6 +596,11 @@ class KubeflowTrainingService implements TrainingService {
                     break;
                 case 'worker':
                     if(this.kubeflowTrialConfig.worker && this.kubeflowTrialConfig.worker.gpuNum == 0) {
+                        runScriptLines.push(`export CUDA_VISIBLE_DEVICES=''`);
+                    }
+                    break;
+                case 'master':
+                    if(this.kubeflowTrialConfig.master && this.kubeflowTrialConfig.master.gpuNum == 0) {
                         runScriptLines.push(`export CUDA_VISIBLE_DEVICES=''`);
                     }
                     break;
