@@ -134,7 +134,7 @@ kubeflow_config_schema = {
         },
         'kubernetesServer': str
     },{
-        'operator': Or('tf-operator', 'pytorch-operato'),
+        'operator': Or('tf-operator', 'pytorch-operator'),
         'keyVault': {
             'vaultName': str,
             'name': str
