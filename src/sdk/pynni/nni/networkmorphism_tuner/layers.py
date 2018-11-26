@@ -23,6 +23,7 @@ from abc import abstractmethod
 import torch
 from torch import nn
 from torch.nn import functional
+from keras import layers
 from nni.networkmorphism_tuner.utils import Constant
 
 
@@ -37,17 +38,17 @@ class GlobalAvgPool(nn.Module):
 
 class GlobalAvgPool1d(GlobalAvgPool):
     def forward(self, input_tensor):
-        return functional.avg_pool1d(input_tensor, input_tensor.size()[2:],ceil_mode=False).view(input_tensor.size()[:2])
+        return functional.avg_pool1d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
 class GlobalAvgPool2d(GlobalAvgPool):
     def forward(self, input_tensor):
-        return functional.avg_pool2d(input_tensor, input_tensor.size()[2:],ceil_mode=False).view(input_tensor.size()[:2])
+        return functional.avg_pool2d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
 class GlobalAvgPool3d(GlobalAvgPool):
     def forward(self, input_tensor):
-        return functional.avg_pool3d(input_tensor, input_tensor.size()[2:],ceil_mode=False).view(input_tensor.size()[:2])
+        return functional.avg_pool3d(input_tensor, input_tensor.size()[2:]).view(input_tensor.size()[:2])
 
 
 class StubLayer:
@@ -268,9 +269,11 @@ class StubGlobalPooling3d(StubGlobalPooling):
         return GlobalAvgPool3d()
 
 class StubPooling(StubLayer):
-    def __init__(self, kernel_size=2, input_node=None, output_node=None):
+    def __init__(self, kernel_size=2, input_node=None, output_node=None, stride=None, padding=0):
         super().__init__(input_node, output_node)
         self.kernel_size = kernel_size
+        self.stride = stride or kernel_size
+        self.padding = padding
 
     @property
     def output_shape(self):
@@ -283,7 +286,6 @@ class StubPooling(StubLayer):
     @abstractmethod
     def to_real_layer(self):
         pass
-
 
 class StubPooling1d(StubPooling):
     def to_real_layer(self):
@@ -398,6 +400,45 @@ class NetworkDescriptor:
         for u, v, connection_type in self.skip_connections:
             skip_list.append({'from': u, 'to': v, 'type': connection_type})
         return {'node_list': self.conv_widths, 'skip_list': skip_list}
+        
+def keras_dropout(layer, rate):
+    input_dim = len(layer.input.shape)
+    if input_dim == 2:
+        return layers.SpatialDropout1D(rate)
+    elif input_dim == 3:
+        return layers.SpatialDropout2D(rate)
+    elif input_dim == 4:
+        return layers.SpatialDropout3D(rate)
+    else:
+        return layers.Dropout(rate)
+
+
+def to_real_keras_layer(layer):
+    if is_layer(layer, 'Dense'):
+        return layers.Dense(layer.units, input_shape=(layer.input_units,))
+    if is_layer(layer, 'Conv'):
+        return layers.Conv2D(layer.filters,
+                             layer.kernel_size,
+                             input_shape=layer.input.shape,
+                             padding='same')  # padding
+    if is_layer(layer, 'Pooling'):
+        return layers.MaxPool2D(2)
+    if is_layer(layer, 'BatchNormalization'):
+        return layers.BatchNormalization(input_shape=layer.input.shape)
+    if is_layer(layer, 'Concatenate'):
+        return layers.Concatenate()
+    if is_layer(layer, 'Add'):
+        return layers.Add()
+    if is_layer(layer, 'Dropout'):
+        return keras_dropout(layer, layer.rate)
+    if is_layer(layer, 'ReLU'):
+        return layers.Activation('relu')
+    if is_layer(layer, 'Softmax'):
+        return layers.Activation('softmax')
+    if is_layer(layer, 'Flatten'):
+        return layers.Flatten()
+    if is_layer(layer, 'GlobalAveragePooling'):
+        return layers.GlobalAveragePooling2D()
 
 def is_layer(layer, layer_type):
     if layer_type == 'Input':

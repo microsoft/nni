@@ -33,9 +33,8 @@ from nni.tuner import Tuner
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
 from nni.networkmorphism_tuner.metric import Accuracy
 from nni.networkmorphism_tuner.utils import pickle_to_file, pickle_from_file, Constant
-from nni.networkmorphism_tuner.net_transformer import default_transform
-from nni.networkmorphism_tuner.nn import CnnGenerator
-from nni.networkmorphism_tuner.graph import onnx_to_graph,graph_to_onnx,graph_to_json,json_to_graph
+from nni.networkmorphism_tuner.nn import CnnGenerator,ResNetGenerator
+from nni.networkmorphism_tuner.graph import onnx_to_graph, graph_to_onnx, graph_to_json, json_to_graph
 import onnx
 import torch
 import json
@@ -52,53 +51,27 @@ class OptimizeMode(Enum):
     Maximize = 'maximize'
 
 
-class SearchTree:
-    def __init__(self):
-        self.root = None
-        self.adj_list = {}
-
-    def add_child(self, u, v):
-        if u == -1:
-            self.root = v
-            self.adj_list[v] = []
-            return
-        if v not in self.adj_list[u]:
-            self.adj_list[u].append(v)
-        if v not in self.adj_list:
-            self.adj_list[v] = []
-
-    def get_dict(self, u=None):
-        if u is None:
-            return self.get_dict(self.root)
-        children = []
-        for v in self.adj_list[u]:
-            children.append(self.get_dict(v))
-        ret = {'name': u, 'children': children}
-        return ret
-
-
 class NetworkMorphismTuner(Tuner):
     '''
     NetworkMorphismTuner is a tuner which using network morphism techniques.
     '''
 
-    def __init__(self, input_shape=(32,32,3), n_output_node=10, algorithm_name="Bayesian",optimize_mode="minimize", path=None, verbose=True, metric=Accuracy, beta=Constant.BETA,
-                 kernel_lambda=Constant.KERNEL_LAMBDA, t_min=Constant.T_MIN, max_model_size=Constant.MAX_MODEL_SIZE, default_model_len=Constant.MODEL_LEN, default_model_width=Constant.MODEL_WIDTH):
+    def __init__(self, input_shape=(32, 32, 3), n_output_node=10, algorithm_name="Bayesian", optimize_mode="minimize", path=None, verbose=True, metric=Accuracy, beta=Constant.BETA,
+                t_min=Constant.T_MIN, max_model_size=Constant.MAX_MODEL_SIZE, default_model_len=Constant.MODEL_LEN, default_model_width=Constant.MODEL_WIDTH):
         if path is None:
             if not os.path.exists("model_path"):
                 os.makedirs("model_path")
-            path = os.path.join(os.getcwd(),"model_path")
+            path = os.path.join(os.getcwd(), "model_path")
         else:
             if not os.path.exists(path):
                 os.makedirs(path)
-            path = os.path.join(os.getcwd(),path)
+            path = os.path.join(os.getcwd(), path)
         self.path = path
         self.n_classes = n_output_node
         self.input_shape = input_shape
 
         self.t_min = t_min
         self.metric = metric
-        self.kernel_lambda = kernel_lambda
         self.beta = beta
         self.algorithm_name = algorithm_name
         self.optimize_mode = OptimizeMode(optimize_mode)
@@ -107,11 +80,12 @@ class NetworkMorphismTuner(Tuner):
         self.verbose = verbose
         self.model_count = 0
 
-        self.bo = BayesianOptimizer(self, self.t_min, self.metric, self.kernel_lambda, self.beta)
+        self.generators = [CnnGenerator,ResNetGenerator]
+        self.bo = BayesianOptimizer(
+            self, self.t_min, self.metric, self.beta)
         self.training_queue = []
         self.x_queue = []
         self.y_queue = []
-        self.search_tree = SearchTree()
         self.descriptors = []
         self.history = []
 
@@ -132,11 +106,11 @@ class NetworkMorphismTuner(Tuner):
         '''
         pass
 
-    def update_search_space(self,search_space):
+    def update_search_space(self, search_space):
         '''
         Update search space definition in tuner by search_space in neural architecture.
         '''
-        
+
         self.search_space = search_space
 
     def generate_parameters(self, parameter_id):
@@ -148,39 +122,34 @@ class NetworkMorphismTuner(Tuner):
         if not self.history:
             self.init_search()
 
-        new_graph = None
-        new_father_id = None
+        searched = False
+        generated_graph = None
+        generated_other_info = None
         if not self.training_queue:
-            while new_father_id is None:
-                new_graph, new_father_id = self.bo.optimize_acq(
-                    self.search_tree.adj_list.keys(), self.descriptors)
+            searched = True
+            new_father_id, generated_graph = self.generate()
             new_model_id = self.model_count
             self.model_count += 1
-            self.training_queue.append(
-                (new_graph, new_father_id, new_model_id))
-            self.descriptors.append(new_graph.extract_descriptor())
+            self.training_queue.append((generated_graph, new_father_id, new_model_id))
+            self.descriptors.append(generated_graph.extract_descriptor())
 
         graph, father_id, model_id = self.training_queue.pop(0)
 
         # from gragh to onnx
         # onnx_model_path = os.path.join(self.path, str(model_id) + '.onnx')
         # onnx_out = graph_to_onnx(graph,onnx_model_path,self.input_shape)
-
         # self.total_data[parameter_id] = (onnx_model_path, father_id, model_id)
-        
-        # self.update_search_space(onnx_model_path)
 
         # from graph to json
         # json_model_path = os.path.join(self.path, str(model_id) + '.json')
         # json_out = graph_to_json(graph,json_model_path,self.input_shape)
-
         # self.total_data[parameter_id] = (json_model_path, father_id, model_id)
 
-        pickle_path=os.path.join(self.path, str(model_id) + '.graph')
+        # from graph to pickle file
+        pickle_path = os.path.join(self.path, str(model_id) + '.graph')
         pickle_to_file(graph, pickle_path)
-
         self.total_data[parameter_id] = (pickle_path, father_id, model_id)
-        
+
         return pickle_path
 
     def receive_trial_result(self, parameter_id, parameters, value):
@@ -217,29 +186,50 @@ class NetworkMorphismTuner(Tuner):
 
         # to use the value and graph
         self.add_model(value, graph, model_id)
-        self.search_tree.add_child(father_id, model_id)
-
-        self.bo.fit(self.x_queue, self.y_queue)
+        self.update(father_id, graph, value, model_id)
 
         pickle_to_file(self, os.path.join(self.path, 'searcher'))
 
     def init_search(self):
+        """Call the generators to generate the initial architectures for the search."""
         if self.verbose:
             logger.info('Initializing search.')
-        graph = CnnGenerator(self.n_classes, self.input_shape).generate(
-            self.default_model_len, self.default_model_width)
-            
-        model_id = self.model_count
-        self.model_count += 1
-        self.training_queue.append((graph, -1, model_id))
-        self.descriptors.append(graph.extract_descriptor())
-        for child_graph in default_transform(graph):
-            child_id = self.model_count
+        for generator in self.generators:
+            graph = generator(self.n_classes, self.input_shape). \
+                generate(self.default_model_len, self.default_model_width)
+            model_id = self.model_count
             self.model_count += 1
-            self.training_queue.append((child_graph, model_id, child_id))
-            self.descriptors.append(child_graph.extract_descriptor())
+            self.training_queue.append((graph, -1, model_id))
+            self.descriptors.append(graph.extract_descriptor())
+
         if self.verbose:
             logger.info('Initialization finished.')
+
+    def generate(self):
+        """Generate the next neural architecture.
+        Returns:
+            other_info: Anything to be saved in the training queue together with the architecture.
+            generated_graph: An instance of Graph.
+        """
+        generated_graph, new_father_id = self.bo.generate(self.descriptors)
+        if new_father_id is None:
+            new_father_id = 0
+            generated_graph = self.generators[0](self.n_classes, self.input_shape).\
+                generate(self.default_model_len, self.default_model_width)
+
+        return new_father_id, generated_graph
+    
+    def update(self, other_info, graph, metric_value, model_id):
+        """ Update the controller with evaluation result of a neural architecture.
+        Args:
+            other_info: Anything. In our case it is the father ID in the search tree.
+            graph: An instance of Graph. The trained neural architecture.
+            metric_value: The final evaluated metric value.
+            model_id: An integer.
+        """
+        father_id = other_info
+        self.bo.fit([graph.extract_descriptor()], [metric_value])
+        self.bo.add_child(father_id, model_id)
 
     def add_model(self, metric_value, graph, model_id):
         ''' add model to the history, x_queue and y_queue
@@ -255,8 +245,9 @@ class NetworkMorphismTuner(Tuner):
 
         if self.verbose:
             logger.info('Saving model.')
-        
-        pickle_to_file(graph, os.path.join(self.path, str(model_id) + '.graph'))
+
+        pickle_to_file(graph, os.path.join(
+            self.path, str(model_id) + '.graph'))
 
         # Update best_model text file
         ret = {'model_id': model_id, 'metric_value': metric_value}
@@ -301,7 +292,7 @@ class NetworkMorphismTuner(Tuner):
 
     def load_best_model(self):
         return self.load_model_by_id(self.get_best_model_id())
-    
+
     def get_metric_value_by_id(self, model_id):
         for item in self.history:
             if item['model_id'] == model_id:

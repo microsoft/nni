@@ -1,8 +1,8 @@
 authorName: default
 experimentName: example_model_retrain
-trialConcurrency: 1
-maxExecDuration: 24h
-maxTrialNum: 10
+trialConcurrency: 4
+maxExecDuration: 48h
+maxTrialNum: 100
 #choice: local, remote, pai
 trainingServicePlatform: local
 #searchSpacePath: search_space.json
@@ -16,6 +16,6 @@ tuner:
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:
-  command: python3 model_retrain.py
+  command: python model_retrain.py
   codeDir: .
-  gpuNum: 0
+  gpuNum: 4

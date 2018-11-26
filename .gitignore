@@ -72,3 +72,9 @@ build
 .vscode
 .vscode/*
 
+src/sdk/pynni/model_path/1.graph
+src/sdk/pynni/model_path/0.graph
+src/sdk/pynni/model_path/searcher
+src/sdk/pynni/model_path/best_model.txt
+src/sdk/pynni/1.graph
+src/sdk/pynni/0.graph

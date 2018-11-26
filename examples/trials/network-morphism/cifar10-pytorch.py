@@ -18,29 +18,27 @@
 import argparse
 import logging
 import os
+import pickle
 import sys
 import time
 
-import utils
-import nni
+import mmdnn
 import numpy as np
+import onnx
 import torch
-import torch.onnx
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.onnx
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
-import torch.nn as nn
+from mmdnn.conversion.pytorch.pytorch_emitter import PytorchEmitter
 from torch.autograd import Variable
 
-import onnx
-import mmdnn
-from mmdnn.conversion.pytorch.pytorch_emitter import PytorchEmitter
-
-import pickle
-
+import nni
+import utils
+from utils import EarlyStopping
 
 # set the logger format
 log_format = '%(asctime)s %(message)s'
@@ -56,13 +54,13 @@ def get_args():
                         default=96, help='batch size')
     parser.add_argument('--optimizer', type=str,
                         default="Adam", help='optimizer')
-    parser.add_argument('--epoches', type=int, default=30, help='epoch limit')
+    parser.add_argument('--epoches', type=int, default=200, help='epoch limit')
     parser.add_argument('--learning_rate', type=float,
                         default=1e-3, help='epoch limit')
     parser.add_argument('--time_limit', type=int,
                         default=0, help='gpu device id')
     parser.add_argument('--cutout', action='store_true',
-                        default=False, help='use cutout')
+                        default=True, help='use cutout')
     parser.add_argument('--cutout_length', type=int,
                         default=16, help='cutout length')
     parser.add_argument('--model_path', type=str, default="./",
@@ -81,10 +79,10 @@ best_acc = 0.0
 args = get_args()
 
 
-def build_graph_from_onnx(onnx_model_path, onnx_weight_path):
+def build_graph_from_onnx(ir_model_path, ir_weight_path):
     ''' build model from onnx intermedia represtation 
     '''
-    onnx_model = onnx.load(onnx_model_path)
+    onnx_model = onnx.load(ir_model_path)
     onnx.checker.check_model(onnx_model)
     onnx.helper.printable_graph(onnx_model)
     return onnx_model
@@ -99,12 +97,20 @@ def build_graph_from_mmdnn(ir_model_path, ir_weight_path):
     return model
 
 
+def build_graph_from_json(ir_model_path):
+    ''' build model from json represtation 
+    '''
+    graph = pickle.load(open(ir_model_path, 'rb'))
+    logging.debug(graph.operation_history)
+    model = graph.produce_torch_model()
+    return model
+
+
 def build_graph_from_pickle(ir_model_path):
     ''' build model from pickle represtation 
     '''
     graph = pickle.load(open(ir_model_path, 'rb'))
     logging.debug(graph.operation_history)
-    logger.debug("Weighted model: {} ".format(graph.weighted))
     model = graph.produce_torch_model()
     return model
 
@@ -138,9 +144,8 @@ def parse_rev_args(receive_msg):
 
     net = net.to(device)
     criterion = nn.CrossEntropyLoss()
-    if device == 'cuda' and torch.cuda.device_count() > 1:
-        net = torch.nn.DataParallel(net)
-
+    # if device == 'cuda' and torch.cuda.device_count() > 1:
+    #     net = torch.nn.DataParallel(net)
 
     if args.optimizer == 'SGD':
         optimizer = optim.SGD(
@@ -170,8 +175,9 @@ def train(epoch):
     train_loss = 0
     correct = 0
     total = 0
+    
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        inputs, targets= inputs.to(device), targets.to(device)
+        inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, targets)
@@ -184,8 +190,13 @@ def train(epoch):
         correct += predicted.eq(targets).sum().item()
 
         acc = 100.*correct/total
+        flag_stop = early_stop.step(acc)
 
-        logger.debug('Loss: %.3f | Acc: %.3f%% (%d/%d)'% (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        logger.debug('Loss: %.3f | Acc: %.3f%% (%d/%d)' %
+                     (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
+        if flag_stop:
+            break
+
 
 
 def test(epoch):
@@ -202,7 +213,7 @@ def test(epoch):
     total = 0
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
-            inputs, targets= inputs.to(device), targets.to(device)
+            inputs, targets = inputs.to(device), targets.to(device)
             outputs = net(inputs)
             loss = criterion(outputs, targets)
 
@@ -213,20 +224,12 @@ def test(epoch):
 
             acc = 100.*correct/total
 
-            logger.debug('Loss: %.3f | Acc: %.3f%% (%d/%d)'% (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
+            logger.debug('Loss: %.3f | Acc: %.3f%% (%d/%d)' %
+                         (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
-    # Save checkpoint.
     acc = 100.*correct/total
     if acc > best_acc:
-        logger.debug('Saving..')
-        state = {
-            'net': net.state_dict(),
-            'acc': acc,
-            'epoch': epoch,
-        }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/cifar10_best_model.pt')
+        logger.debug('Saving..')       
         best_acc = acc
     return acc, best_acc
 
@@ -240,10 +243,13 @@ if __name__ == '__main__':
         parse_rev_args(RCV_CONFIG)
         acc = 0.0
         best_acc = 0.0
+        early_stop = EarlyStopping( mode='max')
         for epoch in range(args.epoches):
             train(epoch)
             acc, best_acc = test(epoch)
             nni.report_intermediate_result(acc)
+            # if early_stop.step(acc):
+            #     break
 
         # trial report best_acc to tuner
         nni.report_final_result(best_acc)

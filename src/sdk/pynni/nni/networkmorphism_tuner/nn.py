@@ -29,7 +29,7 @@ from onnx import (IR_VERSION, AttributeProto, GraphProto, ModelProto,
 
 from nni.networkmorphism_tuner.graph import Graph
 from nni.networkmorphism_tuner.layers import (StubDense, StubDropout1d,
-                                              StubReLU, get_batch_norm_class,
+                                              StubReLU,StubAdd, get_batch_norm_class,
                                               get_conv_class,
                                               get_dropout_class,
                                               get_global_avg_pooling_class,
@@ -38,6 +38,12 @@ from nni.networkmorphism_tuner.utils import Constant
 
 
 class NetworkGenerator:
+    """The base class for generating a network.
+    It can be used to generate a CNN or Multi-Layer Perceptron.
+    Attributes:
+        n_output_node: Number of output nodes in the network.
+        input_shape: A tuple to represent the input shape.
+    """
     def __init__(self, n_output_node, input_shape):
         self.n_output_node = n_output_node
         self.input_shape = input_shape
@@ -48,6 +54,15 @@ class NetworkGenerator:
 
 
 class CnnGenerator(NetworkGenerator):
+    """A class to generate CNN.
+    Attributes:
+          n_dim: `len(self.input_shape) - 1`
+          conv: A class that represents `(n_dim-1)` dimensional convolution.
+          dropout: A class that represents `(n_dim-1)` dimensional dropout.
+          global_avg_pooling: A class that represents `(n_dim-1)` dimensional Global Average Pooling.
+          pooling: A class that represents `(n_dim-1)` dimensional pooling.
+          batch_norm: A class that represents `(n_dim-1)` dimensional batch normalization.
+    """
     def __init__(self, n_output_node, input_shape):
         super(CnnGenerator, self).__init__(n_output_node, input_shape)
         self.n_dim = len(self.input_shape) - 1
@@ -62,6 +77,13 @@ class CnnGenerator(NetworkGenerator):
         self.batch_norm = get_batch_norm_class(self.n_dim)
 
     def generate(self, model_len=Constant.MODEL_LEN, model_width=Constant.MODEL_WIDTH):
+        """Generates a CNN.
+        Args:
+            model_len: An integer. Number of convolutional layers.
+            model_width: An integer. Number of filters for the convolutional layers.
+        Returns:
+            An instance of the class Graph. Represents the neural architecture graph of the generated model.
+        """
         # model = ModelProto()
         # model.ir_version = IR_VERSION
 
@@ -97,12 +119,104 @@ class RnnGenerator(NetworkGenerator):
         return model
 
 class MlpGenerator(NetworkGenerator):
+    """A class to generate Multi-Layer Perceptron.
+    """
+
     def __init__(self, n_output_node, input_shape):
+        """Initialize the instance.
+        Args:
+            n_output_node: An integer. Number of output nodes in the network.
+            input_shape: A tuple. Input shape of the network. If it is 1D, ensure the value is appended by a comma
+                in the tuple.
+        """
         super(MlpGenerator, self).__init__(n_output_node, input_shape)
         if len(self.input_shape) > 1:
             raise ValueError('The input dimension is too high.')
 
+    def generate(self, model_len=Constant.MLP_MODEL_LEN, model_width=Constant.MLP_MODEL_WIDTH):
+        """Generates a Multi-Layer Perceptron.
+        Args:
+            model_len: An integer. Number of hidden layers.
+            model_width: An integer or a list of integers of length `model_len`. If it is a list, it represents the
+                number of nodes in each hidden layer. If it is an integer, all hidden layers have nodes equal to this
+                value.
+        Returns:
+            An instance of the class Graph. Represents the neural architecture graph of the generated model.
+        """
+        if type(model_width) is list and not len(model_width) == model_len:
+            raise ValueError('The length of \'model_width\' does not match \'model_len\'')
+        elif type(model_width) is int:
+            model_width = [model_width] * model_len
+
+        graph = Graph(self.input_shape, False)
+        output_node_id = 0
+        n_nodes_prev_layer = self.input_shape[0]
+        for width in model_width:
+            output_node_id = graph.add_layer(StubDense(n_nodes_prev_layer, width), output_node_id)
+            output_node_id = graph.add_layer(StubDropout1d(Constant.MLP_DROPOUT_RATE), output_node_id)
+            output_node_id = graph.add_layer(StubReLU(), output_node_id)
+            n_nodes_prev_layer = width
+
+        graph.add_layer(StubDense(n_nodes_prev_layer, self.n_output_node), output_node_id)
+        return graph
+
+class ResNetGenerator(NetworkGenerator):
+    def __init__(self, n_output_node, input_shape):
+        super(ResNetGenerator, self).__init__(n_output_node, input_shape)
+        self.layers = [3, 4, 6, 3]
+        self.block_expansion = 1
+        self.n_dim = len(self.input_shape) - 1
+        if len(self.input_shape) > 4:
+            raise ValueError('The input dimension is too high.')
+        elif len(self.input_shape) < 2:
+            raise ValueError('The input dimension is too low.')
+        self.inplanes = 64
+        self.conv = get_conv_class(self.n_dim)
+        self.dropout = get_dropout_class(self.n_dim)
+        self.global_avg_pooling = get_global_avg_pooling_class(self.n_dim)
+        self.adaptive_avg_pooling = get_global_avg_pooling_class(self.n_dim)
+        self.pooling = get_pooling_class(self.n_dim)
+        self.batch_norm = get_batch_norm_class(self.n_dim)
+
     def generate(self, model_len, model_width):
-        model = ModelProto()
-        model.ir_version = IR_VERSION
-        return model
+        graph = Graph(self.input_shape, False)
+        temp_input_channel = self.input_shape[-1]
+        output_node_id = 0
+        output_node_id = graph.add_layer(StubReLU(), output_node_id)
+        output_node_id = graph.add_layer(self.conv(temp_input_channel, model_width, kernel_size=7), output_node_id)
+        output_node_id = graph.add_layer(self.batch_norm(model_width), output_node_id)
+        output_node_id = graph.add_layer(self.pooling(kernel_size=3, stride=2, padding=1), output_node_id)
+        for layer in self.layers:
+            output_node_id = self._make_layer(graph, model_width, layer, output_node_id)
+            model_width *= 2
+        output_node_id = graph.add_layer(self.global_avg_pooling(), output_node_id)
+        graph.add_layer(StubDense(int(model_width / 2) * self.block_expansion, self.n_output_node), output_node_id)
+        return graph
+
+    def _make_layer(self, graph, planes, blocks, node_id):
+        downsample = None
+        if self.inplanes != planes * self.block_expansion:
+            downsample = [
+                self.conv(self.inplanes, planes * self.block_expansion, kernel_size=1),
+                self.batch_norm(planes * self.block_expansion),
+            ]
+        out = self._make_block(graph, self.inplanes, planes, node_id, downsample)
+        self.inplanes = planes * self.block_expansion
+        for _ in range(1, blocks):
+            out = self._make_block(graph, self.inplanes, planes, out)
+        return out
+
+    def _make_block(self, graph, inplanes, planes, node_id, downsample=None):
+        residual_node_id = node_id
+        out = graph.add_layer(StubReLU(), node_id)
+        out = graph.add_layer(self.conv(inplanes, planes, kernel_size=1), out)
+        out = graph.add_layer(self.batch_norm(planes), out)
+        out = graph.add_layer(StubReLU(), out)
+        out = graph.add_layer(self.conv(planes, planes, kernel_size=3), out)
+        out = graph.add_layer(self.batch_norm(planes), out)
+        if downsample is not None:
+            downsample_out = graph.add_layer(StubReLU(), node_id)
+            downsample_out = graph.add_layer(downsample[0], downsample_out)
+            residual_node_id = graph.add_layer(downsample[1], downsample_out)
+        out = graph.add_layer(StubAdd(), (out, residual_node_id))
+        return out

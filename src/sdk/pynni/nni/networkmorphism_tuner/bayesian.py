@@ -31,14 +31,17 @@ from scipy.linalg import cholesky, cho_solve, solve_triangular, LinAlgError
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import rbf_kernel
 
+from nni.networkmorphism_tuner.utils import Constant
 from nni.networkmorphism_tuner.net_transformer import transform
 
 
 def layer_distance(a, b):
+    """The distance between two layers."""
     return abs(a - b) * 1.0 / max(a, b)
 
 
 def layers_distance(list_a, list_b):
+    """The distance between the layers of two neural networks."""
     len_a = len(list_a)
     len_b = len(list_b)
     f = np.zeros((len_a + 1, len_b + 1))
@@ -50,11 +53,12 @@ def layers_distance(list_a, list_b):
     for i in range(len_a):
         for j in range(len_b):
             f[i][j] = min(f[i][j - 1] + 1, f[i - 1][j] + 1, f[i - 1]
-                          [j - 1] + layer_distance(list_a[i], list_b[j]))
+                        [j - 1] + layer_distance(list_a[i], list_b[j]))
     return f[len_a - 1][len_b - 1]
 
 
 def skip_connection_distance(a, b):
+    """The distance between two skip-connections."""
     if a[2] != b[2]:
         return 1.0
     len_a = abs(a[1] - a[0])
@@ -63,6 +67,7 @@ def skip_connection_distance(a, b):
 
 
 def skip_connections_distance(list_a, list_b):
+    """The distance between the skip-connections of two neural networks."""
     distance_matrix = np.zeros((len(list_a), len(list_b)))
     for i, a in enumerate(list_a):
         for j, b in enumerate(list_b):
@@ -70,17 +75,27 @@ def skip_connections_distance(list_a, list_b):
     return distance_matrix[linear_sum_assignment(distance_matrix)].sum() + abs(len(list_a) - len(list_b))
 
 
-def edit_distance(x, y, kernel_lambda):
+def edit_distance(x, y):
+    """The distance between two neural networks.
+    Args:
+        x: An instance of NetworkDescriptor.
+        y: An instance of NetworkDescriptor
+    Returns:
+        The edit-distance between x and y.
+    """
     ret = 0
     ret += layers_distance(x.conv_widths, y.conv_widths)
     ret += layers_distance(x.dense_widths, y.dense_widths)
-    ret += kernel_lambda * skip_connections_distance(
+    ret += Constant.KERNEL_LAMBDA * skip_connections_distance(
         x.skip_connections, y.skip_connections)
     return ret
 
 
 class IncrementalGaussianProcess:
-    def __init__(self, kernel_lambda):
+    """Gaussian process regressor.
+    """
+    def __init__(self):
+        
         self.alpha = 1e-10
         self._distance_matrix = None
         self._x = None
@@ -88,20 +103,24 @@ class IncrementalGaussianProcess:
         self._first_fitted = False
         self._l_matrix = None
         self._alpha_vector = None
-        self.edit_distance_matrix = edit_distance_matrix
-        self.kernel_lambda = kernel_lambda
 
     @property
     def kernel_matrix(self):
         return self._distance_matrix
 
     def fit(self, train_x, train_y):
+        """ Fit the regressor with more data.
+        Args:
+            train_x: A list of NetworkDescriptor.
+            train_y: A list of metric values.
+        """
         if self.first_fitted:
             self.incremental_fit(train_x, train_y)
         else:
             self.first_fit(train_x, train_y)
 
     def incremental_fit(self, train_x, train_y):
+        """ Incrementally fit the regressor. """
         if not self._first_fitted:
             raise ValueError(
                 "The first_fit function needs to be called first.")
@@ -110,10 +129,9 @@ class IncrementalGaussianProcess:
         
 
         # Incrementally compute K
-        up_right_k = self.edit_distance_matrix(
-            self.kernel_lambda, self._x, train_x)
+        up_right_k = edit_distance_matrix(self._x, train_x)
         down_left_k = np.transpose(up_right_k)
-        down_right_k = self.edit_distance_matrix(self.kernel_lambda, train_x)
+        down_right_k = edit_distance_matrix(train_x)
         up_k = np.concatenate((self._distance_matrix, up_right_k), axis=1)
         down_k = np.concatenate((down_left_k, down_right_k), axis=1)
         temp_distance_matrix = np.concatenate((up_k, down_k), axis=0)
@@ -141,13 +159,13 @@ class IncrementalGaussianProcess:
         return self._first_fitted
 
     def first_fit(self, train_x, train_y):
+        """ Fit the regressor for the first time. """
         train_x, train_y = np.array(train_x), np.array(train_y)
 
         self._x = np.copy(train_x)
         self._y = np.copy(train_y)
 
-        self._distance_matrix = self.edit_distance_matrix(
-            self.kernel_lambda, self._x)
+        self._distance_matrix = edit_distance_matrix(self._x)
         k_matrix = bourgain_embedding_matrix(self._distance_matrix)
         k_matrix[np.diag_indices_from(k_matrix)] += self.alpha
 
@@ -160,8 +178,14 @@ class IncrementalGaussianProcess:
         return self
 
     def predict(self, train_x):
-        k_trans = np.exp(-np.power(self.edit_distance_matrix(
-            self.kernel_lambda, train_x, self._x), 2))
+        """Predict the result.
+        Args:
+            train_x: A list of NetworkDescriptor.
+        Returns:
+            y_mean: The predicted mean.
+            y_std: The predicted standard deviation.
+        """
+        k_trans = np.exp(-np.power(edit_distance_matrix(train_x, self._x), 2))
         y_mean = k_trans.dot(self._alpha_vector)  # Line 4 (y_mean = f_star)
 
         # compute inverse K_inv of K based on its Cholesky
@@ -181,7 +205,14 @@ class IncrementalGaussianProcess:
         return y_mean, np.sqrt(y_var)
 
 
-def edit_distance_matrix(kernel_lambda, train_x, train_y=None):
+def edit_distance_matrix( train_x, train_y=None):
+    """Calculate the edit distance.
+    Args:
+        train_x: A list of neural architectures.
+        train_y: A list of neural architectures.
+    Returns:
+        An edit-distance matrix.
+    """
     if train_y is None:
         ret = np.zeros((train_x.shape[0], train_x.shape[0]))
         for x_index, x in enumerate(train_x):
@@ -189,24 +220,31 @@ def edit_distance_matrix(kernel_lambda, train_x, train_y=None):
                 if x_index == y_index:
                     ret[x_index][y_index] = 0
                 elif x_index < y_index:
-                    ret[x_index][y_index] = edit_distance(x, y, kernel_lambda)
+                    ret[x_index][y_index] = edit_distance(x, y)
                 else:
                     ret[x_index][y_index] = ret[y_index][x_index]
         return ret
     ret = np.zeros((train_x.shape[0], train_y.shape[0]))
     for x_index, x in enumerate(train_x):
         for y_index, y in enumerate(train_y):
-            ret[x_index][y_index] = edit_distance(x, y, kernel_lambda)
+            ret[x_index][y_index] = edit_distance(x, y)
     return ret
 
 
 def vector_distance(a, b):
+    """The Euclidean distance between two vectors."""
     a = np.array(a)
     b = np.array(b)
     return np.linalg.norm(a - b)
 
 
 def bourgain_embedding_matrix(distance_matrix):
+    """Use Bourgain algorithm to embed the neural architectures based on their edit-distance.
+    Args:
+        distance_matrix: A matrix of edit-distances.
+    Returns:
+        A matrix of distances after embedding.
+    """
     distance_matrix = np.array(distance_matrix)
     n = len(distance_matrix)
     if n == 1:
@@ -231,22 +269,42 @@ def bourgain_embedding_matrix(distance_matrix):
 
 
 class BayesianOptimizer:
+    """ A Bayesian optimizer for neural architectures.
+    Attributes:
+        searcher: The Searcher which is calling the Bayesian optimizer.
+        t_min: The minimum temperature for simulated annealing.
+        metric: An instance of the Metric subclasses.
+        gpr: A GaussianProcessRegressor for bayesian optimization.
+        beta: The beta in acquisition function. (refer to our paper)
+        search_tree: The network morphism search tree.
     """
-    gpr: A GaussianProcessRegressor for bayesian optimization.
-    """
-
-    def __init__(self, searcher, t_min, metric, kernel_lambda, beta):
+    def __init__(self, searcher, t_min, metric, beta):
         self.searcher = searcher
         self.t_min = t_min
         self.metric = metric
-        self.gpr = IncrementalGaussianProcess(kernel_lambda)
+        self.gpr = IncrementalGaussianProcess()
         self.beta = beta
+        self.search_tree = SearchTree()
 
     def fit(self, x_queue, y_queue):
+        """ Fit the optimizer with new architectures and performances.
+        Args:
+            x_queue: A list of NetworkDescriptor.
+            y_queue: A list of metric values.
+        """
         self.gpr.fit(x_queue, y_queue)
 
-    def optimize_acq(self, model_ids, descriptors):
-        # start_time = time.time()
+    def generate(self, descriptors):
+        """Generate new architecture.
+        Args:
+            descriptors: All the searched neural architectures.
+            timeout: An integer. The time limit in seconds.
+        Returns:
+            graph: An instance of Graph. A morphed neural network with weights.
+            father_id: The father node ID in the search tree.
+        """
+        model_ids = self.search_tree.adj_list.keys()
+
         target_graph = None
         father_id = None
         descriptors = deepcopy(descriptors)
@@ -271,8 +329,6 @@ class BayesianOptimizer:
         t_min = self.t_min
         alpha = 0.9
         opt_acq = self._get_init_opt_acq_value()
-        # remaining_time = timeout
-        # while not pq.empty() and t > t_min and remaining_time > 0:
         while not pq.empty() and t > t_min:
             elem = pq.get()
             if self.metric.higher_better():
@@ -323,9 +379,12 @@ class BayesianOptimizer:
             return True
         return False
 
+    def add_child(self, father_id, model_id):
+        self.search_tree.add_child(father_id, model_id)
 
 @total_ordering
 class Elem:
+    """Elements to be sorted according to metric value."""
     def __init__(self, metric_value, father_id, graph):
         self.father_id = father_id
         self.graph = graph
@@ -339,12 +398,40 @@ class Elem:
 
 
 class ReverseElem(Elem):
+    """Elements to be reversely sorted according to metric value."""
     def __lt__(self, other):
         return self.metric_value > other.metric_value
 
 
 def contain(descriptors, target_descriptor):
+    """Check if the target descriptor is in the descriptors."""
     for descriptor in descriptors:
-        if edit_distance(descriptor, target_descriptor, 1) < 1e-5:
+        if edit_distance(descriptor, target_descriptor) < 1e-5:
             return True
     return False
+
+class SearchTree:
+    """The network morphism search tree."""
+    def __init__(self):
+        self.root = None
+        self.adj_list = {}
+
+    def add_child(self, u, v):
+        if u == -1:
+            self.root = v
+            self.adj_list[v] = []
+            return
+        if v not in self.adj_list[u]:
+            self.adj_list[u].append(v)
+        if v not in self.adj_list:
+            self.adj_list[v] = []
+
+    def get_dict(self, u=None):
+        """ A recursive function to return the content of the tree in a dict."""
+        if u is None:
+            return self.get_dict(self.root)
+        children = []
+        for v in self.adj_list[u]:
+            children.append(self.get_dict(v))
+        ret = {'name': u, 'children': children}
+        return ret

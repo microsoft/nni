@@ -66,7 +66,7 @@ class NetworkMorphismTestCase(TestCase):
         graph = pickle_from_file(model_path_load)
 
         ret = {'model_id': 0, 'metric_value': 0.7}
-        self.assertEqual(tuner.search_tree.adj_list[model_id], [])
+        self.assertEqual(tuner.bo.search_tree.adj_list[model_id], [])
         self.assertEqual(tuner.history[-1], ret)
         self.assertEqual(tuner.x_queue[-1].to_json(), graph.extract_descriptor().to_json())
         self.assertEqual(tuner.y_queue[-1], 0.7)

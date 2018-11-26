@@ -1,5 +1,6 @@
 {
     "optimizer":{"_type":"choice","_value":["Adam", "SGD","Adadelta","Adagrad","Adamax"]},
     "batch_size":{"_type":"choice","_value":[32,64,128,256,512]},
-    "learning_rate":{"_type":"choice","_value":[1e-5,1e-4, 1e-3, 0.002, 0.005, 0.01,0.1]}
+    "learning_rate":{"_type":"choice","_value":[1e-5,1e-4, 1e-3, 0.002, 0.005, 0.01,0.1]},
+    "epoches":{"_type":"choice","_value":[20,30,50, 100, 200, 300]}
 }

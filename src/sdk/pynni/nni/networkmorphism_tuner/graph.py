@@ -18,18 +18,36 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-from copy import deepcopy
-
-from queue import Queue
-import numpy as np
-import torch
-import onnx
 import json
+from collections import Iterable
+from copy import deepcopy
+from queue import Queue
+
+import numpy as np
+import onnx
+import torch
+
+from nni.networkmorphism_tuner.layer_transformer import (add_noise,
+                                                         deeper_conv_block,
+                                                         dense_to_deeper_block,
+                                                         wider_bn,
+                                                         wider_next_conv,
+                                                         wider_next_dense,
+                                                         wider_pre_conv,
+                                                         wider_pre_dense)
+from nni.networkmorphism_tuner.layers import (StubAdd, StubConcatenate,
+                                              StubReLU, get_batch_norm_class,
+                                              get_conv_class, is_layer,
+                                              layer_width,
+                                              set_stub_weight_to_torch,
+                                              set_torch_weight_to_stub)
 from nni.networkmorphism_tuner.utils import Constant
-from nni.networkmorphism_tuner.layer_transformer import wider_bn, wider_next_conv, wider_next_dense, wider_pre_dense,wider_pre_conv, deeper_conv_block, dense_to_deeper_block, add_noise
-from nni.networkmorphism_tuner.layers import StubConcatenate, StubAdd, is_layer, layer_width,  set_torch_weight_to_stub, set_stub_weight_to_torch, StubReLU, get_conv_class, get_batch_norm_class
+
 
 class NetworkDescriptor:
+    """A class describing the neural architecture for neural network kernel.
+    It only record the width of convolutional and dense layers, and the skip-connection types and positions.
+    """
     CONCAT_CONNECT = 'concat'
     ADD_CONNECT = 'add'
 
@@ -53,6 +71,12 @@ class NetworkDescriptor:
         self.dense_widths.append(width)
 
     def add_skip_connection(self, u, v, connection_type):
+        """ Add a skip-connection to the descriptor.
+        Args:
+            u: Number of convolutional layers before the starting point.
+            v: Number of convolutional layers before the ending point.
+            connection_type: Must be either CONCAT_CONNECT or ADD_CONNECT.
+        """
         if connection_type not in [self.CONCAT_CONNECT, self.ADD_CONNECT]:
             raise ValueError('connection_type should be NetworkDescriptor.CONCAT_CONNECT '
                              'or NetworkDescriptor.ADD_CONNECT.')
@@ -66,6 +90,11 @@ class NetworkDescriptor:
 
 
 class Node:
+    """A class for intermediate output tensor (node) in the Graph.
+    Attributes:
+        shape: A tuple describing the shape of the tensor.
+    """
+
     def __init__(self, shape):
         self.shape = shape
 
@@ -87,6 +116,8 @@ class Graph:
         layer_to_id: A dict instance mapping from stub layers to their identifiers.
         layer_id_to_input_node_ids: A dict instance mapping from layer identifiers
             to their input nodes identifiers.
+        layer_id_to_output_node_ids: A dict instance mapping from layer identifiers
+            to their output nodes identifiers.
         adj_list: A two dimensional list. The adjacency list of the graph. The first dimension is
             identified by tensor identifiers. In each edge list, the elements are two-element tuples
             of (tensor identifier, layer identifier).
@@ -97,6 +128,9 @@ class Graph:
     """
 
     def __init__(self, input_shape, weighted=True):
+        """Initializer for Graph.
+        """
+        self.input_shape = input_shape
         self.weighted = weighted
         self.node_list = []
         self.layer_list = []
@@ -116,7 +150,14 @@ class Graph:
         self._add_node(Node(input_shape))
 
     def add_layer(self, layer, input_node_id):
-        if isinstance(input_node_id, list):
+        """Add a layer to the Graph.
+        Args:
+            layer: An instance of the subclasses of StubLayer in layers.py.
+            input_node_id: An integer. The ID of the input node of the layer.
+        Returns:
+            output_node_id: An integer. The ID of the output node of the layer.
+        """
+        if isinstance(input_node_id, Iterable):
             layer.input = list(map(lambda x: self.node_list[x], input_node_id))
             output_node_id = self._add_node(Node(layer.output_shape))
             for node_id in input_node_id:
@@ -153,7 +194,7 @@ class Graph:
         return node_id
 
     def _add_edge(self, layer, input_id, output_id):
-        """Add an edge to the graph."""
+        """Add a new layer to the graph. The nodes should be created in advance."""
 
         if layer in self.layer_to_id:
             layer_id = self.layer_to_id[layer]
@@ -206,7 +247,7 @@ class Graph:
 
     @property
     def topological_order(self):
-        """Return the topological order of the node ids."""
+        """Return the topological order of the node IDs from the input node to the output node."""
         q = Queue()
         in_degree = {}
         for i in range(self.n_nodes):
@@ -229,12 +270,16 @@ class Graph:
         return order_list
 
     def _get_pooling_layers(self, start_node_id, end_node_id):
+        """Given two node IDs, return all the pooling layers between them."""
         layer_list = []
         node_list = [start_node_id]
         self._depth_first_search(end_node_id, layer_list, node_list)
         return filter(lambda layer_id: is_layer(self.layer_list[layer_id], 'Pooling'), layer_list)
 
     def _depth_first_search(self, target_id, layer_id_list, node_list):
+        """Search for all the layers and nodes down the path.
+        A recursive function to search all the layers and nodes between the node in the node_list
+            and the node with target_id."""
         u = node_list[-1]
         if u == target_id:
             return True
@@ -250,9 +295,11 @@ class Graph:
         return False
 
     def _search(self, u, start_dim, total_dim, n_add):
-        """Search the graph for widening the layers.
+        """Search the graph for all the layers to be widened caused by an operation.
+        It is an recursive function with duplication check to avoid deadlock.
+        It searches from a starting node u until the corresponding layers has been widened.
         Args:
-            u: The starting node identifier.
+            u: The starting node ID.
             start_dim: The position to insert the additional dimensions.
             total_dim: The total number of dimensions the layer has before widening.
             n_add: The number of dimensions to add.
@@ -365,19 +412,20 @@ class Graph:
 
         self._insert_new_layers(new_layers, output_id)
 
-    def _insert_new_layers(self, new_layers, output_id):
+    def _insert_new_layers(self, new_layers, start_node_id):
+        """Insert the new_layers after the node with start_node_id."""
         new_node_id = self._add_node(
-            deepcopy(self.node_list[self.adj_list[output_id][0][0]]))
+            deepcopy(self.node_list[self.adj_list[start_node_id][0][0]]))
         temp_output_id = new_node_id
         for layer in new_layers[:-1]:
             temp_output_id = self.add_layer(layer, temp_output_id)
 
         self._add_edge(new_layers[-1], temp_output_id,
-                       self.adj_list[output_id][0][0])
+                       self.adj_list[start_node_id][0][0])
         new_layers[-1].input = self.node_list[temp_output_id]
-        new_layers[-1].output = self.node_list[self.adj_list[output_id][0][0]]
+        new_layers[-1].output = self.node_list[self.adj_list[start_node_id][0][0]]
         self._redirect_edge(
-            output_id, self.adj_list[output_id][0][0], new_node_id)
+            start_node_id, self.adj_list[start_node_id][0][0], new_node_id)
 
     def _block_end_node(self, layer_id, block_size):
         ret = self.layer_id_to_output_node_ids[layer_id][0]
@@ -539,6 +587,7 @@ class Graph:
             new_bn_layer.set_weights(new_weights)
 
     def extract_descriptor(self):
+        """Extract the the description of the Graph as an instance of NetworkDescriptor."""
         ret = NetworkDescriptor()
         topological_node_list = self.topological_order
         for u in topological_node_list:
@@ -585,6 +634,10 @@ class Graph:
         """Build a new Torch model based on the current graph."""
         return TorchModel(self)
 
+    def produce_keras_model(self):
+        """Build a new keras model based on the current graph."""
+        return KerasModel(self).model
+
     def produce_onnx_model(self):
         """Build a new ONNX model based on the current graph."""
         return ONNXModel(self)
@@ -595,7 +648,7 @@ class Graph:
     def produce_json_model(self):
         """Build a new Json model based on the current graph."""
         return JSONModel(self)
-    
+
     def parsing_json_model(self, json_model):
         return self
 
@@ -632,6 +685,8 @@ class Graph:
 
 
 class TorchModel(torch.nn.Module):
+    """A neural network class using pytorch constructed from an instance of Graph."""
+
     def __init__(self, graph):
         super(TorchModel, self).__init__()
         self.graph = graph
@@ -676,32 +731,84 @@ class TorchModel(torch.nn.Module):
         for index, layer in enumerate(self.layers):
             set_torch_weight_to_stub(layer, self.graph.layer_list[index])
 
+
+class KerasModel:
+    def __init__(self, graph):
+        self.graph = graph
+        self.layers = []
+        for layer in graph.layer_list:
+            self.layers.append(to_real_keras_layer(layer))
+
+        # Construct the keras graph.
+        # Input
+        topo_node_list = self.graph.topological_order
+        output_id = topo_node_list[-1]
+        input_id = topo_node_list[0]
+        input_tensor = keras.layers.Input(
+            shape=graph.node_list[input_id].shape)
+
+        node_list = deepcopy(self.graph.node_list)
+        node_list[input_id] = input_tensor
+
+        # Output
+        for v in topo_node_list:
+            for u, layer_id in self.graph.reverse_adj_list[v]:
+                layer = self.graph.layer_list[layer_id]
+                keras_layer = self.layers[layer_id]
+
+                if isinstance(layer, (StubAdd, StubConcatenate)):
+                    edge_input_tensor = list(map(lambda x: node_list[x],
+                                                 self.graph.layer_id_to_input_node_ids[layer_id]))
+                else:
+                    edge_input_tensor = node_list[u]
+
+                temp_tensor = keras_layer(edge_input_tensor)
+                node_list[v] = temp_tensor
+
+        output_tensor = node_list[output_id]
+        self.model = keras.models.Model(
+            inputs=input_tensor, outputs=output_tensor)
+
+        if graph.weighted:
+            for index, layer in enumerate(self.layers):
+                set_stub_weight_to_keras(self.graph.layer_list[index], layer)
+
+    def set_weight_to_graph(self):
+        self.graph.weighted = True
+        for index, layer in enumerate(self.layers):
+            set_keras_weight_to_stub(layer, self.graph.layer_list[index])
+
+
 class ONNXModel:
     def __init__(self, graph):
         pass
 
+
 class JSONModel:
     def __init__(self, graph):
-        return 
+        return
 
 
-def graph_to_onnx(graph,onnx_model_path,input_shape):
+def graph_to_onnx(graph, onnx_model_path, input_shape):
 
-    onnx_out = graph.produce_onnx_model(Constant.BATCH_SIZE,input_shape)
-    onnx.save(onnx_out,onnx_model_path)
+    onnx_out = graph.produce_onnx_model(Constant.BATCH_SIZE, input_shape)
+    onnx.save(onnx_out, onnx_model_path)
     return onnx_out
 
-def onnx_to_graph(onnx_model,input_shape):
+
+def onnx_to_graph(onnx_model, input_shape):
     graph = Graph(input_shape, False)
     graph.parsing_onnx_model(onnx_model)
     return graph
 
-def graph_to_json(graph,json_model_path,input_shape):
-    json_out = graph.produce_json_model(Constant.BATCH_SIZE,input_shape)
+
+def graph_to_json(graph, json_model_path, input_shape):
+    json_out = graph.produce_json_model(Constant.BATCH_SIZE, input_shape)
     with open(json_model_path, 'w') as outfile:
         json.dump(json_out, outfile)
     return json_out
 
-def json_to_graph(json_model,input_shape):
+
+def json_to_graph(json_model, input_shape):
     graph = Graph(input_shape, False)
     return graph
