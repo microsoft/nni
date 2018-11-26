@@ -482,7 +482,7 @@ class KubeflowTrainingService implements TrainingService {
                     trialId: trialJobId
                 }
             },
-            spec: this.kubeflowJobPlural == 'tfjobs'?replicaSpecsObjMap.get('tfReplicaSpecs'):replicaSpecsObjMap.get('pytorchReplicaSpecs');
+            spec: this.kubeflowJobPlural == 'tfjobs'?replicaSpecsObjMap.get('tfReplicaSpecs'):replicaSpecsObjMap.get('pytorchReplicaSpecs')
         };        
     }
 
