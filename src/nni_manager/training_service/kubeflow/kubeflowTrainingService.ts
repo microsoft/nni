@@ -154,7 +154,7 @@ class KubeflowTrainingService implements TrainingService {
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), masterRunScriptContent, { encoding: 'utf8' });
         }
-        
+
         // Write file content ( parameter.cfg ) to local tmp folders
         const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
         if(trialForm && trialForm.hyperParameters) {
@@ -454,18 +454,20 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
-        const tfReplicaSpecsObj: any = {};
-        tfReplicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.worker.replicas, 
+        const replicaSpecsObj: any = {};
+        let replicaSpecsObjMap = new Map<string, any>();
+
+        replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.worker.replicas, 
             this.kubeflowTrialConfig.worker.image, 'run_worker.sh', workerPodResources);
 
-        if(this.kubeflowTrialConfig.ps) {
-            tfReplicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.ps.replicas, 
+        if(this.kubeflowJobPlural == 'tfjobs' && this.kubeflowTrialConfig.ps) {
+            replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.ps.replicas, 
                 this.kubeflowTrialConfig.ps.image, 'run_ps.sh', psOrMasterPodResources);
-        }
-
-        if(this.kubeflowTrialConfig.master) {
-            tfReplicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.master.replicas, 
+            replicaSpecsObjMap.set('tfReplicaSpecs', replicaSpecsObj)
+        }else if(this.kubeflowJobPlural == 'pytorchjobs' && this.kubeflowTrialConfig.master) {
+            replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.master.replicas, 
                 this.kubeflowTrialConfig.master.image, 'run_master.sh', psOrMasterPodResources);
+            replicaSpecsObjMap.set('pytorchReplicaSpecs', replicaSpecsObj)
         }
 
         return {
@@ -480,9 +482,7 @@ class KubeflowTrainingService implements TrainingService {
                     trialId: trialJobId
                 }
             },
-            spec: {
-                tfReplicaSpecs: tfReplicaSpecsObj
-            }                
+            spec: this.kubeflowJobPlural == 'tfjobs'?replicaSpecsObjMap.get('tfReplicaSpecs'):replicaSpecsObjMap.get('pytorchReplicaSpecs');
         };        
     }
 
