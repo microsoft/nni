@@ -46,12 +46,12 @@ export namespace AzureStorageClientUtility {
     }
     
     /**
-     * create a folder in azure storage
+     * create a directory in azure storage
      * @param fileServerClient 
      * @param azureFoler 
      * @param azureShare 
      */
-    export async function createFolder(fileServerClient: any, azureFoler: any, azureShare: any): Promise<void>{
+    export async function createDirectory(fileServerClient: any, azureFoler: any, azureShare: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
         fileServerClient.createDirectoryIfNotExists(azureShare, azureFoler, function(error: any, result: any, response: any) {
             if(error){
@@ -65,17 +65,17 @@ export namespace AzureStorageClientUtility {
     }
 
     /**
-     * Create a new directory in azure file storage
+     * Create a new directory recursively in azure file storage
      * @param fileServerClient
      * @param azureDirectory 
      */
-    export async function createDirectory(fileServerClient: any, azureDirectory: any, azureShare: any): Promise<void>{
+    export async function createDirectoryRecursive(fileServerClient: any, azureDirectory: any, azureShare: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
         let directories = azureDirectory.split("/");
         let rootDirectory = ""
         for(let directory of directories){
             rootDirectory += directory;
-            await createFolder(fileServerClient, rootDirectory, azureShare);
+            await createDirectory(fileServerClient, rootDirectory, azureShare);
             rootDirectory += '/';
         }
         deferred.resolve();
@@ -132,7 +132,7 @@ export namespace AzureStorageClientUtility {
     export async function uploadDirectory(fileServerClient: any, azureDirectory: any, azureShare: any, localDirectory: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
         const fileNameArray: string[] = fs.readdirSync(localDirectory);
-        await createDirectory(fileServerClient, azureDirectory, azureShare);
+        await createDirectoryRecursive(fileServerClient, azureDirectory, azureShare);
         for(let fileName of fileNameArray){
             const fullFilePath: string = path.join(localDirectory, fileName);
             try {

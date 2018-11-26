@@ -119,7 +119,7 @@ kubeflow_trial_schema = {
 
 kubeflow_config_schema = {
     'kubeflowConfig':Or({
-        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operato'),
+        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
         'nfs': {
             'server': str,
             'path': str
