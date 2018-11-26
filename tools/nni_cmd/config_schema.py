@@ -106,6 +106,14 @@ kubeflow_trial_schema = {
             'memoryMB': int,
             'image': str
         },
+        Optional('master'): {
+            'replicas': int,
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        },
         'worker':{
             'replicas': int,
             'command': str,
@@ -119,14 +127,14 @@ kubeflow_trial_schema = {
 
 kubeflow_config_schema = {
     'kubeflowConfig':Or({
-        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operato'),
+        'operator': Or('tf-operator', 'pytorch-operator'),
         'nfs': {
             'server': str,
             'path': str
         },
         'kubernetesServer': str
     },{
-        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operato'),
+        'operator': Or('tf-operator', 'pytorch-operato'),
         'keyVault': {
             'vaultName': str,
             'name': str

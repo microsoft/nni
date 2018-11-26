@@ -36,7 +36,7 @@ import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
-import { KubeflowClusterConfig, kubeflowOperatorMap, KubeflowTrialConfig, NFSConfig } from './kubeflowConfig';
+import { KubeflowClusterConfig, kubeflowOperatorMap, KubeflowTrialConfig, NFSConfig, kubeflowOperatorJobKindMap } from './kubeflowConfig';
 import { KubeflowTrialJobDetail } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
@@ -45,7 +45,7 @@ import { AzureStorageClientUtility } from './azureStorageClientUtils';
 var yaml = require('node-yaml');
 var azure = require('azure-storage');
 
-type DistTrainRole = 'worker' | 'ps';
+type DistTrainRole = 'worker' | 'ps' | 'master';
 
 /**
  * Training Service implementation for Kubeflow
@@ -67,6 +67,7 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
     private kubeflowRestServerPort?: number;
     private kubeflowJobPlural?: string;
+    private kubeflowJobKind?: string;
     private readonly CONTAINER_MOUNT_PATH: string;
     private azureStorageClient: any;
     private azureStorageShare: any;
@@ -146,6 +147,14 @@ class KubeflowTrainingService implements TrainingService {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
         }
 
+        // Write parameter server file content run_master.sh to local tmp folders
+        if(this.kubeflowTrialConfig.master) {
+            const psRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
+                this.kubeflowTrialConfig.master.command, curTrialSequenceId.toString(), 'master');
+
+            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), psRunScriptContent, { encoding: 'utf8' });
+        }
+
         // Write file content ( parameter.cfg ) to local tmp folders
         const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
         if(trialForm && trialForm.hyperParameters) {
@@ -163,21 +172,21 @@ class KubeflowTrainingService implements TrainingService {
         }
         workerPodResources.limits = Object.assign({}, workerPodResources.requests);
 
-        let psPodResources : any = undefined;
+        let psOrMasterPodResources : any = undefined;
         if(this.kubeflowTrialConfig.ps) {
-            psPodResources = {};
-            psPodResources.requests = {
+            psOrMasterPodResources = {};
+            psOrMasterPodResources.requests = {
                 'memory': `${this.kubeflowTrialConfig.ps.memoryMB}Mi`,
                 'cpu': `${this.kubeflowTrialConfig.ps.cpuNum}`,
                 'nvidia.com/gpu': `${this.kubeflowTrialConfig.ps.gpuNum}`
             }
-            psPodResources.limits = Object.assign({}, psPodResources.requests);
+            psOrMasterPodResources.limits = Object.assign({}, psOrMasterPodResources.requests);
         }        
 
         // Generate kubeflow job resource yaml file for K8S
         yaml.write(
             kubeflowJobYamlPath,
-            this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources, psPodResources),
+            this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources, psOrMasterPodResources),
             'utf-8'
         );
 
@@ -351,6 +360,7 @@ class KubeflowTrainingService implements TrainingService {
                 }
 
                 this.kubeflowJobPlural = kubeflowOperatorMap.get(this.kubeflowClusterConfig.operator);
+                this.kubeflowJobKind = kubeflowOperatorJobKindMap.get(this.kubeflowClusterConfig.operator)
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -427,7 +437,7 @@ class KubeflowTrainingService implements TrainingService {
      * @param workerPodResources worker pod template
      * @param psPodResources ps pod template
      */
-    private generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, workerPodResources : any, psPodResources?: any) : any {
+    private generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, workerPodResources : any, psOrMasterPodResources?: any) : any {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -442,12 +452,17 @@ class KubeflowTrainingService implements TrainingService {
 
         if(this.kubeflowTrialConfig.ps) {
             tfReplicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.ps.replicas, 
-                this.kubeflowTrialConfig.ps.image, 'run_ps.sh', psPodResources);
+                this.kubeflowTrialConfig.ps.image, 'run_ps.sh', psOrMasterPodResources);
+        }
+
+        if(this.kubeflowTrialConfig.master) {
+            tfReplicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.master.replicas, 
+                this.kubeflowTrialConfig.master.image, 'run_master.sh', psOrMasterPodResources);
         }
 
         return {
             apiVersion: 'kubeflow.org/v1alpha2',
-            kind: 'TFJob',
+            kind: this.kubeflowJobKind,
             metadata: { 
                 name: kubeflowJobName,
                 namespace: 'default',

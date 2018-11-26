@@ -25,6 +25,7 @@ import { TrialConfig } from "../common/trialConfig";
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' | 'mxnet-operator' | 'caffe2-operator' | 'chainer-operator' | 'mpi-operator';
 export type KubeflowOperatorPlural = 'tfjobs' | 'pytorchjobs' | 'mxjobs' | 'caffe2jobs' | 'chainerjobs' | 'mpijobs';
+export type KubeflowOperatorJobKind = 'TFJob' | 'PyTorchJob'
 
 /**
  * map from Kubeflow operator name to its plural name in K8S
@@ -36,6 +37,14 @@ export const kubeflowOperatorMap : Map<KubeflowOperator, KubeflowOperatorPlural>
     ['caffe2-operator', 'caffe2jobs'],
     ['chainer-operator', 'chainerjobs'],
     ['mpi-operator', 'mpijobs']    
+]);
+
+/**
+ * map from Kubeflow operator name to its job kind name in K8S
+ */
+export const kubeflowOperatorJobKindMap : Map<KubeflowOperator, KubeflowOperatorJobKind> =  new Map<KubeflowOperator, KubeflowOperatorJobKind>([
+    ['tf-operator' , 'TFJob'],
+    ['pytorch-operator', 'PyTorchJob']
 ]);
 
 /**
@@ -146,12 +155,14 @@ export class KubeflowTrialConfigTemplate {
 export class KubeflowTrialConfig {
     public readonly codeDir: string;
     public readonly ps?: KubeflowTrialConfigTemplate;
+    public readonly master?: KubeflowTrialConfigTemplate;
     public readonly worker: KubeflowTrialConfigTemplate;
 
-    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate, ps?: KubeflowTrialConfigTemplate) {
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate, ps?: KubeflowTrialConfigTemplate, master?: KubeflowTrialConfigTemplate) {
         this.codeDir = codeDir;
         this.worker = worker;
         this.ps = ps;
+        this.master = master;
     }
 }
 
