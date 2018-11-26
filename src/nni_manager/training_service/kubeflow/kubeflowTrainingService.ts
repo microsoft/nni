@@ -506,6 +506,10 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
+        if(!this.kubeflowJobPlural) {
+            throw new Error('Kubeflow job plural name is undefined');
+        }
+
         let volumeSpecMap = new Map<string, any>();
         if(this.kubeflowClusterConfig.nfs){
             volumeSpecMap.set('nfsVolumeMounts', [
@@ -541,6 +545,12 @@ class KubeflowTrainingService implements TrainingService {
             this.log.error(clusterConfigError);
             throw new Error(clusterConfigError);
         }
+        let containerNameMap = new Map<string, any>();
+        if(this.kubeflowJobPlural == 'tfjobs'){
+            containerNameMap.set(this.kubeflowJobPlural, 'tensorflow');
+        }else if(this.kubeflowJobPlural == 'pytorchjobs'){
+            containerNameMap.set(this.kubeflowJobPlural, 'pytorch');
+        }
 
         return {
             replicas: replicaNumber,
@@ -553,7 +563,7 @@ class KubeflowTrainingService implements TrainingService {
                     {
                         // Kubeflow tensorflow operator requires that containers' name must be tensorflow
                         // TODO: change the name based on operator's type
-                        name: 'tensorflow',
+                        name: containerNameMap.get(this.kubeflowJobPlural),
                         image: replicaImage,
                         args: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
                         volumeMounts: this.kubeflowClusterConfig.nfs?volumeSpecMap.get('nfsVolumeMounts'):volumeSpecMap.get('azureVolumeMounts'),
