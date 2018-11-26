@@ -70,8 +70,16 @@ export namespace ValidationSchemas {
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()
-                }).required(),
-                kubernetesServer: joi.string().min(1).required()
+                }),
+                kubernetesServer: joi.string().min(1),
+                keyVault: joi.object({
+                    vaultName: joi.string().min(1).required(),
+                    name: joi.string().min(1).required()
+                }),
+                azureStorage: joi.object({
+                    accountName: joi.string().min(1).required(),
+                    azureShare: joi.string().min(1).required()
+                })
             }),
             nni_manager_ip: joi.object({
                 nniManagerIp: joi.string().min(1) 
