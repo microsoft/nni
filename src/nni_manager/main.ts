@@ -36,8 +36,8 @@ import { LocalTrainingServiceForGPU } from './training_service/local/localTraini
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
-import { PAITrainingService } from './training_service/pai/paiTrainingService'
-
+import { PAITrainingService } from './training_service/pai/paiTrainingService';
+import { KubeflowTrainingService } from './training_service/kubeflow/kubeflowTrainingService';
 
 function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number) {
     const createNew: boolean = (startExpMode === 'new');
@@ -52,6 +52,8 @@ async function initContainer(platformMode: string): Promise<void> {
         Container.bind(TrainingService).to(RemoteMachineTrainingService).scope(Scope.Singleton);
     } else if (platformMode === 'pai') {
         Container.bind(TrainingService).to(PAITrainingService).scope(Scope.Singleton);
+    } else if (platformMode === 'kubeflow') {
+        Container.bind(TrainingService).to(KubeflowTrainingService).scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${mode}`);
     }
@@ -76,19 +78,22 @@ if (!strPort || strPort.length === 0) {
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow'].includes(mode)) {
+    console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);
 }
 
 const startMode: string = parseArg(['--start_mode', '-s']);
 if (!['new', 'resume'].includes(startMode)) {
+    console.log(`FATAL: unknown start_mode: ${startMode}`);
     usage();
     process.exit(1);
 }
 
 const experimentId: string = parseArg(['--experiment_id', '-id']);
 if (startMode === 'resume' && experimentId.trim().length < 1) {
+    console.log(`FATAL: cannot resume experiment, invalid experiment_id: ${experimentId}`);
     usage();
     process.exit(1);
 }
@@ -110,10 +115,20 @@ mkDirP(getLogDir()).then(async () => {
 });
 
 process.on('SIGTERM', async () => {
-    const ds: DataStore = component.get(DataStore);
-    await ds.close();
-    const restServer: NNIRestServer = component.get(NNIRestServer);
-    await restServer.stop();
     const log: Logger = getLogger();
-    log.close();
+    let hasError: boolean = false;
+    try{
+        const nniManager: Manager = component.get(Manager);
+        await nniManager.stopExperiment();
+        const ds: DataStore = component.get(DataStore);
+        await ds.close();
+        const restServer: NNIRestServer = component.get(NNIRestServer);
+        await restServer.stop();
+    }catch(err){
+        hasError = true;
+        log.error(`${err.stack}`);
+    }finally{
+        await log.close();
+        process.exit(hasError?1:0);
+    }
 })

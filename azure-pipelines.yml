@@ -1,28 +1,5 @@
 jobs:
 
-- job: 'Install_through_pip'
-  pool:
-    vmImage: 'Ubuntu 16.04'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
-
-  steps:
-  - script: python3 -m pip install --upgrade pip setuptools
-    displayName: 'Install python tools'
-  - script: |
-      python3 -m pip install nni --user
-    displayName: 'Install nni toolkit via pip'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 naive_test.py
-    displayName: 'Integration tests'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 sdk_tuner_test.py
-    displayName: 'Built-in tuner tests'
-
 - job: 'Install_through_source_code'
   pool:
     vmImage: 'Ubuntu 16.04'
@@ -43,5 +20,5 @@ jobs:
     displayName: 'Integration tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 sdk_tuner_test.py
+      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
     displayName: 'Built-in tuner tests'

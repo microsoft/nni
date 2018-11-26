@@ -98,7 +98,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 data: sequence
             },
             yAxis: {
-                name: 'Accuracy',
+                name: 'Default Metric',
                 type: 'value',
                 data: intermediateArr
             },
@@ -130,7 +130,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
             })
             .catch(error => {
                 if (error.response.status === 500) {
-                    message.error('500 error, fail to cancel the job');
+                    if (error.response.data.error) {
+                        message.error(error.response.data.error);
+                    } else {
+                        message.error('500 error, fail to cancel the job');
+                    }
                 }
             });
     }
@@ -161,7 +165,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             key: 'sequenceId',
             width: 120,
             className: 'tableHead',
-            sorter: (a: TableObj, b: TableObj) => (a.sequenceId as number) - (b.sequenceId as number),
+            sorter: (a: TableObj, b: TableObj) => (a.sequenceId as number) - (b.sequenceId as number)
         }, {
             title: 'Id',
             dataIndex: 'id',
@@ -301,6 +305,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const parametersRow = {
                 parameters: record.description.parameters
             };
+            const intermediate = record.description.intermediate;
+            let showIntermediate = '';
+            if (intermediate && intermediate.length > 0) {
+                showIntermediate = intermediate.join(', ');
+            }
             let isLogLink: boolean = false;
             const logPathRow = record.description.logPath;
             if (record.description.isLink !== undefined) {
@@ -336,6 +345,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 <span className="logContent">{logPathRow}</span>
                             </div>
                     }
+                    <Row className="intermediate logpath">
+                        <span className="logName">Intermediate Result:</span> 
+                        {showIntermediate}
+                    </Row>
                 </pre>
             );
         };

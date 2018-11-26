@@ -35,7 +35,7 @@ import {
     HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus } from '../../common/utils';
 
 const tkill = require('tree-kill');
 
@@ -246,7 +246,7 @@ class LocalTrainingService implements TrainingService {
         return true;
     }
 
-    public async cancelTrialJob(trialJobId: string): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         this.log.info(`cancelTrialJob: ${trialJobId}`);
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
         if (trialJob === undefined) {
@@ -263,7 +263,7 @@ class LocalTrainingService implements TrainingService {
         } else {
             throw new Error(`Job type not supported: ${trialJob.form.jobType}`);
         }
-        this.setTrialJobStatus(trialJob, 'USER_CANCELED');
+        this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
@@ -320,6 +320,7 @@ class LocalTrainingService implements TrainingService {
             { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
             { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
             { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
+            { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.sequenceId.toString() },
             { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
     }
@@ -368,7 +369,6 @@ class LocalTrainingService implements TrainingService {
         await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
         await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
-        await this.writeSequenceIdFile(trialJobId);
         const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
 
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
@@ -449,13 +449,6 @@ class LocalTrainingService implements TrainingService {
         }
 
         return this.trialSequenceId++;
-    }
-
-    private async writeSequenceIdFile(trialJobId: string): Promise<void> {
-        const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
-        assert(trialJobDetail !== undefined);
-        const filepath: string = path.join(trialJobDetail.workingDirectory, '.nni', 'sequence_id');
-        await fs.promises.writeFile(filepath, trialJobDetail.sequenceId.toString(), { encoding: 'utf8' });
     }
 }
 

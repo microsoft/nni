@@ -78,3 +78,12 @@ def init_logger(logger_file_path):
     logging.getLogger('matplotlib').setLevel(logging.INFO)
 
     sys.stdout = _LoggerFileWrapper(logger_file)
+
+_multi_thread = False
+
+def enable_multi_thread():
+    global _multi_thread
+    _multi_thread = True
+
+def multi_thread_enabled():
+    return _multi_thread

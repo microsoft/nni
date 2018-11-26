@@ -31,7 +31,7 @@ import * as util from 'util';
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
-import { HyperParameters, TrainingService } from './trainingService';
+import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
     return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
@@ -158,10 +158,14 @@ function parseArg(names: string[]): string {
  * @param assessor: similiar as tuner
  *
  */
-function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean = false): string {
+function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean = false, multiThread: boolean = false): string {
     let command: string = `python3 -m nni --tuner_class_name ${tuner.className}`;
     if (multiPhase) {
         command += ' --multi_phase';
+    }
+
+    if (multiThread) {
+        command += ' --multi_thread';
     }
 
     if (tuner.classArgs !== undefined) {
@@ -276,5 +280,12 @@ function getRemoteTmpDir(os_spec: string): string {
     }
 }
 
-export {getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, 
+/**
+ * Get the status of canceled jobs according to the hint isEarlyStopped
+ */
+function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
+    return isEarlyStopped ? 'EARLY_STOPPED' : 'USER_CANCELED';
+}
+
+export {getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getJobCancelStatus,
     getDefaultDatabaseDir, getIPV4Address, mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };

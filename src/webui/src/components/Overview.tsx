@@ -103,6 +103,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     const clusterMetaData = sessionData.params.clusterMetaData;
                     const endTimenum = sessionData.endTime;
                     const assessor = sessionData.params.assessor;
+                    const advisor = sessionData.params.advisor;
                     trialPro.push({
                         id: sessionData.id,
                         author: sessionData.params.authorName,
@@ -118,6 +119,7 @@ class Overview extends React.Component<{}, OverviewState> {
                         trainingServicePlatform: trainingPlatform,
                         tuner: sessionData.params.tuner,
                         assessor: assessor ? assessor : undefined,
+                        advisor: advisor ? advisor : undefined,
                         clusterMetaData: clusterMetaData ? clusterMetaData : undefined
                     });
                     // search space format loguniform max and min
@@ -294,6 +296,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     if (res.data.params.searchSpace) {
                         res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
                     }
+                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
                     const interResultList = res2.data;
                     const contentOfExperiment = JSON.stringify(res.data, null, 2);
                     let trialMessagesArr = res1.data;
@@ -313,14 +316,16 @@ class Overview extends React.Component<{}, OverviewState> {
                     const trialMessages = JSON.stringify(trialMessagesArr, null, 2);
                     const aTag = document.createElement('a');
                     const file = new Blob([contentOfExperiment, trialMessages], { type: 'application/json' });
-                    aTag.download = 'experiment.txt';
+                    aTag.download = 'experiment.json';
                     aTag.href = URL.createObjectURL(file);
                     aTag.click();
-                    URL.revokeObjectURL(aTag.href);
+                    if (!isEdge) {
+                        URL.revokeObjectURL(aTag.href);
+                    }
                     if (navigator.userAgent.indexOf('Firefox') > -1) {
                         const downTag = document.createElement('a');
                         downTag.addEventListener('click', function () {
-                            downTag.download = 'experiment.txt';
+                            downTag.download = 'experiment.json';
                             downTag.href = URL.createObjectURL(file);
                         });
                         let eventMouse = document.createEvent('MouseEvents');
@@ -334,7 +339,7 @@ class Overview extends React.Component<{}, OverviewState> {
             }));
     }
 
-    // trial accuracy graph
+    // trial accuracy graph Default Metric
     drawPointGraph = () => {
 
         const { tableData } = this.state;
@@ -364,7 +369,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 data: indexarr
             },
             yAxis: {
-                name: 'Accuracy',
+                name: 'Default Metric',
                 type: 'value',
                 data: accarr
             },
