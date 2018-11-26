@@ -65,7 +65,7 @@ def loguniform(low, high, random_state):
     high: an float that represent an upper bound
     random_state: an object of numpy.random.RandomState
     '''
-    return np.exp(uniform(low, high, random_state))
+    return 10 ** (uniform(np.log10(mu), np.log10(sigma), random_state))
 
 
 def qloguniform(low, high, q, random_state):
@@ -107,7 +107,7 @@ def lognormal(mu, sigma, random_state):
     sigma: float or array_like of floats
     random_state: an object of numpy.random.RandomState
     '''
-    return np.exp(normal(mu, sigma, random_state))
+    return 10 ** (normal(np.log10(mu), np.log10(sigma), random_state))
 
 
 def qlognormal(mu, sigma, q, random_state):

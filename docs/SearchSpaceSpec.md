@@ -40,8 +40,8 @@ The candidate type and value for variable is here:
 <br/>
 
 * {"_type":"loguniform","_value":[low, high]}
-   * Which means the variable value is a value drawn according to exp(uniform(low, high)) so that the logarithm of the return value is uniformly distributed.
-   * When optimizing, this variable is constrained to the interval [exp(low), exp(high)].
+   * Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution so that the logarithm of the return value is uniformly distributed.
+   * When optimizing, this variable is constrained to be positive.
 <br/>
 
 * {"_type":"qloguniform","_value":[low, high, q]}
@@ -59,7 +59,8 @@ The candidate type and value for variable is here:
 <br/>
 
 * {"_type":"lognormal","_value":[label, mu, sigma]}
-   * Which means the variable value is a value drawn according to exp(normal(mu, sigma)) so that the logarithm of the return value is normally distributed. When optimizing, this variable is constrained to be positive.
+   * Which means the variable value is a value drawn from a range [low, high] according to a lognormal distribution so that the logarithm of the return value is normally distributed.
+   * When optimizing, this variable is constrained to be positive.
 <br/>
 
 * {"_type":"qlognormal","_value":[label, mu, sigma, q]}

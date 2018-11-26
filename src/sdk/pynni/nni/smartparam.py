@@ -58,7 +58,7 @@ if env_args.platform is None:
         return round(random.uniform(low, high) / q) * q
 
     def loguniform(low, high, name=None):
-        return math.exp(random.uniform(low, high))
+        return 10 ** (random.uniform(np.log10(low), np.log10(high)))
 
     def qloguniform(low, high, q, name=None):
         return round(loguniform(low, high) / q) * q
@@ -70,7 +70,7 @@ if env_args.platform is None:
         return round(random.gauss(mu, sigma) / q) * q
 
     def lognormal(mu, sigma, name=None):
-        return math.exp(random.gauss(mu, sigma))
+        return 10 ** (random.gauss(np.log10(low), np.log10(high)))
 
     def qlognormal(mu, sigma, q, name=None):
         return round(lognormal(mu, sigma) / q) * q
