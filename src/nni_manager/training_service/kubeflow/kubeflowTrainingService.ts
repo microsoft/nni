@@ -453,7 +453,10 @@ class KubeflowTrainingService implements TrainingService {
         if(!this.kubeflowTrialConfig) {
             throw new Error('Kubeflow trial config is not initialized');
         }
-
+        
+        if(!this.kubeflowJobPlural) {
+            throw new Error('Kubeflow job plural name is undefined');
+        }
         const replicaSpecsObj: any = {};
         let replicaSpecsObjMap = new Map<string, any>();
 
@@ -463,11 +466,11 @@ class KubeflowTrainingService implements TrainingService {
         if(this.kubeflowJobPlural == 'tfjobs' && this.kubeflowTrialConfig.ps) {
             replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.ps.replicas, 
                 this.kubeflowTrialConfig.ps.image, 'run_ps.sh', psOrMasterPodResources);
-            replicaSpecsObjMap.set('tfReplicaSpecs', replicaSpecsObj)
+            replicaSpecsObjMap.set(this.kubeflowJobPlural, {'tfReplicaSpecs': replicaSpecsObj})
         }else if(this.kubeflowJobPlural == 'pytorchjobs' && this.kubeflowTrialConfig.master) {
             replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.master.replicas, 
                 this.kubeflowTrialConfig.master.image, 'run_master.sh', psOrMasterPodResources);
-            replicaSpecsObjMap.set('pytorchReplicaSpecs', replicaSpecsObj)
+            replicaSpecsObjMap.set(this.kubeflowJobPlural, {'pytorchReplicaSpecs': replicaSpecsObj})
         }
 
         return {
@@ -482,7 +485,7 @@ class KubeflowTrainingService implements TrainingService {
                     trialId: trialJobId
                 }
             },
-            spec: this.kubeflowJobPlural == 'tfjobs'?replicaSpecsObjMap.get('tfReplicaSpecs'):replicaSpecsObjMap.get('pytorchReplicaSpecs')
+            spec: replicaSpecsObjMap.get(this.kubeflowJobPlural)
         };        
     }
 
