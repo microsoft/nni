@@ -19,12 +19,15 @@
 
 'use strict';
 
-import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from 'common/trainingService';
+import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 
-export class PAITrialJobDetail implements TrialJobDetail {
+/**
+ * KubeflowTrialJobDetail
+ */
+// tslint:disable-next-line:max-classes-per-file
+export class KubeflowTrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;
-    public paiJobName: string;
     public submitTime: number;
     public startTime?: number;
     public endTime?: number;
@@ -32,41 +35,26 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public url?: string;
     public workingDirectory: string;
     public form: JobApplicationForm;
+    public kubeflowJobName: string;
     public sequenceId: number;
-    public hdfsLogPath: string;
-
-    constructor(id: string, status: TrialJobStatus, paiJobName : string, 
-            submitTime: number, workingDirectory: string, form: JobApplicationForm, sequenceId: number, hdfsLogPath: string) {
+    public queryJobFailedCount: number;
+    public k8sPluralName: string
+    
+    constructor(id: string, status: TrialJobStatus, submitTime: number,
+                workingDirectory: string, form: JobApplicationForm, 
+                kubeflowJobName: string, sequenceId: number, url: string, k8sPluralName: string) {
         this.id = id;
         this.status = status;
-        this.paiJobName = paiJobName;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
+        this.kubeflowJobName = kubeflowJobName;
         this.sequenceId = sequenceId;
         this.tags = [];
-        this.hdfsLogPath = hdfsLogPath;
+        this.queryJobFailedCount = 0;
+        this.url = url;
+        this.k8sPluralName = k8sPluralName;
     }
 }
 
-export const PAI_INSTALL_NNI_SHELL_FORMAT: string = 
-`#!/bin/bash
-if python3 -c 'import nni' > /dev/null 2>&1; then
-  # nni module is already installed, skip
-  return
-else
-  # Install nni
-  python3 -m pip install --user nni
-fi`;
-
-export const PAI_TRIAL_COMMAND_FORMAT: string =
-`export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4}
-&& cd $NNI_SYS_DIR && sh install_nni.sh 
-&& python3 -m nni_trial_tool.trial_keeper --trial_command '{5}' --nnimanager_ip '{6}' --nnimanager_port '{7}' 
---pai_hdfs_output_dir '{8}' --pai_hdfs_host '{9}' --pai_user_name {10}`;
-
-export const PAI_OUTPUT_DIR_FORMAT: string = 
-`hdfs://{0}:9000/`;
-
-export const PAI_LOG_PATH_FORMAT: string = 
-`http://{0}/webhdfs/explorer.html#{1}`
+export type KubeflowTFJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';

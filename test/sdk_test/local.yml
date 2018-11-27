@@ -1,5 +1,9 @@
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
 authorName: nni
-experimentName: test_builtin_tuner
+experimentName: test_sdk
 maxExecDuration: 1h
 maxTrialNum: 2
 searchSpacePath: search_space.json

@@ -15,6 +15,7 @@ interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
     isLink?: boolean;
+    intermediate?: Array<string>;
 }
 
 interface Experiment {
@@ -76,10 +77,6 @@ interface Dimobj {
     data?: string[];
 }
 
-interface HoverName {
-    name: string;
-}
-
 interface ParaObj {
     data: number[][];
     parallelAxis: Array<Dimobj>;
@@ -90,8 +87,9 @@ interface VisualMapValue {
     minAccuracy: number;
 }
 
-export {TableObj, Parameters, Experiment, 
+export {
+    TableObj, Parameters, Experiment, 
     AccurPoint, TrialNumber, TrialJob,
     DetailAccurPoint, TooltipForAccuracy,
-    HoverName, ParaObj, VisualMapValue, Dimobj
+    ParaObj, VisualMapValue, Dimobj
 };

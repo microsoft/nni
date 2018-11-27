@@ -34,6 +34,7 @@ interface ExperimentParams {
     searchSpace: string;
     trainingServicePlatform: string;
     multiPhase?: boolean;
+    multiThread?: boolean;
     tuner: {
         className: string;
         builtinTunerName?: string;
@@ -75,7 +76,7 @@ interface TrialJobStatistics {
 }
 
 interface NNIManagerStatus {
-    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE';
+    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL';
     errors: string[];
 }
 
