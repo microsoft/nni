@@ -136,12 +136,12 @@ kubeflow_config_schema = {
     },{
         'operator': Or('tf-operator', 'pytorch-operator'),
         'keyVault': {
-            'vaultName': str,
-            'name': str
+            'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
+            'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')
         },
         'azureStorage': {
-            'accountName': str,
-            'azureShare': str
+            'accountName': Regex('([0-9]|[a-z]|[A-Z]|-){3,31}'),
+            'azureShare': Regex('([0-9]|[a-z]|[A-Z]|-){3,63}')
         }
     })
 }
