@@ -580,7 +580,6 @@ class KubeflowTrainingService implements TrainingService {
         runScriptLines.push('cp -rT $NNI_CODE_DIR $NNI_SYS_DIR');
         runScriptLines.push('cd $NNI_SYS_DIR');
         runScriptLines.push('sh install_nni.sh # Check and install NNI pkg');
-
         runScriptLines.push(`python3 -m nni_trial_tool.trial_keeper --trial_command '${command}' 
         --nnimanager_ip '${nniManagerIp}' --nnimanager_port '${this.kubeflowRestServerPort}' 
         1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`);
