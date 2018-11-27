@@ -6,7 +6,8 @@ export const trialJobStatus = [
     'SUCCEEDED',
     'FAILED',
     'USER_CANCELED',
-    'SYS_CANCELED'
+    'SYS_CANCELED',
+    'EARLY_STOPPED'
 ];
 export const CONTROLTYPE = [
     'SEARCH_SPACE',

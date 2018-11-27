@@ -5,6 +5,7 @@
 Click the tab "Overview".
 
 * See the experiment trial profile and search space message.
+* Support to download the experiment message.
 
 ![](./img/over1.png)
 * See good performance trials.
@@ -41,7 +42,7 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 ![](./img/table_openrow.png)
 
 * Kill: you can kill a job that status is running.
-* Tensor: you can see a job in the tensorflow graph, it will link to the Tensorboard page.
 * Intermediate Result Graph.
+* Support to search for a specific trial.
 
 ![](./img/intermediate.png)
