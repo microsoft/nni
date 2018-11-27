@@ -69,9 +69,9 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowJobPlural?: string;
     private readonly CONTAINER_MOUNT_PATH: string;
     private azureStorageClient: any;
-    private azureStorageShare: any;
-    private azureStorageSecretName: any;
-    private azureStorageAccountName: any;
+    private azureStorageShare?: string;
+    private azureStorageSecretName?: string;
+    private azureStorageAccountName?: string;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     
     constructor() {        
@@ -182,47 +182,39 @@ class KubeflowTrainingService implements TrainingService {
         );
 
         let trialJobDetail: KubeflowTrialJobDetail;
-
-        if(this.kubeflowClusterConfig.nfs){
+        //The url used in trialJobDetail
+        let trialJobDetailUrl: string;
+        if(this.kubeflowClusterConfig.nfs) {
             // Creat work dir for current trial in NFS directory 
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
             // Copy code files from local dir to NFS mounted dir
-
-            
             await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
         
             const nfsConfig: NFSConfig = this.kubeflowClusterConfig.nfs;
-            trialJobDetail = new KubeflowTrialJobDetail(
-                trialJobId,
-                'WAITING',
-                Date.now(),
-                trialWorkingFolder,
-                form,
-                kubeflowJobName,
-                curTrialSequenceId,
-                `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`,
-                this.kubeflowJobPlural
-            );
-        }else{
+            trialJobDetailUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`
+        } else {
             try{
                 //upload local files to azure storage
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient, `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare, `${trialLocalTempFolder}`);
-                trialJobDetail = new KubeflowTrialJobDetail(
-                    trialJobId,
-                    'WAITING',
-                    Date.now(),
-                    trialWorkingFolder,
-                    form,
-                    kubeflowJobName,
-                    curTrialSequenceId,
-                    `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}/${path.join('nni', getExperimentId(), trialJobId, 'output')}`,
-                    this.kubeflowJobPlural
-                );
+                trialJobDetailUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}/${path.join('nni', getExperimentId(), trialJobId, 'output')}`
             }catch(error){
                 this.log.error(error);
                 return Promise.reject(error);
             }
         }
+    
+        trialJobDetail = new KubeflowTrialJobDetail(
+            trialJobId,
+            'WAITING',
+            Date.now(),
+            trialWorkingFolder,
+            form,
+            kubeflowJobName,
+            curTrialSequenceId,
+            trialJobDetailUrl, 
+            this.kubeflowJobPlural
+        );
+
         // Create kubeflow training jobs
         await cpp.exec(`kubectl create -f ${kubeflowJobYamlPath}`);
         // Set trial job detail until kubectl create resource successfully 
@@ -341,8 +333,9 @@ class KubeflowTrainingService implements TrainingService {
                         this.azureStorageSecretName = 'nni-secret-' + uniqueString(8).toLowerCase();
                         await cpp.exec(`kubectl create secret generic ${this.azureStorageSecretName} --from-literal=azurestorageaccountname=${this.azureStorageAccountName} --from-literal=azurestorageaccountkey=${storageAccountKey}`)
 
-                    }catch(err){
-                        throw new Error(err);
+                    }catch(error){
+                        this.log.error(`command error: ${error}`);
+                        throw new Error(error);
                     }
                 }else{
                     const clusterConfigError: string = 'kubeflow cluster config format error!';
@@ -480,30 +473,20 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
-        let volumeSpecMap = new Map<string, any>();
+        let volumeSpecMap = new Map<string, object>();
         if(this.kubeflowClusterConfig.nfs){
-            volumeSpecMap.set('nfsVolumeMounts', [
+            volumeSpecMap.set('nniVolumes', [
             {
-                name: 'nni-nfs-vol',
-                mountPath: this.CONTAINER_MOUNT_PATH
-            }])
-            volumeSpecMap.set('nfsVolumes', [
-            {
-                name: 'nni-nfs-vol',
+                name: 'nni-vol',
                 nfs: {
                     server: `${this.kubeflowClusterConfig.nfs.server}`,
                     path: `${this.kubeflowClusterConfig.nfs.path}`
                 }
             }])
         }else if(this.kubeflowClusterConfig.azureStorage && this.kubeflowClusterConfig.keyVault){
-            volumeSpecMap.set('azureVolumeMounts', [
+            volumeSpecMap.set('nniVolumes', [
             {
-                name: 'nni-azure-vol',
-                mountPath: this.CONTAINER_MOUNT_PATH
-            }])
-            volumeSpecMap.set('azureVolumes', [
-            {
-                name: 'nni-azure-vol',
+                name: 'nni-vol',
                 azureFile: {
                     secretName: `${this.azureStorageSecretName}`,
                     shareName: `${this.azureStorageShare}`,
@@ -530,11 +513,15 @@ class KubeflowTrainingService implements TrainingService {
                         name: 'tensorflow',
                         image: replicaImage,
                         args: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
-                        volumeMounts: this.kubeflowClusterConfig.nfs?volumeSpecMap.get('nfsVolumeMounts'):volumeSpecMap.get('azureVolumeMounts'),
+                        volumeMounts: [
+                        {
+                            name: 'nni-vol',
+                            mountPath: this.CONTAINER_MOUNT_PATH
+                        }],
                         resources: podResources
                     }],
                     restartPolicy: 'ExitCode',
-                    volumes: this.kubeflowClusterConfig.nfs?volumeSpecMap.get('nfsVolumes'):volumeSpecMap.get('azureVolumes')
+                    volumes: volumeSpecMap.get('nniVolumes')
                 }
             }
         };

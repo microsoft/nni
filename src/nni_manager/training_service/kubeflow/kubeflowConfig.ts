@@ -82,6 +82,7 @@ export class NFSConfig {
 
 /**
  * KeyVault configuration to store the key of Azure Storage Service
+ * Refer https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
  */
 export class keyVaultConfig {
     /**The vault-name to specify vault */
