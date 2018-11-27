@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "postbuild": "cp -f --parent scripts/*.py ./dist/",
+    "postbuild": "cp -rf scripts ./dist/",
     "build": "tsc",
     "test": "mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --colors",
     "start": "node dist/main.js"
