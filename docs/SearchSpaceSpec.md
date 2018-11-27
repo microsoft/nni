@@ -40,12 +40,12 @@ The candidate type and value for variable is here:
 <br/>
 
 * {"_type":"loguniform","_value":[low, high]}
-   * Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution so that the logarithm of the return value is uniformly distributed.
+   * Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution like 10^(uniform(log10(low), log10(high))), so that the logarithm of the return value is uniformly distributed.
    * When optimizing, this variable is constrained to be positive.
 <br/>
 
 * {"_type":"qloguniform","_value":[low, high, q]}
-   * Which means the variable value is a value like round(exp(uniform(low, high)) / q) * q
+   * Which means the variable value is a value like round(10^(uniform(log10(low), log10(high))) / q) * q
    * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
 <br/>
 
@@ -59,12 +59,12 @@ The candidate type and value for variable is here:
 <br/>
 
 * {"_type":"lognormal","_value":[label, mu, sigma]}
-   * Which means the variable value is a value drawn from a range [low, high] according to a lognormal distribution so that the logarithm of the return value is normally distributed.
+   * Which means the variable value is a value drawn according to a lognormal distribution like 10^(normal(log10(mu), sigma)), so that the logarithm of the return value is normally distributed.
    * When optimizing, this variable is constrained to be positive.
 <br/>
 
 * {"_type":"qlognormal","_value":[label, mu, sigma, q]}
-   * Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
+   * Which means the variable value is a value like round(10^(normal(log10(mu), sigma)) / q) * q
    * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 <br/>
 
