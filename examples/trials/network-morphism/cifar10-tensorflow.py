@@ -35,33 +35,33 @@ from onnx_tf.backend import prepare, TensorflowRep
 from onnx_tf.frontend import tensorflow_graph_to_onnx_model
 
 
-log_format = '%(asctime)s %(message)s'
-logging.basicConfig(filename="networkmorphism.log",filemode='a', level=logging.INFO,
-                   format=log_format, datefmt='%m/%d %I:%M:%S %p')
+log_format = "%(asctime)s %(message)s"
+logging.basicConfig(
+    filename="networkmorphism.log",
+    filemode="a",
+    level=logging.INFO,
+    format=log_format,
+    datefmt="%m/%d %I:%M:%S %p",
+)
 # set the logger format
-_logger = logging.getLogger('cifar10-network-morphism')
-
+_logger = logging.getLogger("cifar10-network-morphism")
 
 
 def get_args():
     parser = argparse.ArgumentParser("cifar10")
-    parser.add_argument('--batch_size', type=int,
-                        default=96, help='batch size')
-    parser.add_argument('--optimizer', type=str,
-                        default="Adam", help='optimizer')
-    parser.add_argument('--epoches', type=int, default=30, help='epoch limit')
-    parser.add_argument('--learning_rate', type=float,
-                        default=1e-3, help='epoch limit')
-    parser.add_argument('--time_limit', type=int,
-                        default=0, help='gpu device id')
-    parser.add_argument('--cutout', action='store_true',
-                        default=False, help='use cutout')
-    parser.add_argument('--cutout_length', type=int,
-                        default=16, help='cutout length')
-    parser.add_argument('--model_path', type=str, default="./",
-                        help='Path to save the destination model')
+    parser.add_argument("--batch_size", type=int, default=96, help="batch size")
+    parser.add_argument("--optimizer", type=str, default="Adam", help="optimizer")
+    parser.add_argument("--epoches", type=int, default=30, help="epoch limit")
+    parser.add_argument("--learning_rate", type=float, default=1e-3, help="epoch limit")
+    parser.add_argument("--time_limit", type=int, default=0, help="gpu device id")
+    parser.add_argument("--cutout", action="store_true", default=False, help="use cutout")
+    parser.add_argument("--cutout_length", type=int, default=16, help="cutout length")
+    parser.add_argument(
+        "--model_path", type=str, default="./", help="Path to save the destination model"
+    )
     args = parser.parse_args()
     return args
+
 
 optimizer = None
 train_init_op = None
@@ -76,12 +76,9 @@ best_acc = 0.0
 args = get_args()
 
 
-
-
-
 def build_graph_from_onnx(onnx_model_path):
-    ''' build model from onnx intermedia represtation 
-    '''
+    """ build model from onnx intermedia represtation 
+    """
 
     # load onnx model from model path
     onnx_model = onnx.load(onnx_model_path)
@@ -92,30 +89,32 @@ def build_graph_from_onnx(onnx_model_path):
     # polished_model = onnx.utils.polish_model(onnx_model)
 
     # Ignore all the warning messages in this tutorial
-    warnings.filterwarnings('ignore')
+    warnings.filterwarnings("ignore")
 
     # Import the ONNX model to Tensorflow
-    tf_rep = prepare(onnx_model,strict=False)
+    tf_rep = prepare(onnx_model, strict=False)
     # tf_rep.export_graph(args.model_path)
     graph_def = tf_rep.graph.as_graph_def()
     return graph_def
 
+
 def get_output_node_names(graph_def):
-  """Get output node names from GraphDef.
+    """Get output node names from GraphDef.
   Args:
     graph_def: GraphDef object.
   Returns:
     List of output node names.
   """
-  nodes, input_names = dict(), set()
-  for node in graph_def.node:
-    nodes[node.name] = node
-    input_names.update(set(node.input))
-  return list(set(nodes) - input_names)
+    nodes, input_names = dict(), set()
+    for node in graph_def.node:
+        nodes[node.name] = node
+        input_names.update(set(node.input))
+    return list(set(nodes) - input_names)
+
 
 def save_graph_to_onnx(onnx_model_path):
-    ''' save model to onnx intermedia represtation 
-    '''
+    """ save model to onnx intermedia represtation 
+    """
 
     # load tf graph def
     # graph_def = tf.GraphDef()
@@ -130,7 +129,7 @@ def save_graph_to_onnx(onnx_model_path):
     # convert tf graph to onnx model
     # below the function is not enough for all the tensorflow opsets
     model = tensorflow_graph_to_onnx_model(graph_def, output)
-    with open(onnx_model_path, 'wb') as f:
+    with open(onnx_model_path, "wb") as f:
         f.write(model.SerializeToString())
 
 
@@ -146,7 +145,7 @@ def parse_rev_args(receive_msg):
     global optimizer
 
     # Data
-    _logger.info('Preparing data..')
+    _logger.info("Preparing data..")
     (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     (trainX, trainY) = (x_train.astype(np.uint8), y_train.astype(np.int32))
     (testX, testY) = (x_test.astype(np.uint8), y_test.astype(np.int32))
@@ -160,42 +159,47 @@ def parse_rev_args(receive_msg):
     train_dataset = train_dataset.map(map_batch)
     train_dataset = train_dataset.prefetch(2)
 
-    test_dataset = test_dataset.map(map_single, num_parallel_calls=8).batch(
-        args.batch_size).map(map_batch)
+    test_dataset = (
+        test_dataset.map(map_single, num_parallel_calls=8)
+        .batch(args.batch_size)
+        .map(map_batch)
+    )
     test_dataset = test_dataset.prefetch(2)
 
     train_iterator = tf.data.Iterator.from_structure(
-        train_dataset.output_types, train_dataset.output_shapes)
+        train_dataset.output_types, train_dataset.output_shapes
+    )
     test_iterator = tf.data.Iterator.from_structure(
-        test_dataset.output_types, test_dataset.output_shapes)
+        test_dataset.output_types, test_dataset.output_shapes
+    )
     train_features, train_labels = train_iterator.get_next()
     test_features, test_labels = test_iterator.get_next()
     train_init_op = train_iterator.make_initializer(train_dataset)
     test_init_op = test_iterator.make_initializer(test_dataset)
-    _logger.info('Preparing successfully.')
+    _logger.info("Preparing successfully.")
 
     # Model
-    _logger.info('Building model..')
+    _logger.info("Building model..")
     model_path = receive_msg
     graph_def = build_graph_from_onnx(model_path)
 
-    if args.optimizer == 'SGD':
-        optimizer = tf.train.GradientDescentOptimizer(
-            learning_rate=args.learning_rate)
-    elif args.optimizer == 'Adadelta':
-        optimizer = tf.train.AdadeltaOptimizer(
-            learning_rate=args.learning_rate)
-    elif args.optimizer == 'Adagrad':
+    if args.optimizer == "SGD":
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate=args.learning_rate)
+    elif args.optimizer == "Adadelta":
+        optimizer = tf.train.AdadeltaOptimizer(learning_rate=args.learning_rate)
+    elif args.optimizer == "Adagrad":
         optimizer = tf.train.AdagradOptimizer(learning_rate=args.learning_rate)
-    elif args.optimizer == 'Adam':
+    elif args.optimizer == "Adam":
         optimizer = tf.train.AdamOptimizer(learning_rate=args.learning_rate)
-    elif args.optimizer == 'Momentum':
+    elif args.optimizer == "Momentum":
         optimizer = tf.train.MomentumOptimizer(
-            learning_rate=args.learning_rate, momentum=0.9)
+            learning_rate=args.learning_rate, momentum=0.9
+        )
     else:
         raise RuntimeError("{} optimizer not supported".format(args.optimizer))
 
     return graph_def
+
 
 # Training
 
@@ -207,30 +211,24 @@ def train(sess, epoch):
     global train_step
     global optimizer
 
-    _logger.info('Epoch: %d' % epoch)
+    _logger.info("Epoch: %d" % epoch)
     # Placeholders
-    x = tf.get_default_graph().get_tensor_by_name('x:0')
-    y = tf.get_default_graph().get_tensor_by_name('y:0')
-    is_training = tf.get_default_graph().get_tensor_by_name('is_training:0')
-    loss = tf.get_default_graph().get_tensor_by_name('loss:0')
-    out = tf.get_default_graph().get_tensor_by_name('output:0')
-    acc = tf.get_default_graph().get_tensor_by_name('accuary:0')
-    
+    x = tf.get_default_graph().get_tensor_by_name("x:0")
+    y = tf.get_default_graph().get_tensor_by_name("y:0")
+    is_training = tf.get_default_graph().get_tensor_by_name("is_training:0")
+    loss = tf.get_default_graph().get_tensor_by_name("loss:0")
+    out = tf.get_default_graph().get_tensor_by_name("output:0")
+    acc = tf.get_default_graph().get_tensor_by_name("accuary:0")
+
     train_loss = 0
     total = 0
     sess.run(train_init_op)
     for _ in range(train_step):
         batch_x, batch_y = sess.run((train_features, train_labels))
-        train_feed_dict = {
-            x: batch_x,
-            y: batch_y,
-            is_training : True
-        }
-        _ , batch_loss = sess.run([optimizer,loss], feed_dict=train_feed_dict)
+        train_feed_dict = {x: batch_x, y: batch_y, is_training: True}
+        _, batch_loss = sess.run([optimizer, loss], feed_dict=train_feed_dict)
         train_loss += batch_loss
-        total+=batch_x.shape(0)
-         
-
+        total += batch_x.shape(0)
 
 
 def test(sess, epoch, onnx_model_path):
@@ -242,12 +240,12 @@ def test(sess, epoch, onnx_model_path):
     global optimizer
 
     # Placeholders
-    x = tf.get_default_graph().get_tensor_by_name('x:0')
-    y = tf.get_default_graph().get_tensor_by_name('y:0')
-    is_training = tf.get_default_graph().get_tensor_by_name('is_training:0')
-    loss = tf.get_default_graph().get_tensor_by_name('loss:0')
-    out = tf.get_default_graph().get_tensor_by_name('output:0')
-    acc = tf.get_default_graph().get_tensor_by_name('accuary:0')
+    x = tf.get_default_graph().get_tensor_by_name("x:0")
+    y = tf.get_default_graph().get_tensor_by_name("y:0")
+    is_training = tf.get_default_graph().get_tensor_by_name("is_training:0")
+    loss = tf.get_default_graph().get_tensor_by_name("loss:0")
+    out = tf.get_default_graph().get_tensor_by_name("output:0")
+    acc = tf.get_default_graph().get_tensor_by_name("accuary:0")
     feed = dict()
 
     test_loss = 0
@@ -256,20 +254,18 @@ def test(sess, epoch, onnx_model_path):
     sess.run(test_init_op)
     for _ in range(train_step):
         batch_x, batch_y = sess.run((test_features, test_labels))
-        test_feed_dict = {
-            x: batch_x,
-            y: batch_y,
-            is_training : False
-        }
-        _ ,acc_batch, batch_loss = sess.run([optimizer,acc,loss], feed_dict=test_feed_dict)
+        test_feed_dict = {x: batch_x, y: batch_y, is_training: False}
+        _, acc_batch, batch_loss = sess.run(
+            [optimizer, acc, loss], feed_dict=test_feed_dict
+        )
         test_loss += batch_loss
-        total+=batch_x.shape(0)
-        correct+=acc_batch
-   
+        total += batch_x.shape(0)
+        correct += acc_batch
+
     # Save checkpoint.
-    acc = 100.*correct/total
+    acc = 100.0 * correct / total
     if acc > best_acc:
-        _logger.info('Saving..')
+        _logger.info("Saving..")
         # save_graph_to_onnx(onnx_model_path)
         best_acc = acc
     return acc, best_acc
@@ -294,9 +290,19 @@ def map_batch(x, y):
     return x, y
 
 
-def augment(images, labels, resize=None, horizontal_flip=False, vertical_flip=False,
-            rotate=0, crop_probability=0, crop_min_percent=0.6, crop_max_percent=1., mixup=0):
-    ''' data augment using tensorflow
+def augment(
+    images,
+    labels,
+    resize=None,
+    horizontal_flip=False,
+    vertical_flip=False,
+    rotate=0,
+    crop_probability=0,
+    crop_min_percent=0.6,
+    crop_max_percent=1.0,
+    mixup=0,
+):
+    """ data augment using tensorflow
 
     Arguments:
         images,labels
@@ -312,7 +318,7 @@ def augment(images, labels, resize=None, horizontal_flip=False, vertical_flip=Fa
 
     Returns:
        images, labels 
-    '''
+    """
 
     if resize is not None:
         images = tf.image.resize_bilinear(images, resize)
@@ -324,7 +330,7 @@ def augment(images, labels, resize=None, horizontal_flip=False, vertical_flip=Fa
         images = tf.multiply(images, 2.0)
     labels = tf.to_float(labels)
 
-    with tf.name_scope('augmentation'):
+    with tf.name_scope("augmentation"):
         shp = tf.shape(images)
         batch_size, height, width = shp[0], shp[1], shp[2]
         width = tf.cast(width, tf.float32)
@@ -337,54 +343,69 @@ def augment(images, labels, resize=None, horizontal_flip=False, vertical_flip=Fa
         if horizontal_flip:
             coin = tf.less(tf.random_uniform([batch_size], 0, 1.0), 0.5)
             flip_transform = tf.convert_to_tensor(
-                [-1., 0., width, 0., 1., 0., 0., 0.], dtype=tf.float32)
+                [-1.0, 0.0, width, 0.0, 1.0, 0.0, 0.0, 0.0], dtype=tf.float32
+            )
             transforms.append(
-                tf.where(coin,
-                         tf.tile(tf.expand_dims(flip_transform, 0),
-                                 [batch_size, 1]),
-                         tf.tile(tf.expand_dims(identity, 0), [batch_size, 1])))
+                tf.where(
+                    coin,
+                    tf.tile(tf.expand_dims(flip_transform, 0), [batch_size, 1]),
+                    tf.tile(tf.expand_dims(identity, 0), [batch_size, 1]),
+                )
+            )
 
         if vertical_flip:
             coin = tf.less(tf.random_uniform([batch_size], 0, 1.0), 0.5)
             flip_transform = tf.convert_to_tensor(
-                [1, 0, 0, 0, -1, height, 0, 0], dtype=tf.float32)
+                [1, 0, 0, 0, -1, height, 0, 0], dtype=tf.float32
+            )
             transforms.append(
-                tf.where(coin,
-                         tf.tile(tf.expand_dims(flip_transform, 0),
-                                 [batch_size, 1]),
-                         tf.tile(tf.expand_dims(identity, 0), [batch_size, 1])))
+                tf.where(
+                    coin,
+                    tf.tile(tf.expand_dims(flip_transform, 0), [batch_size, 1]),
+                    tf.tile(tf.expand_dims(identity, 0), [batch_size, 1]),
+                )
+            )
 
         if rotate > 0:
             angle_rad = rotate / 180 * math.pi
             angles = tf.random_uniform([batch_size], -angle_rad, angle_rad)
             transforms.append(
-                tf.contrib.image.angles_to_projective_transforms(
-                    angles, height, width))
+                tf.contrib.image.angles_to_projective_transforms(angles, height, width)
+            )
 
         if crop_probability > 0:
-            crop_pct = tf.random_uniform([batch_size], crop_min_percent,
-                                         crop_max_percent)
+            crop_pct = tf.random_uniform([batch_size], crop_min_percent, crop_max_percent)
             left = tf.random_uniform([batch_size], 0, width * (1 - crop_pct))
             top = tf.random_uniform([batch_size], 0, height * (1 - crop_pct))
-            crop_transform = tf.stack([
-                crop_pct,
-                tf.zeros([batch_size]), top,
-                tf.zeros([batch_size]), crop_pct, left,
-                tf.zeros([batch_size]),
-                tf.zeros([batch_size])
-            ], 1)
+            crop_transform = tf.stack(
+                [
+                    crop_pct,
+                    tf.zeros([batch_size]),
+                    top,
+                    tf.zeros([batch_size]),
+                    crop_pct,
+                    left,
+                    tf.zeros([batch_size]),
+                    tf.zeros([batch_size]),
+                ],
+                1,
+            )
 
-            coin = tf.less(
-                tf.random_uniform([batch_size], 0, 1.0), crop_probability)
+            coin = tf.less(tf.random_uniform([batch_size], 0, 1.0), crop_probability)
             transforms.append(
-                tf.where(coin, crop_transform,
-                         tf.tile(tf.expand_dims(identity, 0), [batch_size, 1])))
+                tf.where(
+                    coin,
+                    crop_transform,
+                    tf.tile(tf.expand_dims(identity, 0), [batch_size, 1]),
+                )
+            )
 
         if transforms:
             images = tf.contrib.image.transform(
                 images,
                 tf.contrib.image.compose_transforms(*transforms),
-                interpolation='BILINEAR')  # or 'NEAREST'
+                interpolation="BILINEAR",
+            )  # or 'NEAREST'
 
         def cshift(values):  # Circular shift in batch dimension
             return tf.concat([values[-1:, ...], values[:-1, ...]], 0)
@@ -394,8 +415,7 @@ def augment(images, labels, resize=None, horizontal_flip=False, vertical_flip=Fa
             mixup = 1.0 * mixup
             beta = tf.distributions.Beta(mixup, mixup)
             lam = beta.sample(batch_size)
-            ll = tf.expand_dims(tf.expand_dims(
-                tf.expand_dims(lam, -1), -1), -1)
+            ll = tf.expand_dims(tf.expand_dims(tf.expand_dims(lam, -1), -1), -1)
             images = ll * images + (1 - ll) * cshift(images)
             labels = lam * labels + (1 - lam) * cshift(labels)
 
@@ -428,5 +448,5 @@ def main():
         raise
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -26,15 +26,17 @@ from nni.networkmorphism_tuner.utils import Constant
 from nni.networkmorphism_tuner.layers import is_layer
 from nni.networkmorphism_tuner.graph import NetworkDescriptor
 
+
 def to_wider_graph(graph):
     weighted_layer_ids = graph.wide_layer_ids()
     weighted_layer_ids = list(
-        filter(lambda x: graph.layer_list[x].output.shape[-1], weighted_layer_ids))
+        filter(lambda x: graph.layer_list[x].output.shape[-1], weighted_layer_ids)
+    )
     wider_layers = sample(weighted_layer_ids, 1)
 
     for layer_id in wider_layers:
         layer = graph.layer_list[layer_id]
-        if is_layer(layer, 'Conv'):
+        if is_layer(layer, "Conv"):
             n_add = layer.filters
         else:
             n_add = layer.units
@@ -50,10 +52,16 @@ def to_skip_connection_graph(graph):
     sorted_skips = sorted(descriptor.skip_connections, key=itemgetter(2, 0, 1))
     p = 0
     valid_connection = []
-    for skip_type in sorted([NetworkDescriptor.ADD_CONNECT, NetworkDescriptor.CONCAT_CONNECT]):
+    for skip_type in sorted(
+        [NetworkDescriptor.ADD_CONNECT, NetworkDescriptor.CONCAT_CONNECT]
+    ):
         for index_a in range(len(weighted_layer_ids)):
-            for index_b in range(len(weighted_layer_ids))[index_a + 1:]:
-                if p < len(sorted_skips) and sorted_skips[p] == (index_a + 1, index_b + 1, skip_type):
+            for index_b in range(len(weighted_layer_ids))[index_a + 1 :]:
+                if p < len(sorted_skips) and sorted_skips[p] == (
+                    index_a + 1,
+                    index_b + 1,
+                    skip_type,
+                ):
                     p += 1
                 else:
                     valid_connection.append((index_a, index_b, skip_type))
@@ -81,7 +89,7 @@ def to_deeper_graph(graph):
 
     for layer_id in deeper_layer_ids:
         layer = graph.layer_list[layer_id]
-        if is_layer(layer, 'Conv'):
+        if is_layer(layer, "Conv"):
             graph.to_conv_deeper_model(layer_id, 3)
         else:
             graph.to_dense_deeper_model(layer_id)
@@ -98,7 +106,7 @@ def legal_graph(graph):
 
 def transform(graph):
     graphs = []
-    for i in range(Constant.N_NEIGHBOURS * 2):
+    for _ in range(Constant.N_NEIGHBOURS * 2):
         a = randrange(3)
         temp_graph = None
         if a == 0:
@@ -115,5 +123,3 @@ def transform(graph):
             break
 
     return list(filter(lambda x: legal_graph(x), graphs))
-
-

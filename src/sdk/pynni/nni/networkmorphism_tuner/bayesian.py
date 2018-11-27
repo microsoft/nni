@@ -18,6 +18,7 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
+import math
 import random
 import time
 from copy import deepcopy
@@ -25,14 +26,12 @@ from functools import total_ordering
 from queue import PriorityQueue
 
 import numpy as np
-import math
-
-from scipy.linalg import cholesky, cho_solve, solve_triangular, LinAlgError
+from scipy.linalg import LinAlgError, cho_solve, cholesky, solve_triangular
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import rbf_kernel
 
-from nni.networkmorphism_tuner.utils import Constant
 from nni.networkmorphism_tuner.net_transformer import transform
+from nni.networkmorphism_tuner.utils import Constant
 
 
 def layer_distance(a, b):
@@ -52,8 +51,11 @@ def layers_distance(list_a, list_b):
         f[-1][j] = j + 1
     for i in range(len_a):
         for j in range(len_b):
-            f[i][j] = min(f[i][j - 1] + 1, f[i - 1][j] + 1, f[i - 1]
-                        [j - 1] + layer_distance(list_a[i], list_b[j]))
+            f[i][j] = min(
+                f[i][j - 1] + 1,
+                f[i - 1][j] + 1,
+                f[i - 1][j - 1] + layer_distance(list_a[i], list_b[j]),
+            )
     return f[len_a - 1][len_b - 1]
 
 
@@ -72,7 +74,9 @@ def skip_connections_distance(list_a, list_b):
     for i, a in enumerate(list_a):
         for j, b in enumerate(list_b):
             distance_matrix[i][j] = skip_connection_distance(a, b)
-    return distance_matrix[linear_sum_assignment(distance_matrix)].sum() + abs(len(list_a) - len(list_b))
+    return distance_matrix[linear_sum_assignment(distance_matrix)].sum() + abs(
+        len(list_a) - len(list_b)
+    )
 
 
 def edit_distance(x, y):
@@ -87,15 +91,17 @@ def edit_distance(x, y):
     ret += layers_distance(x.conv_widths, y.conv_widths)
     ret += layers_distance(x.dense_widths, y.dense_widths)
     ret += Constant.KERNEL_LAMBDA * skip_connections_distance(
-        x.skip_connections, y.skip_connections)
+        x.skip_connections, y.skip_connections
+    )
     return ret
 
 
 class IncrementalGaussianProcess:
     """Gaussian process regressor.
     """
+
     def __init__(self):
-        
+
         self.alpha = 1e-10
         self._distance_matrix = None
         self._x = None
@@ -122,11 +128,9 @@ class IncrementalGaussianProcess:
     def incremental_fit(self, train_x, train_y):
         """ Incrementally fit the regressor. """
         if not self._first_fitted:
-            raise ValueError(
-                "The first_fit function needs to be called first.")
+            raise ValueError("The first_fit function needs to be called first.")
 
         train_x, train_y = np.array(train_x), np.array(train_y)
-        
 
         # Incrementally compute K
         up_right_k = edit_distance_matrix(self._x, train_x)
@@ -137,7 +141,7 @@ class IncrementalGaussianProcess:
         temp_distance_matrix = np.concatenate((up_k, down_k), axis=0)
         k_matrix = bourgain_embedding_matrix(temp_distance_matrix)
         diagonal = np.diag_indices_from(k_matrix)
-        diagonal = (diagonal[0][-len(train_x):], diagonal[1][-len(train_x):])
+        diagonal = (diagonal[0][-len(train_x) :], diagonal[1][-len(train_x) :])
         k_matrix[diagonal] += self.alpha
 
         try:
@@ -149,8 +153,7 @@ class IncrementalGaussianProcess:
         self._y = np.concatenate((self._y, train_y), axis=0)
         self._distance_matrix = temp_distance_matrix
 
-        self._alpha_vector = cho_solve(
-            (self._l_matrix, True), self._y)  # Line 3
+        self._alpha_vector = cho_solve((self._l_matrix, True), self._y)  # Line 3
 
         return self
 
@@ -171,8 +174,7 @@ class IncrementalGaussianProcess:
 
         self._l_matrix = cholesky(k_matrix, lower=True)  # Line 2
 
-        self._alpha_vector = cho_solve(
-            (self._l_matrix, True), self._y)  # Line 3
+        self._alpha_vector = cho_solve((self._l_matrix, True), self._y)  # Line 3
 
         self._first_fitted = True
         return self
@@ -190,8 +192,7 @@ class IncrementalGaussianProcess:
 
         # compute inverse K_inv of K based on its Cholesky
         # decomposition L and its inverse L_inv
-        l_inv = solve_triangular(
-            self._l_matrix.T, np.eye(self._l_matrix.shape[0]))
+        l_inv = solve_triangular(self._l_matrix.T, np.eye(self._l_matrix.shape[0]))
         k_inv = l_inv.dot(l_inv.T)
         # Compute variance of predictive distribution
         y_var = np.ones(len(train_x), dtype=np.float)
@@ -205,7 +206,7 @@ class IncrementalGaussianProcess:
         return y_mean, np.sqrt(y_var)
 
 
-def edit_distance_matrix( train_x, train_y=None):
+def edit_distance_matrix(train_x, train_y=None):
     """Calculate the edit distance.
     Args:
         train_x: A list of neural architectures.
@@ -278,6 +279,7 @@ class BayesianOptimizer:
         beta: The beta in acquisition function. (refer to our paper)
         search_tree: The network morphism search tree.
     """
+
     def __init__(self, searcher, t_min, metric, beta):
         self.searcher = searcher
         self.t_min = t_min
@@ -382,9 +384,11 @@ class BayesianOptimizer:
     def add_child(self, father_id, model_id):
         self.search_tree.add_child(father_id, model_id)
 
+
 @total_ordering
 class Elem:
     """Elements to be sorted according to metric value."""
+
     def __init__(self, metric_value, father_id, graph):
         self.father_id = father_id
         self.graph = graph
@@ -399,6 +403,7 @@ class Elem:
 
 class ReverseElem(Elem):
     """Elements to be reversely sorted according to metric value."""
+
     def __lt__(self, other):
         return self.metric_value > other.metric_value
 
@@ -410,8 +415,10 @@ def contain(descriptors, target_descriptor):
             return True
     return False
 
+
 class SearchTree:
     """The network morphism search tree."""
+
     def __init__(self):
         self.root = None
         self.adj_list = {}
@@ -433,5 +440,5 @@ class SearchTree:
         children = []
         for v in self.adj_list[u]:
             children.append(self.get_dict(v))
-        ret = {'name': u, 'children': children}
+        ret = {"name": u, "children": children}
         return ret

@@ -1,7 +1,7 @@
 authorName: default
 experimentName: example_cifar10-network-morphism
 # how many trials could be concurrently running
-trialConcurrency: 2
+trialConcurrency: 4
 # maximum experiment running duration
 maxExecDuration: 48h
 # empty means never stop
@@ -21,4 +21,5 @@ tuner:
 trial:
   command: python cifar10-pytorch.py
   codeDir: .
-  gpuNum: 2
+  # how many gpu num does one single process can use
+  gpuNum: 1

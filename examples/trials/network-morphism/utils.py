@@ -1,8 +1,8 @@
-'''Some helper functions for PyTorch, including:
+"""Some helper functions for PyTorch, including:
     - get_mean_and_std: calculate the mean and std value of dataset.
     - msr_init: net parameter initialization.
     - progress_bar: progress bar mimic xlua.progress.
-'''
+"""
 import os
 import sys
 import time
@@ -20,7 +20,7 @@ import numpy as np
 
 class EarlyStopping(object):
     # pylint: disable=E0202
-    def __init__(self, mode='min', min_delta=0, patience=10, percentage=False):
+    def __init__(self, mode="min", min_delta=0, patience=10, percentage=False):
         self.mode = mode
         self.min_delta = min_delta
         self.patience = patience
@@ -53,20 +53,20 @@ class EarlyStopping(object):
         return False
 
     def _init_is_better(self, mode, min_delta, percentage):
-        if mode not in {'min', 'max'}:
-            raise ValueError('mode ' + mode + ' is unknown!')
+        if mode not in {"min", "max"}:
+            raise ValueError("mode " + mode + " is unknown!")
         if not percentage:
-            if mode == 'min':
+            if mode == "min":
                 self.is_better = lambda a, best: a < best - min_delta
-            if mode == 'max':
+            if mode == "max":
                 self.is_better = lambda a, best: a > best + min_delta
         else:
-            if mode == 'min':
-                self.is_better = lambda a, best: a < best - (
-                            best * min_delta / 100)
-            if mode == 'max':
-                self.is_better = lambda a, best: a > best + (
-                            best * min_delta / 100)
+            if mode == "min":
+                self.is_better = lambda a, best: a < best - (best * min_delta / 100)
+            if mode == "max":
+                self.is_better = lambda a, best: a > best + (best * min_delta / 100)
+
+
 class Cutout(object):
     def __init__(self, length):
         self.length = length
@@ -82,89 +82,98 @@ class Cutout(object):
         x1 = np.clip(x - self.length // 2, 0, w)
         x2 = np.clip(x + self.length // 2, 0, w)
 
-        mask[y1: y2, x1: x2] = 0.
+        mask[y1:y2, x1:x2] = 0.0
         mask = torch.from_numpy(mask)
         mask = mask.expand_as(img)
         img *= mask
         return img
 
+
 def _data_transforms_cifar10(args):
     CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
     CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
 
-    train_transform = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-    ])
+    train_transform = transforms.Compose(
+        [
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+        ]
+    )
     if args.cutout:
         train_transform.transforms.append(Cutout(args.cutout_length))
 
-    valid_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
-        ])
+    valid_transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize(CIFAR_MEAN, CIFAR_STD)]
+    )
     return train_transform, valid_transform
+
 
 def _data_transforms_fashion(args):
     FASHION_MEAN = [0.49139968]
     FASHION_STD = [0.24703233]
 
-    train_transform = transforms.Compose([
-        transforms.RandomCrop(28, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(FASHION_MEAN, FASHION_STD),
-    ])
+    train_transform = transforms.Compose(
+        [
+            transforms.RandomCrop(28, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(FASHION_MEAN, FASHION_STD),
+        ]
+    )
     if args.cutout:
         train_transform.transforms.append(Cutout(args.cutout_length))
 
-    valid_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(FASHION_MEAN, FASHION_STD),
-        ])
+    valid_transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize(FASHION_MEAN, FASHION_STD)]
+    )
     return train_transform, valid_transform
+
 
 def _data_transforms_mnist(args):
     MNIST_MEAN = [0.49139968]
     MNIST_STD = [0.24703233]
 
-    train_transform = transforms.Compose([
-        transforms.RandomCrop(28, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize(MNIST_MEAN, MNIST_STD),
-    ])
+    train_transform = transforms.Compose(
+        [
+            transforms.RandomCrop(28, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+            transforms.Normalize(MNIST_MEAN, MNIST_STD),
+        ]
+    )
     if args.cutout:
         train_transform.transforms.append(Cutout(args.cutout_length))
 
-    valid_transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(MNIST_MEAN, MNIST_STD),
-        ])
+    valid_transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize(MNIST_MEAN, MNIST_STD)]
+    )
     return train_transform, valid_transform
 
 
 def get_mean_and_std(dataset):
-    '''Compute the mean and std value of dataset.'''
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=2)
+    """Compute the mean and std value of dataset."""
+    dataloader = torch.utils.data.DataLoader(
+        dataset, batch_size=1, shuffle=True, num_workers=2
+    )
     mean = torch.zeros(3)
     std = torch.zeros(3)
-    print('==> Computing mean and std..')
+    print("==> Computing mean and std..")
     for inputs, targets in dataloader:
         for i in range(3):
-            mean[i] += inputs[:,i,:,:].mean()
-            std[i] += inputs[:,i,:,:].std()
+            mean[i] += inputs[:, i, :, :].mean()
+            std[i] += inputs[:, i, :, :].std()
     mean.div_(len(dataset))
     std.div_(len(dataset))
     return mean, std
 
+
 def init_params(net):
-    '''Init layer parameters.'''
+    """Init layer parameters."""
     for m in net.modules():
         if isinstance(m, nn.Conv2d):
-            init.kaiming_normal(m.weight, mode='fan_out')
+            init.kaiming_normal(m.weight, mode="fan_out")
             if m.bias:
                 init.constant(m.bias, 0)
         elif isinstance(m, nn.BatchNorm2d):
@@ -177,33 +186,33 @@ def init_params(net):
 
 
 def format_time(seconds):
-    days = int(seconds / 3600/24)
-    seconds = seconds - days*3600*24
+    days = int(seconds / 3600 / 24)
+    seconds = seconds - days * 3600 * 24
     hours = int(seconds / 3600)
-    seconds = seconds - hours*3600
+    seconds = seconds - hours * 3600
     minutes = int(seconds / 60)
-    seconds = seconds - minutes*60
+    seconds = seconds - minutes * 60
     secondsf = int(seconds)
     seconds = seconds - secondsf
-    millis = int(seconds*1000)
+    millis = int(seconds * 1000)
 
-    f = ''
+    f = ""
     i = 1
     if days > 0:
-        f += str(days) + 'D'
+        f += str(days) + "D"
         i += 1
     if hours > 0 and i <= 2:
-        f += str(hours) + 'h'
+        f += str(hours) + "h"
         i += 1
     if minutes > 0 and i <= 2:
-        f += str(minutes) + 'm'
+        f += str(minutes) + "m"
         i += 1
     if secondsf > 0 and i <= 2:
-        f += str(secondsf) + 's'
+        f += str(secondsf) + "s"
         i += 1
     if millis > 0 and i <= 2:
-        f += str(millis) + 'ms'
+        f += str(millis) + "ms"
         i += 1
-    if f == '':
-        f = '0ms'
+    if f == "":
+        f = "0ms"
     return f

@@ -24,14 +24,14 @@ import pickle
 class Constant:
     MAX_LAYERS = 100
     N_NEIGHBOURS = 8
-    MAX_MODEL_SIZE = (1 << 24)
+    MAX_MODEL_SIZE = 1 << 24
     KERNEL_LAMBDA = 0.1
     BETA = 2.576
     MLP_MODEL_LEN = 3
     MLP_MODEL_WIDTH = 5
     MODEL_LEN = 3
     MODEL_WIDTH = 64
-    POOLING_KERNEL_SIZE=2
+    POOLING_KERNEL_SIZE = 2
     DENSE_DROPOUT_RATE = 0.5
     CONV_DROPOUT_RATE = 0.25
     MLP_DROPOUT_RATE = 0.25
@@ -41,11 +41,11 @@ class Constant:
 
 
 def pickle_from_file(path):
-    with open(path,'rb') as f:
+    with open(path, "rb") as f:
         graph = pickle.load(f)
     return graph
 
 
 def pickle_to_file(obj, path):
-    with open(path,'wb') as f:
+    with open(path, "wb") as f:
         pickle.dump(obj, f)

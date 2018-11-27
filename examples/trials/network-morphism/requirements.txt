@@ -1,1 +1,9 @@
-git+https://github.com/onnx/onnx-tensorflow.git
+nni==0.3.0
+Keras==2.2.2
+torchvision==0.2.1
+numpy==1.13.3
+mmdnn==0.2.3
+onnx==1.3.0
+tensorflow==1.10.1
+torch==0.4.1
+onnx_tf==1.2.0

@@ -22,8 +22,8 @@ from abc import abstractmethod
 
 from sklearn.metrics import accuracy_score, mean_squared_error
 
-class Metric:
 
+class Metric:
     @classmethod
     @abstractmethod
     def higher_better(cls):
@@ -38,6 +38,7 @@ class Metric:
     @abstractmethod
     def evaluate(cls, prediction, target):
         pass
+
 
 class Accuracy(Metric):
     @classmethod
@@ -53,7 +54,6 @@ class Accuracy(Metric):
     @classmethod
     def evaluate(cls, prediction, target):
         return accuracy_score(prediction, target)
-
 
 
 class MSE(Metric):
