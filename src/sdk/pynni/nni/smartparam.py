@@ -63,7 +63,7 @@ if env_args.platform is None:
 
     def qloguniform(low, high, q, name=None):
         assert low > 0, 'lower bound must be positive'
-        return round(loguniform(np.log10(low), np.log10(high)) / q) * q
+        return round(loguniform(low, high) / q) * q
 
     def normal(mu, sigma, name=None):
         return random.gauss(mu, sigma)
@@ -77,7 +77,7 @@ if env_args.platform is None:
 
     def qlognormal(mu, sigma, q, name=None):
         assert mu > 0, 'mu must be positive'
-        return round(lognormal(np.log10(mu), sigma) / q) * q
+        return round(lognormal(mu, sigma) / q) * q
 
     def function_choice(*funcs, name=None):
         return random.choice(funcs)()

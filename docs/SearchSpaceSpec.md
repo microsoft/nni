@@ -45,7 +45,7 @@ The candidate type and value for variable is here:
 <br/>
 
 * {"_type":"qloguniform","_value":[low, high, q]}
-   * Which means the variable value is a value like round(10^(uniform(log10(low), log10(high))) / q) * q
+   * Which means the variable value is a value like round(loguniform(low, high)) / q) * q
    * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
 <br/>
 
@@ -64,7 +64,7 @@ The candidate type and value for variable is here:
 <br/>
 
 * {"_type":"qlognormal","_value":[label, mu, sigma, q]}
-   * Which means the variable value is a value like round(10^(normal(log10(mu), sigma)) / q) * q
+   * Which means the variable value is a value like round(lognormal(mu, sigma) / q) * q
    * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 <br/>
 

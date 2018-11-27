@@ -121,4 +121,4 @@ def qlognormal(mu, sigma, q, random_state):
     random_state: an object of numpy.random.RandomState
     '''
     assert mu > 0, 'mu must be positive'
-    return np.round(lognormal(np.log10(mu), sigma, random_state) / q) * q
+    return np.round(lognormal(mu, sigma, random_state) / q) * q
