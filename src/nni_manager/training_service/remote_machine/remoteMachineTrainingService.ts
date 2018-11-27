@@ -66,7 +66,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private log: Logger;
     private isMultiPhase: boolean = false;
     private trialSequenceId: number;
-    private remoteOS: string;
+    private readonly remoteOS: string;
 
     constructor(@component.Inject timer: ObservableTimer) {
         this.remoteOS = 'linux';
