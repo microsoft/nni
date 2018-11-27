@@ -32,7 +32,7 @@ export namespace AzureStorageClientUtility {
      * @param fileServerClient 
      * @param azureShare 
      */
-    export async function createShare(fileServerClient: any, azureShare: any){
+    export async function createShare(fileServerClient: any, azureShare: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
         fileServerClient.createShareIfNotExists(azureShare, function(error: any, result: any, response: any) {
             if(error){
@@ -90,11 +90,10 @@ export namespace AzureStorageClientUtility {
      * @param azureShare 
      * @param localFilePath 
      */
-    async function uploadFileToAzure(fileServerClient: any, azureDirectory: any, azureFileName: any, azureShare: any, localFilePath: any){
+    async function uploadFileToAzure(fileServerClient: any, azureDirectory: any, azureFileName: any, azureShare: any, localFilePath: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
         await fileServerClient.createFileFromLocalFile(azureShare, azureDirectory, azureFileName, localFilePath, function(error: any, result: any, response: any) {
             if(error){
-                console.log(error)
                 getLogger().error(`Upload file failed:, ${error}`);
                 deferred.reject(error);
             }else{          
@@ -112,7 +111,7 @@ export namespace AzureStorageClientUtility {
      * @param azureShare 
      * @param localFilePath 
      */
-    async function downloadFile(fileServerClient: any, azureDirectory: any, azureFileName: any, azureShare: any, localFilePath: any){
+    async function downloadFile(fileServerClient: any, azureDirectory: any, azureFileName: any, azureShare: any, localFilePath: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
         await fileServerClient.getFileToStream(azureShare, azureDirectory, azureFileName, fs.createWriteStream(localFilePath), function(error: any, result: any, response: any) {
             if(error){
@@ -127,7 +126,10 @@ export namespace AzureStorageClientUtility {
 
     /**
      * Upload a directory to azure file storage
-     * @param fileServerClient 
+     * @param fileServerClient : the client of file server
+     * @param azureDirectory : the directory in azure file storage
+     * @param azureShare : the azure share used
+     * @param localDirectory : local directory to be uploaded
      */
     export async function uploadDirectory(fileServerClient: any, azureDirectory: any, azureShare: any, localDirectory: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
@@ -163,6 +165,21 @@ export namespace AzureStorageClientUtility {
         const deferred: Deferred<void> = new Deferred<void>();
         mkDirP(localDirectory);
         fileServerClient.listFilesAndDirectoriesSegmented(azureShare, azureDirectory, 'null', function(error: any, result: any, response: any) {
+            if(('entries' in result) === false){
+                getLogger().error(`list files failed, can't get entries in result`);
+                throw new Error(`list files failed, can't get entries in result`);
+            }
+
+            if(('files' in result['entries']) === false){
+                getLogger().error(`list files failed, can't get files in result['entries']`);
+                throw new Error(`list files failed, can't get files in result['entries']`);
+            }
+
+            if(('directories' in result['directories']) === false){
+                getLogger().error(`list files failed, can't get directories in result['entries']`);
+                throw new Error(`list files failed, can't get directories in result['entries']`);
+            }
+
             for(var fileName of result['entries']['files']){
                 const fullFilePath: string = path.join(localDirectory, fileName.name);
                 downloadFile(fileServerClient, azureDirectory, fileName.name, azureShare, fullFilePath)
