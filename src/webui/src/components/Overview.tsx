@@ -128,14 +128,6 @@ class Overview extends React.Component<{}, OverviewState> {
                         const key = searchSpace[item]._type;
                         let value = searchSpace[item]._value;
                         switch (key) {
-                            case 'loguniform':
-                            case 'qloguniform':
-                                const a = Math.pow(Math.E, value[0]);
-                                const b = Math.pow(Math.E, value[1]);
-                                value = [a, b];
-                                searchSpace[item]._value = value;
-                                break;
-
                             case 'quniform':
                             case 'qnormal':
                             case 'qlognormal':
@@ -345,7 +337,7 @@ class Overview extends React.Component<{}, OverviewState> {
         const { tableData } = this.state;
         const sourcePoint = JSON.parse(JSON.stringify(tableData));
         sourcePoint.sort((a: TableObj, b: TableObj) => {
-            if (a.sequenceId && b.sequenceId) {
+            if (a.sequenceId !== undefined && b.sequenceId !== undefined) {
                 return a.sequenceId - b.sequenceId;
             } else {
                 return NaN;
