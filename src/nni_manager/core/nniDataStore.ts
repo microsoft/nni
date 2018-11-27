@@ -191,7 +191,7 @@ class NNIDataStore implements DataStore {
             const existMetrics: MetricDataRecord[] | undefined = map.get(metric.trialJobId);
             if (existMetrics !== undefined) {
                 if (!multiPhase) {
-                    this.log.error(`Found multiple FINAL results for trial job ${trialJobId}`);
+                    this.log.error(`Found multiple FINAL results for trial job ${trialJobId}, metrics: ${JSON.stringify(metrics)}`);
                 } else {
                     existMetrics.push(metric);
                 }
