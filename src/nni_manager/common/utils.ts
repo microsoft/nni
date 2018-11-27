@@ -272,11 +272,11 @@ function getIPV4Address(): string {
     throw Error('getIPV4Address() failed because no valid IPv4 address found.')
 }
 
-function getRemoteTmpDir(os_spec: string): string {
-    if (os_spec == 'linux') {
+function getRemoteTmpDir(osType: string): string {
+    if (osType == 'linux') {
         return '/tmp';
     } else {
-        throw Error(`remote OS ${os_spec} not supported`);
+        throw Error(`remote OS ${osType} not supported`);
     }
 }
 
