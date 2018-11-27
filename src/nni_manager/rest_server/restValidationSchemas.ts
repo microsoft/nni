@@ -73,12 +73,12 @@ export namespace ValidationSchemas {
                 }),
                 kubernetesServer: joi.string().min(1),
                 keyVault: joi.object({
-                    vaultName: joi.string().regex('([0-9]|[a-z]|[A-Z]|-){1,127}').required(),
-                    name: joi.string().regex('([0-9]|[a-z]|[A-Z]|-){1,127}').required()
+                    vaultName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/),
+                    name: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/)
                 }),
                 azureStorage: joi.object({
-                    accountName: joi.string().regex('([0-9]|[a-z]|[A-Z]|-){3,31}').required(),
-                    azureShare: joi.string().regex('([0-9]|[a-z]|[A-Z]|-){3,63}').required()
+                    accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
+                    azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
                 })
             }),
             nni_manager_ip: joi.object({
