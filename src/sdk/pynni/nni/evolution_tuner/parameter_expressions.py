@@ -109,7 +109,7 @@ def lognormal(mu, sigma, random_state):
     sigma: float or array_like of floats
     random_state: an object of numpy.random.RandomState
     '''
-    assert sigma > 0, 'mu must be positive'
+    assert mu > 0, 'mu must be positive'
     return 10 ** (normal(np.log10(mu), sigma, random_state))
 
 
@@ -120,5 +120,5 @@ def qlognormal(mu, sigma, q, random_state):
     q: sample step
     random_state: an object of numpy.random.RandomState
     '''
-    assert sigma > 0, 'mu must be positive'
+    assert mu > 0, 'mu must be positive'
     return np.round(lognormal(np.log10(mu), sigma, random_state) / q) * q
