@@ -19,3 +19,6 @@
 .WAITING{
     color:	#008B8B;
 }
+.EARLY_STOPPED{
+    color: 	#FFA500;
+}
