@@ -534,7 +534,7 @@ class KubeflowTrainingService implements TrainingService {
             this.log.error(clusterConfigError);
             throw new Error(clusterConfigError);
         }
-        let containerNameMap = new Map<string, any>();
+        let containerNameMap = new Map<string, string>();
         if(this.kubeflowJobPlural == 'tfjobs'){
             containerNameMap.set(this.kubeflowJobPlural, 'tensorflow');
         }else if(this.kubeflowJobPlural == 'pytorchjobs'){
