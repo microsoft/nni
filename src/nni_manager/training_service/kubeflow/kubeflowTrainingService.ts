@@ -41,6 +41,7 @@ import { KubeflowTrialJobDetail } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
+import * as azureStorage from 'azure-storage';
 
 var yaml = require('node-yaml');
 var azure = require('azure-storage');
@@ -68,7 +69,7 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowRestServerPort?: number;
     private kubeflowJobPlural?: string;
     private readonly CONTAINER_MOUNT_PATH: string;
-    private azureStorageClient: any;
+    private azureStorageClient?: azureStorage.FileService;
     private azureStorageShare?: string;
     private azureStorageSecretName?: string;
     private azureStorageAccountName?: string;
