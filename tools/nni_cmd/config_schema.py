@@ -132,7 +132,7 @@ kubeflow_config_schema = {
             'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')
         },
         'azureStorage': {
-            'accountName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
+            'accountName': Regex('([0-9]|[a-z]|[A-Z]|-){3,31}'),
             'azureShare': Regex('([0-9]|[a-z]|[A-Z]|-){3,63}')
         }
     })

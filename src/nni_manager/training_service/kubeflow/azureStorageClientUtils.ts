@@ -46,7 +46,7 @@ export namespace AzureStorageClientUtility {
     }
     
     /**
-     * create a directory in azure storage
+     * Create a new directory (NOT recursively) in azure file storage.
      * @param fileServerClient 
      * @param azureFoler 
      * @param azureShare 
