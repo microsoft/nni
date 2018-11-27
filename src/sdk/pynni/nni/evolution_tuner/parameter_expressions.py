@@ -65,6 +65,7 @@ def loguniform(low, high, random_state):
     high: an float that represent an upper bound
     random_state: an object of numpy.random.RandomState
     '''
+    assert low > 0, 'lower bound must be positive'
     return 10 ** (uniform(np.log10(low), np.log10(high), random_state))
 
 
@@ -75,6 +76,7 @@ def qloguniform(low, high, q, random_state):
     q: sample step
     random_state: an object of numpy.random.RandomState
     '''
+    assert low > 0, 'lower bound must be positive'
     return np.round(loguniform(low, high, random_state) / q) * q
 
 
@@ -107,7 +109,8 @@ def lognormal(mu, sigma, random_state):
     sigma: float or array_like of floats
     random_state: an object of numpy.random.RandomState
     '''
-    return 10 ** (normal(np.log10(mu), np.log10(sigma), random_state))
+    assert sigma > 0, 'mu must be positive'
+    return 10 ** (normal(np.log10(mu), sigma, random_state))
 
 
 def qlognormal(mu, sigma, q, random_state):
@@ -117,4 +120,5 @@ def qlognormal(mu, sigma, q, random_state):
     q: sample step
     random_state: an object of numpy.random.RandomState
     '''
-    return np.round(lognormal(mu, sigma, random_state) / q) * q
+    assert sigma > 0, 'mu must be positive'
+    return np.round(lognormal(np.log10(mu), sigma, random_state) / q) * q
