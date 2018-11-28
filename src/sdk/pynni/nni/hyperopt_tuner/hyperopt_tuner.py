@@ -57,8 +57,8 @@ def json2space(in_x, name=ROOT):
     if isinstance(in_x, dict):
         if TYPE in in_x.keys():
             _type = in_x[TYPE]
-            _value = json2space(in_x[VALUE], name=name)
             name = name + '-' + _type
+            _value = json2space(in_x[VALUE], name=name)
             if _type == 'choice':
                 out_y = eval('hp.hp.'+_type)(name, _value)
             else:
