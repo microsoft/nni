@@ -310,5 +310,5 @@ function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
     return isEarlyStopped ? 'EARLY_STOPPED' : 'USER_CANCELED';
 }
 
-export {getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getJobCancelStatus,
+export {getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getJobCancelStatus, getCheckpointDir,
     getDefaultDatabaseDir, getIPV4Address, mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
