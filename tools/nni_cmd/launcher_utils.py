@@ -83,14 +83,15 @@ def validate_search_space_content(experiment_config):
 
 def validate_kubeflow_operators(experiment_config):
     '''Validate whether the kubeflow operators are valid'''
-    if experiment_config.get('kubeflowConfig').get('operator') == 'tf-operator':
-        if experiment_config.get('trial').get('master') is not None:
-            print_error('kubeflow with tf-operator can not set master')
-            exit(1)
-    elif experiment_config.get('kubeflowConfig').get('operator') == 'pytorch-operator':
-        if experiment_config.get('trial').get('ps') is not None:
-            print_error('kubeflow with pytorch-operator can not set ps')
-            exit(1)
+    if experiment_config.get('kubeflowConfig'):
+        if experiment_config.get('kubeflowConfig').get('operator') == 'tf-operator':
+            if experiment_config.get('trial').get('master') is not None:
+                print_error('kubeflow with tf-operator can not set master')
+                exit(1)
+        elif experiment_config.get('kubeflowConfig').get('operator') == 'pytorch-operator':
+            if experiment_config.get('trial').get('ps') is not None:
+                print_error('kubeflow with pytorch-operator can not set ps')
+                exit(1)
 
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''

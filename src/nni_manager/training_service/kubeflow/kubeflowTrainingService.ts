@@ -115,7 +115,6 @@ class KubeflowTrainingService implements TrainingService {
             const restServer: KubeflowJobRestServer = component.get(KubeflowJobRestServer);
             this.kubeflowRestServerPort = restServer.clusterRestServerPort;
         }
-
         const trialJobId: string = uniqueString(5);
         const curTrialSequenceId: number = this.generateSequenceId();
         // Set trial's NFS working folder
@@ -124,11 +123,9 @@ class KubeflowTrainingService implements TrainingService {
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
         await cpp.exec(`cp -r ${this.kubeflowTrialConfig.codeDir} ${trialLocalTempFolder}`);
-
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
-
         // Create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
@@ -139,7 +136,6 @@ class KubeflowTrainingService implements TrainingService {
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
         }
-
         // Write parameter server file content run_ps.sh to local tmp folders
         if(this.kubeflowTrialConfig.ps) {
             const psRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
@@ -147,7 +143,6 @@ class KubeflowTrainingService implements TrainingService {
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
         }
-
         // Write parameter server file content run_master.sh to local tmp folders
         if(this.kubeflowTrialConfig.master) {
             const masterRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
@@ -155,14 +150,12 @@ class KubeflowTrainingService implements TrainingService {
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), masterRunScriptContent, { encoding: 'utf8' });
         }
-
         // Write file content ( parameter.cfg ) to local tmp folders
         const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
         if(trialForm && trialForm.hyperParameters) {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
                             trialForm.hyperParameters.value, { encoding: 'utf8' });
         }
-
         const kubeflowJobYamlPath = path.join(trialLocalTempFolder, `kubeflow-job-${trialJobId}.yaml`);
         const kubeflowJobName = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
         const workerPodResources : any = {};
@@ -172,7 +165,6 @@ class KubeflowTrainingService implements TrainingService {
             'nvidia.com/gpu': `${this.kubeflowTrialConfig.worker.gpuNum}`
         }
         workerPodResources.limits = Object.assign({}, workerPodResources.requests);
-
         let psOrMasterPodResources : any = undefined;
         if(this.kubeflowTrialConfig.ps) {
             psOrMasterPodResources = {};
@@ -191,14 +183,12 @@ class KubeflowTrainingService implements TrainingService {
             }
             psOrMasterPodResources.limits = Object.assign({}, psOrMasterPodResources.requests);
         }       
-
         // Generate kubeflow job resource yaml file for K8S
         yaml.write(
             kubeflowJobYamlPath,
             this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources, psOrMasterPodResources),
             'utf-8'
         );
-
         let trialJobDetail: KubeflowTrialJobDetail;
         //The url used in trialJobDetail
         let trialJobDetailUrl: string;
@@ -222,7 +212,6 @@ class KubeflowTrainingService implements TrainingService {
                 return Promise.reject(error);
             }
         }
-    
         trialJobDetail = new KubeflowTrialJobDetail(
             trialJobId,
             'WAITING',
@@ -234,7 +223,6 @@ class KubeflowTrainingService implements TrainingService {
             trialJobDetailUrl, 
             this.kubeflowJobPlural
         );
-
         // Create kubeflow training jobs
         await cpp.exec(`kubectl create -f ${kubeflowJobYamlPath}`);
         // Set trial job detail until kubectl create resource successfully 
@@ -457,21 +445,25 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow job plural name is undefined');
         }
         const replicaSpecsObj: any = {};
-        let replicaSpecsObjMap = new Map<string, any>();
+        let replicaSpecsObjMap = new Map<string, object>();
 
         replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.worker.replicas, 
             this.kubeflowTrialConfig.worker.image, 'run_worker.sh', workerPodResources);
 
-        if(this.kubeflowJobPlural == 'tfjobs' && this.kubeflowTrialConfig.ps) {
-            replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.ps.replicas, 
-                this.kubeflowTrialConfig.ps.image, 'run_ps.sh', psOrMasterPodResources);
+        if(this.kubeflowJobPlural == 'tfjobs') {
+            if (this.kubeflowTrialConfig.ps){
+                replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.ps.replicas, 
+                    this.kubeflowTrialConfig.ps.image, 'run_ps.sh', psOrMasterPodResources);
+            }
             replicaSpecsObjMap.set(this.kubeflowJobPlural, {'tfReplicaSpecs': replicaSpecsObj})
-        }else if(this.kubeflowJobPlural == 'pytorchjobs' && this.kubeflowTrialConfig.master) {
-            replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.master.replicas, 
-                this.kubeflowTrialConfig.master.image, 'run_master.sh', psOrMasterPodResources);
+        }else if(this.kubeflowJobPlural == 'pytorchjobs') {
+            if(this.kubeflowTrialConfig.master){
+                replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.master.replicas, 
+                    this.kubeflowTrialConfig.master.image, 'run_master.sh', psOrMasterPodResources);
+            }
             replicaSpecsObjMap.set(this.kubeflowJobPlural, {'pytorchReplicaSpecs': replicaSpecsObj})
         }
-
+        
         return {
             apiVersion: 'kubeflow.org/v1alpha2',
             kind: this.kubeflowJobKind,
