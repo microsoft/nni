@@ -181,7 +181,7 @@ class SqlDB implements Database {
         const sql: string = 'insert into TrialJobEvent values (?,?,?,?,?,?)';
         const logPath: string | undefined = jobDetail === undefined ? undefined : jobDetail.url;
         const sequenceId: number | undefined = jobDetail === undefined ? undefined : jobDetail.sequenceId;
-        const args: any[] = [Date.now(), trialJobId, event, hyperParameter, logPath, sequenceId];
+        const args: any[] = [timestamp, trialJobId, event, hyperParameter, logPath, sequenceId];
 
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });
