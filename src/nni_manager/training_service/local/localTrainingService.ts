@@ -280,15 +280,6 @@ class LocalTrainingService implements TrainingService {
                 if (!this.localTrailConfig) {
                     throw new Error('trial config parsed failed');
                 }
-
-                // Validate to make sure codeDir doesn't have too many files
-                try {
-                    await validateCodeDir(this.localTrailConfig.codeDir);
-                } catch(error) {
-                    this.log.error(error);
-                    return Promise.reject(new Error(error));
-                }
-
                 break;
             case TrialConfigMetadataKey.MULTI_PHASE:
                 this.isMultiPhase = (value === 'true' || value === 'True');
