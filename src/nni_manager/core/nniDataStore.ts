@@ -87,7 +87,19 @@ class NNIDataStore implements DataStore {
         event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
         this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${hyperParameter}, jobDetail: ${JSON.stringify(jobDetail)}`);
 
-        return this.db.storeTrialJobEvent(event, trialJobId, hyperParameter, jobDetail).catch(
+        let timestamp: number | undefined;
+        if (event === 'WAITING' && jobDetail !== undefined) {
+            timestamp = jobDetail.submitTime;
+        } else if (event === 'RUNNING' && jobDetail !== undefined) {
+            timestamp = jobDetail.startTime;
+        } else if (['EARLY_STOPPED', 'SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED'].includes(event) && jobDetail !== undefined) {
+            timestamp = jobDetail.endTime;
+        }
+        if (timestamp === undefined) {
+            timestamp = Date.now();
+        }
+
+        return this.db.storeTrialJobEvent(event, trialJobId, timestamp, hyperParameter, jobDetail).catch(
                 (err: Error) => {
                     throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
                 }
@@ -271,6 +283,9 @@ class NNIDataStore implements DataStore {
                 case 'WAITING':
                     if (record.logPath !== undefined) {
                         jobInfo.logPath = record.logPath;
+                    }
+                    if (jobInfo.startTime === undefined && record.timestamp !== undefined) {
+                        jobInfo.startTime = record.timestamp;
                     }
                     break;
                 case 'SUCCEEDED':
