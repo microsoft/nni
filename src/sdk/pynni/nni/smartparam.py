@@ -60,7 +60,7 @@ if env_args.platform is None:
 
     def loguniform(low, high, base=10, name=None):
         assert low > 0, 'Lower bound must be positive'
-        return 10 ** (random.uniform(np.log10(low), np.log10(high)))
+        return base ** (random.uniform(math.log(low, base), math.log(high, base)))
 
     def qloguniform(low, high, q, base=10, name=None):
         return round(loguniform(low, high) / q) * q

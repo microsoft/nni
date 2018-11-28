@@ -62,7 +62,7 @@ def json2space(in_x, name=ROOT):
             if _type == 'choice':
                 out_y = eval('hp.hp.'+_type)(name, _value)
             else:
-                if _type == 'loguniform':
+                if _type in ['loguniform', 'qloguniform']:
                     if len(_value) == 3:
                         _value = list(map(lambda x: math.log(x, _value[-1]), _value[:2]))
                     else:
@@ -97,10 +97,12 @@ def json2parameter(in_x, parameter, name=ROOT):
                     INDEX: _index,
                     VALUE: json2parameter(in_x[VALUE][_index], parameter, name=name+'[%d]' % _index)
                 }
-            elif _type == 'loguniform':
+            elif _type in ['loguniform', 'qloguniform']:
                 values = in_x[VALUE]
-                ori_val = parameter[name]
-                out_y = 10 ** ori_val if len(values) == 2 else values[-1] ** ori_val
+                uniformed_val = parameter[name]
+                out_y = 10 ** uniformed_val if len(values) == 2 else values[-1] ** uniformed_val
+                if _type == 'qloguniform':
+                    out_y = round(out_y / values[-2]) * values[-2]
             else:
                 out_y = parameter[name]
         else:
