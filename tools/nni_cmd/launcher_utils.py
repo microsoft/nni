@@ -181,3 +181,4 @@ def validate_all_content(experiment_config, config_path):
     parse_tuner_content(experiment_config)
     parse_assessor_content(experiment_config)
     validate_annotation_content(experiment_config)
+    validate_kubeflow_operators(experiment_config)
