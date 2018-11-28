@@ -28,9 +28,11 @@ Optional('description'): str,
 'trialConcurrency': And(int, lambda n: 1 <=n <= 999999),
 Optional('maxExecDuration'): Regex(r'^[1-9][0-9]*[s|m|h|d]$'),
 Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
-'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai']),
+'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai', 'kubeflow']),
 Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
+Optional('multiThread'): bool,
+Optional('nniManagerIp'): str,
 'useAnnotation': bool,
 Optional('advisor'): Or({
     'builtinAdvisorName': Or('Hyperband'),
@@ -48,11 +50,13 @@ Optional('advisor'): Or({
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 }),
 Optional('tuner'): Or({
-    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'Hyperband'),
-    'classArgs': {
-        'optimize_mode': Or('maximize', 'minimize'),
-        Optional('speed'): int,
-        },
+    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'SMAC', 'Evolution'),
+    Optional('classArgs'): {
+        'optimize_mode': Or('maximize', 'minimize')
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'builtinTunerName': Or('BatchTuner', 'GridSearch'),
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'codeDir': os.path.exists,
@@ -63,8 +67,10 @@ Optional('tuner'): Or({
 }),
 Optional('assessor'): Or({
     'builtinAssessorName': lambda x: x in ['Medianstop'],
-    'classArgs': {
-        'optimize_mode': lambda x: x in ['maximize', 'minimize']},
+    Optional('classArgs'): {
+        Optional('optimize_mode'): Or('maximize', 'minimize'),
+        Optional('start_step'): And(int, lambda x: 0 <= x <= 9999)
+    },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
 },{
     'codeDir': os.path.exists,
@@ -104,6 +110,39 @@ pai_config_schema = {
 }
 }
 
+kubeflow_trial_schema = {
+'trial':{
+        'codeDir':  os.path.exists,
+        Optional('ps'): {
+            'replicas': int,
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        },
+        'worker':{
+            'replicas': int,
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        } 
+    }
+}
+
+kubeflow_config_schema = {
+    'kubeflowConfig':{
+        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operato'),
+        'nfs': {
+            'server': str,
+            'path': str
+        },
+        'kubernetesServer': str
+    }
+}
+
 machine_list_schima = {
 Optional('machineList'):[Or({
     'ip': str,
@@ -124,3 +163,5 @@ LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
 REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine_list_schima})
 
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
+
+KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})

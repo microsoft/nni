@@ -25,7 +25,8 @@ ModuleName = {
     'Evolution': 'nni.evolution_tuner.evolution_tuner',
     'SMAC': 'nni.smac_tuner.smac_tuner',
     'BatchTuner': 'nni.batch_tuner.batch_tuner',
-
+    'GridSearch': 'nni.gridsearch_tuner.gridsearch_tuner',
+    
     'Medianstop': 'nni.medianstop_assessor.medianstop_assessor'
 }
 
@@ -36,6 +37,7 @@ ClassName = {
     'Evolution': 'EvolutionTuner',
     'SMAC': 'SMACTuner',
     'BatchTuner': 'BatchTuner',
+    'GridSearch': 'GridSearchTuner',
 
     'Medianstop': 'MedianstopAssessor'
 }

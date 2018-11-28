@@ -28,7 +28,7 @@ import * as stream from 'stream';
 import { Deferred } from 'ts-deferred';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger } from '../../common/log';
-import { uniqueString } from '../../common/utils';
+import { uniqueString, getRemoteTmpDir } from '../../common/utils';
 import { RemoteCommandResult } from './remoteMachineData';
 
 /**
@@ -43,11 +43,11 @@ export namespace SSHClientUtility {
      * @param remoteDirectory remote directory
      * @param sshClient SSH client
      */
-    export async function copyDirectoryToRemote(localDirectory : string, remoteDirectory : string, sshClient : Client) : Promise<void> {
+    export async function copyDirectoryToRemote(localDirectory : string, remoteDirectory : string, sshClient : Client, remoteOS: string) : Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         const tmpTarName: string = `${uniqueString(10)}.tar.gz`;
         const localTarPath: string = path.join(os.tmpdir(), tmpTarName);
-        const remoteTarPath: string = path.join(os.tmpdir(), tmpTarName);
+        const remoteTarPath: string = path.join(getRemoteTmpDir(remoteOS), tmpTarName);
 
         // Compress files in local directory to experiment root directory
         await cpp.exec(`tar -czf ${localTarPath} -C ${localDirectory} .`);

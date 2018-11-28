@@ -21,6 +21,7 @@
 import logging
 from collections import defaultdict
 import json_tricks
+import threading
 
 from .protocol import CommandType, send
 from .msg_dispatcher_base import MsgDispatcherBase
@@ -69,7 +70,7 @@ def _pack_parameter(parameter_id, params, customized=False):
 
 class MsgDispatcher(MsgDispatcherBase):
     def __init__(self, tuner, assessor=None):
-        super()
+        super().__init__()
         self.tuner = tuner
         self.assessor = assessor
         if assessor is None:
@@ -84,6 +85,14 @@ class MsgDispatcher(MsgDispatcherBase):
         self.tuner.save_checkpoint()
         if self.assessor is not None:
             self.assessor.save_checkpoint()
+
+    def handle_initialize(self, data):
+        '''
+        data is search space
+        '''
+        self.tuner.update_search_space(data)
+        send(CommandType.Initialized, '')
+        return True
 
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
@@ -127,7 +136,7 @@ class MsgDispatcher(MsgDispatcherBase):
             if self.assessor is not None:
                 self._handle_intermediate_metric_data(data)
             else:
-               pass
+                pass
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
 

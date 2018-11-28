@@ -31,7 +31,7 @@ import * as util from 'util';
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
-import { HyperParameters, TrainingService } from './trainingService';
+import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
     return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
@@ -164,7 +164,7 @@ function parseArg(names: string[]): string {
  * @param advisor: similar as tuner
  *
  */
-function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiPhase: boolean = false): string {
+function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiPhase: boolean = false, multiThread: boolean = false): string {
     if ((tuner || assessor) && advisor) {
         throw new Error('Error: specify both tuner/assessor and advisor is not allowed');
     }
@@ -175,6 +175,10 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
     let command: string = `python3 -m nni`;
     if (multiPhase) {
         command += ' --multi_phase';
+    }
+
+    if (multiThread) {
+        command += ' --multi_thread';
     }
 
     if (advisor) {
@@ -291,5 +295,20 @@ function getIPV4Address(): string {
     throw Error('getIPV4Address() failed because no valid IPv4 address found.')
 }
 
-export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getCheckpointDir, getExperimentRootDir, 
+function getRemoteTmpDir(osType: string): string {
+    if (osType == 'linux') {
+        return '/tmp';
+    } else {
+        throw Error(`remote OS ${osType} not supported`);
+    }
+}
+
+/**
+ * Get the status of canceled jobs according to the hint isEarlyStopped
+ */
+function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
+    return isEarlyStopped ? 'EARLY_STOPPED' : 'USER_CANCELED';
+}
+
+export {getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getJobCancelStatus,
     getDefaultDatabaseDir, getIPV4Address, mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };

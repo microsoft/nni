@@ -163,7 +163,7 @@ class NNIDataStore implements DataStore {
         }
         const map: Map<string, TrialJobInfo> = this.getTrialJobsByReplayEvents(trialJobEvents);
 
-        const finalMetricsMap: Map<string, MetricDataRecord> = await this.getFinalMetricData(trialJobId);
+        const finalMetricsMap: Map<string, MetricDataRecord[]> = await this.getFinalMetricData(trialJobId);
 
         for (const key of map.keys()) {
             const jobInfo: TrialJobInfo | undefined = map.get(key);
@@ -181,17 +181,23 @@ class NNIDataStore implements DataStore {
         return result;
     }
 
-    private async getFinalMetricData(trialJobId?: string): Promise<Map<string, MetricDataRecord>> {
-        const map: Map<string, MetricDataRecord> = new Map();
+    private async getFinalMetricData(trialJobId?: string): Promise<Map<string, MetricDataRecord[]>> {
+        const map: Map<string, MetricDataRecord[]> = new Map();
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
 
         const multiPhase: boolean = await this.isMultiPhase();
 
         for (const metric of metrics) {
-            if (map.has(metric.trialJobId) && !multiPhase) {
-                this.log.error(`Found multiple FINAL results for trial job ${trialJobId}`);
+            const existMetrics: MetricDataRecord[] | undefined = map.get(metric.trialJobId);
+            if (existMetrics !== undefined) {
+                if (!multiPhase) {
+                    this.log.error(`Found multiple FINAL results for trial job ${trialJobId}, metrics: ${JSON.stringify(metrics)}`);
+                } else {
+                    existMetrics.push(metric);
+                }
+            } else {
+                map.set(metric.trialJobId, [metric]);
             }
-            map.set(metric.trialJobId, metric);
         }
 
         return map;
@@ -271,6 +277,7 @@ class NNIDataStore implements DataStore {
                 case 'FAILED':
                 case 'USER_CANCELED':
                 case 'SYS_CANCELED':
+                case 'EARLY_STOPPED':
                     if (record.logPath !== undefined) {
                         jobInfo.logPath = record.logPath;
                     }
