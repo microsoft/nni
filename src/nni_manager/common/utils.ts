@@ -311,11 +311,9 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     let fileCount: number = -1;
     cpp.exec(`find ${directory} -type f | wc -l`).then((result) => {
         if(result.stdout && parseInt(result.stdout)) {
-            fileCount = parseInt(result.stdout);
-            deferred.resolve(fileCount);
-        } else {
-            deferred.reject(`Error count files under ${directory}: ${result.stderr}`);
+            fileCount = parseInt(result.stdout);            
         }
+        deferred.resolve(fileCount);
     });
 
     return Promise.race([deferred.promise, delayTimeout]).finally(() => {
