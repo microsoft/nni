@@ -300,7 +300,6 @@ class BayesianOptimizer:
         """Generate new architecture.
         Args:
             descriptors: All the searched neural architectures.
-            timeout: An integer. The time limit in seconds.
         Returns:
             graph: An instance of Graph. A morphed neural network with weights.
             father_id: The father node ID in the search tree.
@@ -351,10 +350,7 @@ class BayesianOptimizer:
                         father_id = elem.father_id
                         target_graph = deepcopy(temp_graph)
             t *= alpha
-            # remaining_time = timeout - (time.time() - start_time)
 
-        # if remaining_time < 0:
-        #     raise TimeoutError
         # Did not found a not duplicated architecture
         if father_id is None:
             return None, None

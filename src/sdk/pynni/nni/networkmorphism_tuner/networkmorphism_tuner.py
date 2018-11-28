@@ -27,7 +27,7 @@ import numpy as np
 
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
 from nni.networkmorphism_tuner.metric import Accuracy
-from nni.networkmorphism_tuner.nn import CnnGenerator, ResNetGenerator
+from nni.networkmorphism_tuner.nn import CnnGenerator, MlpGenerator
 from nni.networkmorphism_tuner.utils import Constant, pickle_from_file, pickle_to_file
 from nni.tuner import Tuner
 
@@ -45,13 +45,15 @@ class OptimizeMode(Enum):
 
 
 class NetworkMorphismTuner(Tuner):
-    """
+    """ 
     NetworkMorphismTuner is a tuner which using network morphism techniques.
     """
 
     def __init__(
         self,
-        input_shape=(32, 32, 3),
+        task="cv",
+        input_width=32,
+        input_channel=3,
         n_output_node=10,
         algorithm_name="Bayesian",
         optimize_mode="minimize",
@@ -64,12 +66,37 @@ class NetworkMorphismTuner(Tuner):
         default_model_len=Constant.MODEL_LEN,
         default_model_width=Constant.MODEL_WIDTH,
     ):
+        """ initilizer of the NetworkMorphismTuner
+        
+        Keyword Arguments:
+            task {str} -- [task mode, such as "cv","common" etc.] (default: {"cv"})
+            input_width {int} -- [input sample shape] (default: {32})
+            input_channel {int} -- [input sample shape] (default: {3})
+            n_output_node {int} -- [output node number] (default: {10})
+            algorithm_name {str} -- [algorithm name used in the network morphism] (default: {"Bayesian"})
+            optimize_mode {str} -- [optimize mode "minimize" or "maximize"] (default: {"minimize"})
+            path {str} -- [default mode path to save the model file] (default: {"model_path"})
+            verbose {bool} -- [verbose to print the log] (default: {True})
+            metric {Class} -- [An instance of the Metric subclasses. Accuracy or MSE] (default: {Accuracy})
+            beta {float} -- [The beta in acquisition function. (refer to our paper)] (default: {Constant.BETA})
+            t_min {float} -- [The minimum temperature for simulated annealing.] (default: {Constant.T_MIN})
+            max_model_size {int} -- [max model size to the graph] (default: {Constant.MAX_MODEL_SIZE})
+            default_model_len {int} -- [default model length] (default: {Constant.MODEL_LEN})
+            default_model_width {int} -- [default model width] (default: {Constant.MODEL_WIDTH})
+        """
 
         if not os.path.exists(path):
             os.makedirs(path)
         self.path = os.path.join(os.getcwd(), path)
+        if task == "cv":
+            self.generators = [CnnGenerator]
+        elif task == "common":
+            self.generators = [MlpGenerator]
+        else:
+            raise NotImplementedError('{} task not supported in List ["cv","common"]')
+
         self.n_classes = n_output_node
-        self.input_shape = input_shape
+        self.input_shape = (input_width,input_width,input_channel)
 
         self.t_min = t_min
         self.metric = metric
@@ -81,7 +108,6 @@ class NetworkMorphismTuner(Tuner):
         self.verbose = verbose
         self.model_count = 0
 
-        self.generators = [CnnGenerator, ResNetGenerator]
         self.bo = BayesianOptimizer(self, self.t_min, self.metric, self.beta)
         self.training_queue = []
         self.x_queue = []
@@ -94,6 +120,12 @@ class NetworkMorphismTuner(Tuner):
         self.default_model_width = default_model_width
 
         self.search_space = dict()
+
+    def update_search_space(self, search_space):
+        """
+        Update search space definition in tuner by search_space in neural architecture.
+        """
+        self.search_space = search_space
 
     def generate_parameters(self, parameter_id):
         """

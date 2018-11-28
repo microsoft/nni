@@ -10,12 +10,16 @@ useAnnotation: true
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, Medianstop, NetworkMorphism
   #SMAC (SMAC should be installed through nnictl) 
-  builtinTunerName: NetworkMorphismTuner
+  builtinTunerName: NetworkMorphism
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
+    task: cv
+    input_width: 32
+    input_channel: 3
+    n_output_node: 10
 trial:
-  command: python3 cifar10-network-morphism.py
+  command:  python cifar10-pytorch.py
   codeDir: .
   gpuNum: 1
   cpuNum: 0
