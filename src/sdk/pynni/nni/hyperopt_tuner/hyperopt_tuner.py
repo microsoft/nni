@@ -23,6 +23,7 @@ hyperopt_tuner.py
 
 import copy
 import logging
+import math
 
 from enum import Enum, unique
 import numpy as np
@@ -56,11 +57,17 @@ def json2space(in_x, name=ROOT):
     if isinstance(in_x, dict):
         if TYPE in in_x.keys():
             _type = in_x[TYPE]
-            name = name + '-' + _type
             _value = json2space(in_x[VALUE], name=name)
+            name = name + '-' + _type
             if _type == 'choice':
                 out_y = eval('hp.hp.'+_type)(name, _value)
             else:
+                if _type == 'loguniform':
+                    if len(_value) == 3:
+                        _value = list(map(lambda x: math.log(x, _value[-1]), _value[:2]))
+                    else:
+                        _value = np.log10(_value[:2])
+                    _type = 'uniform'
                 out_y = eval('hp.hp.' + _type)(name, *_value)
         else:
             out_y = dict()
@@ -75,7 +82,7 @@ def json2space(in_x, name=ROOT):
     return out_y
 
 
-def json2paramater(in_x, paramater, name=ROOT):
+def json2parameter(in_x, parameter, name=ROOT):
     '''
     Change json to parameters.
     '''
@@ -85,22 +92,26 @@ def json2paramater(in_x, paramater, name=ROOT):
             _type = in_x[TYPE]
             name = name + '-' + _type
             if _type == 'choice':
-                _index = paramater[name]
+                _index = parameter[name]
                 out_y = {
                     INDEX: _index,
-                    VALUE: json2paramater(in_x[VALUE][_index], paramater, name=name+'[%d]' % _index)
+                    VALUE: json2parameter(in_x[VALUE][_index], parameter, name=name+'[%d]' % _index)
                 }
+            elif _type == 'loguniform':
+                values = in_x[VALUE]
+                ori_val = parameter[name]
+                out_y = 10 ** ori_val if len(values) == 2 else values[-1] ** ori_val
             else:
-                out_y = paramater[name]
+                out_y = parameter[name]
         else:
             out_y = dict()
             for key in in_x.keys():
-                out_y[key] = json2paramater(
-                    in_x[key], paramater, name + '[%s]' % str(key))
+                out_y[key] = json2parameter(
+                    in_x[key], parameter, name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
-            out_y.append(json2paramater(x_i, paramater, name + '[%d]' % i))
+            out_y.append(json2parameter(x_i, parameter, name + '[%d]' % i))
     else:
         logger.info('in_x is not a dict or a list in json2space fuinction %s', str(in_x))
     return out_y
@@ -201,7 +212,7 @@ class HyperoptTuner(Tuner):
                 parameter[key] = None
 
         # remove '_index' from json2parameter and save params-id
-        total_params = json2paramater(self.json, parameter)
+        total_params = json2parameter(self.json, parameter)
         self.total_data[parameter_id] = total_params
         params = _split_index(total_params)
         return params
