@@ -36,6 +36,7 @@ import {
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus } from '../../common/utils';
+import { validateCodeDir} from '../common/util';
 
 const tkill = require('tree-kill');
 
@@ -279,6 +280,15 @@ class LocalTrainingService implements TrainingService {
                 if (!this.localTrailConfig) {
                     throw new Error('trial config parsed failed');
                 }
+
+                // Validate to make sure codeDir doesn't have too many files
+                try {
+                    await validateCodeDir(this.localTrailConfig.codeDir);
+                } catch(error) {
+                    this.log.error(error);
+                    return Promise.reject(new Error(error));
+                }
+
                 break;
             case TrialConfigMetadataKey.MULTI_PHASE:
                 this.isMultiPhase = (value === 'true' || value === 'True');

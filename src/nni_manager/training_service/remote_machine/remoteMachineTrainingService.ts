@@ -48,6 +48,7 @@ import {
     RemoteMachineTrialJobDetail, ScheduleResultType
 } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
+import { validateCodeDir} from '../common/util';
 
 /**
  * Training Service implementation for Remote Machine (Linux)
@@ -297,6 +298,15 @@ class RemoteMachineTrainingService implements TrainingService {
                 if (!fs.lstatSync(remoteMachineTrailConfig.codeDir).isDirectory()) {
                     throw new Error(`codeDir ${remoteMachineTrailConfig.codeDir} is not a directory`);
                 }
+
+                // Validate to make sure codeDir doesn't have too many files
+                try {
+                    await validateCodeDir(remoteMachineTrailConfig.codeDir);
+                } catch(error) {
+                    this.log.error(error);
+                    return Promise.reject(new Error(error));                    
+                }
+
                 this.trialConfig = remoteMachineTrailConfig;
                 break;
             case TrialConfigMetadataKey.MULTI_PHASE:

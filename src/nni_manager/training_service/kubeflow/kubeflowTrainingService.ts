@@ -40,6 +40,7 @@ import { KubeflowClusterConfig, kubeflowOperatorMap, KubeflowTrialConfig, NFSCon
 import { KubeflowTrialJobDetail } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
+import { validateCodeDir } from '../common/util';
 
 var yaml = require('node-yaml');
 
@@ -306,6 +307,15 @@ class KubeflowTrainingService implements TrainingService {
 
                 this.kubeflowTrialConfig = <KubeflowTrialConfig>JSON.parse(value);
                 assert(this.kubeflowClusterConfig !== undefined && this.kubeflowTrialConfig.worker !== undefined);
+
+                // Validate to make sure codeDir doesn't have too many files
+                try {
+                    await validateCodeDir(this.kubeflowTrialConfig.codeDir);
+                } catch(error) {
+                    this.log.error(error);
+                    return Promise.reject(new Error(error));                    
+                }
+
                 break;
             default:
                 break;
