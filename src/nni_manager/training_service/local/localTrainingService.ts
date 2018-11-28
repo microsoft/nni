@@ -36,7 +36,6 @@ import {
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus } from '../../common/utils';
-import { validateCodeDir} from '../common/util';
 
 const tkill = require('tree-kill');
 
