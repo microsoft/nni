@@ -272,6 +272,14 @@ function getIPV4Address(): string {
     throw Error('getIPV4Address() failed because no valid IPv4 address found.')
 }
 
+function getRemoteTmpDir(osType: string): string {
+    if (osType == 'linux') {
+        return '/tmp';
+    } else {
+        throw Error(`remote OS ${osType} not supported`);
+    }
+}
+
 /**
  * Get the status of canceled jobs according to the hint isEarlyStopped
  */
@@ -279,5 +287,5 @@ function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
     return isEarlyStopped ? 'EARLY_STOPPED' : 'USER_CANCELED';
 }
 
-export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getJobCancelStatus,
+export {getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getJobCancelStatus,
     getDefaultDatabaseDir, getIPV4Address, mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
