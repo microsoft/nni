@@ -83,7 +83,8 @@ pai_trial_schema = {
     'memoryMB': int,
     'image': str,
     Optional('dataDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
-    Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?')
+    Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
+    Optional('virtualCluster'): str
     }
 }
 
@@ -118,14 +119,24 @@ kubeflow_trial_schema = {
 }
 
 kubeflow_config_schema = {
-    'kubeflowConfig':{
-        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operato'),
+    'kubeflowConfig':Or({
+        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
         'nfs': {
             'server': str,
             'path': str
         },
         'kubernetesServer': str
-    }
+    },{
+        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
+        'keyVault': {
+            'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
+            'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')
+        },
+        'azureStorage': {
+            'accountName': Regex('([0-9]|[a-z]|[A-Z]|-){3,31}'),
+            'azureShare': Regex('([0-9]|[a-z]|[A-Z]|-){3,63}')
+        }
+    })
 }
 
 machine_list_schima = {

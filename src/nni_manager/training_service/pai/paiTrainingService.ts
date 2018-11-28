@@ -236,9 +236,10 @@ class PAITrainingService implements TrainingService {
                                     this.paiTrialConfig.outputDir, 
                                     // codeDir
                                     `$PAI_DEFAULT_FS_URI${hdfsCodeDir}`, 
-                                    // TODO: Add Virutal Cluster
                                     // PAI Task roles
-                                    paiTaskRoles);
+                                    paiTaskRoles, 
+                                    // Add Virutal Cluster 
+                                    this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString());
 
         // Step 2. Upload code files in codeDir onto HDFS
         try {
@@ -393,7 +394,7 @@ class PAITrainingService implements TrainingService {
                         this.paiClusterConfig.host
                     ).replace(/\r\n|\n|\r/gm, '');
                 }
-                
+
                 const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
 
                 if(hdfsDirContent === null) {
