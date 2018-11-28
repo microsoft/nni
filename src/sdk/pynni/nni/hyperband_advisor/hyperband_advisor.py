@@ -247,6 +247,14 @@ class Hyperband(MsgDispatcherBase):
     def save_checkpont(self):
         pass
 
+    def handle_initialize(self, data):
+        '''
+        data is search space
+        '''
+        self.handle_update_search_space(data)
+        send(CommandType.Initialized, '')
+        return True
+
     def handle_request_trial_jobs(self, data):
         '''
         data: number of trial jobs
