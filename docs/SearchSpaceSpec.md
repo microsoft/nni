@@ -39,13 +39,15 @@ The candidate type and value for variable is here:
    * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.
 <br/>
 
-* {"_type":"loguniform","_value":[low, high]}
-   * Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution like 10^(uniform(log10(low), log10(high))), so that the logarithm of the return value is uniformly distributed.
+* {"_type":"loguniform","_value":[low, high, base]}
+   * Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution like base^(uniform(math.log(low, base), math.log(high, base))), so that the logarithm of the return value is uniformly distributed.
+   * Note that base defaults to 10
    * When optimizing, this variable is constrained to be positive.
 <br/>
 
-* {"_type":"qloguniform","_value":[low, high, q]}
-   * Which means the variable value is a value like round(loguniform(low, high)) / q) * q
+* {"_type":"qloguniform","_value":[low, high, q, base]}
+   * Which means the variable value is a value like round(loguniform(low, high, base)) / q) * q
+   * Note that base defaults to 10
    * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
 <br/>
 
@@ -59,12 +61,11 @@ The candidate type and value for variable is here:
 <br/>
 
 * {"_type":"lognormal","_value":[label, mu, sigma]}
-   * Which means the variable value is a value drawn according to a lognormal distribution like 10^(normal(log10(mu), sigma)), so that the logarithm of the return value is normally distributed.
-   * When optimizing, this variable is constrained to be positive.
+   * Which means the variable value is a value drawn according to exp(normal(mu, sigma)) so that the logarithm of the return value is normally distributed. When optimizing, this variable is constrained to be positive.
 <br/>
 
 * {"_type":"qlognormal","_value":[label, mu, sigma, q]}
-   * Which means the variable value is a value like round(lognormal(mu, sigma) / q) * q
+   * Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
    * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 <br/>
 
