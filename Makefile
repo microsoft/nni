@@ -3,30 +3,45 @@
 PIP_INSTALL := python3 -m pip install
 PIP_UNINSTALL := python3 -m pip uninstall
 
-## Colorful output
-_INFO := $(shell echo -e '\e[1;36m')
-_WARNING := $(shell echo -e '\e[1;33m')
-_END := $(shell echo -e '\e[0m')
+# detect OS
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+	OS_SPEC := linux
+	## Colorful output
+	_INFO := $(shell echo -e '\e[1;36m')
+	_WARNING := $(shell echo -e '\e[1;33m')
+	_END := $(shell echo -e '\e[0m')
+else ifeq ($(UNAME_S), Darwin)
+	OS_SPEC := darwin
+else
+	$(error platform $(UNAME_S) not supported)
+endif
+
+
 
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
     ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
-    BASH_COMP_SCRIPT ?= /usr/share/bash-completion/completions/nnictl
+    BASH_COMP_PREFIX ?= /usr/share/bash-completion/completions
 else  # is normal user
     ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getusersitepackages()).parents[2])')
     ifndef VIRTUAL_ENV
         PIP_MODE ?= --user
     endif
-    BASH_COMP_SCRIPT ?= ${HOME}/.bash_completion.d/nnictl
+    BASH_COMP_PREFIX ?= ${HOME}/.bash_completion.d
 endif
+BASH_COMP_SCRIPT := $(BASH_COMP_PREFIX)/nnictl
+
+NNI_INSTALL_PATH ?= $(INSTALL_PREFIX)/nni
+NNI_TMP_PATH ?= /tmp
 
 BIN_FOLDER ?= $(ROOT_FOLDER)/bin
 NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
 
 ## Dependency information
-NNI_NODE_TARBALL ?= /tmp/nni-node-linux-x64.tar.xz
-NNI_NODE_FOLDER = /tmp/nni-node-linux-x64
+NNI_NODE_TARBALL ?= /tmp/nni-node-$(OS_SPEC)-x64.tar.xz
+NNI_NODE_FOLDER = /tmp/nni-node-$(OS_SPEC)-x64
 NNI_NODE ?= $(BIN_FOLDER)/node
 NNI_YARN_TARBALL ?= /tmp/nni-yarn.tar.gz
 NNI_YARN_FOLDER ?= /tmp/nni-yarn
@@ -120,7 +135,7 @@ clean:
 
 $(NNI_NODE_TARBALL):
 	#$(_INFO) Downloading Node.js $(_END)
-	wget https://aka.ms/nodejs-download -O $(NNI_NODE_TARBALL)
+	wget https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(NNI_NODE_TARBALL)
 
 $(NNI_YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
@@ -176,7 +191,8 @@ dev-install-node-modules:
 
 .PHONY: install-scripts
 install-scripts:
-	install -Dm644 tools/bash-completion $(BASH_COMP_SCRIPT)
+	mkdir -p $(BASH_COMP_PREFIX)
+	install -m644 tools/bash-completion $(BASH_COMP_SCRIPT)
 
 .PHONY: update-bash-config
 ifndef _ROOT
