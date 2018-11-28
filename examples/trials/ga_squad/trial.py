@@ -46,7 +46,7 @@ except:
 
 def get_config():
     '''
-    Get config from arument parser.
+    Get config from argument parser.
     '''
     parser = argparse.ArgumentParser(
         description='This program is using genetic algorithm to search architecture for SQuAD.')
@@ -86,7 +86,7 @@ def get_id(word_dict, word):
 
 def load_embedding(path):
     '''
-    return embedding for a specif file by given file path.
+    return embedding for a specific file by given file path.
     '''
     EMBEDDING_DIM = 300
     embedding_dict = {}

@@ -16,7 +16,7 @@ logger = logging.getLogger('mnist_AutoML')
 
 class MnistNetwork(object):
     '''
-    MnistNetwork is for initlizing and building basic network for mnist.
+    MnistNetwork is for initializing and building basic network for mnist.
     '''
     def __init__(self,
                  channel_1_num,
