@@ -23,8 +23,8 @@ import { TrialConfig } from "../common/trialConfig";
 
 
 /** operator types that kubeflow supported */
-export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' | 'mxnet-operator' | 'caffe2-operator' | 'chainer-operator' | 'mpi-operator';
-export type KubeflowOperatorPlural = 'tfjobs' | 'pytorchjobs' | 'mxjobs' | 'caffe2jobs' | 'chainerjobs' | 'mpijobs';
+export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
+export type KubeflowOperatorPlural = 'tfjobs' | 'pytorchjobs' ;
 export type KubeflowOperatorJobKind = 'TFJob' | 'PyTorchJob'
 
 /**
@@ -32,11 +32,7 @@ export type KubeflowOperatorJobKind = 'TFJob' | 'PyTorchJob'
  */
 export const kubeflowOperatorMap : Map<KubeflowOperator, KubeflowOperatorPlural> =  new Map<KubeflowOperator, KubeflowOperatorPlural>([
     ['tf-operator' , 'tfjobs'],
-    ['pytorch-operator', 'pytorchjobs'],
-    ['mxnet-operator', 'mxjobs'],
-    ['caffe2-operator', 'caffe2jobs'],
-    ['chainer-operator', 'chainerjobs'],
-    ['mpi-operator', 'mpijobs']    
+    ['pytorch-operator', 'pytorchjobs'] 
 ]);
 
 /**
