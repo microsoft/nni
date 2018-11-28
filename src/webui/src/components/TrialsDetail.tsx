@@ -4,6 +4,7 @@ import { MANAGER_IP } from '../static/const';
 import { Row, Col, Button, Tabs, Input } from 'antd';
 const Search = Input.Search;
 import { TableObj, Parameters, DetailAccurPoint, TooltipForAccuracy } from '../static/interface';
+import { getFinalResult } from '../static/function';
 import Accuracy from './overview/Accuracy';
 import Duration from './trial-detail/Duration';
 import Title1 from './overview/Title1';
@@ -47,24 +48,13 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     const accSource: Array<DetailAccurPoint> = [];
                     Object.keys(accData).map(item => {
                         if (accData[item].status === 'SUCCEEDED' && accData[item].finalMetricData) {
-                            let acc;
-                            let tableAcc;
                             let searchSpace: object = {};
-                            if (accData[item].finalMetricData) {
-                                acc = JSON.parse(accData[item].finalMetricData.data);
-                                if (typeof (acc) === 'object') {
-                                    if (acc.default) {
-                                        tableAcc = acc.default;
-                                    }
-                                } else {
-                                    tableAcc = acc;
-                                }
-                            }
+                            const acc = getFinalResult(accData[item].finalMetricData);
                             if (accData[item].hyperParameters) {
                                 searchSpace = JSON.parse(accData[item].hyperParameters).parameters;
                             }
                             accSource.push({
-                                acc: tableAcc,
+                                acc: acc,
                                 index: accData[item].sequenceId,
                                 searchSpace: JSON.stringify(searchSpace)
                             });
@@ -147,8 +137,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             parameters: {},
                             intermediate: []
                         };
-                        let acc;
-                        let tableAcc = 0;
                         let duration = 0;
                         const id = trialJobs[item].id !== undefined
                             ? trialJobs[item].id
@@ -185,23 +173,14 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             }
                         });
                         desc.intermediate = mediate;
-                        if (trialJobs[item].finalMetricData !== undefined) {
-                            acc = JSON.parse(trialJobs[item].finalMetricData.data);
-                            if (typeof (acc) === 'object') {
-                                if (acc.default) {
-                                    tableAcc = acc.default;
-                                }
-                            } else {
-                                tableAcc = acc;
-                            }
-                        }
+                        const acc = getFinalResult(trialJobs[item].finalMetricData);
                         trialTable.push({
                             key: trialTable.length,
                             sequenceId: trialJobs[item].sequenceId,
                             id: id,
                             status: status,
                             duration: duration,
-                            acc: tableAcc,
+                            acc: acc,
                             description: desc
                         });
                     });
