@@ -305,11 +305,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const parametersRow = {
                 parameters: record.description.parameters
             };
-            const intermediate = record.description.intermediate;
-            let showIntermediate = '';
-            if (intermediate && intermediate.length > 0) {
-                showIntermediate = intermediate.join(', ');
-            }
             let isLogLink: boolean = false;
             const logPathRow = record.description.logPath;
             if (record.description.isLink !== undefined) {
@@ -345,10 +340,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 <span className="logContent">{logPathRow}</span>
                             </div>
                     }
-                    <Row className="intermediate logpath">
-                        <span className="logName">Intermediate Result:</span> 
-                        {showIntermediate}
-                    </Row>
                 </pre>
             );
         };

@@ -1,4 +1,6 @@
 import * as React from 'react';
+import MonacoEditor from 'react-monaco-editor';
+import { MONACO } from '../../static/const';
 
 interface SearchspaceProps {
     searchSpace: object;
@@ -14,9 +16,16 @@ class SearchSpace extends React.Component<SearchspaceProps, {}> {
     render() {
         const { searchSpace } = this.props;
         return (
-            <pre className="experiment searchSpace" style={{paddingLeft: 20}}>
-                {JSON.stringify(searchSpace, null, 4)}
-            </pre>
+            <div className="searchSpace">
+                <MonacoEditor
+                    width="100%"
+                    height="380"
+                    language="json"
+                    theme="vs-light"
+                    value={JSON.stringify(searchSpace, null, 2)}
+                    options={MONACO}
+                />
+            </div>
         );
     }
 }
