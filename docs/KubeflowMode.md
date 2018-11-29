@@ -1,6 +1,6 @@
 **Run an Experiment on Kubeflow**
 ===
-Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/kubeflow), called kubeflow mode. Before starting to use NNI kubeflow mode, you should have a kubernetes cluster, either on-prem or [Azure Kubernetes Service(AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/), a Ubuntu machine on which [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) is installed and configured to connect to your kubernetes cluster. If you are not famaliar with kubernetes, [here](https://kubernetes.io/docs/tutorials/kubernetes-basics/) is a goot start. In kubeflow mode, your trial program will run as kubeflow job in kubernetes cluster. 
+Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/kubeflow), called kubeflow mode. Before starting to use NNI kubeflow mode, you should have a kubernetes cluster, either on-prem or [Azure Kubernetes Service(AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/), a Ubuntu machine on which [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) is installed and configured to connect to your kubernetes cluster. If you are not familiar with kubernetes, [here](https://kubernetes.io/docs/tutorials/kubernetes-basics/) is a goot start. In kubeflow mode, your trial program will run as kubeflow job in kubernetes cluster. 
 
 ## Prerequisite
 1. A **Kubernetes** cluster using Kubernetes 1.8 or later. Follow this [guideline](https://kubernetes.io/docs/setup/) to set up Kubernetes
@@ -35,16 +35,16 @@ tuner:
     optimize_mode: maximize
 trial:
   codeDir: ~/nni/examples/trials/mnist
-  Ps:
+  ps:
     replicas: 1 
-    command: python3 mnist-keras.py    
+    command: python mnist-keras.py    
     gpuNum: 0
     cpuNum: 1
     memoryMB: 8196
     image: {your_docker_image_for_tensorflow_ps}
   worker:
     replicas: 1 
-    command: python3 mnist-keras.py    
+    command: python mnist-keras.py    
     gpuNum: 2
     cpuNum: 1
     memoryMB: 8196
