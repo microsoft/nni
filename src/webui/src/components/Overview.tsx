@@ -225,10 +225,6 @@ class Overview extends React.Component<{}, OverviewState> {
                                 }
                                 if (tableData[item].logPath !== undefined) {
                                     desJobDetail.logPath = tableData[item].logPath;
-                                    const isSessionLink = /^http/gi.test(tableData[item].logPath);
-                                    if (isSessionLink) {
-                                        desJobDetail.isLink = true;
-                                    }
                                 }
                                 topTableData.push({
                                     key: topTableData.length,
