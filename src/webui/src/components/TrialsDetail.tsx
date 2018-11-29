@@ -73,9 +73,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             enterable: true,
                             position: function (point: Array<number>, data: TooltipForAccuracy) {
                                 if (data.data[0] < resultList.length / 2) {
-                                    return [point[0], 10];
+                                    return [point[0], 80];
                                 } else {
-                                    return [point[0] - 300, 10];
+                                    return [point[0] - 300, 80];
                                 }
                             },
                             formatter: function (data: TooltipForAccuracy) {
@@ -121,15 +121,10 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
     drawTableList = () => {
 
-        axios
-            .all([
-                axios.get(`${MANAGER_IP}/trial-jobs`),
-                axios.get(`${MANAGER_IP}/metric-data`)
-            ])
-            .then(axios.spread((res, res1) => {
-                if (res.status === 200 && res1.status === 200) {
+            axios.get(`${MANAGER_IP}/trial-jobs`)
+            .then(res => {
+                if (res.status === 200) {
                     const trialJobs = res.data;
-                    const metricSource = res1.data;
                     const trialTable: Array<TableObj> = [];
                     Object.keys(trialJobs).map(item => {
                         // only succeeded trials have finalMetricData
@@ -165,14 +160,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 desc.isLink = true;
                             }
                         }
-                        let mediate: Array<string> = [];
-                        Object.keys(metricSource).map(key => {
-                            const items = metricSource[key];
-                            if (items.trialJobId === id) {
-                                mediate.push(items.data);
-                            }
-                        });
-                        desc.intermediate = mediate;
                         const acc = getFinalResult(trialJobs[item].finalMetricData);
                         trialTable.push({
                             key: trialTable.length,
@@ -191,7 +178,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         }));
                     }
                 }
-            }));
+            });
     }
 
     callback = (key: string) => {
