@@ -1,5 +1,4 @@
 # Experiment config reference
-===
 
 If you want to create a new nni experiment, you need to prepare a config file in your local machine, and provide the path of this file to nnictl.
 The config file is written in yaml format, and need to be written correctly.
@@ -234,7 +233,7 @@ machineList:
 	__gpuNum__ specifies the gpu number you want to use to run the assessor process. The value of this field should be a positive number.
 
         Note: you could only specify one way to set assessor, for example, you could set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and you could not set them both.If you do not want to use assessor, you just need to leave assessor empty or remove assessor in your config file. Default value is 0. 
-* __trial(loca, remote)__
+* __trial(local, remote)__
   * __command__
 
       __command__  specifies the command to run trial process.
