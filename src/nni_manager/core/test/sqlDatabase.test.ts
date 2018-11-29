@@ -120,7 +120,7 @@ describe('core/sqlDatabase', () => {
             await (<SqlDB>db).storeExperimentProfile(profile);
         }
         for (const event of events) {
-            await (<SqlDB>db).storeTrialJobEvent(<TrialJobEvent>event.event, event.trialJobId, event.data);
+            await (<SqlDB>db).storeTrialJobEvent(<TrialJobEvent>event.event, event.trialJobId, Date.now(), event.data);
         }
         for (const metric of metrics) {
             await (<SqlDB>db).storeMetricData(metric.trialJobId, JSON.stringify(metric));

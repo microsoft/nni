@@ -90,7 +90,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                                     :
                                     record.acc
                                 :
-                                'NaN'
+                                '--'
                         }
                     </div>
                 );

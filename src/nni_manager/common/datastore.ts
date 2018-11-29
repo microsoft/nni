@@ -91,7 +91,7 @@ abstract class Database {
     public abstract queryExperimentProfile(experimentId: string, revision?: number): Promise<ExperimentProfile[]>;
     public abstract queryLatestExperimentProfile(experimentId: string): Promise<ExperimentProfile>;
     public abstract storeTrialJobEvent(
-        event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void>;
+        event: TrialJobEvent, trialJobId: string, timestamp: number, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void>;
     public abstract queryTrialJobEvent(trialJobId?: string, event?: TrialJobEvent): Promise<TrialJobEventRecord[]>;
     public abstract storeMetricData(trialJobId: string, data: string): Promise<void>;
     public abstract queryMetricData(trialJobId?: string, type?: MetricType): Promise<MetricDataRecord[]>;
