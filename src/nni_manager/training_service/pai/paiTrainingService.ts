@@ -38,12 +38,14 @@ import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
+import { countFilesRecursively, delay, generateParamFileName, 
+    getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
+import { validateCodeDir } from '../common/util';
 
 var WebHDFS = require('webhdfs');
 
@@ -236,9 +238,10 @@ class PAITrainingService implements TrainingService {
                                     this.paiTrialConfig.outputDir, 
                                     // codeDir
                                     `$PAI_DEFAULT_FS_URI${hdfsCodeDir}`, 
-                                    // TODO: Add Virutal Cluster
                                     // PAI Task roles
-                                    paiTaskRoles);
+                                    paiTaskRoles, 
+                                    // Add Virutal Cluster 
+                                    this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString());
 
         // Step 2. Upload code files in codeDir onto HDFS
         try {
@@ -393,7 +396,16 @@ class PAITrainingService implements TrainingService {
                         this.paiClusterConfig.host
                     ).replace(/\r\n|\n|\r/gm, '');
                 }
-                
+
+                // Validate to make sure codeDir doesn't have too many files
+                try {
+                    await validateCodeDir(this.paiTrialConfig.codeDir);
+                } catch(error) {
+                    this.log.error(error);
+                    deferred.reject(new Error(error));
+                    break;
+                }
+
                 const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
 
                 if(hdfsDirContent === null) {
