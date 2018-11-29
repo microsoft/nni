@@ -18,4 +18,4 @@ tuner:
 trial:
   command: python model_retrain.py
   codeDir: .
-  gpuNum: 4
+  gpuNum: 1

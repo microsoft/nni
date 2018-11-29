@@ -482,28 +482,106 @@ def to_real_keras_layer(layer):
 def is_layer(layer, layer_type):
     if layer_type == "Input":
         return isinstance(layer, StubInput)
-    if layer_type == "Conv":
+    elif layer_type == "Conv":
         return isinstance(layer, StubConv)
-    if layer_type == "Dense":
+    elif layer_type == "Dense":
         return isinstance(layer, (StubDense,))
-    if layer_type == "BatchNormalization":
+    elif layer_type == "BatchNormalization":
         return isinstance(layer, (StubBatchNormalization,))
-    if layer_type == "Concatenate":
+    elif layer_type == "Concatenate":
         return isinstance(layer, (StubConcatenate,))
-    if layer_type == "Add":
+    elif layer_type == "Add":
         return isinstance(layer, (StubAdd,))
-    if layer_type == "Pooling":
+    elif layer_type == "Pooling":
         return isinstance(layer, StubPooling)
-    if layer_type == "Dropout":
+    elif layer_type == "Dropout":
         return isinstance(layer, (StubDropout,))
-    if layer_type == "Softmax":
+    elif layer_type == "Softmax":
         return isinstance(layer, (StubSoftmax,))
-    if layer_type == "ReLU":
+    elif layer_type == "ReLU":
         return isinstance(layer, (StubReLU,))
-    if layer_type == "Flatten":
+    elif layer_type == "Flatten":
         return isinstance(layer, (StubFlatten,))
-    if layer_type == "GlobalAveragePooling":
+    elif layer_type == "GlobalAveragePooling":
         return isinstance(layer, StubGlobalPooling)
+
+
+def layer_description_extractor(layer,node_to_id):
+    if layer.input is None:
+        layer_input = None
+    else:
+        layer_input = node_to_id[layer.input]
+    
+    if layer.output is None:
+        layer_output = None
+    else:
+        layer_output = node_to_id[layer.output]
+
+
+    if isinstance(layer, StubConv):
+        return (
+            "StubConv",
+            layer_input,
+            layer_output,
+            layer.input_channel,
+            layer.filters,
+            layer.kernel_size,
+        )
+    elif isinstance(layer, StubDense):
+        return (
+            type(layer).__name__,
+            layer_input,
+            layer_output,
+            layer.input_units,
+            layer.units,
+        )
+    elif isinstance(layer, StubBatchNormalization):
+        return (
+            type(layer).__name__,
+            layer_input,
+            layer_output,
+            layer.num_features
+        )
+    elif isinstance(layer, StubDropout):
+        return (
+            type(layer).__name__,
+            layer_input,
+            layer_output,
+            layer.rate,
+        )
+    else:
+        return (
+            type(layer).__name__,
+            layer_input,
+            layer_output
+        )
+
+
+def layer_description_builder(layer_information,id_to_node):
+    layer_type = layer_information[0]
+    layer_input = layer_information[1]
+    layer_output = layer_information[2]
+    if layer_input is not None:
+        layer_input = id_to_node[layer_input]
+    if layer_output is not None:
+        layer_output = id_to_node[layer_output]
+    if layer_type.startswith("StubConv"):
+        input_channel = layer_information[3]
+        filters = layer_information[4]
+        kernel_size = layer_information[5]
+        return eval(layer_type)(layer_input,layer_output,input_channel,filters,kernel_size)
+    elif layer_type.startswith("StubDense"):
+        input_units=layer_information[3]
+        units=  layer_information[4]
+        return eval(layer_type)(layer_input,layer_output,input_units,units)
+    elif layer_type.startswith("StubBatchNormalization"):
+        num_features = layer_information[3]
+        return eval(layer_type)(layer_input,layer_output,num_features)
+    elif layer_type.startswith("StubDropout"):
+        rate = layer_information[3]
+        return eval(layer_type)(layer_input,layer_output,rate)
+    else:
+        return eval(layer_type)(layer_input,layer_output)
 
 
 def layer_width(layer):

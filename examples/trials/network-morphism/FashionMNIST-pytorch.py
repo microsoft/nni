@@ -56,9 +56,9 @@ def get_args():
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
     parser.add_argument("--epoches", type=int, default=200, help="epoch limit")
     parser.add_argument("--learning_rate", type=float, default=0.001, help="learning rate")
-    parser.add_argument("--time_limit", type=int, default=0, help="gpu device id")
-    parser.add_argument("--cutout", action="store_true", default=True, help="use cutout")
-    parser.add_argument("--cutout_length", type=int, default=16, help="cutout length")
+    parser.add_argument("--time_limit", type=int, default=0, help="time limit")
+    parser.add_argument("--cutout", action="store_true", default=False, help="use cutout")
+    parser.add_argument("--cutout_length", type=int, default=8, help="cutout length")
     parser.add_argument(
         "--model_path", type=str, default="./", help="Path to save the destination model"
     )

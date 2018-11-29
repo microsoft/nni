@@ -51,6 +51,8 @@ from nni.networkmorphism_tuner.layers import (
     set_stub_weight_to_torch,
     set_torch_weight_to_stub,
     to_real_keras_layer,
+    layer_description_extractor,
+    layer_description_builder
 )
 from nni.networkmorphism_tuner.utils import Constant
 
@@ -686,7 +688,7 @@ class Graph:
 
     def produce_json_model(self):
         """Build a new Json model based on the current graph."""
-        return JSONModel(self)
+        return JSONModel(self).data
 
     def parsing_json_model(self, json_model):
         return self
@@ -775,11 +777,7 @@ class TorchModel(torch.nn.Module):
                     )
                 else:
                     edge_input_tensor = node_list[u]
-                # print("current_device:{}".format(torch.cuda.current_device()))
-                # if hasattr(torch_layer,"get_device"):
-                #     print("{}:{}".format(torch_layer.get_deivce(),torch_layer))
-                # else:
-                #     print("{}".format(torch_layer))
+
                 temp_tensor = torch_layer(edge_input_tensor)
                 node_list[v] = temp_tensor
         return node_list[output_id]
@@ -846,12 +844,41 @@ class ONNXModel:
 
 class JSONModel:
     def __init__(self, graph):
-        return
+        data = dict()
+        node_list = list()
+        layer_list = list()
+
+        data["input_shape"] = graph.input_shape
+        data["weighted"] = graph.weighted
+        data["operation_history"] = graph.operation_history
+        data["layer_id_to_input_node_ids"] = graph.layer_id_to_input_node_ids
+        data["layer_id_to_output_node_ids"] = graph.layer_id_to_output_node_ids
+        data["adj_list"]= graph.adj_list
+        data["reverse_adj_list"] = graph.reverse_adj_list
+        
+        for node in graph.node_list:
+            node_id = graph.node_to_id[node]
+            node_information = node.shape
+            node_list.append((node_id,node_information))
+
+        topo_node_list = graph.topological_order
+        for v in topo_node_list:
+            for _, layer_id in graph.reverse_adj_list[v]:
+                layer = graph.layer_list[layer_id]
+                layer_information = layer_description_extractor(layer,graph.node_to_id)
+
+                layer_list.append((layer_id,layer_information))
+
+        data["node_list"] = node_list
+        data["layer_list"] = layer_list
+
+        self.data = data
 
 
-def graph_to_onnx(graph, onnx_model_path, input_shape):
 
-    onnx_out = graph.produce_onnx_model(Constant.BATCH_SIZE, input_shape)
+def graph_to_onnx(graph, onnx_model_path):
+
+    onnx_out = graph.produce_onnx_model()
     onnx.save(onnx_out, onnx_model_path)
     return onnx_out
 
@@ -862,13 +889,48 @@ def onnx_to_graph(onnx_model, input_shape):
     return graph
 
 
-def graph_to_json(graph, json_model_path, input_shape):
-    json_out = graph.produce_json_model(Constant.BATCH_SIZE, input_shape)
-    with open(json_model_path, "w") as outfile:
-        json.dump(json_out, outfile)
+def graph_to_json(graph, json_model_path):
+    json_out = graph.produce_json_model()
+    # with open(json_model_path, "w") as outfile:
+    json_out=json.dumps(json_out)
     return json_out
 
 
-def json_to_graph(json_model, input_shape):
+def json_to_graph(json_model):
+    print(json_model["input_shape"])
+    input_shape = json_model["input_shape"]
+    node_list = list()
+    node_to_id  = dict()
+    id_to_node=dict()
+    layer_list = list()
+    layer_to_id  = dict()
+    n_dim = len(input_shape) - 1
     graph = Graph(input_shape, False)
+
+    graph.input_shape= input_shape
+    graph.weighted = json_model["weighted"]
+    graph.operation_history = json_model["operation_history"] 
+    graph.layer_id_to_input_node_ids = json_model["layer_id_to_input_node_ids"]
+    graph.layer_id_to_output_node_ids = json_model["layer_id_to_output_node_ids"]
+    graph.adj_list = json_model["adj_list"]
+    graph.reverse_adj_list = json_model["reverse_adj_list"] 
+    
+    
+    for item in json_model["node_list"]:
+        new_node = Node(item[1])
+        node_id = item[0]
+        node_list.append(new_node)
+        node_to_id[new_node] = node_id
+        id_to_node[node_id]=new_node
+    
+    for item in json_model["layer_list"]:
+        new_layer = layer_description_builder(item[1],id_to_node)
+        layer_id = item[0]
+        node_list.append(new_layer)
+        node_to_id[new_layer] = layer_id
+
+    graph.node_list = node_list
+    graph.node_to_id =  node_to_id
+    graph.layer_list = layer_list
+    graph.layer_to_id = layer_to_id
     return graph

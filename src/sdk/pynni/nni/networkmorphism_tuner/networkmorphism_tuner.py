@@ -25,11 +25,13 @@ from enum import Enum, unique
 
 import numpy as np
 
+from nni.tuner import Tuner
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
 from nni.networkmorphism_tuner.metric import Accuracy
 from nni.networkmorphism_tuner.nn import CnnGenerator, MlpGenerator
 from nni.networkmorphism_tuner.utils import Constant, pickle_from_file, pickle_to_file
-from nni.tuner import Tuner
+
+from nni.networkmorphism_tuner.graph import graph_to_json, json_to_graph
 
 logger = logging.getLogger("NetworkMorphism_AutoML")
 
@@ -96,7 +98,7 @@ class NetworkMorphismTuner(Tuner):
             raise NotImplementedError('{} task not supported in List ["cv","common"]')
 
         self.n_classes = n_output_node
-        self.input_shape = (input_width,input_width,input_channel)
+        self.input_shape = (input_width, input_width, input_channel)
 
         self.t_min = t_min
         self.metric = metric
@@ -146,22 +148,12 @@ class NetworkMorphismTuner(Tuner):
 
         graph, father_id, model_id = self.training_queue.pop(0)
 
-        # from gragh to onnx
-        # onnx_model_path = os.path.join(self.path, str(model_id) + '.onnx')
-        # onnx_out = graph_to_onnx(graph,onnx_model_path,self.input_shape)
-        # self.total_data[parameter_id] = (onnx_model_path, father_id, model_id)
-
         # from graph to json
-        # json_model_path = os.path.join(self.path, str(model_id) + '.json')
-        # json_out = graph_to_json(graph,json_model_path,self.input_shape)
-        # self.total_data[parameter_id] = (json_model_path, father_id, model_id)
+        json_model_path = os.path.join(self.path, str(model_id) + ".json")
+        json_out = graph_to_json(graph, json_model_path)
+        self.total_data[parameter_id] = (json_out, father_id, model_id)
 
-        # from graph to pickle file
-        pickle_path = os.path.join(self.path, str(model_id) + ".graph")
-        pickle_to_file(graph, pickle_path)
-        self.total_data[parameter_id] = (pickle_path, father_id, model_id)
-
-        return pickle_path
+        return json_out
 
     def receive_trial_result(self, parameter_id, parameters, value):
         """ Record an observation of the objective function
@@ -184,14 +176,6 @@ class NetworkMorphismTuner(Tuner):
 
         if self.optimize_mode is OptimizeMode.Maximize:
             reward = -reward
-
-        # from onnx_model_path to gragh
-        # onnx_graph = onnx.load(model_path)
-        # graph = onnx_to_graph(onnx_graph,self.input_shape)
-
-        # from json_model_path to gragh
-        # json_graph = json.loads(model_path)
-        # graph = json_to_graph(json_graph,self.input_shape)
 
         graph = self.bo.searcher.load_model_by_id(model_id)
 

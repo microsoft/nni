@@ -16,29 +16,26 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import argparse
+import json
 import logging
 import os
 import pickle
 import sys
 import time
 
-import mmdnn
 import numpy as np
-import onnx
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.onnx
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
-from mmdnn.conversion.pytorch.pytorch_emitter import PytorchEmitter
 from torch.autograd import Variable
 
 import nni
 import utils
-from utils import EarlyStopping
+from nni.networkmorphism_tuner.graph import json_to_graph
 
 # set the logger format
 log_format = "%(asctime)s %(message)s"
@@ -58,10 +55,10 @@ def get_args():
     parser.add_argument("--batch_size", type=int, default=96, help="batch size")
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
     parser.add_argument("--epoches", type=int, default=200, help="epoch limit")
-    parser.add_argument("--learning_rate", type=float, default=0.05, help="learning rate")
-    parser.add_argument("--time_limit", type=int, default=0, help="gpu device id")
-    parser.add_argument("--cutout", action="store_true", default=True, help="use cutout")
-    parser.add_argument("--cutout_length", type=int, default=16, help="cutout length")
+    parser.add_argument("--learning_rate", type=float, default=0.001, help="learning rate")
+    parser.add_argument("--time_limit", type=int, default=0, help="time limit")
+    parser.add_argument("--cutout", action="store_true", default=False, help="use cutout")
+    parser.add_argument("--cutout_length", type=int, default=8, help="cutout length")
     parser.add_argument(
         "--model_path", type=str, default="./", help="Path to save the destination model"
     )
@@ -78,29 +75,11 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 best_acc = 0.0
 args = get_args()
 
-
-def build_graph_from_onnx(ir_model_path, ir_weight_path):
-    """ build model from onnx intermedia represtation 
-    """
-    onnx_model = onnx.load(ir_model_path)
-    onnx.checker.check_model(onnx_model)
-    onnx.helper.printable_graph(onnx_model)
-    return onnx_model
-
-
-def build_graph_from_mmdnn(ir_model_path, ir_weight_path):
-    """ build model from mmdnn intermedia represtation 
-    """
-    emitter = PytorchEmitter((ir_model_path, ir_weight_path))
-    emitter.run(args.model_path)
-    model = torch.load(args.model_path)
-    return model
-
-
-def build_graph_from_json(ir_model_path):
+def build_graph_from_json(ir_model_json):
     """ build model from json represtation 
     """
-    graph = pickle.load(open(ir_model_path, "rb"))
+    graph_json = json.loads(ir_model_json)
+    graph = json_to_graph(graph_json)
     logging.debug(graph.operation_history)
     model = graph.produce_torch_model()
     return model
@@ -143,8 +122,7 @@ def parse_rev_args(receive_msg):
 
     # Model
     logger.debug("Building model..")
-    model_path = receive_msg
-    net = build_graph_from_pickle(model_path)
+    net = build_graph_from_json(receive_msg)
 
     net = net.to(device)
     criterion = nn.CrossEntropyLoss()
@@ -250,7 +228,7 @@ if __name__ == "__main__":
         parse_rev_args(RCV_CONFIG)
         acc = 0.0
         best_acc = 0.0
-        early_stop = EarlyStopping(mode="max")
+        early_stop = utils.EarlyStopping(mode="max")
         for epoch in range(args.epoches):
             train_acc = train(epoch)
             test_acc, best_acc = test(epoch)
