@@ -52,7 +52,7 @@ from nni.networkmorphism_tuner.layers import (
     set_torch_weight_to_stub,
     to_real_keras_layer,
     layer_description_extractor,
-    layer_description_builder
+    layer_description_builder,
 )
 from nni.networkmorphism_tuner.utils import Constant
 
@@ -441,7 +441,9 @@ class Graph:
         for layer in new_layers[:-1]:
             temp_output_id = self.add_layer(layer, temp_output_id)
 
-        self._add_edge(new_layers[-1], temp_output_id, self.adj_list[start_node_id][0][0])
+        self._add_edge(
+            new_layers[-1], temp_output_id, self.adj_list[start_node_id][0][0]
+        )
         new_layers[-1].input = self.node_list[temp_output_id]
         new_layers[-1].output = self.node_list[self.adj_list[start_node_id][0][0]]
         self._redirect_edge(
@@ -524,7 +526,10 @@ class Graph:
             weights = np.zeros((filters_end, filters_start) + filter_shape)
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights(
-                (add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1])))
+                (
+                    add_noise(weights, np.array([0, 1])),
+                    add_noise(bias, np.array([0, 1])),
+                )
             )
 
             n_filters = filters_end
@@ -608,7 +613,10 @@ class Graph:
             )
             bias = np.zeros(filters_end)
             new_conv_layer.set_weights(
-                (add_noise(weights, np.array([0, 1])), add_noise(bias, np.array([0, 1])))
+                (
+                    add_noise(weights, np.array([0, 1])),
+                    add_noise(bias, np.array([0, 1])),
+                )
             )
 
             n_filters = filters_end
@@ -662,7 +670,9 @@ class Graph:
                         pos[u], pos[v], NetworkDescriptor.CONCAT_CONNECT
                     )
                 if is_layer(layer, "Add"):
-                    ret.add_skip_connection(pos[u], pos[v], NetworkDescriptor.ADD_CONNECT)
+                    ret.add_skip_connection(
+                        pos[u], pos[v], NetworkDescriptor.ADD_CONNECT
+                    )
 
         return ret
 
@@ -853,27 +863,25 @@ class JSONModel:
         data["operation_history"] = graph.operation_history
         data["layer_id_to_input_node_ids"] = graph.layer_id_to_input_node_ids
         data["layer_id_to_output_node_ids"] = graph.layer_id_to_output_node_ids
-        data["adj_list"]= graph.adj_list
+        data["adj_list"] = graph.adj_list
         data["reverse_adj_list"] = graph.reverse_adj_list
-        
+
         for node in graph.node_list:
             node_id = graph.node_to_id[node]
             node_information = node.shape
-            node_list.append((node_id,node_information))
+            node_list.append((node_id, node_information))
 
         topo_node_list = graph.topological_order
         for v in topo_node_list:
             for _, layer_id in graph.reverse_adj_list[v]:
                 layer = graph.layer_list[layer_id]
-                layer_information = layer_description_extractor(layer,graph.node_to_id)
-
+                layer_information = layer_description_extractor(layer, graph.node_to_id)
                 layer_list.append((layer_id,layer_information))
 
         data["node_list"] = node_list
         data["layer_list"] = layer_list
 
         self.data = data
-
 
 
 def graph_to_onnx(graph, onnx_model_path):
@@ -891,46 +899,60 @@ def onnx_to_graph(onnx_model, input_shape):
 
 def graph_to_json(graph, json_model_path):
     json_out = graph.produce_json_model()
-    # with open(json_model_path, "w") as outfile:
-    json_out=json.dumps(json_out)
+    with open(json_model_path, "w") as fout:
+        json.dump(json_out, fout)
+    json_out = json.dumps(json_out)
     return json_out
 
 
-def json_to_graph(json_model):
-    print(json_model["input_shape"])
-    input_shape = json_model["input_shape"]
+def json_to_graph(json_model: str):
+    json_model = json.loads(json_model)
+    # restore graph data from json data
+    input_shape = tuple(json_model["input_shape"])
     node_list = list()
-    node_to_id  = dict()
-    id_to_node=dict()
+    node_to_id = dict()
+    id_to_node = dict()
     layer_list = list()
-    layer_to_id  = dict()
-    n_dim = len(input_shape) - 1
+    layer_to_id = dict()
     graph = Graph(input_shape, False)
 
-    graph.input_shape= input_shape
+    graph.input_shape = input_shape
     graph.weighted = json_model["weighted"]
-    graph.operation_history = json_model["operation_history"] 
-    graph.layer_id_to_input_node_ids = json_model["layer_id_to_input_node_ids"]
-    graph.layer_id_to_output_node_ids = json_model["layer_id_to_output_node_ids"]
-    graph.adj_list = json_model["adj_list"]
-    graph.reverse_adj_list = json_model["reverse_adj_list"] 
-    
-    
+    graph.operation_history = json_model["operation_history"]
+    layer_id_to_input_node_ids = json_model["layer_id_to_input_node_ids"]
+    graph.layer_id_to_input_node_ids = {
+        int(k): v for k, v in layer_id_to_input_node_ids.items()
+    }
+    layer_id_to_output_node_ids = json_model["layer_id_to_output_node_ids"]
+    graph.layer_id_to_output_node_ids = {
+        int(k): v for k, v in layer_id_to_output_node_ids.items()
+    }
+    adj_list = {}
+    for k, v in json_model["adj_list"].items():
+        adj_list[int(k)] = [tuple(i) for i in v]
+    graph.adj_list = adj_list
+    reverse_adj_list = {}
+    for k, v in json_model["reverse_adj_list"].items():
+        reverse_adj_list[int(k)] = [tuple(i) for i in v]
+    graph.reverse_adj_list = reverse_adj_list
+
     for item in json_model["node_list"]:
-        new_node = Node(item[1])
+        new_node = Node(tuple(item[1]))
         node_id = item[0]
         node_list.append(new_node)
         node_to_id[new_node] = node_id
-        id_to_node[node_id]=new_node
-    
+        id_to_node[node_id] = new_node
+           
+
     for item in json_model["layer_list"]:
-        new_layer = layer_description_builder(item[1],id_to_node)
-        layer_id = item[0]
-        node_list.append(new_layer)
-        node_to_id[new_layer] = layer_id
+        new_layer = layer_description_builder(item[1], id_to_node)
+        layer_id = int(item[0])
+        layer_list.append(new_layer)
+        layer_to_id[new_layer] = layer_id
 
     graph.node_list = node_list
-    graph.node_to_id =  node_to_id
+    graph.node_to_id = node_to_id
     graph.layer_list = layer_list
     graph.layer_to_id = layer_to_id
+
     return graph

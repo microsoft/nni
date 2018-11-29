@@ -293,7 +293,7 @@ class StubGlobalPooling3d(StubGlobalPooling):
 
 class StubPooling(StubLayer):
     def __init__(
-        self, kernel_size=2, input_node=None, output_node=None, stride=None, padding=0
+        self, kernel_size=2, stride=None, padding=0,input_node=None, output_node=None
     ):
         super().__init__(input_node, output_node)
         self.kernel_size = kernel_size
@@ -506,21 +506,20 @@ def is_layer(layer, layer_type):
         return isinstance(layer, StubGlobalPooling)
 
 
-def layer_description_extractor(layer,node_to_id):
+def layer_description_extractor(layer, node_to_id):
     if layer.input is None:
         layer_input = None
     else:
         layer_input = node_to_id[layer.input]
-    
+
     if layer.output is None:
         layer_output = None
     else:
         layer_output = node_to_id[layer.output]
 
-
     if isinstance(layer, StubConv):
         return (
-            "StubConv",
+            type(layer).__name__,
             layer_input,
             layer_output,
             layer.input_channel,
@@ -528,60 +527,52 @@ def layer_description_extractor(layer,node_to_id):
             layer.kernel_size,
         )
     elif isinstance(layer, StubDense):
-        return (
+        return [
             type(layer).__name__,
             layer_input,
             layer_output,
             layer.input_units,
             layer.units,
-        )
+        ]
     elif isinstance(layer, StubBatchNormalization):
-        return (
-            type(layer).__name__,
-            layer_input,
-            layer_output,
-            layer.num_features
-        )
+        return (type(layer).__name__, layer_input, layer_output, layer.num_features)
     elif isinstance(layer, StubDropout):
-        return (
-            type(layer).__name__,
-            layer_input,
-            layer_output,
-            layer.rate,
-        )
+        return (type(layer).__name__, layer_input, layer_output, layer.rate)
+    elif isinstance(layer,StubPooling):
+        return (type(layer).__name__, layer_input, layer_output, layer.kernel_size, layer.stride, layer.padding)
     else:
-        return (
-            type(layer).__name__,
-            layer_input,
-            layer_output
-        )
+        return (type(layer).__name__, layer_input, layer_output)
 
 
-def layer_description_builder(layer_information,id_to_node):
+def layer_description_builder(layer_information, id_to_node):
     layer_type = layer_information[0]
-    layer_input = layer_information[1]
-    layer_output = layer_information[2]
-    if layer_input is not None:
-        layer_input = id_to_node[layer_input]
-    if layer_output is not None:
-        layer_output = id_to_node[layer_output]
+
+    layer_input = id_to_node[layer_information[1]]
+    layer_output = id_to_node[layer_information[2]]
     if layer_type.startswith("StubConv"):
         input_channel = layer_information[3]
         filters = layer_information[4]
         kernel_size = layer_information[5]
-        return eval(layer_type)(layer_input,layer_output,input_channel,filters,kernel_size)
+        return eval(layer_type)(
+            input_channel, filters, kernel_size,layer_input, layer_output
+        )
     elif layer_type.startswith("StubDense"):
-        input_units=layer_information[3]
-        units=  layer_information[4]
-        return eval(layer_type)(layer_input,layer_output,input_units,units)
+        input_units = layer_information[3]
+        units = layer_information[4]
+        return eval(layer_type)(input_units, units,layer_input, layer_output)
     elif layer_type.startswith("StubBatchNormalization"):
         num_features = layer_information[3]
-        return eval(layer_type)(layer_input,layer_output,num_features)
+        return eval(layer_type)(num_features,layer_input, layer_output)
     elif layer_type.startswith("StubDropout"):
         rate = layer_information[3]
-        return eval(layer_type)(layer_input,layer_output,rate)
+        return eval(layer_type)(rate,layer_input, layer_output)
+    elif layer_type.startswith("StubPooling"):
+        kernel_size = layer_information[3]
+        stride = layer_information[4]
+        padding = layer_information[5]
+        return eval(layer_type)(kernel_size,stride,padding,layer_input, layer_output)
     else:
-        return eval(layer_type)(layer_input,layer_output)
+        return eval(layer_type)(layer_input, layer_output)
 
 
 def layer_width(layer):
