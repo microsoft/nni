@@ -41,7 +41,7 @@ to install the distribution content to development environment, and create cli s
 Now, you can try to start an experiment to check if your environment is ready.
 For example, run the command
 ```
-nnictl create --config ~/nni/examples/trials/mnist/config.yml
+nnictl create --config examples/trials/mnist/config.yml
 ```
 And open WebUI to check if everything is OK
 
