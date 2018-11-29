@@ -12,7 +12,7 @@ experimentName:
 trialConcurrency: 
 maxExecDuration: 
 maxTrialNum: 
-#choice: local, remote, pai
+#choice: local, remote, pai, kubeflow
 trainingServicePlatform: 
 searchSpacePath: 
 #choice: true, false
@@ -42,7 +42,7 @@ experimentName:
 trialConcurrency: 
 maxExecDuration: 
 maxTrialNum: 
-#choice: local, remote, pai
+#choice: local, remote, pai, kubeflow
 trainingServicePlatform: 
 searchSpacePath: 
 #choice: true, false
@@ -79,7 +79,7 @@ experimentName:
 trialConcurrency: 
 maxExecDuration: 
 maxTrialNum: 
-#choice: local, remote, pai
+#choice: local, remote, pai, kubeflow
 trainingServicePlatform: 
 #choice: true, false
 useAnnotation: 
@@ -141,12 +141,17 @@ machineList:
 * __trainingServicePlatform__
   * Description
       
-	  __trainingServicePlatform__ specifies the platform to run the experiment, including {__local__, __remote__}.  
-	* __local__ mode means you run an experiment in your local linux machine.  
+	  __trainingServicePlatform__ specifies the platform to run the experiment, including {__local__, __remote__, __pai__, __kubeflow__}.  
 	
-	* __remote__ mode means you submit trial jobs to remote linux machines. If you set platform as remote, you should complete __machineList__ field.  
+    * __local__ mode means you run an experiment in your local linux machine.  
+	
+	
+    * __remote__ mode means you submit trial jobs to remote linux machines. If you set platform as remote, you should complete __machineList__ field.  
 
-	* __pai__ mode means you submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
+	
+    * __pai__ mode means you submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
+   
+    * __kubeflow__ mode means you submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), nni support kubeflow based on normal kubernets and [azure kubernets](https://azure.microsoft.com/en-us/services/kubernetes-service/).
 	
 * __searchSpacePath__
   * Description
@@ -239,6 +244,37 @@ machineList:
   * __gpuNum__
     
 	  __gpuNum__ specifies the num of gpu you want to use to run your trial process. Default value is 0. 
+
+* __trial(pai)__
+  * __command__
+
+      __command__  specifies the command to run trial process.
+  * __codeDir__
+    
+	  __codeDir__ specifies the directory of your own trial file.
+  * __gpuNum__
+    
+	  __gpuNum__ specifies the num of gpu you want to use to run your trial process. Default value is 0.
+  * __cpuNum__
+
+    __cpuNum__ is the cpu number of cpu you want to use in pai container.
+  * __memoryMB__
+
+    __memoryMB__ set the momory size you want to use in pai's container.
+  
+  * __image__
+
+    __image__ set the image you want to use in pai.
+
+  * __dataDir__
+
+    __dataDir__ is the data directory in hdfs you want to use.
+  
+  * __outputDir__
+   
+    __outputDir__ is the output directory in hdfs you want to use in pai, the stdout and stderr files are stored in the directory after job finished.
+  
+
 
 * __trial(kubeflow)__
   
@@ -344,7 +380,48 @@ machineList:
 
   * __kubernetsServer__
     
+    __kubernetsServer__ set the host of kubernets service.
+  
+  * __keyVault__
+    
+    If you want to use azure kubernets service, you should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+
+    * __vaultName__
+
+      __vaultName__ is the value of ```--vault-name``` used in az command.
+
+    * __name__
+
+      __name__ is the value of ```--name``` used in az command.
+
+* __paiConfig__
+
+  * __userName__
+    
+    __userName__ is the user name of your pai account.
+
+  * __password__
+    
+    __password__ is the password of you pai account.
+  
+  * __host__
+    
+    __host__ is the host of pai.
+
+  * __azureStorage__
+    
+    If you use azure kubernets service, you should set your azure storage account to store your code files.
+
+    * __accountName__
+     
+      __accountName__ is the name of azure storage account.
+
+    * __azureShare__
       
+      __azureShare__ is the share of your azure file storage.
+    
+    
+
         
 ## Examples
 * __local mode__
@@ -356,7 +433,7 @@ experimentName: test_experiment
 trialConcurrency: 3
 maxExecDuration: 1h
 maxTrialNum: 10
-#choice: local, remote, pai
+#choice: local, remote, pai, kubeflow
 trainingServicePlatform: local
 #choice: true, false
 useAnnotation: true
@@ -380,7 +457,7 @@ experimentName: test_experiment
 trialConcurrency: 3
 maxExecDuration: 1h
 maxTrialNum: 10
-#choice: local, remote, pai
+#choice: local, remote, pai, kubeflow
 trainingServicePlatform: local
 searchSpacePath: /nni/search_space.json
 #choice: true, false
@@ -412,7 +489,7 @@ experimentName: test_experiment
 trialConcurrency: 3
 maxExecDuration: 1h
 maxTrialNum: 10
-#choice: local, remote, pai
+#choice: local, remote, pai, kubeflow
 trainingServicePlatform: local
 searchSpacePath: /nni/search_space.json
 #choice: true, false
@@ -448,7 +525,7 @@ experimentName: test_experiment
 trialConcurrency: 3
 maxExecDuration: 1h
 maxTrialNum: 10
-#choice: local, remote, pai
+#choice: local, remote, pai, kubeflow
 trainingServicePlatform: remote
 searchSpacePath: /nni/search_space.json
 #choice: true, false
@@ -479,4 +556,125 @@ machineList:
     username: test
     sshKeyPath: /nni/sshkey
     passphrase: qwert
+```
+
+* __pai mode__
+
+```
+authorName: test
+experimentName: nni_test1
+trialConcurrency: 1
+maxExecDuration:500h
+maxTrialNum: 1
+#choice: local, remote, pai, kubeflow
+trainingServicePlatform: pai
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  command: python3 main.py 
+  codeDir: .
+  gpuNum: 4
+  cpuNum: 2
+  memoryMB: 10000
+  #The docker image to run nni job on pai
+  image: msranni/nni:latest
+  #The hdfs directory to store data on pai, format 'hdfs://host:port/directory'
+  dataDir: hdfs://10.11.12.13:9000/test
+  #The hdfs directory to store output data generated by nni, format 'hdfs://host:port/directory'
+  outputDir: hdfs://10.11.12.13:9000/test
+paiConfig:
+  #The username to login pai
+  userName: test
+  #The password to login pai
+  passWord: test
+  #The host of restful server of pai
+  host: 10.10.10.10
+
+```
+
+* __kubeflow mode__
+
+kubeflow use nfs as storage.
+
+```
+authorName: default
+experimentName: example_mni
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 1
+#choice: local, remote, pai, kubeflow
+trainingServicePlatform: kubeflow
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  codeDir: .
+  worker:
+    replicas: 1
+    command: python3 mnist.py
+    gpuNum: 0
+    cpuNum: 1
+    memoryMB: 8192
+    image: msranni/nni:latest
+kubeflowConfig:
+  operator: tf-operator
+  nfs:
+    server: 10.10.10.10
+    path: /var/nfs/general
+```
+kubeflow use azure storage
+```
+authorName: default
+experimentName: example_mni
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 1
+#choice: local, remote, pai, kubeflow
+trainingServicePlatform: kubeflow
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+#nniManagerIp: 10.10.10.10
+tuner:
+  #choice: TPE, Random, Anneal, Evolution
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+  gpuNum: 0
+trial:
+  codeDir: .
+  worker:
+    replicas: 1
+    command: python3 mnist.py
+    gpuNum: 0
+    cpuNum: 1
+    memoryMB: 4096
+    image: msranni/nni:latest
+kubeflowConfig:
+  operator: tf-operator
+  keyVault:
+    vaultName: Contoso-Vault
+    name: AzureStorageAccountKey
+  azureStorage:
+    accountName: storage
+    azureShare: share01
 ```
