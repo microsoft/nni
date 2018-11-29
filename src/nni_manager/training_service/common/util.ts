@@ -1,3 +1,5 @@
+import { getLogger } from "common/log";
+
 /**
  * Copyright (c) Microsoft Corporation
  * All rights reserved.
@@ -19,16 +21,28 @@
 
 'use strict';
 
+import { countFilesRecursively } from '../../common/utils'
+
 /**
- * Enum of metadata keys for configuration
+ * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
+ * 
+ * @param codeDir codeDir in nni config file
+ * @returns file number under codeDir
  */
-export enum TrialConfigMetadataKey {
-    MACHINE_LIST = 'machine_list',
-    TRIAL_CONFIG = 'trial_config',
-    EXPERIMENT_ID = 'experimentId',
-    MULTI_PHASE = 'multiPhase',
-    RANDOM_SCHEDULER = 'random_scheduler',
-    PAI_CLUSTER_CONFIG = 'pai_config',
-    KUBEFLOW_CLUSTER_CONFIG = 'kubeflow_config',
-    NNI_MANAGER_IP = 'nni_manager_ip'
+export async function validateCodeDir(codeDir: string) : Promise<number> {
+    let fileCount: number | undefined;
+
+    try {
+        fileCount = await countFilesRecursively(codeDir);
+    } catch(error) {
+        throw new Error(`Call count file error: ${error}`);
+    }
+
+    if(fileCount && fileCount > 1000) {
+        const errMessage: string = `Too many files(${fileCount} found}) in ${codeDir},` 
+                                    + ` please check if it's a valid code dir`;
+        throw new Error(errMessage);        
+    }
+
+    return fileCount;
 }

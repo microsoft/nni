@@ -47,7 +47,7 @@ class BatchTuner(Tuner):
     }
     '''
     
-    def __init__(self, optimize_mode):
+    def __init__(self):
         self.count = -1
         self.values = []
 

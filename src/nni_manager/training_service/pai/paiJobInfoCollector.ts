@@ -39,7 +39,7 @@ export class PAIJobInfoCollector {
     constructor(jobMap: Map<string, PAITrialJobDetail>) {
         this.trialJobsMap = jobMap;
         this.statusesNeedToCheck = ['RUNNING', 'UNKNOWN', 'WAITING'];
-        this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED'];
+        this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'];
     }
 
     public async retrieveTrialStatus(paiToken? : string, paiClusterConfig?: PAIClusterConfig) : Promise<void> {
@@ -103,7 +103,9 @@ export class PAIJobInfoCollector {
                             paiTrialJob.status = 'SUCCEEDED';
                             break;
                         case 'STOPPED':
-                            paiTrialJob.status = 'USER_CANCELED';
+                            if (paiTrialJob.status !== 'EARLY_STOPPED') {
+                                paiTrialJob.status = 'USER_CANCELED';
+                            }
                             break;
                         case 'FAILED':
                             paiTrialJob.status = 'FAILED';                            

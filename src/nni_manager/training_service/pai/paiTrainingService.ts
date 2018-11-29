@@ -36,14 +36,16 @@ import { getLogger, Logger } from '../../common/log';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric
+    TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
+import { countFilesRecursively, delay, generateParamFileName, 
+    getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
+import { validateCodeDir } from '../common/util';
 
 var WebHDFS = require('webhdfs');
 
@@ -69,6 +71,7 @@ class PAITrainingService implements TrainingService {
     private hdfsOutputHost: string | undefined;
     private nextTrialSequenceId: number;
     private paiRestServerPort?: number;
+    private nniManagerIpConfig?: NNIManagerIpConfig;
 
     constructor() {
         this.log = getLogger();
@@ -194,7 +197,7 @@ class PAITrainingService implements TrainingService {
             trialSequenceId,
             hdfsLogPath);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
-
+        const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
         const nniPaiTrialCommand : string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
             // PAI will copy job's codeDir into /root directory
@@ -204,7 +207,7 @@ class PAITrainingService implements TrainingService {
             this.experimentId,
             trialSequenceId,
             this.paiTrialConfig.command, 
-            getIPV4Address(),
+            nniManagerIp,
             this.paiRestServerPort,
             hdfsOutputDir,
             this.hdfsOutputHost,
@@ -235,9 +238,10 @@ class PAITrainingService implements TrainingService {
                                     this.paiTrialConfig.outputDir, 
                                     // codeDir
                                     `$PAI_DEFAULT_FS_URI${hdfsCodeDir}`, 
-                                    // TODO: Add Virutal Cluster
                                     // PAI Task roles
-                                    paiTaskRoles);
+                                    paiTaskRoles, 
+                                    // Add Virutal Cluster 
+                                    this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString());
 
         // Step 2. Upload code files in codeDir onto HDFS
         try {
@@ -281,7 +285,7 @@ class PAITrainingService implements TrainingService {
         return false;
     }
 
-    public cancelTrialJob(trialJobId: string): Promise<void> {
+    public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trialJobDetail : PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         const deferred : Deferred<void> = new Deferred<void>();
         if(!trialJobDetail) {
@@ -311,6 +315,9 @@ class PAITrainingService implements TrainingService {
                 this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
                 deferred.reject(error ? error.message : 'Stop trial failed, http code: ' + response.statusCode);                
             } else {
+                if (isEarlyStopped) {
+                    trialJobDetail.status = 'EARLY_STOPPED';
+                }
                 deferred.resolve();
             }
         });
@@ -322,6 +329,11 @@ class PAITrainingService implements TrainingService {
         const deferred : Deferred<void> = new Deferred<void>();
 
         switch (key) {
+            case TrialConfigMetadataKey.NNI_MANAGER_IP:
+                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
+                deferred.resolve();
+                break;
+
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
                 //TODO: try catch exception when setting up HDFS client and get PAI token
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
@@ -384,7 +396,16 @@ class PAITrainingService implements TrainingService {
                         this.paiClusterConfig.host
                     ).replace(/\r\n|\n|\r/gm, '');
                 }
-                
+
+                // Validate to make sure codeDir doesn't have too many files
+                try {
+                    await validateCodeDir(this.paiTrialConfig.codeDir);
+                } catch(error) {
+                    this.log.error(error);
+                    deferred.reject(new Error(error));
+                    break;
+                }
+
                 const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
 
                 if(hdfsDirContent === null) {

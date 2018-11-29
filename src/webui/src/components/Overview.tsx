@@ -6,6 +6,7 @@ import {
     Experiment, TableObj,
     Parameters, TrialNumber
 } from '../static/interface';
+import { getFinalResult } from '../static/function';
 import SuccessTable from './overview/SuccessTable';
 import Title1 from './overview/Title1';
 import Progressed from './overview/Progress';
@@ -128,14 +129,6 @@ class Overview extends React.Component<{}, OverviewState> {
                         const key = searchSpace[item]._type;
                         let value = searchSpace[item]._value;
                         switch (key) {
-                            case 'loguniform':
-                            case 'qloguniform':
-                                const a = Math.pow(Math.E, value[0]);
-                                const b = Math.pow(Math.E, value[1]);
-                                value = [a, b];
-                                searchSpace[item]._value = value;
-                                break;
-
                             case 'quniform':
                             case 'qnormal':
                             case 'qlognormal':
@@ -223,18 +216,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                     parameters: {}
                                 };
                                 const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
-                                let acc;
-                                let tableAcc = 0;
-                                if (tableData[item].finalMetricData) {
-                                    acc = JSON.parse(tableData[item].finalMetricData.data);
-                                    if (typeof (acc) === 'object') {
-                                        if (acc.default) {
-                                            tableAcc = acc.default;
-                                        }
-                                    } else {
-                                        tableAcc = acc;
-                                    }
-                                }
+                                const acc = getFinalResult(tableData[item].finalMetricData);
                                 // if hyperparameters is undefine, show error message, else, show parameters value
                                 if (tableData[item].hyperParameters) {
                                     desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
@@ -254,7 +236,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                     id: tableData[item].id,
                                     duration: duration,
                                     status: tableData[item].status,
-                                    acc: tableAcc,
+                                    acc: acc,
                                     description: desJobDetail
                                 });
                                 break;
@@ -345,7 +327,7 @@ class Overview extends React.Component<{}, OverviewState> {
         const { tableData } = this.state;
         const sourcePoint = JSON.parse(JSON.stringify(tableData));
         sourcePoint.sort((a: TableObj, b: TableObj) => {
-            if (a.sequenceId && b.sequenceId) {
+            if (a.sequenceId !== undefined && b.sequenceId !== undefined) {
                 return a.sequenceId - b.sequenceId;
             } else {
                 return NaN;

@@ -45,19 +45,23 @@ export const kubeflowOperatorMap : Map<KubeflowOperator, KubeflowOperatorPlural>
 export class KubeflowClusterConfig {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
-    public readonly nfs: NFSConfig;
+    public readonly nfs?: NFSConfig;
     public readonly kubernetesServer: string;
-
+    public readonly keyVault?: keyVaultConfig;
+    public readonly azureStorage?: AzureStorage;
+    
     /**
      * Constructor
      * @param userName User name of Kubeflow Cluster
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator, nfs : NFSConfig, kubernetesServer : string) {
+    constructor(operator: KubeflowOperator, kubernetesServer : string, nfs?: NFSConfig, keyVault?: keyVaultConfig, azureStorage ?: AzureStorage) {
         this.operator = operator;
         this.nfs = nfs;
         this.kubernetesServer = kubernetesServer;
+        this.keyVault = keyVault;
+        this.azureStorage = azureStorage;
     }
 }
 
@@ -77,17 +81,78 @@ export class NFSConfig {
 }
 
 /**
+ * KeyVault configuration to store the key of Azure Storage Service
+ * Refer https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+ */
+export class keyVaultConfig {
+    /**The vault-name to specify vault */
+    public readonly vaultName : string;
+    /**The name to specify private key */
+    public readonly name : string;
+
+    constructor(vaultName : string, name : string){
+        this.vaultName = vaultName;
+        this.name = name;
+    }
+}
+
+/**
+ * Azure Storage Service
+ */
+export class AzureStorage {
+    /**The azure share to storage files */
+    public readonly azureShare : string;
+    
+    /**The account name of sotrage service */
+    public readonly accountName: string;
+    constructor(azureShare : string, accountName: string){
+        this.azureShare = azureShare;
+        this.accountName = accountName;
+    }
+}
+
+/**
  * Trial job configuration for Kubeflow
  */
-export class KubeflowTrialConfig extends TrialConfig {
+export class KubeflowTrialConfigTemplate {
+    /** replication number of current role */
+    public readonly replicas: number;
+
+    /** CPU number */
     public readonly cpuNum: number;
+
+    /** Memory  */
     public readonly memoryMB: number;
+
+    /** Docker image */
     public readonly image: string;
+
+    /** Trail command */
+    public readonly command : string;
+
+    /** Required GPU number for trial job. The number should be in [0,100] */
+    public readonly gpuNum : number;
     
-    constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number, image: string) {
-        super(command, codeDir, gpuNum);
+    constructor(replicas: number, command : string, gpuNum : number, 
+        cpuNum: number, memoryMB: number, image: string) {
+        this.replicas = replicas;
+        this.command = command;
+        this.gpuNum = gpuNum;
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
         this.image = image;
     }
 }
+
+export class KubeflowTrialConfig {
+    public readonly codeDir: string;
+    public readonly ps?: KubeflowTrialConfigTemplate;
+    public readonly worker: KubeflowTrialConfigTemplate;
+
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate, ps?: KubeflowTrialConfigTemplate) {
+        this.codeDir = codeDir;
+        this.worker = worker;
+        this.ps = ps;
+    }
+}
+

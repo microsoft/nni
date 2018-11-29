@@ -35,7 +35,7 @@ import {
     HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus } from '../../common/utils';
 
 const tkill = require('tree-kill');
 
@@ -169,7 +169,7 @@ class LocalTrainingService implements TrainingService {
                 this.setTrialJobStatus(trialJob, 'FAILED');
                 try {
                     const state: string = await fs.promises.readFile(path.join(trialJob.workingDirectory, '.nni', 'state'), 'utf8');
-                    const match: RegExpMatchArray | null = state.trim().match(/^(\d+)\s+(\d+)$/);
+                    const match: RegExpMatchArray | null = state.trim().match(/^(\d+)\s+(\d+)/);
                     if (match !== null) {
                         const { 1: code, 2: timestamp } = match;
                         if (parseInt(code, 10) === 0) {
@@ -246,7 +246,7 @@ class LocalTrainingService implements TrainingService {
         return true;
     }
 
-    public async cancelTrialJob(trialJobId: string): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         this.log.info(`cancelTrialJob: ${trialJobId}`);
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
         if (trialJob === undefined) {
@@ -263,7 +263,7 @@ class LocalTrainingService implements TrainingService {
         } else {
             throw new Error(`Job type not supported: ${trialJob.form.jobType}`);
         }
-        this.setTrialJobStatus(trialJob, 'USER_CANCELED');
+        this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
