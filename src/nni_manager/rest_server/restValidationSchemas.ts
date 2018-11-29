@@ -41,6 +41,7 @@ export namespace ValidationSchemas {
                 memoryMB: joi.number().min(100),
                 gpuNum: joi.number().min(0),
                 command: joi.string().min(1),
+                virtualCluster: joi.string(),
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),

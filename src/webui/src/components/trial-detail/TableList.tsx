@@ -237,7 +237,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     :
                                     record.acc
                                 :
-                                'NaN'
+                                '--'
                         }
                     </div>
                 );
