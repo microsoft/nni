@@ -87,9 +87,13 @@ interface VisualMapValue {
     minAccuracy: number;
 }
 
+interface FinalResult {
+    data: string;
+}
+
 export {
     TableObj, Parameters, Experiment, 
     AccurPoint, TrialNumber, TrialJob,
     DetailAccurPoint, TooltipForAccuracy,
-    ParaObj, VisualMapValue, Dimobj
+    ParaObj, VisualMapValue, Dimobj, FinalResult
 };

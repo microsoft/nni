@@ -4,6 +4,7 @@ import { MANAGER_IP } from '../../static/const';
 import ReactEcharts from 'echarts-for-react';
 import { Row, Col, Select, Button, message } from 'antd';
 import { ParaObj, VisualMapValue, Dimobj } from '../../static/interface';
+import { getFinalResult } from '../../static/function';
 const Option = Select.Option;
 require('echarts/lib/chart/parallel');
 require('echarts/lib/component/tooltip');
@@ -156,19 +157,10 @@ class Para extends React.Component<{}, ParaState> {
                         // trial-jobs interface list
                         Object.keys(accParaData).map(item => {
                             if (accParaData[item].status === 'SUCCEEDED') {
-                                if (accParaData[item].finalMetricData && accParaData[item].hyperParameters) {
-                                    // get acc array
-                                    let acc;
-                                    let accReal;
-                                    acc = JSON.parse(accParaData[item].finalMetricData.data);
-                                    if (typeof (acc) === 'object') {
-                                        if (acc.default) {
-                                            accReal = acc.default;
-                                        }
-                                    } else {
-                                        accReal = acc;
-                                    }
-                                    accPara.push(accReal);
+                                const finalData = accParaData[item].finalMetricData;
+                                if (finalData && accParaData[item].hyperParameters) {
+                                    const result = getFinalResult(finalData);
+                                    accPara.push(result);
                                     // get dim and every line specific number
                                     const temp = JSON.parse(accParaData[item].hyperParameters).parameters;
                                     eachTrialParams.push(temp);
