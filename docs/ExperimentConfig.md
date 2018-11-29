@@ -330,7 +330,22 @@ machineList:
 
     __passphrase__ is used to protect ssh key, which could be empty if you don't have passphrase.
 
+* __kubeflowConfig__:
+  
+  * __operator__
+    
+    __operator__ specify the kubeflow's operator you want to use, nni support __tf-operator__ in current version.
+  
+  * __nfs__
+    
+    __server__ is the host of nfs server
 
+    __path__ is the mounted path of nfs
+
+  * __kubernetsServer__
+    
+      
+        
 ## Examples
 * __local mode__
 
