@@ -160,6 +160,14 @@ machineList:
     __useAnnotation__ means whether you use annotation to analysis your code and generate search space. 
 	   
 	    Note: if you set useAnnotation=True, you should not set searchSpacePath.
+
+* __nniManagerIp__
+  * Description
+   
+    __nniManagerIp__ set the IP address of your machine which the nni manager process runs on. This field is an optional choice, if you don't set nniManagerIp, nni will use the IP of etho device.
+
+        Note: if you don't have eth0 device in your machine, we suggest you to set nniManagerIp manually.
+	   
 		
 * __tuner__
   * Description
@@ -221,7 +229,7 @@ machineList:
 	__gpuNum__ specifies the gpu number you want to use to run the assessor process. The value of this field should be a positive number.
 
         Note: you could only specify one way to set assessor, for example, you could set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and you could not set them both.If you do not want to use assessor, you just need to leave assessor empty or remove assessor in your config file. Default value is 0. 
-* __trial__
+* __trial(loca, remote)__
   * __command__
 
       __command__  specifies the command to run trial process.
@@ -231,6 +239,69 @@ machineList:
   * __gpuNum__
     
 	  __gpuNum__ specifies the num of gpu you want to use to run your trial process. Default value is 0. 
+
+* __trial(kubeflow)__
+  
+  * __codeDir__
+    
+    __codeDir__ is the local directory where your code files in.
+  
+  * __ps(optional)__
+    
+    __ps__ is the configuration for kubeflow's tensorflow-operator. 
+    * __replicas__
+      
+      __replicas__ is the replica number of __ps__ role.
+    
+    * __command__
+      
+      __command__ is the run script in __ps__'s container.
+    
+    * __gpuNum__
+     
+      __gpuNum__ set the gpu number you want to use in __ps__ container.
+    
+    * __cpuNum__
+    
+      __cpuNum__ set the cpu number you want to use in __ps__ container.
+    
+    * __memoryMB__
+      
+      __memoryMB__ set the memory size of your container.
+    
+    * __image__
+      
+      __iamge__ set the image you want to use in __ps__.
+
+  * __worker__
+    
+    __worker__ is the configuration for kubeflow's tensorflow-operator. 
+    * __replicas__
+      
+      __replicas__ is the replica number of __worker__ role.
+    
+    * __command__
+      
+      __command__ is the run script in __worker__'s container.
+    
+    * __gpuNum__
+     
+      __gpuNum__ set the gpu number you want to use in __worker__ container.
+    
+    * __cpuNum__
+    
+      __cpuNum__ set the cpu number you want to use in __worker__ container.
+    
+    * __memoryMB__
+      
+      __memoryMB__ set the memory size of your container.
+    
+    * __image__
+      
+      __iamge__ set the image you want to use in __worker__.
+
+
+
 * __machineList__
  
      __machineList__ should be set if you set __trainingServicePlatform__=remote, or it could be empty.
