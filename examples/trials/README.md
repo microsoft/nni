@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
 **2)Get configure from Tuner**
 
-User import ```nni``` and use ```nni.get_next_parameter()``` to recive configure. Please noted **10**, **24** and **25** line in the following code.
+User import ```nni``` and use ```nni.get_next_parameter()``` to receive configure. Please noted **10**, **24** and **25** line in the following code.
 
 
 ```python
@@ -165,7 +165,7 @@ def train(args, params):
 ...    
 ```
 
-Here is the complete exampe:
+Here is the complete example:
 
 
 ```python
