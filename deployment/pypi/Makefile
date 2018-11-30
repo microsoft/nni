@@ -1,12 +1,21 @@
 CWD := $(PWD)/
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S), Linux)
+	OS_SPEC := linux
+else ifeq ($(UNAME_S), Darwin)
+	OS_SPEC := darwin
+else 
+	$(error platform $(UNAME_S) not supported)
+endif
+
 .PHONY: build
 build:
 	python3 -m pip install --user --upgrade setuptools wheel
-	wget https://aka.ms/nodejs-download -O $(CWD)node-linux-x64.tar.xz
-	rm -rf $(CWD)node-linux-x64
-	mkdir $(CWD)node-linux-x64
-	tar xf $(CWD)node-linux-x64.tar.xz -C node-linux-x64 --strip-components 1
+	wget https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(CWD)node-$(OS_SPEC)-x64.tar.xz
+	rm -rf $(CWD)node-$(OS_SPEC)-x64
+	mkdir $(CWD)node-$(OS_SPEC)-x64
+	tar xf $(CWD)node-$(OS_SPEC)-x64.tar.xz -C node-$(OS_SPEC)-x64 --strip-components 1
 	cd $(CWD)../../src/nni_manager && yarn && yarn build
 	cd $(CWD)../../src/webui && yarn && yarn build
 	rm -rf $(CWD)nni
