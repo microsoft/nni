@@ -129,8 +129,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     Object.keys(trialJobs).map(item => {
                         // only succeeded trials have finalMetricData
                         let desc: Parameters = {
-                            parameters: {},
-                            intermediate: []
+                            parameters: {}
                         };
                         let duration = 0;
                         const id = trialJobs[item].id !== undefined
@@ -155,10 +154,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         }
                         if (trialJobs[item].logPath !== undefined) {
                             desc.logPath = trialJobs[item].logPath;
-                            const isHyperLink = /^http/gi.test(trialJobs[item].logPath);
-                            if (isHyperLink) {
-                                desc.isLink = true;
-                            }
                         }
                         const acc = getFinalResult(trialJobs[item].finalMetricData);
                         trialTable.push({
