@@ -5,7 +5,7 @@
 So, if user want to implement a customized Advisor, she/he only need to:
 
 1) Define an Advisor inheriting from the MsgDispatcherBase class
-2) Implement the handle_xxx methods
+2) Implement the methods with prefix `handle_` except `handle_request`
 3) Configure your customized Advisor in experiment yaml config file
 
 Here ia an example:
@@ -19,7 +19,7 @@ class CustomizedAdvisor(MsgDispatcherBase):
         ...
 ```
 
-**2) Implement the handle_xxx methods**
+**2) Implement the methods with prefix `handle_` except `handle_request`**
 
 Please refer to the implementation of Hyperband ([src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py](../src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py)) for how to implement the methods.
 
