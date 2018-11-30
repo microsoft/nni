@@ -1,0 +1,35 @@
+authorName: default
+experimentName: example_mnist_hyperband
+maxExecDuration: 1h
+maxTrialNum: 10000
+trialConcurrency: 10
+#choice: local, remote, pai
+trainingServicePlatform: pai
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+advisor:
+  #choice: Hyperband
+  builtinAdvisorName: Hyperband
+  classArgs:
+    #R: the maximum STEPS
+    R: 100
+    #eta: proportion of discarded trials
+    eta: 3
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: . # /mnt/c/Users/desy/source/repos/pai #
+  gpuNum: 1
+  cpuNum: 1
+  memoryMB: 8196
+  #image: fishyds/nni:master-yds05
+  image: fishyds/nni:kubeflow-yds05-1
+  dataDir: hdfs://10.151.40.179:9000/openmindstudio
+  outputDir: hdfs://10.151.40.179:9000/openmindstudio
+  virtualCluster: nni
+paiConfig:
+  userName: openmindstudio
+  passWord: Passq1w2e3r4
+  host: 10.151.40.179
