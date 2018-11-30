@@ -98,7 +98,7 @@ def validate_common_content(experiment_config):
     if not experiment_config.get('trainingServicePlatform') or \
         experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai', 'kubeflow']:
         print_error('Please set correct trainingServicePlatform!')
-        exit(0)
+        exit(1)
     schema_dict = {
             'local': LOCAL_CONFIG_SCHEMA,
             'remote': REMOTE_CONFIG_SCHEMA,

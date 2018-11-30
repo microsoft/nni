@@ -287,8 +287,8 @@ class KubeflowTrainingService implements TrainingService {
             return Promise.reject(errorMessage);
         }
 
-        const result: cpp.childProcessPromise.Result = await cpp.exec(`kubectl delete 
-        ${this.kubeflowJobPlural} -l app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()},trialId=${trialJobId}`);
+        const result: cpp.childProcessPromise.Result = await cpp.exec(`kubectl delete ${this.kubeflowJobPlural} -l ` 
+                                        + `app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()},trialId=${trialJobId}`);
         if(result.stderr) {
             const errorMessage: string = `kubectl delete ${this.kubeflowJobPlural} for trial ${trialJobId} failed: ${result.stderr}`;
             this.log.error(errorMessage);
@@ -323,7 +323,7 @@ class KubeflowTrainingService implements TrainingService {
                         this.log.error(mountError);
                         throw new Error(mountError);
                     }
-                }else if(this.kubeflowClusterConfig.keyVault && this.kubeflowClusterConfig.azureStorage){
+                } else if(this.kubeflowClusterConfig.keyVault && this.kubeflowClusterConfig.azureStorage){
                     const vaultName = this.kubeflowClusterConfig.keyVault.vaultName;
                     const valutKeyName = this.kubeflowClusterConfig.keyVault.name;
                     this.azureStorageAccountName = this.kubeflowClusterConfig.azureStorage.accountName;
@@ -345,7 +345,7 @@ class KubeflowTrainingService implements TrainingService {
                         + `--from-literal=azurestorageaccountname=${this.azureStorageAccountName} `
                         + `--from-literal=azurestorageaccountkey=${storageAccountKey}`)
 
-                    }catch(error){
+                    } catch(error){
                         this.log.error(`command error: ${error}`);
                         throw new Error(error);
                     }
