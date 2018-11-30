@@ -31,7 +31,7 @@ import json_tricks
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger
-from . import parameter_expressions
+from .. import parameter_expressions
 
 _logger = logging.getLogger(__name__)
 
