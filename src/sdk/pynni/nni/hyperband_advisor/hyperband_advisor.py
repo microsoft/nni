@@ -146,8 +146,12 @@ class Bracket():
                           seq,
                           str(type(self.configs_perf[i][parameter_id][0])),
                           str(type(seq)))
-            assert self.configs_perf[i][parameter_id][0] < seq
-        self.configs_perf[i][parameter_id] = [seq, value]
+            # assert self.configs_perf[i][parameter_id][0] < seq
+            if self.configs_perf[i][parameter_id][0] < seq:
+                self.configs_perf[i][parameter_id] = [seq, value]
+        else:
+            self.configs_perf[i][parameter_id] = [seq, value]
+            
 
     def inform_trial_end(self, i):
         '''
