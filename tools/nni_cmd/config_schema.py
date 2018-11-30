@@ -34,7 +34,22 @@ Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
 'useAnnotation': bool,
-'tuner': Or({
+Optional('advisor'): Or({
+    'builtinAdvisorName': Or('Hyperband'),
+    'classArgs': {
+        'optimize_mode': Or('maximize', 'minimize'),
+        Optional('R'): int,
+        Optional('eta'): int
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'codeDir': os.path.exists,
+    'classFileName': str,
+    'className': str,
+    Optional('classArgs'): dict,
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+}),
+Optional('tuner'): Or({
     'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'SMAC', 'Evolution'),
     Optional('classArgs'): {
         'optimize_mode': Or('maximize', 'minimize')
@@ -42,7 +57,6 @@ Optional('nniManagerIp'): str,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'builtinTunerName': Or('BatchTuner', 'GridSearch'),
-<<<<<<< HEAD:tools/nnicmd/config_schema.py
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'builtinTunerName': 'NetworkMorphism',
@@ -53,8 +67,6 @@ Optional('nniManagerIp'): str,
         Optional('input_channel'):  int,
         Optional('n_output_node'):  int,
         },
-=======
->>>>>>> 02e9fcfcbcb8790b4a41dc0dc3ae72d272c24cc3:tools/nni_cmd/config_schema.py
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'codeDir': os.path.exists,
@@ -138,11 +150,7 @@ kubeflow_config_schema = {
             'server': str,
             'path': str
         },
-<<<<<<< HEAD:tools/nnicmd/config_schema.py
-        'kubernetesServer': str
-=======
         Optional('kubernetesServer'): str
->>>>>>> 02e9fcfcbcb8790b4a41dc0dc3ae72d272c24cc3:tools/nni_cmd/config_schema.py
     },{
         'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
         'keyVault': {

@@ -46,6 +46,7 @@ def uniform(low, high, random_state):
     high: an float that represent an upper bound
     random_state: an object of numpy.random.RandomState
     '''
+    assert high > low, 'Upper bound must be larger than lower bound'
     return random_state.uniform(low, high)
 
 
@@ -65,7 +66,8 @@ def loguniform(low, high, random_state):
     high: an float that represent an upper bound
     random_state: an object of numpy.random.RandomState
     '''
-    return np.exp(uniform(low, high, random_state))
+    assert low > 0, 'Lower bound must be positive'
+    return np.exp(uniform(np.log(low), np.log(high), random_state))
 
 
 def qloguniform(low, high, q, random_state):
