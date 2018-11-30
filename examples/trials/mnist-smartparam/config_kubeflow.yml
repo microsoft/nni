@@ -2,7 +2,7 @@ authorName: default
 experimentName: example_dist
 trialConcurrency: 1
 maxExecDuration: 1h
-maxTrialNum: 1
+maxTrialNum: 10
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform: kubeflow
 #choice: true, false

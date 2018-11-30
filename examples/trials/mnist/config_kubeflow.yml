@@ -26,5 +26,5 @@ trial:
 kubeflowConfig:
   operator: tf-operator
   nfs:
-    server: 10.139.139.68
+    server: 10.10.10.10
     path: /var/nfs/general
