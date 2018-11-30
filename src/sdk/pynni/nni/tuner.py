@@ -41,6 +41,8 @@ class Tuner(Recoverable):
         """Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
         Call 'generate_parameters()' by 'count' times by default.
         User code must override either this function or 'generate_parameters()'.
+        If there's no more trial, user should raise nni.NoMoreTrialError exception in generate_parameters().
+        If so, this function will only return sets of trial (hyper-)parameters that have already been collected.
         parameter_id_list: list of int
         """
         result = []
