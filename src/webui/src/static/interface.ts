@@ -14,8 +14,6 @@ interface ErrorParameter {
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
-    isLink?: boolean;
-    intermediate?: Array<string>;
 }
 
 interface Experiment {
