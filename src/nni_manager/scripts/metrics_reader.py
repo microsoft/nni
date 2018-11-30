@@ -147,7 +147,7 @@ class TrialMetricsReader():
                     status = ''
                     if return_code == 0:
                         status = 'SUCCEEDED'
-                    elif return_code == 141:
+                    elif return_code > 128:
                         status = 'USER_CANCELED'
                     else:
                         status = 'FAILED'

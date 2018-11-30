@@ -1,14 +1,12 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Row, Col } from 'antd';
-import { MANAGER_IP, overviewItem } from '../static/const';
+import { Row, Col, Button } from 'antd';
+import { MANAGER_IP } from '../static/const';
 import {
     Experiment, TableObj,
-    Parameters, AccurPoint, TrialNumber
+    Parameters, TrialNumber
 } from '../static/interface';
-import {
-    getAccuracyData
-} from '../static/function';
+import { getFinalResult } from '../static/function';
 import SuccessTable from './overview/SuccessTable';
 import Title1 from './overview/Title1';
 import Progressed from './overview/Progress';
@@ -23,32 +21,33 @@ require('../static/style/accuracy.css');
 require('../static/style/table.scss');
 require('../static/style/overviewTitle.scss');
 
-interface SessionState {
+interface OverviewState {
     tableData: Array<TableObj>;
     searchSpace: object;
     status: string;
+    errorStr: string;
     trialProfile: Experiment;
-    selNum: number;
     option: object;
     noData: string;
     accuracyData: object;
     bestAccuracy: string;
     accNodata: string;
     trialNumber: TrialNumber;
+    downBool: boolean;
 }
 
-class Overview extends React.Component<{}, SessionState> {
+class Overview extends React.Component<{}, OverviewState> {
 
     public _isMounted = false;
     public intervalID = 0;
     public intervalProfile = 1;
-    public intervalAccuracy = 2;
 
     constructor(props: {}) {
         super(props);
         this.state = {
             searchSpace: {},
             status: '',
+            errorStr: '',
             trialProfile: {
                 id: '',
                 author: '',
@@ -72,7 +71,6 @@ class Overview extends React.Component<{}, SessionState> {
                     parameters: {}
                 }
             }],
-            selNum: overviewItem,
             option: {},
             noData: '',
             // accuracy
@@ -87,7 +85,8 @@ class Overview extends React.Component<{}, SessionState> {
                 runTrial: 0,
                 unknowTrial: 0,
                 totalCurrentTrial: 0
-            }
+            },
+            downBool: false
         };
     }
 
@@ -105,6 +104,7 @@ class Overview extends React.Component<{}, SessionState> {
                     const clusterMetaData = sessionData.params.clusterMetaData;
                     const endTimenum = sessionData.endTime;
                     const assessor = sessionData.params.assessor;
+                    const advisor = sessionData.params.advisor;
                     trialPro.push({
                         id: sessionData.id,
                         author: sessionData.params.authorName,
@@ -120,6 +120,7 @@ class Overview extends React.Component<{}, SessionState> {
                         trainingServicePlatform: trainingPlatform,
                         tuner: sessionData.params.tuner,
                         assessor: assessor ? assessor : undefined,
+                        advisor: advisor ? advisor : undefined,
                         clusterMetaData: clusterMetaData ? clusterMetaData : undefined
                     });
                     // search space format loguniform max and min
@@ -128,14 +129,6 @@ class Overview extends React.Component<{}, SessionState> {
                         const key = searchSpace[item]._type;
                         let value = searchSpace[item]._value;
                         switch (key) {
-                            case 'loguniform':
-                            case 'qloguniform':
-                                const a = Math.pow(10, value[0]);
-                                const b = Math.pow(10, value[1]);
-                                value = [a, b];
-                                searchSpace[item]._value = value;
-                                break;
-
                             case 'quniform':
                             case 'qnormal':
                             case 'qlognormal':
@@ -154,17 +147,30 @@ class Overview extends React.Component<{}, SessionState> {
                     }
                 }
             });
+        this.checkStatus();
 
+    }
+
+    checkStatus = () => {
         axios(`${MANAGER_IP}/check-status`, {
             method: 'GET'
         })
             .then(res => {
                 if (res.status === 200 && this._isMounted) {
-                    this.setState({
-                        status: res.data.status
-                    });
+                    const errors = res.data.errors;
+                    if (errors.length !== 0) {
+                        this.setState({
+                            status: res.data.status,
+                            errorStr: res.data.errors[0]
+                        });
+                    } else {
+                        this.setState({
+                            status: res.data.status,
+                        });
+                    }
                 }
             });
+
     }
 
     showTrials = () => {
@@ -173,7 +179,6 @@ class Overview extends React.Component<{}, SessionState> {
         })
             .then(res => {
                 if (res.status === 200) {
-                    const { selNum } = this.state;
                     const tableData = res.data;
                     const topTableData: Array<TableObj> = [];
                     const profile: TrialNumber = {
@@ -211,10 +216,7 @@ class Overview extends React.Component<{}, SessionState> {
                                     parameters: {}
                                 };
                                 const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
-                                let acc;
-                                if (tableData[item].finalMetricData) {
-                                    acc = parseFloat(tableData[item].finalMetricData.data);
-                                }
+                                const acc = getFinalResult(tableData[item].finalMetricData);
                                 // if hyperparameters is undefine, show error message, else, show parameters value
                                 if (tableData[item].hyperParameters) {
                                     desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
@@ -248,18 +250,23 @@ class Overview extends React.Component<{}, SessionState> {
                             return NaN;
                         }
                     });
-                    topTableData.length = Math.min(selNum, topTableData.length);
+                    topTableData.length = Math.min(10, topTableData.length);
                     if (this._isMounted) {
                         this.setState({
                             tableData: topTableData,
                             trialNumber: profile
                         });
                     }
+                    // draw accuracy
+                    this.drawPointGraph();
                 }
             });
     }
 
     downExperimentContent = () => {
+        this.setState(() => ({
+            downBool: true
+        }));
         axios
             .all([
                 axios.get(`${MANAGER_IP}/experiment`),
@@ -271,6 +278,7 @@ class Overview extends React.Component<{}, SessionState> {
                     if (res.data.params.searchSpace) {
                         res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
                     }
+                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
                     const interResultList = res2.data;
                     const contentOfExperiment = JSON.stringify(res.data, null, 2);
                     let trialMessagesArr = res1.data;
@@ -290,67 +298,87 @@ class Overview extends React.Component<{}, SessionState> {
                     const trialMessages = JSON.stringify(trialMessagesArr, null, 2);
                     const aTag = document.createElement('a');
                     const file = new Blob([contentOfExperiment, trialMessages], { type: 'application/json' });
-                    aTag.download = 'experiment.txt';
+                    aTag.download = 'experiment.json';
                     aTag.href = URL.createObjectURL(file);
                     aTag.click();
-                    URL.revokeObjectURL(aTag.href);
+                    if (!isEdge) {
+                        URL.revokeObjectURL(aTag.href);
+                    }
                     if (navigator.userAgent.indexOf('Firefox') > -1) {
                         const downTag = document.createElement('a');
                         downTag.addEventListener('click', function () {
-                            downTag.download = 'experiment.txt';
+                            downTag.download = 'experiment.json';
                             downTag.href = URL.createObjectURL(file);
                         });
                         let eventMouse = document.createEvent('MouseEvents');
                         eventMouse.initEvent('click', false, false);
                         downTag.dispatchEvent(eventMouse);
                     }
+                    this.setState(() => ({
+                        downBool: false
+                    }));
                 }
             }));
     }
 
-    // trial accuracy graph
+    // trial accuracy graph Default Metric
     drawPointGraph = () => {
 
-        axios(`${MANAGER_IP}/trial-jobs`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200 && this._isMounted) {
-                    const accData = res.data;
-                    const accArr: Array<number> = [];
-                    const accY: Array<AccurPoint> = [];
-                    Object.keys(accData).map(item => {
-                        if (accData[item].status === 'SUCCEEDED' && accData[item].finalMetricData) {
-                            accArr.push(parseFloat(accData[item].finalMetricData.data));
-                        }
-                    });
-                    accArr.sort((a, b) => { return a - b; });
-                    accArr.length = Math.min(10, accArr.length);
-                    accY.push({ yAxis: accArr });
-                    let optionObj = getAccuracyData(accY[0]);
-                    const bestAccnum = Math.max(...accArr);
-                    this.setState({ accuracyData: optionObj }, () => {
-                        if (accArr.length === 0) {
-                            this.setState({
-                                accNodata: 'No data'
-                            });
-                        } else {
-                            this.setState({
-                                accNodata: '',
-                                bestAccuracy: bestAccnum.toFixed(6)
-                            });
-                        }
-                    });
-                }
-            });
+        const { tableData } = this.state;
+        const sourcePoint = JSON.parse(JSON.stringify(tableData));
+        sourcePoint.sort((a: TableObj, b: TableObj) => {
+            if (a.sequenceId !== undefined && b.sequenceId !== undefined) {
+                return a.sequenceId - b.sequenceId;
+            } else {
+                return NaN;
+            }
+        });
+        const accarr: Array<number> = [];
+        const indexarr: Array<number> = [];
+        Object.keys(sourcePoint).map(item => {
+            const items = sourcePoint[item];
+            accarr.push(items.acc);
+            indexarr.push(items.sequenceId);
+        });
+        const bestAccnum = Math.max(...accarr);
+        const accOption = {
+            tooltip: {
+                trigger: 'item'
+            },
+            xAxis: {
+                name: 'Trial',
+                type: 'category',
+                data: indexarr
+            },
+            yAxis: {
+                name: 'Default Metric',
+                type: 'value',
+                data: accarr
+            },
+            series: [{
+                symbolSize: 6,
+                type: 'scatter',
+                data: accarr
+            }]
+        };
+        this.setState({ accuracyData: accOption }, () => {
+            if (accarr.length === 0) {
+                this.setState({
+                    accNodata: 'No data'
+                });
+            } else {
+                this.setState({
+                    accNodata: '',
+                    bestAccuracy: bestAccnum.toFixed(6)
+                });
+            }
+        });
     }
 
     componentDidMount() {
+        this._isMounted = true;
         this.showSessionPro();
         this.showTrials();
-        this.drawPointGraph();
-        this.intervalAccuracy = window.setInterval(this.drawPointGraph, 10000);
-        this._isMounted = true;
         this.intervalID = window.setInterval(this.showTrials, 10000);
         this.intervalProfile = window.setInterval(this.showSessionPro, 60000);
     }
@@ -359,7 +387,6 @@ class Overview extends React.Component<{}, SessionState> {
         this._isMounted = false;
         window.clearInterval(this.intervalID);
         window.clearInterval(this.intervalProfile);
-        window.clearInterval(this.intervalAccuracy);
     }
 
     render() {
@@ -371,15 +398,30 @@ class Overview extends React.Component<{}, SessionState> {
             accuracyData,
             accNodata,
             status,
+            errorStr,
             trialNumber,
-            bestAccuracy
+            bestAccuracy,
+            downBool
         } = this.state;
 
         return (
             <div className="overview">
                 {/* status and experiment block */}
-                <Row className="basicExperiment">
-                    <Title1 text="Experiment" icon="11.png" />
+                <Row>
+                    <Row className="exbgcolor">
+                        <Col span={4}><Title1 text="Experiment" icon="11.png" /></Col>
+                        <Col span={4}>
+                            <Button
+                                type="primary"
+                                className="changeBtu download"
+                                onClick={this.downExperimentContent}
+                                disabled={downBool}
+                            >
+                                <span>Download</span>
+                                <img src={require('../static/img/icon/download.png')} alt="icon" />
+                            </Button>
+                        </Col>
+                    </Row>
                     <BasicInfo trialProfile={trialProfile} status={status} />
                 </Row>
                 <Row className="overMessage">
@@ -391,6 +433,7 @@ class Overview extends React.Component<{}, SessionState> {
                             trialProfile={trialProfile}
                             bestAccuracy={bestAccuracy}
                             status={status}
+                            errors={errorStr}
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}

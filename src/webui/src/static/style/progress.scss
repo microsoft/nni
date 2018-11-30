@@ -17,14 +17,6 @@
             border: 2px solid #e6e6e6;
             border-radius: 0 12px 12px 0 !important;
         }
-        .ant-progress-bg {
-            border-radius: 0 !important;
-        }
-        .ant-progress-status-success .ant-progress-bg{
-            border-radius: 0 12px 12px 0 !important;
-            color: #009245;
-            background-color: #009245;
-        }
         .name{
             height: 34px;
             line-height: 30px;
@@ -43,6 +35,7 @@
             width: 100%;
             line-height: 24px;
             font-size: 12px;
+            color: #212121;
             .right{
                 text-align: right;
             }
@@ -74,9 +67,9 @@
 .mess{
     margin: 10px 0;
 }
-
+/*
 .ant-tooltip-inner{
-    white-space: nowrap;
     min-width: 300px;
 }
+*/
 

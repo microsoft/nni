@@ -21,6 +21,7 @@
 
 import * as assert from 'assert';
 import { randomBytes } from 'crypto';
+import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -31,7 +32,8 @@ import * as util from 'util';
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
-import { HyperParameters, TrainingService } from './trainingService';
+import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
+import { getLogger } from './log';
 
 function getExperimentRootDir(): string {
     return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
@@ -158,10 +160,14 @@ function parseArg(names: string[]): string {
  * @param assessor: similiar as tuner
  *
  */
-function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean = false): string {
+function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean = false, multiThread: boolean = false): string {
     let command: string = `python3 -m nni --tuner_class_name ${tuner.className}`;
     if (multiPhase) {
         command += ' --multi_phase';
+    }
+
+    if (multiThread) {
+        command += ' --multi_thread';
     }
 
     if (tuner.classArgs !== undefined) {
@@ -222,7 +228,7 @@ function prepareUnitTest(): void {
     Container.snapshot(TrainingService);
     Container.snapshot(Manager);
 
-    setExperimentStartupInfo(true, 'unittest');
+    setExperimentStartupInfo(true, 'unittest', 8080);
     mkDirPSync(getLogDir());
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');
@@ -268,5 +274,53 @@ function getIPV4Address(): string {
     throw Error('getIPV4Address() failed because no valid IPv4 address found.')
 }
 
-export { generateParamFileName, getMsgDispatcherCommand, getLogDir, getExperimentRootDir, 
-    getDefaultDatabaseDir, getIPV4Address, mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
+function getRemoteTmpDir(osType: string): string {
+    if (osType == 'linux') {
+        return '/tmp';
+    } else {
+        throw Error(`remote OS ${osType} not supported`);
+    }
+}
+
+/**
+ * Get the status of canceled jobs according to the hint isEarlyStopped
+ */
+function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
+    return isEarlyStopped ? 'EARLY_STOPPED' : 'USER_CANCELED';
+}
+
+/**
+ * Utility method to calculate file numbers under a directory, recursively
+ * @param directory directory name
+ */
+function countFilesRecursively(directory: string, timeoutMilliSeconds?: number): Promise<number> {
+    if(!fs.existsSync(directory)) {
+        throw Error(`Direcotory ${directory} doesn't exist`);
+    }
+
+    const deferred: Deferred<number> = new Deferred<number>();
+
+    let timeoutId : NodeJS.Timer
+    const delayTimeout : Promise<number> = new Promise((resolve : Function, reject : Function) : void => {
+        // Set timeout and reject the promise once reach timeout (5 seconds)
+        timeoutId = setTimeout(() => {
+            reject(new Error(`Timeout: path ${directory} has too many files`));
+        }, 5000);
+    });
+
+    let fileCount: number = -1;
+    cpp.exec(`find ${directory} -type f | wc -l`).then((result) => {
+        if(result.stdout && parseInt(result.stdout)) {
+            fileCount = parseInt(result.stdout);            
+        }
+        deferred.resolve(fileCount);
+    });
+
+    return Promise.race([deferred.promise, delayTimeout]).finally(() => {
+        clearTimeout(timeoutId);
+    });
+}
+
+export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, 
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };

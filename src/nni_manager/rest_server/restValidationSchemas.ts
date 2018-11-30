@@ -39,13 +39,51 @@ export namespace ValidationSchemas {
                 outputDir: joi.string(),
                 cpuNum: joi.number().min(1),
                 memoryMB: joi.number().min(100),
-                gpuNum: joi.number().min(0).required(),
-                command: joi.string().min(1).required()                
+                gpuNum: joi.number().min(0),
+                command: joi.string().min(1),
+                virtualCluster: joi.string(),
+                worker: joi.object({
+                    replicas: joi.number().min(1).required(),
+                    image: joi.string().min(1),
+                    outputDir: joi.string(),
+                    cpuNum: joi.number().min(1),
+                    memoryMB: joi.number().min(100),
+                    gpuNum: joi.number().min(0).required(),
+                    command: joi.string().min(1).required()
+                }),
+                ps: joi.object({
+                        replicas: joi.number().min(1).required(),
+                        image: joi.string().min(1),
+                        outputDir: joi.string(),
+                        cpuNum: joi.number().min(1),
+                        memoryMB: joi.number().min(100),
+                        gpuNum: joi.number().min(0).required(),
+                        command: joi.string().min(1).required()
+                })
             }),
             pai_config: joi.object({
                 userName: joi.string().min(1).required(),
                 passWord: joi.string().min(1).required(),
                 host: joi.string().min(1).required()
+            }),
+            kubeflow_config: joi.object({
+                operator: joi.string().min(1).required(),
+                nfs: joi.object({
+                    server: joi.string().min(1).required(),
+                    path: joi.string().min(1).required()
+                }),
+                kubernetesServer: joi.string().min(1),
+                keyVault: joi.object({
+                    vaultName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/),
+                    name: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/)
+                }),
+                azureStorage: joi.object({
+                    accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
+                    azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
+                })
+            }),
+            nni_manager_ip: joi.object({
+                nniManagerIp: joi.string().min(1) 
             })
         }
     };
@@ -60,8 +98,9 @@ export namespace ValidationSchemas {
             searchSpace: joi.string().required(),
             maxExecDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
+            multiThread: joi.boolean(),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner','NetworkMorphism'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner','GridSearch','NetworkMorphism'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
@@ -94,7 +133,9 @@ export namespace ValidationSchemas {
             params: joi.object(STARTEXPERIMENT.body).required(),
             execDuration: joi.number().required(),
             startTime: joi.number(),
-            endTime: joi.number()
+            endTime: joi.number(),
+            logDir: joi.string(),
+            maxSequenceId: joi.number()
         }
     };
     export const STARTTENSORBOARD = {

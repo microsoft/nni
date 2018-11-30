@@ -22,7 +22,7 @@
 /**
  * define TrialJobStatus
  */
-type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED';
+type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED' | 'EARLY_STOPPED';
 type JobType = 'TRIAL' | 'HOST';
 
 interface TrainingServiceMetadata {
@@ -113,15 +113,27 @@ abstract class TrainingService {
     public abstract submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail>;
     public abstract updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail>;
     public abstract get isMultiPhaseJobSupported(): boolean;
-    public abstract cancelTrialJob(trialJobId: string): Promise<void>;
+    public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
     public abstract getClusterMetadata(key: string): Promise<string>;
     public abstract cleanUp(): Promise<void>;
     public abstract run(): Promise<void>;
 }
 
+/**
+ * the ip of nni manager
+ */
+class NNIManagerIpConfig {
+    public readonly nniManagerIp: string;
+    constructor(nniManagerIp: string){
+        this.nniManagerIp = nniManagerIp;
+    }
+}
+
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
-    HostJobApplicationForm, JobApplicationForm, JobType
+    HostJobApplicationForm, JobApplicationForm, JobType, NNIManagerIpConfig
 };
+
+

@@ -53,6 +53,7 @@ create table ExperimentProfile (
     startTime integer,
     endTime integer,
     logDir text,
+    maxSequenceId integer,
     revision integer);
 create index ExperimentProfile_id on ExperimentProfile(id);
 `;
@@ -65,6 +66,7 @@ function loadExperimentProfile(row: any): ExperimentProfile {
         startTime: row.startTime === null ? undefined : row.startTime,
         endTime: row.endTime === null ? undefined : row.endTime,
         logDir: row.logDir === null ? undefined : row.logDir,
+        maxSequenceId: row.maxSequenceId,
         revision: row.revision
     };
 }
@@ -131,7 +133,7 @@ class SqlDB implements Database {
     }
 
     public storeExperimentProfile(exp: ExperimentProfile): Promise<void> {
-        const sql: string = 'insert into ExperimentProfile values (?,?,?,?,?,?,?)';
+        const sql: string = 'insert into ExperimentProfile values (?,?,?,?,?,?,?,?)';
         const args: any[] = [
             JSON.stringify(exp.params),
             exp.id,
@@ -139,6 +141,7 @@ class SqlDB implements Database {
             exp.startTime === undefined ? null : exp.startTime,
             exp.endTime === undefined ? null : exp.endTime,
             exp.logDir === undefined ? null : exp.logDir,
+            exp.maxSequenceId,
             exp.revision
         ];
 
@@ -174,11 +177,11 @@ class SqlDB implements Database {
     }
 
     public storeTrialJobEvent(
-        event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
+        event: TrialJobEvent, trialJobId: string, timestamp: number, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
         const sql: string = 'insert into TrialJobEvent values (?,?,?,?,?,?)';
         const logPath: string | undefined = jobDetail === undefined ? undefined : jobDetail.url;
         const sequenceId: number | undefined = jobDetail === undefined ? undefined : jobDetail.sequenceId;
-        const args: any[] = [Date.now(), trialJobId, event, hyperParameter, logPath, sequenceId];
+        const args: any[] = [timestamp, trialJobId, event, hyperParameter, logPath, sequenceId];
 
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });

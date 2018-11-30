@@ -19,7 +19,6 @@ import argparse
 import json
 import logging
 import os
-import pickle
 import sys
 import time
 
@@ -56,7 +55,6 @@ def get_args():
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
     parser.add_argument("--epoches", type=int, default=200, help="epoch limit")
     parser.add_argument("--learning_rate", type=float, default=0.001, help="learning rate")
-    parser.add_argument("--time_limit", type=int, default=0, help="time limit")
     parser.add_argument("--cutout", action="store_true", default=False, help="use cutout")
     parser.add_argument("--cutout_length", type=int, default=8, help="cutout length")
     parser.add_argument(
@@ -76,7 +74,7 @@ best_acc = 0.0
 args = get_args()
 
 def build_graph_from_json(ir_model_json):
-    """ build model from json represtation 
+    """build model from json representation
     """
     graph_json = json.loads(ir_model_json)
     graph = json_to_graph(graph_json)
@@ -84,14 +82,6 @@ def build_graph_from_json(ir_model_json):
     model = graph.produce_torch_model()
     return model
 
-
-def build_graph_from_pickle(ir_model_path):
-    """ build model from pickle represtation 
-    """
-    graph = pickle.load(open(ir_model_path, "rb"))
-    logging.debug(graph.operation_history)
-    model = graph.produce_torch_model()
-    return model
 
 
 def parse_rev_args(receive_msg):

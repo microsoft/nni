@@ -1,4 +1,4 @@
-Experiment config reference
+# Experiment config reference
 ===
 
 If you want to create a new nni experiment, you need to prepare a config file in your local machine, and provide the path of this file to nnictl.
@@ -168,10 +168,10 @@ machineList:
   * __builtinTunerName__ and __classArgs__
     * __builtinTunerName__
     
-	  __builtinTunerName__ specifies the name of system tuner you want to use, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__}
+	  __builtinTunerName__ specifies the name of system tuner you want to use, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__, __BatchTuner__, __GridSearch__}
 	 * __classArgs__
 	
-	   __classArgs__ specifies the arguments of tuner algorithm
+	   __classArgs__ specifies the arguments of tuner algorithm. If the __builtinTunerName__ is in {__TPE__, __Random__, __Anneal__, __Evolution__}, you should set __optimize_mode__.
   * __codeDir__, __classFileName__, __className__ and __classArgs__
       * __codeDir__
         

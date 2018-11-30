@@ -8,19 +8,21 @@
       git
       wget
 
-    python pip should also be correctly installed. You could use "which pip" or "pip -V" to check in Linux.
+    python pip should also be correctly installed. You could use "python3 -m pip -v" to check in Linux.
 
 * __Install NNI through pip__
 
-      pip3 install -v --user git+https://github.com/Microsoft/nni.git@v0.2
-      source ~/.bashrc
+      python3 -m pip install --user --upgrade nni
 
 * __Install NNI through source code__
    
-      git clone -b v0.2 https://github.com/Microsoft/nni.git
+      git clone -b v0.3.4 https://github.com/Microsoft/nni.git
       cd nni
-      chmod +x install.sh
       source install.sh
+
+* __Install NNI in docker image__
+
+    You can also install NNI in a docker image. Please follow the instructions [here](../deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
 ## Further reading
 * [Overview](Overview.md)

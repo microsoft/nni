@@ -1,9 +1,10 @@
 import * as React from 'react';
 import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
-import { Row, Tabs } from 'antd';
-import { getAccuracyData } from '../static/function';
-import { TableObj, Parameters, AccurPoint } from '../static/interface';
+import { Row, Col, Button, Tabs, Input } from 'antd';
+const Search = Input.Search;
+import { TableObj, Parameters, DetailAccurPoint, TooltipForAccuracy } from '../static/interface';
+import { getFinalResult } from '../static/function';
 import Accuracy from './overview/Accuracy';
 import Duration from './trial-detail/Duration';
 import Title1 from './overview/Title1';
@@ -16,6 +17,7 @@ interface TrialDetailState {
     accSource: object;
     accNodata: string;
     tableListSource: Array<TableObj>;
+    tableBaseSource: Array<TableObj>;
 }
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
@@ -23,15 +25,16 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     public _isMounted = false;
     public interAccuracy = 0;
     public interTableList = 1;
+
     constructor(props: {}) {
         super(props);
 
         this.state = {
             accSource: {},
             accNodata: '',
-            tableListSource: []
+            tableListSource: [],
+            tableBaseSource: []
         };
-
     }
     // trial accuracy graph
     drawPointGraph = () => {
@@ -42,17 +45,67 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             .then(res => {
                 if (res.status === 200 && this._isMounted) {
                     const accData = res.data;
-                    const accArr: Array<number> = [];
-                    const accY: Array<AccurPoint> = [];
+                    const accSource: Array<DetailAccurPoint> = [];
                     Object.keys(accData).map(item => {
                         if (accData[item].status === 'SUCCEEDED' && accData[item].finalMetricData) {
-                            accArr.push(parseFloat(accData[item].finalMetricData.data));
+                            let searchSpace: object = {};
+                            const acc = getFinalResult(accData[item].finalMetricData);
+                            if (accData[item].hyperParameters) {
+                                searchSpace = JSON.parse(accData[item].hyperParameters).parameters;
+                            }
+                            accSource.push({
+                                acc: acc,
+                                index: accData[item].sequenceId,
+                                searchSpace: JSON.stringify(searchSpace)
+                            });
                         }
                     });
-                    accY.push({ yAxis: accArr });
-                    const optionObj = getAccuracyData(accY[0]);
-                    this.setState({ accSource: optionObj }, () => {
-                        if (accArr.length === 0) {
+                    const resultList: Array<number | string>[] = [];
+                    Object.keys(accSource).map(item => {
+                        const items = accSource[item];
+                        let temp: Array<number | string>;
+                        temp = [items.index, items.acc, JSON.parse(items.searchSpace)];
+                        resultList.push(temp);
+                    });
+                    const allAcuracy = {
+                        tooltip: {
+                            trigger: 'item',
+                            enterable: true,
+                            position: function (point: Array<number>, data: TooltipForAccuracy) {
+                                if (data.data[0] < resultList.length / 2) {
+                                    return [point[0], 80];
+                                } else {
+                                    return [point[0] - 300, 80];
+                                }
+                            },
+                            formatter: function (data: TooltipForAccuracy) {
+                                const result = '<div class="tooldetailAccuracy">' +
+                                    '<div>Trial No: ' + data.data[0] + '</div>' +
+                                    '<div>Default Metrc: ' + data.data[1] + '</div>' +
+                                    '<div>Parameters: ' +
+                                    '<pre>' + JSON.stringify(data.data[2], null, 4) + '</pre>' +
+                                    '</div>' +
+                                    '</div>';
+                                return result;
+                            }
+                        },
+                        xAxis: {
+                            name: 'Trial',
+                            type: 'category',
+                        },
+                        yAxis: {
+                            name: 'Default Metric',
+                            type: 'value',
+                        },
+                        series: [{
+                            symbolSize: 6,
+                            type: 'scatter',
+                            data: resultList
+                        }]
+                    };
+
+                    this.setState({ accSource: allAcuracy }, () => {
+                        if (resultList.length === 0) {
                             this.setState({
                                 accNodata: 'No data'
                             });
@@ -68,9 +121,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
     drawTableList = () => {
 
-        axios(`${MANAGER_IP}/trial-jobs`, {
-            method: 'GET'
-        })
+            axios.get(`${MANAGER_IP}/trial-jobs`)
             .then(res => {
                 if (res.status === 200) {
                     const trialJobs = res.data;
@@ -78,9 +129,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     Object.keys(trialJobs).map(item => {
                         // only succeeded trials have finalMetricData
                         let desc: Parameters = {
-                            parameters: {}
+                            parameters: {},
+                            intermediate: []
                         };
-                        let acc = 0;
                         let duration = 0;
                         const id = trialJobs[item].id !== undefined
                             ? trialJobs[item].id
@@ -109,9 +160,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 desc.isLink = true;
                             }
                         }
-                        if (trialJobs[item].finalMetricData !== undefined) {
-                            acc = parseFloat(trialJobs[item].finalMetricData.data);
-                        }
+                        const acc = getFinalResult(trialJobs[item].finalMetricData);
                         trialTable.push({
                             key: trialTable.length,
                             sequenceId: trialJobs[item].sequenceId,
@@ -124,7 +173,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     });
                     if (this._isMounted) {
                         this.setState(() => ({
-                            tableListSource: trialTable
+                            tableListSource: trialTable,
+                            tableBaseSource: trialTable
                         }));
                     }
                 }
@@ -155,11 +205,38 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         }
     }
 
+    // search a specific trial by trial No.
+    searchTrialNo = (value: string) => {
+
+        window.clearInterval(this.interTableList);
+        const { tableBaseSource } = this.state;
+        const searchResultList: Array<TableObj> = [];
+        Object.keys(tableBaseSource).map(key => {
+            const item = tableBaseSource[key];
+            if (item.sequenceId.toString() === value) {
+                searchResultList.push(item);
+            }
+        });
+        this.setState(() => ({
+            tableListSource: searchResultList
+        }));
+    }
+
+    // reset btn click: rerender table
+    resetRenderTable = () => {
+
+        const searchInput = document.getElementById('searchTrial') as HTMLInputElement;
+        if (searchInput !== null) {
+            searchInput.value = '';
+        }
+        this.drawTableList();
+        this.interTableList = window.setInterval(this.drawTableList, 10000);
+    }
     componentDidMount() {
 
         this._isMounted = true;
-        this.drawPointGraph();
         this.drawTableList();
+        this.drawPointGraph();
         this.interAccuracy = window.setInterval(this.drawPointGraph, 10000);
         this.interTableList = window.setInterval(this.drawTableList, 10000);
     }
@@ -175,8 +252,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             accSource, accNodata,
             tableListSource
         } = this.state;
+
         const titleOfacc = (
-            <Title1 text="Trial Accuracy" icon="3.png" />
+            <Title1 text="Default Metric" icon="3.png" />
         );
         const titleOfhyper = (
             <Title1 text="Hyper Parameter" icon="1.png" />
@@ -206,6 +284,26 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     </Tabs>
                 </div>
                 {/* trial table list */}
+                <Row className="allList">
+                    <Col span={12}>
+                        <Title1 text="All Trials" icon="6.png" />
+                    </Col>
+                    <Col span={12} className="btns">
+                        <Search
+                            placeholder="input search Trial No."
+                            onSearch={value => this.searchTrialNo(value)}
+                            style={{ width: 200 }}
+                            id="searchTrial"
+                        />
+                        <Button
+                            type="primary"
+                            className="tableButton resetBtn"
+                            onClick={this.resetRenderTable}
+                        >
+                            Reset
+                        </Button>
+                    </Col>
+                </Row>
                 <TableList
                     tableSource={tableListSource}
                     updateList={this.drawTableList}

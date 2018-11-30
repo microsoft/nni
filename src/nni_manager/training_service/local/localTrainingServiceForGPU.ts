@@ -61,7 +61,7 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
                     this.requiredGPUNum = 0;
                 }
                 this.log.info('required GPU number is ' + this.requiredGPUNum);
-                if (this.gpuScheduler === undefined) {
+                if (this.gpuScheduler === undefined && this.requiredGPUNum > 0) {
                     this.gpuScheduler = new GPUScheduler();
                 }
                 break;
@@ -78,7 +78,7 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
     }
 
     protected onTrialJobStatusChanged(trialJob: LocalTrialJobDetailForGPU, oldStatus: TrialJobStatus): void {
-        if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length !== 0) {
+        if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length !== 0 && this.gpuScheduler !== undefined) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
                 for (const index of trialJob.gpuIndices) {
                     this.availableGPUIndices[index] = false;
@@ -93,7 +93,7 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
         const variables: { key: string; value: string }[] = super.getEnvironmentVariables(trialJobDetail, resource);
         variables.push({
             key: 'CUDA_VISIBLE_DEVICES',
-            value: resource.gpuIndices.join(',')
+            value: this.gpuScheduler === undefined ? '' : resource.gpuIndices.join(',')
         });
 
         return variables;
@@ -125,8 +125,10 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
 
     protected occupyResource(resource: { gpuIndices: number[] }): void {
         super.occupyResource(resource);
-        for (const index of resource.gpuIndices) {
-            this.availableGPUIndices[index] = true;
+        if (this.gpuScheduler !== undefined) {
+            for (const index of resource.gpuIndices) {
+                this.availableGPUIndices[index] = true;
+            }
         }
     }
 }

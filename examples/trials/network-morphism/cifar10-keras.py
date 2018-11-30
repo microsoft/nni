@@ -16,20 +16,18 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import argparse
+import json
 import logging
 import os
-import pickle
 import sys
 import time
 
-import numpy as np
 import keras
-
-import json
+import numpy as np
 
 import nni
 import utils
-from utils import EarlyStopping
+from nni.networkmorphism_tuner.graph import json_to_graph
 
 # set the logger format
 log_format = "%(asctime)s %(message)s"
@@ -50,7 +48,6 @@ def get_args():
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
     parser.add_argument("--epoches", type=int, default=200, help="epoch limit")
     parser.add_argument("--learning_rate", type=float, default=0.05, help="learning rate")
-    parser.add_argument("--time limit", type=int, default=0, help="gpu device id")
     parser.add_argument("--cutout", action="store_true", default=False, help="use cutout")
     parser.add_argument("--cutout_length", type=int, default=8, help="cutout length")
     parser.add_argument(
@@ -71,9 +68,10 @@ args = get_args()
 
 
 def build_graph_from_json(ir_model_json):
-    """ build model from json represtation 
+    """build model from json representation
     """
     graph_json = json.loads(ir_model_json)
+    graph = json_to_graph(graph_json)
     logging.debug(graph.operation_history)
     model = graph.produce_keras_model()
     return model
@@ -213,7 +211,7 @@ if __name__ == "__main__":
         parse_rev_args(RCV_CONFIG)
         acc = 0.0
         best_acc = 0.0
-        early_stop = EarlyStopping(mode="max")
+        early_stop = utils.EarlyStopping(mode="max")
         for epoch in range(args.epoches):
             train_acc = train(epoch)
             test_acc, best_acc = test(epoch)

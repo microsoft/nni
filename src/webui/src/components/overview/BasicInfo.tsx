@@ -52,7 +52,7 @@ class BasicInfo extends React.Component<BasicInfoProps, {}> {
                 </Col>
                 <Col span={8} className="padItem basic">
                     <p>LogPath</p>
-                    <div className="logPath">
+                    <div className="nowrap">
                         <Tooltip placement="top" title={trialProfile.logDir}>
                             {trialProfile.logDir}
                         </Tooltip>

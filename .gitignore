@@ -67,7 +67,3 @@ typings/
 __pycache__
 build
 *.egg-info
-
-# vscode file
-.vscode
-.vscode/*

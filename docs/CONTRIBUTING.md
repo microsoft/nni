@@ -28,7 +28,7 @@ When raising issues, please specify the following:
 
 Provide PRs with appropriate tags for bug fixes or enhancements to the source code. Do follow the correct naming conventions and code styles when you work on and do try to implement all code reviews along the way.
 
-If you are looking for How to go about contributing and debugging the NNI source code, you can refer our [How to Contribute](./HowToContribute.md) file in the `docs` folder.
+If you are looking for How to develop and debug the NNI source code, you can refer to [How to set up NNI developer environment doc](./SetupNNIDeveloperEnvironment.md) file in the `docs` folder.
 
 Similarly for [writing trials](./WriteYourTrial.md) or [starting experiments](StartExperiment.md). For everything else, refer [here](https://github.com/Microsoft/nni/tree/master/docs).
 

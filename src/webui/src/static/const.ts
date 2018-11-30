@@ -6,11 +6,15 @@ export const trialJobStatus = [
     'SUCCEEDED',
     'FAILED',
     'USER_CANCELED',
-    'SYS_CANCELED'
+    'SYS_CANCELED',
+    'EARLY_STOPPED'
 ];
 export const CONTROLTYPE = [
     'SEARCH_SPACE',
     'TRIAL_CONCURRENCY',
     'MAX_EXEC_DURATION'
 ];
-export const overviewItem = 10;
+export const MONACO = {
+    readOnly: true,
+    automaticLayout: true
+};

@@ -23,10 +23,7 @@
 import argparse
 import json
 import logging
-import os
-import pickle
 import sys
-import time
 
 import numpy as np
 import torch
@@ -37,6 +34,7 @@ import torchvision
 import torchvision.transforms as transforms
 
 import nni
+from nni.networkmorphism_tuner.graph import json_to_graph
 
 sys.path.append("../")
 import utils
@@ -69,12 +67,12 @@ best_model_path = "model_path/best.graph"
 args = get_args()
 
 
-def build_graph_from_pickle(ir_model_path):
-    """ build model from pickle represtation 
+def build_graph_from_json(ir_model_json):
+    """build model from json representation
     """
-    graph = pickle.load(open(ir_model_path, "rb"))
+    graph_json = json.loads(ir_model_json)
+    graph = json_to_graph(graph_json)
     logging.debug(graph.operation_history)
-    logger.debug("Weighted model: {} ".format(graph.weighted))
     model = graph.produce_torch_model()
     return model
 

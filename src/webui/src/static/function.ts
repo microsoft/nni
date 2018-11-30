@@ -1,4 +1,4 @@
-import { AccurPoint } from './interface';
+import { FinalResult } from './interface';
 
 export const convertTime = (num: number) => {
     if (num % 3600 === 0) {
@@ -27,31 +27,21 @@ export const convertDuration = (num: number) => {
     }
 };
 
-// ACCURACY point graph option format
-export const getAccuracyData = (dataObj: AccurPoint) => {
-    const yAxis = dataObj.yAxis;
-    const xAxis: Array<number> = [];
-    for (let i = 1; i <= yAxis.length; i++) {
-        xAxis.push(i);
+// get final result value
+export const getFinalResult = (final: FinalResult) => {
+    let acc;
+    let showDefault = 0;
+    if (final) {
+        acc = JSON.parse(final[0].data);
+        if (typeof (acc) === 'object') {
+            if (acc.default) {
+                showDefault = acc.default;
+            }
+        } else {
+            showDefault = acc;
+        }
+        return showDefault;
+    } else {
+        return 0;
     }
-    return {
-        tooltip: {
-            trigger: 'item'
-        },
-        xAxis: {
-            name: 'Trial',
-            type: 'category',
-            data: xAxis
-        },
-        yAxis: {
-            name: 'Accuracy',
-            type: 'value',
-            data: yAxis
-        },
-        series: [{
-            symbolSize: 6,
-            type: 'scatter',
-            data: yAxis
-        }]
-    };
 };

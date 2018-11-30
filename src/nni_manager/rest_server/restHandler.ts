@@ -65,7 +65,6 @@ class NNIRestHandler {
         this.getExperimentProfile(router);
         this.updateExperimentProfile(router);
         this.startExperiment(router);
-        this.stopExperiment(router);
         this.getTrialJobStatistics(router);
         this.setClusterMetaData(router);
         this.listTrialJobs(router);
@@ -90,9 +89,7 @@ class NNIRestHandler {
         return router;
     }
 
-    private handle_error(err: Error, res: Response): void {
-        this.log.info(err);
-
+    private handle_error(err: Error, res: Response, isFatal: boolean = false): void {
         if (err instanceof NNIError && err.name === NNIErrorNames.NOT_FOUND) {
             res.status(404);
         } else {
@@ -101,6 +98,14 @@ class NNIRestHandler {
         res.send({
             error: err.message
         });
+
+        // If it's a fatal error, exit process
+        if(isFatal) {
+            this.log.critical(err);
+            process.exit(1);
+        }
+
+        this.log.error(err);
     }
 
     // TODO add validators for request params, query, body
@@ -146,28 +151,16 @@ class NNIRestHandler {
                         experiment_id: eid
                     });
                 }).catch((err: Error) => {
+                    // Start experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
             } else {
                 this.nniManager.resumeExperiment().then(() => {
                     res.send();
                 }).catch((err: Error) => {
+                    // Resume experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
-            }
-        });
-    }
-
-    private stopExperiment(router: Router): void {
-        router.delete('/experiment', async (req: Request, res: Response) => {
-            try {
-                await this.tb.cleanUp();
-                await this.nniManager.stopExperiment();
-                res.send();
-                this.log.debug('Stopping rest server');
-                await this.restServer.stop();
-            } catch (err) {
-                this.handle_error(err, res);
             }
         });
     }
@@ -195,7 +188,8 @@ class NNIRestHandler {
                 }
                 res.send();
             } catch (err) {
-                this.handle_error(err, res);
+                // setClusterMetata is a step of initialization, so any exception thrown is a fatal
+                this.handle_error(err, res, true);
             }
         });
     }

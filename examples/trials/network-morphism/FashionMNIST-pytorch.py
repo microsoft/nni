@@ -18,7 +18,7 @@
 import argparse
 import logging
 import os
-import pickle
+import json
 import sys
 import time
 
@@ -36,6 +36,7 @@ from torch.autograd import Variable
 import nni
 import utils
 from utils import EarlyStopping
+from nni.networkmorphism_tuner.graph import json_to_graph
 
 # set the logger format
 log_format = "%(asctime)s %(message)s"
@@ -55,8 +56,9 @@ def get_args():
     parser.add_argument("--batch_size", type=int, default=128, help="batch size")
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
     parser.add_argument("--epoches", type=int, default=200, help="epoch limit")
-    parser.add_argument("--learning_rate", type=float, default=0.001, help="learning rate")
-    parser.add_argument("--time_limit", type=int, default=0, help="time limit")
+    parser.add_argument(
+        "--learning_rate", type=float, default=0.001, help="learning rate"
+    )
     parser.add_argument("--cutout", action="store_true", default=False, help="use cutout")
     parser.add_argument("--cutout_length", type=int, default=8, help="cutout length")
     parser.add_argument(
@@ -76,21 +78,13 @@ best_acc = 0.0
 args = get_args()
 
 
-def build_graph_from_json(ir_model_path):
-    """ build model from json represtation 
+def build_graph_from_json(ir_model_json):
+    """build model from json representation
     """
-    graph = pickle.load(open(ir_model_path, "rb"))
+    graph_json = json.loads(ir_model_json)
+    graph = json_to_graph(graph_json)
     logging.debug(graph.operation_history)
-    model = graph.produce_torch_model()
-    return model
-
-
-def build_graph_from_pickle(ir_model_path):
-    """ build model from pickle represtation 
-    """
-    graph = pickle.load(open(ir_model_path, "rb"))
-    logging.debug(graph.operation_history)
-    model = graph.produce_torch_model()
+    model = graph.produce_keras_model()
     return model
 
 
@@ -104,7 +98,13 @@ def parse_rev_args(receive_msg):
     # Data
     logger.debug("Preparing data..")
 
-    transform_train, transform_test = utils._data_transforms_fashion(args)
+    raw_train_data = torchvision.datasets.FashionMNIST(
+        root="./data", train=True, download=True
+    )
+    dataset_mean, dataset_std = utils.get_mean_and_std(raw_train_data)
+    transform_train, transform_test = utils._data_transforms_mnist(
+        args, dataset_mean, dataset_std
+    )
 
     trainset = torchvision.datasets.FashionMNIST(
         root="./data", train=True, download=True, transform=transform_train
@@ -120,11 +120,9 @@ def parse_rev_args(receive_msg):
         testset, batch_size=args.batch_size, shuffle=False, num_workers=2
     )
 
-
     # Model
     logger.debug("Building model..")
-    model_path = receive_msg
-    net = build_graph_from_pickle(model_path)
+    net = build_graph_from_json(receive_msg)
 
     net = net.to(device)
     criterion = nn.CrossEntropyLoss()

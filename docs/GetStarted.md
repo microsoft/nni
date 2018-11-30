@@ -14,11 +14,11 @@
 
 * __Install NNI through pip__
 
-      python3 -m pip install --user nni-pkg
+      python3 -m pip install --user --upgrade nni
 
 * __Install NNI through source code__
    
-      git clone -b v0.3 https://github.com/Microsoft/nni.git
+      git clone -b v0.3.4 https://github.com/Microsoft/nni.git
       cd nni
       source install.sh
 
@@ -34,7 +34,7 @@ An experiment is to run multiple trial jobs, each trial job tries a configuratio
 
       python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 
-This command will be filled in the yaml configure file below. Please refer to [here]() for how to write your own trial.
+This command will be filled in the yaml configure file below. Please refer to [here](howto_1_WriteTrial.md) for how to write your own trial.
 
 **Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](howto_2_CustomizedTuner.md), but for simplicity, here we choose a tuner provided by NNI as below:
 
@@ -43,7 +43,7 @@ This command will be filled in the yaml configure file below. Please refer to [h
         classArgs:
           optimize_mode: maximize
 
-*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found [here]()), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
+*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner, *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
 
 **Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the yaml configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
 
@@ -86,7 +86,8 @@ You can refer to [here](NNICTLDOC.md) for more usage guide of *nnictl* command l
 ## View experiment results
 The experiment has been running now, NNI provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features. The WebUI is opened by default by `nnictl create`.
 
-## Further reading
+## Read more
+* [Tuners supported in the latest NNI release](../src/sdk/pynni/nni/README.md)
 * [Overview](Overview.md)
 * [Installation](InstallNNI_Ubuntu.md)
 * [Use command line tool nnictl](NNICTLDOC.md)

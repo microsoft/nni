@@ -293,7 +293,7 @@ class StubGlobalPooling3d(StubGlobalPooling):
 
 class StubPooling(StubLayer):
     def __init__(
-        self, kernel_size=2, stride=None, padding=0,input_node=None, output_node=None
+        self, kernel_size=2, stride=None, padding=0, input_node=None, output_node=None
     ):
         super().__init__(input_node, output_node)
         self.kernel_size = kernel_size
@@ -538,8 +538,15 @@ def layer_description_extractor(layer, node_to_id):
         return (type(layer).__name__, layer_input, layer_output, layer.num_features)
     elif isinstance(layer, StubDropout):
         return (type(layer).__name__, layer_input, layer_output, layer.rate)
-    elif isinstance(layer,StubPooling):
-        return (type(layer).__name__, layer_input, layer_output, layer.kernel_size, layer.stride, layer.padding)
+    elif isinstance(layer, StubPooling):
+        return (
+            type(layer).__name__,
+            layer_input,
+            layer_output,
+            layer.kernel_size,
+            layer.stride,
+            layer.padding,
+        )
     else:
         return (type(layer).__name__, layer_input, layer_output)
 
@@ -554,23 +561,23 @@ def layer_description_builder(layer_information, id_to_node):
         filters = layer_information[4]
         kernel_size = layer_information[5]
         return eval(layer_type)(
-            input_channel, filters, kernel_size,layer_input, layer_output
+            input_channel, filters, kernel_size, layer_input, layer_output
         )
     elif layer_type.startswith("StubDense"):
         input_units = layer_information[3]
         units = layer_information[4]
-        return eval(layer_type)(input_units, units,layer_input, layer_output)
+        return eval(layer_type)(input_units, units, layer_input, layer_output)
     elif layer_type.startswith("StubBatchNormalization"):
         num_features = layer_information[3]
-        return eval(layer_type)(num_features,layer_input, layer_output)
+        return eval(layer_type)(num_features, layer_input, layer_output)
     elif layer_type.startswith("StubDropout"):
         rate = layer_information[3]
-        return eval(layer_type)(rate,layer_input, layer_output)
+        return eval(layer_type)(rate, layer_input, layer_output)
     elif layer_type.startswith("StubPooling"):
         kernel_size = layer_information[3]
         stride = layer_information[4]
         padding = layer_information[5]
-        return eval(layer_type)(kernel_size,stride,padding,layer_input, layer_output)
+        return eval(layer_type)(kernel_size, stride, padding, layer_input, layer_output)
     else:
         return eval(layer_type)(layer_input, layer_output)
 

@@ -110,44 +110,21 @@ def _data_transforms_cifar10(args):
     return train_transform, valid_transform
 
 
-def _data_transforms_fashion(args):
-    FASHION_MEAN = [0.49139968]
-    FASHION_STD = [0.24703233]
+def _data_transforms_mnist(args, mnist_mean=[0.5], mnist_std=[0.5]):
 
     train_transform = transforms.Compose(
         [
             transforms.RandomCrop(28, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize(FASHION_MEAN, FASHION_STD),
+            transforms.Normalize(mnist_mean, mnist_std),
         ]
     )
     if args.cutout:
         train_transform.transforms.append(Cutout(args.cutout_length))
 
     valid_transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize(FASHION_MEAN, FASHION_STD)]
-    )
-    return train_transform, valid_transform
-
-
-def _data_transforms_mnist(args):
-    MNIST_MEAN = [0.49139968]
-    MNIST_STD = [0.24703233]
-
-    train_transform = transforms.Compose(
-        [
-            transforms.RandomCrop(28, padding=4),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize(MNIST_MEAN, MNIST_STD),
-        ]
-    )
-    if args.cutout:
-        train_transform.transforms.append(Cutout(args.cutout_length))
-
-    valid_transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize(MNIST_MEAN, MNIST_STD)]
+        [transforms.ToTensor(), transforms.Normalize(mnist_mean, mnist_std)]
     )
     return train_transform, valid_transform
 
