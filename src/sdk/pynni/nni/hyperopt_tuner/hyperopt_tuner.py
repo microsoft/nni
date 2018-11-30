@@ -23,7 +23,6 @@ hyperopt_tuner.py
 
 import copy
 import logging
-import math
 
 from enum import Enum, unique
 import numpy as np

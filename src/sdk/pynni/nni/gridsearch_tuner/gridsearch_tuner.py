@@ -44,7 +44,7 @@ class GridSearchTuner(Tuner):
     Note that q should be at least 2.
     It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
 
-    Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log10(low), log10(high)]
+    Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)]
     and sample and then change the sampled value back.
     '''
 
@@ -102,8 +102,8 @@ class GridSearchTuner(Tuner):
         if param_type == 'quniform':
             return self._parse_quniform(param_value)
         if param_type == 'qloguniform':
-            param_value[:2] = np.log10(param_value[:2])
-            return list(np.power(10, self._parse_quniform(param_value)))
+            param_value[:2] = np.log(param_value[:2])
+            return list(np.exp(self._parse_quniform(param_value)))
 
         raise RuntimeError("Not supported type: %s" % param_type)
 

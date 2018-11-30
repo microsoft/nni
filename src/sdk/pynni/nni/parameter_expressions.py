@@ -67,7 +67,7 @@ def loguniform(low, high, random_state):
     random_state: an object of numpy.random.RandomState
     '''
     assert low > 0, 'Lower bound must be positive'
-    return base ** (uniform(np.log(low), np.log(high), random_state))
+    return np.exp(uniform(np.log(low), np.log(high), random_state))
 
 
 def qloguniform(low, high, q, random_state):
