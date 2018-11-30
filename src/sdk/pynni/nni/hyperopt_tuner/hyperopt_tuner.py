@@ -63,11 +63,8 @@ def json2space(in_x, name=ROOT):
                 out_y = eval('hp.hp.'+_type)(name, _value)
             else:
                 if _type in ['loguniform', 'qloguniform']:
-                    if len(_value) == 3:
-                        _value = list(map(lambda x: math.log(x, _value[-1]), _value[:2]))
-                    else:
-                        _value = np.log10(_value[:2])
-                    _type = 'uniform'
+                    _value[0] = np.log(_value[0])
+                    _value[1] = np.log(_value[1])
                 out_y = eval('hp.hp.' + _type)(name, *_value)
         else:
             out_y = dict()
@@ -97,12 +94,6 @@ def json2parameter(in_x, parameter, name=ROOT):
                     INDEX: _index,
                     VALUE: json2parameter(in_x[VALUE][_index], parameter, name=name+'[%d]' % _index)
                 }
-            elif _type in ['loguniform', 'qloguniform']:
-                values = in_x[VALUE]
-                uniformed_val = parameter[name]
-                out_y = 10 ** uniformed_val if len(values) == 2 else values[-1] ** uniformed_val
-                if _type == 'qloguniform':
-                    out_y = round(out_y / values[-2]) * values[-2]
             else:
                 out_y = parameter[name]
         else:

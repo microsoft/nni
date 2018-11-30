@@ -22,7 +22,6 @@ parameter_expression.py
 '''
 
 import numpy as np
-import math
 
 
 def choice(options, random_state):
@@ -61,24 +60,24 @@ def quniform(low, high, q, random_state):
     return np.round(uniform(low, high, random_state) / q) * q
 
 
-def loguniform(low, high, base=10, random_state=np.random.RandomState()):
+def loguniform(low, high, random_state):
     '''
     low: an float that represent an lower bound
     high: an float that represent an upper bound
     random_state: an object of numpy.random.RandomState
     '''
     assert low > 0, 'Lower bound must be positive'
-    return base ** (uniform(math.log(low, base), math.log(high, base), random_state))
+    return base ** (uniform(np.log(low), np.log(high), random_state))
 
 
-def qloguniform(low, high, q, base=10, random_state=np.random.RandomState()):
+def qloguniform(low, high, q, random_state):
     '''
     low: an float that represent an lower bound
     high: an float that represent an upper bound
     q: sample step
     random_state: an object of numpy.random.RandomState
     '''
-    return np.round(loguniform(low, high, base, random_state) / q) * q
+    return np.round(loguniform(low, high, random_state) / q) * q
 
 
 def normal(mu, sigma, random_state):

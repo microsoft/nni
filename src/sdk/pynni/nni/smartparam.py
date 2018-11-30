@@ -58,11 +58,11 @@ if env_args.platform is None:
         assert high > low, 'Upper bound must be larger than lower bound'
         return round(random.uniform(low, high) / q) * q
 
-    def loguniform(low, high, base=10, name=None):
+    def loguniform(low, high, name=None):
         assert low > 0, 'Lower bound must be positive'
-        return base ** (random.uniform(math.log(low, base), math.log(high, base)))
+        return np.exp(random.uniform(np.log(low), np.log(high)))
 
-    def qloguniform(low, high, q, base=10, name=None):
+    def qloguniform(low, high, q, name=None):
         return round(loguniform(low, high) / q) * q
 
     def normal(mu, sigma, name=None):
@@ -72,7 +72,7 @@ if env_args.platform is None:
         return round(random.gauss(mu, sigma) / q) * q
 
     def lognormal(mu, sigma, name=None):
-        return math.exp(random.gauss(mu, sigma))
+        return np.exp(random.gauss(mu, sigma))
 
     def qlognormal(mu, sigma, q, name=None):
         return round(lognormal(mu, sigma) / q) * q
@@ -94,10 +94,10 @@ else:
     def quniform(low, high, q, name=None):
         return _get_param('quniform', name)
 
-    def loguniform(low, high, base=10, name=None):
+    def loguniform(low, high, name=None):
         return _get_param('loguniform', name)
 
-    def qloguniform(low, high, q, base=10, name=None):
+    def qloguniform(low, high, q, name=None):
         return _get_param('qloguniform', name)
 
     def normal(mu, sigma, name=None):

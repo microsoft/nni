@@ -112,7 +112,7 @@ def json2paramater(x, is_rand, random_state, oldy=None, Rand=False, name=NodeTyp
                     }
                 else:
                     y = eval('parameter_expressions.' +
-                             _type)(*_value, random_state=random_state)
+                             _type)(*(_value + [random_state]))
             else:
                 y = copy.deepcopy(oldy)
         else:
