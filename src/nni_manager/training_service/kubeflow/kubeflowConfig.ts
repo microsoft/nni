@@ -45,19 +45,23 @@ export const kubeflowOperatorMap : Map<KubeflowOperator, KubeflowOperatorPlural>
 export class KubeflowClusterConfig {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
-    public readonly nfs: NFSConfig;
+    public readonly nfs?: NFSConfig;
     public readonly kubernetesServer: string;
-
+    public readonly keyVault?: keyVaultConfig;
+    public readonly azureStorage?: AzureStorage;
+    
     /**
      * Constructor
      * @param userName User name of Kubeflow Cluster
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator, nfs : NFSConfig, kubernetesServer : string) {
+    constructor(operator: KubeflowOperator, kubernetesServer : string, nfs?: NFSConfig, keyVault?: keyVaultConfig, azureStorage ?: AzureStorage) {
         this.operator = operator;
         this.nfs = nfs;
         this.kubernetesServer = kubernetesServer;
+        this.keyVault = keyVault;
+        this.azureStorage = azureStorage;
     }
 }
 
@@ -73,6 +77,37 @@ export class NFSConfig {
     constructor(server : string, path : string) {
         this.server = server;
         this.path = path;
+    }
+}
+
+/**
+ * KeyVault configuration to store the key of Azure Storage Service
+ * Refer https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+ */
+export class keyVaultConfig {
+    /**The vault-name to specify vault */
+    public readonly vaultName : string;
+    /**The name to specify private key */
+    public readonly name : string;
+
+    constructor(vaultName : string, name : string){
+        this.vaultName = vaultName;
+        this.name = name;
+    }
+}
+
+/**
+ * Azure Storage Service
+ */
+export class AzureStorage {
+    /**The azure share to storage files */
+    public readonly azureShare : string;
+    
+    /**The account name of sotrage service */
+    public readonly accountName: string;
+    constructor(azureShare : string, accountName: string){
+        this.azureShare = azureShare;
+        this.accountName = accountName;
     }
 }
 

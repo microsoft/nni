@@ -87,7 +87,21 @@ class NNIDataStore implements DataStore {
         event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
         this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${hyperParameter}, jobDetail: ${JSON.stringify(jobDetail)}`);
 
-        return this.db.storeTrialJobEvent(event, trialJobId, hyperParameter, jobDetail).catch(
+        // Use the timestamp in jobDetail as TrialJobEvent timestamp for different events
+        let timestamp: number | undefined;
+        if (event === 'WAITING' && jobDetail) {
+            timestamp = jobDetail.submitTime;
+        } else if (event === 'RUNNING' && jobDetail) {
+            timestamp = jobDetail.startTime;
+        } else if (['EARLY_STOPPED', 'SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED'].includes(event) && jobDetail) {
+            timestamp = jobDetail.endTime;
+        }
+        // Use current time as timestamp if timestamp is not assigned from jobDetail
+        if (timestamp === undefined) {
+            timestamp = Date.now();
+        }
+
+        return this.db.storeTrialJobEvent(event, trialJobId, timestamp, hyperParameter, jobDetail).catch(
                 (err: Error) => {
                     throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
                 }
@@ -163,7 +177,7 @@ class NNIDataStore implements DataStore {
         }
         const map: Map<string, TrialJobInfo> = this.getTrialJobsByReplayEvents(trialJobEvents);
 
-        const finalMetricsMap: Map<string, MetricDataRecord> = await this.getFinalMetricData(trialJobId);
+        const finalMetricsMap: Map<string, MetricDataRecord[]> = await this.getFinalMetricData(trialJobId);
 
         for (const key of map.keys()) {
             const jobInfo: TrialJobInfo | undefined = map.get(key);
@@ -181,17 +195,23 @@ class NNIDataStore implements DataStore {
         return result;
     }
 
-    private async getFinalMetricData(trialJobId?: string): Promise<Map<string, MetricDataRecord>> {
-        const map: Map<string, MetricDataRecord> = new Map();
+    private async getFinalMetricData(trialJobId?: string): Promise<Map<string, MetricDataRecord[]>> {
+        const map: Map<string, MetricDataRecord[]> = new Map();
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
 
         const multiPhase: boolean = await this.isMultiPhase();
 
         for (const metric of metrics) {
-            if (map.has(metric.trialJobId) && !multiPhase) {
-                this.log.error(`Found multiple FINAL results for trial job ${trialJobId}`);
+            const existMetrics: MetricDataRecord[] | undefined = map.get(metric.trialJobId);
+            if (existMetrics !== undefined) {
+                if (!multiPhase) {
+                    this.log.error(`Found multiple FINAL results for trial job ${trialJobId}, metrics: ${JSON.stringify(metrics)}`);
+                } else {
+                    existMetrics.push(metric);
+                }
+            } else {
+                map.set(metric.trialJobId, [metric]);
             }
-            map.set(metric.trialJobId, metric);
         }
 
         return map;
@@ -265,6 +285,11 @@ class NNIDataStore implements DataStore {
                 case 'WAITING':
                     if (record.logPath !== undefined) {
                         jobInfo.logPath = record.logPath;
+                    }
+                    // Initially assign WAITING timestamp as job's start time,
+                    // If there is RUNNING state event, it will be updated as RUNNING state timestamp
+                    if (jobInfo.startTime === undefined && record.timestamp !== undefined) {
+                        jobInfo.startTime = record.timestamp;
                     }
                     break;
                 case 'SUCCEEDED':

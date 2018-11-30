@@ -14,8 +14,6 @@ interface ErrorParameter {
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
-    isLink?: boolean;
-    intermediate?: Array<string>;
 }
 
 interface Experiment {
@@ -87,9 +85,13 @@ interface VisualMapValue {
     minAccuracy: number;
 }
 
+interface FinalResult {
+    data: string;
+}
+
 export {
     TableObj, Parameters, Experiment, 
     AccurPoint, TrialNumber, TrialJob,
     DetailAccurPoint, TooltipForAccuracy,
-    ParaObj, VisualMapValue, Dimobj
+    ParaObj, VisualMapValue, Dimobj, FinalResult
 };
