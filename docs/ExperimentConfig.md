@@ -1,8 +1,8 @@
 # Experiment config reference
 
-If you want to create a new nni experiment, you need to prepare a config file in your local machine, and provide the path of this file to nnictl.
+A config file is needed when create an experiment, the path of the config file is provide to nnictl.
 The config file is written in yaml format, and need to be written correctly.
-This document describes the rule to write config file, and will provide some examples and templates for you. 
+This document describes the rule to write config file, and will provide some examples and templates. 
 ## Template
 * __light weight(without Annotation and Assessor)__ 
 ```
@@ -117,7 +117,7 @@ machineList:
 * __experimentName__
   * Description
   
-    __experimentName__ is the name of the experiment you created.  
+    __experimentName__ is the name of the experiment created.  
     TBD: add default value
 	
 * __trialConcurrency__
@@ -125,7 +125,7 @@ machineList:
     
 	 __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
 	 
-	    Note: if you set trialGpuNum bigger than the free gpu numbers in your machine, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
+	    Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
 	 
 * __maxExecDuration__
   * Description
@@ -142,48 +142,48 @@ machineList:
       
 	  __trainingServicePlatform__ specifies the platform to run the experiment, including {__local__, __remote__, __pai__, __kubeflow__}.  
 	
-    * __local__ mode means you run an experiment in your local linux machine.  
+    * __local__ run an experiment on local ubuntu machine.  
 	
 	
-    * __remote__ mode means you submit trial jobs to remote linux machines. If you set platform as remote, you should complete __machineList__ field.  
+    * __remote__ submit trial jobs to remote ubuntu machines, and __machineList__ field should be filed in order to set up SSH connection to remote machine.  
 
 	
-    * __pai__ mode means you submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
+    * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
    
-    * __kubeflow__ mode means you submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), nni support kubeflow based on normal kubernets and [azure kubernets](https://azure.microsoft.com/en-us/services/kubernetes-service/).
+    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), nni support kubeflow based on normal kubernets and [azure kubernets](https://azure.microsoft.com/en-us/services/kubernetes-service/).
 	
 * __searchSpacePath__
   * Description
     
-	 __searchSpacePath__ specifies the path of search space file you want to use, which should be a valid path in your local linux machine.
+	 __searchSpacePath__ specifies the path of search space file, which should be a valid path in the local linux machine.
 	        
-	    Note: if you set useAnnotation=True, you should remove searchSpacePath field or just let it be empty.
+	    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
 * __useAnnotation__
   * Description
    
-    __useAnnotation__ means whether you use annotation to analysis your code and generate search space. 
+    __useAnnotation__ use annotation to analysis trial code and generate search space. 
 	   
-	    Note: if you set useAnnotation=True, you should not set searchSpacePath.
+	    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
 
 * __nniManagerIp__
   * Description
    
-    __nniManagerIp__ set the IP address of your machine which the nni manager process runs on. This field is an optional choice, if you don't set nniManagerIp, nni will use the IP of etho device.
+    __nniManagerIp__ set the IP address of the machine on which nni manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
 
-        Note: if you don't have eth0 device in your machine, we suggest you to set nniManagerIp manually.
+        Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
 	   
 		
 * __tuner__
   * Description
   
-    __tuner__ specifies the tuner algorithm you use to run an experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by nni sdk, you just need to set __builtinTunerName__ and __classArgs__. Another way is to use your own tuner file, and you need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+    __tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by nni sdk, need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
   * __builtinTunerName__ and __classArgs__
     * __builtinTunerName__
     
-	  __builtinTunerName__ specifies the name of system tuner you want to use, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__, __BatchTuner__, __GridSearch__}
+	  __builtinTunerName__ specifies the name of system tuner, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__, __BatchTuner__, __GridSearch__}
 	 * __classArgs__
 	
-	   __classArgs__ specifies the arguments of tuner algorithm. If the __builtinTunerName__ is in {__TPE__, __Random__, __Anneal__, __Evolution__}, you should set __optimize_mode__.
+	   __classArgs__ specifies the arguments of tuner algorithm. If the __builtinTunerName__ is in {__TPE__, __Random__, __Anneal__, __Evolution__}, user should set __optimize_mode__.
   * __codeDir__, __classFileName__, __className__ and __classArgs__
       * __codeDir__
         
@@ -199,19 +199,19 @@ machineList:
 	  __classArgs__ specifies the arguments of tuner algorithm.
   * __gpuNum__
     
-	  __gpuNum__ specifies the gpu number you want to use to run the tuner process. The value of this field should be a positive number.
+	  __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
 	  
-	    Note: you could only specify one way to set tuner, for example, you could set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and you could not set them both. 
+	    Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both. 
 
 * __assessor__
  
   * Description
   
-    __assessor__ specifies the assessor algorithm you use to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, you just need to set __builtinAssessorName__ and __classArgs__. Another way is to use your own tuner file, and you need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+    __assessor__ specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own tuner file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
   * __builtinAssessorName__ and __classArgs__
     * __builtinAssessorName__
     
-	  __builtinAssessorName__ specifies the name of system assessor you want to use, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__}
+	  __builtinAssessorName__ specifies the name of system assessor, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__}
 	 * __classArgs__
 	
 	   __classArgs__ specifies the arguments of tuner algorithm
@@ -230,9 +230,9 @@ machineList:
 	  __classArgs__ specifies the arguments of tuner algorithm.
   * __gpuNum__
     
-	__gpuNum__ specifies the gpu number you want to use to run the assessor process. The value of this field should be a positive number.
+	__gpuNum__ specifies the gpu number to run the assessor process. The value of this field should be a positive number.
 
-        Note: you could only specify one way to set assessor, for example, you could set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and you could not set them both.If you do not want to use assessor, you just need to leave assessor empty or remove assessor in your config file. Default value is 0. 
+        Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty. 
 * __trial(local, remote)__
   * __command__
 
@@ -242,7 +242,7 @@ machineList:
 	  __codeDir__ specifies the directory of your own trial file.
   * __gpuNum__
     
-	  __gpuNum__ specifies the num of gpu you want to use to run your trial process. Default value is 0. 
+	  __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0. 
 
 * __trial(pai)__
   * __command__
@@ -250,28 +250,28 @@ machineList:
       __command__  specifies the command to run trial process.
   * __codeDir__
     
-	  __codeDir__ specifies the directory of your own trial file.
+	  __codeDir__ specifies the directory of the own trial file.
   * __gpuNum__
     
-	  __gpuNum__ specifies the num of gpu you want to use to run your trial process. Default value is 0.
+	  __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0.
   * __cpuNum__
 
-    __cpuNum__ is the cpu number of cpu you want to use in pai container.
+    __cpuNum__ is the cpu number of cpu to be used in pai container.
   * __memoryMB__
 
-    __memoryMB__ set the momory size you want to use in pai's container.
+    __memoryMB__ set the momory size to be used in pai's container.
   
   * __image__
 
-    __image__ set the image you want to use in pai.
+    __image__ set the image to be used in pai.
 
   * __dataDir__
 
-    __dataDir__ is the data directory in hdfs you want to use.
+    __dataDir__ is the data directory in hdfs to be used.
   
   * __outputDir__
    
-    __outputDir__ is the output directory in hdfs you want to use in pai, the stdout and stderr files are stored in the directory after job finished.
+    __outputDir__ is the output directory in hdfs to be used in pai, the stdout and stderr files are stored in the directory after job finished.
   
 
 
@@ -279,7 +279,7 @@ machineList:
   
   * __codeDir__
     
-    __codeDir__ is the local directory where your code files in.
+    __codeDir__ is the local directory where the code files in.
   
   * __ps(optional)__
     
@@ -294,19 +294,19 @@ machineList:
     
     * __gpuNum__
      
-      __gpuNum__ set the gpu number you want to use in __ps__ container.
+      __gpuNum__ set the gpu number to be used in __ps__ container.
     
     * __cpuNum__
     
-      __cpuNum__ set the cpu number you want to use in __ps__ container.
+      __cpuNum__ set the cpu number to be used in __ps__ container.
     
     * __memoryMB__
       
-      __memoryMB__ set the memory size of your container.
+      __memoryMB__ set the memory size of the container.
     
     * __image__
       
-      __iamge__ set the image you want to use in __ps__.
+      __iamge__ set the image to be used in __ps__.
 
   * __worker__
     
@@ -321,55 +321,55 @@ machineList:
     
     * __gpuNum__
      
-      __gpuNum__ set the gpu number you want to use in __worker__ container.
+      __gpuNum__ set the gpu number to be used in __worker__ container.
     
     * __cpuNum__
     
-      __cpuNum__ set the cpu number you want to use in __worker__ container.
+      __cpuNum__ set the cpu number to be used in __worker__ container.
     
     * __memoryMB__
       
-      __memoryMB__ set the memory size of your container.
+      __memoryMB__ set the memory size of the container.
     
     * __image__
       
-      __iamge__ set the image you want to use in __worker__.
+      __iamge__ set the image to be used in __worker__.
 
 
 
 * __machineList__
  
-     __machineList__ should be set if you set __trainingServicePlatform__=remote, or it could be empty.
+     __machineList__ should be set if users set __trainingServicePlatform__=remote, or it could be empty.
   * __ip__
     
-	__ip__ is the ip address of your remote machine.
+	__ip__ is the ip address of remote machine.
   * __port__
     
-	__port__ is the ssh port you want to use to connect machine.
+	__port__ is the ssh port to be used to connect machine.
 	
-	    Note: if you set port empty, the default value will be 22.
+	    Note: if users set port empty, the default value will be 22.
   * __username__
     
-	__username__ is the account you use.
+	__username__ is the account of remote machine.
   * __passwd__
     
-	__passwd__ specifies the password of your account.
+	__passwd__ specifies the password of the account.
 
   * __sshKeyPath__
 
-    If you want to use ssh key to login remote machine, you could set __sshKeyPath__ in config file. __sshKeyPath__ is the path of ssh key file, which should be valid.
+    If users use ssh key to login remote machine, could set __sshKeyPath__ in config file. __sshKeyPath__ is the path of ssh key file, which should be valid.
 	
-	    Note: if you set passwd and sshKeyPath simultaneously, nni will try passwd.
+	    Note: if users set passwd and sshKeyPath simultaneously, nni will try passwd.
 		
   * __passphrase__
 
-    __passphrase__ is used to protect ssh key, which could be empty if you don't have passphrase.
+    __passphrase__ is used to protect ssh key, which could be empty if users don't have passphrase.
 
 * __kubeflowConfig__:
   
   * __operator__
     
-    __operator__ specify the kubeflow's operator you want to use, nni support __tf-operator__ in current version.
+    __operator__ specify the kubeflow's operator to be used, nni support __tf-operator__ in current version.
   
   * __nfs__
     
@@ -383,7 +383,7 @@ machineList:
   
   * __keyVault__
     
-    If you want to use azure kubernets service, you should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+    If users want to use azure kubernets service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
 
     * __vaultName__
 
@@ -401,7 +401,7 @@ machineList:
 
   * __password__
     
-    __password__ is the password of you pai account.
+    __password__ is the password of the pai account.
   
   * __host__
     
@@ -409,7 +409,7 @@ machineList:
 
   * __azureStorage__
     
-    If you use azure kubernets service, you should set your azure storage account to store your code files.
+    If users use azure kubernets service, they should set azure storage account to store code files.
 
     * __accountName__
      
@@ -417,7 +417,7 @@ machineList:
 
     * __azureShare__
       
-      __azureShare__ is the share of your azure file storage.
+      __azureShare__ is the share of the azure file storage.
     
     
 
@@ -425,7 +425,7 @@ machineList:
 ## Examples
 * __local mode__
 
-  If you want to run your trial jobs in your local machine, and use annotation to generate search space, you could use the following config:
+  If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
 ```
 authorName: test
 experimentName: test_experiment
@@ -449,7 +449,7 @@ trial:
   gpuNum: 0
 ```
 
-  If you want to use assessor, you could add assessor configuration in your file.
+  Could add assessor configuration in config file if set assessor.
 ```
 authorName: test
 experimentName: test_experiment
@@ -517,7 +517,7 @@ trial:
 
 * __remote mode__
 
-If you want run trial jobs in your remote machine, you could specify the remote mahcine information as fllowing format:
+If run trial jobs in remote machine, users could specify the remote mahcine information as fllowing format:
 ```
 authorName: test
 experimentName: test_experiment
