@@ -62,8 +62,7 @@ def json2space(in_x, name=ROOT):
                 out_y = eval('hp.hp.'+_type)(name, _value)
             else:
                 if _type in ['loguniform', 'qloguniform']:
-                    _value[0] = np.log(_value[0])
-                    _value[1] = np.log(_value[1])
+                    _value[:2] = np.log(_value[:2])
                 out_y = eval('hp.hp.' + _type)(name, *_value)
         else:
             out_y = dict()
