@@ -2,7 +2,7 @@
 
 For now, NNI has supported the following tuner algorithms. Note that NNI installation only installs a subset of those algorithms, other algorithms should be installed through `nnictl package install` before you use them. For example, for SMAC the installation command is `nnictl package install --name=SMAC`.
 
- - TPE
+ - [TPE](#TPE)
  - Random Search
  - Anneal
  - Naive Evolution
@@ -16,6 +16,7 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
 
 We will introduce some basic knowledge about tuner algorithm here. If you are an expert, you could skip this part and jump to how to use.
 
+<a name="TPE"></a>
 **TPE**
 
 The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model. 
