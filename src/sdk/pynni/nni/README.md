@@ -169,6 +169,10 @@ _Usage_:
     classArgs:
       #choice: maximize, minimize
       optimize_mode: maximize
+      # (optional) A trial is determined to be stopped or not, 
+      * only after receiving start_step number of reported intermediate results.
+      * The default value of start_step is 0.
+      start_step: 5
 ```
 
   [1]: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
