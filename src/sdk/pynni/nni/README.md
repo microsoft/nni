@@ -7,7 +7,7 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
  - [Anneal](#Anneal)
  - [Naive Evolution](#Evolution)
  - [SMAC](#SMAC) (to install through `nnictl`)
- - [Batch](#Batch)
+ - [Batch Tuner](#Batch)
  - [Grid Search](#Grid)
  - [Hyperband](#Hyperband)
 
@@ -140,7 +140,7 @@ _Usage_:
       optimize_mode: maximize
       # R: the maximum STEPS (could be the number of mini-batches or epochs) can be
       #    allocated to a trial. Each trial should use STEPS to control how long it runs.
-      R:
+      R: 60
       # eta: proportion of discarded trials
       eta: 3
 ```
