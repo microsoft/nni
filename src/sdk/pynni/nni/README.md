@@ -11,86 +11,139 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
  - [Grid Search](#Grid)
  - [Hyperband](#Hyperband)
 
- ## 1. Tuner algorithm introduction
+ ## Supported tuner algorithms
 
 
-We will introduce some basic knowledge about the tuner algorithms here.
+We will introduce some basic knowledge about the tuner algorithms, suggested scenarios for each tuner, and their example usage (for complete usage spec, please refer to [here]()).
 
 <a name="TPE"></a>
 **TPE**
 
-The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model. 
+The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model.
+The TPE approach models P(x|y) and P(y) where x represents hyperparameters and y the associated evaluate matric. P(x|y) is modeled by transforming the generative process of hyperparameters, replacing the distributions of the configuration prior with non-parametric densities. 
 This optimization approach is described in detail in [Algorithms for Hyper-Parameter Optimization][1].
     
-_Suggested scenario_: Comparing with other algorithm, TPE could be achieve better result when the number of trial experiment is small. Also TPE support continuous or discrete hyper-parameters. From a large amount of experiments, we could found that TPE is far better than Random Search.
+_Suggested scenario_: TPE, as a black-box optimization, can be used in various scenarios, and shows good performance in general. Especially when you have limited computation resource and can only try a small number of trials. From a large amount of experiments, we could found that TPE is far better than Random Search.
+
+_Usage_:
+```
+  # config.yaml
+  tuner:
+    builtinTunerName: TPE
+    classArgs:
+      # choice: maximize, minimize
+      optimize_mode: maximize
+```
 
 <a name="Random"></a>
 **Random Search**
 
 In [Random Search for Hyper-Parameter Optimization][2] show that Random Search might be surprisingly simple and effective. We suggests that we could use Random Search as baseline when we have no knowledge about the prior distribution of hyper-parameters.
 
+_Suggested scenario_: Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space.
+
+_Usage_:
+```
+  # config.yaml
+  tuner:
+    builtinTunerName: Random
+```
+
 <a name="Anneal"></a>
 **Anneal**
+
+Intro here.
+
+_Suggested scenario_:
+
+_Usage_:
 
 <a name="Evolution"></a>
 **Naive Evolution**
 
-Naive Evolution comes from [Large-Scale Evolution of Image Classifiers][3]. Naive Evolution require more experiments to works, but it's very simple and easily to expand new features. There are some tips for user: 
+Naive Evolution comes from [Large-Scale Evolution of Image Classifiers][3]. It randomly initializes a population based on search space. For each generation, it chooses better ones and do some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. 
 
-1) large initial population could avoid to fall into local optimum
-2) use some strategies to keep the diversity of population could be better.
+_Suggested scenario_: Naive Evolution also requires many trials to works. Specifically, it requires large inital population to avoid falling into local optimum. This tuner is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
+
+_Usage_:
+```
+  # config.yaml
+  tuner:
+    builtinTunerName: Evolution
+    classArgs:
+      # choice: maximize, minimize
+      optimize_mode: maximize
+```
 
 <a name="SMAC"></a>
 **SMAC**
 
-[SMAC][4] is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on [the SMAC3 github repo][5]. 
+[SMAC][4] is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on [the SMAC3 github repo][5].
 
-Note that SMAC only supports a subset of the types in [search space spec](../../../../docs/SearchSpaceSpec.md), including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
+Note that SMAC on nni only supports a subset of the types in [search space spec](../../../../docs/SearchSpaceSpec.md), including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
+
+_Suggested scenario_: Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.
+
+_Usage_:
+```
+  # config.yaml
+  tuner:
+    builtinTunerName: SMAC
+    classArgs:
+      # choice: maximize, minimize
+      optimize_mode: maximize
+```
 
 <a name="Batch"></a>
-**Batch**
+**Batch tuner**
 
-Batch allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done.
+Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type `choice` in [search space spec](../../../../docs/SearchSpaceSpec.md).
+
+_Suggested sceanrio_: If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner.
+
+_Usage_:
+```
+  # config.yaml
+  tuner:
+    builtinTunerName: BatchTuner
+```
 
 <a name="Grid"></a>
-**Gridsearch**
+**Grid Search**
 
-Gridsearch performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file
+Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file.
+Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](../../../../docs/SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
 
-Note that the only acceptable types of search space are 'quniform', 'qloguniform' and 'choice':
+_Suggested scenario_: It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space.
 
-* Type 'choice' will select one of the options. Note that it can also be nested.
-* Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
-* Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log10(low), log10(high)] and sample and then change the sampled value back.
+_Usage_:
+```
+  # config.yaml
+  tuner:
+    builtinTunerName: GridSearch
+```
 
 <a name="Hyperband"></a>
 **Hyperband**
 
 [Hyperband][6] tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be refered to [here](hyperband_advisor/README.md)
 
- ## 2. How to use the tuner algorithm in NNI?
+_Suggested scenario_: It is suggested when you have limited computation resource but have relatively large search space. It performs good in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.
 
-User only need to do one thing: choose a Tuner```config.yaml```.
-Here is an example:
-
-
-    ```
-    # config.yaml
-    tuner:
-      # choice: TPE, Random, Anneal, Evolution, ...
-      builtinTunerName: TPE
-      classArgs:
-        # choice: maximize, minimize
-        optimize_mode: maximize
-    ```
-
-There are two filed you need to set: 
-
-```builtinTunerName``` and ```optimize_mode```.
-
-    builtinTunerName: TPE / Random / Anneal / Evolution
-    optimize_mode:  maximize / minimize
-
+_Usage_:
+```
+  # config.yaml
+  advisor:
+    builtinAdvisorName: Hyperband
+    classArgs:
+      # choice: maximize, minimize
+      optimize_mode: maximize
+      # R: the maximum STEPS (could be the number of mini-batches or epochs) can be
+      #    allocated to a trial. Each trial should use STEPS to control how long it runs.
+      R:
+      # eta: proportion of discarded trials
+      eta: 3
+```
 
   [1]: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
   [2]: http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf
