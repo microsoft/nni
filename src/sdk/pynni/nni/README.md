@@ -145,9 +145,36 @@ _Usage_:
       eta: 3
 ```
 
+
+# How to use Assessor that NNI supports?
+
+For now, NNI has supported the following assessor algorithms.
+
+ - [Medianstop](#Medianstop)
+ - Curve Extrapolation (ongoing)
+
+## Supported Assessor Algorithms
+
+<a name="Medianstop"></a>
+**Medianstop**
+
+Medianstop is a simple early stopping rule mentioned in the [paper][7]. It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.
+
+_Suggested scenario_: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.
+
+_Usage_:
+```
+  assessor:
+    builtinAssessorName: Medianstop
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+```
+
   [1]: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
   [2]: http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf
   [3]: https://arxiv.org/pdf/1703.01041.pdf
   [4]: https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf
   [5]: https://github.com/automl/SMAC3
   [6]: https://arxiv.org/pdf/1603.06560.pdf
+  [7]: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
