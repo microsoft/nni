@@ -56,7 +56,7 @@ def get_args():
     parser = argparse.ArgumentParser("cifar10")
     parser.add_argument("--batch_size", type=int, default=128, help="batch size")
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
-    parser.add_argument("--epoches", type=int, default=200, help="epoch limit")
+    parser.add_argument("--epochs", type=int, default=200, help="epoch limit")
     parser.add_argument(
         "--learning_rate", type=float, default=0.001, help="learning rate"
     )
@@ -120,7 +120,7 @@ def parse_rev_args(receive_msg):
     # Model
     logger.debug("Building model..")
     net = build_graph_from_json(receive_msg)
-    
+
     # parallel model
     try:
         available_devices = os.environ["CUDA_VISIBLE_DEVICES"]
@@ -165,6 +165,7 @@ class SendMetrics(keras.callbacks.Callback):
 def train_eval():
     global trainloader
     global testloader
+    global datagen
     global net
 
     (x_train, y_train) = trainloader
@@ -176,13 +177,13 @@ def train_eval():
         y=y_train,
         batch_size=args.batch_size,
         validation_data=(x_test, y_test),
-        epochs=args.epoches,
+        epochs=args.epochs,
         shuffle=True,
         callbacks=[
             SendMetrics(),
             EarlyStopping(min_delta=0.001, patience=10),
             TensorBoard(log_dir=TENSORBOARD_DIR),
-        ],
+        ]
     )
 
     _, acc = net.evaluate(x_test, y_test)

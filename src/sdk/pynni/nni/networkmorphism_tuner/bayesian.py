@@ -31,7 +31,7 @@ from scipy.optimize import linear_sum_assignment
 from sklearn.metrics.pairwise import rbf_kernel
 
 from nni.networkmorphism_tuner.graph_transformer import transform
-from nni.networkmorphism_tuner.utils import Constant
+from nni.networkmorphism_tuner.utils import Constant, OptimizeMode
 from nni.networkmorphism_tuner.layers import is_layer
 
 
@@ -307,10 +307,10 @@ class BayesianOptimizer:
         search_tree: The network morphism search tree.
     """
 
-    def __init__(self, searcher, t_min, metric, beta=None):
+    def __init__(self, searcher, t_min, optimizemode, beta=None):
         self.searcher = searcher
         self.t_min = t_min
-        self.metric = metric
+        self.optimizemode = optimizemode
         self.gpr = IncrementalGaussianProcess()
         self.beta = beta if beta is not None else Constant.BETA
         self.search_tree = SearchTree()
@@ -337,7 +337,7 @@ class BayesianOptimizer:
         father_id = None
         descriptors = deepcopy(descriptors)
         elem_class = Elem
-        if self.metric.higher_better():
+        if self.optimizemode is OptimizeMode.Maximize:
             elem_class = ReverseElem
 
         # Initialize the priority queue.
@@ -359,7 +359,7 @@ class BayesianOptimizer:
         opt_acq = self._get_init_opt_acq_value()
         while not pq.empty() and t > t_min:
             elem = pq.get()
-            if self.metric.higher_better():
+            if self.optimizemode is OptimizeMode.Maximize:
                 temp_exp = min((elem.metric_value - opt_acq) / t, 1.0)
             else:
                 temp_exp = min((opt_acq - elem.metric_value) / t, 1.0)
@@ -388,19 +388,19 @@ class BayesianOptimizer:
 
     def acq(self, graph):
         mean, std = self.gpr.predict(np.array([graph.extract_descriptor()]))
-        if self.metric.higher_better():
+        if self.optimizemode is OptimizeMode.Maximize:
             return mean + self.beta * std
         return mean - self.beta * std
 
     def _get_init_opt_acq_value(self):
-        if self.metric.higher_better():
+        if self.optimizemode is OptimizeMode.Maximize:
             return -np.inf
         return np.inf
 
     def _accept_new_acq_value(self, opt_acq, temp_acq_value):
-        if temp_acq_value > opt_acq and self.metric.higher_better():
+        if temp_acq_value > opt_acq and self.optimizemode is OptimizeMode.Maximize:
             return True
-        if temp_acq_value < opt_acq and not self.metric.higher_better():
+        if temp_acq_value < opt_acq and not self.optimizemode is OptimizeMode.Maximize:
             return True
         return False
 

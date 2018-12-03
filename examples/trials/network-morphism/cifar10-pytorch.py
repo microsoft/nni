@@ -48,7 +48,7 @@ def get_args():
     parser = argparse.ArgumentParser("cifar10")
     parser.add_argument("--batch_size", type=int, default=128, help="batch size")
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
-    parser.add_argument("--epoches", type=int, default=200, help="epoch limit")
+    parser.add_argument("--epochs", type=int, default=200, help="epoch limit")
     parser.add_argument(
         "--learning_rate", type=float, default=0.001, help="learning rate"
     )
@@ -218,7 +218,7 @@ if __name__ == "__main__":
         acc = 0.0
         best_acc = 0.0
         early_stop = utils.EarlyStopping(mode="max")
-        for epoch in range(args.epoches):
+        for epoch in range(args.epochs):
             train_acc = train(epoch)
             test_acc, best_acc = test(epoch)
             nni.report_intermediate_result(test_acc)

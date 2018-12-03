@@ -19,7 +19,16 @@
 # ==================================================================================================
 
 import pickle
+from enum import Enum, unique
 
+@unique
+class OptimizeMode(Enum):
+    """
+    Oprimize Mode class
+    """
+
+    Minimize = "minimize"
+    Maximize = "maximize"
 
 class Constant:
     MAX_LAYERS = 100
@@ -38,6 +47,7 @@ class Constant:
     CONV_BLOCK_DISTANCE = 2
     BATCH_SIZE = 128
     T_MIN = 0.0001
+
 
 
 def pickle_from_file(path):

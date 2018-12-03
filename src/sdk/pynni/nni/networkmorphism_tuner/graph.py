@@ -841,6 +841,7 @@ class KerasModel:
 
 
 class ONNXModel:
+    # TODO 
     def __init__(self, graph):
         pass
 
@@ -891,13 +892,14 @@ class JSONModel:
 
 
 def graph_to_onnx(graph, onnx_model_path):
-
+    # TODO 
     onnx_out = graph.produce_onnx_model()
     onnx.save(onnx_out, onnx_model_path)
     return onnx_out
 
 
 def onnx_to_graph(onnx_model, input_shape):
+    # TODO 
     graph = Graph(input_shape, False)
     graph.parsing_onnx_model(onnx_model)
     return graph
