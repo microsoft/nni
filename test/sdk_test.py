@@ -61,14 +61,14 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name):
 
     nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
 
-    for _ in range(10):
+    for _ in range(20):
         time.sleep(3)
         # check if experiment is done
         experiment_status = check_experiment_status(nnimanager_log_path)
         if experiment_status:
             break
 
-    assert experiment_status, 'Failed to finish in 30 sec'
+    assert experiment_status, 'Failed to finish in 1 min'
 
 def run(dispatch_type):
     '''test all dispatchers whose type is dispatch_type'''
