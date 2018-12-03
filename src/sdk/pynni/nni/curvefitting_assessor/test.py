@@ -1,4 +1,4 @@
- import sys
+import sys
 import os
 sys.path.append(os.path.split(os.path.dirname(os.path.realpath(__file__)))[0]) 
 from curvefitting_assessor import CurvefittingAssessor
@@ -126,4 +126,3 @@ New_Assessor.trial_end(ret)
 # return Bad
 # Actual_y  = 0.102800
 # Predict_y = 0.061745
-'''
