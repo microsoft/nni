@@ -43,7 +43,7 @@ New_Assessor.trial_end(2, True)
 
 print (New_Assessor.assess_trial(3, [0.9398166693250338, 0.9840166797240575, 0.9894000099102656, 0.9919666741291682]))
 # y_predict = 0.9598973 AssessResult.Good
-# y_truth = 1.00
+# y_actual = 1.00
 New_Assessor.trial_end(3, True)
 
 print (New_Assessor.assess_trial(4, [0.0991, 0.3717, 0.5475, 0.6665, 0.7615]))
@@ -65,7 +65,7 @@ New_Assessor.trial_end(ret)
 # predict_y = NaN
 
 ret = (New_Assessor.assess_trial([0.0958, 0.1032, 0.1032, 0.1032, 0.0974, 0.1009]))
-0.061745print (2, ret)
+print (2, ret)
 New_Assessor.trial_end(ret)
 # return Good
 # Actual_y  = 0.098000
