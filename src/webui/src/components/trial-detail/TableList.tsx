@@ -6,6 +6,7 @@ import { Row, Table, Button, Popconfirm, Modal, message } from 'antd';
 import { MANAGER_IP, trialJobStatus } from '../../static/const';
 import { convertDuration } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
+import LogPath from '../logPath/LogPath';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
 require('../../static/style/search.scss');
@@ -237,7 +238,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     :
                                     record.acc
                                 :
-                                'NaN'
+                                '--'
                         }
                     </div>
                 );
@@ -305,16 +306,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const parametersRow = {
                 parameters: record.description.parameters
             };
-            const intermediate = record.description.intermediate;
-            let showIntermediate = '';
-            if (intermediate && intermediate.length > 0) {
-                showIntermediate = intermediate.join(', ');
-            }
-            let isLogLink: boolean = false;
-            const logPathRow = record.description.logPath;
-            if (record.description.isLink !== undefined) {
-                isLogLink = true;
-            }
+            const logPathRow = record.description.logPath !== undefined
+                ?
+                record.description.logPath
+                :
+                'This trial\'s logPath are not available.';
             return (
                 <pre id="allList" className="hyperpar">
                     {
@@ -332,23 +328,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 <span className="error">'This trial's parameters are not available.'</span>
                             </div>
                     }
-                    {
-                        isLogLink
-                            ?
-                            <div className="logpath">
-                                <span className="logName">logPath: </span>
-                                <a className="logContent logHref" href={logPathRow} target="_blank">{logPathRow}</a>
-                            </div>
-                            :
-                            <div className="logpath">
-                                <span className="logName">logPath: </span>
-                                <span className="logContent">{logPathRow}</span>
-                            </div>
-                    }
-                    <Row className="intermediate logpath">
-                        <span className="logName">Intermediate Result:</span> 
-                        {showIntermediate}
-                    </Row>
+                    <LogPath logStr={logPathRow}/>
                 </pre>
             );
         };

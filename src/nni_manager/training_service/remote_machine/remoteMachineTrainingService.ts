@@ -36,7 +36,7 @@ import { ObservableTimer } from '../../common/observableTimer';
 import {
     HostJobApplicationForm, HyperParameters, JobApplicationForm, TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus, getRemoteTmpDir  } from '../../common/utils';
 import { GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -48,6 +48,7 @@ import {
     RemoteMachineTrialJobDetail, ScheduleResultType
 } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
+import { validateCodeDir} from '../common/util';
 
 /**
  * Training Service implementation for Remote Machine (Linux)
@@ -66,8 +67,10 @@ class RemoteMachineTrainingService implements TrainingService {
     private log: Logger;
     private isMultiPhase: boolean = false;
     private trialSequenceId: number;
+    private readonly remoteOS: string;
 
     constructor(@component.Inject timer: ObservableTimer) {
+        this.remoteOS = 'linux';
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.machineSSHClientMap = new Map<RemoteMachineMeta, Client>();
@@ -295,6 +298,15 @@ class RemoteMachineTrainingService implements TrainingService {
                 if (!fs.lstatSync(remoteMachineTrailConfig.codeDir).isDirectory()) {
                     throw new Error(`codeDir ${remoteMachineTrailConfig.codeDir} is not a directory`);
                 }
+
+                // Validate to make sure codeDir doesn't have too many files
+                try {
+                    await validateCodeDir(remoteMachineTrailConfig.codeDir);
+                } catch(error) {
+                    this.log.error(error);
+                    return Promise.reject(new Error(error));                    
+                }
+
                 this.trialConfig = remoteMachineTrailConfig;
                 break;
             case TrialConfigMetadataKey.MULTI_PHASE:
@@ -372,7 +384,7 @@ class RemoteMachineTrainingService implements TrainingService {
         // Copy NNI scripts to remote expeirment working directory
         const remoteScriptsDir: string = this.getRemoteScriptsPath();
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${remoteScriptsDir}`, conn);
-        await SSHClientUtility.copyDirectoryToRemote('./scripts', remoteScriptsDir, conn);
+        await SSHClientUtility.copyDirectoryToRemote('./scripts', remoteScriptsDir, conn, this.remoteOS);
         await SSHClientUtility.remoteExeCommand(`chmod 777 ${nniRootDir} ${nniRootDir}/* ${nniRootDir}/scripts/*`, conn);
 
         //Begin to execute gpu_metrics_collection scripts
@@ -485,7 +497,7 @@ class RemoteMachineTrainingService implements TrainingService {
         await this.writeParameterFile(trialJobId, form.hyperParameters, rmScheduleInfo.rmMeta);
 
         // Copy files in codeDir to remote working directory
-        await SSHClientUtility.copyDirectoryToRemote(this.trialConfig.codeDir, trialWorkingFolder, sshClient);
+        await SSHClientUtility.copyDirectoryToRemote(this.trialConfig.codeDir, trialWorkingFolder, sshClient, this.remoteOS);
         // Execute command in remote machine
         SSHClientUtility.remoteExeCommand(`bash ${path.join(trialWorkingFolder, 'run.sh')}`, sshClient);
     }
@@ -576,7 +588,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private getRemoteExperimentRootDir(): string{
-        return path.join(os.tmpdir(), 'nni', 'experiments', getExperimentId());
+        return path.join(getRemoteTmpDir(this.remoteOS), 'nni', 'experiments', getExperimentId());
     }
 
     private getJobPidPath(jobId: string): string {

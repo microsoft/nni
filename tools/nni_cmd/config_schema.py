@@ -34,7 +34,22 @@ Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
 'useAnnotation': bool,
-'tuner': Or({
+Optional('advisor'): Or({
+    'builtinAdvisorName': Or('Hyperband'),
+    'classArgs': {
+        'optimize_mode': Or('maximize', 'minimize'),
+        Optional('R'): int,
+        Optional('eta'): int
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'codeDir': os.path.exists,
+    'classFileName': str,
+    'className': str,
+    Optional('classArgs'): dict,
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+}),
+Optional('tuner'): Or({
     'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'SMAC', 'Evolution'),
     Optional('classArgs'): {
         'optimize_mode': Or('maximize', 'minimize')
@@ -83,7 +98,8 @@ pai_trial_schema = {
     'memoryMB': int,
     'image': str,
     Optional('dataDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
-    Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?')
+    Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
+    Optional('virtualCluster'): str
     }
 }
 
@@ -118,14 +134,24 @@ kubeflow_trial_schema = {
 }
 
 kubeflow_config_schema = {
-    'kubeflowConfig':{
-        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operato'),
+    'kubeflowConfig':Or({
+        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
         'nfs': {
             'server': str,
             'path': str
         },
-        'kubernetesServer': str
-    }
+        Optional('kubernetesServer'): str
+    },{
+        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
+        'keyVault': {
+            'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
+            'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')
+        },
+        'azureStorage': {
+            'accountName': Regex('([0-9]|[a-z]|[A-Z]|-){3,31}'),
+            'azureShare': Regex('([0-9]|[a-z]|[A-Z]|-){3,63}')
+        }
+    })
 }
 
 machine_list_schima = {

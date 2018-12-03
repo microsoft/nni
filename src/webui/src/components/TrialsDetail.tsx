@@ -4,6 +4,7 @@ import { MANAGER_IP } from '../static/const';
 import { Row, Col, Button, Tabs, Input } from 'antd';
 const Search = Input.Search;
 import { TableObj, Parameters, DetailAccurPoint, TooltipForAccuracy } from '../static/interface';
+import { getFinalResult } from '../static/function';
 import Accuracy from './overview/Accuracy';
 import Duration from './trial-detail/Duration';
 import Title1 from './overview/Title1';
@@ -47,24 +48,13 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     const accSource: Array<DetailAccurPoint> = [];
                     Object.keys(accData).map(item => {
                         if (accData[item].status === 'SUCCEEDED' && accData[item].finalMetricData) {
-                            let acc;
-                            let tableAcc;
                             let searchSpace: object = {};
-                            if (accData[item].finalMetricData) {
-                                acc = JSON.parse(accData[item].finalMetricData.data);
-                                if (typeof (acc) === 'object') {
-                                    if (acc.default) {
-                                        tableAcc = acc.default;
-                                    }
-                                } else {
-                                    tableAcc = acc;
-                                }
-                            }
+                            const acc = getFinalResult(accData[item].finalMetricData);
                             if (accData[item].hyperParameters) {
                                 searchSpace = JSON.parse(accData[item].hyperParameters).parameters;
                             }
                             accSource.push({
-                                acc: tableAcc,
+                                acc: acc,
                                 index: accData[item].sequenceId,
                                 searchSpace: JSON.stringify(searchSpace)
                             });
@@ -83,9 +73,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             enterable: true,
                             position: function (point: Array<number>, data: TooltipForAccuracy) {
                                 if (data.data[0] < resultList.length / 2) {
-                                    return [point[0], 10];
+                                    return [point[0], 80];
                                 } else {
-                                    return [point[0] - 300, 10];
+                                    return [point[0] - 300, 80];
                                 }
                             },
                             formatter: function (data: TooltipForAccuracy) {
@@ -131,24 +121,16 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
     drawTableList = () => {
 
-        axios
-            .all([
-                axios.get(`${MANAGER_IP}/trial-jobs`),
-                axios.get(`${MANAGER_IP}/metric-data`)
-            ])
-            .then(axios.spread((res, res1) => {
-                if (res.status === 200 && res1.status === 200) {
+            axios.get(`${MANAGER_IP}/trial-jobs`)
+            .then(res => {
+                if (res.status === 200) {
                     const trialJobs = res.data;
-                    const metricSource = res1.data;
                     const trialTable: Array<TableObj> = [];
                     Object.keys(trialJobs).map(item => {
                         // only succeeded trials have finalMetricData
                         let desc: Parameters = {
-                            parameters: {},
-                            intermediate: []
+                            parameters: {}
                         };
-                        let acc;
-                        let tableAcc = 0;
                         let duration = 0;
                         const id = trialJobs[item].id !== undefined
                             ? trialJobs[item].id
@@ -172,36 +154,15 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         }
                         if (trialJobs[item].logPath !== undefined) {
                             desc.logPath = trialJobs[item].logPath;
-                            const isHyperLink = /^http/gi.test(trialJobs[item].logPath);
-                            if (isHyperLink) {
-                                desc.isLink = true;
-                            }
                         }
-                        let mediate: Array<string> = [];
-                        Object.keys(metricSource).map(key => {
-                            const items = metricSource[key];
-                            if (items.trialJobId === id) {
-                                mediate.push(items.data);
-                            }
-                        });
-                        desc.intermediate = mediate;
-                        if (trialJobs[item].finalMetricData !== undefined) {
-                            acc = JSON.parse(trialJobs[item].finalMetricData.data);
-                            if (typeof (acc) === 'object') {
-                                if (acc.default) {
-                                    tableAcc = acc.default;
-                                }
-                            } else {
-                                tableAcc = acc;
-                            }
-                        }
+                        const acc = getFinalResult(trialJobs[item].finalMetricData);
                         trialTable.push({
                             key: trialTable.length,
                             sequenceId: trialJobs[item].sequenceId,
                             id: id,
                             status: status,
                             duration: duration,
-                            acc: tableAcc,
+                            acc: acc,
                             description: desc
                         });
                     });
@@ -212,7 +173,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         }));
                     }
                 }
-            }));
+            });
     }
 
     callback = (key: string) => {
