@@ -305,7 +305,10 @@ def main(unused_argv):
         val_feed = {x: mnist.validation.images, y_: mnist.validation.labels}
         interim_val_xent = sess.run(cross_entropy, feed_dict=val_feed)
         print("After %d training step(s), validation cross entropy = %g" % (step, interim_val_xent))
-        nni.report_intermediate_result(interim_val_xent)
+
+        # Only chief worker can report intermediate metrics
+        if is_chief:
+          nni.report_intermediate_result(interim_val_xent)
 
       if step >= FLAGS.train_steps:
         break
@@ -321,7 +324,7 @@ def main(unused_argv):
     print("After %d training step(s), validation cross entropy = %g" %
           (FLAGS.train_steps, val_xent))
 
-    # Report final metrics
+    # Only chief worker can report final metrics
     if is_chief:
         nni.report_final_result(val_xent)
 
