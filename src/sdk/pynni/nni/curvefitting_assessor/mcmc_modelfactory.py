@@ -29,7 +29,7 @@ from scipy.misc import logsumexp
 from scipy.stats import norm, kde
 from scipy.optimize import curve_fit, leastsq, fmin_bfgs, fmin_l_bfgs_b, nnls
 from curvefunctions import curve_combination_models, model_defaults
-from curvemodelfactory import recency_weights
+from ml_curvemodel import recency_weights
 
 logger = logging.getLogger('curvefitting_Assessor: modelfactory')
 
