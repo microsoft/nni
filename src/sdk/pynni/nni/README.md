@@ -61,9 +61,9 @@ _Usage_:
 <a name="Evolution"></a>
 **Naive Evolution**
 
-Naive Evolution comes from [Large-Scale Evolution of Image Classifiers][3]. It randomly initializes a population based on search space. For each generation, it chooses better ones and do some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. 
+Naive Evolution comes from [Large-Scale Evolution of Image Classifiers][3]. It randomly initializes a population based on search space. For each generation, it chooses better ones and do some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naive Evolution requires many trials to works, but it's very simple and easily to expand new features.
 
-_Suggested scenario_: Naive Evolution also requires many trials to works. Specifically, it requires large inital population to avoid falling into local optimum. This tuner is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
+_Suggested scenario_: Its requirement of computation resource is relatively high. Specifically, it requires large inital population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
 
 _Usage_:
 ```
