@@ -16,17 +16,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import argparse
-import json
 import logging
 import os
-import sys
-import time
 
 import keras
+import keras.backend.tensorflow_backend as KTF
 import numpy as np
-
+import tensorflow as tf
+from keras.datasets import cifar10
+from keras.optimizers import SGD, Adadelta, Adagrad, Adam, Adamax, Nadam, RMSprop
+from keras.preprocessing.image import ImageDataGenerator
+from keras.utils import multi_gpu_model, to_categorical
+from keras.callbacks import TensorBoard, EarlyStopping
 import nni
-import utils
 from nni.networkmorphism_tuner.graph import json_to_graph
 
 # set the logger format
@@ -39,19 +41,30 @@ logging.basicConfig(
     datefmt="%m/%d %I:%M:%S %p",
 )
 # set the logger format
-logger = logging.getLogger("cifar10-network-morphism")
+logger = logging.getLogger("cifar10-network-morphism-keras")
+
+
+# restrict gpu usage background
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
+
+KTF.set_session(sess)
 
 
 def get_args():
     parser = argparse.ArgumentParser("cifar10")
-    parser.add_argument("--batch_size", type=int, default=96, help="batch size")
+    parser.add_argument("--batch_size", type=int, default=128, help="batch size")
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
     parser.add_argument("--epoches", type=int, default=200, help="epoch limit")
-    parser.add_argument("--learning_rate", type=float, default=0.05, help="learning rate")
-    parser.add_argument("--cutout", action="store_true", default=False, help="use cutout")
-    parser.add_argument("--cutout_length", type=int, default=8, help="cutout length")
     parser.add_argument(
-        "--model_path", type=str, default="./", help="Path to save the destination model"
+        "--learning_rate", type=float, default=0.001, help="learning rate"
+    )
+    parser.add_argument(
+        "--weight_decay",
+        type=float,
+        default=1e-5,
+        help="weight decay of the learning rate",
     )
     args = parser.parse_args()
     return args
@@ -60,18 +73,14 @@ def get_args():
 trainloader = None
 testloader = None
 net = None
-criterion = None
-optimizer = None
-best_acc = 0.0
 args = get_args()
-
+TENSORBOARD_DIR = os.environ["NNI_OUTPUT_DIR"]
 
 
 def build_graph_from_json(ir_model_json):
     """build model from json representation
     """
-    graph_json = json.loads(ir_model_json)
-    graph = json_to_graph(graph_json)
+    graph = json_to_graph(ir_model_json)
     logging.debug(graph.operation_history)
     model = graph.produce_keras_model()
     return model
@@ -80,126 +89,105 @@ def build_graph_from_json(ir_model_json):
 def parse_rev_args(receive_msg):
     global trainloader
     global testloader
+    global datagen
     global net
-    global criterion
-    global optimizer
 
-    # Data
+    # Loading Data
     logger.debug("Preparing data..")
 
-    transform_train, transform_test = utils._data_transforms_cifar10(args)
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
+    y_train = to_categorical(y_train, 10)
+    y_test = to_categorical(y_test, 10)
+    x_train = x_train.astype("float32")
+    x_test = x_test.astype("float32")
+    x_train /= 255.0
+    x_test /= 255.0
+    trainloader = (x_train, y_train)
+    testloader = (x_test, y_test)
 
-    trainset = torchvision.datasets.CIFAR10(
-        root="./data", train=True, download=True, transform=transform_train
+    datagen = ImageDataGenerator(
+        featurewise_center=True,
+        featurewise_std_normalization=True,
+        rotation_range=20,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        horizontal_flip=True,
     )
-    trainloader = torch.utils.data.DataLoader(
-        trainset, batch_size=args.batch_size, shuffle=True, num_workers=2
-    )
-
-    testset = torchvision.datasets.CIFAR10(
-        root="./data", train=False, download=True, transform=transform_test
-    )
-    testloader = torch.utils.data.DataLoader(
-        testset, batch_size=args.batch_size, shuffle=False, num_workers=2
-    )
+    # compute quantities required for featurewise normalization
+    # (std, mean, and principal components if ZCA whitening is applied)
+    datagen.fit(x_train)
 
     # Model
     logger.debug("Building model..")
     net = build_graph_from_json(receive_msg)
-
-    net = net.to(device)
-    criterion = nn.CrossEntropyLoss()
-    # if device == 'cuda' and torch.cuda.device_count() > 1:
-    #     net = torch.nn.DataParallel(net)
+    
+    # parallel model
+    try:
+        available_devices = os.environ["CUDA_VISIBLE_DEVICES"]
+        gpus = len(available_devices.split(","))
+        if gpus > 1:
+            net = multi_gpu_model(net, gpus)
+    except KeyError:
+        logger.debug("parallel model not support in this config settings")
 
     if args.optimizer == "SGD":
-        optimizer = optim.SGD(
-            net.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=5e-4
-        )
+        optimizer = SGD(lr=args.learning_rate, momentum=0.9, decay=args.weight_decay)
     if args.optimizer == "Adadelta":
-        optimizer = optim.Adadelta(net.parameters(), lr=args.learning_rate)
+        optimizer = Adadelta(lr=args.learning_rate, decay=args.weight_decay)
     if args.optimizer == "Adagrad":
-        optimizer = optim.Adagrad(net.parameters(), lr=args.learning_rate)
+        optimizer = Adagrad(lr=args.learning_rate, decay=args.weight_decay)
     if args.optimizer == "Adam":
-        optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
+        optimizer = Adam(lr=args.learning_rate, decay=args.weight_decay)
     if args.optimizer == "Adamax":
-        optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
+        optimizer = Adamax(lr=args.learning_rate, decay=args.weight_decay)
 
+    # Compile the model
+    net.compile(
+        loss="categorical_crossentropy", optimizer=optimizer, metrics=["accuracy"]
+    )
     return 0
 
 
+class SendMetrics(keras.callbacks.Callback):
+    """
+    Keras callback to send metrics to NNI framework
+    """
+
+    def on_epoch_end(self, epoch, logs={}):
+        """
+        Run on end of each epoch
+        """
+        logger.debug(logs)
+        nni.report_intermediate_result(logs["acc"])
+
+
 # Training
-def train(epoch):
+def train_eval():
     global trainloader
     global testloader
     global net
-    global criterion
-    global optimizer
 
-    logger.debug("Epoch: %d" % epoch)
-    net.train()
-    train_loss = 0
-    correct = 0
-    total = 0
+    (x_train, y_train) = trainloader
+    (x_test, y_test) = testloader
 
-    for batch_idx, (inputs, targets) in enumerate(trainloader):
-        inputs, targets = inputs.to(device), targets.to(device)
-        optimizer.zero_grad()
-        outputs = net(inputs)
-        loss = criterion(outputs, targets)
-        loss.backward()
-        optimizer.step()
+    # train process
+    net.fit(
+        x=x_train,
+        y=y_train,
+        batch_size=args.batch_size,
+        validation_data=(x_test, y_test),
+        epochs=args.epoches,
+        shuffle=True,
+        callbacks=[
+            SendMetrics(),
+            EarlyStopping(min_delta=0.001, patience=10),
+            TensorBoard(log_dir=TENSORBOARD_DIR),
+        ],
+    )
 
-        train_loss += loss.item()
-        _, predicted = outputs.max(1)
-        total += targets.size(0)
-        correct += predicted.eq(targets).sum().item()
-
-        acc = 100.0 * correct / total
-
-        logger.debug(
-            "Loss: %.3f | Acc: %.3f%% (%d/%d)"
-            % (train_loss / (batch_idx + 1), 100.0 * correct / total, correct, total)
-        )
-
-    return acc
-
-
-def test(epoch):
-    global best_acc
-    global trainloader
-    global testloader
-    global net
-    global criterion
-    global optimizer
-
-    net.eval()
-    test_loss = 0
-    correct = 0
-    total = 0
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(testloader):
-            inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs)
-            loss = criterion(outputs, targets)
-
-            test_loss += loss.item()
-            _, predicted = outputs.max(1)
-            total += targets.size(0)
-            correct += predicted.eq(targets).sum().item()
-
-            acc = 100.0 * correct / total
-
-            logger.debug(
-                "Loss: %.3f | Acc: %.3f%% (%d/%d)"
-                % (test_loss / (batch_idx + 1), 100.0 * correct / total, correct, total)
-            )
-
-    acc = 100.0 * correct / total
-    if acc > best_acc:
-        logger.debug("Saving..")
-        best_acc = acc
-    return acc, best_acc
+    _, acc = net.evaluate(x_test, y_test)
+    logger.debug("Final result is: %d", acc)
+    nni.report_final_result(acc)
 
 
 if __name__ == "__main__":
@@ -207,21 +195,8 @@ if __name__ == "__main__":
         # trial get next parameter from network morphism tuner
         RCV_CONFIG = nni.get_next_parameter()
         logger.debug(RCV_CONFIG)
-
         parse_rev_args(RCV_CONFIG)
-        acc = 0.0
-        best_acc = 0.0
-        early_stop = utils.EarlyStopping(mode="max")
-        for epoch in range(args.epoches):
-            train_acc = train(epoch)
-            test_acc, best_acc = test(epoch)
-            nni.report_intermediate_result(test_acc)
-            logger.debug(test_acc)
-            if early_stop.step(test_acc):
-                break
-
-        # trial report best_acc to tuner
-        nni.report_final_result(best_acc)
+        train_eval()
     except Exception as exception:
         logger.exception(exception)
         raise

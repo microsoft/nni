@@ -1,9 +1,6 @@
-nni==0.3.0
-Keras==2.2.2
+numpy==1.14.2
+tensorflow==1.12.0
 torchvision==0.2.1
-numpy==1.13.3
-mmdnn==0.2.3
-onnx==1.3.0
-tensorflow==1.10.1
+Keras==2.2.2
+nni==0.3.0
 torch==0.4.1
-onnx_tf==1.2.0

@@ -32,11 +32,38 @@ from sklearn.metrics.pairwise import rbf_kernel
 
 from nni.networkmorphism_tuner.graph_transformer import transform
 from nni.networkmorphism_tuner.utils import Constant
+from nni.networkmorphism_tuner.layers import is_layer
 
 
 def layer_distance(a, b):
     """The distance between two layers."""
-    return abs(a - b) * 1.0 / max(a, b)
+    if type(a) != type(b):
+        return 1.0
+    if is_layer(a, "Conv"):
+        att_diff = [
+            (a.filters, b.filters),
+            (a.kernel_size, b.kernel_size),
+            (a.stride, b.stride),
+        ]
+        return attribute_difference(att_diff)
+    if is_layer(a, "Pooling"):
+        att_diff = [
+            (a.padding, b.padding),
+            (a.kernel_size, b.kernel_size),
+            (a.stride, b.stride),
+        ]
+        return attribute_difference(att_diff)
+    return 0.0
+
+
+def attribute_difference(att_diff):
+    ret = 0
+    for a_value, b_value in att_diff:
+        if max(a_value, b_value) == 0:
+            ret += 0
+        else:
+            ret += abs(a_value - b_value) * 1.0 / max(a_value, b_value)
+    return ret * 1.0 / len(att_diff)
 
 
 def layers_distance(list_a, list_b):
@@ -87,9 +114,8 @@ def edit_distance(x, y):
     Returns:
         The edit-distance between x and y.
     """
-    ret = 0
-    ret += layers_distance(x.conv_widths, y.conv_widths)
-    ret += layers_distance(x.dense_widths, y.dense_widths)
+
+    ret = layers_distance(x.layers, y.layers)
     ret += Constant.KERNEL_LAMBDA * skip_connections_distance(
         x.skip_connections, y.skip_connections
     )
@@ -98,10 +124,11 @@ def edit_distance(x, y):
 
 class IncrementalGaussianProcess:
     """Gaussian process regressor.
+    Attributes:
+        alpha: A hyperparameter.
     """
 
     def __init__(self):
-
         self.alpha = 1e-10
         self._distance_matrix = None
         self._x = None
@@ -280,12 +307,12 @@ class BayesianOptimizer:
         search_tree: The network morphism search tree.
     """
 
-    def __init__(self, searcher, t_min, metric, beta):
+    def __init__(self, searcher, t_min, metric, beta=None):
         self.searcher = searcher
         self.t_min = t_min
         self.metric = metric
         self.gpr = IncrementalGaussianProcess()
-        self.beta = beta
+        self.beta = beta if beta is not None else Constant.BETA
         self.search_tree = SearchTree()
 
     def fit(self, x_queue, y_queue):

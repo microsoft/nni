@@ -17,17 +17,11 @@
 
 import argparse
 import logging
-import os
-import json
-import sys
-import time
 
-import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.onnx
 import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
@@ -35,7 +29,6 @@ from torch.autograd import Variable
 
 import nni
 import utils
-from utils import EarlyStopping
 from nni.networkmorphism_tuner.graph import json_to_graph
 
 # set the logger format
@@ -81,10 +74,9 @@ args = get_args()
 def build_graph_from_json(ir_model_json):
     """build model from json representation
     """
-    graph_json = json.loads(ir_model_json)
-    graph = json_to_graph(graph_json)
+    graph = json_to_graph(ir_model_json)
     logging.debug(graph.operation_history)
-    model = graph.produce_keras_model()
+    model = graph.produce_torch_model()
     return model
 
 
@@ -95,13 +87,18 @@ def parse_rev_args(receive_msg):
     global criterion
     global optimizer
 
-    # Data
+    # Loading Data
     logger.debug("Preparing data..")
 
     raw_train_data = torchvision.datasets.FashionMNIST(
         root="./data", train=True, download=True
     )
-    dataset_mean, dataset_std = utils.get_mean_and_std(raw_train_data)
+
+    dataset_mean, dataset_std = (
+        [raw_train_data.train_data.float().mean() / 255],
+        [raw_train_data.train_data.float().std() / 255],
+    )
+
     transform_train, transform_test = utils._data_transforms_mnist(
         args, dataset_mean, dataset_std
     )
@@ -138,7 +135,9 @@ def parse_rev_args(receive_msg):
     if args.optimizer == "Adam":
         optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
     if args.optimizer == "Adamax":
-        optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
+        optimizer = optim.Adamax(net.parameters(), lr=args.learning_rate)
+    if args.optimizer == "RMSprop":
+        optimizer = optim.RMSprop(net.parameters(), lr=args.learning_rate)
 
     return 0
 
@@ -226,7 +225,7 @@ if __name__ == "__main__":
         parse_rev_args(RCV_CONFIG)
         acc = 0.0
         best_acc = 0.0
-        early_stop = EarlyStopping(mode="max")
+        early_stop = utils.EarlyStopping(mode="max")
         for epoch in range(args.epoches):
             train_acc = train(epoch)
             test_acc, best_acc = test(epoch)

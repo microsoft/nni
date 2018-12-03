@@ -81,7 +81,7 @@ In the "trial" part, if you want to use GPU to perform the architecture search, 
 nnictl create --config ~/nni/examples/trials/ga_squad/config.yaml
 ```
 
-# Techinal details about the trial
+# Technical details about the trial
 
 ## How does it works
 The evolution-algorithm based architecture for question answering has two different parts just like any other examples: the trial and the tuner.
@@ -99,7 +99,7 @@ The trial has a lot of different files, functions and classes. Here we will only
 
 Among those files, `trial.py` and `graph_to_tf.py` is special.
 
-`graph_to_tf.py` has a function named as `graph_to_network`, here is its skelton code:
+`graph_to_tf.py` has a function named as `graph_to_network`, here is its skeleton code:
 
 ```
 def graph_to_network(input1,

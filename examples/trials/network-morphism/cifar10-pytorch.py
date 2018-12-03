@@ -16,13 +16,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import argparse
-import json
 import logging
-import os
-import sys
-import time
 
-import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
@@ -46,15 +41,17 @@ logging.basicConfig(
     datefmt="%m/%d %I:%M:%S %p",
 )
 # set the logger format
-logger = logging.getLogger("cifar10-network-morphism")
+logger = logging.getLogger("cifar10-network-morphism-pytorch")
 
 
 def get_args():
     parser = argparse.ArgumentParser("cifar10")
-    parser.add_argument("--batch_size", type=int, default=96, help="batch size")
+    parser.add_argument("--batch_size", type=int, default=128, help="batch size")
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
     parser.add_argument("--epoches", type=int, default=200, help="epoch limit")
-    parser.add_argument("--learning_rate", type=float, default=0.001, help="learning rate")
+    parser.add_argument(
+        "--learning_rate", type=float, default=0.001, help="learning rate"
+    )
     parser.add_argument("--cutout", action="store_true", default=False, help="use cutout")
     parser.add_argument("--cutout_length", type=int, default=8, help="cutout length")
     parser.add_argument(
@@ -73,15 +70,14 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 best_acc = 0.0
 args = get_args()
 
+
 def build_graph_from_json(ir_model_json):
     """build model from json representation
     """
-    graph_json = json.loads(ir_model_json)
-    graph = json_to_graph(graph_json)
+    graph = json_to_graph(ir_model_json)
     logging.debug(graph.operation_history)
     model = graph.produce_torch_model()
     return model
-
 
 
 def parse_rev_args(receive_msg):
@@ -91,7 +87,7 @@ def parse_rev_args(receive_msg):
     global criterion
     global optimizer
 
-    # Data
+    # Loading Data
     logger.debug("Preparing data..")
 
     transform_train, transform_test = utils._data_transforms_cifar10(args)
@@ -116,8 +112,8 @@ def parse_rev_args(receive_msg):
 
     net = net.to(device)
     criterion = nn.CrossEntropyLoss()
-    # if device == 'cuda' and torch.cuda.device_count() > 1:
-    #     net = torch.nn.DataParallel(net)
+    if device == "cuda" and torch.cuda.device_count() > 1:
+        net = torch.nn.DataParallel(net)
 
     if args.optimizer == "SGD":
         optimizer = optim.SGD(
@@ -130,7 +126,10 @@ def parse_rev_args(receive_msg):
     if args.optimizer == "Adam":
         optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
     if args.optimizer == "Adamax":
-        optimizer = optim.Adam(net.parameters(), lr=args.learning_rate)
+        optimizer = optim.Adamax(net.parameters(), lr=args.learning_rate)
+    if args.optimizer == "RMSprop":
+        optimizer = optim.RMSprop(net.parameters(), lr=args.learning_rate)
+
 
     return 0
 

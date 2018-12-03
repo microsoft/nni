@@ -29,7 +29,7 @@ from nni.tuner import Tuner
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
 from nni.networkmorphism_tuner.metric import Accuracy
 from nni.networkmorphism_tuner.nn import CnnGenerator, MlpGenerator
-from nni.networkmorphism_tuner.utils import Constant, pickle_from_file, pickle_to_file
+from nni.networkmorphism_tuner.utils import Constant
 
 from nni.networkmorphism_tuner.graph import graph_to_json, json_to_graph
 
@@ -183,8 +183,6 @@ class NetworkMorphismTuner(Tuner):
         self.add_model(value, graph, model_id)
         self.update(father_id, graph, value, model_id)
 
-        pickle_to_file(self, os.path.join(self.path, "searcher"))
-
     def init_search(self):
         """Call the generators to generate the initial architectures for the search."""
         if self.verbose:
@@ -229,7 +227,7 @@ class NetworkMorphismTuner(Tuner):
         self.bo.add_child(father_id, model_id)
 
     def add_model(self, metric_value, graph, model_id):
-        """ add model to the history, x_queue and y_queue
+        """ Add model to the history, x_queue and y_queue
 
         Arguments:
             metric_value: int --metric_value
@@ -243,7 +241,7 @@ class NetworkMorphismTuner(Tuner):
         if self.verbose:
             logger.info("Saving model.")
 
-        pickle_to_file(graph, os.path.join(self.path, str(model_id) + ".graph"))
+        graph_to_json(graph, os.path.join(self.path, str(model_id) + ".json"))
 
         # Update best_model text file
         ret = {"model_id": model_id, "metric_value": metric_value}
@@ -273,8 +271,7 @@ class NetworkMorphismTuner(Tuner):
         return ret
 
     def get_best_model_id(self):
-        """ get the best model_id from history using the metric value
-
+        """ Get the best model_id from history using the metric value
         Returns:
             int -- the best model_id
         """
@@ -284,12 +281,33 @@ class NetworkMorphismTuner(Tuner):
         return min(self.history, key=lambda x: x["metric_value"])["model_id"]
 
     def load_model_by_id(self, model_id):
-        return pickle_from_file(os.path.join(self.path, str(model_id) + ".graph"))
+        """Get the model by model_id
+        Arguments:
+            model_id {int} -- model index
+        Returns:
+            Graph -- the model graph representation
+        """
+
+        with open(os.path.join(self.path, str(model_id) + ".json")) as fin:
+            json_str = fin.read().replace("\n", "")
+
+        load_model = json_to_graph(json_str)
+        return load_model
 
     def load_best_model(self):
+        """ Get the best model by model id
+        Returns:
+            Graph -- the best model graph representation
+        """
         return self.load_model_by_id(self.get_best_model_id())
 
     def get_metric_value_by_id(self, model_id):
+        """ Get the model metric valud by its model_id
+        Arguments:
+            model_id {int} -- model index
+        Returns:
+            float -- the model metric
+        """
         for item in self.history:
             if item["model_id"] == model_id:
                 return item["metric_value"]

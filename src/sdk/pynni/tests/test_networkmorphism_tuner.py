@@ -1,42 +1,27 @@
-import logging
-import random
-from io import BytesIO
+import json
+from unittest import TestCase, main
+from copy import deepcopy
+import torch
 
 import nni
 import nni.protocol
-from nni.protocol import CommandType, send, receive
-
-from unittest import TestCase, main
-
-from nni.networkmorphism_tuner.networkmorphism_tuner import NetworkMorphismTuner
-from nni.networkmorphism_tuner.graph import json_to_graph, graph_to_json
-from nni.networkmorphism_tuner.nn import CnnGenerator
+from nni.networkmorphism_tuner.graph import graph_to_json, json_to_graph
+from nni.networkmorphism_tuner.graph_transformer import (to_deeper_graph,
+                                                         to_skip_connection_graph,
+                                                         to_wider_graph)
 from nni.networkmorphism_tuner.layers import layer_description_extractor
-
-import os
-import json
-
-_in_buf = BytesIO()
-_out_buf = BytesIO()
-
-
-def _reverse_io():
-    _in_buf.seek(0)
-    _out_buf.seek(0)
-    nni.protocol._out_file = _in_buf
-    nni.protocol._in_file = _out_buf
-
-
-def _restore_io():
-    _in_buf.seek(0)
-    _out_buf.seek(0)
-    nni.protocol._in_file = _in_buf
-    nni.protocol._out_file = _out_buf
+from nni.networkmorphism_tuner.networkmorphism_tuner import \
+    NetworkMorphismTuner
+from nni.networkmorphism_tuner.nn import CnnGenerator
+from nni.protocol import CommandType, receive, send
 
 
 class NetworkMorphismTestCase(TestCase):
     def test_graph_json_transform(self):
         graph_init = CnnGenerator(10, (32, 32, 3)).generate()
+        graph_init = to_wider_graph(deepcopy(graph_init))
+        graph_init = to_deeper_graph(deepcopy(graph_init))
+        graph_init = to_skip_connection_graph(deepcopy(graph_init))
         json_out = graph_to_json(graph_init, "temp.json")
 
         graph_recover = json_to_graph(json_out)
@@ -50,7 +35,7 @@ class NetworkMorphismTestCase(TestCase):
         )
         self.assertEqual(graph_init.adj_list, graph_recover.adj_list)
         self.assertEqual(graph_init.reverse_adj_list, graph_recover.reverse_adj_list)
-        self.assertEqual(graph_init.operation_history, graph_recover.operation_history)
+        self.assertEqual(len(graph_init.operation_history), len(graph_recover.operation_history))
         self.assertEqual(graph_init.n_dim, graph_recover.n_dim)
         self.assertEqual(graph_init.conv, graph_recover.conv)
         self.assertEqual(graph_init.batch_norm, graph_recover.batch_norm)
@@ -70,13 +55,46 @@ class NetworkMorphismTestCase(TestCase):
         ]
         self.assertEqual(layer_list_init, layer_list_recover)
 
-        node_to_id_init=[graph_init.node_to_id[node] for node in graph_init.node_list]
-        node_to_id_recover=[graph_recover.node_to_id[node] for node in graph_recover.node_list]
+        node_to_id_init = [graph_init.node_to_id[node] for node in graph_init.node_list]
+        node_to_id_recover = [
+            graph_recover.node_to_id[node] for node in graph_recover.node_list
+        ]
         self.assertEqual(node_to_id_init, node_to_id_recover)
 
-        layer_to_id_init = [graph_init.layer_to_id[layer] for layer in graph_init.layer_list]
-        layer_to_id_recover = [graph_recover.layer_to_id[layer] for layer in graph_recover.layer_list]
+        layer_to_id_init = [
+            graph_init.layer_to_id[layer] for layer in graph_init.layer_list
+        ]
+        layer_to_id_recover = [
+            graph_recover.layer_to_id[layer] for layer in graph_recover.layer_list
+        ]
         self.assertEqual(layer_to_id_init, layer_to_id_recover)
+
+    def test_to_wider_graph(self):
+        graph_init = CnnGenerator(10, (32, 32, 3)).generate()
+        json_out = graph_to_json(graph_init, "temp.json")
+        graph_recover = json_to_graph(json_out)
+        wider_graph = to_wider_graph(deepcopy(graph_recover))
+        model = wider_graph.produce_torch_model()
+        out = model(torch.ones(1, 3, 32, 32))
+        self.assertEqual(out.shape, torch.Size([1, 10]))
+        
+    def test_to_deeper_graph(self):
+        graph_init = CnnGenerator(10, (32, 32, 3)).generate()
+        json_out = graph_to_json(graph_init, "temp.json")
+        graph_recover = json_to_graph(json_out)
+        deeper_graph = to_wider_graph(deepcopy(graph_recover))
+        model = deeper_graph.produce_torch_model()
+        out = model(torch.ones(1, 3, 32, 32))
+        self.assertEqual(out.shape, torch.Size([1, 10]))
+
+    def test_to_skip_connection_graph(self):
+        graph_init = CnnGenerator(10, (32, 32, 3)).generate()
+        json_out = graph_to_json(graph_init, "temp.json")
+        graph_recover = json_to_graph(json_out)
+        skip_connection_graph = to_wider_graph(deepcopy(graph_recover))
+        model = skip_connection_graph.produce_torch_model()
+        out = model(torch.ones(1, 3, 32, 32))
+        self.assertEqual(out.shape, torch.Size([1, 10]))
 
     def test_generate_parameters(self):
         tuner = NetworkMorphismTuner()
@@ -100,7 +118,7 @@ class NetworkMorphismTestCase(TestCase):
         self.assertEqual(tuner.bo.search_tree.adj_list[model_id], [])
         self.assertEqual(tuner.history[-1], ret)
         self.assertEqual(
-            tuner.x_queue[-1].to_json(), graph.extract_descriptor().to_json()
+            len(tuner.x_queue[-1].to_json()), len(graph.extract_descriptor().to_json())
         )
         self.assertEqual(tuner.y_queue[-1], 0.7)
 
@@ -128,7 +146,7 @@ class NetworkMorphismTestCase(TestCase):
         self.assertEqual(tuner.history[-1], ret)
         json_queue = tuner.x_queue[-1].to_json()
         json_graph = graph.extract_descriptor().to_json()
-        self.assertEqual(json_queue, json_graph)
+        self.assertEqual(len(json_queue), len(json_graph))
         self.assertEqual(tuner.y_queue[-1], 0.8)
 
     def test_get_best_model_id(self):

@@ -40,7 +40,7 @@ sys.path.append("../")
 import utils
 
 # set the logger format
-logger = logging.getLogger("cifar10-network-morphism")
+logger = logging.getLogger("cifar10-fine-tuning-TPE")
 log_format = "%(asctime)s %(message)s"
 logger.basicConfig(
     stream=sys.stdout, level=logging.INFO, format=log_format, datefmt="%m/%d %I:%M:%S %p"
@@ -50,7 +50,7 @@ logger.basicConfig(
 def get_args():
     parser = argparse.ArgumentParser("cifar10")
     parser.add_argument("--cutout", action="store_true", default=True, help="use cutout")
-    parser.add_argument("--cutout_length", type=int, default=16, help="cutout length")
+    parser.add_argument("--cutout_length", type=int, default=6, help="cutout length")
     args = parser.parse_args()
     return args
 
@@ -63,15 +63,14 @@ optimizer = None
 device = "cuda" if torch.cuda.is_available() else "cpu"
 best_acc = 0.0
 epoches = 0
-best_model_path = "model_path/best.graph"
+best_model_json = dict()
 args = get_args()
 
 
 def build_graph_from_json(ir_model_json):
     """build model from json representation
     """
-    graph_json = json.loads(ir_model_json)
-    graph = json_to_graph(graph_json)
+    graph = json_to_graph(ir_model_json)
     logging.debug(graph.operation_history)
     model = graph.produce_torch_model()
     return model
@@ -85,7 +84,7 @@ def prepare(msg):
     global optimizer
     global best_model_path
 
-    # Data
+    # Loading Data
     logger.info("Preparing data..")
 
     transform_train, transform_test = utils._data_transforms_cifar10(args)
@@ -106,7 +105,7 @@ def prepare(msg):
 
     # Model
     logger.info("Building model..")
-    net = build_graph_from_pickle(best_model_path)
+    net = build_graph_from_json(best_model_json)
 
     net = net.to(device)
 
@@ -114,16 +113,31 @@ def prepare(msg):
 
     if msg["optimizer"] == "SGD":
         optimizer = optim.SGD(
-            net.parameters(), lr=msg["learning_rate"], momentum=0.9, weight_decay=5e-4
+            net.parameters(),
+            lr=msg["learning_rate"],
+            momentum=0.9,
+            weight_decay=msg["weight_decay"],
         )
     if msg["optimizer"] == "Adadelta":
-        optimizer = optim.Adadelta(net.parameters(), lr=msg["learning_rate"])
+        optimizer = optim.Adadelta(
+            net.parameters(), lr=msg["learning_rate"], weight_decay=msg["weight_decay"]
+        )
     if msg["optimizer"] == "Adagrad":
-        optimizer = optim.Adagrad(net.parameters(), lr=msg["learning_rate"])
+        optimizer = optim.Adagrad(
+            net.parameters(), lr=msg["learning_rate"], weight_decay=msg["weight_decay"]
+        )
     if msg["optimizer"] == "Adam":
-        optimizer = optim.Adam(net.parameters(), lr=msg["learning_rate"])
+        optimizer = optim.Adam(
+            net.parameters(), lr=msg["learning_rate"], weight_decay=msg["weight_decay"]
+        )
     if msg["optimizer"] == "Adamax":
-        optimizer = optim.Adam(net.parameters(), lr=msg["learning_rate"])
+        optimizer = optim.Adamax(
+            net.parameters(), lr=msg["learning_rate"], weight_decay=msg["weight_decay"]
+        )
+    if msg["optimizer"] == "RMSprop":
+        optimizer = optim.RMSprop(
+            net.parameters(), lr=msg["learning_rate"], weight_decay=msg["weight_decay"]
+        )
 
 
 # Training
