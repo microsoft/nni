@@ -36,7 +36,8 @@ import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
-import { KubeflowClusterConfig, kubeflowOperatorMap, KubeflowTrialConfig, NFSConfig, kubeflowOperatorJobKindMap } from './kubeflowConfig';
+import { KubeflowClusterConfigBase, KubeflowClusterConfigNFS, KubeflowClusterConfigAzure, kubeflowOperatorMap, KubeflowTrialConfigBase,
+     KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow, NFSConfig, kubeflowOperatorJobKindMap } from './kubeflowConfig';
 import { KubeflowTrialJobDetail } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
@@ -64,8 +65,8 @@ class KubeflowTrainingService implements TrainingService {
     private stopping: boolean = false;
     private experimentId! : string;
     private nextTrialSequenceId: number;
-    private kubeflowClusterConfig?: KubeflowClusterConfig;
-    private kubeflowTrialConfig?: KubeflowTrialConfig;
+    private kubeflowClusterConfig?: KubeflowClusterConfigBase;
+    private kubeflowTrialConfig?: KubeflowTrialConfigBase;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
     private kubeflowRestServerPort?: number;
     private kubeflowJobPlural?: string;
@@ -129,7 +130,7 @@ class KubeflowTrainingService implements TrainingService {
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
         // Create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
-
+        
         // Write worker file content run_worker.sh to local tmp folders
         if(this.kubeflowTrialConfig.worker) {
             const workerRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
@@ -138,14 +139,14 @@ class KubeflowTrainingService implements TrainingService {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
         }
         // Write parameter server file content run_ps.sh to local tmp folders
-        if(this.kubeflowTrialConfig.ps) {
+        if(this.kubeflowTrialConfig instanceof KubeflowTrialConfigTensorflow && this.kubeflowTrialConfig.ps) {
             const psRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
                 this.kubeflowTrialConfig.ps.command, curTrialSequenceId.toString(), 'ps');
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
         }
         // Write parameter server file content run_master.sh to local tmp folders
-        if(this.kubeflowTrialConfig.master) {
+        if(this.kubeflowTrialConfig instanceof KubeflowTrialConfigPytorch && this.kubeflowTrialConfig.master) {
             const masterRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
                 this.kubeflowTrialConfig.master.command, curTrialSequenceId.toString(), 'master');
 
@@ -167,7 +168,7 @@ class KubeflowTrainingService implements TrainingService {
         }
         workerPodResources.limits = Object.assign({}, workerPodResources.requests);
         let psOrMasterPodResources : any = undefined;
-        if(this.kubeflowTrialConfig.ps) {
+        if(this.kubeflowTrialConfig instanceof KubeflowTrialConfigTensorflow && this.kubeflowTrialConfig.ps) {
             psOrMasterPodResources = {};
             psOrMasterPodResources.requests = {
                 'memory': `${this.kubeflowTrialConfig.ps.memoryMB}Mi`,
@@ -175,7 +176,7 @@ class KubeflowTrainingService implements TrainingService {
                 'nvidia.com/gpu': `${this.kubeflowTrialConfig.ps.gpuNum}`
             }
             psOrMasterPodResources.limits = Object.assign({}, psOrMasterPodResources.requests);
-        }else if(this.kubeflowTrialConfig.master){
+        }else if(this.kubeflowTrialConfig instanceof KubeflowTrialConfigPytorch && this.kubeflowTrialConfig.master){
             psOrMasterPodResources = {};
             psOrMasterPodResources.requests = {
                 'memory': `${this.kubeflowTrialConfig.master.memoryMB}Mi`,
@@ -193,7 +194,7 @@ class KubeflowTrainingService implements TrainingService {
         let trialJobDetail: KubeflowTrialJobDetail;
         //The url used in trialJobDetail
         let trialJobDetailUrl: string;
-        if(this.kubeflowClusterConfig.nfs) {
+        if(this.kubeflowClusterConfig instanceof KubeflowClusterConfigNFS) {
             // Creat work dir for current trial in NFS directory 
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
             // Copy code files from local dir to NFS mounted dir
@@ -201,7 +202,7 @@ class KubeflowTrainingService implements TrainingService {
         
             const nfsConfig: NFSConfig = this.kubeflowClusterConfig.nfs;
             trialJobDetailUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`
-        } else {
+        } else if(this.kubeflowClusterConfig instanceof KubeflowClusterConfigAzure){
             try{
                 //upload local files to azure storage
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient, 
@@ -213,22 +214,24 @@ class KubeflowTrainingService implements TrainingService {
                 return Promise.reject(error);
             }
         }
+        
         trialJobDetail = new KubeflowTrialJobDetail(
             trialJobId,
             'WAITING',
             Date.now(),
             trialWorkingFolder,
             form,
-            kubeflowJobName,
+            "",
             curTrialSequenceId,
-            trialJobDetailUrl, 
+            "", 
             this.kubeflowJobPlural
         );
+        
         // Create kubeflow training jobs
         await cpp.exec(`kubectl create -f ${kubeflowJobYamlPath}`);
         // Set trial job detail until kubectl create resource successfully 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
-
+        
         return Promise.resolve(trialJobDetail);
     }
 
@@ -308,9 +311,17 @@ class KubeflowTrainingService implements TrainingService {
                 break;
             
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
-                this.kubeflowClusterConfig = <KubeflowClusterConfig>JSON.parse(value);
+                let kubeflowClusterJsonObject = JSON.parse(value);
+                if(kubeflowClusterJsonObject.nfs !== undefined){
+                    this.kubeflowClusterConfig = new KubeflowClusterConfigNFS(kubeflowClusterJsonObject.operator, 
+                        kubeflowClusterJsonObject.kubernetsServer, kubeflowClusterJsonObject.nfs);
+                }else{
+                    this.kubeflowClusterConfig = new KubeflowClusterConfigAzure(kubeflowClusterJsonObject.operator, 
+                        kubeflowClusterJsonObject.kubernetsServer,kubeflowClusterJsonObject.keyVault, kubeflowClusterJsonObject.azureStorage);
+                }
+                     
                 // If NFS config section is valid in config file, proceed to mount and config NFS
-                if(this.kubeflowClusterConfig.nfs) {
+                if(this.kubeflowClusterConfig instanceof KubeflowClusterConfigNFS) {
                     //Check and mount NFS mount point here
                     await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
                     const nfsServer: string = this.kubeflowClusterConfig.nfs.server;
@@ -323,7 +334,7 @@ class KubeflowTrainingService implements TrainingService {
                         this.log.error(mountError);
                         throw new Error(mountError);
                     }
-                } else if(this.kubeflowClusterConfig.keyVault && this.kubeflowClusterConfig.azureStorage){
+                } else if(this.kubeflowClusterConfig instanceof KubeflowClusterConfigAzure){
                     const vaultName = this.kubeflowClusterConfig.keyVault.vaultName;
                     const valutKeyName = this.kubeflowClusterConfig.keyVault.name;
                     this.azureStorageAccountName = this.kubeflowClusterConfig.azureStorage.accountName;
@@ -365,8 +376,20 @@ class KubeflowTrainingService implements TrainingService {
                     return Promise.reject(new Error('kubeflow cluster config is not initialized'));                    
                 }
 
-                this.kubeflowTrialConfig = <KubeflowTrialConfig>JSON.parse(value);
-                assert(this.kubeflowClusterConfig !== undefined && this.kubeflowTrialConfig.worker !== undefined);
+                assert(this.kubeflowClusterConfig !== undefined)
+                let kubeflowTrialJsonObjsect = JSON.parse(value);
+                if(this.kubeflowClusterConfig.operator === 'tf-operator'){
+                    this.kubeflowTrialConfig = new KubeflowTrialConfigTensorflow(kubeflowTrialJsonObjsect.codeDir, 
+                        kubeflowTrialJsonObjsect.worker, kubeflowTrialJsonObjsect.ps);
+                }else if(this.kubeflowClusterConfig.operator === 'pytorch-operator'){
+                    this.kubeflowTrialConfig = new KubeflowTrialConfigPytorch(kubeflowTrialJsonObjsect.codeDir, 
+                        kubeflowTrialJsonObjsect.worker, kubeflowTrialJsonObjsect.master);
+                }
+
+                if (!this.kubeflowTrialConfig){
+                    this.log.error('kubeflow kubeflow TrialConfig is not initialized');
+                    return Promise.reject(new Error('kubeflow kubeflow TrialConfig is not initialized'));                    
+                }
 
                 // Validate to make sure codeDir doesn't have too many files
                 try {
@@ -375,7 +398,6 @@ class KubeflowTrainingService implements TrainingService {
                     this.log.error(error);
                     return Promise.reject(new Error(error));                    
                 }
-
                 break;
             default:
                 break;
@@ -450,7 +472,7 @@ class KubeflowTrainingService implements TrainingService {
         if(!this.kubeflowTrialConfig) {
             throw new Error('Kubeflow trial config is not initialized');
         }
-        
+
         if(!this.kubeflowJobPlural) {
             throw new Error('Kubeflow job plural name is undefined');
         }
@@ -460,13 +482,13 @@ class KubeflowTrainingService implements TrainingService {
         replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.worker.replicas, 
             this.kubeflowTrialConfig.worker.image, 'run_worker.sh', workerPodResources);
 
-        if(this.kubeflowJobPlural == 'tfjobs') {
+        if(this.kubeflowTrialConfig instanceof KubeflowTrialConfigTensorflow) {
             if (this.kubeflowTrialConfig.ps){
                 replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.ps.replicas, 
                     this.kubeflowTrialConfig.ps.image, 'run_ps.sh', psOrMasterPodResources);
             }
             replicaSpecsObjMap.set(this.kubeflowJobPlural, {'tfReplicaSpecs': replicaSpecsObj})
-        }else if(this.kubeflowJobPlural == 'pytorchjobs') {
+        }else if(this.kubeflowTrialConfig instanceof KubeflowTrialConfigPytorch) {
             if(this.kubeflowTrialConfig.master){
                 replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.master.replicas, 
                     this.kubeflowTrialConfig.master.image, 'run_master.sh', psOrMasterPodResources);
@@ -487,7 +509,7 @@ class KubeflowTrainingService implements TrainingService {
                 }
             },
             spec: replicaSpecsObjMap.get(this.kubeflowJobPlural)
-        };        
+        };     
     }
 
     /**
@@ -502,7 +524,7 @@ class KubeflowTrainingService implements TrainingService {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
-
+        
         if(!this.kubeflowTrialConfig) {
             throw new Error('Kubeflow trial config is not initialized');
         }
@@ -512,7 +534,7 @@ class KubeflowTrainingService implements TrainingService {
         }
 
         let volumeSpecMap = new Map<string, object>();
-        if(this.kubeflowClusterConfig.nfs){
+        if(this.kubeflowClusterConfig instanceof KubeflowClusterConfigNFS){
             volumeSpecMap.set('nniVolumes', [
             {
                 name: 'nni-vol',
@@ -521,7 +543,7 @@ class KubeflowTrainingService implements TrainingService {
                     path: `${this.kubeflowClusterConfig.nfs.path}`
                 }
             }])
-        }else if(this.kubeflowClusterConfig.azureStorage && this.kubeflowClusterConfig.keyVault){
+        }else if(this.kubeflowClusterConfig instanceof KubeflowClusterConfigAzure){
             volumeSpecMap.set('nniVolumes', [
             {
                 name: 'nni-vol',
@@ -592,15 +614,21 @@ class KubeflowTrainingService implements TrainingService {
         runScriptLines.push(`export NNI_EXP_ID=${getExperimentId()}`);
         runScriptLines.push(`export NNI_CODE_DIR=${trialWorkingFolder}`);
         runScriptLines.push(`export NNI_TRIAL_SEQ_ID=${trialSequenceId}`);
-
+        
         // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
         // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
         // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file
         if(this.kubeflowTrialConfig) {
             switch(roleType) {
                 case 'ps':
-                    if(this.kubeflowTrialConfig.ps && this.kubeflowTrialConfig.ps.gpuNum == 0) {
-                        runScriptLines.push(`export CUDA_VISIBLE_DEVICES=''`);
+                    if(this.kubeflowTrialConfig instanceof KubeflowTrialConfigTensorflow){
+                        if(this.kubeflowTrialConfig.ps && this.kubeflowTrialConfig.ps.gpuNum == 0) {
+                            runScriptLines.push(`export CUDA_VISIBLE_DEVICES=''`);
+                        }
+                    }else{
+                        const kubeflowTrialConfig: string = 'kubeflow trial config error, ps role is in tensorflow operator!';
+                        this.log.error(kubeflowTrialConfig);
+                        throw new Error(kubeflowTrialConfig);
                     }
                     break;
                 case 'worker':
@@ -609,8 +637,14 @@ class KubeflowTrainingService implements TrainingService {
                     }
                     break;
                 case 'master':
-                    if(this.kubeflowTrialConfig.master && this.kubeflowTrialConfig.master.gpuNum == 0) {
-                        runScriptLines.push(`export CUDA_VISIBLE_DEVICES=''`);
+                    if(this.kubeflowTrialConfig instanceof KubeflowTrialConfigPytorch){
+                        if(this.kubeflowTrialConfig.master && this.kubeflowTrialConfig.master.gpuNum == 0) {
+                            runScriptLines.push(`export CUDA_VISIBLE_DEVICES=''`);
+                        }
+                    }else{
+                        const kubeflowTrialConfig: string = 'kubeflow trial config error, ps role is in pytorch operator!';
+                        this.log.error(kubeflowTrialConfig);
+                        throw new Error(kubeflowTrialConfig);
                     }
                     break;
                 default:
@@ -626,8 +660,10 @@ class KubeflowTrainingService implements TrainingService {
         runScriptLines.push(`python3 -m nni_trial_tool.trial_keeper --trial_command '${command}' `
         + `--nnimanager_ip '${nniManagerIp}' --nnimanager_port '${this.kubeflowRestServerPort}' `
         + `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`);
-
+        
         return runScriptLines.join('\n');
+        
+       return ""
     }
 
     private generateSequenceId(): number {

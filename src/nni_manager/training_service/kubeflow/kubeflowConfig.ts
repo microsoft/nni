@@ -47,13 +47,10 @@ export const kubeflowOperatorJobKindMap : Map<KubeflowOperator, KubeflowOperator
  * Kuberflow cluster configuration
  * 
  */
-export class KubeflowClusterConfig {
+export class KubeflowClusterConfigBase {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
-    public readonly nfs?: NFSConfig;
     public readonly kubernetesServer: string;
-    public readonly keyVault?: keyVaultConfig;
-    public readonly azureStorage?: AzureStorage;
     
     /**
      * Constructor
@@ -61,10 +58,27 @@ export class KubeflowClusterConfig {
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator, kubernetesServer : string, nfs?: NFSConfig, keyVault?: keyVaultConfig, azureStorage ?: AzureStorage) {
+    constructor(operator: KubeflowOperator, kubernetesServer : string) {
         this.operator = operator;
-        this.nfs = nfs;
         this.kubernetesServer = kubernetesServer;
+    }
+}
+
+export class KubeflowClusterConfigNFS extends KubeflowClusterConfigBase{
+    public readonly nfs: NFSConfig;
+    
+    constructor(operator: KubeflowOperator, kubernetesServer : string, nfs: NFSConfig) {
+        super(operator, kubernetesServer)
+        this.nfs = nfs;
+    }
+}
+
+export class KubeflowClusterConfigAzure extends KubeflowClusterConfigBase{
+    public readonly keyVault: keyVaultConfig;
+    public readonly azureStorage: AzureStorage;
+    
+    constructor(operator: KubeflowOperator, kubernetesServer : string, keyVault: keyVaultConfig, azureStorage: AzureStorage) {
+        super(operator, kubernetesServer)
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
     }
@@ -149,16 +163,30 @@ export class KubeflowTrialConfigTemplate {
     }
 }
 
-export class KubeflowTrialConfig {
+export class KubeflowTrialConfigBase {
     public readonly codeDir: string;
-    public readonly ps?: KubeflowTrialConfigTemplate;
-    public readonly master?: KubeflowTrialConfigTemplate;
     public readonly worker: KubeflowTrialConfigTemplate;
 
-    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate, ps?: KubeflowTrialConfigTemplate, master?: KubeflowTrialConfigTemplate) {
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate) {
         this.codeDir = codeDir;
         this.worker = worker;
+    }
+}
+
+export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfigBase{
+    public readonly ps?: KubeflowTrialConfigTemplate;
+
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  ps?: KubeflowTrialConfigTemplate) {
+        super(codeDir, worker);
         this.ps = ps;
+    }
+}
+
+export class KubeflowTrialConfigPytorch extends KubeflowTrialConfigBase{
+    public readonly master?: KubeflowTrialConfigTemplate;
+
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  master?: KubeflowTrialConfigTemplate) {
+        super(codeDir, worker);
         this.master = master;
     }
 }
