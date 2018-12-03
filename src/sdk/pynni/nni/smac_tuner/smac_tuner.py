@@ -152,6 +152,15 @@ class SMACTuner(Tuner):
         else:
             self.smbo_solver.nni_smac_receive_runs(self.total_data[parameter_id], reward)
 
+    def convert_loguniform(self, challenger_dict):
+        '''
+        convert the values of type `loguniform` back to their initial range
+        '''
+        for key, value in challenger_dict.items():
+            if key in self.loguniform_key:
+                challenger_dict[key] = np.exp(challenger_dict[key])
+        return challenger_dict
+
     def generate_parameters(self, parameter_id):
         '''
         generate one instance of hyperparameters
@@ -160,23 +169,19 @@ class SMACTuner(Tuner):
             init_challenger = self.smbo_solver.nni_smac_start()
             self.total_data[parameter_id] = init_challenger
             json_tricks.dumps(init_challenger.get_dictionary())
-            return init_challenger.get_dictionary()
+            return self.convert_loguniform(init_challenger.get_dictionary())
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             for challenger in challengers:
                 self.total_data[parameter_id] = challenger
                 json_tricks.dumps(challenger.get_dictionary())
-                return challenger.get_dictionary()
+                return self.convert_loguniform(challenger.get_dictionary())
 
     def generate_multiple_parameters(self, parameter_id_list):
         '''
         generate mutiple instances of hyperparameters
         '''
-        def convert_loguniform(challenger_dict):
-            for key, value in challenger_dict.items():
-                if key in self.loguniform_key:
-                    challenger_dict[key] = np.exp(challenger_dict[key])
-            return challenger_dict
+        
 
         if self.first_one:
             params = []
@@ -184,7 +189,7 @@ class SMACTuner(Tuner):
                 init_challenger = self.smbo_solver.nni_smac_start()
                 self.total_data[one_id] = init_challenger
                 json_tricks.dumps(init_challenger.get_dictionary())
-                params.append(convert_loguniform(init_challenger.get_dictionary()))
+                params.append(self.convert_loguniform(init_challenger.get_dictionary()))
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             cnt = 0
@@ -194,6 +199,6 @@ class SMACTuner(Tuner):
                     break
                 self.total_data[parameter_id_list[cnt]] = challenger
                 json_tricks.dumps(challenger.get_dictionary())
-                params.append(convert_loguniform(challenger.get_dictionary()))
+                params.append(self.convert_loguniform(challenger.get_dictionary()))
                 cnt += 1
         return params
