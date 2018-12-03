@@ -135,9 +135,6 @@ class SMACTuner(Tuner):
             self.update_ss_done = True
         else:
             self.logger.warning('update search space is not supported.')
-        self.logger.info('---------------------------')
-        self.logger.info(self.loguniform_key)
-        self.logger.info('---------------------------')
 
     def receive_trial_result(self, parameter_id, parameters, value):
         '''
@@ -176,14 +173,11 @@ class SMACTuner(Tuner):
         generate mutiple instances of hyperparameters
         '''
         def convert_loguniform(challenger_dict):
-            self.logger.info('---------------------------')
-            self.logger.info('---------------------------')
-            self.logger.info(challenger_dict)
-            self.logger.info('---------------------------')
             for key, value in challenger_dict.items():
                 if key in self.loguniform_key:
                     challenger_dict[key] = np.exp(challenger_dict[key])
             return challenger_dict
+
         if self.first_one:
             params = []
             for one_id in parameter_id_list:
