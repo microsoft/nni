@@ -63,7 +63,8 @@ def generate_pcs(nni_search_space_content):
                                 json.dumps(search_space[key]['_value']),
                                 json.dumps(search_space[key]['_value'][0])))
                         elif search_space[key]['_type'] == 'loguniform':
-                            pcs_fd.write('%s real %s [%s] log\n' % (
+                            search_space[key]['_value'] = np.log(search_space[key]['_value'])
+                            pcs_fd.write('%s real %s [%s]\n' % (
                                 key, 
                                 json.dumps(search_space[key]['_value']),
                                 json.dumps(search_space[key]['_value'][0])))

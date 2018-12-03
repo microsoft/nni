@@ -57,6 +57,7 @@ class SMACTuner(Tuner):
         self.smbo_solver = None
         self.first_one = True
         self.update_ss_done = False
+        self.loguniform_key = set()
 
     def _main_cli(self):
         '''
@@ -130,6 +131,7 @@ class SMACTuner(Tuner):
             generate_scenario(search_space)
             self.optimizer = self._main_cli()
             self.smbo_solver = self.optimizer.solver
+            self.loguniform_key = {key for key in search_space.keys() if search_space[key]['_type'] == 'loguniform'}
             self.update_ss_done = True
         else:
             self.logger.warning('update search space is not supported.')
@@ -170,13 +172,19 @@ class SMACTuner(Tuner):
         '''
         generate mutiple instances of hyperparameters
         '''
+        def convert_loguniform(challenger_dict):
+            key = list(challenger_dict)[0]
+            if key in self.loguniform_key:
+                challenger_dict[key] = np.exp(challenger_dict[key])
+            return challenger_dict
         if self.first_one:
             params = []
             for one_id in parameter_id_list:
                 init_challenger = self.smbo_solver.nni_smac_start()
                 self.total_data[one_id] = init_challenger
                 json_tricks.dumps(init_challenger.get_dictionary())
-                params.append(init_challenger.get_dictionary())
+                dic = 
+                params.append(convert_loguniform(init_challenger.get_dictionary()))
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             cnt = 0
@@ -186,6 +194,6 @@ class SMACTuner(Tuner):
                     break
                 self.total_data[parameter_id_list[cnt]] = challenger
                 json_tricks.dumps(challenger.get_dictionary())
-                params.append(challenger.get_dictionary())
+                params.append(convert_loguniform(challenger.get_dictionary()))
                 cnt += 1
         return params
