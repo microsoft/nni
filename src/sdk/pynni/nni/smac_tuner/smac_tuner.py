@@ -135,6 +135,9 @@ class SMACTuner(Tuner):
             self.update_ss_done = True
         else:
             self.logger.warning('update search space is not supported.')
+        self.logger.info('---------------------------')
+        self.logger.info(self.loguniform_key)
+        self.logger.info('---------------------------')
 
     def receive_trial_result(self, parameter_id, parameters, value):
         '''
@@ -173,9 +176,13 @@ class SMACTuner(Tuner):
         generate mutiple instances of hyperparameters
         '''
         def convert_loguniform(challenger_dict):
-            key = list(challenger_dict)[0]
-            if key in self.loguniform_key:
-                challenger_dict[key] = np.exp(challenger_dict[key])
+            self.logger.info('---------------------------')
+            self.logger.info('---------------------------')
+            self.logger.info(challenger_dict)
+            self.logger.info('---------------------------')
+            for key, value in challenger_dict.items():
+                if key in self.loguniform_key:
+                    challenger_dict[key] = np.exp(challenger_dict[key])
             return challenger_dict
         if self.first_one:
             params = []
@@ -183,7 +190,6 @@ class SMACTuner(Tuner):
                 init_challenger = self.smbo_solver.nni_smac_start()
                 self.total_data[one_id] = init_challenger
                 json_tricks.dumps(init_challenger.get_dictionary())
-                dic = 
                 params.append(convert_loguniform(init_challenger.get_dictionary()))
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()

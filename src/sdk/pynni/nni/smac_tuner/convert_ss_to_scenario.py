@@ -20,6 +20,7 @@
 
 import os
 import json
+import numpy as np
 
 def get_json_content(file_path):
     '''Load json file content'''
@@ -63,7 +64,7 @@ def generate_pcs(nni_search_space_content):
                                 json.dumps(search_space[key]['_value']),
                                 json.dumps(search_space[key]['_value'][0])))
                         elif search_space[key]['_type'] == 'loguniform':
-                            search_space[key]['_value'] = np.log(search_space[key]['_value'])
+                            search_space[key]['_value'] = list(np.round(np.log(search_space[key]['_value']), 10))
                             pcs_fd.write('%s real %s [%s]\n' % (
                                 key, 
                                 json.dumps(search_space[key]['_value']),
