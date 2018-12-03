@@ -64,6 +64,8 @@ class PAITrainingService implements TrainingService {
     private stopping: boolean = false;
     private hdfsClient: any;
     private paiToken? : string;
+    private paiTokenUpdateTime?: number;
+    private paiTokenUpdateInterval: number;
     private experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
     private readonly hdfsDirPattern: string;
@@ -83,6 +85,7 @@ class PAITrainingService implements TrainingService {
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
+        this.paiTokenUpdateInterval = 7200000;
     }
 
     public async run(): Promise<void> {
@@ -90,6 +93,7 @@ class PAITrainingService implements TrainingService {
         await restServer.start();
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
+            await this.updatePaiToken();
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
             await delay(3000);
         }
@@ -347,40 +351,12 @@ class PAITrainingService implements TrainingService {
                 });
 
                 // Get PAI authentication token
-                const authentication_req: request.Options = {
-                    uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
-                    method: 'POST',
-                    json: true,
-                    body: {
-                        username: this.paiClusterConfig.userName,
-                        password: this.paiClusterConfig.passWord
-                    }
-                };
-
-                request(authentication_req, (error: Error, response: request.Response, body: any) => {
-                    if (error) {
-                        this.log.error(`Get PAI token failed: ${error.message}`);
-                        deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
-                    } else {
-                        if(response.statusCode !== 200){
-                            this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
-                            deferred.reject(new Error(`Get PAI token failed, please check paiConfig username or password`));
-                        }
-                        this.paiToken = body.token;
-
-                        deferred.resolve();
-                    }
+                await this.updatePaiToken().then(()=>{
+                    deferred.resolve();
+                }).catch((error)=>{
+                    deferred.reject(new Error(error));
                 });
-
-                let timeoutId: NodeJS.Timer;
-                const timeoutDelay: Promise<void> = new Promise<void>((resolve: Function, reject: Function): void => {
-                    // Set timeout and reject the promise once reach timeout (5 seconds)
-                    timeoutId = setTimeout(
-                        () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
-                        5000);
-                });
-
-                return Promise.race([timeoutDelay, deferred.promise]).finally(() => clearTimeout(timeoutId));
+                break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 if (!this.paiClusterConfig){
@@ -486,6 +462,61 @@ class PAITrainingService implements TrainingService {
         }
 
         return this.nextTrialSequenceId++;
+    }
+    
+    /**
+     * Update pai token by the interval time or initialize the pai token
+     */
+    private async updatePaiToken(): Promise<void> {
+        const deferred : Deferred<void> = new Deferred<void>();
+        
+        let currentTime: number = new Date().getTime();
+        //If pai token initialized and not reach the interval time, do not update
+        if(this.paiTokenUpdateTime && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval){
+            deferred.resolve();
+            return deferred.promise;
+        }
+     
+        if(!this.paiClusterConfig){
+            const paiClusterConfigError = `pai cluster config not initialized!`
+            this.log.error(`${paiClusterConfigError}`);
+            throw Error(`${paiClusterConfigError}`)
+        }
+
+        const authentication_req: request.Options = {
+            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
+            method: 'POST',
+            json: true,
+            body: {
+                username: this.paiClusterConfig.userName,
+                password: this.paiClusterConfig.passWord
+            }
+        };
+
+        request(authentication_req, (error: Error, response: request.Response, body: any) => {
+            if (error) {
+                this.log.error(`Get PAI token failed: ${error.message}`);
+                deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
+            } else {
+                if(response.statusCode !== 200){
+                    this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
+                    deferred.reject(new Error(`Get PAI token failed, please check paiConfig username or password`));
+                }
+                this.paiToken = body.token;
+                this.paiTokenUpdateTime = new Date().getTime();
+                deferred.resolve();
+            }
+        });
+        
+        let timeoutId: NodeJS.Timer;
+        const timeoutDelay: Promise<void> = new Promise<void>((resolve: Function, reject: Function): void => {
+            // Set timeout and reject the promise once reach timeout (5 seconds)
+            timeoutId = setTimeout(
+                () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
+                5000);
+        });
+
+        return Promise.race([timeoutDelay, deferred.promise]).finally(() => clearTimeout(timeoutId));
     }
 }
 
