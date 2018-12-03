@@ -23,7 +23,7 @@ import numpy as np
 from assessor import Assessor, AssessResult
 from curvemodelfactory import MLCurveModel
 from mcmc_modelfactory import MCMCCurveModelCombination
-from curvefunctions import curve_combination_models, model_defaults, all_models
+from ml_curvemodel import curve_combination_models, model_defaults, all_models
 
 logger = logging.getLogger('curvefitting_Assessor')
 
