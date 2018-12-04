@@ -7,8 +7,13 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
 2. Download, set up, and deploy **Kubelow** to your Kubernetes cluster. Follow this [guideline](https://www.kubeflow.org/docs/started/getting-started/) to set up Kubeflow
 3. Install **kubectl**, and configure to connect to your Kubernetes API server.
 4. If your NNI trial job needs GPU resource, you should follow this [guideline](https://github.com/NVIDIA/k8s-device-plugin) to configure **Nvidia device plugin for Kubernetes**.
-5. An **NFS** server and export a general purpose mount (we recommend to map your NFS server path in root_squash option. Refer this [page](https://linux.die.net/man/5/exports) to learn what root_squash option is), or **Azure File Storage**. 
-6. Install **NNI**, follow the install guide [here](GetStarted.md).
+5. Install **NFS server** and export a general purpose mount (we recommend to map your NFS server path in `root_squash option`, otherwise permission issue may raise when nni copy files to NFS. Refer this [page](https://linux.die.net/man/5/exports) to learn what root_squash option is), or **Azure File Storage**. 
+6. Install **NFS client** on the machine where you install NNI and run nnictl to create experiment. Run this command to install NFSv4 client:
+    ```
+    apt-get install nfs-common 
+    ```     
+
+7. Install **NNI**, follow the install guide [here](GetStarted.md).
 
 ## Prerequisite for Azure Kubernets Service
 1. NNI support kubeflow based on Azure Kubernets Service, follow the [guideline](https://azure.microsoft.com/en-us/services/kubernetes-service/) to set up Azure Kubernets Service.
