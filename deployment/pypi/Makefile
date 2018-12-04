@@ -3,7 +3,7 @@ CWD := $(PWD)/
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
 	OS_SPEC := linux
-	WHEEL_SPEC := linux_x86_64
+	WHEEL_SPEC := manylinux1_x86_64
 else ifeq ($(UNAME_S), Darwin)
 	OS_SPEC := darwin
 	WHEEL_SPEC := macosx_10_9_x86_64
