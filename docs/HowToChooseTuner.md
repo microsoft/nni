@@ -88,7 +88,7 @@ _Usage_:
 
 [SMAC][4] is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on [the SMAC3 github repo][5].
 
-Note that SMAC on nni only supports a subset of the types in [search space spec](../../../../docs/SearchSpaceSpec.md), including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
+Note that SMAC on nni only supports a subset of the types in [search space spec](./SearchSpaceSpec.md), including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
 
 _Suggested scenario_: Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.
 
@@ -105,7 +105,7 @@ _Usage_:
 <a name="Batch"></a>
 **Batch tuner**
 
-Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type `choice` in [search space spec](../../../../docs/SearchSpaceSpec.md).
+Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type `choice` in [search space spec](./SearchSpaceSpec.md).
 
 _Suggested sceanrio_: If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner.
 
@@ -120,7 +120,7 @@ _Usage_:
 **Grid Search**
 
 Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file.
-Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](../../../../docs/SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
+Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](./SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
 
 _Suggested scenario_: It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space.
 
@@ -134,7 +134,7 @@ _Usage_:
 <a name="Hyperband"></a>
 **Hyperband**
 
-[Hyperband][6] tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be refered to [here](hyperband_advisor/README.md)
+[Hyperband][6] tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be refered to [here](../src/sdk/pynni/nni/hyperband_advisor/README.md)
 
 _Suggested scenario_: It is suggested when you have limited computation resource but have relatively large search space. It performs good in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.
 
