@@ -85,7 +85,7 @@ class PAITrainingService implements TrainingService {
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
-        this.paiTokenUpdateInterval = 7200000;
+        this.paiTokenUpdateInterval = 7200000; //2hours
     }
 
     public async run(): Promise<void> {
