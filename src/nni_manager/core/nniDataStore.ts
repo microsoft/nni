@@ -219,7 +219,12 @@ class NNIDataStore implements DataStore {
 
     private async isMultiPhase(): Promise<boolean> {
         if (this.multiPhase === undefined) {
-            this.multiPhase = (await this.getExperimentProfile(getExperimentId())).params.multiPhase;
+            const expProfile: ExperimentProfile = await this.getExperimentProfile(getExperimentId());
+            if (expProfile !== undefined) {
+                this.multiPhase = expProfile.params.multiPhase;
+            } else {
+                return false;
+            }
         }
 
         if (this.multiPhase !== undefined) {
