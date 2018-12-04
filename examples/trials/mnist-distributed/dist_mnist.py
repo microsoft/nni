@@ -306,9 +306,8 @@ def main(unused_argv):
         interim_val_xent = sess.run(cross_entropy, feed_dict=val_feed)
         print("After %d training step(s), validation cross entropy = %g" % (step, interim_val_xent))
 
-        # Only chief worker can report intermediate metrics
-        if is_chief:
-          nni.report_intermediate_result(interim_val_xent)
+        # Only chief worker can report intermediate metrics        
+        nni.report_intermediate_result(interim_val_xent)
 
       if step >= FLAGS.train_steps:
         break
