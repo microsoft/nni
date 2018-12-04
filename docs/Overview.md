@@ -32,7 +32,7 @@ NNI provides a set of examples in the package to get you familiar with the above
 **Trial** in NNI is an individual attempt at applying a set of parameters on a model. 
 
 ### **Tuner**
-**Tuner** in NNI is an implementation of Tuner API for a special tuning algorithm. [Read more about the Tuners supported in the latest NNI release](../src/sdk/pynni/nni/README.md)
+**Tuner** in NNI is an implementation of Tuner API for a special tuning algorithm. [Read more about the Tuners supported in the latest NNI release](HowToChooseTuner.md)
 
 ### **Assessor**
 **Assessor** in NNI is an implementation of Assessor API for optimizing the execution of experiment.
