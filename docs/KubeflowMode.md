@@ -62,7 +62,6 @@ kubeflowConfig:
   nfs:
     server: {your_nfs_server}
     path: {your_nfs_server_exported_path}
-  kubernetesServer: {your_kubernetes_api_server_ip}
 ```
 If you use Azure Kubernets Service, you should  set `kubeflowConfig` in your config yaml file as follows:
 ```
