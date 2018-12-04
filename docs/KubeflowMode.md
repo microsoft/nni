@@ -5,7 +5,7 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
 ## Prerequisite
 1. A **Kubernetes** cluster using Kubernetes 1.8 or later. Follow this [guideline](https://kubernetes.io/docs/setup/) to set up Kubernetes
 2. Download, set up, and deploy **Kubelow** to your Kubernetes cluster. Follow this [guideline](https://www.kubeflow.org/docs/started/getting-started/) to set up Kubeflow
-3. Install **kubectl**, and configure to connect to your Kubernetes API server.
+3. Install **kubectl**, and configure to connect to your Kubernetes API server. Follow this [guideline](https://kubernetes.io/docs/tasks/tools/install-kubectl/) to install kubectl on Ubuntu
 4. If your NNI trial job needs GPU resource, you should follow this [guideline](https://github.com/NVIDIA/k8s-device-plugin) to configure **Nvidia device plugin for Kubernetes**.
 5. An **NFS** server and export a general purpose mount (we recommend to map your NFS server path in root_squash option. Refer this [page](https://linux.die.net/man/5/exports) to learn what root_squash option is), or **Azure File Storage**. 
 6. Install **NNI**, follow the install guide [here](GetStarted.md).
@@ -107,4 +107,3 @@ Notice: In kubeflow mode, NNIManager will start a rest server and listen on a po
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information. 
 
 Any problems when using NNI in kubeflow mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni), or send mail to nni@microsoft.com
-

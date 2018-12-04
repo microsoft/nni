@@ -78,7 +78,7 @@ In the "trial" part, if you want to use GPU to perform the architecture search, 
 ## submit this job
 
 ```
-nnictl create --config ~/nni/examples/trials/ga_squad/config.yaml
+nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
 ```
 
 # Technical details about the trial
