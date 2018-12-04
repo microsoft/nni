@@ -40,7 +40,7 @@ _Usage_:
 
 In [Random Search for Hyper-Parameter Optimization][2] show that Random Search might be surprisingly simple and effective. We suggests that we could use Random Search as baseline when we have no knowledge about the prior distribution of hyper-parameters.
 
-_Suggested scenario_: Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space. Random Search could be consider as baseline of search algorithm.
+_Suggested scenario_: Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space. Random Search could be considered as baseline of search algorithm.
 
 _Usage_:
 ```
