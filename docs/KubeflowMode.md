@@ -12,11 +12,10 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
 
 ## Prerequisite for Azure Kubernets Service
 1. NNI support kubeflow based on Azure Kubernets Service, follow the [guideline](https://azure.microsoft.com/en-us/services/kubernetes-service/) to set up Azure Kubernets Service.
-2. Deploy kubeflow on Azure Kubernets Service.
+2. Deploy kubeflow on Azure Kubernets Service, follow the [guideline](https://www.kubeflow.org/docs/started/getting-started/).
 3. Install __kubectl__ and [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest).  Connect kubectl client to Azure K8S, and use `az login` to set azure account.
 4. Follow the [guideline](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=portal) to create azure file storage account. If you use Azure Kubernets Service, nni need Azure Storage Service to store code files and the output files.
-5. Set up Azure Key Vault Service, add a secret to Key Vault
-to store the private key of Azure account.
+5. To access Azure storage service, nni need the access key of the storage account, and nni use Azure Key Vault Service to protect your private key. Set up Azure Key Vault Service, add a secret to Key Vault to store the access key of Azure storage account. Follow this [guideline](https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli) to store the access key.
 
 ## Design 
 TODO
