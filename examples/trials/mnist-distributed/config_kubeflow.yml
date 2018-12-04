@@ -42,4 +42,3 @@ kubeflowConfig:
     server: {your_nfs_server_ip}
     # Your NFS server export path, like /var/nfs/nni
     path: {your_nfs_server_export_path}
-  kubernetesServer: 10.10.10.10
