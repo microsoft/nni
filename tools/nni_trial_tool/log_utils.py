@@ -18,46 +18,18 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-ModuleName = {
-    'TPE': 'nni.hyperopt_tuner.hyperopt_tuner',
-    'Random': 'nni.hyperopt_tuner.hyperopt_tuner',
-    'Anneal': 'nni.hyperopt_tuner.hyperopt_tuner',
-    'Evolution': 'nni.evolution_tuner.evolution_tuner',
-    'SMAC': 'nni.smac_tuner.smac_tuner',
-    'BatchTuner': 'nni.batch_tuner.batch_tuner',
-    'GridSearch': 'nni.gridsearch_tuner.gridsearch_tuner',
-    
-    'Medianstop': 'nni.medianstop_assessor.medianstop_assessor'
-}
+from datetime import datetime
+from enum import Enum, unique
 
-ClassName = {
-    'TPE': 'HyperoptTuner',
-    'Random': 'HyperoptTuner',
-    'Anneal': 'HyperoptTuner',
-    'Evolution': 'EvolutionTuner',
-    'SMAC': 'SMACTuner',
-    'BatchTuner': 'BatchTuner',
-    'GridSearch': 'GridSearchTuner',
+@unique
+class LogType(Enum):
+    Debug = 'DEBUG'
+    Info = 'INFO'
+    Warning = 'WARNING'
+    Error = 'ERROR'
+    Critical = 'CRITICAL'
 
-    'Medianstop': 'MedianstopAssessor'
-}
-
-ClassArgs = {
-    'TPE': {
-        'algorithm_name': 'tpe'
-    },
-    'Random': {
-        'algorithm_name': 'random_search'
-    },
-    'Anneal': {
-        'algorithm_name': 'anneal'
-    }
-}
-
-AdvisorModuleName = {
-    'Hyperband': 'nni.hyperband_advisor.hyperband_advisor'
-}
-
-AdvisorClassName = {
-    'Hyperband': 'Hyperband'
-}
+def nni_log(log_type, log_message):
+    '''Log message into stdout'''
+    dt = datetime.now()
+    print('[{0}] {1} {2}'.format(dt, log_type.value, log_message))

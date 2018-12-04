@@ -47,6 +47,10 @@ function getDefaultDatabaseDir(): string {
     return path.join(getExperimentRootDir(), 'db');
 }
 
+function getCheckpointDir(): string {
+    return path.join(getExperimentRootDir(), 'checkpoint');
+}
+
 function mkDirP(dirPath: string): Promise<void> {
     const deferred: Deferred<void> = new Deferred<void>();
     fs.exists(dirPath, (exists: boolean) => {
@@ -137,7 +141,8 @@ function parseArg(names: string[]): string {
 }
 
 /**
- * Generate command line to start advisor process which runs tuner and assessor
+ * Generate command line to start automl algorithm(s), 
+ * either start advisor or start a process which runs tuner and assessor
  * @param tuner : For builtin tuner:
  *     {
  *         className: 'EvolutionTuner'
@@ -158,10 +163,18 @@ function parseArg(names: string[]): string {
  *     }
  *
  * @param assessor: similiar as tuner
+ * @param advisor: similar as tuner
  *
  */
-function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean = false, multiThread: boolean = false): string {
-    let command: string = `python3 -m nni --tuner_class_name ${tuner.className}`;
+function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiPhase: boolean = false, multiThread: boolean = false): string {
+    if ((tuner || assessor) && advisor) {
+        throw new Error('Error: specify both tuner/assessor and advisor is not allowed');
+    }
+    if (!tuner && !advisor) {
+        throw new Error('Error: specify neither tuner nor advisor is not allowed');
+    }
+
+    let command: string = `python3 -m nni`;
     if (multiPhase) {
         command += ' --multi_phase';
     }
@@ -170,30 +183,40 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, multiPhase: boolean 
         command += ' --multi_thread';
     }
 
-    if (tuner.classArgs !== undefined) {
-        command += ` --tuner_args ${JSON.stringify(JSON.stringify(tuner.classArgs))}`;
-    }
-
-    if (tuner.codeDir !== undefined && tuner.codeDir.length > 1) {
-        command += ` --tuner_directory ${tuner.codeDir}`;
-    }
-
-    if (tuner.classFileName !== undefined && tuner.classFileName.length > 1) {
-        command += ` --tuner_class_filename ${tuner.classFileName}`;
-    }
-
-    if (assessor !== undefined && assessor.className !== undefined) {
-        command += ` --assessor_class_name ${assessor.className}`;
-        if (assessor.classArgs !== undefined) {
-            command += ` --assessor_args ${JSON.stringify(JSON.stringify(assessor.classArgs))}`;
+    if (advisor) {
+        command += ` --advisor_class_name ${advisor.className}`;
+        if (advisor.classArgs !== undefined) {
+            command += ` --advisor_args ${JSON.stringify(JSON.stringify(advisor.classArgs))}`;
+        }
+        if (advisor.codeDir !== undefined && advisor.codeDir.length > 1) {
+            command += ` --advisor_directory ${advisor.codeDir}`;
+        }
+        if (advisor.classFileName !== undefined && advisor.classFileName.length > 1) {
+            command += ` --advisor_class_filename ${advisor.classFileName}`;
+        }
+    } else {
+        command += ` --tuner_class_name ${tuner.className}`;
+        if (tuner.classArgs !== undefined) {
+            command += ` --tuner_args ${JSON.stringify(JSON.stringify(tuner.classArgs))}`;
+        }
+        if (tuner.codeDir !== undefined && tuner.codeDir.length > 1) {
+            command += ` --tuner_directory ${tuner.codeDir}`;
+        }
+        if (tuner.classFileName !== undefined && tuner.classFileName.length > 1) {
+            command += ` --tuner_class_filename ${tuner.classFileName}`;
         }
 
-        if (assessor.codeDir !== undefined && assessor.codeDir.length > 1) {
-            command += ` --assessor_directory ${assessor.codeDir}`;
-        }
-
-        if (assessor.classFileName !== undefined && assessor.classFileName.length > 1) {
-            command += ` --assessor_class_filename ${assessor.classFileName}`;
+        if (assessor !== undefined && assessor.className !== undefined) {
+            command += ` --assessor_class_name ${assessor.className}`;
+            if (assessor.classArgs !== undefined) {
+                command += ` --assessor_args ${JSON.stringify(JSON.stringify(assessor.classArgs))}`;
+            }
+            if (assessor.codeDir !== undefined && assessor.codeDir.length > 1) {
+                command += ` --assessor_directory ${assessor.codeDir}`;
+            }
+            if (assessor.classFileName !== undefined && assessor.classFileName.length > 1) {
+                command += ` --assessor_class_filename ${assessor.classFileName}`;
+            }
         }
     }
 
@@ -321,6 +344,6 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     });
 }
 
-export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, 
+export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
     mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };

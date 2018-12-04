@@ -30,7 +30,6 @@
     height: 386px;
     line-height: 22px;
     font-size: 14px;
-    overflow-y: scroll;
     padding: 15px 0;
     color: #212121;
 }
@@ -46,7 +45,6 @@
 }
 
 .profile{
-    padding: 0 20px;
     pre{
         overflow: inherit;
     }

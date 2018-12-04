@@ -46,7 +46,9 @@ function startProcess(): void {
             className: 'DummyAssessor',
             codeDir: './',
             classFileName: 'dummy_assessor.py'
-        }
+        },
+        // advisor
+        undefined
     );
 
     const proc: ChildProcess = spawn(dispatcherCmd, [], { stdio, cwd: 'core/test', shell: true });
