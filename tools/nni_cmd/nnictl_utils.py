@@ -178,7 +178,7 @@ def stop_experiment(args):
             if not detect_process(rest_pid):
                 print_normal('Experiment is not running...')
                 experiment_config.update_experiment(experiment_id, 'status', 'stopped')
-                return
+                continue
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
                 stop_rest_cmds = ['kill', str(rest_pid)]
