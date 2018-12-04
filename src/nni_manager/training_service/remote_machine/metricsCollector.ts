@@ -25,7 +25,8 @@ import * as path from 'path';
 import { Client } from 'ssh2';
 import { getLogger, Logger } from '../../common/log';
 import { TrialJobStatus, TrialJobDetail } from '../../common/trainingService';
-import { JobMetrics, RemoteCommandResult, RemoteMachineMeta, RemoteMachineTrialJobDetail } from './remoteMachineData';
+import { JobMetrics } from '../common/jobMetrics';
+import { RemoteCommandResult, RemoteMachineMeta, RemoteMachineTrialJobDetail } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
 
 export class MetricsCollector {
@@ -60,7 +61,9 @@ export class MetricsCollector {
                     assert(trialJobDetail);
                     // If job status is not alive again, remove its GPU reservation
                     if(!['RUNNING'].includes(jobMetrics.jobStatus)) {
-                        trialJobDetail.status = jobMetrics.jobStatus;
+                        if (trialJobDetail.status !== 'EARLY_STOPPED') {
+                            trialJobDetail.status = jobMetrics.jobStatus;
+                        }
                         this.log.info(`Set trialjob ${trialJobDetail.id} status to ${trialJobDetail.status}`);
                         runningJobsMap.forEach((jobIds: string[], rmMeta: RemoteMachineMeta) => {
                             // If remote machine has no GPU, gpuReservcation is not initialized, so check if it's undefined

@@ -61,7 +61,8 @@ class Individual(object):
 
     def mutation(self, config=None, info=None, save_dir=None):
         self.result = None
-        self.config = config
+        if config is not None:
+            self.config = config
         self.config.mutation()
         self.restore_dir = self.save_dir
         self.save_dir = save_dir
@@ -107,13 +108,14 @@ class CustomerTuner(Tuner):
         return temp
 
 
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, value):
         '''
         Record an observation of the objective function
         parameter_id : int
         parameters : dict of parameters
-        reward : reward of one trial
+        value: final metrics of the trial, including reward
         '''
+        reward = self.extract_scalar_reward(value)
         if self.optimize_mode is OptimizeMode.Minimize:
             reward = -reward
 
@@ -121,8 +123,7 @@ class CustomerTuner(Tuner):
         logger.debug(str(parameters))
         logger.debug(str(reward))
 
-        indiv = graph_loads(parameters)
-        indiv.result = reward
+        indiv = Individual(graph_loads(parameters), result=reward)
         self.population.append(indiv)
         return
 
@@ -131,7 +132,7 @@ class CustomerTuner(Tuner):
 
 if __name__ =='__main__':
     tuner = CustomerTuner(OptimizeMode.Maximize)
-    config = tuner.generate_parameter(0)
+    config = tuner.generate_parameters(0)
     with open('./data.json', 'w') as outfile:
         json.dump(config, outfile)
     tuner.receive_trial_result(0, config, 0.99)

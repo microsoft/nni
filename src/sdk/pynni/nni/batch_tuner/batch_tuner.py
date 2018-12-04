@@ -47,7 +47,7 @@ class BatchTuner(Tuner):
     }
     '''
     
-    def __init__(self, optimize_mode):
+    def __init__(self):
         self.count = -1
         self.values = []
 
@@ -77,5 +77,5 @@ class BatchTuner(Tuner):
             raise nni.NoMoreTrialError('no more parameters now.')
         return self.values[self.count]
 
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, value):
         pass

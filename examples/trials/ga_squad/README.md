@@ -90,11 +90,11 @@ The evolution-algorithm based architecture for question answering has two differ
 
 The trial has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
 
-* `attention.py` contains an implementaion for attention mechanism in Tensorflow.
+* `attention.py` contains an implementation for attention mechanism in Tensorflow.
 * `data.py` contains functions for data preprocessing.
 * `evaluate.py` contains the evaluation script.
 * `graph.py` contains the definition of the computation graph.
-* `rnn.py` contains an implementaion for GRU in Tensorflow.
+* `rnn.py` contains an implementation for GRU in Tensorflow.
 * `train_model.py` is a wrapper for the whole question answering model.
 
 Among those files, `trial.py` and `graph_to_tf.py` is special.
@@ -244,8 +244,8 @@ Here is an example of the model configuration, which is passed from the tuner to
 
 Every model configuration will has a "layers" section, which is a JSON list of layer definitions. The definition of each layer is also a JSON object, where:
 
- * `type` is the type of the layer. 0, 1, 2, 3, 4 corresponde to attention, self-attention, RNN, input and output layer respectively.
- * `size` is the length of the output. "x", "y" corresponde to document length / question length, respectively.
+ * `type` is the type of the layer. 0, 1, 2, 3, 4 correspond to attention, self-attention, RNN, input and output layer respectively.
+ * `size` is the length of the output. "x", "y" correspond to document length / question length, respectively.
  * `input_size` is the number of inputs the layer has.
  * `input` is the indices of layers taken as input of this layer.
  * `output` is the indices of layers use this layer's output as their input.

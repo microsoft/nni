@@ -55,10 +55,12 @@ if env_args.platform is None:
         return random.uniform(low, high)
 
     def quniform(low, high, q, name=None):
+        assert high > low, 'Upper bound must be larger than lower bound'
         return round(random.uniform(low, high) / q) * q
 
     def loguniform(low, high, name=None):
-        return math.exp(random.uniform(low, high))
+        assert low > 0, 'Lower bound must be positive'
+        return np.exp(random.uniform(np.log(low), np.log(high)))
 
     def qloguniform(low, high, q, name=None):
         return round(loguniform(low, high) / q) * q
@@ -70,7 +72,7 @@ if env_args.platform is None:
         return round(random.gauss(mu, sigma) / q) * q
 
     def lognormal(mu, sigma, name=None):
-        return math.exp(random.gauss(mu, sigma))
+        return np.exp(random.gauss(mu, sigma))
 
     def qlognormal(mu, sigma, q, name=None):
         return round(lognormal(mu, sigma) / q) * q
@@ -124,6 +126,6 @@ else:
         del frame  # see official doc
         module = inspect.getmodulename(filename)
         if name is None:
-            name = '#{:d}'.format(lineno)
+            name = '__line{:d}'.format(lineno)
         key = '{}/{}/{}'.format(module, name, func)
-        return trial.get_parameter(key)
+        return trial.get_current_parameter(key)

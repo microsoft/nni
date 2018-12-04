@@ -59,3 +59,11 @@ typings/
 
 # next.js build output
 .next
+
+# Pycharm Project files
+.idea
+
+# Python cache files
+__pycache__
+build
+*.egg-info

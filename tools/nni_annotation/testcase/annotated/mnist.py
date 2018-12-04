@@ -161,6 +161,7 @@ def generate_default_params():
 
 
 if __name__ == '__main__':
+    nni.get_next_parameter()
     try:
         params = generate_default_params()
         logger.debug('params')

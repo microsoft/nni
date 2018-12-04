@@ -22,16 +22,20 @@
 import { MetricDataRecord, MetricType, TrialJobInfo } from './datastore';
 import { TrialJobStatus } from './trainingService';
 
-type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE';
+type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
 
 interface ExperimentParams {
     authorName: string;
     experimentName: string;
+    description?: string;
     trialConcurrency: number;
     maxExecDuration: number; //seconds
     maxTrialNum: number;
     searchSpace: string;
-    tuner: {
+    trainingServicePlatform: string;
+    multiPhase?: boolean;
+    multiThread?: boolean;
+    tuner?: {
         className: string;
         builtinTunerName?: string;
         codeDir?: string;
@@ -49,6 +53,15 @@ interface ExperimentParams {
         checkpointDir: string;
         gpuNum?: number;
     };
+    advisor?: {
+        className: string;
+        builtinAdvisorName?: string;
+        codeDir?: string;
+        classArgs?: any;
+        classFileName?: string;
+        checkpointDir: string;
+        gpuNum?: number;
+    };
     clusterMetaData?: {
         key: string;
         value: string;
@@ -59,8 +72,10 @@ interface ExperimentProfile {
     params: ExperimentParams;
     id: string;
     execDuration: number;
+    logDir?: string;
     startTime?: number;
     endTime?: number;
+    maxSequenceId: number;
     revision: number;
 }
 
@@ -70,7 +85,7 @@ interface TrialJobStatistics {
 }
 
 interface NNIManagerStatus {
-    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED';
+    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL';
     errors: string[];
 }
 
@@ -89,7 +104,7 @@ abstract class Manager {
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
     public abstract getClusterMetadata(key: string): Promise<string>;
 
-    public abstract getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]>;
+    public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract getStatus(): NNIManagerStatus;
 }

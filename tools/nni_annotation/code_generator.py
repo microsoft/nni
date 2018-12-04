@@ -161,6 +161,7 @@ class Transformer(ast.NodeTransformer):
     def __init__(self):
         self.stack = []
         self.last_line = 0
+        self.annotated = False
 
     def visit(self, node):
         if isinstance(node, (ast.expr, ast.stmt)):
@@ -190,12 +191,14 @@ class Transformer(ast.NodeTransformer):
 
     def _visit_string(self, node):
         string = node.value.s
-
-        if not string.startswith('@nni.'):
+        if string.startswith('@nni.'):
+            self.annotated = True
+        else:
             return node  # not an annotation, ignore it
 
-        if string.startswith('@nni.report_intermediate_result(') \
-                or string.startswith('@nni.report_final_result('):
+        if string.startswith('@nni.report_intermediate_result(')  \
+                or string.startswith('@nni.report_final_result(') \
+                or string.startswith('@nni.get_next_parameter('):
             return parse_annotation(string[1:])  # expand annotation string to code
 
         if string.startswith('@nni.variable(') \
@@ -216,7 +219,7 @@ class Transformer(ast.NodeTransformer):
 
 def parse(code):
     """Annotate user code.
-    Return annotated code (str).
+    Return annotated code (str) if annotation detected; return None if not.
     code: original user code (str)
     """
     try:
@@ -224,10 +227,14 @@ def parse(code):
     except Exception:
         raise RuntimeError('Bad Python code')
 
+    transformer = Transformer()
     try:
-        Transformer().visit(ast_tree)
+        transformer.visit(ast_tree)
     except AssertionError as exc:
         raise RuntimeError('%d: %s' % (ast_tree.last_line, exc.args[0]))
+
+    if not transformer.annotated:
+        return None
 
     last_future_import = -1
     import_nni = ast.Import(names=[ast.alias(name='nni', asname=None)])

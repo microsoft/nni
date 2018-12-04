@@ -19,7 +19,6 @@
 
 'use strict';
 
-import { Client } from 'ssh2';
 import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUSummary } from '../common/gpuData';
 
@@ -65,21 +64,6 @@ export class RemoteCommandResult {
     }
 }
 
-// tslint:disable-next-line:max-classes-per-file
-export class JobMetrics {
-    public readonly jobId: string;
-    public readonly metrics: string[];
-    public readonly jobStatus: TrialJobStatus;
-    public readonly endTimestamp: number;
-
-    constructor(jobId : string, metrics : string[], jobStatus : TrialJobStatus, endTimestamp : number) {
-        this.jobId = jobId;
-        this.metrics = metrics;
-        this.jobStatus = jobStatus;
-        this.endTimestamp = endTimestamp;
-    }
-}
-
 /**
  * RemoteMachineTrialJobDetail
  */
@@ -94,14 +78,17 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     public url?: string;
     public workingDirectory: string;
     public form: JobApplicationForm;
+    public sequenceId: number;
     public rmMeta?: RemoteMachineMeta;
 
-    constructor(id: string, status: TrialJobStatus, submitTime: number, workingDirectory: string, form: JobApplicationForm) {
+    constructor(id: string, status: TrialJobStatus, submitTime: number,
+                workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
+        this.sequenceId = sequenceId;
         this.tags = [];
     }
 }
@@ -121,15 +108,17 @@ export enum ScheduleResultType {
     REQUIRE_EXCEED_TOTAL
 }
 
-export const REMOTEMACHINERUNSHELLFORMAT: string =
+export const REMOTEMACHINE_RUN_SHELL_FORMAT: string =
 `#!/bin/bash
 export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_OUTPUT_DIR={0}
+export MULTI_PHASE={7}
+export NNI_TRIAL_SEQ_ID={8}
 cd $NNI_SYS_DIR
 echo $$ >{2}
 eval {3}{4} 2>{5}
 echo $? \`date +%s%3N\` >{6}`;
 
-export const HOSTJOBSHELLFORMAT: string =
+export const HOST_JOB_SHELL_FORMAT: string =
 `#!/bin/bash
 cd {0}
 echo $$ >{1}

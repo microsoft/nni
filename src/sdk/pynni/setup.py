@@ -26,8 +26,8 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
 setuptools.setup(
-    name = 'nni',
-    version = '0.0.1',
+    name = 'nni-sdk',
+    version = '0.3.0',
     packages = setuptools.find_packages(exclude=['tests']),
 
     python_requires = '>=3.5',
@@ -37,6 +37,7 @@ setuptools.setup(
         'numpy',
         'scipy'
     ],
+    package_data = {'nni': ['**/requirements.txt']},
 
     test_suite = 'tests',
 
@@ -44,7 +45,7 @@ setuptools.setup(
     author_email = 'nni@microsoft.com',
     description = 'Python SDK for Neural Network Intelligence project',
     license = 'MIT',
-    url = 'https://msrasrg.visualstudio.com/NeuralNetworkIntelligence',
+    url = 'https://github.com/Microsoft/nni',
 
     long_description = read('README.md')
 )

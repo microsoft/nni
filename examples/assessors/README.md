@@ -1,11 +1,11 @@
-# Customized Assessor for Experts
+# Define your own Assessor
 
 *Assessor receive intermediate result from Trial and decide whether the Trial should be killed. Once the Trial experiment meets the early stop conditions, the assessor will kill the Trial.*
 
-So, if user want to implement a customized Assessor, she/he only need to:
+So, if users want to implement a customized Assessor, they only need to:
 
 
-**1) Inherit a tuner of a base Tuner class**
+**1) Inherit an assessor of a base Assessor class**
 ```python
 from nni.assessor import Assessor
 
@@ -31,7 +31,7 @@ class CustomizedAssessor(Assessor):
         # you code implement here.
         ...
 ```
-**3) Write a script to run Tuner**
+**3) Write a script to run Assessor**
 ```python
 import argparse
 

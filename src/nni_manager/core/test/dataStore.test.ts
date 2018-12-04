@@ -58,6 +58,7 @@ describe('Unit test for dataStore', () => {
                 trialConcurrency: 2,
                 maxExecDuration: 10,
                 maxTrialNum: 5,
+                trainingServicePlatform: 'local',
                 searchSpace: `{
                     "dropout_rate": {
                         "_type": "uniform",
@@ -78,6 +79,7 @@ describe('Unit test for dataStore', () => {
             execDuration: 0,
             startTime: Date.now(),
             endTime: Date.now(),
+            maxSequenceId: 0,
             revision: 0
         }
         const id: string = profile.id;

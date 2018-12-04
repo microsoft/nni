@@ -19,21 +19,23 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'tail-stream';
-import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
+import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
+import { getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import {
-    HostJobApplicationForm, JobApplicationForm, TrainingService, TrialJobApplicationForm,
+    HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
-import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus } from '../../common/utils';
 
 const tkill = require('tree-kill');
 
@@ -72,15 +74,18 @@ class LocalTrialJobDetail implements TrialJobDetail {
     public url?: string;
     public workingDirectory: string;
     public form: JobApplicationForm;
+    public sequenceId: number;
     public pid?: number;
 
-    constructor(id: string, status: TrialJobStatus, submitTime: number, workingDirectory: string, form: JobApplicationForm) {
+    constructor(id: string, status: TrialJobStatus, submitTime: number,
+        workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
         this.url = `file://localhost:${workingDirectory}`;
+        this.sequenceId = sequenceId;
     }
 }
 
@@ -94,8 +99,11 @@ class LocalTrainingService implements TrainingService {
     private initialized: boolean;
     private stopping: boolean;
     private rootDir!: string;
+    private trialSequenceId: number;
     protected log: Logger;
     protected localTrailConfig?: TrialConfig;
+    private isMultiPhase: boolean = false;
+    private streams: Array<ts.Stream>;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -104,19 +112,24 @@ class LocalTrainingService implements TrainingService {
         this.initialized = false;
         this.stopping = false;
         this.log = getLogger();
+        this.trialSequenceId = -1;
+        this.streams = new Array<ts.Stream>();
     }
 
     public async run(): Promise<void> {
         while (!this.stopping) {
             while (this.jobQueue.length !== 0) {
                 const trialJobId: string = this.jobQueue[0];
-                const [success, resource] = this.tryGetAvailableResource();
-                if (!success) {
-                    break;
+                const trialJobDeatil = this.jobMap.get(trialJobId)
+                if (trialJobDeatil !== undefined && trialJobDeatil.status === 'WAITING'){
+                    const [success, resource] = this.tryGetAvailableResource();
+                    if (!success) {
+                        break;
+                    }
+                    this.occupyResource(resource);
+                    await this.runTrialJob(trialJobId, resource);
                 }
-                this.occupyResource(resource);
                 this.jobQueue.shift();
-                await this.runTrialJob(trialJobId, resource);
             }
             await delay(5000);
         }
@@ -156,7 +169,7 @@ class LocalTrainingService implements TrainingService {
                 this.setTrialJobStatus(trialJob, 'FAILED');
                 try {
                     const state: string = await fs.promises.readFile(path.join(trialJob.workingDirectory, '.nni', 'state'), 'utf8');
-                    const match: RegExpMatchArray | null = state.trim().match(/^(\d+)\s+(\d+)$/);
+                    const match: RegExpMatchArray | null = state.trim().match(/^(\d+)\s+(\d+)/);
                     if (match !== null) {
                         const { 1: code, 2: timestamp } = match;
                         if (parseInt(code, 10) === 0) {
@@ -193,7 +206,9 @@ class LocalTrainingService implements TrainingService {
                 'WAITING',
                 Date.now(),
                 path.join(this.rootDir, 'trials', trialJobId),
-                form);
+                form,
+                this.generateSequenceId()
+            );
             this.jobQueue.push(trialJobId);
             this.jobMap.set(trialJobId, trialJobDetail);
 
@@ -210,22 +225,36 @@ class LocalTrainingService implements TrainingService {
      * @param trialJobId trial job id
      * @param form job application form
      */
-    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
-        throw new MethodNotImplementedError();
+    public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
+        const trialJobDetail: undefined | TrialJobDetail = this.jobMap.get(trialJobId);
+        if (trialJobDetail === undefined) {
+            throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
+        }
+        if (form.jobType === 'TRIAL') {
+            await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>form).hyperParameters);
+        } else {
+            throw new Error(`updateTrialJob failed: jobType ${form.jobType} not supported.`);
+        }
+
+        return trialJobDetail;
     }
 
     /**
      * Is multiphase job supported in current training service
      */
     public get isMultiPhaseJobSupported(): boolean {
-        return false;
+        return true;
     }
 
-    public async cancelTrialJob(trialJobId: string): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         this.log.info(`cancelTrialJob: ${trialJobId}`);
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
         if (trialJob === undefined) {
             throw new NNIError(NNIErrorNames.NOT_FOUND, 'Trial job not found');
+        }
+        if (trialJob.pid === undefined){
+            this.setTrialJobStatus(trialJob, 'USER_CANCELED');
+            return;
         }
         if (trialJob.form.jobType === 'TRIAL') {
             await tkill(trialJob.pid, 'SIGKILL');
@@ -234,7 +263,7 @@ class LocalTrainingService implements TrainingService {
         } else {
             throw new Error(`Job type not supported: ${trialJob.form.jobType}`);
         }
-        this.setTrialJobStatus(trialJob, 'USER_CANCELED');
+        this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
@@ -251,6 +280,9 @@ class LocalTrainingService implements TrainingService {
                     throw new Error('trial config parsed failed');
                 }
                 break;
+            case TrialConfigMetadataKey.MULTI_PHASE:
+                this.isMultiPhase = (value === 'true' || value === 'True');
+                break;
             default:
         }
     }
@@ -258,13 +290,13 @@ class LocalTrainingService implements TrainingService {
     public getClusterMetadata(key: string): Promise<string> {
         switch (key) {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                let getResult : Promise<string>;
-                if(!this.localTrailConfig) {
+                let getResult: Promise<string>;
+                if (!this.localTrailConfig) {
                     getResult = Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, `${key} is never set yet`));
                 } else {
-                    getResult = Promise.resolve(!this.localTrailConfig? '' : JSON.stringify(this.localTrailConfig));
+                    getResult = Promise.resolve(!this.localTrailConfig ? '' : JSON.stringify(this.localTrailConfig));
                 }
-                return getResult;     
+                return getResult;
             default:
                 return Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, 'Key not found'));
         }
@@ -272,7 +304,9 @@ class LocalTrainingService implements TrainingService {
 
     public cleanUp(): Promise<void> {
         this.stopping = true;
-
+        for (const stream of this.streams) {
+            stream.destroy();
+        }
         return Promise.resolve();
     }
 
@@ -285,7 +319,9 @@ class LocalTrainingService implements TrainingService {
             { key: 'NNI_PLATFORM', value: 'local' },
             { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
             { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
-            { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory }
+            { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
+            { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.sequenceId.toString() },
+            { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
     }
 
@@ -331,11 +367,8 @@ class LocalTrainingService implements TrainingService {
         await cpp.exec(`mkdir -p ${trialJobDetail.workingDirectory}`);
         await cpp.exec(`mkdir -p ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
         await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
-        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8' });
-        await fs.promises.writeFile(
-            path.join(trialJobDetail.workingDirectory, 'parameter.cfg'),
-            (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters,
-            { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
+        await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
         const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
 
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
@@ -360,6 +393,7 @@ class LocalTrainingService implements TrainingService {
                 buffer = remain;
             }
         });
+        this.streams.push(stream);
     }
 
     private async runHostJob(form: HostJobApplicationForm): Promise<TrialJobDetail> {
@@ -375,6 +409,7 @@ class LocalTrainingService implements TrainingService {
             submitTime: Date.now(),
             workingDirectory: workDir,
             form: form,
+            sequenceId: this.generateSequenceId(),
             pid: process.pid
         };
         this.jobMap.set(jobId, jobDetail);
@@ -401,6 +436,19 @@ class LocalTrainingService implements TrainingService {
                 throw error;
             }
         }
+    }
+
+    private async writeParameterFile(directory: string, hyperParameters: HyperParameters): Promise<void> {
+        const filepath: string = path.join(directory, generateParamFileName(hyperParameters));
+        await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
+    }
+
+    private generateSequenceId(): number {
+        if (this.trialSequenceId === -1) {
+            this.trialSequenceId = getInitTrialSequenceId();
+        }
+
+        return this.trialSequenceId++;
     }
 }
 

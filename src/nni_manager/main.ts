@@ -36,12 +36,13 @@ import { LocalTrainingServiceForGPU } from './training_service/local/localTraini
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
+import { PAITrainingService } from './training_service/pai/paiTrainingService';
+import { KubeflowTrainingService } from './training_service/kubeflow/kubeflowTrainingService';
 
-
-function initStartupInfo(startExpMode: string, resumeExperimentId: string) {
+function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number) {
     const createNew: boolean = (startExpMode === 'new');
     const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
-    setExperimentStartupInfo(createNew, expId);
+    setExperimentStartupInfo(createNew, expId, basePort);
 }
 
 async function initContainer(platformMode: string): Promise<void> {
@@ -49,6 +50,10 @@ async function initContainer(platformMode: string): Promise<void> {
         Container.bind(TrainingService).to(LocalTrainingServiceForGPU).scope(Scope.Singleton);
     } else if (platformMode === 'remote') {
         Container.bind(TrainingService).to(RemoteMachineTrainingService).scope(Scope.Singleton);
+    } else if (platformMode === 'pai') {
+        Container.bind(TrainingService).to(PAITrainingService).scope(Scope.Singleton);
+    } else if (platformMode === 'kubeflow') {
+        Container.bind(TrainingService).to(KubeflowTrainingService).scope(Scope.Singleton);
     } else {
         throw new Error(`Error: unsupported mode: ${mode}`);
     }
@@ -61,41 +66,46 @@ async function initContainer(platformMode: string): Promise<void> {
 }
 
 function usage(): void {
-    console.info('usage: node main.js --port <port> --mode <local/remote> --start_mode <new/resume> --experiment_id <id>');
+    console.info('usage: node main.js --port <port> --mode <local/remote/pai> --start_mode <new/resume> --experiment_id <id>');
 }
 
-let port: number = NNIRestServer.DEFAULT_PORT;
 const strPort: string = parseArg(['--port', '-p']);
-if (strPort && strPort.length > 0) {
-    port = parseInt(strPort, 10);
+if (!strPort || strPort.length === 0) {
+    usage();
+    process.exit(1);
 }
+
+const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow'].includes(mode)) {
+    console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);
 }
 
 const startMode: string = parseArg(['--start_mode', '-s']);
 if (!['new', 'resume'].includes(startMode)) {
+    console.log(`FATAL: unknown start_mode: ${startMode}`);
     usage();
     process.exit(1);
 }
 
 const experimentId: string = parseArg(['--experiment_id', '-id']);
 if (startMode === 'resume' && experimentId.trim().length < 1) {
+    console.log(`FATAL: cannot resume experiment, invalid experiment_id: ${experimentId}`);
     usage();
     process.exit(1);
 }
 
-initStartupInfo(startMode, experimentId);
+initStartupInfo(startMode, experimentId, port);
 
 mkDirP(getLogDir()).then(async () => {
     const log: Logger = getLogger();
     try {
         await initContainer(mode);
         const restServer: NNIRestServer = component.get(NNIRestServer);
-        await restServer.start(port);
+        await restServer.start();
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {
         log.error(`${err.stack}`);
@@ -103,3 +113,22 @@ mkDirP(getLogDir()).then(async () => {
 }).catch((err: Error) => {
     console.error(`Failed to create log dir: ${err.stack}`);
 });
+
+process.on('SIGTERM', async () => {
+    const log: Logger = getLogger();
+    let hasError: boolean = false;
+    try{
+        const nniManager: Manager = component.get(Manager);
+        await nniManager.stopExperiment();
+        const ds: DataStore = component.get(DataStore);
+        await ds.close();
+        const restServer: NNIRestServer = component.get(NNIRestServer);
+        await restServer.stop();
+    }catch(err){
+        hasError = true;
+        log.error(`${err.stack}`);
+    }finally{
+        await log.close();
+        process.exit(hasError?1:0);
+    }
+})
