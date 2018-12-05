@@ -62,9 +62,9 @@ to start the experiment in pai mode. NNI will create OpanPAI job for each trial,
 You can see the pai jobs created by NNI in your OpenPAI cluster's web portal, like:
 ![](./nni_pai_joblist.jpg)
 
-Notice: In pai mode, NNIManager will start a rest server and listen on `51189` port, to receive metrics from trial job running in PAI container. So you should `enable 51189` TCP port in your firewall rule to allow incoming traffic. 
+Notice: By default, NNIManager will start a rest server and listen on `8081` port in pai mode, to receive metrics from trial job running in PAI container. So you should `turn on 8081` TCP port in firewall rule to allow incoming traffic. In addition, since NNI supports running multiple experiments on the same machine from v0.3, if you use `--port [portNum]` command line option to let NNI manager listen on a different port other than 8080, you should also turn on `portNum + 1` port in firewall rule. For example, you use 'nnictl create -c config.yaml --port 30010' to launch nnimanager and listen on 30010, you should also turn on 30011 in firewall rule to receive trial job metrics.
 
-Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:51188/oview) to check trial's information. 
+Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information. 
 
 Expand a trial information in trial list view, click the logPath link like:
 ![](./nni_webui_joblist.jpg)
