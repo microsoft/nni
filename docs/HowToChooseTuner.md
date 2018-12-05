@@ -116,6 +116,24 @@ _Usage_:
     builtinTunerName: BatchTuner
 ```
 
+Note that the search space that BatchTuner supported like:
+```
+{
+    "combine_params":
+    {
+        "_type" : "choice",
+        "_value" : [{"optimizer": "Adam", "learning_rate": 0.00001},
+                    {"optimizer": "Adam", "learning_rate": 0.0001},
+                    {"optimizer": "Adam", "learning_rate": 0.001},
+                    {"optimizer": "SGD", "learning_rate": 0.01}, 
+                    {"optimizer": "SGD", "learning_rate": 0.005}, 
+                    {"optimizer": "SGD", "learning_rate": 0.0002}]
+    }
+}
+```
+The search space file including the high-level key `combine_params`. The type of params in search space must be `choice` and the `values` including all the combined-params value.
+
+
 <a name="Grid"></a>
 **Grid Search**
 
