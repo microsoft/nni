@@ -3,7 +3,8 @@ import axios from 'axios';
 import { MANAGER_IP } from '../../static/const';
 import ReactEcharts from 'echarts-for-react';
 import { Row, Col, Select, Button, message } from 'antd';
-import { HoverName, ParaObj, VisualMapValue, Dimobj } from '../../static/interface';
+import { ParaObj, VisualMapValue, Dimobj } from '../../static/interface';
+import { getFinalResult } from '../../static/function';
 const Option = Select.Option;
 require('echarts/lib/chart/parallel');
 require('echarts/lib/component/tooltip');
@@ -20,6 +21,11 @@ interface ParaState {
     percent: number;
     paraNodata: string;
     visualValue: VisualMapValue;
+}
+
+interface SearchSpace {
+    _value: Array<number | string>;
+    _type: string;
 }
 
 message.config({
@@ -54,6 +60,82 @@ class Para extends React.Component<{}, ParaState> {
         };
     }
 
+    getParallelAxis = 
+    (   dimName: Array<string>, searchRange: SearchSpace, 
+        parallelAxis: Array<Dimobj>, accPara: Array<number>,
+        eachTrialParams: Array<string>, paraYdata: number[][]
+    ) => {
+        if (this._isMounted) {
+            this.setState(() => ({
+                dimName: dimName,
+                visualValue: {
+                    minAccuracy: accPara.length !== 0 ? Math.min(...accPara) : 0,
+                    maxAccuracy: accPara.length !== 0 ? Math.max(...accPara) : 1
+                }
+            }));
+        }
+        // search space range and specific value [only number]
+        for (let i = 0; i < dimName.length; i++) {
+            const searchKey = searchRange[dimName[i]];
+            switch (searchKey._type) {
+                case 'uniform':
+                case 'quniform':
+                    parallelAxis.push({
+                        dim: i,
+                        name: dimName[i],
+                        max: searchKey._value[1],
+                        min: searchKey._value[0]
+                    });
+                    break;
+
+                case 'randint':
+                    parallelAxis.push({
+                        dim: i,
+                        name: dimName[i],
+                        max: searchKey._value[0],
+                        min: 0
+                    });
+                    break;
+
+                case 'choice':
+                    const data: Array<string> = [];
+                    for (let j = 0; j < searchKey._value.length; j++) {
+                        data.push(searchKey._value[j].toString());
+                    }
+                    parallelAxis.push({
+                        dim: i,
+                        name: dimName[i],
+                        type: 'category',
+                        data: data
+                    });
+                    break;
+
+                default:
+                    parallelAxis.push({
+                        dim: i,
+                        name: dimName[i]
+                    });
+
+            }
+        }
+        // get data for every lines. if dim is choice type, number -> toString()
+        Object.keys(eachTrialParams).map(item => {
+            let temp: Array<number> = [];
+            for (let i = 0; i < dimName.length; i++) {
+                if ('type' in parallelAxis[i]) {
+                    temp.push(
+                        eachTrialParams[item][dimName[i]].toString()
+                    );
+                } else {
+                    temp.push(
+                        eachTrialParams[item][dimName[i]]
+                    );
+                }
+            }
+            paraYdata.push(temp);
+        });
+    }
+
     hyperParaPic = () => {
         axios
             .all([
@@ -66,128 +148,47 @@ class Para extends React.Component<{}, ParaState> {
                         const accParaData = res.data;
                         const accPara: Array<number> = [];
                         // specific value array
-                        const speValue: Array<string> = [];
-                        // yAxis specific name
-                        const speDimName: Array<string> = [];
+                        const eachTrialParams: Array<string> = [];
                         const parallelAxis: Array<Dimobj> = [];
                         const paraYdata: number[][] = [];
+                        // experiment interface search space obj
+                        const searchRange = JSON.parse(res1.data.params.searchSpace);
+                        const reallySearchKeys = Object.keys(searchRange);
+                        // trial-jobs interface list
                         Object.keys(accParaData).map(item => {
-                            if (accParaData[item].hyperParameters !== undefined) {
-                                const tem = JSON.parse(accParaData[item].hyperParameters).parameters;
-                                // get dim and every line specific number
-                                speDimName.push(tem);
-                            }
                             if (accParaData[item].status === 'SUCCEEDED') {
-                                if (accParaData[item].finalMetricData && accParaData[item].hyperParameters) {
-                                    // get acc array
-                                    let acc;
-                                    let accReal;
-                                    acc = JSON.parse(accParaData[item].finalMetricData.data);
-                                    if (typeof (acc) === 'object') {
-                                        if (acc.default) {
-                                            accReal = acc.default;
-                                        }
-                                    } else {
-                                        accReal = acc;
-                                    }
-                                    accPara.push(accReal);
+                                const finalData = accParaData[item].finalMetricData;
+                                if (finalData && accParaData[item].hyperParameters) {
+                                    const result = getFinalResult(finalData);
+                                    accPara.push(result);
                                     // get dim and every line specific number
                                     const temp = JSON.parse(accParaData[item].hyperParameters).parameters;
-                                    speValue.push(temp);
+                                    eachTrialParams.push(temp);
                                 }
                             }
                         });
-                        // get [batch_size...] name, default each trial is same
-                        // if (speValue.length !== 0) {
-                        const dimName = Object.keys(speDimName[0]);
-                        if (this._isMounted) {
-                            this.setState(() => ({
-                                dimName: dimName,
-                                visualValue: {
-                                    minAccuracy: accPara.length !== 0 ? Math.min(...accPara) : 0,
-                                    maxAccuracy: accPara.length !== 0 ? Math.max(...accPara) : 1
-                                }
-                            }));
-                        }
-                        // search space range and specific value [only number]
-                        const searchRange = JSON.parse(res1.data.params.searchSpace);
-                        for (let i = 0; i < dimName.length; i++) {
-                            const searchKey = searchRange[dimName[i]];
-                            switch (searchKey._type) {
-                                case 'uniform':
-                                case 'quniform':
-                                    parallelAxis.push({
-                                        dim: i,
-                                        name: dimName[i],
-                                        max: searchKey._value[1],
-                                        min: searchKey._value[0]
-                                    });
-                                    break;
+                        const dimName = reallySearchKeys;
+                        this.getParallelAxis(dimName, searchRange, parallelAxis, accPara, eachTrialParams, paraYdata);
 
-                                case 'randint':
-                                    parallelAxis.push({
-                                        dim: i,
-                                        name: dimName[i],
-                                        max: searchKey._value[0],
-                                        min: 0
-                                    });
-                                    break;
-
-                                case 'choice':
-                                    const data: Array<string> = [];
-                                    for (let j = 0; j < searchKey._value.length; j++) {
-                                        data.push(searchKey._value[j].toString());
-                                    }
-                                    parallelAxis.push({
-                                        dim: i,
-                                        name: dimName[i],
-                                        type: 'category',
-                                        data: data
-                                    });
-                                    break;
-
-                                default:
-                                    parallelAxis.push({
-                                        dim: i,
-                                        name: dimName[i]
-                                    });
-
-                            }
-                        }
-                        // get data for every lines. if dim is choice type
-                        // number -> toString()
-                        Object.keys(speValue).map(item => {
-                            let temp: Array<number> = [];
-                            for (let i = 0; i < dimName.length; i++) {
-                                if ('type' in parallelAxis[i]) {
-                                    temp.push(
-                                        speValue[item][dimName[i]].toString()
-                                    );
-                                } else {
-                                    temp.push(
-                                        speValue[item][dimName[i]]
-                                    );
-                                }
-                            }
-                            paraYdata.push(temp);
-                        });
                         // add acc
                         Object.keys(paraYdata).map(item => {
                             paraYdata[item].push(accPara[item]);
                         });
+
                         // according acc to sort ydata
                         if (paraYdata.length !== 0) {
                             const len = paraYdata[0].length - 1;
                             paraYdata.sort((a, b) => b[len] - a[len]);
                         }
-                        this.setState(() => ({
-                            paraBack: {
-                                parallelAxis: parallelAxis,
-                                data: paraYdata
-                            }
-                        }));
-                        const { percent, swapAxisArr } = this.state;
-                        const { paraBack } = this.state;
+                        if (this._isMounted) {
+                            this.setState(() => ({
+                                paraBack: {
+                                    parallelAxis: parallelAxis,
+                                    data: paraYdata
+                                }
+                            }));
+                        }
+                        const { percent, swapAxisArr, paraBack } = this.state;
                         // need to cut down the data
                         if (percent !== 0) {
                             const linesNum = paraBack.data.length;
@@ -198,13 +199,7 @@ class Para extends React.Component<{}, ParaState> {
                         if (swapAxisArr.length >= 2) {
                             this.swapGraph(paraBack, swapAxisArr);
                         }
-                        // draw search space graph
-                        if (this._isMounted) {
-                            this.setState({
-                                option: this.getOption(paraBack)
-                            });
-                        }
-                        // }
+                        this.getOption(paraBack);
                     }
                 }
             }));
@@ -240,30 +235,19 @@ class Para extends React.Component<{}, ParaState> {
             };
         } else {
             visualMapObj = {
+                bottom: '20px',
                 type: 'continuous',
                 precision: 3,
                 min: visualValue.minAccuracy,
                 max: visualValue.maxAccuracy,
-                color: ['#CA0000', '#FFC400', '#90EE90']
+                color: ['#CA0000', '#FFC400', '#90EE90'],
+                calculable: true
             };
         }
         let optionown = {
             parallelAxis,
             tooltip: {
-                trigger: 'item',
-                formatter: function (params: HoverName) {
-                    return params.name;
-                }
-            },
-            toolbox: {
-                show: true,
-                left: 'right',
-                iconStyle: {
-                    normal: {
-                        borderColor: '#ddd'
-                    }
-                },
-                z: 202
+                trigger: 'item'
             },
             parallel: {
                 parallelAxisDefault: {
@@ -273,9 +257,6 @@ class Para extends React.Component<{}, ParaState> {
                 }
             },
             visualMap: visualMapObj,
-            highlight: {
-                type: 'highlight'
-            },
             series: {
                 type: 'parallel',
                 smooth: true,
@@ -297,7 +278,12 @@ class Para extends React.Component<{}, ParaState> {
                 });
             }
         }
-        return optionown;
+        // draw search space graph
+        if (this._isMounted) {
+            this.setState(() => ({
+                option: optionown
+            }));
+        }
     }
 
     // get swap parallel axis
@@ -429,7 +415,7 @@ class Para extends React.Component<{}, ParaState> {
                             </Select>
                             <Button
                                 type="primary"
-                                className="changeBtu"
+                                className="changeBtu tableButton"
                                 onClick={this.swapBtn}
                             >
                                 Confirm

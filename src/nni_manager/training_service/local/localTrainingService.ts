@@ -26,7 +26,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'tail-stream';
-import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
+import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -35,7 +35,7 @@ import {
     HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus } from '../../common/utils';
 
 const tkill = require('tree-kill');
 
@@ -78,7 +78,7 @@ class LocalTrialJobDetail implements TrialJobDetail {
     public pid?: number;
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
-                workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
+        workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
@@ -103,6 +103,7 @@ class LocalTrainingService implements TrainingService {
     protected log: Logger;
     protected localTrailConfig?: TrialConfig;
     private isMultiPhase: boolean = false;
+    private streams: Array<ts.Stream>;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -112,19 +113,23 @@ class LocalTrainingService implements TrainingService {
         this.stopping = false;
         this.log = getLogger();
         this.trialSequenceId = -1;
+        this.streams = new Array<ts.Stream>();
     }
 
     public async run(): Promise<void> {
         while (!this.stopping) {
             while (this.jobQueue.length !== 0) {
                 const trialJobId: string = this.jobQueue[0];
-                const [success, resource] = this.tryGetAvailableResource();
-                if (!success) {
-                    break;
+                const trialJobDeatil = this.jobMap.get(trialJobId)
+                if (trialJobDeatil !== undefined && trialJobDeatil.status === 'WAITING'){
+                    const [success, resource] = this.tryGetAvailableResource();
+                    if (!success) {
+                        break;
+                    }
+                    this.occupyResource(resource);
+                    await this.runTrialJob(trialJobId, resource);
                 }
-                this.occupyResource(resource);
                 this.jobQueue.shift();
-                await this.runTrialJob(trialJobId, resource);
             }
             await delay(5000);
         }
@@ -164,7 +169,7 @@ class LocalTrainingService implements TrainingService {
                 this.setTrialJobStatus(trialJob, 'FAILED');
                 try {
                     const state: string = await fs.promises.readFile(path.join(trialJob.workingDirectory, '.nni', 'state'), 'utf8');
-                    const match: RegExpMatchArray | null = state.trim().match(/^(\d+)\s+(\d+)$/);
+                    const match: RegExpMatchArray | null = state.trim().match(/^(\d+)\s+(\d+)/);
                     if (match !== null) {
                         const { 1: code, 2: timestamp } = match;
                         if (parseInt(code, 10) === 0) {
@@ -241,11 +246,15 @@ class LocalTrainingService implements TrainingService {
         return true;
     }
 
-    public async cancelTrialJob(trialJobId: string): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         this.log.info(`cancelTrialJob: ${trialJobId}`);
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
         if (trialJob === undefined) {
             throw new NNIError(NNIErrorNames.NOT_FOUND, 'Trial job not found');
+        }
+        if (trialJob.pid === undefined){
+            this.setTrialJobStatus(trialJob, 'USER_CANCELED');
+            return;
         }
         if (trialJob.form.jobType === 'TRIAL') {
             await tkill(trialJob.pid, 'SIGKILL');
@@ -254,7 +263,7 @@ class LocalTrainingService implements TrainingService {
         } else {
             throw new Error(`Job type not supported: ${trialJob.form.jobType}`);
         }
-        this.setTrialJobStatus(trialJob, 'USER_CANCELED');
+        this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
@@ -281,13 +290,13 @@ class LocalTrainingService implements TrainingService {
     public getClusterMetadata(key: string): Promise<string> {
         switch (key) {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                let getResult : Promise<string>;
-                if(!this.localTrailConfig) {
+                let getResult: Promise<string>;
+                if (!this.localTrailConfig) {
                     getResult = Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, `${key} is never set yet`));
                 } else {
-                    getResult = Promise.resolve(!this.localTrailConfig? '' : JSON.stringify(this.localTrailConfig));
+                    getResult = Promise.resolve(!this.localTrailConfig ? '' : JSON.stringify(this.localTrailConfig));
                 }
-                return getResult;     
+                return getResult;
             default:
                 return Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, 'Key not found'));
         }
@@ -295,7 +304,9 @@ class LocalTrainingService implements TrainingService {
 
     public cleanUp(): Promise<void> {
         this.stopping = true;
-
+        for (const stream of this.streams) {
+            stream.destroy();
+        }
         return Promise.resolve();
     }
 
@@ -309,6 +320,7 @@ class LocalTrainingService implements TrainingService {
             { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
             { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
             { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
+            { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.sequenceId.toString() },
             { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
     }
@@ -355,9 +367,8 @@ class LocalTrainingService implements TrainingService {
         await cpp.exec(`mkdir -p ${trialJobDetail.workingDirectory}`);
         await cpp.exec(`mkdir -p ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
         await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
-        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
-        await this.writeSequenceIdFile(trialJobId);
         const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
 
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
@@ -382,6 +393,7 @@ class LocalTrainingService implements TrainingService {
                 buffer = remain;
             }
         });
+        this.streams.push(stream);
     }
 
     private async runHostJob(form: HostJobApplicationForm): Promise<TrialJobDetail> {
@@ -437,13 +449,6 @@ class LocalTrainingService implements TrainingService {
         }
 
         return this.trialSequenceId++;
-    }
-
-    private async writeSequenceIdFile(trialJobId: string): Promise<void> {
-        const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
-        assert(trialJobDetail !== undefined);
-        const filepath: string = path.join(trialJobDetail.workingDirectory, '.nni', 'sequence_id');
-        await fs.promises.writeFile(filepath, trialJobDetail.sequenceId.toString(), { encoding: 'utf8' });
     }
 }
 

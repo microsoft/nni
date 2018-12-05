@@ -19,7 +19,9 @@
 # ==================================================================================================
 
 import logging
+import threading
 from enum import Enum
+from .common import multi_thread_enabled
 
 
 class CommandType(Enum):
@@ -33,6 +35,7 @@ class CommandType(Enum):
     Terminate = b'TE'
 
     # out
+    Initialized = b'ID'
     NewTrialJob = b'TR'
     SendTrialJobParameter = b'SP'
     NoMoreTrialJobs = b'NO'
@@ -42,6 +45,7 @@ class CommandType(Enum):
 try:
     _in_file = open(3, 'rb')
     _out_file = open(4, 'wb')
+    _lock = threading.Lock()
 except OSError:
     _msg = 'IPC pipeline not exists, maybe you are importing tuner/assessor from trial code?'
     import logging
@@ -53,12 +57,19 @@ def send(command, data):
     command: CommandType object.
     data: string payload.
     """
-    data = data.encode('utf8')
-    assert len(data) < 1000000, 'Command too long'
-    msg = b'%b%06d%b' % (command.value, len(data), data)
-    logging.getLogger(__name__).debug('Sending command, data: [%s]' % msg)
-    _out_file.write(msg)
-    _out_file.flush()
+    global _lock
+    try:
+        if multi_thread_enabled():
+            _lock.acquire()
+        data = data.encode('utf8')
+        assert len(data) < 1000000, 'Command too long'
+        msg = b'%b%06d%b' % (command.value, len(data), data)
+        logging.getLogger(__name__).debug('Sending command, data: [%s]' % msg)
+        _out_file.write(msg)
+        _out_file.flush()
+    finally:
+        if multi_thread_enabled():
+            _lock.release()
 
 
 def receive():

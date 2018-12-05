@@ -1,11 +1,12 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Row, Col } from 'antd';
+import { Row, Col, Button } from 'antd';
 import { MANAGER_IP } from '../static/const';
 import {
     Experiment, TableObj,
     Parameters, TrialNumber
 } from '../static/interface';
+import { getFinalResult } from '../static/function';
 import SuccessTable from './overview/SuccessTable';
 import Title1 from './overview/Title1';
 import Progressed from './overview/Progress';
@@ -20,10 +21,11 @@ require('../static/style/accuracy.css');
 require('../static/style/table.scss');
 require('../static/style/overviewTitle.scss');
 
-interface SessionState {
+interface OverviewState {
     tableData: Array<TableObj>;
     searchSpace: object;
     status: string;
+    errorStr: string;
     trialProfile: Experiment;
     option: object;
     noData: string;
@@ -31,9 +33,10 @@ interface SessionState {
     bestAccuracy: string;
     accNodata: string;
     trialNumber: TrialNumber;
+    downBool: boolean;
 }
 
-class Overview extends React.Component<{}, SessionState> {
+class Overview extends React.Component<{}, OverviewState> {
 
     public _isMounted = false;
     public intervalID = 0;
@@ -44,6 +47,7 @@ class Overview extends React.Component<{}, SessionState> {
         this.state = {
             searchSpace: {},
             status: '',
+            errorStr: '',
             trialProfile: {
                 id: '',
                 author: '',
@@ -81,7 +85,8 @@ class Overview extends React.Component<{}, SessionState> {
                 runTrial: 0,
                 unknowTrial: 0,
                 totalCurrentTrial: 0
-            }
+            },
+            downBool: false
         };
     }
 
@@ -99,6 +104,7 @@ class Overview extends React.Component<{}, SessionState> {
                     const clusterMetaData = sessionData.params.clusterMetaData;
                     const endTimenum = sessionData.endTime;
                     const assessor = sessionData.params.assessor;
+                    const advisor = sessionData.params.advisor;
                     trialPro.push({
                         id: sessionData.id,
                         author: sessionData.params.authorName,
@@ -114,6 +120,7 @@ class Overview extends React.Component<{}, SessionState> {
                         trainingServicePlatform: trainingPlatform,
                         tuner: sessionData.params.tuner,
                         assessor: assessor ? assessor : undefined,
+                        advisor: advisor ? advisor : undefined,
                         clusterMetaData: clusterMetaData ? clusterMetaData : undefined
                     });
                     // search space format loguniform max and min
@@ -122,14 +129,6 @@ class Overview extends React.Component<{}, SessionState> {
                         const key = searchSpace[item]._type;
                         let value = searchSpace[item]._value;
                         switch (key) {
-                            case 'loguniform':
-                            case 'qloguniform':
-                                const a = Math.pow(10, value[0]);
-                                const b = Math.pow(10, value[1]);
-                                value = [a, b];
-                                searchSpace[item]._value = value;
-                                break;
-
                             case 'quniform':
                             case 'qnormal':
                             case 'qlognormal':
@@ -148,17 +147,30 @@ class Overview extends React.Component<{}, SessionState> {
                     }
                 }
             });
+        this.checkStatus();
 
+    }
+
+    checkStatus = () => {
         axios(`${MANAGER_IP}/check-status`, {
             method: 'GET'
         })
             .then(res => {
                 if (res.status === 200 && this._isMounted) {
-                    this.setState({
-                        status: res.data.status
-                    });
+                    const errors = res.data.errors;
+                    if (errors.length !== 0) {
+                        this.setState({
+                            status: res.data.status,
+                            errorStr: res.data.errors[0]
+                        });
+                    } else {
+                        this.setState({
+                            status: res.data.status,
+                        });
+                    }
                 }
             });
+
     }
 
     showTrials = () => {
@@ -204,18 +216,7 @@ class Overview extends React.Component<{}, SessionState> {
                                     parameters: {}
                                 };
                                 const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
-                                let acc;
-                                let tableAcc = 0;
-                                if (tableData[item].finalMetricData) {
-                                    acc = JSON.parse(tableData[item].finalMetricData.data);
-                                    if (typeof (acc) === 'object') {
-                                        if (acc.default) {
-                                            tableAcc = acc.default;
-                                        }
-                                    } else {
-                                        tableAcc = acc;
-                                    }
-                                }
+                                const acc = getFinalResult(tableData[item].finalMetricData);
                                 // if hyperparameters is undefine, show error message, else, show parameters value
                                 if (tableData[item].hyperParameters) {
                                     desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
@@ -224,10 +225,6 @@ class Overview extends React.Component<{}, SessionState> {
                                 }
                                 if (tableData[item].logPath !== undefined) {
                                     desJobDetail.logPath = tableData[item].logPath;
-                                    const isSessionLink = /^http/gi.test(tableData[item].logPath);
-                                    if (isSessionLink) {
-                                        desJobDetail.isLink = true;
-                                    }
                                 }
                                 topTableData.push({
                                     key: topTableData.length,
@@ -235,7 +232,7 @@ class Overview extends React.Component<{}, SessionState> {
                                     id: tableData[item].id,
                                     duration: duration,
                                     status: tableData[item].status,
-                                    acc: tableAcc,
+                                    acc: acc,
                                     description: desJobDetail
                                 });
                                 break;
@@ -263,6 +260,9 @@ class Overview extends React.Component<{}, SessionState> {
     }
 
     downExperimentContent = () => {
+        this.setState(() => ({
+            downBool: true
+        }));
         axios
             .all([
                 axios.get(`${MANAGER_IP}/experiment`),
@@ -274,6 +274,7 @@ class Overview extends React.Component<{}, SessionState> {
                     if (res.data.params.searchSpace) {
                         res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
                     }
+                    const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
                     const interResultList = res2.data;
                     const contentOfExperiment = JSON.stringify(res.data, null, 2);
                     let trialMessagesArr = res1.data;
@@ -293,31 +294,36 @@ class Overview extends React.Component<{}, SessionState> {
                     const trialMessages = JSON.stringify(trialMessagesArr, null, 2);
                     const aTag = document.createElement('a');
                     const file = new Blob([contentOfExperiment, trialMessages], { type: 'application/json' });
-                    aTag.download = 'experiment.txt';
+                    aTag.download = 'experiment.json';
                     aTag.href = URL.createObjectURL(file);
                     aTag.click();
-                    URL.revokeObjectURL(aTag.href);
+                    if (!isEdge) {
+                        URL.revokeObjectURL(aTag.href);
+                    }
                     if (navigator.userAgent.indexOf('Firefox') > -1) {
                         const downTag = document.createElement('a');
                         downTag.addEventListener('click', function () {
-                            downTag.download = 'experiment.txt';
+                            downTag.download = 'experiment.json';
                             downTag.href = URL.createObjectURL(file);
                         });
                         let eventMouse = document.createEvent('MouseEvents');
                         eventMouse.initEvent('click', false, false);
                         downTag.dispatchEvent(eventMouse);
                     }
+                    this.setState(() => ({
+                        downBool: false
+                    }));
                 }
             }));
     }
 
-    // trial accuracy graph
+    // trial accuracy graph Default Metric
     drawPointGraph = () => {
 
         const { tableData } = this.state;
         const sourcePoint = JSON.parse(JSON.stringify(tableData));
         sourcePoint.sort((a: TableObj, b: TableObj) => {
-            if (a.sequenceId && b.sequenceId) {
+            if (a.sequenceId !== undefined && b.sequenceId !== undefined) {
                 return a.sequenceId - b.sequenceId;
             } else {
                 return NaN;
@@ -341,7 +347,7 @@ class Overview extends React.Component<{}, SessionState> {
                 data: indexarr
             },
             yAxis: {
-                name: 'Accuracy',
+                name: 'Default Metric',
                 type: 'value',
                 data: accarr
             },
@@ -388,15 +394,30 @@ class Overview extends React.Component<{}, SessionState> {
             accuracyData,
             accNodata,
             status,
+            errorStr,
             trialNumber,
-            bestAccuracy
+            bestAccuracy,
+            downBool
         } = this.state;
 
         return (
             <div className="overview">
                 {/* status and experiment block */}
-                <Row className="basicExperiment">
-                    <Title1 text="Experiment" icon="11.png" />
+                <Row>
+                    <Row className="exbgcolor">
+                        <Col span={4}><Title1 text="Experiment" icon="11.png" /></Col>
+                        <Col span={4}>
+                            <Button
+                                type="primary"
+                                className="changeBtu download"
+                                onClick={this.downExperimentContent}
+                                disabled={downBool}
+                            >
+                                <span>Download</span>
+                                <img src={require('../static/img/icon/download.png')} alt="icon" />
+                            </Button>
+                        </Col>
+                    </Row>
                     <BasicInfo trialProfile={trialProfile} status={status} />
                 </Row>
                 <Row className="overMessage">
@@ -408,6 +429,7 @@ class Overview extends React.Component<{}, SessionState> {
                             trialProfile={trialProfile}
                             bestAccuracy={bestAccuracy}
                             status={status}
+                            errors={errorStr}
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}

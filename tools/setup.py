@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name = 'nnictl',
-    version = '0.3.0',
+    version = '0.4',
     packages = setuptools.find_packages(exclude=['*test*']),
 
     python_requires = '>=3.5',
@@ -22,7 +22,7 @@ setuptools.setup(
     url = 'https://github.com/Microsoft/nni',
     entry_points = {
         'console_scripts' : [
-            'nnictl = nnicmd.nnictl:parse_args'
+            'nnictl = nni_cmd.nnictl:parse_args'
         ]
     }
 )

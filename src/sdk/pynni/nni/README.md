@@ -7,8 +7,9 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
  - Anneal
  - Naive Evolution
  - SMAC (to install through `nnictl`)
- - ENAS (ongoing)
- - Batch (ongoing)
+ - Batch
+ - Grid Search
+ - Hyperband
 
  ## 1. Tuner algorithm introduction
 
@@ -46,6 +47,19 @@ Note that SMAC only supports a subset of the types in [search space spec](../../
 
 Batch allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done.
 
+**Gridsearch**
+
+Gridsearch performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file
+
+Note that the only acceptable types of search space are 'quniform', 'qloguniform' and 'choice':
+
+* Type 'choice' will select one of the options. Note that it can also be nested.
+* Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
+* Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log10(low), log10(high)] and sample and then change the sampled value back.
+
+**Hyperband**
+
+[Hyperband][6] tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be refered to [here](hyperband_advisor/README.md)
 
  ## 2. How to use the tuner algorithm in NNI?
 
@@ -76,3 +90,4 @@ There are two filed you need to set:
   [3]: https://arxiv.org/pdf/1703.01041.pdf
   [4]: https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf
   [5]: https://github.com/automl/SMAC3
+  [6]: https://arxiv.org/pdf/1603.06560.pdf

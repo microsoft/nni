@@ -1,15 +1,15 @@
 import * as React from 'react';
 import axios from 'axios';
 import JSONTree from 'react-json-tree';
-import { browserHistory } from 'react-router';
 import ReactEcharts from 'echarts-for-react';
 import { Row, Table, Button, Popconfirm, Modal, message } from 'antd';
 import { MANAGER_IP, trialJobStatus } from '../../static/const';
 import { convertDuration } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
-import Title1 from '../overview/Title1';
+import LogPath from '../logPath/LogPath';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
+require('../../static/style/search.scss');
 require('../../static/style/table.scss');
 require('../../static/style/button.scss');
 const echarts = require('echarts/lib/echarts');
@@ -99,7 +99,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 data: sequence
             },
             yAxis: {
-                name: 'Accuracy',
+                name: 'Default Metric',
                 type: 'value',
                 data: intermediateArr
             },
@@ -131,20 +131,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
             })
             .catch(error => {
                 if (error.response.status === 500) {
-                    message.error('500 error, fail to cancel the job');
+                    if (error.response.data.error) {
+                        message.error(error.response.data.error);
+                    } else {
+                        message.error('500 error, fail to cancel the job');
+                    }
                 }
             });
-    }
-
-    // get tensorflow address
-    getTensorpage = (id: string) => {
-
-        let path = {
-            pathname: '/tensor',
-            state: id
-        };
-
-        browserHistory.push(path);
     }
 
     componentDidMount() {
@@ -156,6 +149,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     render() {
+
         const { tableSource } = this.props;
         const { intermediateOption, modalVisible } = this.state;
         let bgColor = '';
@@ -244,7 +238,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     :
                                     record.acc
                                 :
-                                'NaN'
+                                '--'
                         }
                     </div>
                 );
@@ -267,7 +261,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         ?
                         (
                             <Popconfirm
-                                title="Are you sure to delete this trial?"
+                                title="Are you sure to cancel this trial?"
                                 onConfirm={this.killJob.bind(this, record.key, record.id, record.status)}
                             >
                                 <Button type="primary" className="tableButton">Kill</Button>
@@ -286,18 +280,18 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 );
             },
         }, {
-            title: 'Tensor',
-            dataIndex: 'tensor',
-            key: 'tensor',
+            title: 'Intermediate Result',
+            dataIndex: 'intermediate',
+            key: 'intermediate',
             width: '16%',
             render: (text: string, record: TableObj) => {
                 return (
                     <Button
                         type="primary"
                         className="tableButton"
-                        onClick={this.getTensorpage.bind(this, record.id)}
+                        onClick={this.showIntermediateModal.bind(this, record.id)}
                     >
-                        TensorBoard
+                        Intermediate
                     </Button>
                 );
             },
@@ -312,11 +306,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const parametersRow = {
                 parameters: record.description.parameters
             };
-            let isLogLink: boolean = false;
-            const logPathRow = record.description.logPath;
-            if (record.description.isLink !== undefined) {
-                isLogLink = true;
-            }
+            const logPathRow = record.description.logPath !== undefined
+                ?
+                record.description.logPath
+                :
+                'This trial\'s logPath are not available.';
             return (
                 <pre id="allList" className="hyperpar">
                     {
@@ -334,40 +328,20 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 <span className="error">'This trial's parameters are not available.'</span>
                             </div>
                     }
-                    {
-                        isLogLink
-                            ?
-                            <div className="logpath">
-                                <span className="logName">logPath: </span>
-                                <a className="logContent logHref" href={logPathRow} target="_blank">{logPathRow}</a>
-                            </div>
-                            :
-                            <div className="logpath">
-                                <span className="logName">logPath: </span>
-                                <span className="logContent">{logPathRow}</span>
-                            </div>
-                    }
-                    <Button
-                        type="primary"
-                        className="tableButton"
-                        onClick={this.showIntermediateModal.bind(this, record.id)}
-                    >
-                        Intermediate Result
-                    </Button>
+                    <LogPath logStr={logPathRow}/>
                 </pre>
             );
         };
 
         return (
             <Row className="tableList">
-                <Row><Title1 text="All Trials" icon="6.png" /></Row>
                 <div id="tableList">
                     <Table
                         columns={columns}
                         expandedRowRender={openRow}
                         dataSource={tableSource}
                         className="commonTableStyle"
-                        pagination={{ pageSize: 10 }}
+                        pagination={{ pageSize: 20 }}
                     />
                     <Modal
                         title="Intermediate Result"

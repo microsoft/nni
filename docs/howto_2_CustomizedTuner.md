@@ -6,7 +6,7 @@ So, if user want to implement a customized Tuner, she/he only need to:
 
 1) Inherit a tuner of a base Tuner class
 2) Implement receive_trial_result and generate_parameter function
-3) Write a script to run Tuner
+3) Configure your customized tuner in experiment yaml config file
 
 Here ia an example:
 
@@ -93,3 +93,6 @@ More detail example you could see:
 > * [evolution-tuner](../src/sdk/pynni/nni/evolution_tuner)
 > * [hyperopt-tuner](../src/sdk/pynni/nni/hyperopt_tuner)
 > * [evolution-based-customized-tuner](../examples/tuners/ga_customer_tuner)
+
+## Write a more advanced automl algorithm
+The methods above are usually enough to write a general tuner. However, users may also want more methods, for example, intermediate results, trials' state (e.g., the methods in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called `advisor` which directly inherits from `MsgDispatcherBase` in [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../src/sdk/pynni/nni/msg_dispatcher_base.py). Please refer to [here](howto_3_CustomizedAdvisor) for how to write a customized advisor.
