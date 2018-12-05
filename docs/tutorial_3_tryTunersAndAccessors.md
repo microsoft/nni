@@ -13,7 +13,7 @@ NNI provides an easy to adopt approach to set up parameter tuning algorithms as 
 
 ### **Learn More about tuners**
 * For detailed defintion and usage aobut the required field, please refer to [Config an experiment](ExperimentConfig.md)
-* [Tuners in the latest NNI release](../src/sdk/pynni/nni/README.md)
+* [Tuners in the latest NNI release](HowToChooseTuner.md)
 * [How to implement your own tuner](howto_2_CustomizedTuner.md)
 
 
