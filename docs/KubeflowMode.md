@@ -14,7 +14,6 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
     ```     
 7. Install **NNI**, follow the install guide [here](GetStarted.md).
 
-
 ## Prerequisite for Azure Kubernetes Service
 1. NNI support kubeflow based on Azure Kubernetes Service, follow the [guideline](https://azure.microsoft.com/en-us/services/kubernetes-service/) to set up Azure Kubernetes Service.
 2. Install [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) and __kubectl__.  Use `az login` to set azure account, and connect kubectl client to AKS, [refer](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster).
