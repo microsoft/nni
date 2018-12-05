@@ -261,7 +261,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         ?
                         (
                             <Popconfirm
-                                title="Are you sure to delete this trial?"
+                                title="Are you sure to cancel this trial?"
                                 onConfirm={this.killJob.bind(this, record.key, record.id, record.status)}
                             >
                                 <Button type="primary" className="tableButton">Kill</Button>
