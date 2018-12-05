@@ -1,3 +1,30 @@
+# Release 0.4 - 12/6/2018
+
+## Major Features
+  * [Kubeflow Training service](./KubeflowMode.md)
+    * Support tf-operator
+    * [Distributed trial example](../examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
+  * [Grid search tuner](../src/sdk/pynni/nni/README.md#Grid) 
+  * [Hyperband tuner](../src/sdk/pynni/nni/README.md#Hyperband)
+  * Support launch NNI experiment on MAC
+  * WebUI 
+    *  UI support for hyperband tuner
+    *  Remove tensorboard button 
+    *  Show experiment error message 
+    *  Show line numbers in search space and trial profile
+    *  Support search a specific trial by trial number
+    *  Show trial's hdfsLogPath
+    *  Download experiment parameters
+## Others
+  * Asynchronous dispatcher
+  * Docker file update, add pytorch library 
+  * Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API. 
+  * OpenPAI training service bug fix
+    *  Support NNI Manager IP configuration(nniManagerIp) in PAI cluster config file, to fix the issue that user’s machine has no eth0 device 
+    *  File number in codeDir is capped to 1000 now, to avoid user mistakenly fill root dir for codeDir
+    *  Don’t print useless ‘metrics is empty’ log int PAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks PAI trial’s output for debugging purpose
+    *  Add timestamp at the beginning of each log entry in trial keeper.
+
 # Release 0.3.0 - 11/2/2018
 ## NNICTL new features and updates
 * Support running multiple experiments simultaneously. 
