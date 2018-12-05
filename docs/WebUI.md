@@ -5,7 +5,7 @@
 Click the tab "Overview".
 
 * See the experiment trial profile and search space message.
-* Support to download the experiment parameters.
+* Support to download the experiment result.
 
 ![](./img/over1.png)
 * See good performance trials.
@@ -14,7 +14,7 @@ Click the tab "Overview".
 
 ## View job default metric
 
-Click the tab "Default Metric" to see the point graph of all trials. Hover every point to see its specific default metric and search space message.
+Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
 ![](./img/accuracy.png)
 
