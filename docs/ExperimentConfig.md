@@ -393,6 +393,18 @@ machineList:
 
       __name__ is the value of ```--name``` used in az command.
 
+  * __azureStorage__
+    
+    If users use azure kubernets service, they should set azure storage account to store code files.
+
+    * __accountName__
+     
+      __accountName__ is the name of azure storage account.
+
+    * __azureShare__
+      
+      __azureShare__ is the share of the azure file storage.
+
 * __paiConfig__
 
   * __userName__
@@ -406,18 +418,6 @@ machineList:
   * __host__
     
     __host__ is the host of pai.
-
-  * __azureStorage__
-    
-    If users use azure kubernets service, they should set azure storage account to store code files.
-
-    * __accountName__
-     
-      __accountName__ is the name of azure storage account.
-
-    * __azureShare__
-      
-      __azureShare__ is the share of the azure file storage.
     
     
 
