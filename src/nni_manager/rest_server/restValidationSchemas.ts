@@ -72,7 +72,6 @@ export namespace ValidationSchemas {
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()
                 }),
-                kubernetesServer: joi.string().min(1),
                 keyVault: joi.object({
                     vaultName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/),
                     name: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/)
@@ -99,6 +98,15 @@ export namespace ValidationSchemas {
             maxExecDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
+            advisor: joi.object({
+                builtinAdvisorName: joi.string().valid('Hyperband'),
+                codeDir: joi.string(),
+                classFileName: joi.string(),
+                className: joi.string(),
+                classArgs:joi.any(),
+                gpuNum: joi.number().min(0),
+                checkpointDir: joi.string()
+            }),
             tuner: joi.object({
                 builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch'),
                 codeDir: joi.string(),
@@ -107,7 +115,7 @@ export namespace ValidationSchemas {
                 classArgs: joi.any(),
                 gpuNum: joi.number().min(0),
                 checkpointDir: joi.string()
-            }).required(),
+            }),
             assessor: joi.object({
                 builtinAssessorName: joi.string().valid('Medianstop'),
                 codeDir: joi.string(),

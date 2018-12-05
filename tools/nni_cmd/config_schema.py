@@ -34,7 +34,22 @@ Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
 'useAnnotation': bool,
-'tuner': Or({
+Optional('advisor'): Or({
+    'builtinAdvisorName': Or('Hyperband'),
+    'classArgs': {
+        'optimize_mode': Or('maximize', 'minimize'),
+        Optional('R'): int,
+        Optional('eta'): int
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'codeDir': os.path.exists,
+    'classFileName': str,
+    'className': str,
+    Optional('classArgs'): dict,
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+}),
+Optional('tuner'): Or({
     'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'SMAC', 'Evolution'),
     Optional('classArgs'): {
         'optimize_mode': Or('maximize', 'minimize')
@@ -124,8 +139,7 @@ kubeflow_config_schema = {
         'nfs': {
             'server': str,
             'path': str
-        },
-        Optional('kubernetesServer'): str
+        }
     },{
         'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
         'keyVault': {

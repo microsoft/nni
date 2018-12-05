@@ -35,7 +35,7 @@ import {
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
-import { delay, getLogDir, getMsgDispatcherCommand } from '../common/utils';
+import { delay , getLogDir, getCheckpointDir, getMsgDispatcherCommand, mkDirP} from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
@@ -127,15 +127,15 @@ class NNIManager implements Manager {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(
-            expParams.tuner, expParams.assessor, expParams.multiPhase, expParams.multiThread);
+        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
+                                                                expParams.multiPhase, expParams.multiThread);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
+        const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(
-            //expParams.tuner.tunerCommand,
             dispatcherCommand,
             undefined,
             'start',
-            expParams.tuner.checkpointDir);
+            checkpointDir);
 
         this.experimentProfile.startTime = Date.now();
         this.status.status = 'EXPERIMENT_RUNNING';
@@ -160,14 +160,15 @@ class NNIManager implements Manager {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(
-            expParams.tuner, expParams.assessor, expParams.multiPhase, expParams.multiThread);
+        const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
+                                                                expParams.multiPhase, expParams.multiThread);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
+        const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(
             dispatcherCommand,
             undefined,
             'resume',
-            expParams.tuner.checkpointDir);
+            checkpointDir);
 
         const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
 
@@ -371,13 +372,22 @@ class NNIManager implements Manager {
                 this.trialJobs.set(trialJobId, Object.assign({}, trialJobDetail));
                 await this.dataStore.storeTrialJobEvent(trialJobDetail.status, trialJobDetail.id, undefined, trialJobDetail);
             }
+            let hyperParams: string | undefined = undefined;
             switch (trialJobDetail.status) {
                 case 'SUCCEEDED':
                 case 'USER_CANCELED':
                 case 'EARLY_STOPPED':
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
-                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: trialJobDetail.status}));
+                    if (trialJobDetail.form.jobType === 'TRIAL') {
+                        hyperParams = (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters.value;
+                    } else {
+                        throw new Error('Error: jobType error, not TRIAL');
+                    }
+                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
+                        trial_job_id: trialJobDetail.id,
+                        event: trialJobDetail.status,
+                        hyper_params: hyperParams }));
                     break;
                 case 'FAILED':
                 case 'SYS_CANCELED':
@@ -385,7 +395,15 @@ class NNIManager implements Manager {
                     // TO DO: push this job to queue for retry
                     this.trialJobs.delete(trialJobId);
                     finishedTrialJobNum++;
-                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({trial_job_id: trialJobDetail.id, event: trialJobDetail.status}));
+                    if (trialJobDetail.form.jobType === 'TRIAL') {
+                        hyperParams = (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters.value;
+                    } else {
+                        throw new Error('Error: jobType error, not TRIAL');
+                    }
+                    this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
+                        trial_job_id: trialJobDetail.id,
+                        event: trialJobDetail.status,
+                        hyper_params: hyperParams}));
                     break;
                 case 'WAITING':
                 case 'RUNNING':
@@ -642,16 +660,30 @@ class NNIManager implements Manager {
                 maxExecDuration: 0, // unit: second
                 maxTrialNum: 0, // maxTrialNum includes all the submitted trial jobs
                 trainingServicePlatform: '',
-                searchSpace: '',
-                tuner: {
-                    className: '',
-                    classArgs: {},
-                    checkpointDir: ''
-                }
+                searchSpace: ''
             }
         };
     }
 
+    private async createCheckpointDir(): Promise<string> {
+        // TODO: test
+        const chkpDir: string = getCheckpointDir();
+        // create checkpoint directory
+        await mkDirP(chkpDir);
+        // assign this directory to exp profile's checkpointDir
+        if (this.experimentProfile.params.advisor) {
+            this.experimentProfile.params.advisor.checkpointDir = chkpDir;
+        }
+        if (this.experimentProfile.params.tuner) {
+            this.experimentProfile.params.tuner.checkpointDir = chkpDir;
+        }
+        if (this.experimentProfile.params.assessor) {
+            this.experimentProfile.params.assessor.checkpointDir = chkpDir;
+        }
+
+        return Promise.resolve(chkpDir);
+    }
+    
     private async storeMaxSequenceId(sequenceId: number): Promise<void> {
         if (sequenceId > this.experimentProfile.maxSequenceId) {
             this.experimentProfile.maxSequenceId = sequenceId;
