@@ -12,13 +12,13 @@ The network morphism now is framework-based, and we have not implemented the fra
 
 ```bash
 # install the requirements packages
-cd examples/trials/network-morphism/
+cd examples/trials/network_morphism/
 pip install -r requirements.txt
 ```
 
 ### 3. Update configuration
 
-Modify `examples/trials/network-morphism/config.yaml` to fit your own task, here is the default configuration:
+Modify `examples/trials/network_morphism/config.yaml` to fit your own task, here is the default configuration:
 
 ```yaml
 authorName: default
@@ -47,7 +47,7 @@ tuner:
     n_output_node: 10
 trial:
   # your own command here
-  command: python cifar10-pytorch.py
+  command: python cifar10/cifar10-pytorch.py
   codeDir: .
   gpuNum: 0
 ```
@@ -93,16 +93,16 @@ nnictl create --config config.yaml
 
 ## Trial Examples
 
-The trial has some examples which can guide you which located in `examples/trials/network-morphism/`. You can refer to it and modify to your own task. Hope this will help you to build your code.
+The trial has some examples which can guide you which located in `examples/trials/network_morphism/`. You can refer to it and modify to your own task. Hope this will help you to build your code.
 
 ### FashionMNIST
 
 `Fashion-MNIST` is a dataset of [Zalando](https://jobs.zalando.com/tech/)'s article images—consisting of a training set of 60,000 examples and a test set of 10,000 examples. Each example is a 28x28 grayscale image, associated with a label from 10 classes. It is a modern image classification dataset widely used to replacing MNIST as a baseline dataset, because the dataset MNIST is too easy and overused.
 
-There is one simple example [FashionMNIST-pytorch.py](AS). Attention, you should change the `input_width` to 28 and `input_channel` to 1 in `config.yaml ` for this dataset.
+There are two examples, [FashionMNIST-keras.py](./FashionMNIST/FashionMNIST-keras.py) and [FashionMNIST-pytorch.py](./FashionMNIST/FashionMNIST-pytorch.py). Attention, you should change the `input_width` to 28 and `input_channel` to 1 in `config.yaml ` for this dataset.
 
 ### Cifar10
 
 The `CIFAR-10` dataset [Canadian Institute For Advanced Research](https://www.cifar.ca/) is a collection of images that are commonly used to train machine learning and computer vision algorithms. It is one of the most widely used datasets for machine learning research. The CIFAR-10 dataset contains 60,000 32x32 color images in 10 different classes.
 
-There are two example, [cifar10-keras.py](./cifar10-keras.py) and [cifar10-pytorch.py](cifar10-pytorch.py). The value `input_width` is 32 and the value `input_channel` is 3 in `config.yaml ` for this dataset.
+There are two examples, [cifar10-keras.py](./cifar10/cifar10-keras.py) and [cifar10-pytorch.py](./cifar10/cifar10-pytorch.py). The value `input_width` is 32 and the value `input_channel` is 3 in `config.yaml ` for this dataset.

@@ -1,10 +1,30 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+# associated documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish, distribute,
+# sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies or
+# substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+# NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+# OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# ==================================================================================================
+
+
 import json
 from unittest import TestCase, main
 from copy import deepcopy
 import torch
 
 import nni
-import nni.protocol
 from nni.networkmorphism_tuner.graph import graph_to_json, json_to_graph
 from nni.networkmorphism_tuner.graph_transformer import (to_deeper_graph,
                                                          to_skip_connection_graph,
@@ -13,7 +33,6 @@ from nni.networkmorphism_tuner.layers import layer_description_extractor
 from nni.networkmorphism_tuner.networkmorphism_tuner import \
     NetworkMorphismTuner
 from nni.networkmorphism_tuner.nn import CnnGenerator
-from nni.protocol import CommandType, receive, send
 
 
 class NetworkMorphismTestCase(TestCase):
@@ -117,10 +136,6 @@ class NetworkMorphismTestCase(TestCase):
         ret = {"model_id": 0, "metric_value": 0.7}
         self.assertEqual(tuner.bo.search_tree.adj_list[model_id], [])
         self.assertEqual(tuner.history[-1], ret)
-        self.assertEqual(
-            len(tuner.x_queue[-1].to_json()), len(graph.extract_descriptor().to_json())
-        )
-        self.assertEqual(tuner.y_queue[-1], 0.7)
 
     def test_update_search_space(self):
         tuner = NetworkMorphismTuner()
@@ -144,10 +159,6 @@ class NetworkMorphismTestCase(TestCase):
         tuner.add_model(0.8, graph, 0)
         ret = {"model_id": 0, "metric_value": 0.8}
         self.assertEqual(tuner.history[-1], ret)
-        json_queue = tuner.x_queue[-1].to_json()
-        json_graph = graph.extract_descriptor().to_json()
-        self.assertEqual(len(json_queue), len(json_graph))
-        self.assertEqual(tuner.y_queue[-1], 0.8)
 
     def test_get_best_model_id(self):
         tuner = NetworkMorphismTuner()

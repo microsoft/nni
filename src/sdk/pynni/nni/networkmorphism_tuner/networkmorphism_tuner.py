@@ -98,8 +98,8 @@ class NetworkMorphismTuner(Tuner):
 
         self.bo = BayesianOptimizer(self, self.t_min, self.optimize_mode, self.beta)
         self.training_queue = []
-        self.x_queue = []
-        self.y_queue = []
+        # self.x_queue = []
+        # self.y_queue = []
         self.descriptors = []
         self.history = []
 
@@ -224,8 +224,6 @@ class NetworkMorphismTuner(Tuner):
         if self.verbose:
             logger.info("Saving model.")
 
-        graph_to_json(graph, os.path.join(self.path, str(model_id) + ".json"))
-
         # Update best_model text file
         ret = {"model_id": model_id, "metric_value": metric_value}
         self.history.append(ret)
@@ -234,9 +232,9 @@ class NetworkMorphismTuner(Tuner):
             file.write("best model: " + str(model_id))
             file.close()
 
-        descriptor = graph.extract_descriptor()
-        self.x_queue.append(descriptor)
-        self.y_queue.append(metric_value)
+        # descriptor = graph.extract_descriptor()
+        # self.x_queue.append(descriptor)
+        # self.y_queue.append(metric_value)
         return ret
 
     def get_best_model_id(self):

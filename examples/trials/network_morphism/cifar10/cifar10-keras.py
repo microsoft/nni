@@ -171,7 +171,7 @@ def train_eval():
     (x_train, y_train) = trainloader
     (x_test, y_test) = testloader
 
-    # train process
+    # train procedure
     net.fit(
         x=x_train,
         y=y_train,
@@ -183,9 +183,10 @@ def train_eval():
             SendMetrics(),
             EarlyStopping(min_delta=0.001, patience=10),
             TensorBoard(log_dir=TENSORBOARD_DIR),
-        ]
+        ],
     )
 
+    # trial report final acc to tuner
     _, acc = net.evaluate(x_test, y_test)
     logger.debug("Final result is: %d", acc)
     nni.report_final_result(acc)

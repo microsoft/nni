@@ -17,6 +17,7 @@
 
 import argparse
 import logging
+import sys
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -28,8 +29,11 @@ import torchvision.transforms as transforms
 from torch.autograd import Variable
 
 import nni
-import utils
 from nni.networkmorphism_tuner.graph import json_to_graph
+
+sys.path.append("../")
+from network_morphism import utils
+
 
 # set the logger format
 log_format = "%(asctime)s %(message)s"
@@ -41,11 +45,11 @@ logging.basicConfig(
     datefmt="%m/%d %I:%M:%S %p",
 )
 # set the logger format
-logger = logging.getLogger("cifar10-network-morphism-pytorch")
+logger = logging.getLogger("FashionMNIST-network-morphism")
 
 
 def get_args():
-    parser = argparse.ArgumentParser("cifar10")
+    parser = argparse.ArgumentParser("FashionMNIST")
     parser.add_argument("--batch_size", type=int, default=128, help="batch size")
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
     parser.add_argument("--epochs", type=int, default=200, help="epoch limit")
@@ -90,16 +94,27 @@ def parse_rev_args(receive_msg):
     # Loading Data
     logger.debug("Preparing data..")
 
-    transform_train, transform_test = utils._data_transforms_cifar10(args)
+    raw_train_data = torchvision.datasets.FashionMNIST(
+        root="./data", train=True, download=True
+    )
 
-    trainset = torchvision.datasets.CIFAR10(
+    dataset_mean, dataset_std = (
+        [raw_train_data.train_data.float().mean() / 255],
+        [raw_train_data.train_data.float().std() / 255],
+    )
+
+    transform_train, transform_test = utils._data_transforms_mnist(
+        args, dataset_mean, dataset_std
+    )
+
+    trainset = torchvision.datasets.FashionMNIST(
         root="./data", train=True, download=True, transform=transform_train
     )
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=args.batch_size, shuffle=True, num_workers=2
     )
 
-    testset = torchvision.datasets.CIFAR10(
+    testset = torchvision.datasets.FashionMNIST(
         root="./data", train=False, download=True, transform=transform_test
     )
     testloader = torch.utils.data.DataLoader(
@@ -112,8 +127,6 @@ def parse_rev_args(receive_msg):
 
     net = net.to(device)
     criterion = nn.CrossEntropyLoss()
-    if device == "cuda" and torch.cuda.device_count() > 1:
-        net = torch.nn.DataParallel(net)
 
     if args.optimizer == "SGD":
         optimizer = optim.SGD(
@@ -129,7 +142,6 @@ def parse_rev_args(receive_msg):
         optimizer = optim.Adamax(net.parameters(), lr=args.learning_rate)
     if args.optimizer == "RMSprop":
         optimizer = optim.RMSprop(net.parameters(), lr=args.learning_rate)
-
 
     return 0
 

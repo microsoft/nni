@@ -20,10 +20,10 @@ tuner:
     input_channel: 3
     n_output_node: 10
 trial:
-  command:  python cifar10-pytorch.py
+  command:  python cifar10/cifar10-pytorch.py
   codeDir: .
   gpuNum: 1
-  cpuNum: 0
+  cpuNum: 1
   memoryMB: 8196
   #The docker image to run nni job on pai
   image: msranni/nni:latest
