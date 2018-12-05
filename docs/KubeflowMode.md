@@ -12,7 +12,7 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
     ```
     apt-get install nfs-common 
     ```     
-    
+
 7. Install **NNI**, follow the install guide [here](GetStarted.md).
 
 ## Prerequisite for Azure Kubernetes Service
