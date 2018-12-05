@@ -46,7 +46,6 @@ export class KubeflowClusterConfig {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
     public readonly nfs?: NFSConfig;
-    public readonly kubernetesServer: string;
     public readonly keyVault?: keyVaultConfig;
     public readonly azureStorage?: AzureStorage;
     
@@ -56,10 +55,9 @@ export class KubeflowClusterConfig {
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator, kubernetesServer : string, nfs?: NFSConfig, keyVault?: keyVaultConfig, azureStorage ?: AzureStorage) {
+    constructor(operator: KubeflowOperator, nfs?: NFSConfig, keyVault?: keyVaultConfig, azureStorage ?: AzureStorage) {
         this.operator = operator;
-        this.nfs = nfs;
-        this.kubernetesServer = kubernetesServer;
+        this.nfs = nfs;        
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
     }

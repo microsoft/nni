@@ -18,7 +18,7 @@
 
 * __Install NNI through source code__
    
-      git clone -b v0.3.4 https://github.com/Microsoft/nni.git
+      git clone -b v0.4 https://github.com/Microsoft/nni.git
       cd nni
       source install.sh
 
@@ -87,7 +87,7 @@ You can refer to [here](NNICTLDOC.md) for more usage guide of *nnictl* command l
 The experiment has been running now, NNI provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features. The WebUI is opened by default by `nnictl create`.
 
 ## Read more
-* [Tuners supported in the latest NNI release](../src/sdk/pynni/nni/README.md)
+* [Tuners supported in the latest NNI release](./HowToChooseTuner.md)
 * [Overview](Overview.md)
 * [Installation](InstallNNI_Ubuntu.md)
 * [Use command line tool nnictl](NNICTLDOC.md)

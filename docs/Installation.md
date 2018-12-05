@@ -1,5 +1,7 @@
-**Install NNI on Ubuntu**
+**Installation of NNI**
 ===
+
+Currently we only support installation on Linux & Mac.
 
 ## **Installation**
 * __Dependencies__
@@ -8,7 +10,7 @@
       git
       wget
 
-    python pip should also be correctly installed. You could use "python3 -m pip -v" to check in Linux.
+    python pip should also be correctly installed. You could use "python3 -m pip -v" to check pip version. 
 
 * __Install NNI through pip__
 
@@ -16,7 +18,7 @@
 
 * __Install NNI through source code__
    
-      git clone -b v0.3.4 https://github.com/Microsoft/nni.git
+      git clone -b v0.4 https://github.com/Microsoft/nni.git
       cd nni
       source install.sh
 
