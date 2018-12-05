@@ -150,7 +150,7 @@ machineList:
 	
     * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
    
-    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), nni support kubeflow based on normal kubernets and [azure kubernets](https://azure.microsoft.com/en-us/services/kubernetes-service/).
+    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), nni support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
 	
 * __searchSpacePath__
   * Description
@@ -379,7 +379,7 @@ machineList:
   
   * __keyVault__
     
-    If users want to use azure kubernets service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+    If users want to use azure kubernetes service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
 
     * __vaultName__
 
@@ -391,7 +391,7 @@ machineList:
 
   * __azureStorage__
     
-    If users use azure kubernets service, they should set azure storage account to store code files.
+    If users use azure kubernetes service, they should set azure storage account to store code files.
 
     * __accountName__
      

@@ -10,11 +10,11 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
 5. An **NFS** server and export a general purpose mount (we recommend to map your NFS server path in root_squash option. Refer this [page](https://linux.die.net/man/5/exports) to learn what root_squash option is), or **Azure File Storage**. 
 6. Install **NNI**, follow the install guide [here](GetStarted.md).
 
-## Prerequisite for Azure Kubernets Service
-1. NNI support kubeflow based on Azure Kubernets Service, follow the [guideline](https://azure.microsoft.com/en-us/services/kubernetes-service/) to set up Azure Kubernets Service.
+## Prerequisite for Azure Kubernetes Service
+1. NNI support kubeflow based on Azure Kubernetes Service, follow the [guideline](https://azure.microsoft.com/en-us/services/kubernetes-service/) to set up Azure Kubernetes Service.
 2. Install [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) and __kubectl__.  Use `az login` to set azure account, and connect kubectl client to AKS, [refer](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster).
-3. Deploy kubeflow on Azure Kubernets Service, follow the [guideline](https://www.kubeflow.org/docs/started/getting-started/).
-4. Follow the [guideline](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=portal) to create azure file storage account. If you use Azure Kubernets Service, nni need Azure Storage Service to store code files and the output files.
+3. Deploy kubeflow on Azure Kubernetes Service, follow the [guideline](https://www.kubeflow.org/docs/started/getting-started/).
+4. Follow the [guideline](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=portal) to create azure file storage account. If you use Azure Kubernetes Service, nni need Azure Storage Service to store code files and the output files.
 5. To access Azure storage service, nni need the access key of the storage account, and nni use [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) Service to protect your private key. Set up Azure Key Vault Service, add a secret to Key Vault to store the access key of Azure storage account. Follow this [guideline](https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli) to store the access key.
 
 ## Design 
@@ -62,7 +62,7 @@ kubeflowConfig:
     server: {your_nfs_server}
     path: {your_nfs_server_exported_path}
 ```
-If you use Azure Kubernets Service, you should  set `kubeflowConfig` in your config yaml file as follows:
+If you use Azure Kubernetes Service, you should  set `kubeflowConfig` in your config yaml file as follows:
 ```
 kubeflowConfig:
   operator: tf-operator
