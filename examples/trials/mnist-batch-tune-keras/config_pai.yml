@@ -12,9 +12,6 @@ tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner
   #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: BatchTuner
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
 trial:
   command: python3 mnist-keras.py
   codeDir: .
