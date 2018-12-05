@@ -376,10 +376,6 @@ machineList:
     __server__ is the host of nfs server
 
     __path__ is the mounted path of nfs
-
-  * __kubernetsServer__
-    
-    __kubernetsServer__ set the host of kubernets service.
   
   * __keyVault__
     
