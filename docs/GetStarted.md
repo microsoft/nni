@@ -89,7 +89,7 @@ The experiment has been running now, NNI provides WebUI for you to view experime
 ## Read more
 * [Tuners supported in the latest NNI release](./HowToChooseTuner.md)
 * [Overview](Overview.md)
-* [Installation](InstallNNI_Ubuntu.md)
+* [Installation](Installation.md)
 * [Use command line tool nnictl](NNICTLDOC.md)
 * [Use NNIBoard](WebUI.md)
 * [Define search space](SearchSpaceSpec.md)

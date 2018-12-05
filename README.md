@@ -92,7 +92,7 @@ You can use these commands to get more information about the experiment
 * [Quick start](docs/GetStarted.md)
 
 ## **How to**
-* [Install NNI](docs/InstallNNI_Ubuntu.md)
+* [Install NNI](docs/Installation.md)
 * [Use command line tool nnictl](docs/NNICTLDOC.md)
 * [Use NNIBoard](docs/WebUI.md)
 * [How to define search space](docs/SearchSpaceSpec.md)
