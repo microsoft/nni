@@ -10,6 +10,7 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
  - [Batch Tuner](#Batch)
  - [Grid Search](#Grid)
  - [Hyperband](#Hyperband)
+ - [Network Morphism](#NetworkMorphism)
 
  ## Supported tuner algorithms
 
@@ -22,11 +23,11 @@ We will introduce some basic knowledge about the tuner algorithms, suggested sce
 The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model.
 The TPE approach models P(x|y) and P(y) where x represents hyperparameters and y the associated evaluate matric. P(x|y) is modeled by transforming the generative process of hyperparameters, replacing the distributions of the configuration prior with non-parametric densities. 
 This optimization approach is described in detail in [Algorithms for Hyper-Parameter Optimization][1].
-    
+​    
 _Suggested scenario_: TPE, as a black-box optimization, can be used in various scenarios, and shows good performance in general. Especially when you have limited computation resource and can only try a small number of trials. From a large amount of experiments, we could found that TPE is far better than Random Search.
 
 _Usage_:
-```
+```yaml
   # config.yaml
   tuner:
     builtinTunerName: TPE
@@ -43,7 +44,7 @@ In [Random Search for Hyper-Parameter Optimization][2] show that Random Search m
 _Suggested scenario_: Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space. Random Search could be considered as baseline of search algorithm.
 
 _Usage_:
-```
+```yaml
   # config.yaml
   tuner:
     builtinTunerName: Random
@@ -57,7 +58,7 @@ This simple annealing algorithm begins by sampling from the prior, but tends ove
 _Suggested scenario_: Anneal is suggested when each trial does not take too long, and you have enough computation resource(almost same with Random Search). Or the variables in search space could be sample from some prior distribution.
 
 _Usage_:
-```
+```yaml
   # config.yaml
   tuner:
     builtinTunerName: Anneal
@@ -74,7 +75,7 @@ Naive Evolution comes from [Large-Scale Evolution of Image Classifiers][3]. It r
 _Suggested scenario_: Its requirement of computation resource is relatively high. Specifically, it requires large inital population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
 
 _Usage_:
-```
+```yaml
   # config.yaml
   tuner:
     builtinTunerName: Evolution
@@ -93,7 +94,7 @@ Note that SMAC on nni only supports a subset of the types in [search space spec]
 _Suggested scenario_: Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.
 
 _Usage_:
-```
+```yaml
   # config.yaml
   tuner:
     builtinTunerName: SMAC
@@ -110,14 +111,14 @@ Batch tuner allows users to simply provide several configurations (i.e., choices
 _Suggested sceanrio_: If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner.
 
 _Usage_:
-```
+```yaml
   # config.yaml
   tuner:
     builtinTunerName: BatchTuner
 ```
 
 Note that the search space that BatchTuner supported like:
-```
+```json
 {
     "combine_params":
     {
@@ -133,7 +134,6 @@ Note that the search space that BatchTuner supported like:
 ```
 The search space file including the high-level key `combine_params`. The type of params in search space must be `choice` and the `values` including all the combined-params value.
 
-
 <a name="Grid"></a>
 **Grid Search**
 
@@ -143,7 +143,7 @@ Note that the only acceptable types of search space are `choice`, `quniform`, `q
 _Suggested scenario_: It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space.
 
 _Usage_:
-```
+```yaml
   # config.yaml
   tuner:
     builtinTunerName: GridSearch
@@ -152,12 +152,12 @@ _Usage_:
 <a name="Hyperband"></a>
 **Hyperband**
 
-[Hyperband][6] tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be refered to [here](../src/sdk/pynni/nni/hyperband_advisor/README.md)
+[Hyperband][6] tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be referred to [here](../src/sdk/pynni/nni/hyperband_advisor/README.md).
 
 _Suggested scenario_: It is suggested when you have limited computation resource but have relatively large search space. It performs good in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.
 
 _Usage_:
-```
+```yaml
   # config.yaml
   advisor:
     builtinAdvisorName: Hyperband
@@ -169,6 +169,31 @@ _Usage_:
       R: 60
       # eta: proportion of discarded trials
       eta: 3
+```
+
+<a name="NetworkMorphism"></a>
+**Network Morphism**
+
+[Network Morphism](7) provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Then it finds the most promising one to get the final result. More detail can be referred to [here](../src/sdk/pynni/nni/networkmorphism_tuner/README.md).
+
+_Suggested scenario_: It is suggested that you want to apply deep learning methods to your task but you have no idea of how to choose or design a network. It is feasible for different tasks to find a good network architecture.
+
+_Usage_:
+```yaml
+  # config.yaml
+  tuner:
+    builtinTunerName: NetworkMorphism
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+      #for now, we only support cv domain
+      task: cv
+      #input image width
+      input_width: 32
+      #input image channel
+      input_channel: 3
+      #output nums
+      n_output_node: 10
 ```
 
 
@@ -184,12 +209,12 @@ For now, NNI has supported the following assessor algorithms.
 <a name="Medianstop"></a>
 **Medianstop**
 
-Medianstop is a simple early stopping rule mentioned in the [paper][7]. It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.
+Medianstop is a simple early stopping rule mentioned in the [paper][8]. It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.
 
 _Suggested scenario_: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.
 
 _Usage_:
-```
+```yaml
   assessor:
     builtinAssessorName: Medianstop
     classArgs:
@@ -201,10 +226,11 @@ _Usage_:
       start_step: 5
 ```
 
-  [1]: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
-  [2]: http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf
-  [3]: https://arxiv.org/pdf/1703.01041.pdf
-  [4]: https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf
-  [5]: https://github.com/automl/SMAC3
-  [6]: https://arxiv.org/pdf/1603.06560.pdf
-  [7]: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
+[1]: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
+[2]: http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf
+[3]: https://arxiv.org/pdf/1703.01041.pdf
+[4]: https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf
+[5]: https://github.com/automl/SMAC3
+[6]: https://arxiv.org/pdf/1603.06560.pdf
+[7]: https://arxiv.org/abs/1806.10282
+[8]: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf

@@ -2,9 +2,9 @@
 
 ## 1. Intorduction
 
-[Autokeras](https://arxiv.org/abs/1806.10282) is a popular automl tools using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generate several child graphs from a father graph. Then it use a naïve Bayesian regression estimate its metric value from history trained results of network and metric value pair. Next, it choose the the child which has best estimated performance and add it to the training queue. Inspired by its work, we implement Network Morphism in our NNI platform.
+[Autokeras](https://arxiv.org/abs/1806.10282) is a popular automl tools using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression estimate its metric value from history trained results of network and metric value pair. Next, it chooses the the child which has best estimated performance and adds it to the training queue. Inspired by its work, we implement Network Morphism in our NNI platform.
 
-If you want to know about network morphism trial usage, please check [Readme.md](../../../../../examples/trials/network-morphism/README.md) of the trial to get more information for it.
+If you want to know about network morphism trial usage, please check [Readme.md](../../../../../examples/trials/network-morphism/README.md) of the trial to get more detail.
 
 ## 2. Usage
 
