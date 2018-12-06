@@ -25,7 +25,8 @@ import { TrialConfig } from "../common/trialConfig";
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type KubeflowOperatorPlural = 'tfjobs' | 'pytorchjobs' ;
-export type KubeflowOperatorJobKind = 'TFJob' | 'PyTorchJob'
+export type KubeflowOperatorJobKind = 'TFJob' | 'PyTorchJob';
+export type KubeflowStorageKind = 'nfs' | 'azureStorage';
 
 /**
  * map from Kubeflow operator name to its plural name in K8S
@@ -50,10 +51,7 @@ export const kubeflowOperatorJobKindMap : Map<KubeflowOperator, KubeflowOperator
 export class KubeflowClusterConfigBase {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
-    public readonly nfs?: NFSConfig;
-    public readonly keyVault?: keyVaultConfig;
-    public readonly azureStorage?: AzureStorage;
-
+    public readonly storage?: KubeflowStorageKind;
     
     /**
      * Constructor
@@ -61,8 +59,9 @@ export class KubeflowClusterConfigBase {
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator) {
+    constructor(operator: KubeflowOperator, storage?: KubeflowStorageKind) {
         this.operator = operator;
+        this.storage = storage;
     }
 }
 
@@ -167,29 +166,31 @@ export class KubeflowTrialConfigTemplate {
 
 export class KubeflowTrialConfigBase {
     public readonly codeDir: string;
-    public readonly worker: KubeflowTrialConfigTemplate;
 
-    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate) {
+    constructor(codeDir: string) {
         this.codeDir = codeDir;
-        this.worker = worker;
     }
 }
 
 export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfigBase{
     public readonly ps?: KubeflowTrialConfigTemplate;
+    public readonly worker: KubeflowTrialConfigTemplate;
 
     constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  ps?: KubeflowTrialConfigTemplate) {
-        super(codeDir, worker);
+        super(codeDir);
         this.ps = ps;
+        this.worker = worker;
     }
 }
 
 export class KubeflowTrialConfigPytorch extends KubeflowTrialConfigBase{
     public readonly master?: KubeflowTrialConfigTemplate;
+    public readonly worker: KubeflowTrialConfigTemplate;
 
     constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  master?: KubeflowTrialConfigTemplate) {
-        super(codeDir, worker);
+        super(codeDir);
         this.master = master;
+        this.worker = worker;
     }
 }
 

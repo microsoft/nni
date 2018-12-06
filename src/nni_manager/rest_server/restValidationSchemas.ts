@@ -77,6 +77,7 @@ export namespace ValidationSchemas {
             }),
             kubeflow_config: joi.object({
                 operator: joi.string().min(1).required(),
+                storage: joi.string().min(1),
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()

@@ -35,7 +35,6 @@ def parse_relative_path(root_path, experiment_config, key):
         print_warning('expand %s: %s to %s ' % (key, experiment_config[key], absolute_path))
         experiment_config[key] = absolute_path
 
-
 def parse_time(experiment_config):
     '''Parse time format'''
     unit = experiment_config['maxExecDuration'][-1]
@@ -98,6 +97,15 @@ def validate_kubeflow_operators(experiment_config):
         elif experiment_config.get('kubeflowConfig').get('operator') == 'pytorch-operator':
             if experiment_config.get('trial').get('ps') is not None:
                 print_error('kubeflow with pytorch-operator can not set ps')
+                exit(1)
+        
+        if experiment_config.get('kubeflowConfig').get('storage') == 'nfs':
+            if experiment_config.get('kubeflowConfig').get('nfs') is None:
+                print_error('please set nfs configuration!')
+                exit(1)
+        elif experiment_config.get('kubeflowConfig').get('storage') == 'azureStorage':
+            if experiment_config.get('kubeflowConfig').get('azureStorage') is None:
+                print_error('please set azureStorage configuration!')
                 exit(1)
 
 def validate_common_content(experiment_config):

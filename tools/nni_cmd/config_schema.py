@@ -144,12 +144,14 @@ kubeflow_trial_schema = {
 kubeflow_config_schema = {
     'kubeflowConfig':Or({
         'operator': Or('tf-operator', 'pytorch-operator'),
+        Optional('storage'): Or('nfs', 'azureStorage'),
         'nfs': {
             'server': str,
             'path': str
         }
     },{
         'operator': Or('tf-operator', 'pytorch-operator'),
+        Optional('storage'): Or('nfs', 'azureStorage'),
         'keyVault': {
             'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
             'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')
