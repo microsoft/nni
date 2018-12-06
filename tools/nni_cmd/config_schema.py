@@ -147,8 +147,7 @@ kubeflow_config_schema = {
         'nfs': {
             'server': str,
             'path': str
-        },
-        Optional('kubernetesServer'): str
+        }
     },{
         'operator': Or('tf-operator', 'pytorch-operator'),
         'keyVault': {

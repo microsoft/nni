@@ -81,7 +81,6 @@ export namespace ValidationSchemas {
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()
                 }),
-                kubernetesServer: joi.string().min(1),
                 keyVault: joi.object({
                     vaultName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/),
                     name: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/)

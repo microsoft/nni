@@ -1,8 +1,8 @@
 authorName: default
-experimentName: example_pytorch_cifar10
+experimentName: example_sklearn
 trialConcurrency: 1
-maxExecDuration: 100h
-maxTrialNum: 10
+maxExecDuration: 1h
+maxTrialNum: 100
 #choice: local, remote, pai
 trainingServicePlatform: pai
 searchSpacePath: search_space.json
@@ -18,7 +18,7 @@ tuner:
 trial:
   command: python3 main.py
   codeDir: .
-  gpuNum: 1
+  gpuNum: 0
   cpuNum: 1
   memoryMB: 8196
   #The docker image to run nni job on pai

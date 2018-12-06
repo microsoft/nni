@@ -50,7 +50,10 @@ export const kubeflowOperatorJobKindMap : Map<KubeflowOperator, KubeflowOperator
 export class KubeflowClusterConfigBase {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
-    public readonly kubernetesServer: string;
+    public readonly nfs?: NFSConfig;
+    public readonly keyVault?: keyVaultConfig;
+    public readonly azureStorage?: AzureStorage;
+
     
     /**
      * Constructor
@@ -58,17 +61,16 @@ export class KubeflowClusterConfigBase {
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator, kubernetesServer : string) {
+    constructor(operator: KubeflowOperator) {
         this.operator = operator;
-        this.kubernetesServer = kubernetesServer;
     }
 }
 
 export class KubeflowClusterConfigNFS extends KubeflowClusterConfigBase{
     public readonly nfs: NFSConfig;
     
-    constructor(operator: KubeflowOperator, kubernetesServer : string, nfs: NFSConfig) {
-        super(operator, kubernetesServer)
+    constructor(operator: KubeflowOperator, nfs: NFSConfig) {
+        super(operator)
         this.nfs = nfs;
     }
 }
@@ -77,8 +79,8 @@ export class KubeflowClusterConfigAzure extends KubeflowClusterConfigBase{
     public readonly keyVault: keyVaultConfig;
     public readonly azureStorage: AzureStorage;
     
-    constructor(operator: KubeflowOperator, kubernetesServer : string, keyVault: keyVaultConfig, azureStorage: AzureStorage) {
-        super(operator, kubernetesServer)
+    constructor(operator: KubeflowOperator, keyVault: keyVaultConfig, azureStorage: AzureStorage) {
+        super(operator)
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
     }
