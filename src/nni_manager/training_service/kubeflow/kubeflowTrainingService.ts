@@ -130,7 +130,7 @@ class KubeflowTrainingService implements TrainingService {
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
         // Create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
-        
+
         // Write worker file content run_worker.sh to local tmp folders
         if(this.kubeflowTrialConfig.worker) {
             const workerRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
@@ -216,7 +216,7 @@ class KubeflowTrainingService implements TrainingService {
         } else{
             throw new Error('kubeflowClusterConfig error!');
         }
-        
+
         trialJobDetail = new KubeflowTrialJobDetail(
             trialJobId,
             'WAITING',
@@ -233,7 +233,7 @@ class KubeflowTrainingService implements TrainingService {
         await cpp.exec(`kubectl create -f ${kubeflowJobYamlPath}`);
         // Set trial job detail until kubectl create resource successfully 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
-        
+
         return Promise.resolve(trialJobDetail);
     }
 
@@ -496,7 +496,7 @@ class KubeflowTrainingService implements TrainingService {
             }
             replicaSpecsObjMap.set(this.kubeflowJobPlural, {'pytorchReplicaSpecs': replicaSpecsObj})
         }
-        
+
         return {
             apiVersion: 'kubeflow.org/v1alpha2',
             kind: this.kubeflowJobKind,
@@ -525,7 +525,7 @@ class KubeflowTrainingService implements TrainingService {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
-        
+
         if(!this.kubeflowTrialConfig) {
             throw new Error('Kubeflow trial config is not initialized');
         }
@@ -615,7 +615,7 @@ class KubeflowTrainingService implements TrainingService {
         runScriptLines.push(`export NNI_EXP_ID=${getExperimentId()}`);
         runScriptLines.push(`export NNI_CODE_DIR=${trialWorkingFolder}`);
         runScriptLines.push(`export NNI_TRIAL_SEQ_ID=${trialSequenceId}`);
-        
+
         // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
         // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
         // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file
@@ -661,7 +661,7 @@ class KubeflowTrainingService implements TrainingService {
         runScriptLines.push(`python3 -m nni_trial_tool.trial_keeper --trial_command '${command}' `
         + `--nnimanager_ip '${nniManagerIp}' --nnimanager_port '${this.kubeflowRestServerPort}' `
         + `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`);
-        
+
         return runScriptLines.join('\n');
         
        return ""
