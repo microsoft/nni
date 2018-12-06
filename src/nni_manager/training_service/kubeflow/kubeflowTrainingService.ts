@@ -313,11 +313,10 @@ class KubeflowTrainingService implements TrainingService {
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
                 let kubeflowClusterJsonObject = JSON.parse(value);
                 if(kubeflowClusterJsonObject.nfs !== undefined){
-                    this.kubeflowClusterConfig = new KubeflowClusterConfigNFS(kubeflowClusterJsonObject.operator, 
-                        kubeflowClusterJsonObject.kubernetsServer, kubeflowClusterJsonObject.nfs);
+                    this.kubeflowClusterConfig = new KubeflowClusterConfigNFS(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.nfs);
                 }else{
                     this.kubeflowClusterConfig = new KubeflowClusterConfigAzure(kubeflowClusterJsonObject.operator, 
-                        kubeflowClusterJsonObject.kubernetsServer,kubeflowClusterJsonObject.keyVault, kubeflowClusterJsonObject.azureStorage);
+                        kubeflowClusterJsonObject.keyVault, kubeflowClusterJsonObject.azureStorage);
                 }
                      
                 // If NFS config section is valid in config file, proceed to mount and config NFS
