@@ -83,9 +83,9 @@ In the "trial" part, if you want to use GPU to perform the architecture search, 
 nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
 ```
 
-## Run this example on pai
+## Run this example on OpenAI
 
-Due to the memory limitation of upload, we only upload the source code and complete the data download and training on pai. This experiment requires sufficient memory that `memoryMB >= 32G`, and the training may last for several hours.
+Due to the memory limitation of upload, we only upload the source code and complete the data download and training on OpenAI. This experiment requires sufficient memory that `memoryMB >= 32G`, and the training may last for several hours.
 
 ### Update configuration
 Modify `nni/examples/trials/ga_squad/config_pai.yaml`, here is the default configuration:
