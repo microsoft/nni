@@ -213,6 +213,8 @@ class KubeflowTrainingService implements TrainingService {
                 this.log.error(error);
                 return Promise.reject(error);
             }
+        } else{
+            throw new Error('kubeflowClusterConfig error!');
         }
         
         trialJobDetail = new KubeflowTrialJobDetail(
@@ -221,9 +223,9 @@ class KubeflowTrainingService implements TrainingService {
             Date.now(),
             trialWorkingFolder,
             form,
-            "",
+            kubeflowJobName,
             curTrialSequenceId,
-            "", 
+            trialJobDetailUrl, 
             this.kubeflowJobPlural
         );
         
