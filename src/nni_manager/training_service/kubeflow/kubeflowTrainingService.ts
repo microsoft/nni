@@ -463,9 +463,9 @@ class KubeflowTrainingService implements TrainingService {
      * @param trialWorkingFolder working folder
      * @param kubeflowJobName job name
      * @param workerPodResources worker pod template
-     * @param psPodResources ps pod template
+     * @param nonWorkerPodResources non-worker pod template, like ps or master
      */
-    private generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, workerPodResources : any, psOrMasterPodResources?: any) : any {
+    private generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, workerPodResources : any, nonWorkerPodResources?: any) : any {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -486,13 +486,13 @@ class KubeflowTrainingService implements TrainingService {
         if(this.kubeflowTrialConfig instanceof KubeflowTrialConfigTensorflow) {
             if (this.kubeflowTrialConfig.ps){
                 replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.ps.replicas, 
-                    this.kubeflowTrialConfig.ps.image, 'run_ps.sh', psOrMasterPodResources);
+                    this.kubeflowTrialConfig.ps.image, 'run_ps.sh', nonWorkerPodResources);
             }
             replicaSpecsObjMap.set(this.kubeflowJobPlural, {'tfReplicaSpecs': replicaSpecsObj})
         }else if(this.kubeflowTrialConfig instanceof KubeflowTrialConfigPytorch) {
             if(this.kubeflowTrialConfig.master){
                 replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, this.kubeflowTrialConfig.master.replicas, 
-                    this.kubeflowTrialConfig.master.image, 'run_master.sh', psOrMasterPodResources);
+                    this.kubeflowTrialConfig.master.image, 'run_master.sh', nonWorkerPodResources);
             }
             replicaSpecsObjMap.set(this.kubeflowJobPlural, {'pytorchReplicaSpecs': replicaSpecsObj})
         }
@@ -663,8 +663,6 @@ class KubeflowTrainingService implements TrainingService {
         + `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`);
 
         return runScriptLines.join('\n');
-        
-       return ""
     }
 
     private generateSequenceId(): number {
