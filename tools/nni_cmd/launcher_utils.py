@@ -181,7 +181,7 @@ def validate_annotation_content(experiment_config, spec_key, builtin_name):
         # validate searchSpaceFile
         if experiment_config[spec_key].get(builtin_name):
             if experiment_config.get('searchSpacePath') is None:
-                print_error('Please set searchSpace!')
+                print_error('Please set searchSpacePath!')
                 exit(1)
             validate_search_space_content(experiment_config)
 
