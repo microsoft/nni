@@ -161,6 +161,10 @@ def parse_args():
     parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
     parser_tensorboard_start.set_defaults(func=stop_tensorboard)
 
+    #parse top command
+    parser_top = subparsers.add_parser('top', help='monitor the experiment')
+    parser_top.set_defaults(func=monitor_experiment)
+
     args = parser.parse_args()
     args.func(args)
 
