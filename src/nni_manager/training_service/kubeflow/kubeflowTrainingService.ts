@@ -331,13 +331,8 @@ class KubeflowTrainingService implements TrainingService {
             
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
                 let kubeflowClusterJsonObject = JSON.parse(value);
-                if(kubeflowClusterJsonObject.nfs !== undefined){
-                    this.kubeflowClusterConfig = new KubeflowClusterConfigNFS(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.nfs);
-                }else{
-                    this.kubeflowClusterConfig = new KubeflowClusterConfigAzure(kubeflowClusterJsonObject.operator, 
-                        kubeflowClusterJsonObject.keyVault, kubeflowClusterJsonObject.azureStorage);
-                }
-
+                this.kubeflowClusterConfig = new KubeflowClusterConfigBase(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.storage);
+         
                 if(this.kubeflowClusterConfig && this.kubeflowClusterConfig.storage === 'azureStorage') {
                     let azureKubeflowClusterConfig = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
                     const vaultName = azureKubeflowClusterConfig.keyVault.vaultName;
