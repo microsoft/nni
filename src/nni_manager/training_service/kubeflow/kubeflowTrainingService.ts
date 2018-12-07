@@ -143,7 +143,7 @@ class KubeflowTrainingService implements TrainingService {
 
         // Write worker file content run_worker.sh to local tmp folders
         if(kubeflowTrialConfig.worker) {
-            const workerRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
+            const workerRunScriptContent: string = this.generateRunScript(trialJobId, trialWorkingFolder, 
                     kubeflowTrialConfig.worker.command, curTrialSequenceId.toString(), 'worker', kubeflowTrialConfig.worker.gpuNum);
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
@@ -152,7 +152,7 @@ class KubeflowTrainingService implements TrainingService {
         if(this.kubeflowClusterConfig.operator === 'tf-operator') {
             let tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
             if(tensorflowTrialConfig.ps){
-                const psRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
+                const psRunScriptContent: string = this.generateRunScript(trialJobId, trialWorkingFolder, 
                     tensorflowTrialConfig.ps.command, curTrialSequenceId.toString(), 'ps', tensorflowTrialConfig.ps.gpuNum);
                 await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
             }
@@ -160,7 +160,7 @@ class KubeflowTrainingService implements TrainingService {
         else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
             let pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
             if(pytorchTrialConfig.master){
-                const masterRunScriptContent: string = this.genereateRunScript(trialJobId, trialWorkingFolder, 
+                const masterRunScriptContent: string = this.generateRunScript(trialJobId, trialWorkingFolder, 
                     pytorchTrialConfig.master.command, curTrialSequenceId.toString(), 'master', pytorchTrialConfig.master.gpuNum);
                 await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), masterRunScriptContent, { encoding: 'utf8' });
             }
@@ -615,7 +615,7 @@ class KubeflowTrainingService implements TrainingService {
      * @param command 
      * @param trialSequenceId sequence id
      */
-    private genereateRunScript(trialJobId: string, trialWorkingFolder: string, 
+    private generateRunScript(trialJobId: string, trialWorkingFolder: string, 
                 command: string, trialSequenceId: string, roleType: DistTrainRole, gpuNum: number): string {
         const runScriptLines: string[] = [];
 
