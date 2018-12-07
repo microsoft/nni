@@ -49,7 +49,7 @@ unzip glove.840B.300d.zip
 ```
 
 ### Update configuration
-Modify `nni/examples/trials/ga_squad/config.yaml`, here is the default configuration:
+Modify `nni/examples/trials/ga_squad/config.yml`, here is the default configuration:
 
 ```
 authorName: default
