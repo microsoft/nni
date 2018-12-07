@@ -371,6 +371,10 @@ machineList:
     
     __operator__ specify the kubeflow's operator to be used, nni support __tf-operator__ in current version.
   
+  * __storage__
+   
+    __storage__ specify the storage type of kubeflow, including {__nfs__, __azureStorage__}. This field is optional, and the default value is __nfs__. If the config use azureStorage, this field must be completed.
+  
   * __nfs__
     
     __server__ is the host of nfs server
