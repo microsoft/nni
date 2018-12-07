@@ -59,6 +59,15 @@ export namespace ValidationSchemas {
                         memoryMB: joi.number().min(100),
                         gpuNum: joi.number().min(0).required(),
                         command: joi.string().min(1).required()
+                }),
+                master: joi.object({
+                    replicas: joi.number().min(1).required(),
+                    image: joi.string().min(1),
+                    outputDir: joi.string(),
+                    cpuNum: joi.number().min(1),
+                    memoryMB: joi.number().min(100),
+                    gpuNum: joi.number().min(0).required(),
+                    command: joi.string().min(1).required()
                 })
             }),
             pai_config: joi.object({
@@ -68,6 +77,7 @@ export namespace ValidationSchemas {
             }),
             kubeflow_config: joi.object({
                 operator: joi.string().min(1).required(),
+                storage: joi.string().min(1),
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()
