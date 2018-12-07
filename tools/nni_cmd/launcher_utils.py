@@ -107,6 +107,10 @@ def validate_kubeflow_operators(experiment_config):
             if experiment_config.get('kubeflowConfig').get('azureStorage') is None:
                 print_error('please set azureStorage configuration!')
                 exit(1)
+        elif experiment_config.get('kubeflowConfig').get('storage') is None:
+            if experiment_config.get('kubeflowConfig').get('azureStorage'):
+                print_error('please set storage type!')
+                exit(1)
 
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
