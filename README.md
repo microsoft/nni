@@ -42,6 +42,8 @@ Note: If you are in docker container (as root), please remove `--user` from the 
     source install.sh	
 ```
 
+For the system requirements of NNI, please refer to [Install NNI](docs/Installation.md)
+
 **Verify install**	
 
 The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.	
