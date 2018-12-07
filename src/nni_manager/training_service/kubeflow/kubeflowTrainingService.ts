@@ -124,7 +124,7 @@ class KubeflowTrainingService implements TrainingService {
         }else if(this.kubeflowClusterConfig.operator === 'pytorch-operator'){
             kubeflowTrialConfig = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
         }else {
-            throw Error('kubeflowTrialConfig not initialized!')
+            throw Error(`operator ${this.kubeflowClusterConfig.operator} is invalid`)
         }
 
         const trialJobId: string = uniqueString(5);
