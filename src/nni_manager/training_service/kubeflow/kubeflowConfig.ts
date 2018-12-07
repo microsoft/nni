@@ -68,8 +68,8 @@ export class KubeflowClusterConfigBase {
 export class KubeflowClusterConfigNFS extends KubeflowClusterConfigBase{
     public readonly nfs: NFSConfig;
     
-    constructor(operator: KubeflowOperator, nfs: NFSConfig) {
-        super(operator)
+    constructor(operator: KubeflowOperator, nfs: NFSConfig, storage?: KubeflowStorageKind) {
+        super(operator, storage)
         this.nfs = nfs;
     }
 }
@@ -78,8 +78,8 @@ export class KubeflowClusterConfigAzure extends KubeflowClusterConfigBase{
     public readonly keyVault: keyVaultConfig;
     public readonly azureStorage: AzureStorage;
     
-    constructor(operator: KubeflowOperator, keyVault: keyVaultConfig, azureStorage: AzureStorage) {
-        super(operator)
+    constructor(operator: KubeflowOperator, keyVault: keyVaultConfig, azureStorage: AzureStorage, storage?: KubeflowStorageKind) {
+        super(operator, storage)
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
     }

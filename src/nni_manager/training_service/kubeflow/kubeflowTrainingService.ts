@@ -331,9 +331,11 @@ class KubeflowTrainingService implements TrainingService {
             
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
                 let kubeflowClusterJsonObject = JSON.parse(value);
-                this.kubeflowClusterConfig = new KubeflowClusterConfigBase(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.storage);
-         
-                if(this.kubeflowClusterConfig && this.kubeflowClusterConfig.storage === 'azureStorage') {
+                let kubeflowClusterConfigBase: KubeflowClusterConfigBase = new KubeflowClusterConfigBase(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.storage);
+                
+                if(kubeflowClusterConfigBase && kubeflowClusterConfigBase.storage === 'azureStorage') {
+                    this.kubeflowClusterConfig = new KubeflowClusterConfigAzure(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.keyvault, 
+                        kubeflowClusterJsonObject.azureStorage, kubeflowClusterJsonObject.storage)
                     let azureKubeflowClusterConfig = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
                     const vaultName = azureKubeflowClusterConfig.keyVault.vaultName;
                     const valutKeyName = azureKubeflowClusterConfig.keyVault.name;
@@ -361,6 +363,8 @@ class KubeflowTrainingService implements TrainingService {
                     }
                 } else {
                     //Check and mount NFS mount point here
+                    this.kubeflowClusterConfig = new KubeflowClusterConfigNFS(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.nfs, 
+                        kubeflowClusterJsonObject.storage)
                     let nfsKubeflowClusterConfig = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
                     await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
                     const nfsServer: string = nfsKubeflowClusterConfig.nfs.server;
