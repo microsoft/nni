@@ -361,8 +361,9 @@ class KubeflowTrainingService implements TrainingService {
                         this.log.error(error);
                         throw new Error(error);
                     }
-                } else {
+                } else if(kubeflowClusterConfigBase && (kubeflowClusterConfigBase.storage === 'nfs' || kubeflowClusterConfigBase.storage === undefined)) {
                     //Check and mount NFS mount point here
+                    //If storage is undefined, the default value is nfs
                     this.kubeflowClusterConfig = new KubeflowClusterConfigNFS(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.nfs, 
                         kubeflowClusterJsonObject.storage)
                     let nfsKubeflowClusterConfig = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
@@ -377,6 +378,10 @@ class KubeflowTrainingService implements TrainingService {
                         this.log.error(mountError);
                         throw new Error(mountError);
                     }
+                } else {
+                    const error: string = `kubeflowClusterConfig format error!`;
+                    this.log.error(error);
+                    throw new Error(error);
                 }
 
                 this.kubeflowJobPlural = kubeflowOperatorMap.get(this.kubeflowClusterConfig.operator);
