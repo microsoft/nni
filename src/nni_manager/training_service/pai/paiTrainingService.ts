@@ -351,11 +351,7 @@ class PAITrainingService implements TrainingService {
                 });
 
                 // Get PAI authentication token
-                await this.updatePaiToken().then(()=>{
-                    deferred.resolve();
-                }).catch((error)=>{
-                    deferred.reject(new Error(error));
-                });
+                await this.updatePaiToken();
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -473,8 +469,7 @@ class PAITrainingService implements TrainingService {
         let currentTime: number = new Date().getTime();
         //If pai token initialized and not reach the interval time, do not update
         if(this.paiTokenUpdateTime && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval){
-            deferred.resolve();
-            return deferred.promise;
+            return Promise.resolve();
         }
      
         if(!this.paiClusterConfig){
