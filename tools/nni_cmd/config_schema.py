@@ -132,6 +132,14 @@ kubeflow_trial_schema = {
             'memoryMB': int,
             'image': str
         },
+        Optional('master'): {
+            'replicas': int,
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        },
         'worker':{
             'replicas': int,
             'command': str,
@@ -145,13 +153,15 @@ kubeflow_trial_schema = {
 
 kubeflow_config_schema = {
     'kubeflowConfig':Or({
-        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
+        'operator': Or('tf-operator', 'pytorch-operator'),
+        Optional('storage'): Or('nfs', 'azureStorage'),
         'nfs': {
             'server': str,
             'path': str
         }
     },{
-        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
+        'operator': Or('tf-operator', 'pytorch-operator'),
+        Optional('storage'): Or('nfs', 'azureStorage'),
         'keyVault': {
             'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
             'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')

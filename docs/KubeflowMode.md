@@ -63,6 +63,7 @@ trial:
     image: {your_docker_image_for_tensorflow_worker}
 kubeflowConfig:
   operator: tf-operator
+  storage: nfs
   nfs:
     server: {your_nfs_server}
     path: {your_nfs_server_exported_path}
@@ -71,6 +72,7 @@ If you use Azure Kubernetes Service, you should  set `kubeflowConfig` in your co
 ```
 kubeflowConfig:
   operator: tf-operator
+  storage: azureStorage
   keyVault:
     vaultName: {your_vault_name}
     name: {your_secert_name}
