@@ -31,6 +31,8 @@ class OptimizeMode(Enum):
     Maximize = "maximize"
 
 class Constant:
+    '''Constant for the Tuner.
+    '''
     MAX_LAYERS = 100
     N_NEIGHBOURS = 8
     MAX_MODEL_SIZE = 1 << 24
@@ -48,14 +50,3 @@ class Constant:
     BATCH_SIZE = 128
     T_MIN = 0.0001
 
-
-
-def pickle_from_file(path):
-    with open(path, "rb") as f:
-        graph = pickle.load(f)
-    return graph
-
-
-def pickle_to_file(obj, path):
-    with open(path, "wb") as f:
-        pickle.dump(obj, f)

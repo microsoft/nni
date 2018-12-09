@@ -19,15 +19,17 @@
 # ==================================================================================================
 
 from abc import abstractmethod
+from collections import Iterable
 
 import torch
 from torch import nn
 from torch.nn import functional
-from collections import Iterable
 from nni.networkmorphism_tuner.utils import Constant
 
 
 class AvgPool(nn.Module):
+    '''AvgPool Module.
+    '''
     def __init__(self):
         super().__init__()
 
@@ -37,6 +39,8 @@ class AvgPool(nn.Module):
 
 
 class GlobalAvgPool1d(AvgPool):
+    '''GlobalAvgPool1d Module.
+    '''
     def forward(self, input_tensor):
         return functional.avg_pool1d(input_tensor, input_tensor.size()[2:]).view(
             input_tensor.size()[:2]
@@ -44,6 +48,8 @@ class GlobalAvgPool1d(AvgPool):
 
 
 class GlobalAvgPool2d(AvgPool):
+    '''GlobalAvgPool2d Module.
+    '''
     def forward(self, input_tensor):
         return functional.avg_pool2d(input_tensor, input_tensor.size()[2:]).view(
             input_tensor.size()[:2]
@@ -51,6 +57,8 @@ class GlobalAvgPool2d(AvgPool):
 
 
 class GlobalAvgPool3d(AvgPool):
+    '''GlobalAvgPool3d Module.
+    '''
     def forward(self, input_tensor):
         return functional.avg_pool3d(input_tensor, input_tensor.size()[2:]).view(
             input_tensor.size()[:2]
@@ -58,47 +66,73 @@ class GlobalAvgPool3d(AvgPool):
 
 
 class StubLayer:
+    '''StubLayer Module. Base Module.
+    '''
     def __init__(self, input_node=None, output_node=None):
         self.input = input_node
         self.output = output_node
         self.weights = None
 
     def build(self, shape):
+        '''build shape.
+        '''
         pass
 
     def set_weights(self, weights):
+        '''set weights.
+        '''
         self.weights = weights
 
     def import_weights(self, torch_layer):
+        '''import weights.
+        '''
         pass
 
     def import_weights_keras(self, keras_layer):
+        '''import weights from keras layer.
+        '''
         pass
 
     def export_weights(self, torch_layer):
+        '''export weights.
+        '''
         pass
 
     def export_weights_keras(self, keras_layer):
+        '''export weights to keras layer.
+        '''
         pass
 
     def get_weights(self):
+        '''get weights.
+        '''
         return self.weights
 
     def size(self):
+        '''size().
+        '''
         return 0
 
     @property
     def output_shape(self):
+        '''output shape.
+        '''
         return self.input.shape
 
     def to_real_layer(self):
+        '''to real layer.
+        '''
         pass
 
     def __str__(self):
+        '''str() function to print.
+        '''
         return type(self).__name__[4:]
 
 
 class StubWeightBiasLayer(StubLayer):
+    '''StubWeightBiasLayer Module to set the bias.
+    '''
     def import_weights(self, torch_layer):
         self.set_weights(
             (torch_layer.weight.data.cpu().numpy(), torch_layer.bias.data.cpu().numpy())
@@ -116,6 +150,8 @@ class StubWeightBiasLayer(StubLayer):
 
 
 class StubBatchNormalization(StubWeightBiasLayer):
+    '''StubBatchNormalization Module. Batch Norm.
+    '''
     def __init__(self, num_features, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.num_features = num_features
@@ -145,21 +181,29 @@ class StubBatchNormalization(StubWeightBiasLayer):
 
 
 class StubBatchNormalization1d(StubBatchNormalization):
+    '''StubBatchNormalization1d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.BatchNorm1d(self.num_features)
 
 
 class StubBatchNormalization2d(StubBatchNormalization):
+    '''StubBatchNormalization2d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.BatchNorm2d(self.num_features)
 
 
 class StubBatchNormalization3d(StubBatchNormalization):
+    '''StubBatchNormalization3d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.BatchNorm3d(self.num_features)
 
 
 class StubDense(StubWeightBiasLayer):
+    '''StubDense Module. Linear.
+    '''
     def __init__(self, input_units, units, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.input_units = input_units
@@ -183,15 +227,9 @@ class StubDense(StubWeightBiasLayer):
 
 
 class StubConv(StubWeightBiasLayer):
-    def __init__(
-        self,
-        input_channel,
-        filters,
-        kernel_size,
-        stride=1,
-        input_node=None,
-        output_node=None,
-    ):
+    '''StubConv Module. Conv.
+    '''
+    def __init__(self, input_channel, filters, kernel_size, stride=1, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.input_channel = input_channel
         self.filters = filters
@@ -240,6 +278,8 @@ class StubConv(StubWeightBiasLayer):
 
 
 class StubConv1d(StubConv):
+    '''StubConv1d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.Conv1d(
             self.input_channel,
@@ -251,6 +291,8 @@ class StubConv1d(StubConv):
 
 
 class StubConv2d(StubConv):
+    '''StubConv2d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.Conv2d(
             self.input_channel,
@@ -262,6 +304,8 @@ class StubConv2d(StubConv):
 
 
 class StubConv3d(StubConv):
+    '''StubConv3d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.Conv3d(
             self.input_channel,
@@ -273,6 +317,8 @@ class StubConv3d(StubConv):
 
 
 class StubAggregateLayer(StubLayer):
+    '''StubAggregateLayer Module.
+    '''
     def __init__(self, input_nodes=None, output_node=None):
         if input_nodes is None:
             input_nodes = []
@@ -280,6 +326,8 @@ class StubAggregateLayer(StubLayer):
 
 
 class StubConcatenate(StubAggregateLayer):
+    '''StubConcatenate Module.
+    '''
     @property
     def output_shape(self):
         ret = 0
@@ -293,6 +341,8 @@ class StubConcatenate(StubAggregateLayer):
 
 
 class StubAdd(StubAggregateLayer):
+    '''StubAdd Module.
+    '''
     @property
     def output_shape(self):
         return self.input[0].shape
@@ -302,6 +352,8 @@ class StubAdd(StubAggregateLayer):
 
 
 class StubFlatten(StubLayer):
+    '''StubFlatten Module.
+    '''
     @property
     def output_shape(self):
         ret = 1
@@ -314,16 +366,22 @@ class StubFlatten(StubLayer):
 
 
 class StubReLU(StubLayer):
+    '''StubReLU Module.
+    '''
     def to_real_layer(self):
         return torch.nn.ReLU()
 
 
 class StubSoftmax(StubLayer):
+    '''StubSoftmax Module.
+    '''
     def to_real_layer(self):
         return torch.nn.LogSoftmax(dim=1)
 
 
 class StubDropout(StubLayer):
+    '''StubDropout Module.
+    '''
     def __init__(self, rate, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
         self.rate = rate
@@ -334,29 +392,43 @@ class StubDropout(StubLayer):
 
 
 class StubDropout1d(StubDropout):
+    '''StubDropout1d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.Dropout(self.rate)
 
 
 class StubDropout2d(StubDropout):
+    '''StubDropout2d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.Dropout2d(self.rate)
 
 
 class StubDropout3d(StubDropout):
+    '''StubDropout3d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.Dropout3d(self.rate)
 
 
 class StubInput(StubLayer):
+    '''StubInput Module.
+    '''
     def __init__(self, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
 
 
 class StubPooling(StubLayer):
-    def __init__(
-        self, kernel_size=None, stride=None, padding=0, input_node=None, output_node=None
-    ):
+    '''StubPooling Module.
+    '''
+
+    def __init__(self,
+                 kernel_size=None,
+                 stride=None,
+                 padding=0,
+                 input_node=None,
+                 output_node=None):
         super().__init__(input_node, output_node)
         self.kernel_size = (
             kernel_size if kernel_size is not None else Constant.POOLING_KERNEL_SIZE
@@ -378,21 +450,30 @@ class StubPooling(StubLayer):
 
 
 class StubPooling1d(StubPooling):
+    '''StubPooling1d Module.
+    '''
+
     def to_real_layer(self):
         return torch.nn.MaxPool1d(self.kernel_size, stride=self.stride)
 
 
 class StubPooling2d(StubPooling):
+    '''StubPooling2d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.MaxPool2d(self.kernel_size, stride=self.stride)
 
 
 class StubPooling3d(StubPooling):
+    '''StubPooling3d Module.
+    '''
     def to_real_layer(self):
         return torch.nn.MaxPool3d(self.kernel_size, stride=self.stride)
 
 
 class StubGlobalPooling(StubLayer):
+    '''StubGlobalPooling Module.
+    '''
     def __init__(self, input_node=None, output_node=None):
         super().__init__(input_node, output_node)
 
@@ -406,79 +487,50 @@ class StubGlobalPooling(StubLayer):
 
 
 class StubGlobalPooling1d(StubGlobalPooling):
+    '''StubGlobalPooling1d Module.
+    '''
     def to_real_layer(self):
         return GlobalAvgPool1d()
 
 
 class StubGlobalPooling2d(StubGlobalPooling):
+    '''StubGlobalPooling2d Module.
+    '''
     def to_real_layer(self):
         return GlobalAvgPool2d()
 
 
 class StubGlobalPooling3d(StubGlobalPooling):
+    '''StubGlobalPooling3d Module.
+    '''
     def to_real_layer(self):
         return GlobalAvgPool3d()
 
 
 class TorchConcatenate(nn.Module):
+    '''TorchConcatenate Module.
+    '''
     def forward(self, input_list):
         return torch.cat(input_list, dim=1)
 
 
 class TorchAdd(nn.Module):
+    '''TorchAdd Module.
+    '''
     def forward(self, input_list):
         return input_list[0] + input_list[1]
 
 
 class TorchFlatten(nn.Module):
+    '''TorchFlatten Module.
+    '''
     def forward(self, input_tensor):
         return input_tensor.view(input_tensor.size(0), -1)
 
-
-class StubInput(StubLayer):
-    def __init__(self, input_node=None, output_node=None):
-        super().__init__(input_node, output_node)
-
-
-class NetworkDescriptor:
-    CONCAT_CONNECT = "concat"
-    ADD_CONNECT = "add"
-
-    def __init__(self):
-        self.skip_connections = []
-        self.conv_widths = []
-        self.dense_widths = []
-
-    @property
-    def n_dense(self):
-        return len(self.dense_widths)
-
-    @property
-    def n_conv(self):
-        return len(self.conv_widths)
-
-    def add_conv_width(self, width):
-        self.conv_widths.append(width)
-
-    def add_dense_width(self, width):
-        self.dense_widths.append(width)
-
-    def add_skip_connection(self, u, v, connection_type):
-        if connection_type not in [self.CONCAT_CONNECT, self.ADD_CONNECT]:
-            raise ValueError(
-                "connection_type should be NetworkDescriptor.CONCAT_CONNECT "
-                "or NetworkDescriptor.ADD_CONNECT."
-            )
-        self.skip_connections.append((u, v, connection_type))
-
-    def to_json(self):
-        skip_list = []
-        for u, v, connection_type in self.skip_connections:
-            skip_list.append({"from": u, "to": v, "type": connection_type})
-        return {"node_list": self.conv_widths, "skip_list": skip_list}
-
-
 def keras_dropout(layer, rate):
+    '''keras dropout layer.
+    '''
+
     from keras import layers
 
     input_dim = len(layer.input.shape)
@@ -493,6 +545,8 @@ def keras_dropout(layer, rate):
 
 
 def to_real_keras_layer(layer):
+    ''' real keras layer.
+    '''
     from keras import layers
 
     if is_layer(layer, "Dense"):
@@ -525,6 +579,11 @@ def to_real_keras_layer(layer):
 
 
 def is_layer(layer, layer_type):
+    '''judge the layer type.
+    Returns:
+        boolean -- True or False
+    '''
+
     if layer_type == "Input":
         return isinstance(layer, StubInput)
     elif layer_type == "Conv":
@@ -552,6 +611,9 @@ def is_layer(layer, layer_type):
 
 
 def layer_description_extractor(layer, node_to_id):
+    '''get layer description.
+    '''
+
     layer_input = layer.input
     layer_output = layer.output
     if layer_input is not None:
@@ -600,6 +662,9 @@ def layer_description_extractor(layer, node_to_id):
 
 
 def layer_description_builder(layer_information, id_to_node):
+    '''build layer from description.
+    '''
+    # pylint: disable=W0123
     layer_type = layer_information[0]
 
     layer_input_ids = layer_information[1]
@@ -636,6 +701,9 @@ def layer_description_builder(layer_information, id_to_node):
 
 
 def layer_width(layer):
+    '''get layer width.
+    '''
+
     if is_layer(layer, "Dense"):
         return layer.units
     if is_layer(layer, "Conv"):
@@ -693,37 +761,28 @@ def get_batch_norm_class(n_dim):
 
 
 def get_n_dim(layer):
-    if isinstance(
-        layer,
-        (
+    if isinstance(layer, (
             StubConv1d,
             StubDropout1d,
             StubGlobalPooling1d,
             StubPooling1d,
             StubBatchNormalization1d,
-        ),
-    ):
+    )):
         return 1
-    if isinstance(
-        layer,
-        (
+    if isinstance(layer, (
             StubConv2d,
             StubDropout2d,
             StubGlobalPooling2d,
             StubPooling2d,
             StubBatchNormalization2d,
-        ),
-    ):
+    )):
         return 2
-    if isinstance(
-        layer,
-        (
+    if isinstance(layer, (
             StubConv3d,
             StubDropout3d,
             StubGlobalPooling3d,
             StubPooling3d,
             StubBatchNormalization3d,
-        ),
-    ):
+    )):
         return 3
     return -1

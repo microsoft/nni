@@ -20,7 +20,6 @@
 
 import math
 import random
-import time
 from copy import deepcopy
 from functools import total_ordering
 from queue import PriorityQueue
@@ -37,6 +36,7 @@ from nni.networkmorphism_tuner.layers import is_layer
 
 def layer_distance(a, b):
     """The distance between two layers."""
+    # pylint: disable=unidiomatic-typecheck
     if type(a) != type(b):
         return 1.0
     if is_layer(a, "Conv"):
@@ -57,6 +57,9 @@ def layer_distance(a, b):
 
 
 def attribute_difference(att_diff):
+    ''' The attribute distance.
+    '''
+
     ret = 0
     for a_value, b_value in att_diff:
         if max(a_value, b_value) == 0:
@@ -139,6 +142,8 @@ class IncrementalGaussianProcess:
 
     @property
     def kernel_matrix(self):
+        ''' Kernel matric.
+        '''
         return self._distance_matrix
 
     def fit(self, train_x, train_y):
@@ -186,6 +191,8 @@ class IncrementalGaussianProcess:
 
     @property
     def first_fitted(self):
+        ''' if it is firsr fitted
+        '''
         return self._first_fitted
 
     def first_fit(self, train_x, train_y):
@@ -387,6 +394,8 @@ class BayesianOptimizer:
         return nm_graph, father_id
 
     def acq(self, graph):
+        ''' estimate the value of generated graph
+        '''
         mean, std = self.gpr.predict(np.array([graph.extract_descriptor()]))
         if self.optimizemode is OptimizeMode.Maximize:
             return mean + self.beta * std
@@ -405,6 +414,12 @@ class BayesianOptimizer:
         return False
 
     def add_child(self, father_id, model_id):
+        ''' add child to the search tree
+        Arguments:
+            father_id {int} -- father id
+            model_id {int} -- model id
+        '''
+
         self.search_tree.add_child(father_id, model_id)
 
 
@@ -447,6 +462,12 @@ class SearchTree:
         self.adj_list = {}
 
     def add_child(self, u, v):
+        ''' add child to search tree itself.
+        Arguments:
+            u {int} -- father id
+            v {int} --  child id
+        '''
+
         if u == -1:
             self.root = v
             self.adj_list[v] = []

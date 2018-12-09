@@ -29,8 +29,6 @@ import torch
 
 from nni.networkmorphism_tuner.layer_transformer import (
     add_noise,
-    deeper_conv_block,
-    dense_to_deeper_block,
     wider_bn,
     wider_next_conv,
     wider_next_dense,
@@ -90,12 +88,18 @@ class NetworkDescriptor:
         self.skip_connections.append((u, v, connection_type))
 
     def to_json(self):
+        ''' NetworkDescriptor to json representation
+        '''
+
         skip_list = []
         for u, v, connection_type in self.skip_connections:
             skip_list.append({"from": u, "to": v, "type": connection_type})
         return {"node_list": self.layers, "skip_list": skip_list}
 
     def add_layer(self, layer):
+        ''' add one layer
+        '''
+
         self.layers.append(layer)
 
 
@@ -598,9 +602,7 @@ class Graph:
                     temp_v = v
                     temp_layer_id = layer_id
                     skip_type = None
-                    while not (
-                        temp_v in index_in_main_chain and temp_u in index_in_main_chain
-                    ):
+                    while not (temp_v in index_in_main_chain and temp_u in index_in_main_chain):
                         if is_layer(self.layer_list[temp_layer_id], "Concatenate"):
                             skip_type = NetworkDescriptor.CONCAT_CONNECT
                         if is_layer(self.layer_list[temp_layer_id], "Add"):
@@ -624,6 +626,8 @@ class Graph:
         return ret
 
     def clear_weights(self):
+        ''' clear weights of the graph
+        '''
         self.weighted = False
         for layer in self.layer_list:
             layer.weights = None
@@ -641,14 +645,19 @@ class Graph:
         return ONNXModel(self)
 
     def parsing_onnx_model(self, onnx_model):
-        return self
+        '''to do in the future to use the onnx model
+        '''
+        return ONNXModel(onnx_model)
 
     def produce_json_model(self):
         """Build a new Json model based on the current graph."""
         return JSONModel(self).data
 
+    @classmethod
     def parsing_json_model(self, json_model):
-        return self
+        '''build a graph from json
+        '''
+        return json_to_graph(json_model)
 
     def _layer_ids_in_order(self, layer_ids):
         node_id_to_order_index = {}
@@ -721,7 +730,7 @@ class Graph:
             pre_node[i] = i
         for i in range(self.n_nodes - 1):
             for u in range(self.n_nodes):
-                for v, layer_id in self.adj_list[u]:
+                for v, _ in self.adj_list[u]:
                     if distance[u] + 1 > distance[v]:
                         distance[v] = distance[u] + 1
                         pre_node[v] = u
@@ -827,7 +836,9 @@ class KerasModel:
                 node_list[v] = temp_tensor
 
         output_tensor = node_list[output_id]
-        output_tensor = keras.layers.Activation('softmax', name='activation_add')(output_tensor)
+        output_tensor = keras.layers.Activation("softmax", name="activation_add")(
+            output_tensor
+        )
         self.model = keras.models.Model(inputs=input_tensor, outputs=output_tensor)
 
         if graph.weighted:
@@ -841,7 +852,7 @@ class KerasModel:
 
 
 class ONNXModel:
-    # TODO 
+    # to do in the future using onnx ir
     def __init__(self, graph):
         pass
 
@@ -892,14 +903,14 @@ class JSONModel:
 
 
 def graph_to_onnx(graph, onnx_model_path):
-    # TODO 
+    # to do in the future using onnx ir
     onnx_out = graph.produce_onnx_model()
     onnx.save(onnx_out, onnx_model_path)
     return onnx_out
 
 
 def onnx_to_graph(onnx_model, input_shape):
-    # TODO 
+    # to do in the future using onnx ir
     graph = Graph(input_shape, False)
     graph.parsing_onnx_model(onnx_model)
     return graph

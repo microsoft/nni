@@ -3,11 +3,6 @@
     - msr_init: net parameter initialization.
     - progress_bar: progress bar mimic xlua.progress.
 """
-import os
-import sys
-import time
-import math
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -15,10 +10,10 @@ import torch.nn.init as init
 import torchvision.transforms as transforms
 
 
-import numpy as np
+class EarlyStopping:
+    """ EarlyStopping class to keep NN from overfitting
+    """
 
-
-class EarlyStopping(object):
     # pylint: disable=E0202
     def __init__(self, mode="min", min_delta=0, patience=10, percentage=False):
         self.mode = mode
@@ -34,6 +29,11 @@ class EarlyStopping(object):
             self.step = lambda a: False
 
     def step(self, metrics):
+        """ EarlyStopping step on each epoch
+        Arguments:
+            metrics {float} -- metric value
+        """
+
         if self.best is None:
             self.best = metrics
             return False
@@ -67,50 +67,72 @@ class EarlyStopping(object):
                 self.is_better = lambda a, best: a > best + (best * min_delta / 100)
 
 
-class Cutout(object):
+class Cutout:
+    """Randomly mask out one or more patches from an image.
+    Args:
+        n_holes (int): Number of patches to cut out of each image.
+        length (int): The length (in pixels) of each square patch.
+    """
+
     def __init__(self, length):
         self.length = length
 
     def __call__(self, img):
-        h, w = img.size(1), img.size(2)
-        mask = np.ones((h, w), np.float32)
-        y = np.random.randint(h)
-        x = np.random.randint(w)
+        """
+        Args:
+            img (Tensor): Tensor image of size (C, H, W).
+        Returns:
+            Tensor: Image with n_holes of dimension length x length cut out of it.
+        """
+        h_img, w_img = img.size(1), img.size(2)
+        mask = np.ones((h_img, w_img), np.float32)
+        y_img = np.random.randint(h_img)
+        x_img = np.random.randint(w_img)
 
-        y1 = np.clip(y - self.length // 2, 0, h)
-        y2 = np.clip(y + self.length // 2, 0, h)
-        x1 = np.clip(x - self.length // 2, 0, w)
-        x2 = np.clip(x + self.length // 2, 0, w)
+        y1_img = np.clip(y_img - self.length // 2, 0, h_img)
+        y2_img = np.clip(y_img + self.length // 2, 0, h_img)
+        x1_img = np.clip(x_img - self.length // 2, 0, w_img)
+        x2_img = np.clip(x_img + self.length // 2, 0, w_img)
 
-        mask[y1:y2, x1:x2] = 0.0
+        mask[y1_img:y2_img, x1_img:x2_img] = 0.0
         mask = torch.from_numpy(mask)
         mask = mask.expand_as(img)
         img *= mask
         return img
 
 
-def _data_transforms_cifar10(args):
-    CIFAR_MEAN = [0.49139968, 0.48215827, 0.44653124]
-    CIFAR_STD = [0.24703233, 0.24348505, 0.26158768]
+def data_transforms_cifar10(args):
+    """ data_transforms for cifar10 dataset
+    """
+
+    cifar_mean = [0.49139968, 0.48215827, 0.44653124]
+    cifar_std = [0.24703233, 0.24348505, 0.26158768]
 
     train_transform = transforms.Compose(
         [
             transforms.RandomCrop(32, padding=4),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize(CIFAR_MEAN, CIFAR_STD),
+            transforms.Normalize(cifar_mean, cifar_std),
         ]
     )
     if args.cutout:
         train_transform.transforms.append(Cutout(args.cutout_length))
 
     valid_transform = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize(CIFAR_MEAN, CIFAR_STD)]
+        [transforms.ToTensor(), transforms.Normalize(cifar_mean, cifar_std)]
     )
     return train_transform, valid_transform
 
 
-def _data_transforms_mnist(args, mnist_mean=[0.5], mnist_std=[0.5]):
+def data_transforms_mnist(args, mnist_mean=None, mnist_std=None):
+    """ data_transforms for mnist dataset
+    """
+    if mnist_mean is None:
+        mnist_mean = [0.5]
+
+    if mnist_std is None:
+        mnist_std = [0.5]
 
     train_transform = transforms.Compose(
         [
@@ -137,7 +159,7 @@ def get_mean_and_std(dataset):
     mean = torch.zeros(3)
     std = torch.zeros(3)
     print("==> Computing mean and std..")
-    for inputs, targets in dataloader:
+    for inputs, _ in dataloader:
         for i in range(3):
             mean[i] += inputs[:, i, :, :].mean()
             std[i] += inputs[:, i, :, :].std()
@@ -148,48 +170,15 @@ def get_mean_and_std(dataset):
 
 def init_params(net):
     """Init layer parameters."""
-    for m in net.modules():
-        if isinstance(m, nn.Conv2d):
-            init.kaiming_normal(m.weight, mode="fan_out")
-            if m.bias:
-                init.constant(m.bias, 0)
-        elif isinstance(m, nn.BatchNorm2d):
-            init.constant(m.weight, 1)
-            init.constant(m.bias, 0)
-        elif isinstance(m, nn.Linear):
-            init.normal(m.weight, std=1e-3)
-            if m.bias:
-                init.constant(m.bias, 0)
-
-
-def format_time(seconds):
-    days = int(seconds / 3600 / 24)
-    seconds = seconds - days * 3600 * 24
-    hours = int(seconds / 3600)
-    seconds = seconds - hours * 3600
-    minutes = int(seconds / 60)
-    seconds = seconds - minutes * 60
-    secondsf = int(seconds)
-    seconds = seconds - secondsf
-    millis = int(seconds * 1000)
-
-    f = ""
-    i = 1
-    if days > 0:
-        f += str(days) + "D"
-        i += 1
-    if hours > 0 and i <= 2:
-        f += str(hours) + "h"
-        i += 1
-    if minutes > 0 and i <= 2:
-        f += str(minutes) + "m"
-        i += 1
-    if secondsf > 0 and i <= 2:
-        f += str(secondsf) + "s"
-        i += 1
-    if millis > 0 and i <= 2:
-        f += str(millis) + "ms"
-        i += 1
-    if f == "":
-        f = "0ms"
-    return f
+    for module in net.modules():
+        if isinstance(module, nn.Conv2d):
+            init.kaiming_normal(module.weight, mode="fan_out")
+            if module.bias:
+                init.constant(module.bias, 0)
+        elif isinstance(module, nn.BatchNorm2d):
+            init.constant(module.weight, 1)
+            init.constant(module.bias, 0)
+        elif isinstance(module, nn.Linear):
+            init.normal(module.weight, std=1e-3)
+            if module.bias:
+                init.constant(module.bias, 0)

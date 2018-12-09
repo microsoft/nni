@@ -36,6 +36,8 @@ from nni.networkmorphism_tuner.utils import Constant
 
 
 def to_wider_graph(graph):
+    ''' wider graph
+    '''
     weighted_layer_ids = graph.wide_layer_ids()
     weighted_layer_ids = list(
         filter(lambda x: graph.layer_list[x].output.shape[-1], weighted_layer_ids)
@@ -54,17 +56,17 @@ def to_wider_graph(graph):
 
 
 def to_skip_connection_graph(graph):
+    ''' skip connection graph
+    '''
     # The last conv layer cannot be widen since wider operator cannot be done over the two sides of flatten.
     weighted_layer_ids = graph.skip_connection_layer_ids()
     valid_connection = []
-    for skip_type in sorted(
-        [NetworkDescriptor.ADD_CONNECT, NetworkDescriptor.CONCAT_CONNECT]
-    ):
+    for skip_type in sorted([NetworkDescriptor.ADD_CONNECT, NetworkDescriptor.CONCAT_CONNECT]):
         for index_a in range(len(weighted_layer_ids)):
             for index_b in range(len(weighted_layer_ids))[index_a + 1 :]:
                 valid_connection.append((index_a, index_b, skip_type))
 
-    if len(valid_connection) < 1:
+    if not valid_connection:
         return graph
     for index_a, index_b, skip_type in sample(valid_connection, 1):
         a_id = weighted_layer_ids[index_a]
@@ -77,6 +79,9 @@ def to_skip_connection_graph(graph):
 
 
 def create_new_layer(layer, n_dim):
+    ''' create  new layer for the graph
+    '''
+
     input_shape = layer.output.shape
     dense_deeper_classes = [StubDense, get_dropout_class(n_dim), StubReLU]
     conv_deeper_classes = [get_conv_class(n_dim), get_batch_norm_class(n_dim), StubReLU]
@@ -120,6 +125,9 @@ def create_new_layer(layer, n_dim):
 
 
 def to_deeper_graph(graph):
+    ''' deeper graph
+    '''
+
     weighted_layer_ids = graph.deep_layer_ids()
     if len(weighted_layer_ids) >= Constant.MAX_LAYERS:
         return None
@@ -134,6 +142,9 @@ def to_deeper_graph(graph):
 
 
 def legal_graph(graph):
+    '''judge if a graph is legal or not.
+    '''
+
     descriptor = graph.extract_descriptor()
     skips = descriptor.skip_connections
     if len(skips) != len(set(skips)):
@@ -142,15 +153,18 @@ def legal_graph(graph):
 
 
 def transform(graph):
+    '''core transform function for graph.
+    '''
+
     graphs = []
     for _ in range(Constant.N_NEIGHBOURS * 2):
-        a = randrange(3)
+        random_num = randrange(3)
         temp_graph = None
-        if a == 0:
+        if random_num == 0:
             temp_graph = to_deeper_graph(deepcopy(graph))
-        elif a == 1:
+        elif random_num == 1:
             temp_graph = to_wider_graph(deepcopy(graph))
-        elif a == 2:
+        elif random_num == 2:
             temp_graph = to_skip_connection_graph(deepcopy(graph))
 
         if temp_graph is not None and temp_graph.size() <= Constant.MAX_MODEL_SIZE:

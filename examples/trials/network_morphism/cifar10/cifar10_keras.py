@@ -19,15 +19,14 @@ import argparse
 import logging
 import os
 
-import keras
-import keras.backend.tensorflow_backend as KTF
-import numpy as np
 import tensorflow as tf
-from keras.datasets import fashion_mnist
-from keras.optimizers import SGD, Adadelta, Adagrad, Adam, Adamax, Nadam, RMSprop
-from keras.preprocessing.image import ImageDataGenerator
+import keras
+from keras.callbacks import EarlyStopping, TensorBoard
+from keras.datasets import cifar10
+from keras.optimizers import SGD, Adadelta, Adagrad, Adam, Adamax, RMSprop
 from keras.utils import multi_gpu_model, to_categorical
-from keras.callbacks import TensorBoard, EarlyStopping
+import keras.backend.tensorflow_backend as KTF
+
 import nni
 from nni.networkmorphism_tuner.graph import json_to_graph
 
@@ -41,11 +40,12 @@ logging.basicConfig(
     datefmt="%m/%d %I:%M:%S %p",
 )
 # set the logger format
-logger = logging.getLogger("fashion_mnist-network-morphism-keras")
+logger = logging.getLogger("cifar10-network-morphism-keras")
 
 
 # restrict gpu usage background
 config = tf.ConfigProto()
+# pylint: disable=E1101,W0603
 config.gpu_options.allow_growth = True
 sess = tf.Session(config=config)
 
@@ -53,7 +53,9 @@ KTF.set_session(sess)
 
 
 def get_args():
-    parser = argparse.ArgumentParser("fashion_mnist")
+    """ get args from command line
+    """
+    parser = argparse.ArgumentParser("cifar10")
     parser.add_argument("--batch_size", type=int, default=128, help="batch size")
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
     parser.add_argument("--epochs", type=int, default=200, help="epoch limit")
@@ -66,8 +68,7 @@ def get_args():
         default=1e-5,
         help="weight decay of the learning rate",
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 trainloader = None
@@ -87,35 +88,24 @@ def build_graph_from_json(ir_model_json):
 
 
 def parse_rev_args(receive_msg):
+    """ parse reveive msgs to global variable
+    """
     global trainloader
     global testloader
-    global datagen
     global net
 
     # Loading Data
     logger.debug("Preparing data..")
 
-    (x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = cifar10.load_data()
     y_train = to_categorical(y_train, 10)
     y_test = to_categorical(y_test, 10)
-    x_train = x_train.reshape(x_train.shape+(1,)).astype("float32")
-    x_test = x_test.reshape(x_test.shape+(1,)).astype("float32")
+    x_train = x_train.astype("float32")
+    x_test = x_test.astype("float32")
     x_train /= 255.0
     x_test /= 255.0
     trainloader = (x_train, y_train)
     testloader = (x_test, y_test)
-
-    datagen = ImageDataGenerator(
-        featurewise_center=True,
-        featurewise_std_normalization=True,
-        rotation_range=20,
-        width_shift_range=0.2,
-        height_shift_range=0.2,
-        horizontal_flip=True,
-    )
-    # compute quantities required for featurewise normalization
-    # (std, mean, and principal components if ZCA whitening is applied)
-    datagen.fit(x_train)
 
     # Model
     logger.debug("Building model..")
@@ -140,6 +130,8 @@ def parse_rev_args(receive_msg):
         optimizer = Adam(lr=args.learning_rate, decay=args.weight_decay)
     if args.optimizer == "Adamax":
         optimizer = Adamax(lr=args.learning_rate, decay=args.weight_decay)
+    if args.optimizer == "RMSprop":
+        optimizer = RMSprop(lr=args.learning_rate, decay=args.weight_decay)
 
     # Compile the model
     net.compile(
@@ -153,19 +145,23 @@ class SendMetrics(keras.callbacks.Callback):
     Keras callback to send metrics to NNI framework
     """
 
-    def on_epoch_end(self, epoch, logs={}):
+    def on_epoch_end(self, epoch, logs=None):
         """
         Run on end of each epoch
         """
+        if logs is None:
+            logs = dict()
         logger.debug(logs)
         nni.report_intermediate_result(logs["acc"])
 
 
 # Training
 def train_eval():
+    """ train and eval the model
+    """
+
     global trainloader
     global testloader
-    global datagen
     global net
 
     (x_train, y_train) = trainloader

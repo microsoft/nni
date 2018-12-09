@@ -19,21 +19,16 @@ import argparse
 import logging
 import sys
 
-import torch
-import torch.backends.cudnn as cudnn
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-import torchvision
-import torchvision.transforms as transforms
-from torch.autograd import Variable
-
 import nni
 from nni.networkmorphism_tuner.graph import json_to_graph
 
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torchvision
+
 sys.path.append("../")
 from network_morphism import utils
-
 
 # set the logger format
 log_format = "%(asctime)s %(message)s"
@@ -44,12 +39,15 @@ logging.basicConfig(
     format=log_format,
     datefmt="%m/%d %I:%M:%S %p",
 )
+# pylint: disable=W0603
 # set the logger format
-logger = logging.getLogger("FashionMNIST-network-morphism")
+logger = logging.getLogger("cifar10-network-morphism-pytorch")
 
 
 def get_args():
-    parser = argparse.ArgumentParser("FashionMNIST")
+    """ get args from command line
+    """
+    parser = argparse.ArgumentParser("cifar10")
     parser.add_argument("--batch_size", type=int, default=128, help="batch size")
     parser.add_argument("--optimizer", type=str, default="SGD", help="optimizer")
     parser.add_argument("--epochs", type=int, default=200, help="epoch limit")
@@ -61,8 +59,7 @@ def get_args():
     parser.add_argument(
         "--model_path", type=str, default="./", help="Path to save the destination model"
     )
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 trainloader = None
@@ -85,6 +82,8 @@ def build_graph_from_json(ir_model_json):
 
 
 def parse_rev_args(receive_msg):
+    """ parse reveive msgs to global variable
+    """
     global trainloader
     global testloader
     global net
@@ -94,27 +93,16 @@ def parse_rev_args(receive_msg):
     # Loading Data
     logger.debug("Preparing data..")
 
-    raw_train_data = torchvision.datasets.FashionMNIST(
-        root="./data", train=True, download=True
-    )
+    transform_train, transform_test = utils.data_transforms_cifar10(args)
 
-    dataset_mean, dataset_std = (
-        [raw_train_data.train_data.float().mean() / 255],
-        [raw_train_data.train_data.float().std() / 255],
-    )
-
-    transform_train, transform_test = utils._data_transforms_mnist(
-        args, dataset_mean, dataset_std
-    )
-
-    trainset = torchvision.datasets.FashionMNIST(
+    trainset = torchvision.datasets.CIFAR10(
         root="./data", train=True, download=True, transform=transform_train
     )
     trainloader = torch.utils.data.DataLoader(
         trainset, batch_size=args.batch_size, shuffle=True, num_workers=2
     )
 
-    testset = torchvision.datasets.FashionMNIST(
+    testset = torchvision.datasets.CIFAR10(
         root="./data", train=False, download=True, transform=transform_test
     )
     testloader = torch.utils.data.DataLoader(
@@ -127,6 +115,8 @@ def parse_rev_args(receive_msg):
 
     net = net.to(device)
     criterion = nn.CrossEntropyLoss()
+    if device == "cuda" and torch.cuda.device_count() > 1:
+        net = torch.nn.DataParallel(net)
 
     if args.optimizer == "SGD":
         optimizer = optim.SGD(
@@ -143,18 +133,22 @@ def parse_rev_args(receive_msg):
     if args.optimizer == "RMSprop":
         optimizer = optim.RMSprop(net.parameters(), lr=args.learning_rate)
 
+
     return 0
 
 
 # Training
 def train(epoch):
+    """ train model on each epoch in trainset
+    """
+
     global trainloader
     global testloader
     global net
     global criterion
     global optimizer
 
-    logger.debug("Epoch: %d" % epoch)
+    logger.debug("Epoch: %d", epoch)
     net.train()
     train_loss = 0
     correct = 0
@@ -176,14 +170,19 @@ def train(epoch):
         acc = 100.0 * correct / total
 
         logger.debug(
-            "Loss: %.3f | Acc: %.3f%% (%d/%d)"
-            % (train_loss / (batch_idx + 1), 100.0 * correct / total, correct, total)
+            "Loss: %.3f | Acc: %.3f%% (%d/%d)",
+            train_loss / (batch_idx + 1),
+            100.0 * correct / total,
+            correct,
+            total,
         )
 
     return acc
 
 
 def test(epoch):
+    """ eval model on each epoch in testset
+    """
     global best_acc
     global trainloader
     global testloader
@@ -191,6 +190,7 @@ def test(epoch):
     global criterion
     global optimizer
 
+    logger.debug("Eval on epoch: %d", epoch)
     net.eval()
     test_loss = 0
     correct = 0
@@ -209,13 +209,15 @@ def test(epoch):
             acc = 100.0 * correct / total
 
             logger.debug(
-                "Loss: %.3f | Acc: %.3f%% (%d/%d)"
-                % (test_loss / (batch_idx + 1), 100.0 * correct / total, correct, total)
+                "Loss: %.3f | Acc: %.3f%% (%d/%d)",
+                test_loss / (batch_idx + 1),
+                100.0 * correct / total,
+                correct,
+                total,
             )
 
     acc = 100.0 * correct / total
     if acc > best_acc:
-        logger.debug("Saving..")
         best_acc = acc
     return acc, best_acc
 
@@ -227,12 +229,12 @@ if __name__ == "__main__":
         logger.debug(RCV_CONFIG)
 
         parse_rev_args(RCV_CONFIG)
-        acc = 0.0
+        train_acc = 0.0
         best_acc = 0.0
         early_stop = utils.EarlyStopping(mode="max")
-        for epoch in range(args.epochs):
-            train_acc = train(epoch)
-            test_acc, best_acc = test(epoch)
+        for ep in range(args.epochs):
+            train_acc = train(ep)
+            test_acc, best_acc = test(ep)
             nni.report_intermediate_result(test_acc)
             logger.debug(test_acc)
             if early_stop.step(test_acc):

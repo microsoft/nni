@@ -18,12 +18,9 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-import json
 import logging
 import os
 
-
-import numpy as np
 
 from nni.tuner import Tuner
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
@@ -41,23 +38,22 @@ class NetworkMorphismTuner(Tuner):
     """
 
     def __init__(
-        self,
-        task="cv",
-        input_width=32,
-        input_channel=3,
-        n_output_node=10,
-        algorithm_name="Bayesian",
-        optimize_mode="maximize",
-        path="model_path",
-        verbose=True,
-        beta=Constant.BETA,
-        t_min=Constant.T_MIN,
-        max_model_size=Constant.MAX_MODEL_SIZE,
-        default_model_len=Constant.MODEL_LEN,
-        default_model_width=Constant.MODEL_WIDTH,
+            self,
+            task="cv",
+            input_width=32,
+            input_channel=3,
+            n_output_node=10,
+            algorithm_name="Bayesian",
+            optimize_mode="maximize",
+            path="model_path",
+            verbose=True,
+            beta=Constant.BETA,
+            t_min=Constant.T_MIN,
+            max_model_size=Constant.MAX_MODEL_SIZE,
+            default_model_len=Constant.MODEL_LEN,
+            default_model_width=Constant.MODEL_WIDTH,
     ):
-        """ initilizer of the NetworkMorphismTuner
-        
+        """ initilizer of the NetworkMorphismTuner.
         Keyword Arguments:
             task {str} -- [task mode, such as "cv","common" etc.] (default: {"cv"})
             input_width {int} -- [input sample shape] (default: {32})
@@ -163,7 +159,7 @@ class NetworkMorphismTuner(Tuner):
         graph = self.bo.searcher.load_model_by_id(model_id)
 
         # to use the value and graph
-        self.add_model(reward, graph, model_id)
+        self.add_model(reward, model_id)
         self.update(father_id, graph, reward, model_id)
 
     def init_search(self):
@@ -209,7 +205,7 @@ class NetworkMorphismTuner(Tuner):
         self.bo.fit([graph.extract_descriptor()], [metric_value])
         self.bo.add_child(father_id, model_id)
 
-    def add_model(self, metric_value, graph, model_id):
+    def add_model(self, metric_value, model_id):
         """ Add model to the history, x_queue and y_queue
 
         Arguments:
