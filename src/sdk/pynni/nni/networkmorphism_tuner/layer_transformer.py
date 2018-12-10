@@ -32,6 +32,8 @@ NOISE_RATIO = 1e-4
 
 
 def deeper_conv_block(conv_layer, kernel_size, weighted=True):
+    '''deeper conv layer.
+    '''
     n_dim = get_n_dim(conv_layer)
     filter_shape = (kernel_size,) * 2
     n_filters = conv_layer.filters
@@ -64,6 +66,8 @@ def deeper_conv_block(conv_layer, kernel_size, weighted=True):
 
 
 def dense_to_deeper_block(dense_layer, weighted=True):
+    '''deeper dense layer.
+    '''
     units = dense_layer.units
     weight = np.eye(units)
     bias = np.zeros(units)
@@ -76,6 +80,8 @@ def dense_to_deeper_block(dense_layer, weighted=True):
 
 
 def wider_pre_dense(layer, n_add, weighted=True):
+    '''wider previous dense layer.
+    '''
     if not weighted:
         return StubDense(layer.input_units, layer.units + n_add)
 
@@ -101,6 +107,8 @@ def wider_pre_dense(layer, n_add, weighted=True):
 
 
 def wider_pre_conv(layer, n_add_filters, weighted=True):
+    '''wider previous conv layer.
+    '''
     n_dim = get_n_dim(layer)
     if not weighted:
         return get_conv_class(n_dim)(
@@ -132,6 +140,8 @@ def wider_pre_conv(layer, n_add_filters, weighted=True):
 
 
 def wider_next_conv(layer, start_dim, total_dim, n_add, weighted=True):
+    '''wider next conv layer.
+    '''
     n_dim = get_n_dim(layer)
     if not weighted:
         return get_conv_class(n_dim)(layer.input_channel + n_add,
@@ -157,6 +167,8 @@ def wider_next_conv(layer, start_dim, total_dim, n_add, weighted=True):
 
 
 def wider_bn(layer, start_dim, total_dim, n_add, weighted=True):
+    '''wider batch norm layer.
+    '''
     n_dim = get_n_dim(layer)
     if not weighted:
         return get_batch_norm_class(n_dim)(layer.num_features + n_add)
@@ -183,6 +195,8 @@ def wider_bn(layer, start_dim, total_dim, n_add, weighted=True):
 
 
 def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
+    '''wider next dense layer.
+    '''
     if not weighted:
         return StubDense(layer.input_units + n_add, layer.units)
     teacher_w, teacher_b = layer.get_weights()
@@ -207,6 +221,8 @@ def wider_next_dense(layer, start_dim, total_dim, n_add, weighted=True):
 
 
 def add_noise(weights, other_weights):
+    '''add noise to the layer.
+    '''
     w_range = np.ptp(other_weights.flatten())
     noise_range = NOISE_RATIO * w_range
     noise = np.random.uniform(-noise_range / 2.0, noise_range / 2.0, weights.shape)
@@ -214,6 +230,8 @@ def add_noise(weights, other_weights):
 
 
 def init_dense_weight(layer):
+    '''initilize dense layer weight.
+    '''
     units = layer.units
     weight = np.eye(units)
     bias = np.zeros(units)
@@ -223,6 +241,8 @@ def init_dense_weight(layer):
 
 
 def init_conv_weight(layer):
+    '''initilize conv layer weight.
+    '''
     n_filters = layer.filters
     filter_shape = (layer.kernel_size,) * get_n_dim(layer)
     weight = np.zeros((n_filters, n_filters) + filter_shape)
@@ -241,6 +261,8 @@ def init_conv_weight(layer):
 
 
 def init_bn_weight(layer):
+    '''initilize batch norm layer weight.
+    '''
     n_filters = layer.num_features
     new_weights = [
         add_noise(np.ones(n_filters, dtype=np.float32), np.array([0, 1])),

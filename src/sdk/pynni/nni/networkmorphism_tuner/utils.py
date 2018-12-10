@@ -18,7 +18,6 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-import pickle
 from enum import Enum, unique
 
 @unique
@@ -49,4 +48,3 @@ class Constant:
     CONV_BLOCK_DISTANCE = 2
     BATCH_SIZE = 128
     T_MIN = 0.0001
-

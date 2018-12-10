@@ -33,9 +33,7 @@ logger = logging.getLogger("NetworkMorphism_AutoML")
 
 
 class NetworkMorphismTuner(Tuner):
-    """ 
-    NetworkMorphismTuner is a tuner which using network morphism techniques.
-    """
+    """NetworkMorphismTuner is a tuner which using network morphism techniques."""
 
     def __init__(
             self,
@@ -138,13 +136,11 @@ class NetworkMorphismTuner(Tuner):
         return json_out
 
     def receive_trial_result(self, parameter_id, parameters, value):
-        """ Record an observation of the objective function
-
-        Arguments:           
+        """ Record an observation of the objective function.
+        Arguments:
             parameter_id : int
             parameters : dict of parameters
-            value: final metrics of the trial, including reward     
-
+            value: final metrics of the trial, including reward
         Raises:
             RuntimeError -- Received parameter_id not in total_data.
         """
