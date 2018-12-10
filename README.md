@@ -104,7 +104,7 @@ You can use these commands to get more information about the experiment
 * [Run an experiment on multiple machines?](docs/tutorial_2_RemoteMachineMode.md)
 * [Run an experiment on OpenPAI?](docs/PAIMode.md)
 * [Run an experiment on Kubeflow?](docs/KubeflowMode.md)
-* [Try different tuners and assessors](docs/tutorial_3_tryTunersAndAccessors.md)
+* [Try different tuners and assessors](docs/tutorial_3_tryTunersAndAssessors.md)
 * [Implement a customized tuner](docs/howto_2_CustomizedTuner.md)
 * [Implement a customized assessor](examples/assessors/README.md)
 * [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](examples/trials/ga_squad/README.md)
