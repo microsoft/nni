@@ -28,8 +28,6 @@ import json
 import random
 from enum import Enum, unique
 
-global_layer_id = 0
-
 @unique
 class LayerType(Enum):
     '''
@@ -46,9 +44,6 @@ class Layer(object):
     Layer class, which contains the information of graph.
     '''
     def __init__(self, graph_type, inputs=None, output=None, size=None):
-        global global_layer_id
-        self.global_id = global_layer_id
-        global_layer_id += 1
         self.input = inputs if inputs is not None else []
         self.output = output if output is not None else []
         self.graph_type = graph_type
@@ -96,7 +91,7 @@ class Layer(object):
             self.size = None
 
     def __str__(self):
-        return 'id:' + str(self.global_id) +  'input:' + str(self.input) + ' output:' + str(self.output) + ' type:' + str(
+        return 'input:' + str(self.input) + ' output:' + str(self.output) + ' type:' + str(
             self.graph_type) + ' is_delete:' + str(self.is_delete) + ' size:' + str(self.size)
 
 def graph_dumps(graph):
