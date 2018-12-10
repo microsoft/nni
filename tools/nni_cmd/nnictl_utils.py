@@ -419,8 +419,8 @@ def show_experiment_info():
 
 def monitor_experiment(args):
     '''monitor the experiment'''
-    if args.time < 0:
-        print_error('please input a positive integer as time interval, and the unit of time is second!')
+    if args.time <= 0:
+        print_error('please input a positive integer as time interval, the unit is second.')
         exit(1)
     while True:
         try:
