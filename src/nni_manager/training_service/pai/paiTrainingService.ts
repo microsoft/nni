@@ -352,6 +352,7 @@ class PAITrainingService implements TrainingService {
 
                 // Get PAI authentication token
                 await this.updatePaiToken();
+                deferred.resolve();
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
