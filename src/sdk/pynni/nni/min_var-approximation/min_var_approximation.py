@@ -4,6 +4,10 @@ import scipy
 import math
 import curvefunctions
 
+NUM_OF_FUNCTIONS = 5
+STEP_SIZE = 0.2
+TARGET_POS = 20
+
 class curvefitting(object):
     def __init__(self, curve_history, best_performance, target_pos = TARGET_POS):
         self.curve_history = curve_history
