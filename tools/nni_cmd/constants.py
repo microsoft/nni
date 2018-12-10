@@ -40,11 +40,12 @@ EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0
                           '         commands                       description\n' \
                           '1. nnictl experiment show        show the information of experiments\n' \
                           '2. nnictl trial ls               list all of trial jobs\n' \
-                          '3. nnictl log stderr             show stderr log content\n' \
-                          '4. nnictl log stdout             show stdout log content\n' \
-                          '5. nnictl stop                   stop an experiment\n' \
-                          '6. nnictl trial kill             kill a trial job by id\n' \
-                          '7. nnictl --help                 get help information about nnictl\n' \
+                          '3. nnictl top                    monitor the status of running experiments\n' \
+                          '4. nnictl log stderr             show stderr log content\n' \
+                          '5. nnictl log stdout             show stdout log content\n' \
+                          '6. nnictl stop                   stop an experiment\n' \
+                          '7. nnictl trial kill             kill a trial job by id\n' \
+                          '8. nnictl --help                 get help information about nnictl\n' \
                           '-----------------------------------------------------------------------\n' \
 
 LOG_HEADER = '-----------------------------------------------------------------------\n' \

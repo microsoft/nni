@@ -68,7 +68,7 @@ def check_experiment_id(args):
             experiment_information = ""
             for key in running_experiment_list:
                 experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key].get('platform'), experiment_dict[key]['port'], experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         elif not running_experiment_list:
@@ -112,7 +112,7 @@ def parse_ids(args):
             experiment_information = ""
             for key in running_experiment_list:
                 experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key].get('platform'), experiment_dict[key]['port'], experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
@@ -419,15 +419,17 @@ def show_experiment_info():
 
 def monitor_experiment(args):
     '''monitor the experiment'''
+    if args.time < 0:
+        print_error('please input a positive integer as time interval, and the unit of time is second!')
+        exit(1)
     while True:
         try:
             os.system('clear')
             update_experiment_status()
             show_experiment_info()
-            time.sleep(3)
+            time.sleep(args.time)
         except KeyboardInterrupt:
             exit(0)
         except Exception as exception:
             print_error(exception)
             exit(1)
-            
