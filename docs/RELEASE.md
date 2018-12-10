@@ -86,10 +86,10 @@ Initial release of Neural Network Intelligence (NNI).
    * Installation and Deployment
       * Support pip install and source codes install
       * Support training services on local mode(including Multi-GPU mode) as well as multi-machines mode
-   * Tuners, Accessors and Trial
+   * Tuners, Assessors and Trial
       * Support AutoML algorithms including:  hyperopt_tpe, hyperopt_annealing, hyperopt_random, and evolution_tuner
       * Support assessor(early stop) algorithms including: medianstop algorithm
-      * Provide Python API for user defined tuners and accessors
+      * Provide Python API for user defined tuners and assessors
       * Provide Python API for user to wrap trial code as NNI deployable codes
    * Experiments
       * Provide a command line toolkit 'nnictl' for experiments management
