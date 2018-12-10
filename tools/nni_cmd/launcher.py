@@ -37,7 +37,6 @@ import random
 import site
 from pathlib import Path
 
-
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
     stdout_full_path = os.path.join(NNICTL_HOME_DIR, config_file_name, 'stdout')
@@ -66,7 +65,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         'You could use \'nnictl create --help\' to get help information' % port)
         exit(1)
     
-    if platform == 'pai' and detect_port(int(port) + 1):
+    if (platform == 'pai' or platform == 'kubeflow') and detect_port(int(port) + 1):
         print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
         'You could set another port to start experiment!\n' \
         'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
@@ -100,21 +99,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
 def set_trial_config(experiment_config, port, config_file_name):
     '''set trial configuration'''
     request_data = dict()
-    value_dict = dict()
-    value_dict['command'] = experiment_config['trial']['command']
-    value_dict['codeDir'] = experiment_config['trial']['codeDir']
-    value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
-    if experiment_config['trial'].get('cpuNum'):
-        value_dict['cpuNum'] = experiment_config['trial']['cpuNum']
-    if experiment_config['trial'].get('memoryMB'):
-        value_dict['memoryMB'] = experiment_config['trial']['memoryMB']
-    if experiment_config['trial'].get('image'):
-        value_dict['image'] = experiment_config['trial']['image']
-    if experiment_config['trial'].get('dataDir'):
-        value_dict['dataDir'] = experiment_config['trial']['dataDir']
-    if experiment_config['trial'].get('outputDir'):
-        value_dict['outputDir'] = experiment_config['trial']['outputDir']
-    request_data['trial_config'] = value_dict
+    request_data['trial_config'] = experiment_config['trial']
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
     if check_response(response):
         return True
@@ -148,6 +133,23 @@ def set_remote_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
+def setNNIManagerIp(experiment_config, port, config_file_name):
+    '''set nniManagerIp'''
+    if experiment_config.get('nniManagerIp') is None:
+        return True, None
+    ip_config_dict = dict()
+    ip_config_dict['nni_manager_ip'] = { 'nniManagerIp' : experiment_config['nniManagerIp'] }
+    response = rest_put(cluster_metadata_url(port), json.dumps(ip_config_dict), 20)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
+    return True, None
+
 def set_pai_config(experiment_config, port, config_file_name):
     '''set pai configuration''' 
     pai_config_data = dict()
@@ -161,7 +163,28 @@ def set_pai_config(experiment_config, port, config_file_name):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
+    #set trial_config
+    return set_trial_config(experiment_config, port, config_file_name), err_message
 
+def set_kubeflow_config(experiment_config, port, config_file_name):
+    '''set kubeflow configuration''' 
+    kubeflow_config_data = dict()
+    kubeflow_config_data['kubeflow_config'] = experiment_config['kubeflowConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(kubeflow_config_data), 20)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
@@ -180,9 +203,12 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['description'] = experiment_config['description']
     if experiment_config.get('multiPhase'):
         request_data['multiPhase'] = experiment_config.get('multiPhase')
-    request_data['tuner'] = experiment_config['tuner']
-    if 'assessor' in experiment_config:
-        request_data['assessor'] = experiment_config['assessor']
+    if experiment_config.get('advisor'):
+        request_data['advisor'] = experiment_config['advisor']
+    else:
+        request_data['tuner'] = experiment_config['tuner']
+        if 'assessor' in experiment_config:
+            request_data['assessor'] = experiment_config['assessor']
 
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
@@ -193,31 +219,18 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     elif experiment_config['trainingServicePlatform'] == 'remote':
         request_data['clusterMetaData'].append(
             {'key': 'machine_list', 'value': experiment_config['machineList']})
-        value_dict = dict()
-        value_dict['command'] = experiment_config['trial']['command']
-        value_dict['codeDir'] = experiment_config['trial']['codeDir']
-        value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
         request_data['clusterMetaData'].append(
-            {'key': 'trial_config', 'value': value_dict})
+            {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'pai':
         request_data['clusterMetaData'].append(
-            {'key': 'pai_config', 'value': experiment_config['paiConfig']})
-        value_dict = dict()
-        value_dict['command'] = experiment_config['trial']['command']
-        value_dict['codeDir'] = experiment_config['trial']['codeDir']
-        value_dict['gpuNum'] = experiment_config['trial']['gpuNum']
-        if experiment_config['trial'].get('cpuNum'):
-            value_dict['cpuNum'] = experiment_config['trial']['cpuNum']
-        if experiment_config['trial'].get('memoryMB'):
-            value_dict['memoryMB'] = experiment_config['trial']['memoryMB']
-        if experiment_config['trial'].get('image'):
-            value_dict['image'] = experiment_config['trial']['image']
-        if experiment_config['trial'].get('dataDir'):
-            value_dict['dataDir'] = experiment_config['trial']['dataDir']
-        if experiment_config['trial'].get('outputDir'):
-            value_dict['outputDir'] = experiment_config['trial']['outputDir']
+            {'key': 'pai_config', 'value': experiment_config['paiConfig']})        
         request_data['clusterMetaData'].append(
-            {'key': 'trial_config', 'value': value_dict})
+            {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'kubeflow':
+        request_data['clusterMetaData'].append(
+            {'key': 'kubeflow_config', 'value': experiment_config['kubeflowConfig']})
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
 
     response = rest_post(experiment_url(port), json.dumps(request_data), 20)
     if check_response(response):
@@ -311,6 +324,22 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
+    
+    #set kubeflow config
+    if experiment_config['trainingServicePlatform'] == 'kubeflow':
+        print_normal('Setting kubeflow config...')
+        config_result, err_msg = set_kubeflow_config(experiment_config, args.port, config_file_name)
+        if config_result:
+            print_normal('Successfully set kubeflow config!')
+        else:
+            if err_msg:
+                print_error('Failed! Error is: {}'.format(err_msg))
+            try:
+                cmds = ['pkill', '-P', str(rest_process.pid)]
+                call(cmds)
+            except Exception:
+                raise Exception(ERROR_INFO % 'Restful server stopped!')
+            exit(1)
 
     # start a new experiment
     print_normal('Starting experiment...')
@@ -328,7 +357,10 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
-    web_ui_url_list = get_local_urls(args.port)
+    if experiment_config.get('nniManagerIp'):
+        web_ui_url_list = ['{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
+    else:
+        web_ui_url_list = get_local_urls(args.port)
     nni_config.set_config('webuiUrl', web_ui_url_list)
     
     #save experiment information

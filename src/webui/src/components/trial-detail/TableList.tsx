@@ -6,6 +6,7 @@ import { Row, Table, Button, Popconfirm, Modal, message } from 'antd';
 import { MANAGER_IP, trialJobStatus } from '../../static/const';
 import { convertDuration } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
+import LogPath from '../logPath/LogPath';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
 require('../../static/style/search.scss');
@@ -98,7 +99,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 data: sequence
             },
             yAxis: {
-                name: 'Accuracy',
+                name: 'Default Metric',
                 type: 'value',
                 data: intermediateArr
             },
@@ -130,7 +131,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
             })
             .catch(error => {
                 if (error.response.status === 500) {
-                    message.error('500 error, fail to cancel the job');
+                    if (error.response.data.error) {
+                        message.error(error.response.data.error);
+                    } else {
+                        message.error('500 error, fail to cancel the job');
+                    }
                 }
             });
     }
@@ -161,7 +166,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             key: 'sequenceId',
             width: 120,
             className: 'tableHead',
-            sorter: (a: TableObj, b: TableObj) => (a.sequenceId as number) - (b.sequenceId as number),
+            sorter: (a: TableObj, b: TableObj) => (a.sequenceId as number) - (b.sequenceId as number)
         }, {
             title: 'Id',
             dataIndex: 'id',
@@ -233,7 +238,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     :
                                     record.acc
                                 :
-                                'NaN'
+                                '--'
                         }
                     </div>
                 );
@@ -256,7 +261,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         ?
                         (
                             <Popconfirm
-                                title="Are you sure to delete this trial?"
+                                title="Are you sure to cancel this trial?"
                                 onConfirm={this.killJob.bind(this, record.key, record.id, record.status)}
                             >
                                 <Button type="primary" className="tableButton">Kill</Button>
@@ -301,11 +306,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const parametersRow = {
                 parameters: record.description.parameters
             };
-            let isLogLink: boolean = false;
-            const logPathRow = record.description.logPath;
-            if (record.description.isLink !== undefined) {
-                isLogLink = true;
-            }
+            const logPathRow = record.description.logPath !== undefined
+                ?
+                record.description.logPath
+                :
+                'This trial\'s logPath are not available.';
             return (
                 <pre id="allList" className="hyperpar">
                     {
@@ -323,19 +328,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 <span className="error">'This trial's parameters are not available.'</span>
                             </div>
                     }
-                    {
-                        isLogLink
-                            ?
-                            <div className="logpath">
-                                <span className="logName">logPath: </span>
-                                <a className="logContent logHref" href={logPathRow} target="_blank">{logPathRow}</a>
-                            </div>
-                            :
-                            <div className="logpath">
-                                <span className="logName">logPath: </span>
-                                <span className="logContent">{logPathRow}</span>
-                            </div>
-                    }
+                    <LogPath logStr={logPathRow}/>
                 </pre>
             );
         };

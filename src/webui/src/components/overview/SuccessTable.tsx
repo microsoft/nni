@@ -4,6 +4,7 @@ import { Table } from 'antd';
 import { TableObj } from '../../static/interface';
 import { convertDuration } from '../../static/function';
 import '../../static/style/tableStatus.css';
+import LogPath from '../logPath/LogPath';
 
 interface SuccessTableProps {
     tableSource: Array<TableObj>;
@@ -42,6 +43,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             dataIndex: 'duration',
             key: 'duration',
             width: 140,
+            sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
             render: (text: string, record: TableObj) => {
                 let duration;
                 if (record.duration) {
@@ -69,6 +71,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             title: 'Default Metric',
             dataIndex: 'acc',
             key: 'acc',
+            sorter: (a: TableObj, b: TableObj) => (a.acc as number) - (b.acc as number),
             render: (text: string, record: TableObj) => {
                 const accuracy = record.acc;
                 let wei = 0;
@@ -88,7 +91,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                                     :
                                     record.acc
                                 :
-                                'NaN'
+                                '--'
                         }
                     </div>
                 );
@@ -104,11 +107,11 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             const openRowDataSource = {
                 parameters: record.description.parameters
             };
-            let isLogLink: boolean = false;
-            const logPathRow = record.description.logPath;
-            if (record.description.isLink !== undefined) {
-                isLogLink = true;
-            }
+            const logPathRow = record.description.logPath !== undefined
+                ?
+                record.description.logPath
+                :
+                'This trial\'s logPath are not available.';
             return (
                 <pre id="description" className="hyperpar">
                     {
@@ -126,19 +129,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                                 <span className="error">'This trial's parameters are not available.'</span>
                             </div>
                     }
-                    {
-                        isLogLink
-                            ?
-                            <div className="logpath">
-                                <span className="logName">logPath: </span>
-                                <a className="logContent logHref" href={logPathRow} target="_blank">{logPathRow}</a>
-                            </div>
-                            :
-                            <div className="logpath">
-                                <span className="logName">logPath: </span>
-                                <span className="logContent">{logPathRow}</span>
-                            </div>
-                    }
+                    <LogPath logStr={logPathRow}/>
                 </pre>
             );
         };

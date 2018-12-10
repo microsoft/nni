@@ -1,7 +1,16 @@
 import setuptools
+import platform
 from os import walk, path
 
-data_files = [('bin', ['node-linux-x64/bin/node'])]
+os_type = platform.system()
+if os_type == 'Linux':
+    os_name = 'POSIX :: Linux'
+elif os_type == 'Darwin':
+    os_name = 'MacOS'
+else:
+    raise NotImplementedError('current platform {} not supported'.format(os_type))
+
+data_files = [('bin', ['node-{}-x64/bin/node'.format(os_type.lower())])]
 for (dirpath, dirnames, filenames) in walk('./nni'):
     files = [path.normpath(path.join(dirpath, filename)) for filename in filenames]
     data_files.append((path.normpath(dirpath), files))
@@ -11,7 +20,7 @@ with open('../../README.md', 'r') as fh:
 
 setuptools.setup(
     name = 'nni',
-    version = '0.3.4',
+    version = '0.4',
     author = 'Microsoft NNI team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence package',
@@ -38,7 +47,7 @@ setuptools.setup(
     classifiers = [
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
-        'Operating System :: POSIX :: Linux'
+        'Operating System :: ' + os_name
     ],
     data_files = data_files,
     entry_points = {

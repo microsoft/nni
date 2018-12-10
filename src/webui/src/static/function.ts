@@ -1,3 +1,5 @@
+import { FinalResult } from './interface';
+
 export const convertTime = (num: number) => {
     if (num % 3600 === 0) {
         return num / 3600 + 'h';
@@ -22,5 +24,24 @@ export const convertDuration = (num: number) => {
         return `${min}min ${second}s`;
     } else {
         return result;
+    }
+};
+
+// get final result value
+export const getFinalResult = (final: FinalResult) => {
+    let acc;
+    let showDefault = 0;
+    if (final) {
+        acc = JSON.parse(final[0].data);
+        if (typeof (acc) === 'object') {
+            if (acc.default) {
+                showDefault = acc.default;
+            }
+        } else {
+            showDefault = acc;
+        }
+        return showDefault;
+    } else {
+        return 0;
     }
 };

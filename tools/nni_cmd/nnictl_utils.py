@@ -31,9 +31,24 @@ from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMEN
 import time
 from .common_utils import print_normal, print_error, print_warning, detect_process
 
+def update_experiment_status():
+    '''Update the experiment status in config file'''
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    if not experiment_dict:
+        return None
+    for key in experiment_dict.keys():
+        if isinstance(experiment_dict[key], dict):
+            if experiment_dict[key].get('status') == 'running':
+                nni_config = Config(experiment_dict[key]['fileName'])
+                rest_pid = nni_config.get_config('restServerPid')
+                if not detect_process(rest_pid):
+                    experiment_config.update_experiment(key, 'status', 'stopped')
+
 def check_experiment_id(args):
     '''check if the id is valid
     '''
+    update_experiment_status()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
@@ -76,6 +91,7 @@ def parse_ids(args):
     5.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
     6.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
     '''
+    update_experiment_status()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
@@ -175,23 +191,6 @@ def stop_experiment(args):
             nni_config = Config(experiment_dict[experiment_id]['fileName'])
             rest_port = nni_config.get_config('restServerPort')
             rest_pid = nni_config.get_config('restServerPid')
-            if not detect_process(rest_pid):
-                print_normal('Experiment is not running...')
-                experiment_config.update_experiment(experiment_id, 'status', 'stopped')
-                return
-            running, _ = check_rest_server_quick(rest_port)
-            stop_rest_result = True
-            if running:
-                response = rest_delete(experiment_url(rest_port), 20)
-                if not response or not check_response(response):
-                    if response:
-                        print_error(response.text)
-                    else:
-                        print_error('No response from restful server!')
-                    stop_rest_result = False
-            #sleep to wait rest handler done
-            time.sleep(3)
-            rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
                 stop_rest_cmds = ['kill', str(rest_pid)]
                 call(stop_rest_cmds)
@@ -204,8 +203,7 @@ def stop_experiment(args):
                         except Exception as exception:
                             print_error(exception)
                     nni_config.set_config('tensorboardPidList', [])
-            if stop_rest_result:
-                print_normal('Stop experiment success!')
+            print_normal('Stop experiment success!')
             experiment_config.update_experiment(experiment_id, 'status', 'stopped')
             time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
             experiment_config.update_experiment(experiment_id, 'endTime', str(time_now))

@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { Experiment  } from '../../static/interface';
+import { Experiment } from '../../static/interface';
+import MonacoEditor from 'react-monaco-editor';
+import { MONACO } from '../../static/const';
 
 interface TrialInfoProps {
     tiralProInfo: Experiment;
@@ -20,13 +22,19 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
             trialConcurrency: tiralProInfo.runConcurren,
             tuner: tiralProInfo.tuner,
             assessor: tiralProInfo.assessor ? tiralProInfo.assessor : undefined,
+            advisor: tiralProInfo.advisor ? tiralProInfo.advisor : undefined,
             clusterMetaData: tiralProInfo.clusterMetaData ? tiralProInfo.clusterMetaData : undefined
         });
         return (
             <div className="profile">
-                <pre>
-                    {JSON.stringify(showProInfo[0], null, 4)}
-                </pre>
+                <MonacoEditor
+                    width="100%"
+                    height="386"
+                    language="json"
+                    theme="vs-light"
+                    value={JSON.stringify(showProInfo[0], null, 2)}
+                    options={MONACO}
+                />
             </div>
         );
     }

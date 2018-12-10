@@ -14,7 +14,6 @@ interface ErrorParameter {
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
-    isLink?: boolean;
 }
 
 interface Experiment {
@@ -32,6 +31,7 @@ interface Experiment {
     trainingServicePlatform: string;
     tuner: object;
     assessor?: object;
+    advisor?: object;
     clusterMetaData?: object;
 }
 
@@ -39,6 +39,16 @@ interface Experiment {
 interface AccurPoint {
     acc: number;
     index: number;
+}
+
+interface DetailAccurPoint {
+    acc: number;
+    index: number;
+    searchSpace: string;
+}
+
+interface TooltipForAccuracy {
+    data: Array<number | object>;
 }
 
 interface TrialNumber {
@@ -65,10 +75,6 @@ interface Dimobj {
     data?: string[];
 }
 
-interface HoverName {
-    name: string;
-}
-
 interface ParaObj {
     data: number[][];
     parallelAxis: Array<Dimobj>;
@@ -79,7 +85,13 @@ interface VisualMapValue {
     minAccuracy: number;
 }
 
-export {TableObj, Parameters, Experiment, 
+interface FinalResult {
+    data: string;
+}
+
+export {
+    TableObj, Parameters, Experiment, 
     AccurPoint, TrialNumber, TrialJob,
-    HoverName, ParaObj, VisualMapValue, Dimobj
+    DetailAccurPoint, TooltipForAccuracy,
+    ParaObj, VisualMapValue, Dimobj, FinalResult
 };

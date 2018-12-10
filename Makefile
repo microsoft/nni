@@ -23,7 +23,7 @@ endif
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
     ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
-    BASH_COMP_SCRIPT ?= /usr/share/bash-completion/completions/nnictl
+    BASH_COMP_PREFIX ?= /usr/share/bash-completion/completions
 else  # is normal user
     ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getusersitepackages()).parents[2])')
     ifndef VIRTUAL_ENV
@@ -135,7 +135,7 @@ clean:
 
 $(NNI_NODE_TARBALL):
 	#$(_INFO) Downloading Node.js $(_END)
-	wget https://aka.ms/nodejs-download -O $(NNI_NODE_TARBALL)
+	wget https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(NNI_NODE_TARBALL)
 
 $(NNI_YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
@@ -191,7 +191,8 @@ dev-install-node-modules:
 
 .PHONY: install-scripts
 install-scripts:
-	install -Dm644 tools/bash-completion $(BASH_COMP_SCRIPT)
+	mkdir -p $(BASH_COMP_PREFIX)
+	install -m644 tools/bash-completion $(BASH_COMP_SCRIPT)
 
 .PHONY: update-bash-config
 ifndef _ROOT

@@ -28,5 +28,7 @@ export enum TrialConfigMetadataKey {
     EXPERIMENT_ID = 'experimentId',
     MULTI_PHASE = 'multiPhase',
     RANDOM_SCHEDULER = 'random_scheduler',
-    PAI_CLUSTER_CONFIG = 'pai_config'
+    PAI_CLUSTER_CONFIG = 'pai_config',
+    KUBEFLOW_CLUSTER_CONFIG = 'kubeflow_config',
+    NNI_MANAGER_IP = 'nni_manager_ip'
 }
