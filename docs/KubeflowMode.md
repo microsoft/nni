@@ -5,7 +5,7 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
 ## Prerequisite for on-premises Kubernetes Service
 1. A **Kubernetes** cluster using Kubernetes 1.8 or later. Follow this [guideline](https://kubernetes.io/docs/setup/) to set up Kubernetes
 2. Download, set up, and deploy **Kubelow** to your Kubernetes cluster. Follow this [guideline](https://www.kubeflow.org/docs/started/getting-started/) to set up Kubeflow
-3. Install **kubectl**, and configure to connect to your Kubernetes API server.
+3. Install **kubectl**, and configure to connect to your Kubernetes API server. Follow this [guideline](https://kubernetes.io/docs/tasks/tools/install-kubectl/) to install kubectl on Ubuntu
 4. If your NNI trial job needs GPU resource, you should follow this [guideline](https://github.com/NVIDIA/k8s-device-plugin) to configure **Nvidia device plugin for Kubernetes**.
 5. Install **NFS server** and export a general purpose mount (we recommend to map your NFS server path in `root_squash option`, otherwise permission issue may raise when nni copy files to NFS. Refer this [page](https://linux.die.net/man/5/exports) to learn what root_squash option is), or **Azure File Storage**. 
 6. Install **NFS client** on the machine where you install NNI and run nnictl to create experiment. Run this command to install NFSv4 client:
@@ -63,6 +63,7 @@ trial:
     image: {your_docker_image_for_tensorflow_worker}
 kubeflowConfig:
   operator: tf-operator
+  storage: nfs
   nfs:
     server: {your_nfs_server}
     path: {your_nfs_server_exported_path}
@@ -71,6 +72,7 @@ If you use Azure Kubernetes Service, you should  set `kubeflowConfig` in your co
 ```
 kubeflowConfig:
   operator: tf-operator
+  storage: azureStorage
   keyVault:
     vaultName: {your_vault_name}
     name: {your_secert_name}

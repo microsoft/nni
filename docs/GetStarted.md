@@ -87,9 +87,9 @@ You can refer to [here](NNICTLDOC.md) for more usage guide of *nnictl* command l
 The experiment has been running now, NNI provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features. The WebUI is opened by default by `nnictl create`.
 
 ## Read more
-* [Tuners supported in the latest NNI release](../src/sdk/pynni/nni/README.md)
+* [Tuners supported in the latest NNI release](./HowToChooseTuner.md)
 * [Overview](Overview.md)
-* [Installation](InstallNNI_Ubuntu.md)
+* [Installation](Installation.md)
 * [Use command line tool nnictl](NNICTLDOC.md)
 * [Use NNIBoard](WebUI.md)
 * [Define search space](SearchSpaceSpec.md)
