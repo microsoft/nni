@@ -170,10 +170,10 @@ class Overview extends React.Component<{}, OverviewState> {
                     }
                 }
             });
-
     }
 
     showTrials = () => {
+        this.isOffInterval();
         axios(`${MANAGER_IP}/trial-jobs`, {
             method: 'GET'
         })
@@ -253,6 +253,7 @@ class Overview extends React.Component<{}, OverviewState> {
                             trialNumber: profile
                         });
                     }
+                    this.checkStatus();
                     // draw accuracy
                     this.drawPointGraph();
                 }
@@ -371,6 +372,19 @@ class Overview extends React.Component<{}, OverviewState> {
         });
     }
 
+    isOffInterval = () => {
+        const { status } = this.state;
+        switch (status) {
+            case 'DONE':
+            case 'ERROR':
+            case 'STOPPED':
+                window.clearInterval(this.intervalID);
+                window.clearInterval(this.intervalProfile);
+                break;
+            default:
+        }
+    }
+    
     componentDidMount() {
         this._isMounted = true;
         this.showSessionPro();
