@@ -20,31 +20,35 @@
 'use strict';
 
 /** operator types that kubeflow supported */
-export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' | 'mxnet-operator' | 'caffe2-operator' | 'chainer-operator' | 'mpi-operator';
-export type KubeflowOperatorPlural = 'tfjobs' | 'pytorchjobs' | 'mxjobs' | 'caffe2jobs' | 'chainerjobs' | 'mpijobs';
+export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
+export type KubeflowOperatorPlural = 'tfjobs' | 'pytorchjobs' ;
+export type KubeflowOperatorJobKind = 'TFJob' | 'PyTorchJob';
+export type KubeflowStorageKind = 'nfs' | 'azureStorage';
 
 /**
  * map from Kubeflow operator name to its plural name in K8S
  */
 export const kubeflowOperatorMap : Map<KubeflowOperator, KubeflowOperatorPlural> =  new Map<KubeflowOperator, KubeflowOperatorPlural>([
     ['tf-operator' , 'tfjobs'],
-    ['pytorch-operator', 'pytorchjobs'],
-    ['mxnet-operator', 'mxjobs'],
-    ['caffe2-operator', 'caffe2jobs'],
-    ['chainer-operator', 'chainerjobs'],
-    ['mpi-operator', 'mpijobs']    
+    ['pytorch-operator', 'pytorchjobs'] 
+]);
+
+/**
+ * map from Kubeflow operator name to its job kind name in K8S
+ */
+export const kubeflowOperatorJobKindMap : Map<KubeflowOperator, KubeflowOperatorJobKind> =  new Map<KubeflowOperator, KubeflowOperatorJobKind>([
+    ['tf-operator' , 'TFJob'],
+    ['pytorch-operator', 'PyTorchJob']
 ]);
 
 /**
  * Kuberflow cluster configuration
  * 
  */
-export class KubeflowClusterConfig {
+export class KubeflowClusterConfigBase {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
-    public readonly nfs?: NFSConfig;
-    public readonly keyVault?: keyVaultConfig;
-    public readonly azureStorage?: AzureStorage;
+    public readonly storage?: KubeflowStorageKind;
     
     /**
      * Constructor
@@ -52,9 +56,27 @@ export class KubeflowClusterConfig {
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator, nfs?: NFSConfig, keyVault?: keyVaultConfig, azureStorage ?: AzureStorage) {
+    constructor(operator: KubeflowOperator, storage?: KubeflowStorageKind) {
         this.operator = operator;
-        this.nfs = nfs;        
+        this.storage = storage;
+    }
+}
+
+export class KubeflowClusterConfigNFS extends KubeflowClusterConfigBase{
+    public readonly nfs: NFSConfig;
+    
+    constructor(operator: KubeflowOperator, nfs: NFSConfig, storage?: KubeflowStorageKind) {
+        super(operator, storage)
+        this.nfs = nfs;
+    }
+}
+
+export class KubeflowClusterConfigAzure extends KubeflowClusterConfigBase{
+    public readonly keyVault: keyVaultConfig;
+    public readonly azureStorage: AzureStorage;
+    
+    constructor(operator: KubeflowOperator, keyVault: keyVaultConfig, azureStorage: AzureStorage, storage?: KubeflowStorageKind) {
+        super(operator, storage)
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
     }
@@ -139,15 +161,33 @@ export class KubeflowTrialConfigTemplate {
     }
 }
 
-export class KubeflowTrialConfig {
+export class KubeflowTrialConfigBase {
     public readonly codeDir: string;
+
+    constructor(codeDir: string) {
+        this.codeDir = codeDir;
+    }
+}
+
+export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfigBase{
     public readonly ps?: KubeflowTrialConfigTemplate;
     public readonly worker: KubeflowTrialConfigTemplate;
 
-    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate, ps?: KubeflowTrialConfigTemplate) {
-        this.codeDir = codeDir;
-        this.worker = worker;
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  ps?: KubeflowTrialConfigTemplate) {
+        super(codeDir);
         this.ps = ps;
+        this.worker = worker;
+    }
+}
+
+export class KubeflowTrialConfigPytorch extends KubeflowTrialConfigBase{
+    public readonly master?: KubeflowTrialConfigTemplate;
+    public readonly worker: KubeflowTrialConfigTemplate;
+
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  master?: KubeflowTrialConfigTemplate) {
+        super(codeDir);
+        this.master = master;
+        this.worker = worker;
     }
 }
 

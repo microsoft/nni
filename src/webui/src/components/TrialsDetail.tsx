@@ -201,14 +201,13 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     }
 
     // search a specific trial by trial No.
-    searchTrialNo = (value: string) => {
-
+    searchTrial = (value: string) => {
         window.clearInterval(this.interTableList);
         const { tableBaseSource } = this.state;
         const searchResultList: Array<TableObj> = [];
         Object.keys(tableBaseSource).map(key => {
             const item = tableBaseSource[key];
-            if (item.sequenceId.toString() === value) {
+            if (item.sequenceId.toString() === value || item.id.includes(value)) {
                 searchResultList.push(item);
             }
         });
@@ -285,8 +284,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     </Col>
                     <Col span={12} className="btns">
                         <Search
-                            placeholder="input search Trial No."
-                            onSearch={value => this.searchTrialNo(value)}
+                            placeholder="search by Trial No. and id"
+                            onSearch={value => this.searchTrial(value)}
                             style={{ width: 200 }}
                             id="searchTrial"
                         />
