@@ -96,4 +96,27 @@ class TFOperatorClient extends KubeflowOperatorClient {
     }
 }
 
-export { KubeflowOperatorClient, TFOperatorClient }
+class PytorchOperatorClient extends KubeflowOperatorClient {
+    /**
+     * constructor, to initialize tfjob CRD definition
+     */
+    public constructor() {
+        super();
+        this.client.addCustomResourceDefinition(tfjobCRDv1alpha2);
+    }
+
+    public async createKubeflowJob(jobManifest: any): Promise<boolean> {
+        return Promise.resolve(false);
+    }
+
+    //TODO : replace any
+    public async getKubeflowJob(kubeflowJobName: string): Promise<any> {
+        return Promise.resolve({});
+    }
+
+    public async deleteKubeflowJob(labels: Map<string, string>): Promise<boolean> {
+        return Promise.resolve(false);
+    }
+}
+
+export { KubeflowOperatorClient, PytorchOperatorClient, TFOperatorClient }

@@ -44,6 +44,7 @@ import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 import { validateCodeDir } from '../common/util';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import * as azureStorage from 'azure-storage';
+import { KubeflowOperatorClient, PytorchOperatorClient, TFOperatorClient } from './kubernetesApiClient';
 
 var yaml = require('node-yaml');
 var azure = require('azure-storage');
@@ -71,6 +72,7 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowRestServerPort?: number;
     private kubeflowJobPlural?: string;
     private kubeflowJobKind?: string;
+    private operatorClient?: KubeflowOperatorClient;
     private readonly CONTAINER_MOUNT_PATH: string;
     private azureStorageClient?: azureStorage.FileService;
     private azureStorageShare?: string;
@@ -96,7 +98,7 @@ class KubeflowTrainingService implements TrainingService {
         while (!this.stopping) {
             // collect metrics by calling 'kubectl get' command on Kubeflow jobs 
             await delay(3000);
-            await this.kubeflowJobInfoCollector.retrieveTrialStatus();            
+            await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.operatorClient);
         }
     }
 
@@ -345,7 +347,7 @@ class KubeflowTrainingService implements TrainingService {
                     const valutKeyName = azureKubeflowClusterConfig.keyVault.name;
                     this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
                     this.azureStorageShare = azureKubeflowClusterConfig.azureStorage.azureShare;
-                    try{
+                    try {
                         const result = await cpp.exec(`az keyvault secret show --name ${valutKeyName} --vault-name ${vaultName}`);
                         if(result.stderr) {
                             const errorMessage: string = result.stderr;
@@ -361,7 +363,7 @@ class KubeflowTrainingService implements TrainingService {
                         await cpp.exec(`kubectl create secret generic ${this.azureStorageSecretName} `
                         + `--from-literal=azurestorageaccountname=${this.azureStorageAccountName} `
                         + `--from-literal=azurestorageaccountkey=${storageAccountKey}`)
-                    }catch(error) {
+                    } catch(error) {
                         this.log.error(error);
                         throw new Error(error);
                     }
@@ -390,6 +392,13 @@ class KubeflowTrainingService implements TrainingService {
 
                 this.kubeflowJobPlural = kubeflowOperatorMap.get(this.kubeflowClusterConfig.operator);
                 this.kubeflowJobKind = kubeflowOperatorJobKindMap.get(this.kubeflowClusterConfig.operator)
+
+                if(this.kubeflowClusterConfig.operator === 'tf-operator') {
+                    this.operatorClient = new TFOperatorClient();
+                } else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
+                    this.operatorClient = new PytorchOperatorClient();
+                }
+
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
