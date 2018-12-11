@@ -50,14 +50,14 @@ id =  8  Predict y =  0.6708587832073503
 id =  9  Predict y =  0.5603008498036938
 id =  10  Predict y =  0.11109919129610249
 
-Add k Output:
-id =  1  Predict y =  0.5249103542128244    Actual y = 0.9632
-id =  2  Predict y =  0.8049103542128243    Actual y = 0.9957
-id =  3  Predict y =  0.8049103542128243    Actual y = 0.9935
-id =  4  Predict y =  0.524910331558036     Actual y = 0.9983
-id =  5  Predict y =  0.5249103542128243    Actual y = 0.1135
-id =  6  Predict y =  0.28327435397833717   Actual y = 0.0980
-id =  7  Predict y =  0.4449103542128244    Actual y = 0.07375
-id =  8  Predict y =  0.7649103542128244    Actual y = 0.961800
-id =  9  Predict y =  0.7192213115559152    Actual y = 0.9396
-id =  10  Predict y =  0.12327435397833716  Actual y = 0.0982
+Add k Output:                             rank   Expect                           rank       result
+id =  1  Predict y =  0.5249103542128244   7      Good      Actual y = 0.9632      4           Good
+id =  2  Predict y =  0.8049103542128243   1      Good      Actual y = 0.9957      2           Good
+id =  3  Predict y =  0.8049103542128243   2      Good      Actual y = 0.9935      3           Good
+id =  4  Predict y =  0.524910331558036    6      Bad       Actual y = 0.9983      1           Good
+id =  5  Predict y =  0.5249103542128243   5      Bad       Actual y = 0.1135      7           Bad
+id =  6  Predict y =  0.28327435397833717  9      Bad       Actual y = 0.0980      9           Bad
+id =  7  Predict y =  0.4449103542128244   8      Bad       Actual y = 0.07375     10          Bad
+id =  8  Predict y =  0.7649103542128244   3      Good/Bad  Actual y = 0.961800    5           Good/Bad
+id =  9  Predict y =  0.7192213115559152   4      Good/Bad  Actual y = 0.9396      6           Good/Bad
+id =  10  Predict y =  0.12327435397833716 10     Bad       Actual y = 0.0982      8           Bad
