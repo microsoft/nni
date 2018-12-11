@@ -8,6 +8,9 @@ import nni
 
 def generate_rand_file(fl_name):
     fl_size = random.randint(1024, 102400)
+    fl_dir = os.path.split(fl_name)[0]
+    if not os.path.exists(fl_dir):
+        os.makedirs(fl_dir)
     with open(fl_name, 'wb') as fout:
         fout.write(os.urandom(fl_size))
 
@@ -24,10 +27,11 @@ def check_sum(fl_name, id=None):
 
 
 if __name__ == '__main__':
-    nfs_path = '/mount/nfs/shared'
-    params = nni.get_parameters()
+    nfs_path = '/mnt/nfs/nni'
+    params = nni.get_next_parameter()
+    print(params)
     if params['prev_id'] == 0:
-        model_file = os.path.join(nfs_path, str(params['id'], 'model.dat'))
+        model_file = os.path.join(nfs_path, str(params['id']), 'model.dat')
         time.sleep(10)
         generate_rand_file(model_file)
         nni.report_final_result({
