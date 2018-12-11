@@ -21,7 +21,7 @@
 import os
 import json
 from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA
-from .common_utils import get_json_content, print_error
+from .common_utils import get_json_content, print_error, print_warning
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -31,7 +31,9 @@ def expand_path(experiment_config, key):
 def parse_relative_path(root_path, experiment_config, key):
     '''Change relative path to absolute path'''
     if experiment_config.get(key) and not os.path.isabs(experiment_config.get(key)):
-        experiment_config[key] = os.path.join(root_path, experiment_config.get(key))
+        absolute_path = os.path.join(root_path, experiment_config.get(key))
+        print_warning('expand %s: %s to %s ' % (key, experiment_config[key], absolute_path))
+        experiment_config[key] = absolute_path
 
 def parse_time(experiment_config):
     '''Parse time format'''
@@ -82,7 +84,33 @@ def validate_search_space_content(experiment_config):
                 print_error('please use _type and _value to specify searchspace!')
                 exit(1)
     except:
-        raise Exception('searchspace file is not a valid json format!')
+        print_error('searchspace file is not a valid json format!')
+        exit(1)
+
+def validate_kubeflow_operators(experiment_config):
+    '''Validate whether the kubeflow operators are valid'''
+    if experiment_config.get('kubeflowConfig'):
+        if experiment_config.get('kubeflowConfig').get('operator') == 'tf-operator':
+            if experiment_config.get('trial').get('master') is not None:
+                print_error('kubeflow with tf-operator can not set master')
+                exit(1)
+        elif experiment_config.get('kubeflowConfig').get('operator') == 'pytorch-operator':
+            if experiment_config.get('trial').get('ps') is not None:
+                print_error('kubeflow with pytorch-operator can not set ps')
+                exit(1)
+        
+        if experiment_config.get('kubeflowConfig').get('storage') == 'nfs':
+            if experiment_config.get('kubeflowConfig').get('nfs') is None:
+                print_error('please set nfs configuration!')
+                exit(1)
+        elif experiment_config.get('kubeflowConfig').get('storage') == 'azureStorage':
+            if experiment_config.get('kubeflowConfig').get('azureStorage') is None:
+                print_error('please set azureStorage configuration!')
+                exit(1)
+        elif experiment_config.get('kubeflowConfig').get('storage') is None:
+            if experiment_config.get('kubeflowConfig').get('azureStorage'):
+                print_error('please set storage type!')
+                exit(1)
 
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
@@ -165,7 +193,7 @@ def validate_annotation_content(experiment_config, spec_key, builtin_name):
         # validate searchSpaceFile
         if experiment_config[spec_key].get(builtin_name):
             if experiment_config.get('searchSpacePath') is None:
-                print_error('Please set searchSpace!')
+                print_error('Please set searchSpacePath!')
                 exit(1)
             validate_search_space_content(experiment_config)
 
