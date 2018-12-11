@@ -76,6 +76,7 @@ def parse_nni_variable(code):
     name_str = astor.to_source(name).strip()
     keyword_arg = ast.keyword(arg='name', value=ast.Str(s=name_str))
     arg.keywords.append(keyword_arg)
+    add_keyword(arg)
 
     return name, arg
 
@@ -93,6 +94,19 @@ def parse_nni_function(code):
     call.keywords[0].value = ast.Str(s=name_str)
 
     return call, funcs
+
+def add_keyword(call):
+    """Add a key to every arg such that the key is the same as the value of args prefixed by '_'.
+    Return the AST Call node with keywords and no args
+    """
+    for arg in call.args:
+        arg_value = astor.to_source(arg).strip()
+        arg_key = "_" + arg_value
+        keyword_arg = ast.keyword(arg=arg_key, value=type(arg)(arg_value))
+        arg.keywords.append(keyword_arg)
+    del call.args[:]
+
+    return call
 
 
 def make_lambda(call):

@@ -66,23 +66,23 @@ class SearchSpaceGenerator(ast.NodeVisitor):
 
         self.last_line = node.lineno
 
-        if node.keywords:
+        keys = [keyword.arg for keyword in node.keywords]
+        if 'name' in keys:
             # there is a `name` argument
-            assert len(node.keywords) == 1, 'Smart parameter has keyword argument other than "name"'
-            assert node.keywords[0].arg == 'name', 'Smart paramater\'s keyword argument is not "name"'
-            assert type(node.keywords[0].value) is ast.Str, 'Smart parameter\'s name must be string literal'
-            name = node.keywords[0].value.s
+            name_index = keys.index('name')
+            assert type(node.keywords[name_index].value) is ast.Str, 'Smart parameter\'s name must be string literal'
+            name = node.keywords[name_index].value.s
             specified_name = True
+            keys.remove('name')
         else:
             # generate the missing name automatically
-            assert len(node.args) > 0, 'Smart parameter expression has no argument'
-            name = '__line' + str(node.args[-1].lineno)
+            #assert len(node.args) > 0, 'Smart parameter expression has no argument'
+            name = '__line' + str(node.lineno)
             specified_name = False
 
         if func in ('choice', 'function_choice'):
-            # arguments of `choice` may contain complex expression,
-            # so use indices instead of arguments
-            args = list(range(len(node.args)))
+            # we will use the key as the choices
+            args = [x[1:] for x in keys]
         else:
             # arguments of other functions must be literal number
             assert all(type(arg) is ast.Num for arg in node.args), 'Smart parameter\'s arguments must be number literals'
