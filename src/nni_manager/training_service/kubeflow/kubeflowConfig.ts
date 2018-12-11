@@ -1,5 +1,3 @@
-import { TrialConfig } from "../common/trialConfig";
-
 /**
  * Copyright (c) Microsoft Corporation
  * All rights reserved.
@@ -20,7 +18,6 @@ import { TrialConfig } from "../common/trialConfig";
  */
 
 'use strict';
-
 
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' | 'mxnet-operator' | 'caffe2-operator' | 'chainer-operator' | 'mpi-operator';
