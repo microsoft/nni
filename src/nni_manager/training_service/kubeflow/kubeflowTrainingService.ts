@@ -205,8 +205,13 @@ class KubeflowTrainingService implements TrainingService {
         );
         let trialJobDetail: KubeflowTrialJobDetail;
         //The url used in trialJobDetail
-        let trialJobDetailUrl: string;
-        if(this.kubeflowClusterConfig.storage && this.kubeflowClusterConfig.storage === 'azureStorage') {
+        let trialJobDetailUrl: string = '';
+
+        assert(!this.kubeflowClusterConfig.storage 
+            || this.kubeflowClusterConfig.storage === 'azureStorage' 
+            || this.kubeflowClusterConfig.storage === 'nfs');
+
+        if(this.kubeflowClusterConfig.storage === 'azureStorage') {
             try{
                 //upload local files to azure storage
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient, 
@@ -217,7 +222,7 @@ class KubeflowTrainingService implements TrainingService {
                 this.log.error(error);
                 return Promise.reject(error);
             }
-        } else if(this.kubeflowClusterConfig.storage && (this.kubeflowClusterConfig.storage === 'nfs' || this.kubeflowClusterConfig.storage === undefined)) {
+        } else if(this.kubeflowClusterConfig.storage === 'nfs' || this.kubeflowClusterConfig.storage === undefined) {
             let nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
             // Creat work dir for current trial in NFS directory 
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
@@ -226,10 +231,6 @@ class KubeflowTrainingService implements TrainingService {
         
             const nfsConfig: NFSConfig = nfsKubeflowClusterConfig.nfs;
             trialJobDetailUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`
-        } else {
-            const error: string = `kubeflowClusterConfig format error!`;
-            this.log.error(error);
-            throw new Error(error);
         }
 
         trialJobDetail = new KubeflowTrialJobDetail(
