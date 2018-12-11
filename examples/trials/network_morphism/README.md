@@ -47,7 +47,7 @@ tuner:
     n_output_node: 10
 trial:
   # your own command here
-  command: python cifar10/cifar10-pytorch.py
+  command: python cifar10/cifar10_pytorch.py
   codeDir: .
   gpuNum: 0
 ```

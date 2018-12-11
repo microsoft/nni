@@ -24,7 +24,6 @@ from copy import deepcopy, copy
 from queue import Queue
 
 import numpy as np
-import onnx
 import torch
 
 from nni.networkmorphism_tuner.layer_transformer import (
@@ -903,6 +902,7 @@ class JSONModel:
 
 
 def graph_to_onnx(graph, onnx_model_path):
+    import onnx
     # to do in the future using onnx ir
     onnx_out = graph.produce_onnx_model()
     onnx.save(onnx_out, onnx_model_path)
@@ -910,6 +910,7 @@ def graph_to_onnx(graph, onnx_model_path):
 
 
 def onnx_to_graph(onnx_model, input_shape):
+    import onnx
     # to do in the future using onnx ir
     graph = Graph(input_shape, False)
     graph.parsing_onnx_model(onnx_model)

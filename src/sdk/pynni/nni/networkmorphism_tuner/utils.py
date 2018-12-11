@@ -35,7 +35,7 @@ class Constant:
     MAX_LAYERS = 100
     N_NEIGHBOURS = 8
     MAX_MODEL_SIZE = 1 << 24
-    KERNEL_LAMBDA = 0.1
+    KERNEL_LAMBDA = 1.0
     BETA = 2.576
     MLP_MODEL_LEN = 3
     MLP_MODEL_WIDTH = 5
