@@ -31,9 +31,24 @@ from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMEN
 import time
 from .common_utils import print_normal, print_error, print_warning, detect_process
 
+def update_experiment_status():
+    '''Update the experiment status in config file'''
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    if not experiment_dict:
+        return None
+    for key in experiment_dict.keys():
+        if isinstance(experiment_dict[key], dict):
+            if experiment_dict[key].get('status') == 'running':
+                nni_config = Config(experiment_dict[key]['fileName'])
+                rest_pid = nni_config.get_config('restServerPid')
+                if not detect_process(rest_pid):
+                    experiment_config.update_experiment(key, 'status', 'stopped')
+
 def check_experiment_id(args):
     '''check if the id is valid
     '''
+    update_experiment_status()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
@@ -76,6 +91,7 @@ def parse_ids(args):
     5.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
     6.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
     '''
+    update_experiment_status()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
@@ -174,11 +190,6 @@ def stop_experiment(args):
             print_normal('Stoping experiment %s' % experiment_id)
             nni_config = Config(experiment_dict[experiment_id]['fileName'])
             rest_port = nni_config.get_config('restServerPort')
-            rest_pid = nni_config.get_config('restServerPid')
-            if not detect_process(rest_pid):
-                print_normal('Experiment is not running...')
-                experiment_config.update_experiment(experiment_id, 'status', 'stopped')
-                return
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
                 stop_rest_cmds = ['kill', str(rest_pid)]
