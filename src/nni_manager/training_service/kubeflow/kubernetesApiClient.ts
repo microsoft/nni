@@ -25,7 +25,7 @@ import { getLogger, Logger } from '../../common/log';
 
 var K8SClient = require('kubernetes-client').Client;
 var K8SConfig = require('kubernetes-client').config;
-var tfjobCRDv1alpha2 = require('./tfjob-crd-v1alpha2.json');
+var tfjobCRDv1alpha2 = require('./config/tfjob-crd-v1alpha2.json');
 
 abstract class KubeflowOperatorClient {
     //TODO: replace any
