@@ -19,13 +19,13 @@
 
 'use strict';
 
+import * as fs from 'fs';
 import * as os from 'os'
 import * as path from 'path';
 import { getLogger, Logger } from '../../common/log';
 
 var K8SClient = require('kubernetes-client').Client;
 var K8SConfig = require('kubernetes-client').config;
-var tfjobCRDv1alpha2 = require('./config/tfjob-crd-v1alpha2.json');
 
 abstract class KubeflowOperatorClient {
     //TODO: replace any
@@ -49,8 +49,8 @@ class TFOperatorClient extends KubeflowOperatorClient {
      * constructor, to initialize tfjob CRD definition
      */
     public constructor() {
-        super();
-        this.client.addCustomResourceDefinition(tfjobCRDv1alpha2);
+        super();        
+        this.client.addCustomResourceDefinition(JSON.parse(fs.readFileSync('./config/tfjob-crd-v1alpha2.json', 'utf8')));
     }
 
     public async createKubeflowJob(jobManifest: any): Promise<boolean> {
@@ -101,8 +101,7 @@ class PytorchOperatorClient extends KubeflowOperatorClient {
      * constructor, to initialize tfjob CRD definition
      */
     public constructor() {
-        super();
-        this.client.addCustomResourceDefinition(tfjobCRDv1alpha2);
+        super();        
     }
 
     public async createKubeflowJob(jobManifest: any): Promise<boolean> {
