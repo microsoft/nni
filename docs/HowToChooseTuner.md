@@ -192,7 +192,7 @@ _Usage_:
       input_width: 32
       #input image channel
       input_channel: 3
-      #output nums
+      #number of classes
       n_output_node: 10
 ```
 

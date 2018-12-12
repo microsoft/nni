@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 ### 3. Update configuration
 
-Modify `examples/trials/network_morphism/config.yaml` to fit your own task, note that searchSpacePath is not required in our configuration. here is the default configuration:
+Modify `examples/trials/network_morphism/cifar10/config.yaml` to fit your own task, note that searchSpacePath is not required in our configuration. Here is the default configuration:
 
 ```yaml
 authorName: default
@@ -47,7 +47,7 @@ tuner:
     n_output_node: 10
 trial:
   # your own command here
-  command: python cifar10/cifar10_pytorch.py
+  command: python cifar10_pytorch.py
   codeDir: .
   gpuNum: 0
 ```

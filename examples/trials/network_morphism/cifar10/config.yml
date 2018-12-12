@@ -24,6 +24,6 @@ tuner:
     #number of classes
     n_output_node: 10
 trial:
-  command: python cifar10/cifar10_pytorch.py
+  command: python cifar10_keras.py
   codeDir: .
   gpuNum: 1

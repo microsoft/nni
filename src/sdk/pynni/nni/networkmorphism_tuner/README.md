@@ -192,8 +192,6 @@ The definition of each model is a JSON object(also you can consider the model as
 
   - For else layers, the number follows is its node input id(or id list) and node output id.
 
-
 ## 5. TODO
 
 Next step, we will change the API from fixed network generator to more network operator generator. Besides, we will use ONNX instead of JSON later as the intermediate representation spec in the future.
-

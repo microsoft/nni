@@ -37,9 +37,10 @@ ClassName = {
     'Evolution': 'EvolutionTuner',
     'SMAC': 'SMACTuner',
     'BatchTuner': 'BatchTuner',
-    'Medianstop': 'MedianstopAssessor',
     'GridSearch': 'GridSearchTuner',
-    'NetworkMorphism':'NetworkMorphismTuner'
+    'NetworkMorphism':'NetworkMorphismTuner',
+
+    'Medianstop': 'MedianstopAssessor'
 }
 
 ClassArgs = {
