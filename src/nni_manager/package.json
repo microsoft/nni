@@ -1,6 +1,6 @@
 {
   "name": "nni",
-  "version": "1.0.0",
+  "version": "NNI_VERSION",
   "main": "index.js",
   "scripts": {
     "postbuild": "cp -rf scripts ./dist/",
