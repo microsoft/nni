@@ -77,9 +77,7 @@ def parse_nni_variable(code):
     keyword_arg = ast.keyword(arg='name', value=ast.Str(s=name_str))
     arg.keywords.append(keyword_arg)
     if arg.func.attr == 'choice':
-        add_keyword(arg)
-    print(ast.dump(arg))
-    print(astor.to_source(arg))
+        convert_args_to_dict(arg)
 
     return name, arg
 
@@ -91,11 +89,7 @@ def parse_nni_function(code):
     """
     name, call = parse_annotation_function(code, 'function_choice')
     funcs = [ast.dump(func, False) for func in call.args]
-    try:
-        add_keyword(call, with_lambda=True)
-    except:
-        print(ast.dump(call))
-        raise
+    convert_args_to_dict(call, with_lambda=True)
 
     name_str = astor.to_source(name).strip()
     call.keywords[0].value = ast.Str(s=name_str)
@@ -103,9 +97,9 @@ def parse_nni_function(code):
     return call, funcs
 
 
-def add_keyword(call, with_lambda=False):
-    """Add a key to every arg such that the key is the same as the value of the arg prefixed by '_'.
-    Return the AST Call node with keywords and no args
+def convert_args_to_dict(call, with_lambda=False):
+    """Convert all args to a dict such that every key and value in the dict is the same as the value of the arg.
+    Return the AST Call node with only one arg that is the dictionary
     """
     keys, values = list(), list()
     for arg in call.args:
