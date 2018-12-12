@@ -444,6 +444,7 @@ class Overview extends React.Component<{}, OverviewState> {
                             bestAccuracy={bestAccuracy}
                             status={status}
                             errors={errorStr}
+                            updateFile={this.showSessionPro}
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}
