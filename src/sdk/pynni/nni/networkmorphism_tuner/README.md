@@ -2,7 +2,7 @@
 
 ## 1. Intorduction
 
-[Autokeras](https://arxiv.org/abs/1806.10282) is a popular automl tools using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression estimate its metric value from history trained results of network and metric value pair. Next, it chooses the the child which has best estimated performance and adds it to the training queue. Inspired by its work, we implement Network Morphism in our NNI platform.
+[Autokeras](https://arxiv.org/abs/1806.10282) is a popular automl tools using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression estimate its metric value from history trained results of network and metric value pair. Next, it chooses the the child which has best estimated performance and adds it to the training queue. Inspired by its work and referring to its [code](https://github.com/jhfjhfj1/autokeras), we implement our Network Morphism method in our NNI platform.
 
 If you want to know about network morphism trial usage, please check [Readme.md](../../../../../examples/trials/network-morphism/README.md) of the trial to get more detail.
 
@@ -17,13 +17,13 @@ tuner:
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
-    #for now, we only support cv domain
+    #for now, this tuner only supports cv domain
     task: cv
     #modify to fit your input image width
     input_width: 32
     #modify to fit your input image channel
     input_channel: 3
-    #modify to fit your n_output_node
+    #modify to fit your number of classes
     n_output_node: 10
 ```
 

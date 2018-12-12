@@ -15,13 +15,13 @@ tuner:
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
-    #for now, we only support cv domain
+    #for now, this tuner only supports cv domain
     task: cv
     #input image width
     input_width: 32
     #input image channel
     input_channel: 3
-    #output nums
+    #number of classes
     n_output_node: 10
 trial:
   command: python cifar10/cifar10_pytorch.py

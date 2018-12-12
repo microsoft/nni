@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 ### 3. Update configuration
 
-Modify `examples/trials/network_morphism/config.yaml` to fit your own task, here is the default configuration:
+Modify `examples/trials/network_morphism/config.yaml` to fit your own task, note that searchSpacePath is not required in our configuration. here is the default configuration:
 
 ```yaml
 authorName: default
@@ -37,13 +37,13 @@ tuner:
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
-    #for now, we only support cv domain
+    #for now, this tuner only supports cv domain
     task: cv
     #modify to fit your input image width
     input_width: 32
     #modify to fit your input image channel
     input_channel: 3
-    #modify to fit your n_output_node
+    #modify to fit your number of classes
     n_output_node: 10
 trial:
   # your own command here
