@@ -415,7 +415,7 @@ class KubeflowTrainingService implements TrainingService {
                         kubeflowTrialJsonObjsect.worker, kubeflowTrialJsonObjsect.ps);
                 }else if(this.kubeflowClusterConfig.operator === 'pytorch-operator'){
                     this.kubeflowTrialConfig = new KubeflowTrialConfigPytorch(kubeflowTrialJsonObjsect.codeDir, 
-                        kubeflowTrialJsonObjsect.worker, kubeflowTrialJsonObjsect.master);
+                        kubeflowTrialJsonObjsect.master, kubeflowTrialJsonObjsect.worker);
                 }
 
                 if (!this.kubeflowTrialConfig){

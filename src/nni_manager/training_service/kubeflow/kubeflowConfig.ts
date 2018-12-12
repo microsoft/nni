@@ -153,9 +153,9 @@ export class KubeflowTrialConfigBase {
 
 export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfigBase{
     public readonly ps?: KubeflowTrialConfigTemplate;
-    public readonly worker?: KubeflowTrialConfigTemplate;
+    public readonly worker: KubeflowTrialConfigTemplate;
 
-    constructor(codeDir: string, worker?: KubeflowTrialConfigTemplate,  ps?: KubeflowTrialConfigTemplate) {
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  ps?: KubeflowTrialConfigTemplate) {
         super(codeDir);
         this.ps = ps;
         this.worker = worker;
@@ -163,10 +163,10 @@ export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfigBase{
 }
 
 export class KubeflowTrialConfigPytorch extends KubeflowTrialConfigBase{
-    public readonly master?: KubeflowTrialConfigTemplate;
+    public readonly master: KubeflowTrialConfigTemplate;
     public readonly worker?: KubeflowTrialConfigTemplate;
 
-    constructor(codeDir: string, worker?: KubeflowTrialConfigTemplate,  master?: KubeflowTrialConfigTemplate) {
+    constructor(codeDir: string, master: KubeflowTrialConfigTemplate, worker?: KubeflowTrialConfigTemplate) {
         super(codeDir);
         this.master = master;
         this.worker = worker;
