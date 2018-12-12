@@ -28,35 +28,18 @@ var K8SClient = require('kubernetes-client').Client;
 var K8SConfig = require('kubernetes-client').config;
 
 abstract class KubeflowOperatorClient {
-    //TODO: replace any
     protected readonly client: any;
     protected readonly log: Logger = getLogger();
+    protected crdSchema: any;
 
     constructor() {
         this.client = new K8SClient({ config: K8SConfig.fromKubeconfig(path.join(os.homedir(), '.kube', 'config'))});
         this.client.loadSpec();
     }
 
-    public abstract get jobKind(): string;
+    protected abstract get operator(): any;
+
     public abstract get containerName(): string;
-    public abstract createKubeflowJob(jobManifest: any): Promise<boolean>;
-    //TODO : replace any
-    public abstract getKubeflowJob(kubeflowJobName: string): Promise<any>;
-    public abstract deleteKubeflowJob(labels: Map<string, string>): Promise<boolean>;
-
-}
-
-class TFOperatorClient extends KubeflowOperatorClient {
-    private readonly crdSchema!: any;
-
-    /**
-     * constructor, to initialize tfjob CRD definition
-     */
-    public constructor() {
-        super();
-        this.crdSchema = JSON.parse(fs.readFileSync('./config/tfjob-crd-v1alpha2.json', 'utf8'));
-        this.client.addCustomResourceDefinition(this.crdSchema);
-    }
 
     public get jobKind(): string {
         if(this.crdSchema 
@@ -65,17 +48,13 @@ class TFOperatorClient extends KubeflowOperatorClient {
             && this.crdSchema.spec.names.kind) {
             return this.crdSchema.spec.names.kind;
         } else {
-            throw new Error('TFOperatorClient: getJobKind failed, kind is undefined in tfjob crd schema!');
+            throw new Error('KubeflowOperatorClient: getJobKind failed, kind is undefined in tfjob crd schema!');
         }
     }
-
-    public get containerName(): string {
-        return 'tensorflow';
-    }
-
+    
     public async createKubeflowJob(jobManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
-        const response : any = await this.client.apis["kubeflow.org"].v1alpha2.namespaces('default').tfjobs.post({body: jobManifest});
+        const response : any = await this.operator.post({body: jobManifest});
         if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
@@ -87,7 +66,7 @@ class TFOperatorClient extends KubeflowOperatorClient {
     //TODO : replace any
     public async getKubeflowJob(kubeflowJobName: string): Promise<any> {
         let result: Promise<any>;
-        const response : any = await this.client.apis["kubeflow.org"].v1alpha2.namespaces('default').tfjobs(kubeflowJobName).get();
+        const response : any = await this.operator(kubeflowJobName).get();
         if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             console.log(`TFOperatorClient: tfjobs conditions is ${JSON.stringify(response.body.status.conditions)}`);
             result = Promise.resolve(response.body);
@@ -102,7 +81,7 @@ class TFOperatorClient extends KubeflowOperatorClient {
         // construct match query from labels for deleting tfjob
         const matchQuery: string = Array.from(labels.keys()).map(labelKey => `${labelKey}=${labels.get(labelKey)}`).join(',');
         try {
-            const deleteResult : any = await this.client.apis["kubeflow.org"].v1alpha2.namespaces('default').tfjobs().delete({ qs: { labelSelector: matchQuery } });
+            const deleteResult : any = await this.operator().delete({ qs: { labelSelector: matchQuery } });
             if(deleteResult.statusCode && deleteResult.statusCode >= 200 && deleteResult.statusCode <= 299) {
                 result = Promise.resolve(true);
             } else {
@@ -116,33 +95,41 @@ class TFOperatorClient extends KubeflowOperatorClient {
     }
 }
 
+class TFOperatorClient extends KubeflowOperatorClient {
+    /**
+     * constructor, to initialize tfjob CRD definition
+     */
+    public constructor() {
+        super();
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/tfjob-crd-v1alpha2.json', 'utf8'));
+        this.client.addCustomResourceDefinition(this.crdSchema);
+    }
+
+    protected get operator(): any {
+        return this.client.apis["kubeflow.org"].v1alpha2.namespaces('default').tfjobs;
+    }
+
+    public get containerName(): string {
+        return 'tensorflow';
+    }    
+}
+
 class PytorchOperatorClient extends KubeflowOperatorClient {
     /**
      * constructor, to initialize tfjob CRD definition
      */
     public constructor() {
-        super();        
+        super();
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/pytorchjob-crd-v1alpha2.json', 'utf8'));
+        this.client.addCustomResourceDefinition(this.crdSchema);
     }
 
-    public get jobKind(): string {
-        return '';
+    protected get operator(): any {
+        return this.client.apis["kubeflow.org"].v1alpha2.namespaces('default').pytorchjobs;
     }
 
     public get containerName(): string {
         return 'pytorch';
-    }
-
-    public async createKubeflowJob(jobManifest: any): Promise<boolean> {
-        return Promise.resolve(false);
-    }
-
-    //TODO : replace any
-    public async getKubeflowJob(kubeflowJobName: string): Promise<any> {
-        return Promise.resolve({});
-    }
-
-    public async deleteKubeflowJob(labels: Map<string, string>): Promise<boolean> {
-        return Promise.resolve(false);
     }
 }
 
