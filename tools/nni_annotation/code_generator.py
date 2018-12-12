@@ -76,7 +76,10 @@ def parse_nni_variable(code):
     name_str = astor.to_source(name).strip()
     keyword_arg = ast.keyword(arg='name', value=ast.Str(s=name_str))
     arg.keywords.append(keyword_arg)
-    add_keyword(arg)
+    if arg.func.attr == 'choice':
+        add_keyword(arg)
+    print(ast.dump(arg))
+    print(astor.to_source(arg))
 
     return name, arg
 
@@ -88,23 +91,38 @@ def parse_nni_function(code):
     """
     name, call = parse_annotation_function(code, 'function_choice')
     funcs = [ast.dump(func, False) for func in call.args]
-    call.args = [make_lambda(arg) for arg in call.args]
+    try:
+        add_keyword(call, with_lambda=True)
+    except:
+        print(ast.dump(call))
+        raise
+    #call.args = [make_lambda(arg) for arg in call.args]
 
     name_str = astor.to_source(name).strip()
     call.keywords[0].value = ast.Str(s=name_str)
 
     return call, funcs
 
-def add_keyword(call):
-    """Add a key to every arg such that the key is the same as the value of args prefixed by '_'.
+
+def add_keyword(call, with_lambda=False):
+    """Add a key to every arg such that the key is the same as the value of the arg prefixed by '_'.
     Return the AST Call node with keywords and no args
     """
+    keys, values = list(), list()
     for arg in call.args:
-        arg_value = astor.to_source(arg).strip()
-        arg_key = "_" + arg_value
-        keyword_arg = ast.keyword(arg=arg_key, value=type(arg)(arg_value))
-        arg.keywords.append(keyword_arg)
+        # If arg is a function, we use its name as the key
+        if type(arg) is ast.Call:
+            arg_value = astor.to_source(arg).strip('\n"()').split('(')[0]
+            arg_value = ast.Str(str(arg_value))
+        else:
+            arg_value = arg
+            #arg_value = ast.Str("'{}'".format(arg_value))
+        # Add a prefix '_' so it can work even if the value is a literal number, which will be remove in search_space_generator
+        arg = make_lambda(arg) if with_lambda else arg
+        keys.append(arg_value)
+        values.append(arg)
     del call.args[:]
+    call.args.append(ast.Dict(keys=keys, values=values))
 
     return call
 

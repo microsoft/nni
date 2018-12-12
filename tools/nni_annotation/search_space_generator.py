@@ -81,8 +81,9 @@ class SearchSpaceGenerator(ast.NodeVisitor):
             specified_name = False
 
         if func in ('choice', 'function_choice'):
-            # we will use the key as the choices
-            args = [x[1:] for x in keys]
+            # we will use keys in the dict as the choices
+            assert len(node.args) == 1, 'Smart parameter has arguments other than dict'
+            args = [key.n if type(key) is ast.Num else key.s for key in node.args[0].keys]
         else:
             # arguments of other functions must be literal number
             assert all(type(arg) is ast.Num for arg in node.args), 'Smart parameter\'s arguments must be number literals'
