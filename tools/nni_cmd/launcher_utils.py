@@ -102,7 +102,7 @@ def validate_kubeflow_operators(experiment_config):
                 print_error('kubeflow with pytorch-operator can not set ps')
                 exit(1)
             if experiment_config.get('trial').get('master') is None:
-                print_error('kubeflow with tf-operator must set master')
+                print_error('kubeflow with pytorch-operator must set master')
                 exit(1)
         
         if experiment_config.get('kubeflowConfig').get('storage') == 'nfs':
