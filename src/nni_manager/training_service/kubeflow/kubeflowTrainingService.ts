@@ -36,8 +36,8 @@ import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
-import { KubeflowClusterConfigBase, KubeflowClusterConfigNFS, KubeflowClusterConfigAzure, kubeflowOperatorMap, KubeflowTrialConfigBase,
-     KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow, NFSConfig, kubeflowOperatorJobKindMap } from './kubeflowConfig';
+import { KubeflowClusterConfigBase, KubeflowClusterConfigNFS, KubeflowClusterConfigAzure, KubeflowTrialConfigBase,
+     KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow, NFSConfig } from './kubeflowConfig';
 import { KubeflowTrialJobDetail } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
@@ -46,7 +46,6 @@ import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import * as azureStorage from 'azure-storage';
 import { KubeflowOperatorClient, PytorchOperatorClient, TFOperatorClient } from './kubernetesApiClient';
 
-var yaml = require('node-yaml');
 var azure = require('azure-storage');
 
 type DistTrainRole = 'worker' | 'ps' | 'master';
@@ -57,7 +56,7 @@ type DistTrainRole = 'worker' | 'ps' | 'master';
  */
 @component.Singleton
 class KubeflowTrainingService implements TrainingService {
-    private readonly NNI_KUBEFLOW_TRIAL_LABEL = 'nni-kubeflow-trial';
+    private readonly NNI_KUBEFLOW_TRIAL_LABEL: string = 'nni-kubeflow-trial';
     private readonly log!: Logger;
     private readonly metricsEmitter: EventEmitter;
     private readonly trialJobsMap: Map<string, KubeflowTrialJobDetail>;
@@ -70,8 +69,6 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowTrialConfig?: KubeflowTrialConfigBase;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
     private kubeflowRestServerPort?: number;
-    private kubeflowJobPlural?: string;
-    private kubeflowJobKind?: string;
     private operatorClient?: KubeflowOperatorClient;
     private readonly CONTAINER_MOUNT_PATH: string;
     private azureStorageClient?: azureStorage.FileService;
@@ -96,7 +93,7 @@ class KubeflowTrainingService implements TrainingService {
         await restServer.start();
         this.log.info(`Kubeflow Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
-            // collect metrics by calling 'kubectl get' command on Kubeflow jobs 
+            // collect metrics for Kubeflow jobs by interacting with Kubernetes API server  
             await delay(3000);
             await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.operatorClient);
         }
@@ -111,8 +108,8 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
-        if(!this.kubeflowJobPlural) {
-            throw new Error('Kubeflow job plural name is undefined');
+        if(!this.operatorClient) {
+            throw new Error('Kubeflow job operator client is undefined');
         }
 
         if(!this.kubeflowRestServerPort) {
@@ -173,7 +170,6 @@ class KubeflowTrainingService implements TrainingService {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
                             trialForm.hyperParameters.value, { encoding: 'utf8' });
         }
-        const kubeflowJobYamlPath = path.join(trialLocalTempFolder, `kubeflow-job-${trialJobId}.yaml`);
         const kubeflowJobName = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
         
         const workerPodResources : any = {};
@@ -197,15 +193,9 @@ class KubeflowTrainingService implements TrainingService {
                     nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
             }
         }       
-        // Generate kubeflow job resource yaml file for K8S
-        yaml.write(
-            kubeflowJobYamlPath,
-            this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources, nonWorkerResources),
-            'utf-8'
-        );
-        let trialJobDetail: KubeflowTrialJobDetail;
-        //The url used in trialJobDetail
-        let trialJobDetailUrl: string = '';
+
+        //The output url used in trialJobDetail
+        let trialJobOutputUrl: string = '';
 
         assert(!this.kubeflowClusterConfig.storage 
             || this.kubeflowClusterConfig.storage === 'azureStorage' 
@@ -217,7 +207,7 @@ class KubeflowTrainingService implements TrainingService {
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient, 
                     `nni/${getExperimentId()}/${trialJobId}`, this.azureStorageShare, `${trialLocalTempFolder}`);
 
-                trialJobDetailUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}/${path.join('nni', getExperimentId(), trialJobId, 'output')}`
+                trialJobOutputUrl = `https://${this.azureStorageAccountName}.file.core.windows.net/${this.azureStorageShare}/${path.join('nni', getExperimentId(), trialJobId, 'output')}`
             }catch(error){
                 this.log.error(error);
                 return Promise.reject(error);
@@ -230,10 +220,10 @@ class KubeflowTrainingService implements TrainingService {
             await cpp.exec(`cp -r ${trialLocalTempFolder}/* ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}/.`);
         
             const nfsConfig: NFSConfig = nfsKubeflowClusterConfig.nfs;
-            trialJobDetailUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`
+            trialJobOutputUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`
         }
 
-        trialJobDetail = new KubeflowTrialJobDetail(
+        const trialJobDetail: KubeflowTrialJobDetail = new KubeflowTrialJobDetail(
             trialJobId,
             'WAITING',
             Date.now(),
@@ -241,13 +231,16 @@ class KubeflowTrainingService implements TrainingService {
             form,
             kubeflowJobName,
             curTrialSequenceId,
-            trialJobDetailUrl, 
-            this.kubeflowJobPlural
+            trialJobOutputUrl
         );
-        
-        // Create kubeflow training jobs
-        await cpp.exec(`kubectl create -f ${kubeflowJobYamlPath}`);
-        // Set trial job detail until kubectl create resource successfully 
+
+        // Generate kubeflow job resource config object        
+        const kubeflowJobConfig: any = this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources, nonWorkerResources);
+
+        // Create kubeflow job based on generated kubeflow job resource config
+        await this.operatorClient.createKubeflowJob(kubeflowJobConfig);
+
+        // Set trial job detail until create Kubeflow job successfully 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
         return Promise.resolve(trialJobDetail);
@@ -309,17 +302,23 @@ class KubeflowTrainingService implements TrainingService {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} not found`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
-        }
-        if(!this.kubeflowJobPlural) {
-            const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} failed because kubeflowJobPlural is undefined`;
+        }        
+        if(!this.operatorClient) {
+            const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} failed because operatorClient is undefined`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }
 
-        const result: cpp.childProcessPromise.Result = await cpp.exec(`kubectl delete ${this.kubeflowJobPlural} -l ` 
-                                        + `app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()},trialId=${trialJobId}`);
-        if(result.stderr) {
-            const errorMessage: string = `kubectl delete ${this.kubeflowJobPlural} for trial ${trialJobId} failed: ${result.stderr}`;
+        try {
+            await this.operatorClient.deleteKubeflowJob(new Map(
+                [
+                    ['app', this.NNI_KUBEFLOW_TRIAL_LABEL],
+                    ['expId', getExperimentId()],
+                    ['trialId', trialJobId]
+                ]
+            ));
+        } catch(err) {
+            const errorMessage: string = `Delete trial ${trialJobId} failed: ${err}`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }
@@ -391,9 +390,6 @@ class KubeflowTrainingService implements TrainingService {
                     throw new Error(error);
                 }
 
-                this.kubeflowJobPlural = kubeflowOperatorMap.get(this.kubeflowClusterConfig.operator);
-                this.kubeflowJobKind = kubeflowOperatorJobKindMap.get(this.kubeflowClusterConfig.operator)
-
                 if(this.kubeflowClusterConfig.operator === 'tf-operator') {
                     this.operatorClient = new TFOperatorClient();
                 } else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
@@ -454,14 +450,19 @@ class KubeflowTrainingService implements TrainingService {
                 kubeflowTrialJob.status = 'SYS_CANCELED';
             }
         }
-
-        assert(this.kubeflowJobPlural !== undefined);
         
         // Delete all kubeflow jobs whose expId label is current experiment id 
         try {
-            await cpp.exec(`kubectl delete ${this.kubeflowJobPlural} -l app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()}`);
+            if(this.operatorClient) {
+                await this.operatorClient.deleteKubeflowJob(new Map(
+                    [
+                        ['app', this.NNI_KUBEFLOW_TRIAL_LABEL],
+                        ['expId', getExperimentId()]
+                    ]
+                ));
+            }
         } catch(error) {
-            this.log.error(`Delete ${this.kubeflowJobPlural} with label: app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
+            this.log.error(`Delete kubeflow job with label: app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
         }
 
         // Unmount NFS
@@ -505,9 +506,10 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
-        if(!this.kubeflowJobPlural) {
-            throw new Error('Kubeflow job plural name is undefined');
+        if(!this.operatorClient) {
+            throw new Error('Kubeflow operator client is not initialized');
         }
+
         const replicaSpecsObj: any = {};
         let replicaSpecsObjMap = new Map<string, object>();
 
@@ -519,7 +521,7 @@ class KubeflowTrainingService implements TrainingService {
                 replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, tensorflowTrialConfig.ps.replicas, 
                     tensorflowTrialConfig.ps.image, 'run_ps.sh', nonWorkerPodResources);
             }
-            replicaSpecsObjMap.set(this.kubeflowJobPlural, {'tfReplicaSpecs': replicaSpecsObj})
+            replicaSpecsObjMap.set(this.operatorClient.jobKind, {'tfReplicaSpecs': replicaSpecsObj})
         }
         else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
             let pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
@@ -529,12 +531,12 @@ class KubeflowTrainingService implements TrainingService {
                 replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.master.replicas, 
                     pytorchTrialConfig.master.image, 'run_master.sh', nonWorkerPodResources);
             }
-            replicaSpecsObjMap.set(this.kubeflowJobPlural, {'pytorchReplicaSpecs': replicaSpecsObj})
+            replicaSpecsObjMap.set(this.operatorClient.jobKind, {'pytorchReplicaSpecs': replicaSpecsObj})
         }
 
         return {
             apiVersion: 'kubeflow.org/v1alpha2',
-            kind: this.kubeflowJobKind,
+            kind: this.operatorClient.jobKind,
             metadata: { 
                 name: kubeflowJobName,
                 namespace: 'default',
@@ -544,7 +546,7 @@ class KubeflowTrainingService implements TrainingService {
                     trialId: trialJobId
                 }
             },
-            spec: replicaSpecsObjMap.get(this.kubeflowJobPlural)
+            spec: replicaSpecsObjMap.get(this.operatorClient.jobKind)
         };     
     }
 
@@ -565,8 +567,8 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
-        if(!this.kubeflowJobPlural) {
-            throw new Error('Kubeflow job plural name is undefined');
+        if(!this.operatorClient) {
+            throw new Error('Kubeflow operator client is not initialized');
         }
 
         let volumeSpecMap = new Map<string, object>();
@@ -592,13 +594,6 @@ class KubeflowTrainingService implements TrainingService {
             }])
         }
 
-        let containerNameMap = new Map<string, string>();
-        if(this.kubeflowJobPlural == 'tfjobs'){
-            containerNameMap.set(this.kubeflowJobPlural, 'tensorflow');
-        }else if(this.kubeflowJobPlural == 'pytorchjobs'){
-            containerNameMap.set(this.kubeflowJobPlural, 'pytorch');
-        }
-
         return {
             replicas: replicaNumber,
             template: {
@@ -610,7 +605,7 @@ class KubeflowTrainingService implements TrainingService {
                     {
                         // Kubeflow tensorflow operator requires that containers' name must be tensorflow
                         // TODO: change the name based on operator's type
-                        name: containerNameMap.get(this.kubeflowJobPlural),
+                        name: this.operatorClient.containerName,
                         image: replicaImage,
                         args: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
                         volumeMounts: [

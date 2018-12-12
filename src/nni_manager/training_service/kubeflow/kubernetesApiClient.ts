@@ -37,6 +37,8 @@ abstract class KubeflowOperatorClient {
         this.client.loadSpec();
     }
 
+    public abstract get jobKind(): string;
+    public abstract get containerName(): string;
     public abstract createKubeflowJob(jobManifest: any): Promise<boolean>;
     //TODO : replace any
     public abstract getKubeflowJob(kubeflowJobName: string): Promise<any>;
@@ -45,12 +47,30 @@ abstract class KubeflowOperatorClient {
 }
 
 class TFOperatorClient extends KubeflowOperatorClient {
+    private readonly crdSchema!: any;
+
     /**
      * constructor, to initialize tfjob CRD definition
      */
     public constructor() {
-        super();        
-        this.client.addCustomResourceDefinition(JSON.parse(fs.readFileSync('./config/tfjob-crd-v1alpha2.json', 'utf8')));
+        super();
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/tfjob-crd-v1alpha2.json', 'utf8'));
+        this.client.addCustomResourceDefinition(this.crdSchema);
+    }
+
+    public get jobKind(): string {
+        if(this.crdSchema 
+            && this.crdSchema.spec 
+            && this.crdSchema.spec.names
+            && this.crdSchema.spec.names.kind) {
+            return this.crdSchema.spec.names.kind;
+        } else {
+            throw new Error('TFOperatorClient: getJobKind failed, kind is undefined in tfjob crd schema!');
+        }
+    }
+
+    public get containerName(): string {
+        return 'tensorflow';
     }
 
     public async createKubeflowJob(jobManifest: any): Promise<boolean> {
@@ -102,6 +122,14 @@ class PytorchOperatorClient extends KubeflowOperatorClient {
      */
     public constructor() {
         super();        
+    }
+
+    public get jobKind(): string {
+        return '';
+    }
+
+    public get containerName(): string {
+        return 'pytorch';
     }
 
     public async createKubeflowJob(jobManifest: any): Promise<boolean> {

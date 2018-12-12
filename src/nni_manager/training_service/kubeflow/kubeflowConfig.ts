@@ -21,25 +21,7 @@
 
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
-export type KubeflowOperatorPlural = 'tfjobs' | 'pytorchjobs' ;
-export type KubeflowOperatorJobKind = 'TFJob' | 'PyTorchJob';
 export type KubeflowStorageKind = 'nfs' | 'azureStorage';
-
-/**
- * map from Kubeflow operator name to its plural name in K8S
- */
-export const kubeflowOperatorMap : Map<KubeflowOperator, KubeflowOperatorPlural> =  new Map<KubeflowOperator, KubeflowOperatorPlural>([
-    ['tf-operator' , 'tfjobs'],
-    ['pytorch-operator', 'pytorchjobs'] 
-]);
-
-/**
- * map from Kubeflow operator name to its job kind name in K8S
- */
-export const kubeflowOperatorJobKindMap : Map<KubeflowOperator, KubeflowOperatorJobKind> =  new Map<KubeflowOperator, KubeflowOperatorJobKind>([
-    ['tf-operator' , 'TFJob'],
-    ['pytorch-operator', 'PyTorchJob']
-]);
 
 /**
  * Kuberflow cluster configuration
