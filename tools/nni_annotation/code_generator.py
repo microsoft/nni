@@ -96,7 +96,6 @@ def parse_nni_function(code):
     except:
         print(ast.dump(call))
         raise
-    #call.args = [make_lambda(arg) for arg in call.args]
 
     name_str = astor.to_source(name).strip()
     call.keywords[0].value = ast.Str(s=name_str)
@@ -116,8 +115,6 @@ def add_keyword(call, with_lambda=False):
             arg_value = ast.Str(str(arg_value))
         else:
             arg_value = arg
-            #arg_value = ast.Str("'{}'".format(arg_value))
-        # Add a prefix '_' so it can work even if the value is a literal number, which will be remove in search_space_generator
         arg = make_lambda(arg) if with_lambda else arg
         keys.append(arg_value)
         values.append(arg)

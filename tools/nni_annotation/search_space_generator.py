@@ -73,10 +73,8 @@ class SearchSpaceGenerator(ast.NodeVisitor):
             assert type(node.keywords[name_index].value) is ast.Str, 'Smart parameter\'s name must be string literal'
             name = node.keywords[name_index].value.s
             specified_name = True
-            keys.remove('name')
         else:
             # generate the missing name automatically
-            #assert len(node.args) > 0, 'Smart parameter expression has no argument'
             name = '__line' + str(node.lineno)
             specified_name = False
 
