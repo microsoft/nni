@@ -114,7 +114,7 @@ class TFOperatorClient extends KubeflowOperatorClient {
     }    
 }
 
-class PytorchOperatorClient extends KubeflowOperatorClient {
+class PytorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     /**
      * constructor, to initialize tfjob CRD definition
      */
@@ -133,4 +133,25 @@ class PytorchOperatorClient extends KubeflowOperatorClient {
     }
 }
 
-export { KubeflowOperatorClient, PytorchOperatorClient, TFOperatorClient }
+class PytorchOperatorClientV1Beta1 extends KubeflowOperatorClient {
+    /**
+     * constructor, to initialize tfjob CRD definition
+     */
+    public constructor() {
+        super();
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/pytorchjob-crd-v1beta1.json', 'utf8'));
+        this.client.addCustomResourceDefinition(this.crdSchema);
+    }
+
+    protected get operator(): any {
+        return this.client.apis["kubeflow.org"].v1beta1.namespaces('default').pytorchjobs;
+    }
+
+    public get containerName(): string {
+        return 'pytorch';
+    }
+}
+
+export { KubeflowOperatorClient, 
+    PytorchOperatorClientV1Alpha2, PytorchOperatorClientV1Beta1, 
+    TFOperatorClient }

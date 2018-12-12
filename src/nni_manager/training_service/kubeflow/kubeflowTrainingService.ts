@@ -44,7 +44,9 @@ import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 import { validateCodeDir } from '../common/util';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import * as azureStorage from 'azure-storage';
-import { KubeflowOperatorClient, PytorchOperatorClient, TFOperatorClient } from './kubernetesApiClient';
+import { KubeflowOperatorClient, 
+    PytorchOperatorClientV1Alpha2, PytorchOperatorClientV1Beta1, 
+    TFOperatorClient } from './kubernetesApiClient';
 
 var azure = require('azure-storage');
 
@@ -393,7 +395,7 @@ class KubeflowTrainingService implements TrainingService {
                 if(this.kubeflowClusterConfig.operator === 'tf-operator') {
                     this.operatorClient = new TFOperatorClient();
                 } else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
-                    this.operatorClient = new PytorchOperatorClient();
+                    this.operatorClient = new PytorchOperatorClientV1Beta1();
                 }
 
                 break;
