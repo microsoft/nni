@@ -21,21 +21,21 @@
 
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
-import { getLogger, Logger } from '../../common/log';
-import { KubeflowTrialJobDetail, KubeflowTFJobType} from './kubeflowData';
-import { NNIError, NNIErrorNames } from '../../common/errors';
-import { TrialJobStatus } from '../../common/trainingService';
+import { getLogger, Logger } from 'common/log';
+import { KubernetesJobType, KubernetesTrialJobDetail} from '../kubernetes/kubernetesData';
+import { NNIError, NNIErrorNames } from 'common/errors';
+import { TrialJobStatus } from 'common/trainingService';
 import { KubeflowOperatorClient } from './kubernetesApiClient';
 
 /**
  * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally
  */
 export class KubeflowJobInfoCollector {
-    private readonly trialJobsMap : Map<string, KubeflowTrialJobDetail>;
+    private readonly trialJobsMap : Map<string, KubernetesTrialJobDetail>;
     private readonly log: Logger = getLogger();
     private readonly statusesNeedToCheck: TrialJobStatus[];
 
-    constructor(jobMap: Map<string, KubeflowTrialJobDetail>) {
+    constructor(jobMap: Map<string, KubernetesTrialJobDetail>) {
         this.trialJobsMap = jobMap;
         this.statusesNeedToCheck = ['RUNNING', 'WAITING'];
     }
@@ -58,7 +58,7 @@ export class KubeflowJobInfoCollector {
     }
 
     private async retrieveSingleTrialJobInfo(operatorClient: KubeflowOperatorClient | undefined, 
-                                    kubeflowTrialJob : KubeflowTrialJobDetail) : Promise<void> {
+                                    kubeflowTrialJob : KubernetesTrialJobDetail) : Promise<void> {
         if (!this.statusesNeedToCheck.includes(kubeflowTrialJob.status)) {
             return Promise.resolve();
         }
@@ -77,7 +77,7 @@ export class KubeflowJobInfoCollector {
 
         if(kubeflowJobInfo.status && kubeflowJobInfo.status.conditions) {
             const latestCondition = kubeflowJobInfo.status.conditions[kubeflowJobInfo.status.conditions.length - 1];
-            const tfJobType : KubeflowTFJobType = <KubeflowTFJobType>latestCondition.type;
+            const tfJobType : KubernetesJobType = <KubernetesJobType>latestCondition.type;
             switch(tfJobType) {
                 case 'Created':
                     kubeflowTrialJob.status = 'WAITING';

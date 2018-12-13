@@ -38,6 +38,7 @@ import {
 } from './training_service/remote_machine/remoteMachineTrainingService';
 import { PAITrainingService } from './training_service/pai/paiTrainingService';
 import { KubeflowTrainingService } from './training_service/kubeflow/kubeflowTrainingService';
+import { KubernetesTrainingService } from './training_service/kubernetes/kubernetesTrainingService';
 
 function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number) {
     const createNew: boolean = (startExpMode === 'new');
@@ -54,7 +55,10 @@ async function initContainer(platformMode: string): Promise<void> {
         Container.bind(TrainingService).to(PAITrainingService).scope(Scope.Singleton);
     } else if (platformMode === 'kubeflow') {
         Container.bind(TrainingService).to(KubeflowTrainingService).scope(Scope.Singleton);
-    } else {
+    } else if (platformMode === 'frameworkcontroller') {
+        Container.bind(TrainingService).to(KubeflowTrainingService).scope(Scope.Singleton);
+    }
+    else {
         throw new Error(`Error: unsupported mode: ${mode}`);
     }
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);

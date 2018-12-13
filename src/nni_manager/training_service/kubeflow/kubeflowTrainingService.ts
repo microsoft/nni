@@ -20,33 +20,36 @@
 'use strict'
 
 import * as assert from 'assert';
-import * as component from '../../common/component';
+import * as component from 'common/component';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
 
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { EventEmitter } from 'events';
-import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { MethodNotImplementedError } from '../../common/errors';
+import { getExperimentId, getInitTrialSequenceId } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { MethodNotImplementedError } from 'common/errors';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
-} from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
-import { KubeflowClusterConfigBase, KubeflowClusterConfigNFS, KubeflowClusterConfigAzure, KubeflowTrialConfigBase,
-     KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow, NFSConfig } from './kubeflowConfig';
-import { KubeflowTrialJobDetail } from './kubeflowData';
+} from 'common/trainingService';
+import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from 'common/utils';
+import { KubeflowClusterConfigBase, KubeflowClusterConfigNFS, KubeflowClusterConfigAzure,
+     KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow } from './kubeflowConfig';
+import { NFSConfig } from '../kubernetes/kubernetesConfig'
+import { KubernetesTrialJobDetail } from '../kubernetes/kubernetesData';
+import { KubernetesTrialConfig } from '../kubernetes/kubernetesConfig';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 import { validateCodeDir } from '../common/util';
-import { AzureStorageClientUtility } from './azureStorageClientUtils';
+import { AzureStorageClientUtility } from '../kubernetes/azureStorageClientUtils';
 import * as azureStorage from 'azure-storage';
 import { KubeflowOperatorClient, 
     PytorchOperatorClientV1Alpha2, PytorchOperatorClientV1Beta1, 
     TFOperatorClient } from './kubernetesApiClient';
+import { KubernetesTrainingService } from '../kubernetes/kubernetesTrainingService'
 
 var azure = require('azure-storage');
 
@@ -57,37 +60,17 @@ type DistTrainRole = 'worker' | 'ps' | 'master';
  * Refer https://github.com/kubeflow/kubeflow for more info about Kubeflow
  */
 @component.Singleton
-class KubeflowTrainingService implements TrainingService {
-    private readonly NNI_KUBEFLOW_TRIAL_LABEL: string = 'nni-kubeflow-trial';
-    private readonly log!: Logger;
-    private readonly metricsEmitter: EventEmitter;
-    private readonly trialJobsMap: Map<string, KubeflowTrialJobDetail>;
-    /**  experiment root dir in NFS */
-    private readonly trialLocalNFSTempFolder: string;
-    private stopping: boolean = false;
-    private experimentId! : string;
-    private nextTrialSequenceId: number;
+class KubeflowTrainingService extends KubernetesTrainingService {
     private kubeflowClusterConfig?: KubeflowClusterConfigBase;
-    private kubeflowTrialConfig?: KubeflowTrialConfigBase;
+    private kubeflowTrialConfig?: KubernetesTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
-    private kubeflowRestServerPort?: number;
     private operatorClient?: KubeflowOperatorClient;
-    private readonly CONTAINER_MOUNT_PATH: string;
-    private azureStorageClient?: azureStorage.FileService;
-    private azureStorageShare?: string;
-    private azureStorageSecretName?: string;
-    private azureStorageAccountName?: string;
-    private nniManagerIpConfig?: NNIManagerIpConfig;
-    
-    constructor() {        
-        this.log = getLogger();
-        this.metricsEmitter = new EventEmitter();
-        this.trialJobsMap = new Map<string, KubeflowTrialJobDetail>();
+
+    constructor() {
+        super();  
         this.kubeflowJobInfoCollector = new KubeflowJobInfoCollector(this.trialJobsMap);
-        this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
         this.experimentId = getExperimentId();      
         this.nextTrialSequenceId = -1;
-        this.CONTAINER_MOUNT_PATH = '/tmp/mount';
     }
 
     public async run(): Promise<void> {
@@ -114,9 +97,9 @@ class KubeflowTrainingService implements TrainingService {
             throw new Error('Kubeflow job operator client is undefined');
         }
 
-        if(!this.kubeflowRestServerPort) {
+        if(!this.kubernetesRestServerPort) {
             const restServer: KubeflowJobRestServer = component.get(KubeflowJobRestServer);
-            this.kubeflowRestServerPort = restServer.clusterRestServerPort;
+            this.kubernetesRestServerPort = restServer.clusterRestServerPort;
         }
         // initialize kubeflow trial config to specific type
         let kubeflowTrialConfig;
@@ -226,7 +209,7 @@ class KubeflowTrainingService implements TrainingService {
             trialJobOutputUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`
         }
 
-        const trialJobDetail: KubeflowTrialJobDetail = new KubeflowTrialJobDetail(
+        const trialJobDetail: KubernetesTrialJobDetail = new KubernetesTrialJobDetail(
             trialJobId,
             'WAITING',
             Date.now(),

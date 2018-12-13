@@ -91,6 +91,21 @@ export namespace ValidationSchemas {
                     azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
                 })
             }),
+            frameworkcontroller_config: joi.object({
+                storage: joi.string().min(1),
+                nfs: joi.object({
+                    server: joi.string().min(1).required(),
+                    path: joi.string().min(1).required()
+                }),
+                keyVault: joi.object({
+                    vaultName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/),
+                    name: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/)
+                }),
+                azureStorage: joi.object({
+                    accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
+                    azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
+                })
+            }),
             nni_manager_ip: joi.object({
                 nniManagerIp: joi.string().min(1) 
             })

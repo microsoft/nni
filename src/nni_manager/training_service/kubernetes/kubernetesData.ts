@@ -19,13 +19,13 @@
 
 'use strict';
 
-import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from 'common/trainingService';
 
 /**
  * KubeflowTrialJobDetail
  */
 // tslint:disable-next-line:max-classes-per-file
-export class KubeflowTrialJobDetail implements TrialJobDetail {
+export class KubernetesTrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;
     public submitTime: number;
@@ -55,4 +55,4 @@ export class KubeflowTrialJobDetail implements TrialJobDetail {
     }
 }
 
-export type KubeflowTFJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
+export type KubernetesJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
