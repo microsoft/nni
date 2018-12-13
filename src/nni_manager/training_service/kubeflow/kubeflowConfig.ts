@@ -1,5 +1,3 @@
-import { TrialConfig } from "../common/trialConfig";
-
 /**
  * Copyright (c) Microsoft Corporation
  * All rights reserved.
@@ -21,28 +19,11 @@ import { TrialConfig } from "../common/trialConfig";
 
 'use strict';
 
-
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
-export type KubeflowOperatorPlural = 'tfjobs' | 'pytorchjobs' ;
-export type KubeflowOperatorJobKind = 'TFJob' | 'PyTorchJob';
 export type KubeflowStorageKind = 'nfs' | 'azureStorage';
-
-/**
- * map from Kubeflow operator name to its plural name in K8S
- */
-export const kubeflowOperatorMap : Map<KubeflowOperator, KubeflowOperatorPlural> =  new Map<KubeflowOperator, KubeflowOperatorPlural>([
-    ['tf-operator' , 'tfjobs'],
-    ['pytorch-operator', 'pytorchjobs'] 
-]);
-
-/**
- * map from Kubeflow operator name to its job kind name in K8S
- */
-export const kubeflowOperatorJobKindMap : Map<KubeflowOperator, KubeflowOperatorJobKind> =  new Map<KubeflowOperator, KubeflowOperatorJobKind>([
-    ['tf-operator' , 'TFJob'],
-    ['pytorch-operator', 'PyTorchJob']
-]);
+export type DistTrainRole = 'worker' | 'ps' | 'master';
+export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
 
 /**
  * Kuberflow cluster configuration
@@ -51,7 +32,8 @@ export const kubeflowOperatorJobKindMap : Map<KubeflowOperator, KubeflowOperator
 export class KubeflowClusterConfigBase {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
-    public readonly storage?: KubeflowStorageKind;
+    public readonly apiVersion: OperatorApiVersion;
+    public readonly storage?: KubeflowStorageKind;    
     
     /**
      * Constructor
@@ -59,8 +41,9 @@ export class KubeflowClusterConfigBase {
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator, storage?: KubeflowStorageKind) {
+    constructor(operator: KubeflowOperator, apiVersion: OperatorApiVersion, storage?: KubeflowStorageKind) {
         this.operator = operator;
+        this.apiVersion = apiVersion;
         this.storage = storage;
     }
 }
@@ -68,8 +51,10 @@ export class KubeflowClusterConfigBase {
 export class KubeflowClusterConfigNFS extends KubeflowClusterConfigBase{
     public readonly nfs: NFSConfig;
     
-    constructor(operator: KubeflowOperator, nfs: NFSConfig, storage?: KubeflowStorageKind) {
-        super(operator, storage)
+    constructor(operator: KubeflowOperator, 
+            apiVersion: OperatorApiVersion, 
+            nfs: NFSConfig, storage?: KubeflowStorageKind) {
+        super(operator, apiVersion, storage);
         this.nfs = nfs;
     }
 }
@@ -78,8 +63,12 @@ export class KubeflowClusterConfigAzure extends KubeflowClusterConfigBase{
     public readonly keyVault: keyVaultConfig;
     public readonly azureStorage: AzureStorage;
     
-    constructor(operator: KubeflowOperator, keyVault: keyVaultConfig, azureStorage: AzureStorage, storage?: KubeflowStorageKind) {
-        super(operator, storage)
+    constructor(operator: KubeflowOperator, 
+            apiVersion: OperatorApiVersion, 
+            keyVault: keyVaultConfig, 
+            azureStorage: AzureStorage, 
+            storage?: KubeflowStorageKind) {
+        super(operator, apiVersion, storage);
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
     }
@@ -184,10 +173,10 @@ export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfigBase{
 }
 
 export class KubeflowTrialConfigPytorch extends KubeflowTrialConfigBase{
-    public readonly master?: KubeflowTrialConfigTemplate;
-    public readonly worker: KubeflowTrialConfigTemplate;
+    public readonly master: KubeflowTrialConfigTemplate;
+    public readonly worker?: KubeflowTrialConfigTemplate;
 
-    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  master?: KubeflowTrialConfigTemplate) {
+    constructor(codeDir: string, master: KubeflowTrialConfigTemplate, worker?: KubeflowTrialConfigTemplate) {
         super(codeDir);
         this.master = master;
         this.worker = worker;
