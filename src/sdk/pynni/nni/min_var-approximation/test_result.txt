@@ -143,7 +143,7 @@ id = 9 predict_y =  0.8176207964188611
 id = 10 predict_y =  0.1380464481536764
 
 ------------------------------------------------------------------------------------------------------
-# 采用curve_fit以及12条曲线进行拟合，去方差最小的那条线
+# 采用curve_fit以及12条曲线进行拟合，取方差最小的那条线
 curve_combination_models = ['vap', 'pow3','linear', 'logx_linear', 'dr_hill_zero_background', 'log_power', 'pow4', 'mmf', 'exp4', 'ilog2', 'weibull', 'janoschek']
 id = 1 predict_y =  0.10024494602157075
 id = 2 predict_y =  0.10024494602157075
