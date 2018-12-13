@@ -204,6 +204,4 @@ class PytorchOperatorClientV1Beta1 extends KubeflowOperatorClient {
     }
 }
 
-export { KubeflowOperatorClient, 
-    PytorchOperatorClientV1Alpha2, PytorchOperatorClientV1Beta1, 
-    TFOperatorClientV1Alpha2 }
+export { KubeflowOperatorClient }
