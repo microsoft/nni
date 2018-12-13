@@ -23,6 +23,7 @@ import * as fs from 'fs';
 import * as os from 'os'
 import * as path from 'path';
 import { getLogger, Logger } from '../../common/log';
+import { KubeflowOperator, OperatorApiVersion } from './kubeflowConfig';
 
 var K8SClient = require('kubernetes-client').Client;
 var K8SConfig = require('kubernetes-client').config;
@@ -41,6 +42,28 @@ abstract class KubeflowOperatorClient {
 
     public abstract get containerName(): string;
 
+    /**
+     * Factory method to generate operator cliet
+     */
+    public static generateOperatorClient(kubeflowOperator: KubeflowOperator, 
+                                    operatorApiVersion: OperatorApiVersion): KubeflowOperatorClient {
+        if(kubeflowOperator === 'tf-operator') {
+            if(operatorApiVersion == 'v1alpha2') {
+                return new TFOperatorClientV1Alpha2();
+            } else if(operatorApiVersion == 'v1beta1') {
+                return new TFOperatorClientV1Beta1();
+            }
+        } else if(kubeflowOperator === 'pytorch-operator') {
+            if(operatorApiVersion == 'v1alpha2') {
+                return new PytorchOperatorClientV1Alpha2();
+            } else if(operatorApiVersion == 'v1beta1') {
+                return new PytorchOperatorClientV1Beta1();
+            }
+        }
+
+        throw new Error(`Invalid operator ${kubeflowOperator} or apiVersion ${operatorApiVersion}`);
+    }
+
     public get jobKind(): string {
         if(this.crdSchema 
             && this.crdSchema.spec 
@@ -48,7 +71,17 @@ abstract class KubeflowOperatorClient {
             && this.crdSchema.spec.names.kind) {
             return this.crdSchema.spec.names.kind;
         } else {
-            throw new Error('KubeflowOperatorClient: getJobKind failed, kind is undefined in tfjob crd schema!');
+            throw new Error('KubeflowOperatorClient: getJobKind failed, kind is undefined in crd schema!');
+        }
+    }
+
+    public get apiVersion(): string {
+        if(this.crdSchema 
+            && this.crdSchema.spec 
+            && this.crdSchema.spec.version) {
+            return this.crdSchema.spec.version;
+        } else {
+            throw new Error('KubeflowOperatorClient: get apiVersion failed, version is undefined in crd schema!');
         }
     }
     
@@ -95,7 +128,7 @@ abstract class KubeflowOperatorClient {
     }
 }
 
-class TFOperatorClient extends KubeflowOperatorClient {
+class TFOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     /**
      * constructor, to initialize tfjob CRD definition
      */
@@ -107,6 +140,25 @@ class TFOperatorClient extends KubeflowOperatorClient {
 
     protected get operator(): any {
         return this.client.apis["kubeflow.org"].v1alpha2.namespaces('default').tfjobs;
+    }
+
+    public get containerName(): string {
+        return 'tensorflow';
+    }    
+}
+
+class TFOperatorClientV1Beta1 extends KubeflowOperatorClient {
+    /**
+     * constructor, to initialize tfjob CRD definition
+     */
+    public constructor() {
+        super();
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/tfjob-crd-v1beta1.json', 'utf8'));
+        this.client.addCustomResourceDefinition(this.crdSchema);
+    }
+
+    protected get operator(): any {
+        return this.client.apis["kubeflow.org"].v1beta1.namespaces('default').tfjobs;
     }
 
     public get containerName(): string {
@@ -154,4 +206,4 @@ class PytorchOperatorClientV1Beta1 extends KubeflowOperatorClient {
 
 export { KubeflowOperatorClient, 
     PytorchOperatorClientV1Alpha2, PytorchOperatorClientV1Beta1, 
-    TFOperatorClient }
+    TFOperatorClientV1Alpha2 }

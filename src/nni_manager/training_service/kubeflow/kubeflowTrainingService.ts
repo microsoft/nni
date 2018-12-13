@@ -20,6 +20,7 @@
 'use strict'
 
 import * as assert from 'assert';
+import * as azureStorage from 'azure-storage';
 import * as component from '../../common/component';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
@@ -36,21 +37,16 @@ import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
-import { KubeflowClusterConfigBase, KubeflowClusterConfigNFS, KubeflowClusterConfigAzure, KubeflowTrialConfigBase,
+import { DistTrainRole, KubeflowClusterConfigBase, KubeflowClusterConfigNFS, KubeflowClusterConfigAzure, KubeflowTrialConfigBase,
      KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow, NFSConfig } from './kubeflowConfig';
 import { KubeflowTrialJobDetail } from './kubeflowData';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 import { validateCodeDir } from '../common/util';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
-import * as azureStorage from 'azure-storage';
-import { KubeflowOperatorClient, 
-    PytorchOperatorClientV1Alpha2, PytorchOperatorClientV1Beta1, 
-    TFOperatorClient } from './kubernetesApiClient';
+import { KubeflowOperatorClient } from './kubernetesApiClient';
 
 var azure = require('azure-storage');
-
-type DistTrainRole = 'worker' | 'ps' | 'master';
 
 /**
  * Training Service implementation for Kubeflow
@@ -393,12 +389,8 @@ class KubeflowTrainingService implements TrainingService {
                     throw new Error(error);
                 }
 
-                if(this.kubeflowClusterConfig.operator === 'tf-operator') {
-                    this.operatorClient = new TFOperatorClient();
-                } else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
-                    this.operatorClient = new PytorchOperatorClientV1Beta1();
-                }
-
+                this.operatorClient = KubeflowOperatorClient.generateOperatorClient(this.kubeflowClusterConfig.operator,
+                                                                                     this.kubeflowClusterConfig.apiVersion);
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -540,7 +532,7 @@ class KubeflowTrainingService implements TrainingService {
         }
 
         return {
-            apiVersion: 'kubeflow.org/v1alpha2',
+            apiVersion: `kubeflow.org/${this.operatorClient.apiVersion}`,
             kind: this.operatorClient.jobKind,
             metadata: { 
                 name: kubeflowJobName,
