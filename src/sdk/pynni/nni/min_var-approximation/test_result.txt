@@ -141,3 +141,17 @@ id = 7 predict_y =  0.8473815361211596
 id = 8 predict_y =  0.8284807850551068
 id = 9 predict_y =  0.8176207964188611
 id = 10 predict_y =  0.1380464481536764
+
+------------------------------------------------------------------------------------------------------
+# 采用curve_fit以及12条曲线进行拟合，去方差最小的那条线
+curve_combination_models = ['vap', 'pow3','linear', 'logx_linear', 'dr_hill_zero_background', 'log_power', 'pow4', 'mmf', 'exp4', 'ilog2', 'weibull', 'janoschek']
+id = 1 predict_y =  0.10024494602157075
+id = 2 predict_y =  0.10024494602157075
+id = 3 predict_y =  1.1976582008378525
+id = 4 predict_y =  0.391333918785257
+id = 5 predict_y =  1.1976582008378525
+id = 6 predict_y =  1.1976582008378525
+id = 7 predict_y =  1.1976582008378525
+id = 8 predict_y =  1.1976582008378525
+id = 9 predict_y =  1.1976582008378525
+id = 10 predict_y =  0.10024494602157075
