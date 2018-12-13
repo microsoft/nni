@@ -175,8 +175,10 @@ class KubeflowTrainingService implements TrainingService {
         const kubeflowJobName = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
         
         const workerPodResources : any = {};
-        workerPodResources.requests = this.generatePodResource(kubeflowTrialConfig.worker.memoryMB, kubeflowTrialConfig.worker.cpuNum, 
-            kubeflowTrialConfig.worker.gpuNum)
+        if(kubeflowTrialConfig.worker) {
+            workerPodResources.requests = this.generatePodResource(kubeflowTrialConfig.worker.memoryMB, kubeflowTrialConfig.worker.cpuNum, 
+                kubeflowTrialConfig.worker.gpuNum)
+        }
         workerPodResources.limits = Object.assign({}, workerPodResources.requests);
 
         let nonWorkerResources : any = {};
@@ -189,11 +191,10 @@ class KubeflowTrainingService implements TrainingService {
             }
         }else if(this.kubeflowClusterConfig.operator === 'pytorch-operator'){
             let pyTorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
-            if (pyTorchTrialConfig.master) {
-                nonWorkerResources.requests = this.generatePodResource(pyTorchTrialConfig.master.memoryMB, pyTorchTrialConfig.master.cpuNum, 
-                    pyTorchTrialConfig.master.gpuNum)
-                    nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
-            }
+            nonWorkerResources.requests = this.generatePodResource(pyTorchTrialConfig.master.memoryMB, pyTorchTrialConfig.master.cpuNum, 
+                pyTorchTrialConfig.master.gpuNum)
+                nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
+            
         }       
 
         //The output url used in trialJobDetail
@@ -413,7 +414,7 @@ class KubeflowTrainingService implements TrainingService {
                         kubeflowTrialJsonObjsect.worker, kubeflowTrialJsonObjsect.ps);
                 }else if(this.kubeflowClusterConfig.operator === 'pytorch-operator'){
                     this.kubeflowTrialConfig = new KubeflowTrialConfigPytorch(kubeflowTrialJsonObjsect.codeDir, 
-                        kubeflowTrialJsonObjsect.worker, kubeflowTrialJsonObjsect.master);
+                        kubeflowTrialJsonObjsect.master, kubeflowTrialJsonObjsect.worker);
                 }
 
                 if (!this.kubeflowTrialConfig){
@@ -519,6 +520,7 @@ class KubeflowTrainingService implements TrainingService {
             let tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
             replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, tensorflowTrialConfig.worker.replicas, 
                 tensorflowTrialConfig.worker.image, 'run_worker.sh', workerPodResources);
+            
             if (tensorflowTrialConfig.ps){
                 replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, tensorflowTrialConfig.ps.replicas, 
                     tensorflowTrialConfig.ps.image, 'run_ps.sh', nonWorkerPodResources);
@@ -527,12 +529,13 @@ class KubeflowTrainingService implements TrainingService {
         }
         else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
             let pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
-            replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.worker.replicas, 
-                pytorchTrialConfig.worker.image, 'run_worker.sh', workerPodResources);
-            if(pytorchTrialConfig.master){
-                replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.master.replicas, 
-                    pytorchTrialConfig.master.image, 'run_master.sh', nonWorkerPodResources);
+            if(pytorchTrialConfig.worker) {
+                replicaSpecsObj.Worker = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.worker.replicas, 
+                    pytorchTrialConfig.worker.image, 'run_worker.sh', workerPodResources);
             }
+            replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.master.replicas, 
+                pytorchTrialConfig.master.image, 'run_master.sh', nonWorkerPodResources);
+            
             replicaSpecsObjMap.set(this.operatorClient.jobKind, {'pytorchReplicaSpecs': replicaSpecsObj})
         }
 
