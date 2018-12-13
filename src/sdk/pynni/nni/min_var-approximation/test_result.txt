@@ -127,3 +127,17 @@ id =  7  Predict y =  1.7021104446101938     Good      Actual y: 0.9704   Good
 id =  8  Predict y =  1.6021104446101937     Bad       Actual y: 0.9553   Bad
 id =  9  Predict y =  1.5021104446101936     Bad       Actual y: 0.9513   Bad
 id =  10 Predict y =  0.07984922574848283    Bad       Actual y: 0.1028   Bad
+
+-------------------------------------------------------------------------------------------------------
+# 采用curve_fit以及12条曲线进行拟合，每个点表现最好的曲线给1/NUM的权重
+curve_combination_models = ['vap', 'pow3','linear', 'logx_linear', 'dr_hill_zero_background', 'log_power', 'pow4', 'mmf', 'exp4', 'ilog2', 'weibull', 'janoschek']
+id = 1 predict_y =  0.10024494602157073
+id = 2 predict_y =  0.10024494602157073
+id = 3 predict_y =  0.4098596722332598
+id = 4 predict_y =  0.24972366112663724
+id = 5 predict_y =  0.7250023842360875
+id = 6 predict_y =  0.8284807850551068
+id = 7 predict_y =  0.8473815361211596
+id = 8 predict_y =  0.8284807850551068
+id = 9 predict_y =  0.8176207964188611
+id = 10 predict_y =  0.1380464481536764
