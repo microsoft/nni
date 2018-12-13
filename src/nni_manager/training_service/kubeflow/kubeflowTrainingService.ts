@@ -336,12 +336,16 @@ class KubeflowTrainingService implements TrainingService {
             
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
                 let kubeflowClusterJsonObject = JSON.parse(value);
-                let kubeflowClusterConfigBase: KubeflowClusterConfigBase = new KubeflowClusterConfigBase(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.storage);
+                let kubeflowClusterConfigBase: KubeflowClusterConfigBase 
+                        = new KubeflowClusterConfigBase(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.apiVersion, kubeflowClusterJsonObject.storage);
                 
                 if(kubeflowClusterConfigBase && kubeflowClusterConfigBase.storage === 'azureStorage') {
-                    this.kubeflowClusterConfig = new KubeflowClusterConfigAzure(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.keyvault, 
-                        kubeflowClusterJsonObject.azureStorage, kubeflowClusterJsonObject.storage)
-                    let azureKubeflowClusterConfig = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
+                    const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = 
+                        new KubeflowClusterConfigAzure(kubeflowClusterJsonObject.operator, 
+                            kubeflowClusterJsonObject.apiVersion,
+                            kubeflowClusterJsonObject.keyvault, 
+                            kubeflowClusterJsonObject.azureStorage, kubeflowClusterJsonObject.storage);
+
                     const vaultName = azureKubeflowClusterConfig.keyVault.vaultName;
                     const valutKeyName = azureKubeflowClusterConfig.keyVault.name;
                     this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
@@ -366,12 +370,17 @@ class KubeflowTrainingService implements TrainingService {
                         this.log.error(error);
                         throw new Error(error);
                     }
+
+                    this.kubeflowClusterConfig = azureKubeflowClusterConfig;
                 } else if(kubeflowClusterConfigBase && (kubeflowClusterConfigBase.storage === 'nfs' || kubeflowClusterConfigBase.storage === undefined)) {
                     //Check and mount NFS mount point here
                     //If storage is undefined, the default value is nfs
-                    this.kubeflowClusterConfig = new KubeflowClusterConfigNFS(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.nfs, 
-                        kubeflowClusterJsonObject.storage)
-                    let nfsKubeflowClusterConfig = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
+                    const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = 
+                                 new KubeflowClusterConfigNFS(kubeflowClusterJsonObject.operator, 
+                                            kubeflowClusterJsonObject.apiVersion,
+                                            kubeflowClusterJsonObject.nfs, 
+                                            kubeflowClusterJsonObject.storage);
+
                     await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
                     const nfsServer: string = nfsKubeflowClusterConfig.nfs.server;
                     const nfsPath: string = nfsKubeflowClusterConfig.nfs.path;
@@ -383,6 +392,7 @@ class KubeflowTrainingService implements TrainingService {
                         this.log.error(mountError);
                         throw new Error(mountError);
                     }
+                    this.kubeflowClusterConfig = nfsKubeflowClusterConfig;
                 } else {
                     const error: string = `kubeflowClusterConfig format error!`;
                     this.log.error(error);
