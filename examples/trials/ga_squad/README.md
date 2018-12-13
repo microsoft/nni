@@ -159,7 +159,7 @@ The trial has a lot of different files, functions and classes. Here we will only
 
 Among those files, `trial.py` and `graph_to_tf.py` is special.
 
-`graph_to_tf.py` has a function named as `graph_to_network`, here is its skelton code:
+`graph_to_tf.py` has a function named as `graph_to_network`, here is its skeleton code:
 
 ```
 def graph_to_network(input1,

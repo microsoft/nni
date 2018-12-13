@@ -191,6 +191,8 @@ def validate_annotation_content(experiment_config, spec_key, builtin_name):
             exit(1)
     else:
         # validate searchSpaceFile
+        if experiment_config[spec_key].get(builtin_name) == 'NetworkMorphism':
+            return
         if experiment_config[spec_key].get(builtin_name):
             if experiment_config.get('searchSpacePath') is None:
                 print_error('Please set searchSpacePath!')
