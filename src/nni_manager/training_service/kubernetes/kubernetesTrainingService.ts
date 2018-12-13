@@ -20,22 +20,21 @@
 'use strict'
 
 import * as assert from 'assert';
-import * as component from 'common/component';
+import * as component from '../../common/component';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
 
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { EventEmitter } from 'events';
-import { getExperimentId, getInitTrialSequenceId } from 'common/experimentStartupInfo';
-import { getLogger, Logger } from 'common/log';
-import { MethodNotImplementedError } from 'common/errors';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from 'common/utils';
+import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getLogger, Logger } from '../../common/log';
+import { MethodNotImplementedError } from '../../common/errors';
+import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
-} from 'common/trainingService';
+} from '../../common/trainingService';
 import { KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesClusterConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage} from './kubernetesConfig';
 
@@ -88,32 +87,6 @@ class KubernetesTrainingService implements TrainingService {
         return Promise.resolve(tmp);
     }
 
-    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
-        throw new MethodNotImplementedError();
-    }
-
-    public listTrialJobs(): Promise<TrialJobDetail[]> {
-        let tmp: any;
-        return Promise.resolve(tmp);
-    }
-
-    public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
-        let tmp: any;
-        return Promise.resolve(tmp);
-    }
-
-    public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void) {
-        
-    }
-
-    public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void) {
-       
-    }
- 
-    public get isMultiPhaseJobSupported(): boolean {
-        return false;
-    }
-
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         return Promise.resolve();
     }
@@ -122,17 +95,112 @@ class KubernetesTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    public getClusterMetadata(key: string): Promise<string> {
-        return Promise.resolve('');
-    }
-
     public async cleanUp(): Promise<void> {
         return Promise.resolve();
     }
 
+    public generatePodResource(memory: number, cpuNum: number, gpuNum: number) {
+        return {
+            'memory': `${memory}Mi`,
+            'cpu': `${cpuNum}`,
+            'nvidia.com/gpu': `${gpuNum}`
+        }
+    }
+
+    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
+        throw new MethodNotImplementedError();
+    }
+
+    public listTrialJobs(): Promise<TrialJobDetail[]> {
+        const jobs: TrialJobDetail[] = [];
+        
+        this.trialJobsMap.forEach(async (value: KubernetesTrialJobDetail, key: string) => {
+            if (value.form.jobType === 'TRIAL') {
+                jobs.push(await this.getTrialJob(key));
+            }
+        });
+
+        return Promise.resolve(jobs);
+    }
+
+    public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
+
+        const kubernetesTrialJob: TrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+
+        if (!kubernetesTrialJob) {
+            return Promise.reject(`trial job ${trialJobId} not found`)
+        }        
+
+        return Promise.resolve(kubernetesTrialJob);
+    }
+
+    public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void) {
+        this.metricsEmitter.on('metric', listener);
+    }
+
+    public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void) {
+        this.metricsEmitter.off('metric', listener);
+    }
+ 
+    public get isMultiPhaseJobSupported(): boolean {
+        return false;
+    }
+
+    public getClusterMetadata(key: string): Promise<string> {
+        return Promise.resolve('');
+    }
+
     public get MetricsEmitter() : EventEmitter {
-        let tmp: any;
-        return tmp;
+        return this.metricsEmitter;
+    }
+
+        /**
+     * Genereate run script for different roles(like worker or ps)
+     * @param trialJobId trial job id
+     * @param trialWorkingFolder working folder
+     * @param command 
+     * @param trialSequenceId sequence id
+     */
+    protected generateRunScript(trialJobId: string, trialWorkingFolder: string, 
+                command: string, trialSequenceId: string, roleType: DistTrainRole, gpuNum: number): string {
+        const runScriptLines: string[] = [];
+
+        runScriptLines.push('#!/bin/bash');
+        runScriptLines.push('export NNI_PLATFORM=kubeflow');
+        runScriptLines.push(`export NNI_SYS_DIR=$PWD/nni/${trialJobId}`);
+        runScriptLines.push(`export NNI_OUTPUT_DIR=${path.join(trialWorkingFolder, 'output', `${roleType}_output`)}`);
+        runScriptLines.push('export MULTI_PHASE=false');
+        runScriptLines.push(`export NNI_TRIAL_JOB_ID=${trialJobId}`);
+        runScriptLines.push(`export NNI_EXP_ID=${getExperimentId()}`);
+        runScriptLines.push(`export NNI_CODE_DIR=${trialWorkingFolder}`);
+        runScriptLines.push(`export NNI_TRIAL_SEQ_ID=${trialSequenceId}`);
+        
+        // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
+        // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
+        // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file
+        if(gpuNum === 0) {
+            runScriptLines.push(`export CUDA_VISIBLE_DEVICES=''`);
+        }
+
+        const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
+        runScriptLines.push('mkdir -p $NNI_SYS_DIR');
+        runScriptLines.push('mkdir -p $NNI_OUTPUT_DIR');
+        runScriptLines.push('cp -rT $NNI_CODE_DIR $NNI_SYS_DIR');
+        runScriptLines.push('cd $NNI_SYS_DIR');
+        runScriptLines.push('sh install_nni.sh # Check and install NNI pkg');
+        runScriptLines.push(`python3 -m nni_trial_tool.trial_keeper --trial_command '${command}' `
+        + `--nnimanager_ip '${nniManagerIp}' --nnimanager_port '${this.kubernetesRestServerPort}' `
+        + `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`);
+
+        return runScriptLines.join('\n');
+    }
+
+    protected generateSequenceId(): number {
+        if (this.nextTrialSequenceId === -1) {
+            this.nextTrialSequenceId = getInitTrialSequenceId();
+        }
+
+        return this.nextTrialSequenceId++;
     }
 }
 
