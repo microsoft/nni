@@ -247,7 +247,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
     public listTrialJobs(): Promise<TrialJobDetail[]> {
         const jobs: TrialJobDetail[] = [];
         
-        this.trialJobsMap.forEach(async (value: KubeflowTrialJobDetail, key: string) => {
+        this.trialJobsMap.forEach(async (value: KubernetesTrialJobDetail, key: string) => {
             if (value.form.jobType === 'TRIAL') {
                 jobs.push(await this.getTrialJob(key));
             }
@@ -283,7 +283,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
     }
 
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
-        const trialJobDetail : KubeflowTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
+        const trialJobDetail : KubernetesTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         if(!trialJobDetail) {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} not found`;
             this.log.error(errorMessage);
@@ -645,7 +645,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
         runScriptLines.push('cd $NNI_SYS_DIR');
         runScriptLines.push('sh install_nni.sh # Check and install NNI pkg');
         runScriptLines.push(`python3 -m nni_trial_tool.trial_keeper --trial_command '${command}' `
-        + `--nnimanager_ip '${nniManagerIp}' --nnimanager_port '${this.kubeflowRestServerPort}' `
+        + `--nnimanager_ip '${nniManagerIp}' --nnimanager_port '${this.kubernetesRestServerPort}' `
         + `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`);
 
         return runScriptLines.join('\n');

@@ -39,7 +39,7 @@ import {
 import { KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesClusterConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage} from './kubernetesConfig';
 
-
+import * as azureStorage from 'azure-storage';
 var azure = require('azure-storage');
 
 type DistTrainRole = 'worker' | 'ps' | 'master';
@@ -62,6 +62,11 @@ class KubernetesTrainingService implements TrainingService {
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
     protected kubernetesRestServerPort?: number;
     protected readonly CONTAINER_MOUNT_PATH: string;
+    protected azureStorageClient?: azureStorage.FileService;
+    protected azureStorageShare?: string;
+    protected azureStorageSecretName?: string;
+    protected azureStorageAccountName?: string;
+    protected nniManagerIpConfig?: NNIManagerIpConfig;
 
     
     constructor() {
