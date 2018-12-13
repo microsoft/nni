@@ -140,7 +140,7 @@ kubeflow_trial_schema = {
             'memoryMB': int,
             'image': str
         },
-        'worker':{
+        Optional('worker'):{
             'replicas': int,
             'command': str,
             'gpuNum': And(int, lambda x: 0 <= x <= 99999),
@@ -154,6 +154,7 @@ kubeflow_trial_schema = {
 kubeflow_config_schema = {
     'kubeflowConfig':Or({
         'operator': Or('tf-operator', 'pytorch-operator'),
+        'apiVersion': str,
         Optional('storage'): Or('nfs', 'azureStorage'),
         'nfs': {
             'server': str,

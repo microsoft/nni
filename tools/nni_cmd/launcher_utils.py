@@ -94,9 +94,15 @@ def validate_kubeflow_operators(experiment_config):
             if experiment_config.get('trial').get('master') is not None:
                 print_error('kubeflow with tf-operator can not set master')
                 exit(1)
+            if experiment_config.get('trial').get('worker') is None:
+                print_error('kubeflow with tf-operator must set worker')
+                exit(1)
         elif experiment_config.get('kubeflowConfig').get('operator') == 'pytorch-operator':
             if experiment_config.get('trial').get('ps') is not None:
                 print_error('kubeflow with pytorch-operator can not set ps')
+                exit(1)
+            if experiment_config.get('trial').get('master') is None:
+                print_error('kubeflow with pytorch-operator must set master')
                 exit(1)
         
         if experiment_config.get('kubeflowConfig').get('storage') == 'nfs':
