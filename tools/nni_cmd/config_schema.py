@@ -59,6 +59,16 @@ Optional('tuner'): Or({
     'builtinTunerName': Or('BatchTuner', 'GridSearch'),
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
+    'builtinTunerName': 'NetworkMorphism',
+    'classArgs': {
+        Optional('optimize_mode'): Or('maximize', 'minimize'),
+        Optional('task'): And(str, lambda x: x in ['cv','nlp','common']),
+        Optional('input_width'):  int,
+        Optional('input_channel'):  int,
+        Optional('n_output_node'):  int,
+        },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
     'codeDir': os.path.exists,
     'classFileName': str,
     'className': str,
