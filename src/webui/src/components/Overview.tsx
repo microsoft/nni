@@ -219,7 +219,12 @@ class Overview extends React.Component<{}, OverviewState> {
                                 const acc = getFinalResult(tableData[item].finalMetricData);
                                 // if hyperparameters is undefine, show error message, else, show parameters value
                                 if (tableData[item].hyperParameters) {
-                                    desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
+                                    const parameters = JSON.parse(tableData[item].hyperParameters).parameters;
+                                    if (typeof parameters === 'string') {
+                                        desJobDetail.parameters = JSON.parse(parameters);
+                                    } else {
+                                        desJobDetail.parameters = parameters;
+                                    }
                                 } else {
                                     desJobDetail.parameters = { error: 'This trial\'s parameters are not available.' };
                                 }
@@ -384,7 +389,7 @@ class Overview extends React.Component<{}, OverviewState> {
             default:
         }
     }
-    
+
     componentDidMount() {
         this._isMounted = true;
         this.showSessionPro();

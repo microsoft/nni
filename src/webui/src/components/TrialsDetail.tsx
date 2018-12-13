@@ -150,7 +150,12 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             }
                         }
                         if (trialJobs[item].hyperParameters !== undefined) {
-                            desc.parameters = JSON.parse(trialJobs[item].hyperParameters).parameters;
+                            const getPara = JSON.parse(trialJobs[item].hyperParameters).parameters;
+                            if (typeof getPara === 'string') {
+                                desc.parameters = JSON.parse(getPara);
+                            } else {
+                                desc.parameters = getPara;
+                            }
                         } else {
                             desc.parameters = { error: 'This trial\'s parameters are not available.' };
                         }
