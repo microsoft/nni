@@ -28,6 +28,30 @@ import { KubeflowOperator, OperatorApiVersion } from './kubeflowConfig';
 var K8SClient = require('kubernetes-client').Client;
 var K8SConfig = require('kubernetes-client').config;
 
+/**
+ * Generict Kubernetes client, target version >= 1.9
+ */
+class GeneralK8sClient {
+    protected readonly client: any;
+    protected readonly log: Logger = getLogger();
+
+    constructor() {
+        this.client = new K8SClient({ config: K8SConfig.fromKubeconfig(path.join(os.homedir(), '.kube', 'config')), version: '1.9'});
+        this.client.loadSpec();
+    }
+
+    public async createSecret(secretManifest: any): Promise<boolean> {
+        let result: Promise<boolean>;        
+        const response : any = await this.client.api.v1.namespaces('default').secrets.post({body: secretManifest});
+        if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(true);
+        } else {
+            result = Promise.reject(`Create secrets failed, statusCode is ${response.statusCode}`);
+        }
+        return result;
+    }
+}
+
 abstract class KubeflowOperatorClient {
     protected readonly client: any;
     protected readonly log: Logger = getLogger();
@@ -91,7 +115,7 @@ abstract class KubeflowOperatorClient {
         if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
-            result = Promise.reject(`TFOperatorClient create tfjobs failed, statusCode is ${response.statusCode}`);
+            result = Promise.reject(`KubeflowOperatorClient create tfjobs failed, statusCode is ${response.statusCode}`);
         }
         return result;
     }
@@ -101,10 +125,9 @@ abstract class KubeflowOperatorClient {
         let result: Promise<any>;
         const response : any = await this.operator(kubeflowJobName).get();
         if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
-            console.log(`TFOperatorClient: tfjobs conditions is ${JSON.stringify(response.body.status.conditions)}`);
             result = Promise.resolve(response.body);
         } else {
-            result = Promise.reject(`TFOperatorClient get tfjobs failed, statusCode is ${response.statusCode}`);
+            result = Promise.reject(`KubeflowOperatorClient get tfjobs failed, statusCode is ${response.statusCode}`);
         }
         return result;
     }
@@ -118,7 +141,7 @@ abstract class KubeflowOperatorClient {
             if(deleteResult.statusCode && deleteResult.statusCode >= 200 && deleteResult.statusCode <= 299) {
                 result = Promise.resolve(true);
             } else {
-                result = Promise.reject(`TFOperatorClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
+                result = Promise.reject(`KubeflowOperatorClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
             }
         } catch(err) {
             result = Promise.reject(err);
@@ -134,7 +157,7 @@ class TFOperatorClientV1Alpha2 extends KubeflowOperatorClient {
      */
     public constructor() {
         super();
-        this.crdSchema = JSON.parse(fs.readFileSync('./config/tfjob-crd-v1alpha2.json', 'utf8'));
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/kubeflow/tfjob-crd-v1alpha2.json', 'utf8'));
         this.client.addCustomResourceDefinition(this.crdSchema);
     }
 
@@ -153,7 +176,7 @@ class TFOperatorClientV1Beta1 extends KubeflowOperatorClient {
      */
     public constructor() {
         super();
-        this.crdSchema = JSON.parse(fs.readFileSync('./config/tfjob-crd-v1beta1.json', 'utf8'));
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/kubeflow/tfjob-crd-v1beta1.json', 'utf8'));
         this.client.addCustomResourceDefinition(this.crdSchema);
     }
 
@@ -172,7 +195,7 @@ class PytorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {
      */
     public constructor() {
         super();
-        this.crdSchema = JSON.parse(fs.readFileSync('./config/pytorchjob-crd-v1alpha2.json', 'utf8'));
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/kubeflow/pytorchjob-crd-v1alpha2.json', 'utf8'));
         this.client.addCustomResourceDefinition(this.crdSchema);
     }
 
@@ -191,7 +214,7 @@ class PytorchOperatorClientV1Beta1 extends KubeflowOperatorClient {
      */
     public constructor() {
         super();
-        this.crdSchema = JSON.parse(fs.readFileSync('./config/pytorchjob-crd-v1beta1.json', 'utf8'));
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/kubeflow/pytorchjob-crd-v1beta1.json', 'utf8'));
         this.client.addCustomResourceDefinition(this.crdSchema);
     }
 
@@ -204,4 +227,4 @@ class PytorchOperatorClientV1Beta1 extends KubeflowOperatorClient {
     }
 }
 
-export { KubeflowOperatorClient }
+export { KubeflowOperatorClient, GeneralK8sClient };

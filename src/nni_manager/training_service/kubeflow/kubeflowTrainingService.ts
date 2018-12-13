@@ -44,7 +44,7 @@ import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 import { validateCodeDir } from '../common/util';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
-import { KubeflowOperatorClient } from './kubernetesApiClient';
+import { GeneralK8sClient, KubeflowOperatorClient } from './kubernetesApiClient';
 
 var azure = require('azure-storage');
 
@@ -68,6 +68,7 @@ class KubeflowTrainingService implements TrainingService {
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
     private kubeflowRestServerPort?: number;
     private operatorClient?: KubeflowOperatorClient;
+    private readonly genericK8sClient: GeneralK8sClient;
     private readonly CONTAINER_MOUNT_PATH: string;
     private azureStorageClient?: azureStorage.FileService;
     private azureStorageShare?: string;
@@ -79,6 +80,7 @@ class KubeflowTrainingService implements TrainingService {
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, KubeflowTrialJobDetail>();
+        this.genericK8sClient = new GeneralK8sClient();
         this.kubeflowJobInfoCollector = new KubeflowJobInfoCollector(this.trialJobsMap);
         this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
         this.experimentId = getExperimentId();      
@@ -363,9 +365,26 @@ class KubeflowTrainingService implements TrainingService {
                         await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
                         //create sotrage secret
                         this.azureStorageSecretName = 'nni-secret-' + uniqueString(8).toLowerCase();
-                        await cpp.exec(`kubectl create secret generic ${this.azureStorageSecretName} `
-                        + `--from-literal=azurestorageaccountname=${this.azureStorageAccountName} `
-                        + `--from-literal=azurestorageaccountkey=${storageAccountKey}`)
+
+                        await this.genericK8sClient.createSecret(
+                            {
+                                apiVersion: 'v1',
+                                kind: 'Secret',
+                                metadata: { 
+                                    name: this.azureStorageSecretName,
+                                    namespace: 'default',
+                                    labels: {
+                                        app: this.NNI_KUBEFLOW_TRIAL_LABEL,
+                                        expId: getExperimentId()
+                                    }
+                                },
+                                type: 'Opaque',
+                                data: {
+                                    azurestorageaccountname: this.azureStorageAccountName,
+                                    azurestorageaccountkey: storageAccountKey
+                                }
+                            }
+                        );
                     } catch(error) {
                         this.log.error(error);
                         throw new Error(error);
