@@ -140,7 +140,7 @@ kubeflow_trial_schema = {
             'memoryMB': int,
             'image': str
         },
-        'worker':{
+        Optional('worker'):{
             'replicas': int,
             'command': str,
             'gpuNum': And(int, lambda x: 0 <= x <= 99999),
