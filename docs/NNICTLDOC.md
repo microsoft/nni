@@ -16,6 +16,7 @@ nnictl config
 nnictl log
 nnictl webui
 nnictl tensorboard
+nnictl top
 ```
 ### Manage an experiment
 * __nnictl create__ 
@@ -172,7 +173,24 @@ nnictl tensorboard
           | ------ | ------ | ------ |------ |
          | id|  False| |ID of the experiment you want to set|   
          | --trialid, -t|  True| |ID of the trial you want to kill.| 
+  
+  * __nnictl top__
+    
+      * Description
+        
+        Monitor all of running experiments.
       
+      * Usage
+  
+              nnictl top
+      
+      	Options:  
+	        
+          | Name, shorthand | Required|Default | Description |
+          | ------ | ------ | ------ |------ |
+         | id|  False| |ID of the experiment you want to set|   
+         | --time, -t|  False| |The interval to update the experiment status, the unit of time is second, and the default value is 3 second.| 
+
           
 
 ### Manage experiment information

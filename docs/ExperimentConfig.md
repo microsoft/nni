@@ -150,7 +150,7 @@ machineList:
 	
     * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
    
-    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), nni support kubeflow based on normal kubernets and [azure kubernets](https://azure.microsoft.com/en-us/services/kubernetes-service/).
+    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), nni support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
 	
 * __searchSpacePath__
   * Description
@@ -371,19 +371,19 @@ machineList:
     
     __operator__ specify the kubeflow's operator to be used, nni support __tf-operator__ in current version.
   
+  * __storage__
+   
+    __storage__ specify the storage type of kubeflow, including {__nfs__, __azureStorage__}. This field is optional, and the default value is __nfs__. If the config use azureStorage, this field must be completed.
+  
   * __nfs__
     
     __server__ is the host of nfs server
 
     __path__ is the mounted path of nfs
-
-  * __kubernetsServer__
-    
-    __kubernetsServer__ set the host of kubernets service.
   
   * __keyVault__
     
-    If users want to use azure kubernets service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+    If users want to use azure kubernetes service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
 
     * __vaultName__
 
@@ -392,6 +392,18 @@ machineList:
     * __name__
 
       __name__ is the value of ```--name``` used in az command.
+
+  * __azureStorage__
+    
+    If users use azure kubernetes service, they should set azure storage account to store code files.
+
+    * __accountName__
+     
+      __accountName__ is the name of azure storage account.
+
+    * __azureShare__
+      
+      __azureShare__ is the share of the azure file storage.
 
 * __paiConfig__
 
@@ -406,18 +418,6 @@ machineList:
   * __host__
     
     __host__ is the host of pai.
-
-  * __azureStorage__
-    
-    If users use azure kubernets service, they should set azure storage account to store code files.
-
-    * __accountName__
-     
-      __accountName__ is the name of azure storage account.
-
-    * __azureShare__
-      
-      __azureShare__ is the share of the azure file storage.
     
     
 

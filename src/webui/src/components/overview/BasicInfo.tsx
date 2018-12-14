@@ -31,24 +31,20 @@ class BasicInfo extends React.Component<BasicInfoProps, {}> {
                     <div>{trialProfile.id}</div>
                 </Col>
                 <Col span={8} className="padItem basic">
-                    <Row>
-                        <Col span={18}>
-                            <p>Start Time</p>
-                            <div className="nowrap">
-                                {new Date(trialProfile.startTime).toLocaleString('en-US')}
-                            </div>
-                            <p>End Time</p>
-                            <div className="nowrap">
-                                {
-                                    trialProfile.endTime
-                                        ?
-                                        new Date(trialProfile.endTime).toLocaleString('en-US')
-                                        :
-                                        'none'
-                                }
-                            </div>
-                        </Col>
-                    </Row>
+                    <p>Start Time</p>
+                    <div className="nowrap">
+                        {new Date(trialProfile.startTime).toLocaleString('en-US')}
+                    </div>
+                    <p>End Time</p>
+                    <div className="nowrap">
+                        {
+                            trialProfile.endTime
+                                ?
+                                new Date(trialProfile.endTime).toLocaleString('en-US')
+                                :
+                                'none'
+                        }
+                    </div>
                 </Col>
                 <Col span={8} className="padItem basic">
                     <p>LogPath</p>
