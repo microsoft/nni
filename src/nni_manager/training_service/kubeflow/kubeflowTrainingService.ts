@@ -47,6 +47,7 @@ import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import { GeneralK8sClient, KubeflowOperatorClient } from './kubernetesApiClient';
 
 var azure = require('azure-storage');
+var base64 = require('js-base64').Base64;
 
 /**
  * Training Service implementation for Kubeflow
@@ -345,7 +346,7 @@ class KubeflowTrainingService implements TrainingService {
                     const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = 
                         new KubeflowClusterConfigAzure(kubeflowClusterJsonObject.operator, 
                             kubeflowClusterJsonObject.apiVersion,
-                            kubeflowClusterJsonObject.keyvault, 
+                            kubeflowClusterJsonObject.keyVault, 
                             kubeflowClusterJsonObject.azureStorage, kubeflowClusterJsonObject.storage);
 
                     const vaultName = azureKubeflowClusterConfig.keyVault.vaultName;
@@ -365,7 +366,6 @@ class KubeflowTrainingService implements TrainingService {
                         await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
                         //create sotrage secret
                         this.azureStorageSecretName = 'nni-secret-' + uniqueString(8).toLowerCase();
-
                         await this.genericK8sClient.createSecret(
                             {
                                 apiVersion: 'v1',
@@ -380,8 +380,8 @@ class KubeflowTrainingService implements TrainingService {
                                 },
                                 type: 'Opaque',
                                 data: {
-                                    azurestorageaccountname: this.azureStorageAccountName,
-                                    azurestorageaccountkey: storageAccountKey
+                                    azurestorageaccountname: base64.encode(this.azureStorageAccountName),
+                                    azurestorageaccountkey: base64.encode(storageAccountKey)
                                 }
                             }
                         );
