@@ -2,8 +2,12 @@ import * as React from 'react';
 import {
     Row,
     Col,
-    Popover
+    Popover,
+    Button,
+    message
 } from 'antd';
+import axios from 'axios';
+import { MANAGER_IP, CONTROLTYPE } from '../../static/const';
 import { Experiment, TrialNumber } from '../../static/interface';
 import { convertTime } from '../../static/function';
 import ProgressBar from './ProgressItem';
@@ -16,19 +20,130 @@ interface ProgressProps {
     bestAccuracy: string;
     status: string;
     errors: string;
+    updateFile: Function;
 }
 
-class Progressed extends React.Component<ProgressProps, {}> {
+interface ProgressState {
+    btnName: string;
+    isEnable: boolean;
+    userInputVal?: string; // get user input
+    cancelSty: string;
+}
+
+class Progressed extends React.Component<ProgressProps, ProgressState> {
+
+    public conInput: HTMLInputElement | null;
 
     constructor(props: ProgressProps) {
         super(props);
+        this.state = {
+            btnName: 'Edit',
+            isEnable: true,
+            cancelSty: 'none'
+        };
+    }
+
+    editTrialConcurrency = () => {
+        const { btnName } = this.state;
+        if (btnName === 'Edit') {
+            this.setState(() => ({
+                isEnable: false,
+                btnName: 'Save',
+                cancelSty: 'inline-block'
+            }));
+        } else {
+            axios(`${MANAGER_IP}/experiment`, {
+                method: 'GET'
+            })
+                .then(rese => {
+                    if (rese.status === 200) {
+                        const { userInputVal } = this.state;
+                        const experimentFile = rese.data;
+                        const trialConcurrency = experimentFile.params.trialConcurrency;
+                        if (userInputVal !== undefined) {
+                            if (userInputVal === trialConcurrency.toString() || userInputVal === '') {
+                                message.info(
+                                    `trialConcurrency's value is ${trialConcurrency}, you did not modify it`, 2);
+                            } else {
+                                experimentFile.params.trialConcurrency = parseInt(userInputVal, 10);
+                                // rest api, modify trial concurrency value
+                                axios(`${MANAGER_IP}/experiment`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Content-Type': 'application/json;charset=utf-8'
+                                    },
+                                    data: experimentFile,
+                                    params: {
+                                        update_type: CONTROLTYPE[1]
+                                    }
+                                }).then(res => {
+                                    if (res.status === 200) {
+                                        message.success(`Update ${CONTROLTYPE[1].toLocaleLowerCase()} successfully`);
+                                        // rerender trial profile message
+                                        const { updateFile } = this.props;
+                                        updateFile();
+                                    }
+                                })
+                                    .catch(error => {
+                                        if (error.response.status === 500) {
+                                            if (error.response.data.error) {
+                                                message.error(error.response.data.error);
+                                            } else {
+                                                message.error(`Update ${CONTROLTYPE[1].toLocaleLowerCase()} failed`);
+                                            }
+                                        }
+                                    });
+                                // btn -> edit
+                                this.setState(() => ({
+                                    btnName: 'Edit',
+                                    isEnable: true,
+                                    cancelSty: 'none'
+                                }));
+                            }
+                        }
+                    }
+                });
+        }
+    }
+
+    cancelFunction = () => {
+        const { trialProfile } = this.props;
+        this.setState(
+            () => ({
+                btnName: 'Edit',
+                isEnable: true,
+                cancelSty: 'none',
+            }));
+        if (this.conInput !== null) {
+            this.conInput.value = trialProfile.runConcurren.toString();
+        }
+    }
+
+    getUserTrialConcurrency = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+        if (value.match(/^[1-9]\d*$/) || value === '') {
+            this.setState(() => ({
+                userInputVal: value
+            }));
+        } else {
+            message.error('Please enter a positive integer!', 2);
+            if (this.conInput !== null) {
+                const { trialProfile } = this.props;
+                this.conInput.value = trialProfile.runConcurren.toString();
+            }
+        }
+    }
+
+    componentWillReceiveProps() {
+        const { trialProfile } = this.props;
+        if (this.conInput !== null) {
+            this.conInput.value = trialProfile.runConcurren.toString();
+        }
     }
 
     render() {
-        const { trialProfile,
-            trialNumber, bestAccuracy,
-            status, errors
-        } = this.props;
+        const { trialProfile, trialNumber, bestAccuracy, status, errors } = this.props;
+        const { isEnable, btnName, cancelSty } = this.state;
         const bar2 = trialNumber.totalCurrentTrial - trialNumber.waitTrial - trialNumber.unknowTrial;
         const bar2Percent = (bar2 / trialProfile.MaxTrialNum) * 100;
         const percent = (trialProfile.execDuration / trialProfile.maxDuration) * 100;
@@ -69,6 +184,31 @@ class Progressed extends React.Component<ProgressProps, {}> {
                         }
 
                     </div>
+                </Row>
+                {/* modify concurrency */}
+                <Row className="inputBox">
+                    <span className="title">Concurrency:</span>
+                    <input
+                        type="number"
+                        disabled={isEnable}
+                        onChange={this.getUserTrialConcurrency}
+                        className="concurrencyInput"
+                        ref={(input) => this.conInput = input}
+                    />
+                    <Button
+                        type="primary"
+                        className="tableButton editStyle"
+                        onClick={this.editTrialConcurrency}
+                    >{btnName}
+                    </Button>
+                    <Button
+                        type="primary"
+                        onClick={this.cancelFunction}
+                        style={{ display: cancelSty, marginLeft: 1 }}
+                        className="tableButton editStyle"
+                    >
+                        Cancel
+                    </Button>
                 </Row>
                 <ProgressBar
                     who="Duration"
