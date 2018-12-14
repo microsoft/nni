@@ -25,6 +25,8 @@ trial:
     image: msranni/nni:latest
 kubeflowConfig:
   operator: tf-operator
+  apiVersion: v1alpha2
+  storage: nfs
   nfs:
     server: 10.10.10.10
     path: /var/nfs/general

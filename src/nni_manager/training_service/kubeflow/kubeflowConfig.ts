@@ -24,6 +24,9 @@ import { KubernetesClusterConfig, KubernetesStorageKind, NFSConfig, AzureStorage
 
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
+export type KubeflowStorageKind = 'nfs' | 'azureStorage';
+export type DistTrainRole = 'worker' | 'ps' | 'master';
+export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
 
 /**
  * Kuberflow cluster configuration
@@ -32,6 +35,8 @@ export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export class KubeflowClusterConfigBase extends KubernetesClusterConfig {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
+    public readonly apiVersion: OperatorApiVersion;
+    public readonly storage?: KubeflowStorageKind;    
     
     /**
      * Constructor
@@ -39,17 +44,21 @@ export class KubeflowClusterConfigBase extends KubernetesClusterConfig {
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator, storage?: KubernetesStorageKind) {
+    constructor(operator: KubeflowOperator, apiVersion: OperatorApiVersion, storage?: KubeflowStorageKind) {
         super(storage)
         this.operator = operator;
+        this.apiVersion = apiVersion;
+        this.storage = storage;
     }
 }
 
 export class KubeflowClusterConfigNFS extends KubeflowClusterConfigBase{
     public readonly nfs: NFSConfig;
     
-    constructor(operator: KubeflowOperator, nfs: NFSConfig, storage?: KubernetesStorageKind) {
-        super(operator, storage)
+    constructor(operator: KubeflowOperator, 
+            apiVersion: OperatorApiVersion, 
+            nfs: NFSConfig, storage?: KubeflowStorageKind) {
+        super(operator, apiVersion, storage);
         this.nfs = nfs;
     }
 }
@@ -58,8 +67,12 @@ export class KubeflowClusterConfigAzure extends KubeflowClusterConfigBase{
     public readonly keyVault: keyVaultConfig;
     public readonly azureStorage: AzureStorage;
     
-    constructor(operator: KubeflowOperator, keyVault: keyVaultConfig, azureStorage: AzureStorage, storage?: KubernetesStorageKind) {
-        super(operator, storage)
+    constructor(operator: KubeflowOperator, 
+            apiVersion: OperatorApiVersion, 
+            keyVault: keyVaultConfig, 
+            azureStorage: AzureStorage, 
+            storage?: KubeflowStorageKind) {
+        super(operator, apiVersion, storage);
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
     }

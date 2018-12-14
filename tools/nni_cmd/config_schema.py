@@ -154,6 +154,7 @@ kubernetes_trial_schema = {
 kubeflow_config_schema = {
     'kubeflowConfig':Or({
         'operator': Or('tf-operator', 'pytorch-operator'),
+        'apiVersion': str,
         Optional('storage'): Or('nfs', 'azureStorage'),
         'nfs': {
             'server': str,

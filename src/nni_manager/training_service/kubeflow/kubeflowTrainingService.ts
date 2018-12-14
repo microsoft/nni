@@ -20,6 +20,7 @@
 'use strict'
 
 import * as assert from 'assert';
+import * as azureStorage from 'azure-storage';
 import * as component from '../../common/component';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
@@ -45,15 +46,10 @@ import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 import { validateCodeDir } from '../common/util';
 import { AzureStorageClientUtility } from '../kubernetes/azureStorageClientUtils';
-import * as azureStorage from 'azure-storage';
-import { KubeflowOperatorClient, 
-    PytorchOperatorClientV1Alpha2, PytorchOperatorClientV1Beta1, 
-    TFOperatorClient } from './kubernetesApiClient';
+import { GeneralK8sClient, KubeflowOperatorClient } from './kubernetesApiClient';
 import { KubernetesTrainingService } from '../kubernetes/kubernetesTrainingService'
 
 var azure = require('azure-storage');
-
-type DistTrainRole = 'worker' | 'ps' | 'master';
 
 /**
  * Training Service implementation for Kubeflow
@@ -64,6 +60,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
     private kubeflowClusterConfig?: KubeflowClusterConfigBase;
     private kubeflowTrialConfig?: KubernetesTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
+    private readonly genericK8sClient: GeneralK8sClient;
     private operatorClient?: KubeflowOperatorClient;
 
     constructor() {
@@ -71,6 +68,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
         this.kubeflowJobInfoCollector = new KubeflowJobInfoCollector(this.trialJobsMap);
         this.experimentId = getExperimentId();      
         this.nextTrialSequenceId = -1;
+        this.genericK8sClient = new GeneralK8sClient();
     }
 
     public async run(): Promise<void> {
@@ -220,6 +218,9 @@ class KubeflowTrainingService extends KubernetesTrainingService {
             trialJobOutputUrl
         );
 
+        // Set trial job detail until create Kubeflow job successfully 
+        this.trialJobsMap.set(trialJobId, trialJobDetail);
+
         // Generate kubeflow job resource config object        
         const kubeflowJobConfig: any = this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources, nonWorkerResources);
 
@@ -273,12 +274,16 @@ class KubeflowTrainingService extends KubernetesTrainingService {
             
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
                 let kubeflowClusterJsonObject = JSON.parse(value);
-                let kubeflowClusterConfigBase: KubeflowClusterConfigBase = new KubeflowClusterConfigBase(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.storage);
+                let kubeflowClusterConfigBase: KubeflowClusterConfigBase 
+                        = new KubeflowClusterConfigBase(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.apiVersion, kubeflowClusterJsonObject.storage);
                 
                 if(kubeflowClusterConfigBase && kubeflowClusterConfigBase.storage === 'azureStorage') {
-                    this.kubeflowClusterConfig = new KubeflowClusterConfigAzure(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.keyvault, 
-                        kubeflowClusterJsonObject.azureStorage, kubeflowClusterJsonObject.storage)
-                    let azureKubeflowClusterConfig = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
+                    const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = 
+                        new KubeflowClusterConfigAzure(kubeflowClusterJsonObject.operator, 
+                            kubeflowClusterJsonObject.apiVersion,
+                            kubeflowClusterJsonObject.keyvault, 
+                            kubeflowClusterJsonObject.azureStorage, kubeflowClusterJsonObject.storage);
+
                     const vaultName = azureKubeflowClusterConfig.keyVault.vaultName;
                     const valutKeyName = azureKubeflowClusterConfig.keyVault.name;
                     this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
@@ -296,19 +301,41 @@ class KubeflowTrainingService extends KubernetesTrainingService {
                         await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
                         //create sotrage secret
                         this.azureStorageSecretName = 'nni-secret-' + uniqueString(8).toLowerCase();
-                        await cpp.exec(`kubectl create secret generic ${this.azureStorageSecretName} `
-                        + `--from-literal=azurestorageaccountname=${this.azureStorageAccountName} `
-                        + `--from-literal=azurestorageaccountkey=${storageAccountKey}`)
+
+                        await this.genericK8sClient.createSecret(
+                            {
+                                apiVersion: 'v1',
+                                kind: 'Secret',
+                                metadata: { 
+                                    name: this.azureStorageSecretName,
+                                    namespace: 'default',
+                                    labels: {
+                                        app: this.NNI_KUBEFLOW_TRIAL_LABEL,
+                                        expId: getExperimentId()
+                                    }
+                                },
+                                type: 'Opaque',
+                                data: {
+                                    azurestorageaccountname: this.azureStorageAccountName,
+                                    azurestorageaccountkey: storageAccountKey
+                                }
+                            }
+                        );
                     } catch(error) {
                         this.log.error(error);
                         throw new Error(error);
                     }
+
+                    this.kubeflowClusterConfig = azureKubeflowClusterConfig;
                 } else if(kubeflowClusterConfigBase && (kubeflowClusterConfigBase.storage === 'nfs' || kubeflowClusterConfigBase.storage === undefined)) {
                     //Check and mount NFS mount point here
                     //If storage is undefined, the default value is nfs
-                    this.kubeflowClusterConfig = new KubeflowClusterConfigNFS(kubeflowClusterJsonObject.operator, kubeflowClusterJsonObject.nfs, 
-                        kubeflowClusterJsonObject.storage)
-                    let nfsKubeflowClusterConfig = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
+                    const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = 
+                                 new KubeflowClusterConfigNFS(kubeflowClusterJsonObject.operator, 
+                                            kubeflowClusterJsonObject.apiVersion,
+                                            kubeflowClusterJsonObject.nfs, 
+                                            kubeflowClusterJsonObject.storage);
+
                     await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
                     const nfsServer: string = nfsKubeflowClusterConfig.nfs.server;
                     const nfsPath: string = nfsKubeflowClusterConfig.nfs.path;
@@ -320,18 +347,15 @@ class KubeflowTrainingService extends KubernetesTrainingService {
                         this.log.error(mountError);
                         throw new Error(mountError);
                     }
+                    this.kubeflowClusterConfig = nfsKubeflowClusterConfig;
                 } else {
                     const error: string = `kubeflowClusterConfig format error!`;
                     this.log.error(error);
                     throw new Error(error);
                 }
 
-                if(this.kubeflowClusterConfig.operator === 'tf-operator') {
-                    this.operatorClient = new TFOperatorClient();
-                } else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
-                    this.operatorClient = new PytorchOperatorClientV1Beta1();
-                }
-
+                this.operatorClient = KubeflowOperatorClient.generateOperatorClient(this.kubeflowClusterConfig.operator,
+                                                                                     this.kubeflowClusterConfig.apiVersion);
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
@@ -465,7 +489,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
         }
 
         return {
-            apiVersion: 'kubeflow.org/v1alpha2',
+            apiVersion: `kubeflow.org/${this.operatorClient.apiVersion}`,
             kind: this.operatorClient.jobKind,
             metadata: { 
                 name: kubeflowJobName,

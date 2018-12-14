@@ -58,7 +58,7 @@ export class KubeflowJobInfoCollector {
     }
 
     private async retrieveSingleTrialJobInfo(operatorClient: KubeflowOperatorClient | undefined, 
-                                    kubeflowTrialJob : KubernetesTrialJobDetail) : Promise<void> {
+        kubeflowTrialJob : KubernetesTrialJobDetail) : Promise<void> {
         if (!this.statusesNeedToCheck.includes(kubeflowTrialJob.status)) {
             return Promise.resolve();
         }
