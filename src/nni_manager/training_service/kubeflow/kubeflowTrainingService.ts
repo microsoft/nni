@@ -50,6 +50,7 @@ import { GeneralK8sClient, KubeflowOperatorClient } from './kubernetesApiClient'
 import { KubernetesTrainingService } from '../kubernetes/kubernetesTrainingService'
 
 var azure = require('azure-storage');
+var base64 = require('js-base64').Base64;
 
 /**
  * Training Service implementation for Kubeflow
@@ -281,7 +282,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
                     const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = 
                         new KubeflowClusterConfigAzure(kubeflowClusterJsonObject.operator, 
                             kubeflowClusterJsonObject.apiVersion,
-                            kubeflowClusterJsonObject.keyvault, 
+                            kubeflowClusterJsonObject.keyVault, 
                             kubeflowClusterJsonObject.azureStorage, kubeflowClusterJsonObject.storage);
 
                     const vaultName = azureKubeflowClusterConfig.keyVault.vaultName;
@@ -301,7 +302,6 @@ class KubeflowTrainingService extends KubernetesTrainingService {
                         await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
                         //create sotrage secret
                         this.azureStorageSecretName = 'nni-secret-' + uniqueString(8).toLowerCase();
-
                         await this.genericK8sClient.createSecret(
                             {
                                 apiVersion: 'v1',
@@ -316,8 +316,8 @@ class KubeflowTrainingService extends KubernetesTrainingService {
                                 },
                                 type: 'Opaque',
                                 data: {
-                                    azurestorageaccountname: this.azureStorageAccountName,
-                                    azurestorageaccountkey: storageAccountKey
+                                    azurestorageaccountname: base64.encode(this.azureStorageAccountName),
+                                    azurestorageaccountkey: base64.encode(storageAccountKey)
                                 }
                             }
                         );

@@ -162,6 +162,7 @@ kubeflow_config_schema = {
         }
     },{
         'operator': Or('tf-operator', 'pytorch-operator'),
+        'apiVersion': str,
         Optional('storage'): Or('nfs', 'azureStorage'),
         'keyVault': {
             'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
