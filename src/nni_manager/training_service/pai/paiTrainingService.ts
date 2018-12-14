@@ -173,7 +173,7 @@ class PAITrainingService implements TrainingService {
         
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
+        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
