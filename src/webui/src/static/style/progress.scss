@@ -5,8 +5,6 @@
         color: #0573bc;
         font-size: 20px;
         font-weight: bold;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 12px;
     }
 
     .probar{
@@ -54,7 +52,7 @@
     }
     div{
         font-size: 16px;
-        color: #8c8c8c;
+        color: #333;
     }
 }
 
@@ -72,4 +70,25 @@
     min-width: 300px;
 }
 */
+.inputBox{
+    height: 30px;
+    margin-top: 8px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 44px;
+    .title{
+        font-size: 14px;
+        margin-right: 10px;
+    }
+    .concurrencyInput{
+        width: 25%;
+        height: 32px;
+        outline: none;
+        border: 1px solid #ccc;
+    }
+    .editStyle{
+        height: 32px;
+    }
+
+}
+
 
