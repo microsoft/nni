@@ -74,6 +74,7 @@ class PAITrainingService implements TrainingService {
     private nextTrialSequenceId: number;
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
+    private copyExpCodeDirPromise?: Promise<void>;
 
     constructor() {
         this.log = getLogger();
@@ -160,6 +161,11 @@ class PAITrainingService implements TrainingService {
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
+        // Make sure experiment code files is copied from local to HDFS
+        if(this.copyExpCodeDirPromise) {
+            await this.copyExpCodeDirPromise;
+        }
+
         const trialJobId: string = uniqueString(5);
         const trialSequenceId: number = this.generateSequenceId();
         //TODO: use HDFS working folder instead
@@ -168,7 +174,6 @@ class PAITrainingService implements TrainingService {
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
-        await cpp.exec(`cp -r ${this.paiTrialConfig.codeDir} ${trialLocalTempFolder}`);
 
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
@@ -215,7 +220,8 @@ class PAITrainingService implements TrainingService {
             this.paiRestServerPort,
             hdfsOutputDir,
             this.hdfsOutputHost,
-            this.paiClusterConfig.userName
+            this.paiClusterConfig.userName, 
+            path.join(this.hdfsBaseDir, this.expRootDir)
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
@@ -390,6 +396,7 @@ class PAITrainingService implements TrainingService {
                 }
         
                 this.hdfsOutputHost = groups['host'];
+                //TODO: choose to use /${username} as baseDir
                 this.hdfsBaseDir = groups['baseDir'];
                 if(this.hdfsBaseDir === undefined) {
                     this.hdfsBaseDir = "/";
@@ -414,6 +421,10 @@ class PAITrainingService implements TrainingService {
                 } catch(error) {
                     deferred.reject(new Error(`HDFS encounters problem, error is ${error}. Please check hdfsOutputDir host!`));
                 }
+
+                // Copy experiment files from local folder to HDFS
+                this.copyExpCodeDirPromise = HDFSClientUtility.copyDirectoryToHdfs(this.paiTrialConfig.codeDir, path.join(this.hdfsBaseDir, this.expRootDir), this.hdfsClient);
+                this.log.info(`Copy experiment code dir from ${this.paiTrialConfig.codeDir} to ${path.join(this.hdfsBaseDir, this.expRootDir)}`);
 
                 deferred.resolve();
                 break;
