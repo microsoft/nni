@@ -3,7 +3,7 @@ This page is for frequent asked questions and answers.
 
 ### tmp folder fulled
 NNICTL will use tmp folder as a temporary folder to copy files under codeDir when executing experimentation creation. 
-When met errors like below, try clean up **tmp** folder first.
+When met errors like below, try to clean up **tmp** folder first.
 > OSError: [Errno 28] No space left on device
 
 ### Cannot get trials' metrics in OpenPAI mode
