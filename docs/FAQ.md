@@ -14,7 +14,7 @@ In OpenPAI training mode, we start a rest server which listens on 51189 port in 
 There are two options:
 
 * Update or reinstall you current python's pip like `python3 -m pip install -U pip`
-* Install nni with --no-cache-dir flah like `python3 -m pip install nni --no-cache-dir`
+* Install nni with --no-cache-dir flag like `python3 -m pip install nni --no-cache-dir`
 
 ### Job management error: getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.
 Your machine don't have eth0 device, please set nniManagerIp in your config file manually. [refer](https://github.com/Microsoft/nni/blob/master/docs/ExperimentConfig.md)
