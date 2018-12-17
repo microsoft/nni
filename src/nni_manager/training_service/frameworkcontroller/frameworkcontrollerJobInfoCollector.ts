@@ -22,14 +22,15 @@
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import { getLogger, Logger } from '../../common/log';
-import { KubernetesJobType, KubernetesTrialJobDetail, FrameworkControllerJobType} from '../kubernetes/kubernetesData';
+import { KubernetesTrialJobDetail} from '../kubernetes/kubernetesData';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { TrialJobStatus } from '../../common/trainingService';
 import { KubernetesCRDClient } from '../kubernetes/kubernetesApiClient';
 import { KubernetesJobInfoCollector } from '../kubernetes/kubernetesJobInfoCollector';
+import { FrameworkControllerJobType, FrameworkControllerJobCompleteType } from './frameworkcontrollerConfig';
 
 /**
- * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally
+ * Collector frameworkcontroller jobs info from Kubernetes cluster, and update frameworkcontroller job status locally
  */
 export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollector{
     constructor(jobMap: Map<string, KubernetesTrialJobDetail>) {
@@ -48,24 +49,35 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
 
         let kubernetesJobInfo: any;
         try {
-            kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubeflowJobName);            
+            kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);            
         } catch(error) {
-            this.log.error(`Get job ${kubernetesTrialJob.kubeflowJobName} info failed, error is ${error}`);
+            this.log.error(`Get job ${kubernetesTrialJob.kubernetesJobName} info failed, error is ${error}`);
             return Promise.resolve();
         }
 
         if(kubernetesJobInfo.status && kubernetesJobInfo.status.state) {
-            const frameworkJobType : FrameworkControllerJobType = <FrameworkControllerJobType>kubernetesJobInfo.status.state;
+            const frameworkJobType: FrameworkControllerJobType = <FrameworkControllerJobType>kubernetesJobInfo.status.state;
             switch(frameworkJobType) {
+                case 'AttemptCreationPending' || 'AttemptCreationRequested' || 'AttemptPreparing':
+                    kubernetesTrialJob.status = 'WAITING';
+                    break;
                 case 'AttemptRunning':
-                kubernetesTrialJob.status = 'RUNNING';
+                    kubernetesTrialJob.status = 'RUNNING';
                     if(!kubernetesTrialJob.startTime) {
                         kubernetesTrialJob.startTime = Date.parse(<string>kubernetesJobInfo.status.startTime);
                     }
                     break;
                 case  'Completed':
-                    kubernetesTrialJob.status = 'SUCCEEDED';
-                    kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTime);                    
+                    const completedJobType : FrameworkControllerJobCompleteType = <FrameworkControllerJobCompleteType>kubernetesJobInfo.status.attemptStatus.completionStatus.type.name;
+                    switch(completedJobType) {
+                        case 'Succeeded':
+                            kubernetesTrialJob.status = 'SUCCEEDED';
+                            break;
+                        case 'Failed':
+                            kubernetesTrialJob.status = 'FAILED';
+                            break;        
+                    }
+                    kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTime); 
                     break;
                 default:
                     break;

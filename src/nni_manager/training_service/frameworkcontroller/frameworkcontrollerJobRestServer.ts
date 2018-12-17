@@ -25,7 +25,7 @@ import { FrameworkControllerainingService } from './frameworkcontrollerTrainingS
 import { KubernetesJobRestServer } from '../kubernetes/kubernetesJobRestServer'
 
 /**
- * Kubeflow Training service Rest server, provides rest API to support kubeflow job metrics update
+ * frameworkcontroller Training service Rest server, provides rest API to support frameworkcontroller job metrics update
  * 
  */
 @component.Singleton

@@ -21,12 +21,13 @@
 
 import { KubernetesClusterConfig, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig,
         KubernetesTrialConfig, KubernetesTrialConfigTemplate } from '../kubernetes/kubernetesConfig'
+import { MethodNotImplementedError } from '../../common/errors';
 
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type DistTrainRole = 'worker' | 'ps' | 'master';
 export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
-export type KubernetesJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
+export type KubeflowJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
 
 /**
  * Kuberflow cluster configuration
@@ -116,7 +117,17 @@ export class KubeflowClusterConfigFactory {
     }
 }
 
-export class KubeflowTrialConfigTensorflow extends KubernetesTrialConfig{
+export class KubeflowTrialConfig extends KubernetesTrialConfig {
+    constructor(codeDir: string) {
+        super(codeDir);
+    }
+
+    public get operatorType(): KubeflowOperator {
+        throw new MethodNotImplementedError();
+    }
+}
+
+export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfig {
     public readonly ps?: KubernetesTrialConfigTemplate;
     public readonly worker: KubernetesTrialConfigTemplate;
 
@@ -125,9 +136,13 @@ export class KubeflowTrialConfigTensorflow extends KubernetesTrialConfig{
         this.ps = ps;
         this.worker = worker;
     }
+
+    public get operatorType(): KubeflowOperator {
+        return 'tf-operator';
+    }
 }
 
-export class KubeflowTrialConfigPytorch extends KubernetesTrialConfig{
+export class KubeflowTrialConfigPytorch extends KubeflowTrialConfig {
     public readonly master: KubernetesTrialConfigTemplate;
     public readonly worker?: KubernetesTrialConfigTemplate;
 
@@ -135,5 +150,31 @@ export class KubeflowTrialConfigPytorch extends KubernetesTrialConfig{
         super(codeDir);
         this.master = master;
         this.worker = worker;
+    }
+
+    public get operatorType(): KubeflowOperator {
+        return 'pytorch-operator';
+    }
+}
+
+export class KubeflowTrialConfigFactory {
+
+    public static generateKubeflowTrialConfig(jsonObject: object, operator: KubeflowOperator): KubeflowTrialConfig {
+        if(operator === 'tf-operator'){
+            let kubeflowTrialConfigObject = <KubeflowTrialConfigTensorflow>jsonObject;
+            return new KubeflowTrialConfigTensorflow(
+                kubeflowTrialConfigObject.codeDir, 
+                kubeflowTrialConfigObject.worker,
+                kubeflowTrialConfigObject.ps
+            );
+        }else if(operator === 'pytorch-operator'){
+            let kubeflowTrialConfigObject = <KubeflowTrialConfigPytorch>jsonObject;
+            return new KubeflowTrialConfigPytorch(
+                kubeflowTrialConfigObject.codeDir,
+                kubeflowTrialConfigObject.master,
+                kubeflowTrialConfigObject.worker
+            );
+        }
+         throw new Error(`Invalid json object ${jsonObject}`);
     }
 }

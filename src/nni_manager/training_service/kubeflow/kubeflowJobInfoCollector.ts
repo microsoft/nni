@@ -22,11 +22,12 @@
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import { getLogger, Logger } from '../../common/log';
-import { KubernetesJobType, KubernetesTrialJobDetail, FrameworkControllerJobType} from '../kubernetes/kubernetesData';
+import { KubernetesTrialJobDetail} from '../kubernetes/kubernetesData';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { TrialJobStatus } from '../../common/trainingService';
 import { KubernetesCRDClient } from '../kubernetes/kubernetesApiClient';
 import { KubernetesJobInfoCollector } from '../kubernetes/kubernetesJobInfoCollector';
+import { KubeflowJobType } from './kubeflowConfig';
 
 /**
  * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally
@@ -48,22 +49,22 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
 
         let kubernetesJobInfo: any;
         try {
-            kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubeflowJobName);            
+            kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);            
         } catch(error) {
-            this.log.error(`Get job ${kubernetesTrialJob.kubeflowJobName} info failed, error is ${error}`);
+            this.log.error(`Get job ${kubernetesTrialJob.kubernetesJobName} info failed, error is ${error}`);
             return Promise.resolve();
         }
 
         if(kubernetesJobInfo.status && kubernetesJobInfo.status.conditions) {
             const latestCondition = kubernetesJobInfo.status.conditions[kubernetesJobInfo.status.conditions.length - 1];
-            const tfJobType : KubernetesJobType = <KubernetesJobType>latestCondition.type;
+            const tfJobType : KubeflowJobType = <KubeflowJobType>latestCondition.type;
             switch(tfJobType) {
                 case 'Created':
                     kubernetesTrialJob.status = 'WAITING';
                     kubernetesTrialJob.startTime = Date.parse(<string>latestCondition.lastUpdateTime);                    
                     break; 
                 case 'Running':
-                kubernetesTrialJob.status = 'RUNNING';
+                    kubernetesTrialJob.status = 'RUNNING';
                     if(!kubernetesTrialJob.startTime) {
                         kubernetesTrialJob.startTime = Date.parse(<string>latestCondition.lastUpdateTime);
                     }

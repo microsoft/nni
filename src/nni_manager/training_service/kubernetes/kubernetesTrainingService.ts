@@ -53,7 +53,7 @@ type DistTrainRole = 'worker' | 'ps' | 'master';
  */
 @component.Singleton
 class KubernetesTrainingService implements TrainingService {
-    protected readonly NNI_KUBEFLOW_TRIAL_LABEL: string = 'nni-kubeflow-trial';
+    protected readonly NNI_KUBERNETES_TRIAL_LABEL: string = 'nni-kubernetes-trial';
     protected readonly log!: Logger;
     protected readonly metricsEmitter: EventEmitter;
     protected readonly trialJobsMap: Map<string, KubernetesTrialJobDetail>;
@@ -62,7 +62,6 @@ class KubernetesTrainingService implements TrainingService {
     protected stopping: boolean = false;
     protected experimentId! : string;
     protected nextTrialSequenceId: number;
-    protected kubernetesClusterConfig?: KubernetesClusterConfig;
     protected kubernetesRestServerPort?: number;
     protected readonly CONTAINER_MOUNT_PATH: string;
     protected azureStorageClient?: azureStorage.FileService;
@@ -71,7 +70,6 @@ class KubernetesTrainingService implements TrainingService {
     protected azureStorageAccountName?: string;
     protected nniManagerIpConfig?: NNIManagerIpConfig;
     protected readonly genericK8sClient: GeneralK8sClient;
-    protected kubernetesTrialConfig?: KubernetesTrialConfig;
     protected kubernetesCRDClient?: KubernetesCRDClient;
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
     
@@ -142,15 +140,15 @@ class KubernetesTrainingService implements TrainingService {
     }
  
     public get isMultiPhaseJobSupported(): boolean {
-        throw new MethodNotImplementedError();
+        return false;
     }
 
     public getClusterMetadata(key: string): Promise<string> {
-        throw new MethodNotImplementedError();
+        return Promise.resolve('');
     }
 
     public get MetricsEmitter() : EventEmitter {
-        throw new MethodNotImplementedError();
+        return this.metricsEmitter;
     }
 
     /**
@@ -224,7 +222,7 @@ class KubernetesTrainingService implements TrainingService {
                         name: this.azureStorageSecretName,
                         namespace: 'default',
                         labels: {
-                            app: this.NNI_KUBEFLOW_TRIAL_LABEL,
+                            app: this.NNI_KUBERNETES_TRIAL_LABEL,
                             expId: getExperimentId()
                         }
                     },
@@ -270,7 +268,7 @@ class KubernetesTrainingService implements TrainingService {
         try {
             await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
                 [
-                    ['app', this.NNI_KUBEFLOW_TRIAL_LABEL],
+                    ['app', this.NNI_KUBERNETES_TRIAL_LABEL],
                     ['expId', getExperimentId()],
                     ['trialId', trialJobId]
                 ]
@@ -305,13 +303,13 @@ class KubernetesTrainingService implements TrainingService {
             if(this.kubernetesCRDClient) {
                 await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
                     [
-                        ['app', this.NNI_KUBEFLOW_TRIAL_LABEL],
+                        ['app', this.NNI_KUBERNETES_TRIAL_LABEL],
                         ['expId', getExperimentId()]
                     ]
                 ));
             }
         } catch(error) {
-            this.log.error(`Delete kubeflow job with label: app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
+            this.log.error(`Delete kubeflow job with label: app=${this.NNI_KUBERNETES_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
         }
 
         // Unmount NFS

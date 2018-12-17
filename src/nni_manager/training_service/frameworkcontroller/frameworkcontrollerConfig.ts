@@ -80,3 +80,7 @@ export class FrameworkControllerTrialConfig extends KubernetesTrialConfig{
         this.worker = worker;
     }
 }
+
+export type FrameworkControllerJobType = 'AttemptRunning' | 'Completed' | 'AttemptCreationPending' | 'AttemptCreationRequested' | 'AttemptPreparing' | 'AttemptCompleted';
+
+export type FrameworkControllerJobCompleteType = 'Succeeded' | 'Failed';
