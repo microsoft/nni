@@ -20,13 +20,17 @@
 'use strict';
 
 export type KubernetesStorageKind = 'nfs' | 'azureStorage';
-export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
+import { MethodNotImplementedError } from '../../common/errors';
 
 export class KubernetesClusterConfig {
     public readonly storage?: KubernetesStorageKind;
     
     constructor(storage?: KubernetesStorageKind) {
         this.storage = storage;
+    }
+
+    public get storageType(): KubernetesStorageKind{
+        throw new MethodNotImplementedError();
     }
 }
 

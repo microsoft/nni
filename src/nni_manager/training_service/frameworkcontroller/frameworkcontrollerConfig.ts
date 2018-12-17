@@ -28,6 +28,10 @@ export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfig
         super(storage)
         this.nfs = nfs;
     }
+
+    public get storageType(): KubernetesStorageKind{
+        return 'nfs';
+    }
 }
 
 export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConfig{
@@ -38,6 +42,31 @@ export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConf
         super(storage)
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
+    }
+
+    public get storageType(): KubernetesStorageKind{
+        return 'azureStorage';
+    }
+}
+
+export class FrameworkControllerClusterConfigFactory {
+
+    public static generateFrameworkControllerClusterConfig(jsonObject: object): KubernetesClusterConfig {
+         let frameworkcontrollerClusterConfigObject = <KubernetesClusterConfig>jsonObject;
+         if(frameworkcontrollerClusterConfigObject.storage && frameworkcontrollerClusterConfigObject.storage === 'azureStorage') {
+            let frameworkcontrollerClusterConfigAzureObject = <FrameworkControllerClusterConfigAzure>jsonObject;
+            return new FrameworkControllerClusterConfigAzure(
+                frameworkcontrollerClusterConfigAzureObject.keyVault,
+                frameworkcontrollerClusterConfigAzureObject.azureStorage,
+                frameworkcontrollerClusterConfigAzureObject.storage);
+         } else if (frameworkcontrollerClusterConfigObject.storage === undefined || frameworkcontrollerClusterConfigObject.storage === 'nfs') {
+            let frameworkcontrollerClusterConfigNFS = <FrameworkControllerClusterConfigNFS>jsonObject;
+            return new FrameworkControllerClusterConfigNFS(
+                frameworkcontrollerClusterConfigNFS.nfs,
+                frameworkcontrollerClusterConfigNFS.storage
+            );
+         }
+         throw new Error(`Invalid json object ${jsonObject}`);
     }
 }
 

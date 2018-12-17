@@ -37,10 +37,12 @@ import {
 } from '../../common/trainingService';
 import { KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesClusterConfig, KubernetesTrialConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage} from './kubernetesConfig';
-import { GeneralK8sClient }from './kubernetesApiClient';
+import { GeneralK8sClient } from './kubernetesApiClient';
+import { AzureStorageClientUtility } from './azureStorageClientUtils';
 
 import * as azureStorage from 'azure-storage';
 var azure = require('azure-storage');
+var base64 = require('js-base64').Base64;
 
 type DistTrainRole = 'worker' | 'ps' | 'master';
 
@@ -205,6 +207,58 @@ class KubernetesTrainingService implements TrainingService {
         }
 
         return this.nextTrialSequenceId++;
+    }
+
+    protected async createAzureStorage(vaultName: string, valutKeyName: string, accountName: string, azureShare: string): Promise<void> {
+        try {
+            const result = await cpp.exec(`az keyvault secret show --name ${valutKeyName} --vault-name ${vaultName}`);
+            if(result.stderr) {
+                const errorMessage: string = result.stderr;
+                this.log.error(errorMessage);
+                return Promise.reject(errorMessage);
+            }
+            const storageAccountKey =JSON.parse(result.stdout).value;
+            //create storage client
+            this.azureStorageClient = azure.createFileService(this.azureStorageAccountName, storageAccountKey);
+            await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
+            //create sotrage secret
+            this.azureStorageSecretName = 'nni-secret-' + uniqueString(8).toLowerCase();
+            await this.genericK8sClient.createSecret(
+                {
+                    apiVersion: 'v1',
+                    kind: 'Secret',
+                    metadata: { 
+                        name: this.azureStorageSecretName,
+                        namespace: 'default',
+                        labels: {
+                            app: this.NNI_KUBEFLOW_TRIAL_LABEL,
+                            expId: getExperimentId()
+                        }
+                    },
+                    type: 'Opaque',
+                    data: {
+                        azurestorageaccountname: base64.encode(this.azureStorageAccountName),
+                        azurestorageaccountkey: base64.encode(storageAccountKey)
+                    }
+                }
+            );
+        } catch(error) {
+            this.log.error(error);
+            return Promise.reject(error);
+        }
+        return Promise.resolve();
+    }
+
+    protected async createNFSStorage(nfsServer: string, nfsPath: string): Promise<void> {
+        await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
+        try {
+            await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalNFSTempFolder}`);
+        } catch(error) {
+            const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`;
+            this.log.error(mountError);
+            return Promise.reject(mountError);
+        }
+        return Promise.resolve();
     }
 }
 

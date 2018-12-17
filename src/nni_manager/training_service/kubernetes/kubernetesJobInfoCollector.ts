@@ -26,6 +26,7 @@ import { NNIError, NNIErrorNames } from '../../common/errors';
 import { TrialJobStatus } from '../../common/trainingService';
 import { KubernetesCRDClient } from './kubernetesApiClient';
 import { MethodNotImplementedError } from '../../common/errors';
+import { KubernetesTrialJobDetail } from './kubernetesData';
 
 /**
  * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally

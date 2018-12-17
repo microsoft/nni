@@ -43,7 +43,8 @@ import { KubernetesTrialConfig, KubernetesClusterConfig } from '../kubernetes/ku
 import { validateCodeDir } from '../common/util';
 import { AzureStorageClientUtility } from '../kubernetes/azureStorageClientUtils';
 import { KubernetesTrainingService } from '../kubernetes/kubernetesTrainingService';
-import { FrameworkControllerClusterConfigAzure, FrameworkControllerClusterConfigNFS, FrameworkControllerTrialConfig } from './frameworkcontrollerConfig';
+import { FrameworkControllerClusterConfigAzure, FrameworkControllerClusterConfigNFS, FrameworkControllerTrialConfig, 
+    FrameworkControllerClusterConfigFactory } from './frameworkcontrollerConfig';
 import { GeneralK8sClient } from '../kubernetes/kubernetesApiClient';
 import { FrameworkControllerJobRestServer } from './frameworkcontrollerJobRestServer';
 import { FrameworkControllerClient } from './frameworkcontrollerApiClient';
@@ -248,84 +249,26 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
             
             case TrialConfigMetadataKey.FRAMEWORKCONTROLLER_CLUSTER_CONFIG:
                 let frameworkcontrollerClusterJsonObject = JSON.parse(value);
-                let frameworkcontrollerClusterConfig: KubernetesClusterConfig 
-                        = new KubernetesClusterConfig(frameworkcontrollerClusterJsonObject.storage);
-                
-                if(frameworkcontrollerClusterConfig && frameworkcontrollerClusterConfig.storage === 'azureStorage') {
-                    const azureKubeflowClusterConfig: FrameworkControllerClusterConfigAzure = 
-                        new FrameworkControllerClusterConfigAzure(frameworkcontrollerClusterJsonObject.keyVault, 
-                            frameworkcontrollerClusterJsonObject.azureStorage, frameworkcontrollerClusterJsonObject.storage);
-
-                    const vaultName = azureKubeflowClusterConfig.keyVault.vaultName;
-                    const valutKeyName = azureKubeflowClusterConfig.keyVault.name;
+                this.frameworkcontrollerClusterConfig = FrameworkControllerClusterConfigFactory.generateFrameworkControllerClusterConfig(frameworkcontrollerClusterJsonObject);
+                if(this.frameworkcontrollerClusterConfig.storageType === 'azureStorage') {
+                    let azureKubeflowClusterConfig = <FrameworkControllerClusterConfigAzure>this.frameworkcontrollerClusterConfig;
                     this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
                     this.azureStorageShare = azureKubeflowClusterConfig.azureStorage.azureShare;
-                    try {
-                        const result = await cpp.exec(`az keyvault secret show --name ${valutKeyName} --vault-name ${vaultName}`);
-                        if(result.stderr) {
-                            const errorMessage: string = result.stderr;
-                            this.log.error(errorMessage);
-                            return Promise.reject(errorMessage);
-                        }
-                        const storageAccountKey =JSON.parse(result.stdout).value;
-                        //create storage client
-                        this.azureStorageClient = azure.createFileService(this.azureStorageAccountName, storageAccountKey);
-                        await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
-                        //create sotrage secret
-                        this.azureStorageSecretName = 'nni-secret-' + uniqueString(8).toLowerCase();
-                        await this.genericK8sClient.createSecret(
-                            {
-                                apiVersion: 'v1',
-                                kind: 'Secret',
-                                metadata: { 
-                                    name: this.azureStorageSecretName,
-                                    namespace: 'default',
-                                    labels: {
-                                        app: this.NNI_KUBEFLOW_TRIAL_LABEL,
-                                        expId: getExperimentId()
-                                    }
-                                },
-                                type: 'Opaque',
-                                data: {
-                                    azurestorageaccountname: base64.encode(this.azureStorageAccountName),
-                                    azurestorageaccountkey: base64.encode(storageAccountKey)
-                                }
-                            }
-                        );
-                    } catch(error) {
-                        this.log.error(error);
-                        throw new Error(error);
-                    }
-
-                    this.frameworkcontrollerClusterConfig = azureKubeflowClusterConfig;
-                    this.frameworkcotrollerAPIClient = FrameworkControllerClient.generateOperatorClient();
-
-                } else if(frameworkcontrollerClusterConfig && (frameworkcontrollerClusterConfig.storage === 'nfs' || frameworkcontrollerClusterConfig.storage === undefined)) {
-                    //Check and mount NFS mount point here
-                    //If storage is undefined, the default value is nfs
-                    const nfsKubeflowClusterConfig: FrameworkControllerClusterConfigNFS = 
-                                 new FrameworkControllerClusterConfigNFS(frameworkcontrollerClusterJsonObject.nfs, 
-                                    frameworkcontrollerClusterJsonObject.storage);
-
-                    await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
-                    const nfsServer: string = nfsKubeflowClusterConfig.nfs.server;
-                    const nfsPath: string = nfsKubeflowClusterConfig.nfs.path;
-
-                    try {
-                        await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalNFSTempFolder}`);
-                    } catch(error) {
-                        const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`;
-                        this.log.error(mountError);
-                        throw new Error(mountError);
-                    }
-                    this.frameworkcontrollerClusterConfig = nfsKubeflowClusterConfig;
-                } else {
-                    const error: string = `kubeflowClusterConfig format error!`;
-                    this.log.error(error);
-                    throw new Error(error);
-                }
+                    await this.createAzureStorage(
+                        azureKubeflowClusterConfig.keyVault.vaultName,
+                        azureKubeflowClusterConfig.keyVault.name,
+                        azureKubeflowClusterConfig.azureStorage.accountName,
+                        azureKubeflowClusterConfig.azureStorage.azureShare
+                    );
+                } else if(this.frameworkcontrollerClusterConfig.storageType === 'nfs') {
+                    let nfsKubeflowClusterConfig = <FrameworkControllerClusterConfigNFS>this.frameworkcontrollerClusterConfig;
+                    await this.createNFSStorage(
+                        nfsKubeflowClusterConfig.nfs.server,
+                        nfsKubeflowClusterConfig.nfs.path
+                    );
+                } 
+                this.frameworkcotrollerAPIClient = FrameworkControllerClient.generateOperatorClient();
                 break;
-
             case TrialConfigMetadataKey.TRIAL_CONFIG:
             if (!this.frameworkcontrollerClusterConfig){
                 this.log.error('kubeflow cluster config is not initialized');

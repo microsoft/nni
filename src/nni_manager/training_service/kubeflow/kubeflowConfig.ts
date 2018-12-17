@@ -24,7 +24,6 @@ import { KubernetesClusterConfig, KubernetesStorageKind, NFSConfig, AzureStorage
 
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
-export type KubeflowStorageKind = 'nfs' | 'azureStorage';
 export type DistTrainRole = 'worker' | 'ps' | 'master';
 export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
 export type KubernetesJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
@@ -37,7 +36,7 @@ export class KubeflowClusterConfigBase extends KubernetesClusterConfig {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
     public readonly apiVersion: OperatorApiVersion;
-    public readonly storage?: KubeflowStorageKind;    
+    public readonly storage?: KubernetesStorageKind;    
     
     /**
      * Constructor
@@ -45,7 +44,7 @@ export class KubeflowClusterConfigBase extends KubernetesClusterConfig {
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator, apiVersion: OperatorApiVersion, storage?: KubeflowStorageKind) {
+    constructor(operator: KubeflowOperator, apiVersion: OperatorApiVersion, storage?: KubernetesStorageKind) {
         super(storage)
         this.operator = operator;
         this.apiVersion = apiVersion;
@@ -56,11 +55,18 @@ export class KubeflowClusterConfigBase extends KubernetesClusterConfig {
 export class KubeflowClusterConfigNFS extends KubeflowClusterConfigBase{
     public readonly nfs: NFSConfig;
     
-    constructor(operator: KubeflowOperator, 
+    constructor(
+            operator: KubeflowOperator, 
             apiVersion: OperatorApiVersion, 
-            nfs: NFSConfig, storage?: KubeflowStorageKind) {
+            nfs: NFSConfig,
+            storage?: KubernetesStorageKind
+        ) {
         super(operator, apiVersion, storage);
         this.nfs = nfs;
+    }
+
+    public get storageType(): KubernetesStorageKind{
+        return 'nfs';
     }
 }
 
@@ -68,14 +74,45 @@ export class KubeflowClusterConfigAzure extends KubeflowClusterConfigBase{
     public readonly keyVault: keyVaultConfig;
     public readonly azureStorage: AzureStorage;
     
-    constructor(operator: KubeflowOperator, 
+    constructor(
+            operator: KubeflowOperator, 
             apiVersion: OperatorApiVersion, 
             keyVault: keyVaultConfig, 
             azureStorage: AzureStorage, 
-            storage?: KubeflowStorageKind) {
+            storage?: KubernetesStorageKind
+        ) {
         super(operator, apiVersion, storage);
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
+    }
+
+    public get storageType(): KubernetesStorageKind{
+        return 'azureStorage';
+    }
+}
+
+export class KubeflowClusterConfigFactory {
+
+    public static generateKubeflowClusterConfig(jsonObject: object): KubeflowClusterConfigBase {
+         let kubeflowClusterConfigObject = <KubeflowClusterConfigBase>jsonObject;
+         if(kubeflowClusterConfigObject.storage && kubeflowClusterConfigObject.storage === 'azureStorage') {
+            let kubeflowClusterConfigAzureObject = <KubeflowClusterConfigAzure>jsonObject;
+            return new KubeflowClusterConfigAzure(
+                kubeflowClusterConfigAzureObject.operator, 
+                kubeflowClusterConfigAzureObject.apiVersion,
+                kubeflowClusterConfigAzureObject.keyVault,
+                kubeflowClusterConfigAzureObject.azureStorage,
+                kubeflowClusterConfigAzureObject.storage);
+         } else if (kubeflowClusterConfigObject.storage === undefined || kubeflowClusterConfigObject.storage === 'nfs') {
+            let kubeflowClusterConfigNFSObject = <KubeflowClusterConfigNFS>jsonObject;
+            return new KubeflowClusterConfigNFS(
+                kubeflowClusterConfigNFSObject.operator,
+                kubeflowClusterConfigNFSObject.apiVersion,
+                kubeflowClusterConfigNFSObject.nfs,
+                kubeflowClusterConfigNFSObject.storage
+                );
+         }
+         throw new Error(`Invalid json object ${jsonObject}`);
     }
 }
 
@@ -100,4 +137,3 @@ export class KubeflowTrialConfigPytorch extends KubernetesTrialConfig{
         this.worker = worker;
     }
 }
-
