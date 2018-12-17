@@ -1,3 +1,30 @@
+# Release 0.4 - 12/6/2018
+
+## Major Features
+  * [Kubeflow Training service](./KubeflowMode.md)
+    * Support tf-operator
+    * [Distributed trial example](../examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
+  * [Grid search tuner](../src/sdk/pynni/nni/README.md#Grid) 
+  * [Hyperband tuner](../src/sdk/pynni/nni/README.md#Hyperband)
+  * Support launch NNI experiment on MAC
+  * WebUI 
+    *  UI support for hyperband tuner
+    *  Remove tensorboard button 
+    *  Show experiment error message 
+    *  Show line numbers in search space and trial profile
+    *  Support search a specific trial by trial number
+    *  Show trial's hdfsLogPath
+    *  Download experiment parameters
+## Others
+  * Asynchronous dispatcher
+  * Docker file update, add pytorch library 
+  * Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API. 
+  * OpenPAI training service bug fix
+    *  Support NNI Manager IP configuration(nniManagerIp) in PAI cluster config file, to fix the issue that user’s machine has no eth0 device 
+    *  File number in codeDir is capped to 1000 now, to avoid user mistakenly fill root dir for codeDir
+    *  Don’t print useless ‘metrics is empty’ log int PAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks PAI trial’s output for debugging purpose
+    *  Add timestamp at the beginning of each log entry in trial keeper.
+
 # Release 0.3.0 - 11/2/2018
 ## NNICTL new features and updates
 * Support running multiple experiments simultaneously. 
@@ -41,7 +68,7 @@
    * Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
       * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
       * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
-   * Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](../src/sdk/pynni/nni/README.md) for instructions about how to use SMAC tuner)
+   * Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](HowToChooseTuner.md) for instructions about how to use SMAC tuner)
       * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO to handle categorical parameters. The SMAC supported by NNI is a wrapper on [SMAC3](https://github.com/automl/SMAC3)
    * Support NNI installation on [conda](https://conda.io/docs/index.html) and python virtual environment
    * Others
@@ -59,10 +86,10 @@ Initial release of Neural Network Intelligence (NNI).
    * Installation and Deployment
       * Support pip install and source codes install
       * Support training services on local mode(including Multi-GPU mode) as well as multi-machines mode
-   * Tuners, Accessors and Trial
+   * Tuners, Assessors and Trial
       * Support AutoML algorithms including:  hyperopt_tpe, hyperopt_annealing, hyperopt_random, and evolution_tuner
       * Support assessor(early stop) algorithms including: medianstop algorithm
-      * Provide Python API for user defined tuners and accessors
+      * Provide Python API for user defined tuners and assessors
       * Provide Python API for user to wrap trial code as NNI deployable codes
    * Experiments
       * Provide a command line toolkit 'nnictl' for experiments management

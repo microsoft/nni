@@ -19,11 +19,13 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import { getLogger, Logger } from '../../common/log';
 import { KubeflowTrialJobDetail, KubeflowTFJobType} from './kubeflowData';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { TrialJobStatus } from '../../common/trainingService';
+import { KubeflowOperatorClient } from './kubernetesApiClient';
 
 /**
  * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally
@@ -32,14 +34,14 @@ export class KubeflowJobInfoCollector {
     private readonly trialJobsMap : Map<string, KubeflowTrialJobDetail>;
     private readonly log: Logger = getLogger();
     private readonly statusesNeedToCheck: TrialJobStatus[];
-    private readonly MAX_FAILED_QUERY_JOB_NUMBER: number = 30;
 
     constructor(jobMap: Map<string, KubeflowTrialJobDetail>) {
         this.trialJobsMap = jobMap;
         this.statusesNeedToCheck = ['RUNNING', 'WAITING'];
     }
 
-    public async retrieveTrialStatus() : Promise<void> {
+    public async retrieveTrialStatus(operatorClient: KubeflowOperatorClient | undefined) : Promise<void> {
+        assert(operatorClient !== undefined);
         const updateKubeflowTrialJobs : Promise<void>[] = [];
         for(let [trialJobId, kubeflowTrialJob] of this.trialJobsMap) {
             if (!kubeflowTrialJob) {
@@ -49,33 +51,30 @@ export class KubeflowJobInfoCollector {
             if( Date.now() - kubeflowTrialJob.submitTime < 20 * 1000) {
                 return Promise.resolve();
             }
-            updateKubeflowTrialJobs.push(this.retrieveSingleTrialJobInfo(kubeflowTrialJob))
+            updateKubeflowTrialJobs.push(this.retrieveSingleTrialJobInfo(operatorClient, kubeflowTrialJob))
         }
 
         await Promise.all(updateKubeflowTrialJobs);
     }
 
-    private async retrieveSingleTrialJobInfo(kubeflowTrialJob : KubeflowTrialJobDetail) : Promise<void> {
+    private async retrieveSingleTrialJobInfo(operatorClient: KubeflowOperatorClient | undefined, 
+                                    kubeflowTrialJob : KubeflowTrialJobDetail) : Promise<void> {
         if (!this.statusesNeedToCheck.includes(kubeflowTrialJob.status)) {
             return Promise.resolve();
         }
 
-        let result : cpp.childProcessPromise.Result;
+        if(operatorClient === undefined) {
+            return Promise.reject('operatorClient is undefined');
+        }
+
+        let kubeflowJobInfo: any;
         try {
-            result = await cpp.exec(`kubectl get ${kubeflowTrialJob.k8sPluralName} ${kubeflowTrialJob.kubeflowJobName} -o json`);
-            if(result.stderr) {
-                this.log.error(`Get ${kubeflowTrialJob.k8sPluralName} ${kubeflowTrialJob.kubeflowJobName} failed. Error is ${result.stderr}, failed checking number is ${kubeflowTrialJob.queryJobFailedCount}`);
-                kubeflowTrialJob.queryJobFailedCount++;
-                if(kubeflowTrialJob.queryJobFailedCount >= this.MAX_FAILED_QUERY_JOB_NUMBER) {
-                    kubeflowTrialJob.status = 'UNKNOWN';
-                }
-            }
+            kubeflowJobInfo = await operatorClient.getKubeflowJob(kubeflowTrialJob.kubeflowJobName);            
         } catch(error) {
-            this.log.error(`kubectl get ${kubeflowTrialJob.k8sPluralName} ${kubeflowTrialJob.kubeflowJobName} failed, error is ${error}`);
+            this.log.error(`Get job ${kubeflowTrialJob.kubeflowJobName} info failed, error is ${error}`);
             return Promise.resolve();
         }
 
-        const kubeflowJobInfo = JSON.parse(result.stdout);
         if(kubeflowJobInfo.status && kubeflowJobInfo.status.conditions) {
             const latestCondition = kubeflowJobInfo.status.conditions[kubeflowJobInfo.status.conditions.length - 1];
             const tfJobType : KubeflowTFJobType = <KubeflowTFJobType>latestCondition.type;

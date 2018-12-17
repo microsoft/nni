@@ -59,6 +59,16 @@ Optional('tuner'): Or({
     'builtinTunerName': Or('BatchTuner', 'GridSearch'),
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
+    'builtinTunerName': 'NetworkMorphism',
+    'classArgs': {
+        Optional('optimize_mode'): Or('maximize', 'minimize'),
+        Optional('task'): And(str, lambda x: x in ['cv','nlp','common']),
+        Optional('input_width'):  int,
+        Optional('input_channel'):  int,
+        Optional('n_output_node'):  int,
+        },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
     'codeDir': os.path.exists,
     'classFileName': str,
     'className': str,
@@ -122,7 +132,15 @@ kubeflow_trial_schema = {
             'memoryMB': int,
             'image': str
         },
-        'worker':{
+        Optional('master'): {
+            'replicas': int,
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        },
+        Optional('worker'):{
             'replicas': int,
             'command': str,
             'gpuNum': And(int, lambda x: 0 <= x <= 99999),
@@ -135,14 +153,17 @@ kubeflow_trial_schema = {
 
 kubeflow_config_schema = {
     'kubeflowConfig':Or({
-        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
+        'operator': Or('tf-operator', 'pytorch-operator'),
+        'apiVersion': str,
+        Optional('storage'): Or('nfs', 'azureStorage'),
         'nfs': {
             'server': str,
             'path': str
-        },
-        Optional('kubernetesServer'): str
+        }
     },{
-        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operator'),
+        'operator': Or('tf-operator', 'pytorch-operator'),
+        'apiVersion': str,
+        Optional('storage'): Or('nfs', 'azureStorage'),
         'keyVault': {
             'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
             'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')

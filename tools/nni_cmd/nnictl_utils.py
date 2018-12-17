@@ -27,13 +27,28 @@ from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
-from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT
-import time
+from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
+     EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL
 from .common_utils import print_normal, print_error, print_warning, detect_process
+
+def update_experiment_status():
+    '''Update the experiment status in config file'''
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    if not experiment_dict:
+        return None
+    for key in experiment_dict.keys():
+        if isinstance(experiment_dict[key], dict):
+            if experiment_dict[key].get('status') == 'running':
+                nni_config = Config(experiment_dict[key]['fileName'])
+                rest_pid = nni_config.get_config('restServerPid')
+                if not detect_process(rest_pid):
+                    experiment_config.update_experiment(key, 'status', 'stopped')
 
 def check_experiment_id(args):
     '''check if the id is valid
     '''
+    update_experiment_status()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
@@ -53,7 +68,7 @@ def check_experiment_id(args):
             experiment_information = ""
             for key in running_experiment_list:
                 experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key]['port'], experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         elif not running_experiment_list:
@@ -76,6 +91,7 @@ def parse_ids(args):
     5.If the id does not exist but match the prefix of an experiment id, nnictl will return the matched id
     6.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information
     '''
+    update_experiment_status()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
@@ -96,7 +112,7 @@ def parse_ids(args):
             experiment_information = ""
             for key in running_experiment_list:
                 experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], \
-                experiment_dict[key]['port'], experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+                experiment_dict[key]['port'], experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
@@ -174,11 +190,6 @@ def stop_experiment(args):
             print_normal('Stoping experiment %s' % experiment_id)
             nni_config = Config(experiment_dict[experiment_id]['fileName'])
             rest_port = nni_config.get_config('restServerPort')
-            rest_pid = nni_config.get_config('restServerPid')
-            if not detect_process(rest_pid):
-                print_normal('Experiment is not running...')
-                experiment_config.update_experiment(experiment_id, 'status', 'stopped')
-                return
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
                 stop_rest_cmds = ['kill', str(rest_pid)]
@@ -356,6 +367,69 @@ def experiment_list(args):
     experiment_information = ""
     for key in experiment_id_list:
         experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], experiment_dict[key]['port'],\
-        experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
+        experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
 
+def get_time_interval(time1, time2):
+    '''get the interval of two times'''
+    try:
+        #convert time to timestamp
+        time1 = time.mktime(time.strptime(time1, '%Y-%m-%d %H:%M:%S'))
+        time2 = time.mktime(time.strptime(time2, '%Y-%m-%d %H:%M:%S'))
+        seconds = (datetime.datetime.fromtimestamp(time2) - datetime.datetime.fromtimestamp(time1)).seconds
+        #convert seconds to day:hour:minute:second
+        days = seconds / 86400
+        seconds %= 86400
+        hours = seconds / 3600
+        seconds %= 3600
+        minutes = seconds / 60
+        seconds %= 60
+        return '%dd %dh %dm %ds' % (days, hours, minutes, seconds)
+    except:
+        return 'N/A'
+
+def show_experiment_info():
+    '''show experiment information in monitor'''
+    experiment_config = Experiments()
+    experiment_dict = experiment_config.get_all_experiments()
+    if not experiment_dict:
+        print('There is no experiment running...')
+        exit(1)
+    experiment_id_list = []
+    for key in experiment_dict.keys():
+        if experiment_dict[key]['status'] == 'running':
+            experiment_id_list.append(key)
+    if not experiment_id_list:
+        print_warning('There is no experiment running...')
+        return
+    for key in experiment_id_list:
+        current_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
+        print(EXPERIMENT_MONITOR_INFO % (key, experiment_dict[key]['status'], experiment_dict[key]['port'], \
+             experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], get_time_interval(experiment_dict[key]['startTime'], current_time)))
+        print(TRIAL_MONITOR_HEAD)
+        running, response = check_rest_server_quick(experiment_dict[key]['port'])
+        if running:
+            response = rest_get(trial_jobs_url(experiment_dict[key]['port']), 20)
+            if response and check_response(response):
+                content = json.loads(response.text)
+                for index, value in enumerate(content):               
+                    content[index] = convert_time_stamp_to_date(value)
+                    print(TRIAL_MONITOR_CONTENT % (content[index].get('id'), content[index].get('startTime'), content[index].get('endTime'), content[index].get('status')))
+        print(TRIAL_MONITOR_TAIL)
+
+def monitor_experiment(args):
+    '''monitor the experiment'''
+    if args.time <= 0:
+        print_error('please input a positive integer as time interval, the unit is second.')
+        exit(1)
+    while True:
+        try:
+            os.system('clear')
+            update_experiment_status()
+            show_experiment_info()
+            time.sleep(args.time)
+        except KeyboardInterrupt:
+            exit(0)
+        except Exception as exception:
+            print_error(exception)
+            exit(1)
