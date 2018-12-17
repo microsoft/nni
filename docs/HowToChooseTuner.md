@@ -202,7 +202,7 @@ _Usage_:
 For now, NNI has supported the following assessor algorithms.
 
  - [Medianstop](#Medianstop)
- - [Curvefitting] (#Curvefitting)
+ - [Curvefitting](#Curvefitting)
 
 ## Supported Assessor Algorithms
 
