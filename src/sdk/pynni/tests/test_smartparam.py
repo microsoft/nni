@@ -42,23 +42,23 @@ class SmartParamTestCase(TestCase):
 
     def test_specified_name(self):
         val = nni.choice('a', 'b', 'c', name = 'choice1')
-        self.assertEqual(val, 'c')
+        self.assertIn(val, ['a', 'b', 'c'])
 
     def test_default_name(self):
         val = nni.uniform(1, 10)  # NOTE: assign this line number to lineno1
-        self.assertEqual(val, '5')
+        self.assertLessEqual(val, 10)
+        self.assertGreaterEqual(val, 1)
 
     def test_specified_name_func(self):
         val = nni.function_choice(foo, bar, name = 'func')
-        self.assertEqual(val, 'bar')
+        self.assertIn(val, ['foo', 'bar'])
 
     def test_default_name_func(self):
         val = nni.function_choice(
             lambda: max(1, 2, 3),
             lambda: 2 * 2  # NOTE: assign this line number to lineno2
         )
-        self.assertEqual(val, 3)
-
+        self.assertIn(val, [3, 4])
 
 def foo():
     return 'foo'
