@@ -20,6 +20,7 @@
 'use strict';
 
 export type KubernetesStorageKind = 'nfs' | 'azureStorage';
+export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
 
 export class KubernetesClusterConfig {
     public readonly storage?: KubernetesStorageKind;

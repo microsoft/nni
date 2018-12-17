@@ -27,7 +27,31 @@ import { getLogger, Logger } from '../../common/log';
 var K8SClient = require('kubernetes-client').Client;
 var K8SConfig = require('kubernetes-client').config;
 
-abstract class KubeflowOperatorClient {
+/**
+ * Generict Kubernetes client, target version >= 1.9
+ */
+class GeneralK8sClient {
+    protected readonly client: any;
+    protected readonly log: Logger = getLogger();
+
+    constructor() {
+        this.client = new K8SClient({ config: K8SConfig.fromKubeconfig(path.join(os.homedir(), '.kube', 'config')), version: '1.9'});
+        this.client.loadSpec();
+    }
+
+    public async createSecret(secretManifest: any): Promise<boolean> {
+        let result: Promise<boolean>;        
+        const response : any = await this.client.api.v1.namespaces('default').secrets.post({body: secretManifest});
+        if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
+            result = Promise.resolve(true);
+        } else {
+            result = Promise.reject(`Create secrets failed, statusCode is ${response.statusCode}`);
+        }
+        return result;
+    }
+}
+
+abstract class KubernetesCRDClient {
     protected readonly client: any;
     protected readonly log: Logger = getLogger();
     protected crdSchema: any;
@@ -48,7 +72,17 @@ abstract class KubeflowOperatorClient {
             && this.crdSchema.spec.names.kind) {
             return this.crdSchema.spec.names.kind;
         } else {
-            throw new Error('KubeflowOperatorClient: getJobKind failed, kind is undefined in tfjob crd schema!');
+            throw new Error('KubeflowOperatorClient: getJobKind failed, kind is undefined in crd schema!');
+        }
+    }
+
+    public get apiVersion(): string {
+        if(this.crdSchema 
+            && this.crdSchema.spec 
+            && this.crdSchema.spec.version) {
+            return this.crdSchema.spec.version;
+        } else {
+            throw new Error('KubeflowOperatorClient: get apiVersion failed, version is undefined in crd schema!');
         }
     }
     
@@ -58,7 +92,7 @@ abstract class KubeflowOperatorClient {
         if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
-            result = Promise.reject(`TFOperatorClient create tfjobs failed, statusCode is ${response.statusCode}`);
+            result = Promise.reject(`KubeflowOperatorClient create tfjobs failed, statusCode is ${response.statusCode}`);
         }
         return result;
     }
@@ -68,10 +102,9 @@ abstract class KubeflowOperatorClient {
         let result: Promise<any>;
         const response : any = await this.operator(kubeflowJobName).get();
         if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
-            console.log(`TFOperatorClient: tfjobs conditions is ${JSON.stringify(response.body.status.conditions)}`);
             result = Promise.resolve(response.body);
         } else {
-            result = Promise.reject(`TFOperatorClient get tfjobs failed, statusCode is ${response.statusCode}`);
+            result = Promise.reject(`KubeflowOperatorClient get tfjobs failed, statusCode is ${response.statusCode}`);
         }
         return result;
     }
@@ -85,7 +118,7 @@ abstract class KubeflowOperatorClient {
             if(deleteResult.statusCode && deleteResult.statusCode >= 200 && deleteResult.statusCode <= 299) {
                 result = Promise.resolve(true);
             } else {
-                result = Promise.reject(`TFOperatorClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
+                result = Promise.reject(`KubeflowOperatorClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
             }
         } catch(err) {
             result = Promise.reject(err);
@@ -95,63 +128,4 @@ abstract class KubeflowOperatorClient {
     }
 }
 
-class TFOperatorClient extends KubeflowOperatorClient {
-    /**
-     * constructor, to initialize tfjob CRD definition
-     */
-    public constructor() {
-        super();
-        this.crdSchema = JSON.parse(fs.readFileSync('./config/tfjob-crd-v1alpha2.json', 'utf8'));
-        this.client.addCustomResourceDefinition(this.crdSchema);
-    }
-
-    protected get operator(): any {
-        return this.client.apis["kubeflow.org"].v1alpha2.namespaces('default').tfjobs;
-    }
-
-    public get containerName(): string {
-        return 'tensorflow';
-    }    
-}
-
-class PytorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {
-    /**
-     * constructor, to initialize tfjob CRD definition
-     */
-    public constructor() {
-        super();
-        this.crdSchema = JSON.parse(fs.readFileSync('./config/pytorchjob-crd-v1alpha2.json', 'utf8'));
-        this.client.addCustomResourceDefinition(this.crdSchema);
-    }
-
-    protected get operator(): any {
-        return this.client.apis["kubeflow.org"].v1alpha2.namespaces('default').pytorchjobs;
-    }
-
-    public get containerName(): string {
-        return 'pytorch';
-    }
-}
-
-class PytorchOperatorClientV1Beta1 extends KubeflowOperatorClient {
-    /**
-     * constructor, to initialize tfjob CRD definition
-     */
-    public constructor() {
-        super();
-        this.crdSchema = JSON.parse(fs.readFileSync('./config/pytorchjob-crd-v1beta1.json', 'utf8'));
-        this.client.addCustomResourceDefinition(this.crdSchema);
-    }
-
-    protected get operator(): any {
-        return this.client.apis["kubeflow.org"].v1beta1.namespaces('default').pytorchjobs;
-    }
-
-    public get containerName(): string {
-        return 'pytorch';
-    }
-}
-
-export { KubeflowOperatorClient, 
-    PytorchOperatorClientV1Alpha2, PytorchOperatorClientV1Beta1, 
-    TFOperatorClient }
+export { KubernetesCRDClient, GeneralK8sClient };

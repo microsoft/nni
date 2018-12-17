@@ -21,19 +21,37 @@
 
 import * as component from '../../common/component';
 import { Inject } from 'typescript-ioc';
-import { KubeflowTrainingService } from './kubeflowTrainingService';
-import { KubernetesJobRestServer } from '../kubernetes/kubernetesJobRestServer'
+import { KubernetesTrainingService } from './kubernetesTrainingService';
+import { ClusterJobRestServer } from '../common/clusterJobRestServer'
 
 /**
  * Kubeflow Training service Rest server, provides rest API to support kubeflow job metrics update
  * 
  */
 @component.Singleton
-export class KubeflowJobRestServer extends KubernetesJobRestServer{
+export class KubernetesJobRestServer extends ClusterJobRestServer{
+    @Inject
+    private kubernetesTrainingService? : KubernetesTrainingService;
+
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
-    constructor() {
-        super(component.get(KubeflowTrainingService));
+    constructor(kubernetesTrainingService: KubernetesTrainingService) {
+        super();
+        this.kubernetesTrainingService = kubernetesTrainingService;
+    }
+
+    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
+        if(!this.kubernetesTrainingService) {
+            throw Error('kubernetesTrainingService not initialized!');
+        }
+        // Split metrics array into single metric, then emit
+        // Warning: If not split metrics into single ones, the behavior will  be UNKNOWN
+        for (const singleMetric of metrics) {
+            this.kubernetesTrainingService.MetricsEmitter.emit('metric', {
+                id : jobId,
+                data : singleMetric
+            });
+        }
     }   
 }

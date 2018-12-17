@@ -27,6 +27,7 @@ export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type KubeflowStorageKind = 'nfs' | 'azureStorage';
 export type DistTrainRole = 'worker' | 'ps' | 'master';
 export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
+export type KubernetesJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
 
 /**
  * Kuberflow cluster configuration

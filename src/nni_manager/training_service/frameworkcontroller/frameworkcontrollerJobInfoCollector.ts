@@ -31,7 +31,7 @@ import { KubernetesJobInfoCollector } from '../kubernetes/kubernetesJobInfoColle
 /**
  * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally
  */
-export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
+export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollector{
     constructor(jobMap: Map<string, KubernetesTrialJobDetail>) {
         super(jobMap);
     }
@@ -54,27 +54,18 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
             return Promise.resolve();
         }
 
-        if(kubernetesJobInfo.status && kubernetesJobInfo.status.conditions) {
-            const latestCondition = kubernetesJobInfo.status.conditions[kubernetesJobInfo.status.conditions.length - 1];
-            const tfJobType : KubernetesJobType = <KubernetesJobType>latestCondition.type;
-            switch(tfJobType) {
-                case 'Created':
-                    kubernetesTrialJob.status = 'WAITING';
-                    kubernetesTrialJob.startTime = Date.parse(<string>latestCondition.lastUpdateTime);                    
-                    break; 
-                case 'Running':
+        if(kubernetesJobInfo.status && kubernetesJobInfo.status.state) {
+            const frameworkJobType : FrameworkControllerJobType = <FrameworkControllerJobType>kubernetesJobInfo.status.state;
+            switch(frameworkJobType) {
+                case 'AttemptRunning':
                 kubernetesTrialJob.status = 'RUNNING';
                     if(!kubernetesTrialJob.startTime) {
-                        kubernetesTrialJob.startTime = Date.parse(<string>latestCondition.lastUpdateTime);
+                        kubernetesTrialJob.startTime = Date.parse(<string>kubernetesJobInfo.status.startTime);
                     }
                     break;
-                case 'Failed':
-                    kubernetesTrialJob.status = 'FAILED';
-                    kubernetesTrialJob.endTime = Date.parse(<string>latestCondition.lastUpdateTime);                    
-                    break;
-                case  'Succeeded':
+                case  'Completed':
                     kubernetesTrialJob.status = 'SUCCEEDED';
-                    kubernetesTrialJob.endTime = Date.parse(<string>latestCondition.lastUpdateTime);                    
+                    kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTime);                    
                     break;
                 default:
                     break;

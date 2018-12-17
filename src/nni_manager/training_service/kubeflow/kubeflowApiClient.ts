@@ -24,53 +24,18 @@ import * as os from 'os'
 import * as path from 'path';
 import { getLogger, Logger } from '../../common/log';
 import { KubeflowOperator, OperatorApiVersion } from './kubeflowConfig';
+import { KubernetesCRDClient, GeneralK8sClient } from '../kubernetes/kubernetesApiClient';
 
-var K8SClient = require('kubernetes-client').Client;
-var K8SConfig = require('kubernetes-client').config;
-
-/**
- * Generict Kubernetes client, target version >= 1.9
- */
-class GeneralK8sClient {
-    protected readonly client: any;
-    protected readonly log: Logger = getLogger();
-
+abstract class KubeflowOperatorClient extends KubernetesCRDClient{
     constructor() {
-        this.client = new K8SClient({ config: K8SConfig.fromKubeconfig(path.join(os.homedir(), '.kube', 'config')), version: '1.9'});
-        this.client.loadSpec();
+        super();
     }
-
-    public async createSecret(secretManifest: any): Promise<boolean> {
-        let result: Promise<boolean>;        
-        const response : any = await this.client.api.v1.namespaces('default').secrets.post({body: secretManifest});
-        if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
-            result = Promise.resolve(true);
-        } else {
-            result = Promise.reject(`Create secrets failed, statusCode is ${response.statusCode}`);
-        }
-        return result;
-    }
-}
-
-abstract class KubeflowOperatorClient {
-    protected readonly client: any;
-    protected readonly log: Logger = getLogger();
-    protected crdSchema: any;
-
-    constructor() {
-        this.client = new K8SClient({ config: K8SConfig.fromKubeconfig(path.join(os.homedir(), '.kube', 'config'))});
-        this.client.loadSpec();
-    }
-
-    protected abstract get operator(): any;
-
-    public abstract get containerName(): string;
 
     /**
      * Factory method to generate operator cliet
      */
     public static generateOperatorClient(kubeflowOperator: KubeflowOperator, 
-                                    operatorApiVersion: OperatorApiVersion): KubeflowOperatorClient {
+                                    operatorApiVersion: OperatorApiVersion): KubernetesCRDClient {
         if(kubeflowOperator === 'tf-operator') {
             if(operatorApiVersion == 'v1alpha2') {
                 return new TFOperatorClientV1Alpha2();
@@ -86,68 +51,6 @@ abstract class KubeflowOperatorClient {
         }
 
         throw new Error(`Invalid operator ${kubeflowOperator} or apiVersion ${operatorApiVersion}`);
-    }
-
-    public get jobKind(): string {
-        if(this.crdSchema 
-            && this.crdSchema.spec 
-            && this.crdSchema.spec.names
-            && this.crdSchema.spec.names.kind) {
-            return this.crdSchema.spec.names.kind;
-        } else {
-            throw new Error('KubeflowOperatorClient: getJobKind failed, kind is undefined in crd schema!');
-        }
-    }
-
-    public get apiVersion(): string {
-        if(this.crdSchema 
-            && this.crdSchema.spec 
-            && this.crdSchema.spec.version) {
-            return this.crdSchema.spec.version;
-        } else {
-            throw new Error('KubeflowOperatorClient: get apiVersion failed, version is undefined in crd schema!');
-        }
-    }
-    
-    public async createKubeflowJob(jobManifest: any): Promise<boolean> {
-        let result: Promise<boolean>;
-        const response : any = await this.operator.post({body: jobManifest});
-        if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
-            result = Promise.resolve(true);
-        } else {
-            result = Promise.reject(`KubeflowOperatorClient create tfjobs failed, statusCode is ${response.statusCode}`);
-        }
-        return result;
-    }
-
-    //TODO : replace any
-    public async getKubeflowJob(kubeflowJobName: string): Promise<any> {
-        let result: Promise<any>;
-        const response : any = await this.operator(kubeflowJobName).get();
-        if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
-            result = Promise.resolve(response.body);
-        } else {
-            result = Promise.reject(`KubeflowOperatorClient get tfjobs failed, statusCode is ${response.statusCode}`);
-        }
-        return result;
-    }
-
-    public async deleteKubeflowJob(labels: Map<string, string>): Promise<boolean> {
-        let result: Promise<boolean>;
-        // construct match query from labels for deleting tfjob
-        const matchQuery: string = Array.from(labels.keys()).map(labelKey => `${labelKey}=${labels.get(labelKey)}`).join(',');
-        try {
-            const deleteResult : any = await this.operator().delete({ qs: { labelSelector: matchQuery } });
-            if(deleteResult.statusCode && deleteResult.statusCode >= 200 && deleteResult.statusCode <= 299) {
-                result = Promise.resolve(true);
-            } else {
-                result = Promise.reject(`KubeflowOperatorClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
-            }
-        } catch(err) {
-            result = Promise.reject(err);
-        }
-
-        return result;
     }
 }
 
@@ -170,7 +73,7 @@ class TFOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     }    
 }
 
-class TFOperatorClientV1Beta1 extends KubeflowOperatorClient {
+class TFOperatorClientV1Beta1 extends KubernetesCRDClient {
     /**
      * constructor, to initialize tfjob CRD definition
      */
@@ -208,7 +111,7 @@ class PytorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     }
 }
 
-class PytorchOperatorClientV1Beta1 extends KubeflowOperatorClient {
+class PytorchOperatorClientV1Beta1 extends KubernetesCRDClient {
     /**
      * constructor, to initialize tfjob CRD definition
      */
@@ -228,3 +131,4 @@ class PytorchOperatorClientV1Beta1 extends KubeflowOperatorClient {
 }
 
 export { KubeflowOperatorClient, GeneralK8sClient };
+

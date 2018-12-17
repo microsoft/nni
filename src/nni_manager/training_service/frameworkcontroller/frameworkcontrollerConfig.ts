@@ -19,8 +19,7 @@
 
 'use strict';
 
-import { KubernetesClusterConfig, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig } from '../kubernetes/kubernetesConfig'
-
+import { KubernetesClusterConfig, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig, KubernetesTrialConfig, KubernetesTrialConfigTemplate } from '../kubernetes/kubernetesConfig'
 
 export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfig{
     public readonly nfs: NFSConfig;
@@ -39,5 +38,16 @@ export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConf
         super(storage)
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
+    }
+}
+
+export class FrameworkControllerTrialConfig extends KubernetesTrialConfig{
+    public readonly ps?: KubernetesTrialConfigTemplate;
+    public readonly worker: KubernetesTrialConfigTemplate;
+
+    constructor(codeDir: string, worker: KubernetesTrialConfigTemplate,  ps?: KubernetesTrialConfigTemplate) {
+        super(codeDir);
+        this.ps = ps;
+        this.worker = worker;
     }
 }

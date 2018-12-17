@@ -36,7 +36,8 @@ import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { KubernetesTrialJobDetail } from './kubernetesData';
-import { KubernetesClusterConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage} from './kubernetesConfig';
+import { KubernetesClusterConfig, KubernetesTrialConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage} from './kubernetesConfig';
+import { GeneralK8sClient }from './kubernetesApiClient';
 
 import * as azureStorage from 'azure-storage';
 var azure = require('azure-storage');
@@ -66,6 +67,8 @@ class KubernetesTrainingService implements TrainingService {
     protected azureStorageSecretName?: string;
     protected azureStorageAccountName?: string;
     protected nniManagerIpConfig?: NNIManagerIpConfig;
+    protected readonly genericK8sClient: GeneralK8sClient;
+    protected kubernetesTrialConfig?: KubernetesTrialConfig;
 
     
     constructor() {
@@ -76,10 +79,11 @@ class KubernetesTrainingService implements TrainingService {
         this.experimentId = getExperimentId();      
         this.nextTrialSequenceId = -1;
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
+        this.genericK8sClient = new GeneralK8sClient();
     }
 
     public async run(): Promise<void> {
-        
+        return Promise.resolve();
     }
 
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {

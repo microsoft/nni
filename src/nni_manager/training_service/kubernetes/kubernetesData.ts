@@ -56,3 +56,5 @@ export class KubernetesTrialJobDetail implements TrialJobDetail {
 }
 
 export type KubernetesJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
+
+export type FrameworkControllerJobType = 'AttemptRunning' | 'Completed';
