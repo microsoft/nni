@@ -1,0 +1,59 @@
+Curve Fitting Assessor on NNI
+===
+
+## 1. Introduction
+Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve, the large set of parametric curve models are chosen from [reference paper][1]. The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
+
+<p align="center">
+<img src="./learning_curve.png" alt="drawing"/>
+</p>
+
+We combine all learning curve models into a single, more powerful model. This combined model is given by a weighted linear combination:
+<p align="center">
+<img src="./f_comb.gif" alt="drawing"/>
+</p>
+where the new combined parameter vector
+<p align="center">
+<img src="./expression_xi.gif" alt="drawing"/>
+</p>
+Assuming additive a Gaussian noise and the noise parameter is initialized to its maximum likelihood estimate.
+
+This algorithm goes through three stages of learning, predicting and assessing.
+* Step1: Learning. We will learning about the trial history of the current trial and determine the \xi. First of all, We fit each curve using the least squares method(implement by `fit_theta`) to save our time. After we obtained the parameters, we filter the curve and remove the outliers(implement by `filter_curve`). Fially, we use the MCMC sampling method(implement by `MCMC_sampling`) to adjust the weight of each curve. Up to now, we have dertermined all the parameters in \xi.
+* Step2: Predicting. Calculates the expected final result accuracy(implement by `f_comb`) at target position(ie the total number of epoch) by the \xi and the formula of the combined model.
+* Step3: If the fitting result doesn't converge, the predicted value will be `-1`, in this case we return `AssessResult.Good` to ask for future accuracy information and predict again. Furthermore, we will get a positive value by `predict()` function, if this value is strictly greater than the best final performance in history * `THRESHOLD`(default value = 0.95), return `AssessResult.Good`, otherwise, return  `AssessResult.Bad`
+
+The figure below is the result of our algorithm on MNIST trial history data, where the blue point represents the data obtained by Assessor, the green point represents the future but unknown data, and the red line is the Curve predicted by the Curve fitting assessor.
+
+<p align="center">
+<img src="./example_of_curve_fitting.png" alt="drawing"/>
+</p>
+
+## 2. Usage
+To use Curve Fitting Assessor, you should add the following spec in your experiment's yaml config file:
+
+```
+assessor:
+builtinAssessorName: Curvefitting
+    classArgs:
+      # (optional) A trial is determined to be stopped or not, 
+      * only after receiving start_step number of reported intermediate results.
+      * The default value of start_step is 6.
+      start_step: 6
+      # The total number of epoch
+      * The default value of start_step is 20.
+      epoch_num: 20
+```
+
+## 3. File Structure
+The assessor has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
+
+* `curvefunctions.py` includes all the function expression and default parameters.
+* `modelfactory.py` includes learning and predicting, the corresponding calculation part is also implemented here.
+* `curvefitting_assessor.py` is a assessor which receives the trial history and assess whether to early stop the trial.
+
+## 4. TODO
+Further improve the accuracy of the prediction and test it on more models.
+
+
+[1]: http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf

@@ -17,8 +17,8 @@
 
 import unittest
 
-from curvefitting_assessor import CurvefittingAssessor
-from modelfactory import *
+from .curvefitting_assessor import CurvefittingAssessor
+from .modelfactory import *
 from nni.assessor import AssessResult
 
 class TestCurveFittingAssessor(unittest.TestCase):

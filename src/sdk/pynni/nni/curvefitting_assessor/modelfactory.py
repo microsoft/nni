@@ -16,8 +16,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import numpy as np
 from scipy import optimize
-import matplotlib.pyplot as plt
-from curvefunctions import *
+from .curvefunctions import *
 
 NUM_OF_FUNCTIONS = 12
 MAXFEV = 1000000
@@ -27,7 +26,7 @@ STEP_SIZE = 0.0005
 
 
 class CurveModel(object):
-    def __init__(self, target_pos=20):
+    def __init__(self, target_pos):
         self.target_pos = target_pos
 
     def fit_theta(self):
@@ -76,6 +75,7 @@ class CurveModel(object):
             y = self.predict_y(model, self.target_pos)
             if y < median + 3 * std and y > median - 3 * std:
                 self.effective_model.append(model)
+        self.effective_model_num = len(self.effective_model)
 
     def predict_y(self, model, pos):
         '''return the predict y of 'model' when epoch = pos'''
@@ -177,7 +177,6 @@ class CurveModel(object):
         self.effective_model = []
         self.fit_theta()
         self.filter_curve()
-        self.effective_model_num = len(self.effective_model)
         if self.effective_model_num < 4:
             '''different curve's predictions are too scattered, requires more information'''
             return -1

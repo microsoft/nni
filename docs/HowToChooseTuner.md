@@ -202,7 +202,7 @@ _Usage_:
 For now, NNI has supported the following assessor algorithms.
 
  - [Medianstop](#Medianstop)
- - Curve Extrapolation (ongoing)
+ - [Curvefitting] (#Curvefitting)
 
 ## Supported Assessor Algorithms
 
@@ -214,7 +214,7 @@ Medianstop is a simple early stopping rule mentioned in the [paper][8]. It stops
 _Suggested scenario_: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.
 
 _Usage_:
-```yaml
+```yml
   assessor:
     builtinAssessorName: Medianstop
     classArgs:
@@ -226,6 +226,27 @@ _Usage_:
       start_step: 5
 ```
 
+<a name="Curvefitting"></a>
+**Curvefitting**
+
+Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve, the large set of parametric curve models are chosen from [reference paper][9]. The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
+
+_Suggested scenario_: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.
+
+_Usage_:
+```yml
+  assessor:
+    builtinAssessorName: Curvefitting
+    classArgs:
+      # (optional) A trial is determined to be stopped or not, 
+      * only after receiving start_step number of reported intermediate results.
+      * The default value of start_step is 6.
+      start_step: 6
+      # The total number of epoch
+      * The default value of start_step is 20.
+      epoch_num: 20
+```
+
 [1]: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
 [2]: http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf
 [3]: https://arxiv.org/pdf/1703.01041.pdf
@@ -234,3 +255,4 @@ _Usage_:
 [6]: https://arxiv.org/pdf/1603.06560.pdf
 [7]: https://arxiv.org/abs/1806.10282
 [8]: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
+[9]: http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf

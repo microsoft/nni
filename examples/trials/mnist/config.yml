@@ -15,6 +15,12 @@ tuner:
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
+assessor:
+  #choice: Medianstop, Curvefitting
+  builtinAssessorName: Curvefitting
+  classArgs:
+    start_step: 6
+    epoch_num: 20
 trial:
   command: python3 mnist.py
   codeDir: .
