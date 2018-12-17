@@ -36,6 +36,7 @@ import { createRestHandler } from './restHandler';
 @component.Singleton
 export class NNIRestServer extends RestServer {
     private readonly API_ROOT_URL: string = '/api/v1/nni';
+    private readonly LOGS_ROOT_URL: string = '/logs';
 
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
@@ -51,7 +52,7 @@ export class NNIRestServer extends RestServer {
         this.app.use(express.static('static'));
         this.app.use(bodyParser.json());
         this.app.use(this.API_ROOT_URL, createRestHandler(this));
-        this.app.use('/logs', express.static(getLogDir()));
+        this.app.use(this.LOGS_ROOT_URL, express.static(getLogDir()));
         this.app.get('*', (req: express.Request, res: express.Response) => {
             res.sendFile(path.resolve('static/index.html'));
         });
