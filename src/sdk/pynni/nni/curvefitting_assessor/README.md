@@ -23,7 +23,7 @@ This algorithm goes through three stages of learning, predicting and assessing.
 * Step2: Predicting. Calculates the expected final result accuracy(implement by `f_comb`) at target position(ie the total number of epoch) by the \xi and the formula of the combined model.
 * Step3: If the fitting result doesn't converge, the predicted value will be `-1`, in this case we return `AssessResult.Good` to ask for future accuracy information and predict again. Furthermore, we will get a positive value by `predict()` function, if this value is strictly greater than the best final performance in history * `THRESHOLD`(default value = 0.95), return `AssessResult.Good`, otherwise, return  `AssessResult.Bad`
 
-The figure below is the result of our algorithm on MNIST trial history data, where the blue point represents the data obtained by Assessor, the green point represents the future but unknown data, and the red line is the Curve predicted by the Curve fitting assessor.
+The figure below is the result of our algorithm on MNIST trial history data, where the green point represents the data obtained by Assessor, the blue point represents the future but unknown data, and the red line is the Curve predicted by the Curve fitting assessor.
 
 <p align="center">
 <img src="./example_of_curve_fitting.PNG" alt="drawing"/>
