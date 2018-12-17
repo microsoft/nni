@@ -19,10 +19,14 @@
 # ==================================================================================================
 
 #import json_tricks
-import os
 import logging
-import json_tricks
+import os
+from queue import Queue
+import sys
+
 from multiprocessing.dummy import Pool as ThreadPool
+
+import json_tricks
 from .common import init_logger, multi_thread_enabled
 from .recoverable import Recoverable
 from .protocol import CommandType, receive
@@ -49,7 +53,7 @@ class MsgDispatcherBase(Recoverable):
             if command is None:
                 break
             if multi_thread_enabled():
-                self.pool.map_async(self.handle_request, [(command, data)])
+                self.pool.map_async(self.handle_request_thread, [(command, data)])
             else:
                 self.handle_request((command, data))
 
@@ -58,6 +62,16 @@ class MsgDispatcherBase(Recoverable):
             self.pool.join()
 
         _logger.info('Terminated by NNI manager')
+
+    def handle_request_thread(self, request):
+        if multi_thread_enabled():
+            try:
+                self.handle_request(request)
+            except Exception as e:
+                _logger.exception(str(e))
+                sys.exit(-1)
+        else:
+            pass
 
     def handle_request(self, request):
         command, data = request

@@ -24,11 +24,17 @@ Graph is customed-define class, this module contains related class and function 
 
 
 import copy
+import hashlib
+import logging
 import json
 import random
+from collections import deque
 from enum import Enum, unique
+from typing import Iterable
 
-global_layer_id = 0
+import numpy as np
+
+_logger = logging.getLogger('ga_squad_graph')
 
 @unique
 class LayerType(Enum):
@@ -45,15 +51,13 @@ class Layer(object):
     '''
     Layer class, which contains the information of graph.
     '''
-    def __init__(self, graph_type, inputs=None, output=None, size=None):
-        global global_layer_id
-        self.global_id = global_layer_id
-        global_layer_id += 1
+    def __init__(self, graph_type, inputs=None, output=None, size=None, hash_id=None):
         self.input = inputs if inputs is not None else []
         self.output = output if output is not None else []
         self.graph_type = graph_type
         self.is_delete = False
         self.size = size
+        self.hash_id = hash_id
         if graph_type == LayerType.attention.value:
             self.input_size = 2
             self.output_size = 1
@@ -66,11 +70,29 @@ class Layer(object):
         elif graph_type == LayerType.input.value:
             self.input_size = 0
             self.output_size = 1
+            if self.hash_id is None:
+                hasher = hashlib.md5()
+                hasher.update(np.random.bytes(100))
+                self.hash_id = hasher.hexdigest()
         elif graph_type == LayerType.output.value:
             self.input_size = 1
             self.output_size = 0
         else:
-            print(graph_type)
+            raise ValueError('Unsupported LayerType: {}'.format(graph_type))
+
+    def update_hash(self, layers: Iterable):
+        """
+        update hash_id of Layer
+        """
+        if self.graph_type == LayerType.input.value:
+            return
+        hasher = hashlib.md5()
+        for i in self.input:
+            if layers[i].hash_id is None:
+                raise ValueError('Hash id of layer {}: {} not generated!'.format(i, layers[i]))
+            hasher.update(layers[i].hash_id.encode('ascii'))
+        self.hash_id = hasher.hexdigest()
+
     def set_size(self, graph_id, size):
         '''
         Set size.
@@ -96,8 +118,7 @@ class Layer(object):
             self.size = None
 
     def __str__(self):
-        return 'id:' + str(self.global_id) +  'input:' + str(self.input) + ' output:' + str(self.output) + ' type:' + str(
-            self.graph_type) + ' is_delete:' + str(self.is_delete) + ' size:' + str(self.size)
+        return 'input:' + str(self.input) + ' output:' + str(self.output) + ' type:' + str(self.graph_type) + ' is_delete:' + str(self.is_delete) + ' size:' + str(self.size)
 
 def graph_dumps(graph):
     '''
@@ -111,7 +132,7 @@ def graph_loads(graph_json):
     '''
     layers = []
     for layer in graph_json['layers']:
-        layer_info = Layer(layer['type'], layer['input'], layer['output'], layer['size'])
+        layer_info = Layer(layer['graph_type'], layer['input'], layer['output'], layer['size'], layer['hash_id'])
         layer_info.is_delete = layer['is_delete']
         layers.append(layer_info)
     graph = Graph(graph_json['max_layer_num'], [], [], [])
@@ -209,6 +230,22 @@ class Graph(object):
 
         return True
 
+    def update_hash(self):
+        """
+        update hash id of each layer, in topological order/recursively
+        hash id will be used in weight sharing
+        """
+        _logger.debug('update hash')
+        layer_in_cnt = [len(layer.input) for layer in self.layers]
+        topo_queue = deque([i for i, layer in enumerate(self.layers) if not layer.is_delete and layer.graph_type == LayerType.input.value])
+        while topo_queue:
+            layer_i = topo_queue.pop()
+            self.layers[layer_i].update_hash(self.layers)
+            for layer_j in self.layers[layer_i].output:
+                layer_in_cnt[layer_j] -= 1
+                if layer_in_cnt[layer_j] == 0:
+                    topo_queue.appendleft(layer_j)
+
     def mutation(self, only_add=False):
         '''
         Mutation for a graph
@@ -283,6 +320,7 @@ class Graph(object):
             else:
                 layers = copy.deepcopy(self.layers)
                 cnt_try += 1
+        self.update_hash()
 
     def __str__(self):
         info = ""

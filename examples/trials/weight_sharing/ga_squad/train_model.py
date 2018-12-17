@@ -58,10 +58,10 @@ class GAGConfig:
 
 class GAG:
     """The class for the computation graph based QA model."""
-    def __init__(self, cfg, embed, graph):
+    def __init__(self, cfg, embed, p_graph):
         self.cfg = cfg
         self.embed = embed
-        self.graph = graph
+        self.graph = p_graph
 
         self.query_word = None
         self.query_mask = None
@@ -87,13 +87,12 @@ class GAG:
     def build_net(self, is_training):
         """Build the whole neural network for the QA model."""
         cfg = self.cfg
-        with tf.device('/cpu:0'):
-            word_embed = tf.get_variable(
-                name='word_embed', initializer=self.embed, dtype=tf.float32, trainable=False)
-            char_embed = tf.get_variable(name='char_embed',
-                                         shape=[cfg.char_vcb_size,
-                                                cfg.char_embed_dim],
-                                         dtype=tf.float32)
+        word_embed = tf.get_variable(
+            name='word_embed', initializer=self.embed, dtype=tf.float32, trainable=False)
+        char_embed = tf.get_variable(name='char_embed',
+                                        shape=[cfg.char_vcb_size,
+                                            cfg.char_embed_dim],
+                                        dtype=tf.float32)
 
         # [query_length, batch_size]
         self.query_word = tf.placeholder(dtype=tf.int32,

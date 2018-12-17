@@ -270,12 +270,12 @@ def graph_to_network(input1,
                      input2,
                      input1_lengths,
                      input2_lengths,
-                     graph,
+                     p_graph,
                      dropout_rate,
                      is_training,
                      num_heads=1,
                      rnn_units=256):
-    topology = graph.is_topology()
+    topology = p_graph.is_topology()
     layers = dict()
     layers_sequence_lengths = dict()
     num_units = input1.get_shape().as_list()[-1]
@@ -289,50 +289,51 @@ def graph_to_network(input1,
     for _, topo_i in enumerate(topology):
         if topo_i == '|':
             continue
-        if graph.layers[topo_i].graph_type == LayerType.input.value:
-            continue
-        elif graph.layers[topo_i].graph_type == LayerType.attention.value:
-            with tf.variable_scope('attation_%d' % topo_i):
-                layer = multihead_attention(layers[graph.layers[topo_i].input[0]],
-                                            layers[graph.layers[topo_i].input[1]],
-                                            scope="multihead_attention%d" % topo_i,
-                                            dropout_rate=dropout_rate,
-                                            is_training=is_training,
-                                            num_heads=num_heads,
-                                            num_units=rnn_units * 2)
-                layer = feedforward(layer, scope="feedforward%d" % topo_i,
-                                    num_units=[rnn_units * 2 * 4, rnn_units * 2])
-            layers[topo_i] = layer
-            layers_sequence_lengths[topo_i] = layers_sequence_lengths[
-                graph.layers[topo_i].input[0]]
-        elif graph.layers[topo_i].graph_type == LayerType.self_attention.value:
-            with tf.variable_scope('self-attation_%d' % topo_i):
-                layer = multihead_attention(layers[graph.layers[topo_i].input[0]],
-                                            layers[graph.layers[topo_i].input[0]],
-                                            scope="multihead_attention%d" % topo_i,
-                                            dropout_rate=dropout_rate,
-                                            is_training=is_training,
-                                            num_heads=num_heads,
-                                            num_units=rnn_units * 2)
-                layer = feedforward(layer, scope="feedforward%d" % topo_i,
-                                    num_units=[rnn_units * 2 * 4, rnn_units * 2])
-            layers[topo_i] = layer
-            layers_sequence_lengths[topo_i] = layers_sequence_lengths[
-                graph.layers[topo_i].input[0]]
-        elif graph.layers[topo_i].graph_type == LayerType.rnn.value:
-            with tf.variable_scope('rnn_%d' % topo_i):
-                layer = rnn(layers[graph.layers[topo_i].input[0]],
-                            layers_sequence_lengths[graph.layers[topo_i].input[0]],
-                            dropout_rate,
-                            is_training,
-                            rnn_units)
-            layers[topo_i] = layer
-            layers_sequence_lengths[topo_i] = layers_sequence_lengths[
-                graph.layers[topo_i].input[0]]
-        elif graph.layers[topo_i].graph_type == LayerType.output.value:
-            layers[topo_i] = layers[graph.layers[topo_i].input[0]]
-            if layers[topo_i].get_shape().as_list()[-1] != rnn_units * 1 * 2:
-                with tf.variable_scope('add_dense'):
-                    layers[topo_i] = tf.layers.dense(
-                        layers[topo_i], units=rnn_units*2)
+        with tf.variable_scope(p_graph.layers[topo_i].hash_id):
+            if p_graph.layers[topo_i].graph_type == LayerType.input.value:
+                continue
+            elif p_graph.layers[topo_i].graph_type == LayerType.attention.value:
+                with tf.variable_scope('attention'):
+                    layer = multihead_attention(layers[p_graph.layers[topo_i].input[0]],
+                                                layers[p_graph.layers[topo_i].input[1]],
+                                                scope="multihead_attention",
+                                                dropout_rate=dropout_rate,
+                                                is_training=is_training,
+                                                num_heads=num_heads,
+                                                num_units=rnn_units * 2)
+                    layer = feedforward(layer, scope="feedforward",
+                                        num_units=[rnn_units * 2 * 4, rnn_units * 2])
+                layers[topo_i] = layer
+                layers_sequence_lengths[topo_i] = layers_sequence_lengths[
+                    p_graph.layers[topo_i].input[0]]
+            elif p_graph.layers[topo_i].graph_type == LayerType.self_attention.value:
+                with tf.variable_scope('self-attention'):
+                    layer = multihead_attention(layers[p_graph.layers[topo_i].input[0]],
+                                                layers[p_graph.layers[topo_i].input[0]],
+                                                scope="multihead_attention",
+                                                dropout_rate=dropout_rate,
+                                                is_training=is_training,
+                                                num_heads=num_heads,
+                                                num_units=rnn_units * 2)
+                    layer = feedforward(layer, scope="feedforward",
+                                        num_units=[rnn_units * 2 * 4, rnn_units * 2])
+                layers[topo_i] = layer
+                layers_sequence_lengths[topo_i] = layers_sequence_lengths[
+                    p_graph.layers[topo_i].input[0]]
+            elif p_graph.layers[topo_i].graph_type == LayerType.rnn.value:
+                with tf.variable_scope('rnn'):
+                    layer = rnn(layers[p_graph.layers[topo_i].input[0]],
+                                layers_sequence_lengths[p_graph.layers[topo_i].input[0]],
+                                dropout_rate,
+                                is_training,
+                                rnn_units)
+                layers[topo_i] = layer
+                layers_sequence_lengths[topo_i] = layers_sequence_lengths[
+                    p_graph.layers[topo_i].input[0]]
+            elif p_graph.layers[topo_i].graph_type == LayerType.output.value:
+                layers[topo_i] = layers[p_graph.layers[topo_i].input[0]]
+                if layers[topo_i].get_shape().as_list()[-1] != rnn_units * 1 * 2:
+                    with tf.variable_scope('add_dense'):
+                        layers[topo_i] = tf.layers.dense(
+                            layers[topo_i], units=rnn_units*2)
     return layers[2], layers[3]
