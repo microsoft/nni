@@ -5,7 +5,7 @@ Curve Fitting Assessor on NNI
 Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve, the large set of parametric curve models are chosen from [reference paper][1]. The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
 
 <p align="center">
-<img src="./learning_curve.png" alt="drawing"/>
+<img src="./learning_curve.PNG" alt="drawing"/>
 </p>
 
 We combine all learning curve models into a single, more powerful model. This combined model is given by a weighted linear combination:
@@ -26,7 +26,7 @@ This algorithm goes through three stages of learning, predicting and assessing.
 The figure below is the result of our algorithm on MNIST trial history data, where the blue point represents the data obtained by Assessor, the green point represents the future but unknown data, and the red line is the Curve predicted by the Curve fitting assessor.
 
 <p align="center">
-<img src="./example_of_curve_fitting.png" alt="drawing"/>
+<img src="./example_of_curve_fitting.PNG" alt="drawing"/>
 </p>
 
 ## 2. Usage
