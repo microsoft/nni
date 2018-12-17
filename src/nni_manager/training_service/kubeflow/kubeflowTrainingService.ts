@@ -62,7 +62,6 @@ var base64 = require('js-base64').Base64;
 class KubeflowTrainingService extends KubernetesTrainingService {
     private kubeflowClusterConfig?: KubeflowClusterConfigBase;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
-    private operatorClient?: KubeflowOperatorClient;
 
     constructor() {
         super();  
@@ -78,7 +77,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
         while (!this.stopping) {
             // collect metrics for Kubeflow jobs by interacting with Kubernetes API server  
             await delay(3000);
-            await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.operatorClient);
+            await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
         }
     }
 
@@ -91,7 +90,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
-        if(!this.operatorClient) {
+        if(!this.kubernetesCRDClient) {
             throw new Error('Kubeflow job operator client is undefined');
         }
 
@@ -225,7 +224,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
         const kubeflowJobConfig: any = this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources, nonWorkerResources);
 
         // Create kubeflow job based on generated kubeflow job resource config
-        await this.operatorClient.createKubeflowJob(kubeflowJobConfig);
+        await this.kubernetesCRDClient.createKubernetesJob(kubeflowJobConfig);
 
         // Set trial job detail until create Kubeflow job successfully 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
@@ -240,14 +239,14 @@ class KubeflowTrainingService extends KubernetesTrainingService {
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }        
-        if(!this.operatorClient) {
+        if(!this.kubernetesCRDClient) {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} failed because operatorClient is undefined`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }
 
         try {
-            await this.operatorClient.deleteKubeflowJob(new Map(
+            await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
                 [
                     ['app', this.NNI_KUBEFLOW_TRIAL_LABEL],
                     ['expId', getExperimentId()],
@@ -292,7 +291,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
                         nfsKubeflowClusterConfig.nfs.path
                     );
                 } 
-                this.operatorClient = KubeflowOperatorClient.generateOperatorClient(this.kubeflowClusterConfig.operator,
+                this.kubernetesCRDClient = KubeflowOperatorClient.generateOperatorClient(this.kubeflowClusterConfig.operator,
                                                                                      this.kubeflowClusterConfig.apiVersion);
                 break;
 
@@ -347,8 +346,8 @@ class KubeflowTrainingService extends KubernetesTrainingService {
         
         // Delete all kubeflow jobs whose expId label is current experiment id 
         try {
-            if(this.operatorClient) {
-                await this.operatorClient.deleteKubeflowJob(new Map(
+            if(this.kubernetesCRDClient) {
+                await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
                     [
                         ['app', this.NNI_KUBEFLOW_TRIAL_LABEL],
                         ['expId', getExperimentId()]
@@ -396,7 +395,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
-        if(!this.operatorClient) {
+        if(!this.kubernetesCRDClient) {
             throw new Error('Kubeflow operator client is not initialized');
         }
 
@@ -412,7 +411,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
                 replicaSpecsObj.Ps = this.generateReplicaConfig(trialWorkingFolder, tensorflowTrialConfig.ps.replicas, 
                     tensorflowTrialConfig.ps.image, 'run_ps.sh', nonWorkerPodResources);
             }
-            replicaSpecsObjMap.set(this.operatorClient.jobKind, {'tfReplicaSpecs': replicaSpecsObj})
+            replicaSpecsObjMap.set(this.kubernetesCRDClient.jobKind, {'tfReplicaSpecs': replicaSpecsObj})
         }
         else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
             let pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubernetesTrialConfig;
@@ -423,12 +422,12 @@ class KubeflowTrainingService extends KubernetesTrainingService {
             replicaSpecsObj.Master = this.generateReplicaConfig(trialWorkingFolder, pytorchTrialConfig.master.replicas, 
                 pytorchTrialConfig.master.image, 'run_master.sh', nonWorkerPodResources);
             
-            replicaSpecsObjMap.set(this.operatorClient.jobKind, {'pytorchReplicaSpecs': replicaSpecsObj})
+            replicaSpecsObjMap.set(this.kubernetesCRDClient.jobKind, {'pytorchReplicaSpecs': replicaSpecsObj})
         }
 
         return {
-            apiVersion: `kubeflow.org/${this.operatorClient.apiVersion}`,
-            kind: this.operatorClient.jobKind,
+            apiVersion: `kubeflow.org/${this.kubernetesCRDClient.apiVersion}`,
+            kind: this.kubernetesCRDClient.jobKind,
             metadata: { 
                 name: kubeflowJobName,
                 namespace: 'default',
@@ -438,7 +437,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
                     trialId: trialJobId
                 }
             },
-            spec: replicaSpecsObjMap.get(this.operatorClient.jobKind)
+            spec: replicaSpecsObjMap.get(this.kubernetesCRDClient.jobKind)
         };     
     }
 
@@ -459,7 +458,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
-        if(!this.operatorClient) {
+        if(!this.kubernetesCRDClient) {
             throw new Error('Kubeflow operator client is not initialized');
         }
 
@@ -497,7 +496,7 @@ class KubeflowTrainingService extends KubernetesTrainingService {
                     {
                         // Kubeflow tensorflow operator requires that containers' name must be tensorflow
                         // TODO: change the name based on operator's type
-                        name: this.operatorClient.containerName,
+                        name: this.kubernetesCRDClient.containerName,
                         image: replicaImage,
                         args: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
                         volumeMounts: [

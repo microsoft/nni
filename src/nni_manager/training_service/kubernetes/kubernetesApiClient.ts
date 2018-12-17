@@ -86,19 +86,19 @@ abstract class KubernetesCRDClient {
         }
     }
     
-    public async createKubeflowJob(jobManifest: any): Promise<boolean> {
+    public async createKubernetesJob(jobManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
         const response : any = await this.operator.post({body: jobManifest});
         if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
-            result = Promise.reject(`KubeflowOperatorClient create tfjobs failed, statusCode is ${response.statusCode}`);
+            result = Promise.reject(`Create kubernetes job failed, statusCode is ${response.statusCode}`);
         }
         return result;
     }
 
     //TODO : replace any
-    public async getKubeflowJob(kubeflowJobName: string): Promise<any> {
+    public async getKubernetesJob(kubeflowJobName: string): Promise<any> {
         let result: Promise<any>;
         const response : any = await this.operator(kubeflowJobName).get();
         if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
@@ -109,7 +109,7 @@ abstract class KubernetesCRDClient {
         return result;
     }
 
-    public async deleteKubeflowJob(labels: Map<string, string>): Promise<boolean> {
+    public async deleteKubernetesJob(labels: Map<string, string>): Promise<boolean> {
         let result: Promise<boolean>;
         // construct match query from labels for deleting tfjob
         const matchQuery: string = Array.from(labels.keys()).map(labelKey => `${labelKey}=${labels.get(labelKey)}`).join(',');

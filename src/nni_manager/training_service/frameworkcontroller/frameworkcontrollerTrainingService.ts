@@ -61,7 +61,6 @@ var base64 = require('js-base64').Base64;
 @component.Singleton
 class FrameworkControllerainingService extends KubernetesTrainingService {
     private frameworkcontrollerClusterConfig?: KubernetesClusterConfig;
-    private frameworkcotrollerAPIClient?: FrameworkControllerClient;
     private frameworkcontrollerJobInfoCollector: FrameworkControllerJobInfoCollector;
 
     constructor() {
@@ -78,7 +77,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         while (!this.stopping) {
             // collect metrics for Kubeflow jobs by interacting with Kubernetes API server  
             await delay(3000);
-            await this.frameworkcontrollerJobInfoCollector.retrieveTrialStatus(this.frameworkcotrollerAPIClient);
+            await this.frameworkcontrollerJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
         }
     }
 
@@ -91,7 +90,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
             throw new Error('Kubeflow trial config is not initialized');
         }
 
-        if(!this.frameworkcotrollerAPIClient) {
+        if(!this.kubernetesCRDClient) {
             throw new Error('Kubeflow job operator client is undefined');
         }
 
@@ -137,7 +136,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
                             trialForm.hyperParameters.value, { encoding: 'utf8' });
         }
-        const kubeflowJobName = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();
+        const frameworkcontrollerJobName = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
         
         const workerPodResources : any = {};
         if(frameworkcontrollerTrialConfig.worker) {
@@ -156,11 +155,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         //The output url used in trialJobDetail
         let trialJobOutputUrl: string = '';
 
-        assert(!this.frameworkcontrollerClusterConfig.storage 
-            || this.frameworkcontrollerClusterConfig.storage === 'azureStorage' 
-            || this.frameworkcontrollerClusterConfig.storage === 'nfs');
-
-        if(this.frameworkcontrollerClusterConfig.storage === 'azureStorage') {
+        if(this.frameworkcontrollerClusterConfig.storageType === 'azureStorage') {
             try{
                 //upload local files to azure storage
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient, 
@@ -171,7 +166,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                 this.log.error(error);
                 return Promise.reject(error);
             }
-        } else if(this.frameworkcontrollerClusterConfig.storage === 'nfs' || this.frameworkcontrollerClusterConfig.storage === undefined) {
+        } else if(this.frameworkcontrollerClusterConfig.storageType === 'nfs') {
             let nfsKubeflowClusterConfig: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS>this.frameworkcontrollerClusterConfig;
             // Creat work dir for current trial in NFS directory 
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
@@ -188,7 +183,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
             Date.now(),
             trialWorkingFolder,
             form,
-            kubeflowJobName,
+            frameworkcontrollerJobName,
             curTrialSequenceId,
             trialJobOutputUrl
         );
@@ -197,10 +192,10 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
         // Generate kubeflow job resource config object        
-        const kubeflowJobConfig: any = this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources, nonWorkerResources);
+        const kubeflowJobConfig: any = this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, workerPodResources, nonWorkerResources);
 
         // Create kubeflow job based on generated kubeflow job resource config
-        await this.frameworkcotrollerAPIClient.createKubeflowJob(kubeflowJobConfig);
+        await this.kubernetesCRDClient.createKubernetesJob(kubeflowJobConfig);
 
         // Set trial job detail until create Kubeflow job successfully 
         this.trialJobsMap.set(trialJobId, trialJobDetail);
@@ -215,14 +210,14 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }        
-        if(!this.frameworkcotrollerAPIClient) {
+        if(!this.kubernetesCRDClient) {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} failed because operatorClient is undefined`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }
 
         try {
-            await this.frameworkcotrollerAPIClient.deleteKubeflowJob(new Map(
+            await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
                 [
                     ['app', this.NNI_KUBEFLOW_TRIAL_LABEL],
                     ['expId', getExperimentId()],
@@ -267,7 +262,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                         nfsKubeflowClusterConfig.nfs.path
                     );
                 } 
-                this.frameworkcotrollerAPIClient = FrameworkControllerClient.generateOperatorClient();
+                this.kubernetesCRDClient = FrameworkControllerClient.generateOperatorClient();
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
             if (!this.frameworkcontrollerClusterConfig){
@@ -315,8 +310,8 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         
         // Delete all kubeflow jobs whose expId label is current experiment id 
         try {
-            if(this.frameworkcotrollerAPIClient) {
-                await this.frameworkcotrollerAPIClient.deleteKubeflowJob(new Map(
+            if(this.kubernetesCRDClient) {
+                await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
                     [
                         ['app', this.NNI_KUBEFLOW_TRIAL_LABEL],
                         ['expId', getExperimentId()]
@@ -355,7 +350,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
      * @param workerPodResources worker pod template
      * @param nonWorkerPodResources non-worker pod template, like ps or master
      */
-    private generateKubeflowJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, workerPodResources : any, nonWorkerPodResources?: any) : any {
+    private generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName : string, workerPodResources : any, nonWorkerPodResources?: any) : any {
         if(!this.frameworkcontrollerClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }

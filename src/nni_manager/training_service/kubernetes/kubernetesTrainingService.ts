@@ -37,8 +37,9 @@ import {
 } from '../../common/trainingService';
 import { KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesClusterConfig, KubernetesTrialConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage} from './kubernetesConfig';
-import { GeneralK8sClient } from './kubernetesApiClient';
+import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
+import { KubernetesJobRestServer } from './kubernetesJobRestServer';
 
 import * as azureStorage from 'azure-storage';
 var azure = require('azure-storage');
@@ -71,7 +72,8 @@ class KubernetesTrainingService implements TrainingService {
     protected nniManagerIpConfig?: NNIManagerIpConfig;
     protected readonly genericK8sClient: GeneralK8sClient;
     protected kubernetesTrialConfig?: KubernetesTrialConfig;
-
+    protected kubernetesCRDClient?: KubernetesCRDClient;
+    protected kubernetesJobRestServer?: KubernetesJobRestServer;
     
     constructor() {
         this.log = getLogger();
@@ -85,24 +87,15 @@ class KubernetesTrainingService implements TrainingService {
     }
 
     public async run(): Promise<void> {
-        return Promise.resolve();
+        throw new MethodNotImplementedError();
     }
 
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        let tmp:any;
-        return Promise.resolve(tmp);
-    }
-
-    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
-        return Promise.resolve();
+        throw new MethodNotImplementedError();
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
-        return Promise.resolve();
-    }
-
-    public async cleanUp(): Promise<void> {
-        return Promise.resolve();
+        throw new MethodNotImplementedError();
     }
 
     public generatePodResource(memory: number, cpuNum: number, gpuNum: number) {
@@ -149,18 +142,18 @@ class KubernetesTrainingService implements TrainingService {
     }
  
     public get isMultiPhaseJobSupported(): boolean {
-        return false;
+        throw new MethodNotImplementedError();
     }
 
     public getClusterMetadata(key: string): Promise<string> {
-        return Promise.resolve('');
+        throw new MethodNotImplementedError();
     }
 
     public get MetricsEmitter() : EventEmitter {
-        return this.metricsEmitter;
+        throw new MethodNotImplementedError();
     }
 
-        /**
+    /**
      * Genereate run script for different roles(like worker or ps)
      * @param trialJobId trial job id
      * @param trialWorkingFolder working folder
@@ -258,6 +251,88 @@ class KubernetesTrainingService implements TrainingService {
             this.log.error(mountError);
             return Promise.reject(mountError);
         }
+        return Promise.resolve();
+    }
+
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
+        const trialJobDetail : KubernetesTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
+        if(!trialJobDetail) {
+            const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} not found`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }        
+        if(!this.kubernetesCRDClient) {
+            const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} failed because operatorClient is undefined`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }
+
+        try {
+            await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
+                [
+                    ['app', this.NNI_KUBEFLOW_TRIAL_LABEL],
+                    ['expId', getExperimentId()],
+                    ['trialId', trialJobId]
+                ]
+            ));
+        } catch(err) {
+            const errorMessage: string = `Delete trial ${trialJobId} failed: ${err}`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }
+
+        trialJobDetail.endTime = Date.now();
+        trialJobDetail.status = getJobCancelStatus(isEarlyStopped);
+
+        return Promise.resolve();
+    }
+
+    public async cleanUp(): Promise<void> {
+        this.stopping = true;
+
+        // First, cancel all running kubeflow jobs
+        for(let [trialJobId, kubeflowTrialJob] of this.trialJobsMap) {
+            if(['RUNNING', 'WAITING', 'UNKNOWN'].includes(kubeflowTrialJob.status)) {
+                try {
+                    await this.cancelTrialJob(trialJobId);
+                } catch(error) {} // DONT throw error during cleanup
+                kubeflowTrialJob.status = 'SYS_CANCELED';
+            }
+        }
+        
+        // Delete all kubeflow jobs whose expId label is current experiment id 
+        try {
+            if(this.kubernetesCRDClient) {
+                await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
+                    [
+                        ['app', this.NNI_KUBEFLOW_TRIAL_LABEL],
+                        ['expId', getExperimentId()]
+                    ]
+                ));
+            }
+        } catch(error) {
+            this.log.error(`Delete kubeflow job with label: app=${this.NNI_KUBEFLOW_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
+        }
+
+        // Unmount NFS
+        try {
+            await cpp.exec(`sudo umount ${this.trialLocalNFSTempFolder}`);
+        } catch(error) {
+            this.log.error(`Unmount ${this.trialLocalNFSTempFolder} failed, error is ${error}`);
+        }
+
+        // Stop Kubeflow rest server 
+        if(!this.kubernetesJobRestServer) {
+            throw new Error('kubernetesJobRestServer not initialized!');
+        }
+        try {
+            await this.kubernetesJobRestServer.stop();
+            this.log.info('Kubeflow Training service rest server stopped successfully.');
+        } catch (error) {
+            this.log.error(`Kubeflow Training service rest server stopped failed, error: ${error.message}`);
+            Promise.reject(error);
+        }
+
         return Promise.resolve();
     }
 }

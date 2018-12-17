@@ -48,7 +48,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
 
         let kubernetesJobInfo: any;
         try {
-            kubernetesJobInfo = await kubernetesCRDClient.getKubeflowJob(kubernetesTrialJob.kubeflowJobName);            
+            kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubeflowJobName);            
         } catch(error) {
             this.log.error(`Get job ${kubernetesTrialJob.kubeflowJobName} info failed, error is ${error}`);
             return Promise.resolve();
