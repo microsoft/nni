@@ -103,7 +103,7 @@ def convert_args_to_dict(call, with_lambda=False):
     """
     keys, values = list(), list()
     for arg in call.args:
-        # If arg is a function, we use its name as the key
+        # if arg is a function, we use its name without arguments as the key
         if type(arg) is ast.Call:
             arg_value = astor.to_source(arg).strip('\n"()').split('(')[0]
             arg_value = ast.Str(str(arg_value))

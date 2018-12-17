@@ -1,54 +1,105 @@
 {
     "handwrite/conv_size/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2, 3 ]
+        "_value": [
+            2,
+            3,
+            5,
+            7
+        ]
     },
-    "handwrite/__line5/function_choice": {
+    "handwrite/__line3/function_choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2 ]
+        "_value": [
+            "max_pool",
+            "h_conv1",
+            "avg_pool"
+        ]
     },
-    "handwrite/__line8/qlognormal": {
+    "handwrite/__line7/qlognormal": {
         "_type": "qlognormal",
-        "_value": [ 1.2, 3, 4.5 ]
+        "_value": [
+            1.2,
+            3,
+            4.5
+        ]
     },
-    "handwrite/__line13/choice": {
+    "handwrite/__line12/choice": {
         "_type": "choice",
-        "_value": [ 0, 1 ]
+        "_value": [
+            "foo",
+            "bar"
+        ]
     },
     "mnist/self.conv_size/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2, 3 ]
+        "_value": [
+            2,
+            3,
+            5,
+            7
+        ]
     },
     "mnist/self.hidden_size/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2 ]
+        "_value": [
+            124,
+            512,
+            1024
+        ]
     },
     "mnist/self.learning_rate/randint": {
         "_type": "randint",
-        "_value": [ 2, 3, 5 ]
+        "_value": [
+            2,
+            3,
+            5
+        ]
     },
     "mnist/tf.nn.relu/function_choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2 ]
+        "_value": [
+            "tf.nn.relu",
+            "tf.nn.sigmoid",
+            "tf.nn.tanh"
+        ]
     },
     "mnist/max_pool/function_choice": {
         "_type": "choice",
-        "_value": [ 0, 1 ]
+        "_value": [
+            "max_pool",
+            "avg_pool"
+        ]
     },
     "mnist/batch_size/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2 ]
+        "_value": [
+            50,
+            250,
+            500
+        ]
     },
     "mnist/dropout_rate/choice": {
         "_type": "choice",
-        "_value": [ 0, 1 ]
+        "_value": [
+            1,
+            5
+        ]
     },
     "dir.simple/conv_size/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2, 3 ]
+        "_value": [
+            2,
+            3,
+            5,
+            7
+        ]
     },
     "dir.simple/max_pool/function_choice": {
         "_type": "choice",
-        "_value": [ 0, 1 ]
+        "_value": [
+            "max_pool",
+            "avg_pool"
+        ]
     }
 }
