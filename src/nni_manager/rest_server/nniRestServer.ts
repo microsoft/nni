@@ -19,11 +19,12 @@
 
 'use strict';
 
-import * as express from 'express';
 import * as bodyParser from 'body-parser';
+import * as express from 'express';
 import * as path from 'path';
 import * as component from '../common/component';
 import { RestServer } from '../common/restServer'
+import { getLogDir } from '../common/utils';
 import { createRestHandler } from './restHandler';
 
 /**
@@ -50,6 +51,7 @@ export class NNIRestServer extends RestServer {
         this.app.use(express.static('static'));
         this.app.use(bodyParser.json());
         this.app.use(this.API_ROOT_URL, createRestHandler(this));
+        this.app.use('/logs', express.static(getLogDir()));
         this.app.get('*', (req: express.Request, res: express.Response) => {
             res.sendFile(path.resolve('static/index.html'));
         });
