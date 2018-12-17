@@ -33,6 +33,7 @@ If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received
 `eta` means `n/eta` configurations from `n` configurations will survive and rerun using more STEPS.
 
 Here is a concrete example of `R=81` and `eta=3`:
+
 |  | s=4 | s=3 | s=2 | s=1 | s=0 |
 |------|-----|-----|-----|-----|-----|
 |i     | n r | n r | n r | n r | n r |

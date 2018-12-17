@@ -170,10 +170,10 @@ class Overview extends React.Component<{}, OverviewState> {
                     }
                 }
             });
-
     }
 
     showTrials = () => {
+        this.isOffInterval();
         axios(`${MANAGER_IP}/trial-jobs`, {
             method: 'GET'
         })
@@ -219,7 +219,12 @@ class Overview extends React.Component<{}, OverviewState> {
                                 const acc = getFinalResult(tableData[item].finalMetricData);
                                 // if hyperparameters is undefine, show error message, else, show parameters value
                                 if (tableData[item].hyperParameters) {
-                                    desJobDetail.parameters = JSON.parse(tableData[item].hyperParameters).parameters;
+                                    const parameters = JSON.parse(tableData[item].hyperParameters).parameters;
+                                    if (typeof parameters === 'string') {
+                                        desJobDetail.parameters = JSON.parse(parameters);
+                                    } else {
+                                        desJobDetail.parameters = parameters;
+                                    }
                                 } else {
                                     desJobDetail.parameters = { error: 'This trial\'s parameters are not available.' };
                                 }
@@ -253,6 +258,7 @@ class Overview extends React.Component<{}, OverviewState> {
                             trialNumber: profile
                         });
                     }
+                    this.checkStatus();
                     // draw accuracy
                     this.drawPointGraph();
                 }
@@ -371,6 +377,19 @@ class Overview extends React.Component<{}, OverviewState> {
         });
     }
 
+    isOffInterval = () => {
+        const { status } = this.state;
+        switch (status) {
+            case 'DONE':
+            case 'ERROR':
+            case 'STOPPED':
+                window.clearInterval(this.intervalID);
+                window.clearInterval(this.intervalProfile);
+                break;
+            default:
+        }
+    }
+
     componentDidMount() {
         this._isMounted = true;
         this.showSessionPro();
@@ -430,6 +449,7 @@ class Overview extends React.Component<{}, OverviewState> {
                             bestAccuracy={bestAccuracy}
                             status={status}
                             errors={errorStr}
+                            updateFile={this.showSessionPro}
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}

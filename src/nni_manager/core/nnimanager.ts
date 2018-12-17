@@ -138,7 +138,7 @@ class NNIManager implements Manager {
             checkpointDir);
 
         this.experimentProfile.startTime = Date.now();
-        this.status.status = 'EXPERIMENT_RUNNING';
+        this.status.status = 'RUNNING';
         await this.storeExperimentProfile();
         this.run().catch((err: Error) => {
             this.criticalError(err);
@@ -185,7 +185,7 @@ class NNIManager implements Manager {
             this.experimentProfile.endTime) {
             delete this.experimentProfile.endTime;
         }
-        this.status.status = 'EXPERIMENT_RUNNING';
+        this.status.status = 'RUNNING';
 
         // TO DO: update database record for resume event
         this.run().catch((err: Error) => {
@@ -350,7 +350,7 @@ class NNIManager implements Manager {
         let count: number = 1;
         while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
             await delay(1000 * 1); // 1 seconds
-            if (this.status.status === 'EXPERIMENT_RUNNING') {
+            if (this.status.status === 'RUNNING') {
                 this.experimentProfile.execDuration += 1;
                 if (count % 10 === 0) {
                     await this.storeExperimentProfile();
@@ -460,15 +460,15 @@ class NNIManager implements Manager {
             }
 
             // check maxtrialnum and maxduration here
-            // NO_MORE_TRIAL is more like a subset of EXPERIMENT_RUNNING, because during EXPERIMENT_RUNNING tuner
+            // NO_MORE_TRIAL is more like a subset of RUNNING, because during RUNNING tuner
             // might tell nnimanager that this is no more trials. In NO_MORE_TRIAL state, the experiment is viewed
-            // as still running. DONE could be transfered from EXPERIMENT_RUNNING or NO_MORE_TRIAL.
-            assert(this.status.status === 'EXPERIMENT_RUNNING' ||
+            // as still running. DONE could be transfered from RUNNING or NO_MORE_TRIAL.
+            assert(this.status.status === 'RUNNING' ||
                 this.status.status === 'DONE' ||
                 this.status.status === 'NO_MORE_TRIAL');
             if (this.experimentProfile.execDuration > this.experimentProfile.params.maxExecDuration ||
                 this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
-                if (this.status.status === 'EXPERIMENT_RUNNING' ||
+                if (this.status.status === 'RUNNING' ||
                     this.status.status === 'NO_MORE_TRIAL') {
                     this.experimentProfile.endTime = Date.now();
                     await this.storeExperimentProfile();
@@ -480,7 +480,7 @@ class NNIManager implements Manager {
                     await this.storeExperimentProfile();
                 }
                 if (this.status.status !== 'NO_MORE_TRIAL') {
-                    this.status.status = 'EXPERIMENT_RUNNING';
+                    this.status.status = 'RUNNING';
                 }
                 for (let i: number = this.trialJobs.size; i < this.experimentProfile.params.trialConcurrency; i++) {
                     if (this.waitingTrials.length === 0 ||
@@ -602,7 +602,7 @@ class NNIManager implements Manager {
             case NEW_TRIAL_JOB:
                 if (this.status.status === 'NO_MORE_TRIAL') {
                     this.log.warning('It is not supposed to receive more trials after NO_MORE_TRIAL is set');
-                    this.status.status = 'EXPERIMENT_RUNNING';
+                    this.status.status = 'RUNNING';
                 }
                 this.waitingTrials.push(content);
                 break;
