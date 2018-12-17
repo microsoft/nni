@@ -83,6 +83,13 @@ Optional('assessor'): Or({
     },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
 },{
+    'builtinAssessorName': lambda x: x in ['Curvefitting'],
+    Optional('classArgs'): {
+        Optional('start_step'): And(int, lambda x: 0 <= x <= 9999),
+        'epoch_num': And(int, lambda x: 0 <= x <= 9999)
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
+},{
     'codeDir': os.path.exists,
     'classFileName': str,
     'className': str,
