@@ -30,7 +30,7 @@ import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { Deferred } from 'ts-deferred';
 import { EventEmitter } from 'events';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
-import { HDFSClientUtility } from './hdfsClientUtility'
+import { HDFSClientUtility } from './hdfsClientUtility';
 import { MethodNotImplementedError } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -38,7 +38,7 @@ import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
-import { countFilesRecursively, delay, generateParamFileName, 
+import { delay, generateParamFileName, 
     getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
@@ -146,11 +146,11 @@ class PAITrainingService implements TrainingService {
             throw new Error('PAI token is not initialized');
         }
         
-        if(!this.hdfsBaseDir){
+        if(!this.hdfsBaseDir) {
             throw new Error('hdfsBaseDir is not initialized');
         }
 
-        if(!this.hdfsOutputHost){
+        if(!this.hdfsOutputHost) {
             throw new Error('hdfsOutputHost is not initialized');
         }
 
@@ -187,8 +187,8 @@ class PAITrainingService implements TrainingService {
         }
         
         // Step 1. Prepare PAI job configuration
-        const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
-        const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
+        const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
+        const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
         
         const hdfsOutputDir : string = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
         const hdfsLogPath : string = String.Format(
@@ -221,7 +221,7 @@ class PAITrainingService implements TrainingService {
             hdfsOutputDir,
             this.hdfsOutputHost,
             this.paiClusterConfig.userName, 
-            path.join(this.hdfsBaseDir, this.expRootDir)
+            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName)
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
@@ -421,10 +421,11 @@ class PAITrainingService implements TrainingService {
                 } catch(error) {
                     deferred.reject(new Error(`HDFS encounters problem, error is ${error}. Please check hdfsOutputDir host!`));
                 }
-
+                
                 // Copy experiment files from local folder to HDFS
-                this.copyExpCodeDirPromise = HDFSClientUtility.copyDirectoryToHdfs(this.paiTrialConfig.codeDir, path.join(this.hdfsBaseDir, this.expRootDir), this.hdfsClient);
-                this.log.info(`Copy experiment code dir from ${this.paiTrialConfig.codeDir} to ${path.join(this.hdfsBaseDir, this.expRootDir)}`);
+                this.copyExpCodeDirPromise = HDFSClientUtility.copyDirectoryToHdfs(this.paiTrialConfig.codeDir, 
+                    HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
+                    this.hdfsClient);
 
                 deferred.resolve();
                 break;
