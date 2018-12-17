@@ -91,9 +91,9 @@ _Usage_:
 
 Note that SMAC on nni only supports a subset of the types in [search space spec](./SearchSpaceSpec.md), including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
 
-_Installation_: 	
-* Install swig first. (`sudo apt-get install swig` for Ubuntu users)	
-* Run `nnictl package install --name=SMAC`	
+_Installation_:
+* Install swig first. (`sudo apt-get install swig` for Ubuntu users)
+* Run `nnictl package install --name=SMAC`
 
 _Suggested scenario_: Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.
 
