@@ -91,7 +91,7 @@ _Usage_:
 
 Note that SMAC on nni only supports a subset of the types in [search space spec](./SearchSpaceSpec.md), including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
 
-_Installation_:
+_Installation_: 
 * Install swig first. (`sudo apt-get install swig` for Ubuntu users)
 * Run `nnictl package install --name=SMAC`
 
