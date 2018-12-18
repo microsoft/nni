@@ -242,13 +242,15 @@ _Usage_:
   assessor:
     builtinAssessorName: Curvefitting
     classArgs:
-      # (optional) A trial is determined to be stopped or not, 
+      # The total number of epoch.
+      # We need to know the number of epoch to determine which point we need to predict
+      * The default value of start_step is 20.
+      epoch_num: 20
+      # (optional) A trial is determined to be stopped or not
+      # In order to save our computing resource, we start to predict when we have more than start_step(default=6) accuracy points.
       * only after receiving start_step number of reported intermediate results.
       * The default value of start_step is 6.
       start_step: 6
-      # The total number of epoch
-      * The default value of start_step is 20.
-      epoch_num: 20
 ```
 
 [1]: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
