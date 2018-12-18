@@ -61,6 +61,7 @@ class NNIRestHandler {
             next();
         });
 
+        this.version(router);
         this.checkStatus(router);
         this.getExperimentProfile(router);
         this.updateExperimentProfile(router);
@@ -106,6 +107,13 @@ class NNIRestHandler {
         }
 
         this.log.error(err);
+    }
+
+    private version(router: Router): void {
+        router.get('/version', async (req: Request, res: Response) => {
+            const pkg = await import(path.join(__dirname, '..', 'package.json'));
+            res.send(pkg.version);
+        });
     }
 
     // TODO add validators for request params, query, body
