@@ -218,7 +218,7 @@ Medianstop is a simple early stopping rule mentioned in the [paper][8]. It stops
 _Suggested scenario_: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.
 
 _Usage_:
-```yml
+```yaml
   assessor:
     builtinAssessorName: Medianstop
     classArgs:
@@ -238,7 +238,7 @@ Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It s
 _Suggested scenario_: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance. Please note that the current version only support `maximize` mode.
 
 _Usage_:
-```yml
+```yaml
   assessor:
     builtinAssessorName: Curvefitting
     classArgs:
