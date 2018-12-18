@@ -36,22 +36,23 @@ To use Curve Fitting Assessor, you should add the following spec in your experim
 assessor:
     builtinAssessorName: Curvefitting
     classArgs:
-      # The total number of epoch.
+      # (Require)The total number of epoch.
       # We need to know the number of epoch to determine which point we need to predict.
-      * The default value of epoch_num is 20.
       epoch_num: 20
+      # (optional) choice: maximize, minimize
+      * The default value of optimize_mode is maximize
+      optimize_mode: maximize
+      # Kindly reminds that if you choose minimize mode, please adjust the value of threshold >= 1.0 (e.g threshold=1.1)
       # (optional) A trial is determined to be stopped or not
       # In order to save our computing resource, we start to predict when we have more than start_step(default=6) accuracy points.
       # only after receiving start_step number of reported intermediate results.
       * The default value of start_step is 6.
       start_step: 6
       # (optional) The threshold that we decide to early stop the worse performance curve.
-      # For example: if threshold = 0.95, best performance in the history is 0.9, then we will stop the trial which predict value is           # lower than 0.95 * 0.9 = 0.855.
+      # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
       * The default value of threshold is 0.95.
       shreshold: 0.95
 ```
-
-**Please note that the current version only support `maximize` mode.**
 
 ## 3. File Structure
 The assessor has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
@@ -62,7 +63,6 @@ The assessor has a lot of different files, functions and classes. Here we will o
 
 ## 4. TODO
 * Further improve the accuracy of the prediction and test it on more models.
-* Support `minimize` model
 
 
 [1]: http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf

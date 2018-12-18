@@ -14,8 +14,9 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-import numpy as np
+
 import logging
+import numpy as np
 from scipy import optimize
 from .curvefunctions import *
 
@@ -37,25 +38,30 @@ logger = logging.getLogger('curvefitting_Assessor')
 class CurveModel(object):
     def __init__(self, target_pos):
         self.target_pos = target_pos
+        self.trial_history = []
+        self.point_num = 0
+        self.effective_model = []
+        self.effective_model_num = 0
+        self.weight_samples = []
 
     def fit_theta(self):
         '''use least squares to fit all default curves parameter seperately'''
         x = range(1, self.point_num + 1)
         y = self.trial_history
-        for i in range (NUM_OF_FUNCTIONS):
+        for i in range(NUM_OF_FUNCTIONS):
             model = curve_combination_models[i]
             try:
                 if model_para_num[model] == 2:
-                    a, b = optimize.curve_fit(all_models[model], x, y, maxfev = MAXFEV)[0]
+                    a, b = optimize.curve_fit(all_models[model], x, y, maxfev=MAXFEV)[0]
                     model_para[model][0] = a
                     model_para[model][1] = b
                 elif model_para_num[model] == 3:
-                    a, b, c = optimize.curve_fit(all_models[model], x, y, maxfev = MAXFEV)[0]
+                    a, b, c = optimize.curve_fit(all_models[model], x, y, maxfev=MAXFEV)[0]
                     model_para[model][0] = a
                     model_para[model][1] = b
                     model_para[model][2] = c
                 elif model_para_num[model] == 4:
-                    a, b, c, d = optimize.curve_fit(all_models[model], x, y, maxfev = MAXFEV)[0]
+                    a, b, c, d = optimize.curve_fit(all_models[model], x, y, maxfev=MAXFEV)[0]
                     model_para[model][0] = a
                     model_para[model][1] = b
                     model_para[model][2] = c
@@ -65,7 +71,7 @@ class CurveModel(object):
                 pass
             except Exception as exception:
                 logger.critical("Exceptions in fit_theta:", exception)
-    
+
     def filter_curve(self):
         '''filter the poor performing curve'''
         avg = np.sum(self.trial_history) / self.point_num
@@ -88,6 +94,7 @@ class CurveModel(object):
             if y < median + 3 * std and y > median - 3 * std:
                 self.effective_model.append(model)
         self.effective_model_num = len(self.effective_model)
+        logger.info('List of effective model: ', self.effective_model)
 
     def predict_y(self, model, pos):
         '''return the predict y of 'model' when epoch = pos'''
@@ -98,11 +105,11 @@ class CurveModel(object):
         elif model_para_num[model] == 4:
             y = all_models[model](pos, model_para[model][0], model_para[model][1], model_para[model][2], model_para[model][3])
         return y
-        
+
     def f_comb(self, pos, sample):
         '''return the value of the f_comb when epoch = pos'''
         ret = 0
-        for i in range (self.effective_model_num):
+        for i in range(self.effective_model_num):
             model = self.effective_model[i]
             y = self.predict_y(model, pos)
             ret += sample[i] * y
@@ -110,12 +117,12 @@ class CurveModel(object):
 
     def normalize_weight(self, samples):
         '''normalize weight '''
-        for i in range (NUM_OF_INSTANCE):
-            sum = 0
-            for j in range (self.effective_model_num):
-                sum += samples[i][j]
-            for j in range (self.effective_model_num):
-                samples[i][j] /= sum
+        for i in range(NUM_OF_INSTANCE):
+            total = 0
+            for j in range(self.effective_model_num):
+                total += samples[i][j]
+            for j in range(self.effective_model_num):
+                samples[i][j] /= total
         return samples
 
     def sigma_sq(self, sample):
@@ -129,12 +136,13 @@ class CurveModel(object):
     def normal_distribution(self, pos, sample):
         '''returns the value of normal distribution, given the weight's sample and target position'''
         curr_sigma_sq = self.sigma_sq(sample)
-        return np.exp(np.square(self.trial_history[pos - 1] - self.f_comb(pos, sample)) / (-2.0 * curr_sigma_sq)) / np.sqrt(2 * np.pi * np.sqrt(curr_sigma_sq))
+        delta = self.trial_history[pos - 1] - self.f_comb(pos, sample)
+        return np.exp(np.square(delta) / (-2.0 * curr_sigma_sq)) / np.sqrt(2 * np.pi * np.sqrt(curr_sigma_sq))
 
     def likelihood(self, samples):
         '''likelihood'''
         ret = np.ones(NUM_OF_INSTANCE)
-        for i in range (NUM_OF_INSTANCE):
+        for i in range(NUM_OF_INSTANCE):
             for j in range(1, self.point_num + 1):
                 ret[i] *= self.normal_distribution(j, samples[i])
         return ret
@@ -142,11 +150,11 @@ class CurveModel(object):
     def prior(self, samples):
         '''priori distribution'''
         ret = np.ones(NUM_OF_INSTANCE)
-        for i in range (NUM_OF_INSTANCE):
-            for j in range (self.effective_model_num):
+        for i in range(NUM_OF_INSTANCE):
+            for j in range(self.effective_model_num):
                 if not samples[i][j] > 0:
                     ret[i] = 0
-            if not self.f_comb(1, samples[i]) < self.f_comb(self.target_pos, samples[i]):
+            if self.f_comb(1, samples[i]) >= self.f_comb(self.target_pos, samples[i]):
                 ret[i] = 0
         return ret
 
@@ -155,16 +163,16 @@ class CurveModel(object):
         curr_likelihood = self.likelihood(samples)
         curr_prior = self.prior(samples)
         ret = np.ones(NUM_OF_INSTANCE)
-        for i in range (NUM_OF_INSTANCE):
+        for i in range(NUM_OF_INSTANCE):
             ret[i] = curr_likelihood[i] * curr_prior[i]
         return ret
 
-    def MCMC_sampling(self):
+    def mcmc_sampling(self):
         '''
         Adjust the weight of each function using mcmc sampling.
         The initial value of each weight is evenly distribute.
         Brief introduction:
-        (1)Definition of sample: 
+        (1)Definition of sample:
             Sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
         (2)Definition of samples:
             Samples is a collection of sample, it's a (NUM_OF_INSTANCE * NUM_OF_FUNCTIONS) matrix,
@@ -186,8 +194,8 @@ class CurveModel(object):
             u = np.random.rand(NUM_OF_INSTANCE)
             # new value
             change_value_flag = (u < alpha).astype(np.int)
-            for i in range (NUM_OF_INSTANCE):
-                new_values[i] = self.weight_samples[i] * (1 - change_value_flag[i]) + new_values[i] * change_value_flag[i]
+            for j in range(NUM_OF_INSTANCE):
+                new_values[j] = self.weight_samples[j] * (1 - change_value_flag[j]) + new_values[j] * change_value_flag[j]
             self.weight_samples = new_values
 
     def predict(self, trial_history):
@@ -198,9 +206,9 @@ class CurveModel(object):
         self.fit_theta()
         self.filter_curve()
         if self.effective_model_num < LEAST_FITTED_FUNCTION:
-            '''different curve's predictions are too scattered, requires more information'''
+            # different curve's predictions are too scattered, requires more information
             return None
-        self.MCMC_sampling()
+        self.mcmc_sampling()
         ret = 0
         for i in range(NUM_OF_INSTANCE):
             ret += self.f_comb(self.target_pos, self.weight_samples[i])

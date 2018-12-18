@@ -21,7 +21,8 @@ all_models = {}
 model_para = {}
 model_para_num = {}
 
-curve_combination_models = ['vap', 'pow3','linear', 'logx_linear', 'dr_hill_zero_background', 'log_power', 'pow4', 'mmf', 'exp4', 'ilog2', 'weibull', 'janoschek']
+curve_combination_models = ['vap', 'pow3', 'linear', 'logx_linear', 'dr_hill_zero_background', 'log_power', 'pow4', 'mmf',
+                            'exp4', 'ilog2', 'weibull', 'janoschek']
 
 def vap(x, a, b, c):
     ''' Vapor pressure model '''
@@ -41,7 +42,7 @@ model_para_num['pow3'] = 3
 def linear(x, a, b):
     return a*x + b
 
-all_models['linear'] =linear
+all_models['linear'] = linear
 model_para['linear'] = [1., 0]
 model_para_num['linear'] = 2
 
@@ -51,7 +52,7 @@ def logx_linear(x, a, b):
 
 all_models['logx_linear'] = logx_linear
 model_para['logx_linear'] = [0.378106, 0.046506]
-model_para_num['logx_linear'] = 2 
+model_para_num['logx_linear'] = 2
 
 def dr_hill_zero_background(x, theta, eta, kappa):
     return (theta* x**eta) / (kappa**eta + x**eta)
@@ -100,7 +101,7 @@ all_models['ilog2'] = ilog2
 model_para['ilog2'] = [0.78, 0.43]
 model_para_num['ilog2'] = 2
 
-def weibull(x, alpha, beta, kappa,delta):
+def weibull(x, alpha, beta, kappa, delta):
     '''
     Weibull model
     http://www.pisces-conservation.com/growthhelp/index.html?morgan_mercer_floden.htm
@@ -112,11 +113,9 @@ model_para['weibull'] = [0.7, 0.1, 0.01, 1]
 model_para_num['weibull'] = 4
 
 def janoschek(x, a, beta, k, delta):
-    '''
-    http://www.pisces-conservation.com/growthhelp/janoschek.htm
-    ''' 
+    '''http://www.pisces-conservation.com/growthhelp/janoschek.htm'''
     return a - (a - beta) * np.exp(-k*x**delta)
-    
+
 all_models['janoschek'] = janoschek
 model_para['janoschek'] = [0.73, 0.07, 0.355, 0.46]
 model_para_num['janoschek'] = 4
