@@ -15,15 +15,24 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import numpy as np
+import logging
 from scipy import optimize
 from .curvefunctions import *
 
+# Number of curve functions we prepared, more details can be found in "curvefunctions.py"
 NUM_OF_FUNCTIONS = 12
+# Maximum number of iterations when fitting the curve optimal parameters
 MAXFEV = 1000000
+# Number of simulation time when we do MCMC sampling
 NUM_OF_SIMULATION_TIME = 20
+# Number of samples we select when we do MCMC sampling
 NUM_OF_INSTANCE = 10
+# The step size of each noise when we do MCMC sampling
 STEP_SIZE = 0.0005
+# Number of least fitting function, if effective function is lower than this number, we will ask for more information
+LEAST_FITTED_FUNCTION = 4
 
+logger = logging.getLogger('curvefitting_Assessor')
 
 class CurveModel(object):
     def __init__(self, target_pos):
@@ -51,8 +60,11 @@ class CurveModel(object):
                     model_para[model][1] = b
                     model_para[model][2] = c
                     model_para[model][3] = d
-            except Exception as exception:
+            except (RuntimeError, FloatingPointError, OverflowError, ZeroDivisionError):
+                # Ignore exceptions caused by numerical calculations
                 pass
+            except Exception as exception:
+                logger.critical("Exceptions in fit_theta:", exception)
     
     def filter_curve(self):
         '''filter the poor performing curve'''
@@ -151,8 +163,17 @@ class CurveModel(object):
         '''
         Adjust the weight of each function using mcmc sampling.
         The initial value of each weight is evenly distribute.
-        Reference paper: Tobias Domhan, Jost Tobias Springenberg, Frank Hutter. Speeding up Automatic Hyperparameter Optimization of 
-        Deep Neural Networks by Extrapolation of Learning Curves. IJCAI, 2015.
+
+        Brief introduction:
+        (1)Definition of sample: 
+            Sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
+        (2)Definition of samples:
+            Samples is a collection of sample, it's a (NUM_OF_INSTANCE * NUM_OF_FUNCTIONS) matrix,
+            representing{{w11, w12, ..., w1k}, {w21, w22, ... w2k}, ...{wk1, wk2,..., wkk}}
+        (3)Definition of model:
+            Model is the function we chose right now. Such as: 'wap', 'weibull'.
+        (4)Definition of pos:
+            Pos is the position we want to predict, corresponds to the value of epoch.
         '''
         init_weight = np.ones((self.effective_model_num), dtype=np.float) / self.effective_model_num
         self.weight_samples = np.broadcast_to(init_weight, (NUM_OF_INSTANCE, self.effective_model_num))
@@ -177,9 +198,9 @@ class CurveModel(object):
         self.effective_model = []
         self.fit_theta()
         self.filter_curve()
-        if self.effective_model_num < 4:
+        if self.effective_model_num < LEAST_FITTED_FUNCTION:
             '''different curve's predictions are too scattered, requires more information'''
-            return -1
+            return None
         self.MCMC_sampling()
         ret = 0
         for i in range(NUM_OF_INSTANCE):
