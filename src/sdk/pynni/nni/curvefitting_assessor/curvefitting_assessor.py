@@ -28,7 +28,7 @@ class CurvefittingAssessor(Assessor):
     CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
     It stops a pending trial X at step S if the trial's forecast result at target step is convergence and lower than the best performance in the history.
     '''
-    def __init__(self, start_step=6, epoch_num=20):
+    def __init__(self, start_step=6, epoch_num=20, threshold=THRESHOLD):
         if not start_step > 0:
             logger.warning('start step should be a positive number')
         if not epoch_num > 0:
@@ -38,8 +38,8 @@ class CurvefittingAssessor(Assessor):
         # Record the best performance so far
         self.completed_best_performance = 0.0001
         # Start forecasting when historical data reaches start step
-        self.start_step = start_step
-        # self.start_step = max(start_step, int(epoch_num / 4))
+        self.start_step = max(start_step, int(epoch_num / 4))
+        THRESHOLD = threshold
         logger.info('Successfully initials the curvefitting assessor')
 
     def trial_end(self, trial_job_id, success):
