@@ -56,7 +56,7 @@ import { FrameworkControllerJobInfoCollector } from './frameworkcontrollerJobInf
 @component.Singleton
 class FrameworkControllerainingService extends KubernetesTrainingService {
     private frameworkcontrollerClusterConfig?: KubernetesClusterConfig;
-    private frameworkcontrollerTrialConfig?: KubernetesTrialConfig;
+    private frameworkcontrollerTrialConfig?: FrameworkControllerTrialConfig;
     private frameworkcontrollerJobInfoCollector: FrameworkControllerJobInfoCollector;
 
     constructor() {
@@ -97,10 +97,6 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
             const restServer: FrameworkControllerJobRestServer = component.get(FrameworkControllerJobRestServer);
             this.kubernetesRestServerPort = restServer.clusterRestServerPort;
         }
-        // initialize frameworkcontroller trial config to specific type
-        let frameworkcontrollerTrialConfig;
-        frameworkcontrollerTrialConfig = <FrameworkControllerTrialConfig>this.frameworkcontrollerTrialConfig;
-
         const trialJobId: string = uniqueString(5);
         const curTrialSequenceId: number = this.generateSequenceId();
         // Set trial's NFS working folder
@@ -108,7 +104,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
-        await cpp.exec(`cp -r ${frameworkcontrollerTrialConfig.codeDir} ${trialLocalTempFolder}`);
+        await cpp.exec(`cp -r ${this.frameworkcontrollerTrialConfig.codeDir} ${trialLocalTempFolder}`);
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
@@ -116,17 +112,25 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
         // Write worker file content run_worker.sh to local tmp folders
-        if(frameworkcontrollerTrialConfig.worker) {
+        const workerPodResources : any = {};
+        let nonWorkerResources : any = {};
+        if(this.frameworkcontrollerTrialConfig.worker) {
             const workerRunScriptContent: string = this.generateRunScript(trialJobId, trialWorkingFolder, 
-                frameworkcontrollerTrialConfig.worker.command, curTrialSequenceId.toString(), 'worker', frameworkcontrollerTrialConfig.worker.gpuNum);
+                this.frameworkcontrollerTrialConfig.worker.command, curTrialSequenceId.toString(), 'worker', this.frameworkcontrollerTrialConfig.worker.gpuNum);
 
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
+            
+            workerPodResources.requests = this.generatePodResource(this.frameworkcontrollerTrialConfig.worker.memoryMB, this.frameworkcontrollerTrialConfig.worker.cpuNum, 
+                this.frameworkcontrollerTrialConfig.worker.gpuNum)
+            workerPodResources.limits = Object.assign({}, workerPodResources.requests);
         }
-  
-        if(frameworkcontrollerTrialConfig.ps){
+        if(this.frameworkcontrollerTrialConfig.ps){
             const psRunScriptContent: string = this.generateRunScript(trialJobId, trialWorkingFolder, 
-                frameworkcontrollerTrialConfig.ps.command, curTrialSequenceId.toString(), 'ps', frameworkcontrollerTrialConfig.ps.gpuNum);
+                this.frameworkcontrollerTrialConfig.ps.command, curTrialSequenceId.toString(), 'ps', this.frameworkcontrollerTrialConfig.ps.gpuNum);
             await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
+            nonWorkerResources.requests = this.generatePodResource(this.frameworkcontrollerTrialConfig.ps.memoryMB, this.frameworkcontrollerTrialConfig.ps.cpuNum, 
+                this.frameworkcontrollerTrialConfig.ps.gpuNum)
+                nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
         }
         
         // Write file content ( parameter.cfg ) to local tmp folders
@@ -135,21 +139,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
                             trialForm.hyperParameters.value, { encoding: 'utf8' });
         }
-        const frameworkcontrollerJobName = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();
-        
-        const workerPodResources : any = {};
-        if(frameworkcontrollerTrialConfig.worker) {
-            workerPodResources.requests = this.generatePodResource(frameworkcontrollerTrialConfig.worker.memoryMB, frameworkcontrollerTrialConfig.worker.cpuNum, 
-                frameworkcontrollerTrialConfig.worker.gpuNum)
-        }
-        workerPodResources.limits = Object.assign({}, workerPodResources.requests);
-
-        let nonWorkerResources : any = {};
-        if (frameworkcontrollerTrialConfig.ps) {
-            nonWorkerResources.requests = this.generatePodResource(frameworkcontrollerTrialConfig.ps.memoryMB, frameworkcontrollerTrialConfig.ps.cpuNum, 
-                frameworkcontrollerTrialConfig.ps.gpuNum)
-                nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
-        }      
+        const frameworkcontrollerJobName = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();   
 
         //The output url used in trialJobDetail
         let trialJobOutputUrl: string = '';
@@ -231,32 +221,32 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                 this.kubernetesCRDClient = FrameworkControllerClient.generateOperatorClient();
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-            if (!this.frameworkcontrollerClusterConfig){
-                this.log.error('frameworkcontroller cluster config is not initialized');
-                return Promise.reject(new Error('frameworkcontroller cluster config is not initialized'));                    
-            }
+                if (!this.frameworkcontrollerClusterConfig){
+                    this.log.error('frameworkcontroller cluster config is not initialized');
+                    return Promise.reject(new Error('frameworkcontroller cluster config is not initialized'));                    
+                }
 
-            assert(this.frameworkcontrollerClusterConfig !== undefined)
-            let frameworkcontrollerTrialJsonObjsect = JSON.parse(value);
+                assert(this.frameworkcontrollerClusterConfig !== undefined)
+                let frameworkcontrollerTrialJsonObjsect = JSON.parse(value);
 
-            this.frameworkcontrollerTrialConfig = new FrameworkControllerTrialConfig(
-                frameworkcontrollerTrialJsonObjsect.codeDir, 
-                frameworkcontrollerTrialJsonObjsect.worker, 
-                frameworkcontrollerTrialJsonObjsect.ps
-            );
-            if (!this.frameworkcontrollerTrialConfig){
-                this.log.error('frameworkcontroller TrialConfig is not initialized');
-                return Promise.reject(new Error('frameworkcontroller TrialConfig is not initialized'));                    
-            }
+                this.frameworkcontrollerTrialConfig = new FrameworkControllerTrialConfig(
+                    frameworkcontrollerTrialJsonObjsect.codeDir, 
+                    frameworkcontrollerTrialJsonObjsect.worker, 
+                    frameworkcontrollerTrialJsonObjsect.ps
+                );
+                if (!this.frameworkcontrollerTrialConfig){
+                    this.log.error('frameworkcontroller TrialConfig is not initialized');
+                    return Promise.reject(new Error('frameworkcontroller TrialConfig is not initialized'));                    
+                }
 
-            // Validate to make sure codeDir doesn't have too many files
-            try {
-                await validateCodeDir(this.frameworkcontrollerTrialConfig.codeDir);
-            } catch(error) {
-                this.log.error(error);
-                return Promise.reject(new Error(error));                    
-            }
-            break;
+                // Validate to make sure codeDir doesn't have too many files
+                try {
+                    await validateCodeDir(this.frameworkcontrollerTrialConfig.codeDir);
+                } catch(error) {
+                    this.log.error(error);
+                    return Promise.reject(new Error(error));                    
+                }
+                break;
             default:
                 break;
         }
@@ -280,13 +270,45 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         if(!this.frameworkcontrollerTrialConfig) {
             throw new Error('frameworkcontroller trial config is not initialized');
         }
+        
+        let taskRoles = [];
 
-        let replicaSpecsObj: any;
+        if(this.frameworkcontrollerTrialConfig.worker) {
+            let workerTaskRole = this.generateTaskRoleConfig(
+                trialWorkingFolder, 
+                this.frameworkcontrollerTrialConfig.worker.image, 
+                'run_worker.sh',
+                 workerPodResources
+            );
+            taskRoles.push({
+                name: 'worker',
+                taskNumber: this.frameworkcontrollerTrialConfig.worker.replicas,
+                frameworkAttemptCompletionPolicy: {
+                    minFailedTaskCount: 1, 
+                    minSucceededTaskCount: this.frameworkcontrollerTrialConfig.worker.replicas
+                },
+                task: workerTaskRole
+            });
+        }
 
-        let frameworkcontrollerTrialConfig = <FrameworkControllerTrialConfig>this.frameworkcontrollerTrialConfig;
-        replicaSpecsObj = this.generateReplicaConfig(trialWorkingFolder, frameworkcontrollerTrialConfig.worker.replicas, 
-            frameworkcontrollerTrialConfig.worker.image, 'run_worker.sh', workerPodResources);
-
+        if(this.frameworkcontrollerTrialConfig.ps) {
+            let psTaskRole = this.generateTaskRoleConfig(
+                trialWorkingFolder, 
+                this.frameworkcontrollerTrialConfig.ps.image, 
+                'run_ps.sh',
+                nonWorkerPodResources
+            );
+            taskRoles.push({
+                name: 'ps',
+                taskNumber: this.frameworkcontrollerTrialConfig.ps.replicas,
+                frameworkAttemptCompletionPolicy: {
+                    minFailedTaskCount: 1, 
+                    minSucceededTaskCount: -1
+                },
+                task: psTaskRole
+            });
+        }
+        
         return {
             apiVersion: `frameworkcontroller.microsoft.com/v1`,
             kind: 'Framework',
@@ -299,19 +321,14 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                     trialId: trialJobId
                 }
             },
-            spec: replicaSpecsObj
+            spec: {
+                executionType: 'Start',
+                taskRoles: taskRoles
+            }
         };     
     }
 
-    /**
-     * Generate tf-operator's tfjobs replica config section
-     * @param trialWorkingFolder trial working folder
-     * @param replicaNumber replica number
-     * @param replicaImage image
-     * @param runScriptFile script file name
-     * @param podResources pod resource config section
-     */
-    private generateReplicaConfig(trialWorkingFolder: string, replicaNumber: number, replicaImage: string, runScriptFile: string, podResources: any): any {
+    private generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string, podResources: any): any {
         if(!this.frameworkcontrollerClusterConfig) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }
@@ -342,42 +359,28 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                 }
             }])
         }
-
-        return {
-            executionType: 'Start',
-            taskRoles: [
-                {
-                    name: 'worker',
-                    taskNumber: replicaNumber,
-                    frameworkAttemptCompletionPolicy: {
-                        minFailedTaskCount: 1, 
-                        minSucceededTaskCount: replicaNumber
-                    },
-                    task: {
-                        pod: {
-                            spec: {
-                                containers: [
-                                {
-                                    // frameworkcontroller tensorflow operator requires that containers' name must be tensorflow
-                                    // TODO: change the name based on operator's type
-                                    name: 'framework',
-                                    image: replicaImage,
-                                    args: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
-                                    volumeMounts: [
-                                    {
-                                        name: 'nni-vol',
-                                        mountPath: this.CONTAINER_MOUNT_PATH
-                                    }],
-                                    resources: podResources
-                                }],
-                                restartPolicy: 'OnFailure',
-                                volumes: volumeSpecMap.get('nniVolumes')
-                            }
-                        }
-                    }
+        
+        let taskRole = {
+            pod: {
+                spec: {
+                    containers: [
+                    {
+                        name: 'framework',
+                        image: replicaImage,
+                        args: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
+                        volumeMounts: [
+                        {
+                            name: 'nni-vol',
+                            mountPath: this.CONTAINER_MOUNT_PATH
+                        }],
+                        resources: podResources
+                    }],
+                    restartPolicy: 'OnFailure',
+                    volumes: volumeSpecMap.get('nniVolumes')
                 }
-            ]
-        };
+            }
+        }
+        return taskRole;
     }
 }
 
