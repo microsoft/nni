@@ -3,7 +3,7 @@ def max_pool(k):
 h_conv1=1
 """@nni.variable(nni.choice(2,3,5,7),name=conv_size)"""
 conv_size = 5
-"""@nni.variable(nni.choice('2',3,5*6,7),name=abc)"""
+"""@nni.variable(nni.choice('2',3,5*6,{1:2, '3':4},[1,2,3]),name=abc)"""
 abc = 5
 """@nni.function_choice(max_pool(h_conv1), avg_pool(h_conv2,h_conv3), name=max_pool)"""
 h_pool1 = max_pool(h_conv1)

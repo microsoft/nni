@@ -107,7 +107,7 @@ def convert_args_to_dict(call, with_lambda=False):
             arg_value = arg
         else:
         # if arg is not a string or a number, we use its source code as the key
-            arg_value = astor.to_source(arg).strip('\n"')
+            arg_value = astor.to_source(arg).strip('\n"()')
             arg_value = ast.Str(str(arg_value))
         arg = make_lambda(arg) if with_lambda else arg
         keys.append(arg_value)
