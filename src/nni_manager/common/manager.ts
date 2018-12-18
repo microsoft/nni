@@ -35,7 +35,7 @@ interface ExperimentParams {
     trainingServicePlatform: string;
     multiPhase?: boolean;
     multiThread?: boolean;
-    tuner: {
+    tuner?: {
         className: string;
         builtinTunerName?: string;
         codeDir?: string;
@@ -47,6 +47,15 @@ interface ExperimentParams {
     assessor?: {
         className: string;
         builtinAssessorName?: string;
+        codeDir?: string;
+        classArgs?: any;
+        classFileName?: string;
+        checkpointDir: string;
+        gpuNum?: number;
+    };
+    advisor?: {
+        className: string;
+        builtinAdvisorName?: string;
         codeDir?: string;
         classArgs?: any;
         classFileName?: string;
@@ -76,7 +85,7 @@ interface TrialJobStatistics {
 }
 
 interface NNIManagerStatus {
-    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL';
+    status: 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL';
     errors: string[];
 }
 

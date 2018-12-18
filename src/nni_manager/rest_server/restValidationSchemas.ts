@@ -41,6 +41,7 @@ export namespace ValidationSchemas {
                 memoryMB: joi.number().min(100),
                 gpuNum: joi.number().min(0),
                 command: joi.string().min(1),
+                virtualCluster: joi.string(),
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
@@ -58,6 +59,15 @@ export namespace ValidationSchemas {
                         memoryMB: joi.number().min(100),
                         gpuNum: joi.number().min(0).required(),
                         command: joi.string().min(1).required()
+                }),
+                master: joi.object({
+                    replicas: joi.number().min(1).required(),
+                    image: joi.string().min(1),
+                    outputDir: joi.string(),
+                    cpuNum: joi.number().min(1),
+                    memoryMB: joi.number().min(100),
+                    gpuNum: joi.number().min(0).required(),
+                    command: joi.string().min(1).required()
                 })
             }),
             pai_config: joi.object({
@@ -67,11 +77,20 @@ export namespace ValidationSchemas {
             }),
             kubeflow_config: joi.object({
                 operator: joi.string().min(1).required(),
+                storage: joi.string().min(1),
+                apiVersion: joi.string().min(1),
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()
-                }).required(),
-                kubernetesServer: joi.string().min(1).required()
+                }),
+                keyVault: joi.object({
+                    vaultName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/),
+                    name: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/)
+                }),
+                azureStorage: joi.object({
+                    accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
+                    azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
+                })
             }),
             nni_manager_ip: joi.object({
                 nniManagerIp: joi.string().min(1) 
@@ -90,15 +109,24 @@ export namespace ValidationSchemas {
             maxExecDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
+            advisor: joi.object({
+                builtinAdvisorName: joi.string().valid('Hyperband'),
+                codeDir: joi.string(),
+                classFileName: joi.string(),
+                className: joi.string(),
+                classArgs:joi.any(),
+                gpuNum: joi.number().min(0),
+                checkpointDir: joi.string()
+            }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
                 gpuNum: joi.number().min(0),
                 checkpointDir: joi.string()
-            }).required(),
+            }),
             assessor: joi.object({
                 builtinAssessorName: joi.string().valid('Medianstop'),
                 codeDir: joi.string(),

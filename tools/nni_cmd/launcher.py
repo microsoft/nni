@@ -203,9 +203,14 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['description'] = experiment_config['description']
     if experiment_config.get('multiPhase'):
         request_data['multiPhase'] = experiment_config.get('multiPhase')
-    request_data['tuner'] = experiment_config['tuner']
-    if 'assessor' in experiment_config:
-        request_data['assessor'] = experiment_config['assessor']
+    if experiment_config.get('multiThread'):
+        request_data['multiThread'] = experiment_config.get('multiThread')
+    if experiment_config.get('advisor'):
+        request_data['advisor'] = experiment_config['advisor']
+    else:
+        request_data['tuner'] = experiment_config['tuner']
+        if 'assessor' in experiment_config:
+            request_data['assessor'] = experiment_config['assessor']
 
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
@@ -361,8 +366,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     nni_config.set_config('webuiUrl', web_ui_url_list)
     
     #save experiment information
-    experiment_config = Experiments()
-    experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name)
+    nnictl_experiment_config = Experiments()
+    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name, experiment_config['trainingServicePlatform'])
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
 

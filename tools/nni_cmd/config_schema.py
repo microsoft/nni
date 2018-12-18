@@ -34,7 +34,22 @@ Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
 'useAnnotation': bool,
-'tuner': Or({
+Optional('advisor'): Or({
+    'builtinAdvisorName': Or('Hyperband'),
+    'classArgs': {
+        'optimize_mode': Or('maximize', 'minimize'),
+        Optional('R'): int,
+        Optional('eta'): int
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'codeDir': os.path.exists,
+    'classFileName': str,
+    'className': str,
+    Optional('classArgs'): dict,
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+}),
+Optional('tuner'): Or({
     'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'SMAC', 'Evolution'),
     Optional('classArgs'): {
         'optimize_mode': Or('maximize', 'minimize')
@@ -42,6 +57,16 @@ Optional('nniManagerIp'): str,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'builtinTunerName': Or('BatchTuner', 'GridSearch'),
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'builtinTunerName': 'NetworkMorphism',
+    'classArgs': {
+        Optional('optimize_mode'): Or('maximize', 'minimize'),
+        Optional('task'): And(str, lambda x: x in ['cv','nlp','common']),
+        Optional('input_width'):  int,
+        Optional('input_channel'):  int,
+        Optional('n_output_node'):  int,
+        },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'codeDir': os.path.exists,
@@ -83,7 +108,8 @@ pai_trial_schema = {
     'memoryMB': int,
     'image': str,
     Optional('dataDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
-    Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?')
+    Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
+    Optional('virtualCluster'): str
     }
 }
 
@@ -106,7 +132,15 @@ kubeflow_trial_schema = {
             'memoryMB': int,
             'image': str
         },
-        'worker':{
+        Optional('master'): {
+            'replicas': int,
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        },
+        Optional('worker'):{
             'replicas': int,
             'command': str,
             'gpuNum': And(int, lambda x: 0 <= x <= 99999),
@@ -118,14 +152,27 @@ kubeflow_trial_schema = {
 }
 
 kubeflow_config_schema = {
-    'kubeflowConfig':{
-        'operator': Or('tf-operator', 'mxnet-operator', 'pytorch-operato'),
+    'kubeflowConfig':Or({
+        'operator': Or('tf-operator', 'pytorch-operator'),
+        'apiVersion': str,
+        Optional('storage'): Or('nfs', 'azureStorage'),
         'nfs': {
             'server': str,
             'path': str
+        }
+    },{
+        'operator': Or('tf-operator', 'pytorch-operator'),
+        'apiVersion': str,
+        Optional('storage'): Or('nfs', 'azureStorage'),
+        'keyVault': {
+            'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
+            'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')
         },
-        'kubernetesServer': str
-    }
+        'azureStorage': {
+            'accountName': Regex('([0-9]|[a-z]|[A-Z]|-){3,31}'),
+            'azureShare': Regex('([0-9]|[a-z]|[A-Z]|-){3,63}')
+        }
+    })
 }
 
 machine_list_schima = {

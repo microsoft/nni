@@ -30,7 +30,7 @@ import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { Deferred } from 'ts-deferred';
 import { EventEmitter } from 'events';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
-import { HDFSClientUtility } from './hdfsClientUtility'
+import { HDFSClientUtility } from './hdfsClientUtility';
 import { MethodNotImplementedError } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -38,12 +38,14 @@ import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, 
+    getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
+import { validateCodeDir } from '../common/util';
 
 var WebHDFS = require('webhdfs');
 
@@ -62,6 +64,8 @@ class PAITrainingService implements TrainingService {
     private stopping: boolean = false;
     private hdfsClient: any;
     private paiToken? : string;
+    private paiTokenUpdateTime?: number;
+    private paiTokenUpdateInterval: number;
     private experimentId! : string;
     private readonly paiJobCollector : PAIJobInfoCollector;
     private readonly hdfsDirPattern: string;
@@ -70,6 +74,7 @@ class PAITrainingService implements TrainingService {
     private nextTrialSequenceId: number;
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
+    private copyExpCodeDirPromise?: Promise<void>;
 
     constructor() {
         this.log = getLogger();
@@ -81,6 +86,7 @@ class PAITrainingService implements TrainingService {
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
+        this.paiTokenUpdateInterval = 7200000; //2hours
     }
 
     public async run(): Promise<void> {
@@ -88,6 +94,7 @@ class PAITrainingService implements TrainingService {
         await restServer.start();
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
+            await this.updatePaiToken();
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
             await delay(3000);
         }
@@ -139,11 +146,11 @@ class PAITrainingService implements TrainingService {
             throw new Error('PAI token is not initialized');
         }
         
-        if(!this.hdfsBaseDir){
+        if(!this.hdfsBaseDir) {
             throw new Error('hdfsBaseDir is not initialized');
         }
 
-        if(!this.hdfsOutputHost){
+        if(!this.hdfsOutputHost) {
             throw new Error('hdfsOutputHost is not initialized');
         }
 
@@ -154,6 +161,11 @@ class PAITrainingService implements TrainingService {
 
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
+        // Make sure experiment code files is copied from local to HDFS
+        if(this.copyExpCodeDirPromise) {
+            await this.copyExpCodeDirPromise;
+        }
+
         const trialJobId: string = uniqueString(5);
         const trialSequenceId: number = this.generateSequenceId();
         //TODO: use HDFS working folder instead
@@ -161,8 +173,7 @@ class PAITrainingService implements TrainingService {
         
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
-        await cpp.exec(`cp -r ${this.paiTrialConfig.codeDir} ${trialLocalTempFolder}`);
+        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
@@ -176,8 +187,8 @@ class PAITrainingService implements TrainingService {
         }
         
         // Step 1. Prepare PAI job configuration
-        const paiJobName : string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
-        const hdfsCodeDir : string = path.join(this.expRootDir, trialJobId);
+        const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
+        const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
         
         const hdfsOutputDir : string = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
         const hdfsLogPath : string = String.Format(
@@ -209,7 +220,8 @@ class PAITrainingService implements TrainingService {
             this.paiRestServerPort,
             hdfsOutputDir,
             this.hdfsOutputHost,
-            this.paiClusterConfig.userName
+            this.paiClusterConfig.userName, 
+            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName)
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
@@ -236,9 +248,10 @@ class PAITrainingService implements TrainingService {
                                     this.paiTrialConfig.outputDir, 
                                     // codeDir
                                     `$PAI_DEFAULT_FS_URI${hdfsCodeDir}`, 
-                                    // TODO: Add Virutal Cluster
                                     // PAI Task roles
-                                    paiTaskRoles);
+                                    paiTaskRoles, 
+                                    // Add Virutal Cluster 
+                                    this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString());
 
         // Step 2. Upload code files in codeDir onto HDFS
         try {
@@ -344,40 +357,9 @@ class PAITrainingService implements TrainingService {
                 });
 
                 // Get PAI authentication token
-                const authentication_req: request.Options = {
-                    uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
-                    method: 'POST',
-                    json: true,
-                    body: {
-                        username: this.paiClusterConfig.userName,
-                        password: this.paiClusterConfig.passWord
-                    }
-                };
-
-                request(authentication_req, (error: Error, response: request.Response, body: any) => {
-                    if (error) {
-                        this.log.error(`Get PAI token failed: ${error.message}`);
-                        deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
-                    } else {
-                        if(response.statusCode !== 200){
-                            this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
-                            deferred.reject(new Error(`Get PAI token failed, please check paiConfig username or password`));
-                        }
-                        this.paiToken = body.token;
-
-                        deferred.resolve();
-                    }
-                });
-
-                let timeoutId: NodeJS.Timer;
-                const timeoutDelay: Promise<void> = new Promise<void>((resolve: Function, reject: Function): void => {
-                    // Set timeout and reject the promise once reach timeout (5 seconds)
-                    timeoutId = setTimeout(
-                        () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
-                        5000);
-                });
-
-                return Promise.race([timeoutDelay, deferred.promise]).finally(() => clearTimeout(timeoutId));
+                await this.updatePaiToken();
+                deferred.resolve();
+                break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 if (!this.paiClusterConfig){
@@ -393,7 +375,16 @@ class PAITrainingService implements TrainingService {
                         this.paiClusterConfig.host
                     ).replace(/\r\n|\n|\r/gm, '');
                 }
-                
+
+                // Validate to make sure codeDir doesn't have too many files
+                try {
+                    await validateCodeDir(this.paiTrialConfig.codeDir);
+                } catch(error) {
+                    this.log.error(error);
+                    deferred.reject(new Error(error));
+                    break;
+                }
+
                 const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
 
                 if(hdfsDirContent === null) {
@@ -405,6 +396,7 @@ class PAITrainingService implements TrainingService {
                 }
         
                 this.hdfsOutputHost = groups['host'];
+                //TODO: choose to use /${username} as baseDir
                 this.hdfsBaseDir = groups['baseDir'];
                 if(this.hdfsBaseDir === undefined) {
                     this.hdfsBaseDir = "/";
@@ -429,6 +421,11 @@ class PAITrainingService implements TrainingService {
                 } catch(error) {
                     deferred.reject(new Error(`HDFS encounters problem, error is ${error}. Please check hdfsOutputDir host!`));
                 }
+                
+                // Copy experiment files from local folder to HDFS
+                this.copyExpCodeDirPromise = HDFSClientUtility.copyDirectoryToHdfs(this.paiTrialConfig.codeDir, 
+                    HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
+                    this.hdfsClient);
 
                 deferred.resolve();
                 break;
@@ -474,6 +471,60 @@ class PAITrainingService implements TrainingService {
         }
 
         return this.nextTrialSequenceId++;
+    }
+    
+    /**
+     * Update pai token by the interval time or initialize the pai token
+     */
+    private async updatePaiToken(): Promise<void> {
+        const deferred : Deferred<void> = new Deferred<void>();
+        
+        let currentTime: number = new Date().getTime();
+        //If pai token initialized and not reach the interval time, do not update
+        if(this.paiTokenUpdateTime && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval){
+            return Promise.resolve();
+        }
+     
+        if(!this.paiClusterConfig){
+            const paiClusterConfigError = `pai cluster config not initialized!`
+            this.log.error(`${paiClusterConfigError}`);
+            throw Error(`${paiClusterConfigError}`)
+        }
+
+        const authentication_req: request.Options = {
+            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
+            method: 'POST',
+            json: true,
+            body: {
+                username: this.paiClusterConfig.userName,
+                password: this.paiClusterConfig.passWord
+            }
+        };
+
+        request(authentication_req, (error: Error, response: request.Response, body: any) => {
+            if (error) {
+                this.log.error(`Get PAI token failed: ${error.message}`);
+                deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
+            } else {
+                if(response.statusCode !== 200){
+                    this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
+                    deferred.reject(new Error(`Get PAI token failed, please check paiConfig username or password`));
+                }
+                this.paiToken = body.token;
+                this.paiTokenUpdateTime = new Date().getTime();
+                deferred.resolve();
+            }
+        });
+        
+        let timeoutId: NodeJS.Timer;
+        const timeoutDelay: Promise<void> = new Promise<void>((resolve: Function, reject: Function): void => {
+            // Set timeout and reject the promise once reach timeout (5 seconds)
+            timeoutId = setTimeout(
+                () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
+                5000);
+        });
+
+        return Promise.race([timeoutDelay, deferred.promise]).finally(() => clearTimeout(timeoutId));
     }
 }
 

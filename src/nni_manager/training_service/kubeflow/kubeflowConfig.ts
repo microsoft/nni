@@ -1,5 +1,3 @@
-import { TrialConfig } from "../common/trialConfig";
-
 /**
  * Copyright (c) Microsoft Corporation
  * All rights reserved.
@@ -21,43 +19,58 @@ import { TrialConfig } from "../common/trialConfig";
 
 'use strict';
 
-
 /** operator types that kubeflow supported */
-export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' | 'mxnet-operator' | 'caffe2-operator' | 'chainer-operator' | 'mpi-operator';
-export type KubeflowOperatorPlural = 'tfjobs' | 'pytorchjobs' | 'mxjobs' | 'caffe2jobs' | 'chainerjobs' | 'mpijobs';
-
-/**
- * map from Kubeflow operator name to its plural name in K8S
- */
-export const kubeflowOperatorMap : Map<KubeflowOperator, KubeflowOperatorPlural> =  new Map<KubeflowOperator, KubeflowOperatorPlural>([
-    ['tf-operator' , 'tfjobs'],
-    ['pytorch-operator', 'pytorchjobs'],
-    ['mxnet-operator', 'mxjobs'],
-    ['caffe2-operator', 'caffe2jobs'],
-    ['chainer-operator', 'chainerjobs'],
-    ['mpi-operator', 'mpijobs']    
-]);
+export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
+export type KubeflowStorageKind = 'nfs' | 'azureStorage';
+export type DistTrainRole = 'worker' | 'ps' | 'master';
+export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
 
 /**
  * Kuberflow cluster configuration
  * 
  */
-export class KubeflowClusterConfig {
+export class KubeflowClusterConfigBase {
     /** Name of Kubeflow operator, like tf-operator */
     public readonly operator: KubeflowOperator;
-    public readonly nfs: NFSConfig;
-    public readonly kubernetesServer: string;
-
+    public readonly apiVersion: OperatorApiVersion;
+    public readonly storage?: KubeflowStorageKind;    
+    
     /**
      * Constructor
      * @param userName User name of Kubeflow Cluster
      * @param passWord password of Kubeflow Cluster
      * @param host Host IP of Kubeflow Cluster
      */
-    constructor(operator: KubeflowOperator, nfs : NFSConfig, kubernetesServer : string) {
+    constructor(operator: KubeflowOperator, apiVersion: OperatorApiVersion, storage?: KubeflowStorageKind) {
         this.operator = operator;
+        this.apiVersion = apiVersion;
+        this.storage = storage;
+    }
+}
+
+export class KubeflowClusterConfigNFS extends KubeflowClusterConfigBase{
+    public readonly nfs: NFSConfig;
+    
+    constructor(operator: KubeflowOperator, 
+            apiVersion: OperatorApiVersion, 
+            nfs: NFSConfig, storage?: KubeflowStorageKind) {
+        super(operator, apiVersion, storage);
         this.nfs = nfs;
-        this.kubernetesServer = kubernetesServer;
+    }
+}
+
+export class KubeflowClusterConfigAzure extends KubeflowClusterConfigBase{
+    public readonly keyVault: keyVaultConfig;
+    public readonly azureStorage: AzureStorage;
+    
+    constructor(operator: KubeflowOperator, 
+            apiVersion: OperatorApiVersion, 
+            keyVault: keyVaultConfig, 
+            azureStorage: AzureStorage, 
+            storage?: KubeflowStorageKind) {
+        super(operator, apiVersion, storage);
+        this.keyVault = keyVault;
+        this.azureStorage = azureStorage;
     }
 }
 
@@ -73,6 +86,37 @@ export class NFSConfig {
     constructor(server : string, path : string) {
         this.server = server;
         this.path = path;
+    }
+}
+
+/**
+ * KeyVault configuration to store the key of Azure Storage Service
+ * Refer https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+ */
+export class keyVaultConfig {
+    /**The vault-name to specify vault */
+    public readonly vaultName : string;
+    /**The name to specify private key */
+    public readonly name : string;
+
+    constructor(vaultName : string, name : string){
+        this.vaultName = vaultName;
+        this.name = name;
+    }
+}
+
+/**
+ * Azure Storage Service
+ */
+export class AzureStorage {
+    /**The azure share to storage files */
+    public readonly azureShare : string;
+    
+    /**The account name of sotrage service */
+    public readonly accountName: string;
+    constructor(azureShare : string, accountName: string){
+        this.azureShare = azureShare;
+        this.accountName = accountName;
     }
 }
 
@@ -109,15 +153,33 @@ export class KubeflowTrialConfigTemplate {
     }
 }
 
-export class KubeflowTrialConfig {
+export class KubeflowTrialConfigBase {
     public readonly codeDir: string;
+
+    constructor(codeDir: string) {
+        this.codeDir = codeDir;
+    }
+}
+
+export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfigBase{
     public readonly ps?: KubeflowTrialConfigTemplate;
     public readonly worker: KubeflowTrialConfigTemplate;
 
-    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate, ps?: KubeflowTrialConfigTemplate) {
-        this.codeDir = codeDir;
-        this.worker = worker;
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  ps?: KubeflowTrialConfigTemplate) {
+        super(codeDir);
         this.ps = ps;
+        this.worker = worker;
+    }
+}
+
+export class KubeflowTrialConfigPytorch extends KubeflowTrialConfigBase{
+    public readonly master: KubeflowTrialConfigTemplate;
+    public readonly worker?: KubeflowTrialConfigTemplate;
+
+    constructor(codeDir: string, master: KubeflowTrialConfigTemplate, worker?: KubeflowTrialConfigTemplate) {
+        super(codeDir);
+        this.master = master;
+        this.worker = worker;
     }
 }
 

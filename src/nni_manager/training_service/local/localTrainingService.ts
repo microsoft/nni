@@ -169,7 +169,7 @@ class LocalTrainingService implements TrainingService {
                 this.setTrialJobStatus(trialJob, 'FAILED');
                 try {
                     const state: string = await fs.promises.readFile(path.join(trialJob.workingDirectory, '.nni', 'state'), 'utf8');
-                    const match: RegExpMatchArray | null = state.trim().match(/^(\d+)\s+(\d+)$/);
+                    const match: RegExpMatchArray | null = state.trim().match(/^(\d+)\s+(\d+)/);
                     if (match !== null) {
                         const { 1: code, 2: timestamp } = match;
                         if (parseInt(code, 10) === 0) {
@@ -362,7 +362,7 @@ class LocalTrainingService implements TrainingService {
         }
         runScriptLines.push(
             `eval ${this.localTrailConfig.command} 2>${path.join(trialJobDetail.workingDirectory, 'stderr')}`,
-            `echo $? \`date +%s%3N\` >${path.join(trialJobDetail.workingDirectory, '.nni', 'state')}`);
+            `echo $? \`date +%s000\` >${path.join(trialJobDetail.workingDirectory, '.nni', 'state')}`);
 
         await cpp.exec(`mkdir -p ${trialJobDetail.workingDirectory}`);
         await cpp.exec(`mkdir -p ${path.join(trialJobDetail.workingDirectory, '.nni')}`);

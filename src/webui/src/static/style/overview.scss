@@ -1,7 +1,7 @@
 
 /* new style */
 .overMessage{
-    height: 424px;
+    height: 430px;
 }
 .overGraph{
     height: 362px;
@@ -27,10 +27,8 @@
 }
 
 .searchSpace{
-    height: 386px;
     line-height: 22px;
     font-size: 14px;
-    overflow-y: scroll;
     padding: 15px 0;
     color: #212121;
 }
@@ -46,34 +44,8 @@
 }
 
 .profile{
-    padding: 0 20px;
     pre{
         overflow: inherit;
     }
 }
 
-.exbgcolor {
-    background: #b3b3b3;
-
-    .download{
-        height: 30px;
-        border: 1px solid #fff;
-        border-radius: 0;
-        margin-top: 4px;
-        background-color: #0071BC;
-
-        span{
-            font-family: 'Segoe';
-            font-size: 14px;
-        }
-        
-        img{
-            height: 14px;
-            margin-left: 10px;
-            margin-top: -6px;
-        }
-    }
-}
-.exbgcolor .download:hover{
-    border: 1px solid #fff;
-}

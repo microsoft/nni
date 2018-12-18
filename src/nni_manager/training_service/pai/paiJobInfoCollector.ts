@@ -124,7 +124,7 @@ export class PAIJobInfoCollector {
                         }
                         // Set pai trial job's url to WebHDFS output path
                         if(paiTrialJob.hdfsLogPath) {
-                            paiTrialJob.url = paiTrialJob.hdfsLogPath;
+                            paiTrialJob.url += `,${paiTrialJob.hdfsLogPath}`;
                         }
                     }
                 }

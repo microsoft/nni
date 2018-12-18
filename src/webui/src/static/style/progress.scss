@@ -1,12 +1,11 @@
 
 .progress{
-    margin: 15px 20px;
+    margin: 15px 17px;
     .status{
         color: #0573bc;
         font-size: 20px;
         font-weight: bold;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 12px;
+        margin-top: 5px;
     }
 
     .probar{
@@ -54,7 +53,7 @@
     }
     div{
         font-size: 16px;
-        color: #8c8c8c;
+        color: #333;
     }
 }
 
@@ -72,4 +71,22 @@
     min-width: 300px;
 }
 */
+.inputBox{
+    height: 26px;
+    .concurrencyInput{
+        width: 25%;
+        height: 26px;
+        padding-left: 8px;
+        outline: none;
+        border: 1px solid #ccc;
+    }
+    .editStyle{
+        height: 26px;
+        padding: 0 9px;
+    }
+}
 
+.lineBasic{
+    padding-bottom: 14px;
+    border-bottom: 1px solid #ccc;
+}

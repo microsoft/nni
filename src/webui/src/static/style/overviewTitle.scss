@@ -1,13 +1,13 @@
+$titleBgcolor: #b3b3b3;
 .overview .overviewBoder{
     height: 100%;
     border-right: 2px solid white;
 }
 
 .panelTitle{
-    display: block;
     width: 100%;
     height: 38px;
-    background: #b3b3b3;
+    background: $titleBgcolor;
 
     img{
         height: 22px;
@@ -22,5 +22,27 @@
         font-family: 'Segoe';
         color: #333;
         line-height: 38px;
+    }
+}
+
+
+.top10bg{
+    background-color: $titleBgcolor;
+
+    .top10Title{
+        width: 160px;
+    }
+
+    .title{
+        width: 135px;
+        border-left: 2px solid #fff;
+    }
+
+    .minTitle{
+        border-right: 2px solid #fff;
+    }
+    
+    .title:hover{
+        cursor: pointer;
     }
 }

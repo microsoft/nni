@@ -14,7 +14,7 @@ logger = logging.getLogger('mnist_AutoML')
 
 class MnistNetwork(object):
     '''
-    MnistNetwork is for initlizing and building basic network for mnist.
+    MnistNetwork is for initializing and building basic network for mnist.
     '''
     def __init__(self,
                  channel_1_num,
@@ -32,7 +32,7 @@ class MnistNetwork(object):
         """@nni.variable(nni.choice(124, 512, 1024), name=self.hidden_size)"""
         self.hidden_size = hidden_size
         self.pool_size = pool_size
-        """@nni.variable(nni.uniform(0.0001, 0.1), name=self.learning_rate)"""
+        """@nni.variable(nni.loguniform(0.0001, 0.1), name=self.learning_rate)"""
         self.learning_rate = learning_rate
         self.x_dim = x_dim
         self.y_dim = y_dim
@@ -211,7 +211,7 @@ def main(params):
         logger.debug('Send final result done.')
 
 
-def generate_defualt_params():
+def generate_default_params():
     '''
     Generate default parameters for mnist network.
     '''
@@ -232,7 +232,7 @@ def generate_defualt_params():
 if __name__ == '__main__':
     '''@nni.get_next_parameter()'''
     try:
-        main(generate_defualt_params())
+        main(generate_default_params())
     except Exception as exception:
         logger.exception(exception)
         raise

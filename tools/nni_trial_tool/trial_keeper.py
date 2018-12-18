@@ -27,8 +27,9 @@ import shlex
 import re
 from pyhdfs import HdfsClient
 
-from .hdfsClientUtility import copyDirectoryToHdfs
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
+from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
+from .log_utils import LogType, nni_log
 from .metrics_reader import read_experiment_metrics
 
 logger = logging.getLogger('trial_keeper')
@@ -41,35 +42,41 @@ def main_loop(args):
     
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
-    print(shlex.split(args.trial_command))
+
+    try:
+        hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
+    except Exception as e:
+        nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
+        raise e
+
+    copyHdfsDirectoryToLocal(args.nni_hdfs_exp_dir, os.getcwd(), hdfs_client)
+
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     process = Popen(args.trial_command, shell = True, stdout = stdout_file, stderr = stderr_file)
-    print('Subprocess pid is {}'.format(process.pid))
+    nni_log(LogType.Info, 'Trial keeper spawns a subprocess (pid {0}) to run command: {1}'.format(process.pid, shlex.split(args.trial_command)))
+    
     while True:
         retCode = process.poll()
         ## Read experiment metrics, to avoid missing metrics
         read_experiment_metrics(args.nnimanager_ip, args.nnimanager_port)
         
         if retCode is not None:
-            print('subprocess terminated. Exit code is {}. Quit'.format(retCode))
+            nni_log(LogType.Info, 'subprocess terminated. Exit code is {}. Quit'.format(retCode))
             if NNI_PLATFORM == 'pai':
                 # Copy local directory to hdfs for OpenPAI
                 nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
                 try:
-                    hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
                     if copyDirectoryToHdfs(nni_local_output_dir, args.pai_hdfs_output_dir, hdfs_client):
-                        print('copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
+                        nni_log(LogType.Info, 'copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
                     else:
-                        print('copy directory from {0} to {1} failed!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
-                except Exception as exception:
-                    print('HDFS copy directory got exception')
-                    raise exception
+                        nni_log(LogType.Info, 'copy directory from {0} to {1} failed!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
+                except Exception as e:
+                    nni_log(LogType.Error, 'HDFS copy directory got exception: ' + str(e))
+                    raise e
 
             ## Exit as the retCode of subprocess(trial)
             exit(retCode)
             break
-        else:
-            print('subprocess pid: {} is still alive'.format(process.pid))
 
         time.sleep(2)
 
@@ -86,6 +93,7 @@ if __name__ == '__main__':
     PARSER.add_argument('--pai_hdfs_output_dir', type=str, help='the output dir of hdfs')
     PARSER.add_argument('--pai_hdfs_host', type=str, help='the host of hdfs')
     PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
+    PARSER.add_argument('--nni_hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)
@@ -93,9 +101,9 @@ if __name__ == '__main__':
     try:
         main_loop(args)
     except SystemExit as se:
-        print('NNI trial keeper exit with code {}'.format(se.code))
+        nni_log(LogType.Info, 'NNI trial keeper exit with code {}'.format(se.code))
         sys.exit(se.code)
     except Exception as e:
-        print('Exit trial keeper with code 1 because Exception: {} is catched'.format(str(e)))
+        nni_log(LogType.Error, 'Exit trial keeper with code 1 because Exception: {} is catched'.format(str(e)))
         sys.exit(1)
 

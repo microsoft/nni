@@ -1,4 +1,6 @@
-export const convertTime = (num: number) => {
+import { FinalResult } from './interface';
+
+const convertTime = (num: number) => {
     if (num % 3600 === 0) {
         return num / 3600 + 'h';
     } else {
@@ -9,7 +11,7 @@ export const convertTime = (num: number) => {
 };
 
 // trial's duration, accurate to seconds for example 10min 30s
-export const convertDuration = (num: number) => {
+const convertDuration = (num: number) => {
     const hour = Math.floor(num / 3600);
     const min = Math.floor(num / 60 % 60);
     const second = Math.floor(num % 60);
@@ -23,4 +25,27 @@ export const convertDuration = (num: number) => {
     } else {
         return result;
     }
+};
+
+// get final result value
+const getFinalResult = (final: FinalResult) => {
+    let acc;
+    let showDefault = 0;
+    if (final) {
+        acc = JSON.parse(final[0].data);
+        if (typeof (acc) === 'object') {
+            if (acc.default) {
+                showDefault = acc.default;
+            }
+        } else {
+            showDefault = acc;
+        }
+        return showDefault;
+    } else {
+        return 0;
+    }
+};
+
+export {
+    convertTime, convertDuration, getFinalResult
 };
