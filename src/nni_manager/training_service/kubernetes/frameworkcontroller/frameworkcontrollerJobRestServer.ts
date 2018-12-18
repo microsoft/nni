@@ -19,21 +19,22 @@
 
 'use strict';
 
-import * as component from '../../common/component';
+import * as component from '../../../common/component';
 import { Inject } from 'typescript-ioc';
-import { KubeflowTrainingService } from './kubeflowTrainingService';
-import { KubernetesJobRestServer } from '../kubernetes/kubernetesJobRestServer'
+import { FrameworkControllerainingService } from './frameworkcontrollerTrainingService';
+import { KubernetesJobRestServer } from '../kubernetesJobRestServer'
 
 /**
- * Kubeflow Training service Rest server, provides rest API to support kubeflow job metrics update
+ * frameworkcontroller Training service Rest server, provides rest API to support frameworkcontroller job metrics update
  * 
  */
 @component.Singleton
-export class KubeflowJobRestServer extends KubernetesJobRestServer{
+export class FrameworkControllerJobRestServer extends KubernetesJobRestServer{
+    
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
     constructor() {
-        super(component.get(KubeflowTrainingService));
-    }   
+        super(component.get(FrameworkControllerainingService));
+    }  
 }

@@ -22,9 +22,9 @@
 import * as fs from 'fs';
 import * as os from 'os'
 import * as path from 'path';
-import { getLogger, Logger } from '../../common/log';
+import { getLogger, Logger } from '../../../common/log';
 import { KubeflowOperator, OperatorApiVersion } from './kubeflowConfig';
-import { KubernetesCRDClient, GeneralK8sClient } from '../kubernetes/kubernetesApiClient';
+import { KubernetesCRDClient, GeneralK8sClient } from '../kubernetesApiClient';
 
 abstract class KubeflowOperatorClient extends KubernetesCRDClient{
     constructor() {

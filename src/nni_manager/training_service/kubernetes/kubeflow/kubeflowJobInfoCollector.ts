@@ -21,18 +21,18 @@
 
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
-import { getLogger, Logger } from '../../common/log';
-import { KubernetesTrialJobDetail} from '../kubernetes/kubernetesData';
-import { NNIError, NNIErrorNames } from '../../common/errors';
-import { TrialJobStatus } from '../../common/trainingService';
-import { KubernetesCRDClient } from '../kubernetes/kubernetesApiClient';
-import { KubernetesJobInfoCollector } from '../kubernetes/kubernetesJobInfoCollector';
-import { FrameworkControllerJobType, FrameworkControllerJobCompleteType } from './frameworkcontrollerConfig';
+import { getLogger, Logger } from '../../../common/log';
+import { KubernetesTrialJobDetail} from '../kubernetesData';
+import { NNIError, NNIErrorNames } from '../../../common/errors';
+import { TrialJobStatus } from '../../../common/trainingService';
+import { KubernetesCRDClient } from '../kubernetesApiClient';
+import { KubernetesJobInfoCollector } from '../kubernetesJobInfoCollector';
+import { KubeflowJobType } from './kubeflowConfig';
 
 /**
- * Collector frameworkcontroller jobs info from Kubernetes cluster, and update frameworkcontroller job status locally
+ * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally
  */
-export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollector{
+export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
     constructor(jobMap: Map<string, KubernetesTrialJobDetail>) {
         super(jobMap);
     }
@@ -55,29 +55,27 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
             return Promise.resolve();
         }
 
-        if(kubernetesJobInfo.status && kubernetesJobInfo.status.state) {
-            const frameworkJobType: FrameworkControllerJobType = <FrameworkControllerJobType>kubernetesJobInfo.status.state;
-            switch(frameworkJobType) {
-                case 'AttemptCreationPending' || 'AttemptCreationRequested' || 'AttemptPreparing':
+        if(kubernetesJobInfo.status && kubernetesJobInfo.status.conditions) {
+            const latestCondition = kubernetesJobInfo.status.conditions[kubernetesJobInfo.status.conditions.length - 1];
+            const tfJobType : KubeflowJobType = <KubeflowJobType>latestCondition.type;
+            switch(tfJobType) {
+                case 'Created':
                     kubernetesTrialJob.status = 'WAITING';
-                    break;
-                case 'AttemptRunning':
+                    kubernetesTrialJob.startTime = Date.parse(<string>latestCondition.lastUpdateTime);                    
+                    break; 
+                case 'Running':
                     kubernetesTrialJob.status = 'RUNNING';
                     if(!kubernetesTrialJob.startTime) {
-                        kubernetesTrialJob.startTime = Date.parse(<string>kubernetesJobInfo.status.startTime);
+                        kubernetesTrialJob.startTime = Date.parse(<string>latestCondition.lastUpdateTime);
                     }
                     break;
-                case  'Completed':
-                    const completedJobType : FrameworkControllerJobCompleteType = <FrameworkControllerJobCompleteType>kubernetesJobInfo.status.attemptStatus.completionStatus.type.name;
-                    switch(completedJobType) {
-                        case 'Succeeded':
-                            kubernetesTrialJob.status = 'SUCCEEDED';
-                            break;
-                        case 'Failed':
-                            kubernetesTrialJob.status = 'FAILED';
-                            break;        
-                    }
-                    kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTime); 
+                case 'Failed':
+                    kubernetesTrialJob.status = 'FAILED';
+                    kubernetesTrialJob.endTime = Date.parse(<string>latestCondition.lastUpdateTime);                    
+                    break;
+                case  'Succeeded':
+                    kubernetesTrialJob.status = 'SUCCEEDED';
+                    kubernetesTrialJob.endTime = Date.parse(<string>latestCondition.lastUpdateTime);                    
                     break;
                 default:
                     break;

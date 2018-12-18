@@ -21,31 +21,31 @@
 
 import * as assert from 'assert';
 import * as azureStorage from 'azure-storage';
-import * as component from '../../common/component';
+import * as component from '../../../common/component';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
 import { EventEmitter } from 'events';
-import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { MethodNotImplementedError } from '../../common/errors';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
+import { getExperimentId, getInitTrialSequenceId } from '../../../common/experimentStartupInfo';
+import { getLogger, Logger } from '../../../common/log';
+import { MethodNotImplementedError } from '../../../common/errors';
+import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
-} from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
-import { NFSConfig } from '../kubernetes/kubernetesConfig'
-import { KubernetesTrialJobDetail } from '../kubernetes/kubernetesData';
-import { KubernetesTrialConfig, KubernetesClusterConfig } from '../kubernetes/kubernetesConfig';
-import { validateCodeDir } from '../common/util';
-import { AzureStorageClientUtility } from '../kubernetes/azureStorageClientUtils';
-import { KubernetesTrainingService } from '../kubernetes/kubernetesTrainingService';
+} from '../../../common/trainingService';
+import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../../common/utils';
+import { NFSConfig } from '../kubernetesConfig'
+import { KubernetesTrialJobDetail } from '../kubernetesData';
+import { KubernetesTrialConfig, KubernetesClusterConfig } from '../kubernetesConfig';
+import { validateCodeDir } from '../../common/util';
+import { AzureStorageClientUtility } from '../azureStorageClientUtils';
+import { KubernetesTrainingService } from '../kubernetesTrainingService';
 import { FrameworkControllerClusterConfigAzure, FrameworkControllerClusterConfigNFS, FrameworkControllerTrialConfig, 
     FrameworkControllerClusterConfigFactory } from './frameworkcontrollerConfig';
-import { GeneralK8sClient } from '../kubernetes/kubernetesApiClient';
+import { GeneralK8sClient } from '../kubernetesApiClient';
 import { FrameworkControllerJobRestServer } from './frameworkcontrollerJobRestServer';
 import { FrameworkControllerClient } from './frameworkcontrollerApiClient';
 import { FrameworkControllerJobInfoCollector } from './frameworkcontrollerJobInfoCollector';

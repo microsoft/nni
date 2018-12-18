@@ -37,8 +37,8 @@ import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
 import { PAITrainingService } from './training_service/pai/paiTrainingService';
-import { KubeflowTrainingService } from './training_service/kubeflow/kubeflowTrainingService';
-import { FrameworkControllerainingService } from './training_service/frameworkcontroller/frameworkcontrollerTrainingService';
+import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
+import { FrameworkControllerainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 
 function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number) {
     const createNew: boolean = (startExpMode === 'new');

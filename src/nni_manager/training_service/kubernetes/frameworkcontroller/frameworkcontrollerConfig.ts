@@ -19,7 +19,7 @@
 
 'use strict';
 
-import { KubernetesClusterConfig, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig, KubernetesTrialConfig, KubernetesTrialConfigTemplate } from '../kubernetes/kubernetesConfig'
+import { KubernetesClusterConfig, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig, KubernetesTrialConfig, KubernetesTrialConfigTemplate } from '../kubernetesConfig'
 
 export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfig{
     public readonly nfs: NFSConfig;

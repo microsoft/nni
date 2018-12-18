@@ -20,8 +20,8 @@
 'use strict';
 
 import { KubernetesClusterConfig, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig,
-        KubernetesTrialConfig, KubernetesTrialConfigTemplate } from '../kubernetes/kubernetesConfig'
-import { MethodNotImplementedError } from '../../common/errors';
+        KubernetesTrialConfig, KubernetesTrialConfigTemplate } from '../kubernetesConfig'
+import { MethodNotImplementedError } from '../../../common/errors';
 
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
