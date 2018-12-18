@@ -34,5 +34,7 @@ kubeflowConfig:
   operator: pytorch-operator
   apiVersion: v1alpha2
   nfs:
-    server: 10.10.10.10
-    path: /var/nfs/general
+    # Your NFS server IP, like 10.10.10.10
+    server: {your_nfs_server_ip}
+    # Your NFS server export path, like /var/nfs/nni
+    path: {your_nfs_server_export_path}
