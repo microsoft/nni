@@ -70,14 +70,37 @@ export class FrameworkControllerClusterConfigFactory {
     }
 }
 
-export class FrameworkControllerTrialConfig extends KubernetesTrialConfig{
-    public readonly ps?: KubernetesTrialConfigTemplate;
-    public readonly worker: KubernetesTrialConfigTemplate;
+export class FrameworkAttemptCompletionPolicy {
+    public readonly minFailedTaskCount: number;
+    public readonly minSucceededTaskCount: number;
+    constructor(minFailedTaskCount: number, minSucceededTaskCount: number) {
+        this.minFailedTaskCount = minFailedTaskCount;
+        this.minSucceededTaskCount = minSucceededTaskCount;
+    }
+}
 
-    constructor(codeDir: string, worker: KubernetesTrialConfigTemplate,  ps?: KubernetesTrialConfigTemplate) {
+/**
+ * Trial job configuration for FrameworkController
+ */
+export class FrameworkControllerTrialConfigTemplate extends KubernetesTrialConfigTemplate{
+    public readonly frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy;
+    public readonly name: string;
+    constructor(replicas: number, command : string, gpuNum : number, 
+        cpuNum: number, memoryMB: number, image: string, 
+        frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy) {
+        super(replicas, command, gpuNum, cpuNum, memoryMB, image);
+        this.frameworkAttemptCompletionPolicy = frameworkAttemptCompletionPolicy;
+        this.name = name;
+    }
+}
+
+export class FrameworkControllerTrialConfig extends KubernetesTrialConfig{
+    public readonly taskRoles: FrameworkControllerTrialConfigTemplate[];
+    public readonly codeDir: string;
+    constructor(codeDir: string, taskRoles: FrameworkControllerTrialConfigTemplate[]) {
         super(codeDir);
-        this.ps = ps;
-        this.worker = worker;
+        this.taskRoles = taskRoles;
+        this.codeDir = codeDir;
     }
 }
 

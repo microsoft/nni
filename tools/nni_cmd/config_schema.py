@@ -121,7 +121,7 @@ pai_config_schema = {
 }
 }
 
-kubernetes_trial_schema = {
+kubeflow_trial_schema = {
 'trial':{
         'codeDir':  os.path.exists,
         Optional('ps'): {
@@ -175,6 +175,25 @@ kubeflow_config_schema = {
     })
 }
 
+frameworkcontroller_trial_schema = {
+    'trial':{
+        'codeDir':  os.path.exists,
+        'taskRoles': [{
+            'name': str,
+            'replicas': int,
+            'frameworkAttemptCompletionPolicy': {
+                'minFailedTaskCount': int,
+                'minSucceededTaskCount': int
+            },
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        }]
+    }
+}
+
 frameworkcontroller_config_schema = {
     'frameworkcontrollerConfig':Or({
         Optional('storage'): Or('nfs', 'azureStorage'),
@@ -217,6 +236,6 @@ REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine
 
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
 
-KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubernetes_trial_schema, **kubeflow_config_schema})
+KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
 
-FRAMEWORKCONTROLLER_CONFIG_SCHEMA = Schema({**common_schema, **kubernetes_trial_schema, **frameworkcontroller_config_schema})
+FRAMEWORKCONTROLLER_CONFIG_SCHEMA = Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema})

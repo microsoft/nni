@@ -112,25 +112,15 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
         // Write worker file content run_worker.sh to local tmp folders
-        const workerPodResources : any = {};
-        let nonWorkerResources : any = {};
-        if(this.frameworkcontrollerTrialConfig.worker) {
-            const workerRunScriptContent: string = this.generateRunScript(trialJobId, trialWorkingFolder, 
-                this.frameworkcontrollerTrialConfig.worker.command, curTrialSequenceId.toString(), 'worker', this.frameworkcontrollerTrialConfig.worker.gpuNum);
-
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
-            
-            workerPodResources.requests = this.generatePodResource(this.frameworkcontrollerTrialConfig.worker.memoryMB, this.frameworkcontrollerTrialConfig.worker.cpuNum, 
-                this.frameworkcontrollerTrialConfig.worker.gpuNum)
-            workerPodResources.limits = Object.assign({}, workerPodResources.requests);
-        }
-        if(this.frameworkcontrollerTrialConfig.ps){
-            const psRunScriptContent: string = this.generateRunScript(trialJobId, trialWorkingFolder, 
-                this.frameworkcontrollerTrialConfig.ps.command, curTrialSequenceId.toString(), 'ps', this.frameworkcontrollerTrialConfig.ps.gpuNum);
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
-            nonWorkerResources.requests = this.generatePodResource(this.frameworkcontrollerTrialConfig.ps.memoryMB, this.frameworkcontrollerTrialConfig.ps.cpuNum, 
-                this.frameworkcontrollerTrialConfig.ps.gpuNum)
-                nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
+        const podResources : any = [];
+        for(let taskRole of this.frameworkcontrollerTrialConfig.taskRoles) {
+            const runScriptContent: string = this.generateRunScript(trialJobId, trialWorkingFolder, 
+                taskRole.command, curTrialSequenceId.toString(), taskRole.name, taskRole.gpuNum);
+            await fs.promises.writeFile(path.join(trialLocalTempFolder, `run_${taskRole.name}.sh`), runScriptContent, { encoding: 'utf8' });
+            let resource: any = {};
+            resource.requests = this.generatePodResource(taskRole.memoryMB, taskRole.cpuNum, taskRole.gpuNum);
+            resource.limits = Object.assign({}, resource.requests);
+            podResources.push(resource);
         }
         
         // Write file content ( parameter.cfg ) to local tmp folders
@@ -181,7 +171,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
         // Generate frameworkcontroller job resource config object        
-        const frameworkcontrollerJobConfig: any = this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, workerPodResources, nonWorkerResources);
+        const frameworkcontrollerJobConfig: any = this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
 
         // Create frameworkcontroller job based on generated frameworkcontroller job resource config
         await this.kubernetesCRDClient.createKubernetesJob(frameworkcontrollerJobConfig);
@@ -221,23 +211,12 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                 this.kubernetesCRDClient = FrameworkControllerClient.generateOperatorClient();
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                if (!this.frameworkcontrollerClusterConfig){
-                    this.log.error('frameworkcontroller cluster config is not initialized');
-                    return Promise.reject(new Error('frameworkcontroller cluster config is not initialized'));                    
-                }
-
-                assert(this.frameworkcontrollerClusterConfig !== undefined)
                 let frameworkcontrollerTrialJsonObjsect = JSON.parse(value);
 
                 this.frameworkcontrollerTrialConfig = new FrameworkControllerTrialConfig(
-                    frameworkcontrollerTrialJsonObjsect.codeDir, 
-                    frameworkcontrollerTrialJsonObjsect.worker, 
-                    frameworkcontrollerTrialJsonObjsect.ps
+                    frameworkcontrollerTrialJsonObjsect.codeDir,
+                    frameworkcontrollerTrialJsonObjsect.taskRoles
                 );
-                if (!this.frameworkcontrollerTrialConfig){
-                    this.log.error('frameworkcontroller TrialConfig is not initialized');
-                    return Promise.reject(new Error('frameworkcontroller TrialConfig is not initialized'));                    
-                }
 
                 // Validate to make sure codeDir doesn't have too many files
                 try {
@@ -262,7 +241,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
      * @param workerPodResources worker pod template
      * @param nonWorkerPodResources non-worker pod template, like ps or master
      */
-    private generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName : string, workerPodResources : any, nonWorkerPodResources?: any) : any {
+    private generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName : string, podResources : any) : any {
         if(!this.frameworkcontrollerClusterConfig) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }
@@ -272,40 +251,21 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         }
         
         let taskRoles = [];
-
-        if(this.frameworkcontrollerTrialConfig.worker) {
-            let workerTaskRole = this.generateTaskRoleConfig(
+        for(let index in this.frameworkcontrollerTrialConfig.taskRoles) {
+            let taskRole = this.generateTaskRoleConfig(
                 trialWorkingFolder, 
-                this.frameworkcontrollerTrialConfig.worker.image, 
-                'run_worker.sh',
-                 workerPodResources
+                this.frameworkcontrollerTrialConfig.taskRoles[index].image, 
+                `run_${this.frameworkcontrollerTrialConfig.taskRoles[index].name}.sh`,
+                podResources[index]
             );
             taskRoles.push({
-                name: 'worker',
-                taskNumber: this.frameworkcontrollerTrialConfig.worker.replicas,
+                name: this.frameworkcontrollerTrialConfig.taskRoles[index].name,
+                taskNumber: this.frameworkcontrollerTrialConfig.taskRoles[index].replicas,
                 frameworkAttemptCompletionPolicy: {
-                    minFailedTaskCount: 1, 
-                    minSucceededTaskCount: this.frameworkcontrollerTrialConfig.worker.replicas
+                    minFailedTaskCount: this.frameworkcontrollerTrialConfig.taskRoles[index].frameworkAttemptCompletionPolicy.minFailedTaskCount, 
+                    minSucceededTaskCount: this.frameworkcontrollerTrialConfig.taskRoles[index].frameworkAttemptCompletionPolicy.minSucceededTaskCount
                 },
-                task: workerTaskRole
-            });
-        }
-
-        if(this.frameworkcontrollerTrialConfig.ps) {
-            let psTaskRole = this.generateTaskRoleConfig(
-                trialWorkingFolder, 
-                this.frameworkcontrollerTrialConfig.ps.image, 
-                'run_ps.sh',
-                nonWorkerPodResources
-            );
-            taskRoles.push({
-                name: 'ps',
-                taskNumber: this.frameworkcontrollerTrialConfig.ps.replicas,
-                frameworkAttemptCompletionPolicy: {
-                    minFailedTaskCount: 1, 
-                    minSucceededTaskCount: -1
-                },
-                task: psTaskRole
+                task: taskRole
             });
         }
         
@@ -325,7 +285,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                 executionType: 'Start',
                 taskRoles: taskRoles
             }
-        };     
+        };
     }
 
     private generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string, podResources: any): any {

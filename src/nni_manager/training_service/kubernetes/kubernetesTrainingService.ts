@@ -159,13 +159,13 @@ class KubernetesTrainingService implements TrainingService {
      * @param trialSequenceId sequence id
      */
     protected generateRunScript(trialJobId: string, trialWorkingFolder: string, 
-                command: string, trialSequenceId: string, roleType: DistTrainRole, gpuNum: number): string {
+                command: string, trialSequenceId: string, roleName: string, gpuNum: number): string {
         const runScriptLines: string[] = [];
 
         runScriptLines.push('#!/bin/bash');
         runScriptLines.push('export NNI_PLATFORM=kubeflow');
         runScriptLines.push(`export NNI_SYS_DIR=$PWD/nni/${trialJobId}`);
-        runScriptLines.push(`export NNI_OUTPUT_DIR=${path.join(trialWorkingFolder, 'output', `${roleType}_output`)}`);
+        runScriptLines.push(`export NNI_OUTPUT_DIR=${path.join(trialWorkingFolder, 'output', `${roleName}_output`)}`);
         runScriptLines.push('export MULTI_PHASE=false');
         runScriptLines.push(`export NNI_TRIAL_JOB_ID=${trialJobId}`);
         runScriptLines.push(`export NNI_EXP_ID=${getExperimentId()}`);
