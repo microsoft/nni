@@ -21,13 +21,14 @@ from nni.assessor import Assessor, AssessResult
 from .modelfactory import CurveModel
 
 logger = logging.getLogger('curvefitting_Assessor')
+THRESHOLD = 0.95
 
 class CurvefittingAssessor(Assessor):
     '''
     CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
     It stops a pending trial X at step S if the trial's forecast result at target step is convergence and lower than the best performance in the history.
     '''
-    def __init__(self, start_step=6, epoch_num=20, threshold=0.95):
+    def __init__(self, start_step=6, epoch_num=20, threshold=THRESHOLD):
         if not start_step > 0:
             logger.warning('start step should be a positive number')
         if not epoch_num > 0:
@@ -38,7 +39,7 @@ class CurvefittingAssessor(Assessor):
         self.completed_best_performance = 0.0001
         # Start forecasting when historical data reaches start step
         self.start_step = max(start_step, int(epoch_num / 4))
-        self.threshold = threshold
+        THRESHOLD = threshold
         logger.info('Successfully initials the curvefitting assessor')
 
     def trial_end(self, trial_job_id, success):
@@ -47,7 +48,7 @@ class CurvefittingAssessor(Assessor):
         '''
         if success:
             self.completed_best_performance = max(self.completed_best_performance, np.max(self.trial_history))
-            logger.info('Successfully update complted best performance, trial job id:', trial_job_id)
+            logger.info('Successully update complted best performance, trial job id:', trial_job_id)
         else:
             logger.info('No need to update, trial job id: ', trial_job_id)
 
@@ -64,13 +65,14 @@ class CurvefittingAssessor(Assessor):
         try:
             curvemodel = CurveModel(self.target_pos)
             predict_y = curvemodel.predict(trial_history)
-            if predict_y == None:
+            print ("predict y ", predict_y)
+            if predict_y == -1:
                 '''wait for more information to predict precisely'''
                 return AssessResult.Good
-            elif predict_y / self.completed_best_performance > self.threshold:
+            elif predict_y / self.completed_best_performance > THRESHOLD:
                 return AssessResult.Good
             else:
                 return AssessResult.Bad
 
         except Exception as e:
-            logger.exception('unrecognize exception in curvefitting_asserssor', e)
+            logger.warning('unrecognize exception in curvefitting_asserssor', e)

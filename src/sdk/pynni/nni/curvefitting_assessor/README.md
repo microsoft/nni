@@ -35,20 +35,14 @@ To use Curve Fitting Assessor, you should add the following spec in your experim
 ```
 assessor:
 builtinAssessorName: Curvefitting
-classArgs:
-  # The total number of epoch.
-  # We need to know the number of epoch to determine which point we need to predict.
-  * The default value of epoch_num is 20.
-  epoch_num: 20
-  # (optional) A trial is determined to be stopped or not
-  # In order to save our computing resource, we start to predict when we have more than start_step(default=6) accuracy points.
-  # only after receiving start_step number of reported intermediate results.
-  * The default value of start_step is 6.
-  start_step: 6
-  # (optional) The threshold that we decide to early stop the worse performance curve.
-  # For example: if threshold = 0.95, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
-  * The default value of threshold is 0.95.
-  shreshold: 0.95
+    classArgs:
+      # (optional) A trial is determined to be stopped or not, 
+      * only after receiving start_step number of reported intermediate results.
+      * The default value of start_step is 6.
+      start_step: 6
+      # The total number of epoch
+      * The default value of start_step is 20.
+      epoch_num: 20
 ```
 
 **Please note that the current version only support `maximize` mode.**
