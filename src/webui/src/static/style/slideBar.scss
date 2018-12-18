@@ -46,30 +46,9 @@ $barHeight: 56px;
     }
 }
 
-.download{
-    height: 30px;
-    border-radius: 0;
-    margin-top: 4px;
-    background-color: transparent;
-    border: none;
-    outline: none;
-
-    span{
-        font-family: 'Segoe';
-        font-size: 14px;
-    }
-    
-    img{
-        width: 12px;
-        margin-left: 10px;
-        margin-top: -6px;
-    }
-}
-
-.download:hover{
-    border: none;
-    background-color: transparent;
-}
 .link li{
     float: left;
+}
+.dropdown{
+    margin-right: 10px;
 }

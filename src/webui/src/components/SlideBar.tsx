@@ -1,14 +1,19 @@
 import * as React from 'react';
 import { Link } from 'react-router';
 import axios from 'axios';
-import { Row, Col, Button } from 'antd';
+import { DOWNLOAD_IP } from '../static/const';
+import { Row, Col, Menu, Dropdown, Icon } from 'antd';
 import { MANAGER_IP } from '../static/const';
 import '../static/style/slideBar.scss';
 import '../static/style/button.scss';
 
 interface SliderState {
-  downBool: boolean;
   version: string;
+  menuVisible: boolean;
+}
+
+interface EventPer {
+  key: string;
 }
 
 class SlideBar extends React.Component<{}, SliderState> {
@@ -18,15 +23,12 @@ class SlideBar extends React.Component<{}, SliderState> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      downBool: false,
-      version: ''
+      version: '',
+      menuVisible: false
     };
   }
 
   downExperimentContent = () => {
-    this.setState(() => ({
-      downBool: true
-    }));
     axios
       .all([
         axios.get(`${MANAGER_IP}/experiment`),
@@ -74,13 +76,69 @@ class SlideBar extends React.Component<{}, SliderState> {
             eventMouse.initEvent('click', false, false);
             downTag.dispatchEvent(eventMouse);
           }
-          this.setState(() => ({
-            downBool: false
-          }));
         }
       }));
   }
 
+  downnnimanagerLog = () => {
+    axios(`${DOWNLOAD_IP}/nnimanager.log`, {
+      method: 'GET'
+    })
+      .then(res => {
+        if (res.status === 200) {
+          const nniLogfile = res.data;
+          const aTag = document.createElement('a');
+          const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
+          const file = new Blob([nniLogfile], { type: 'application/json' });
+          aTag.download = 'nnimanagerLog.json';
+          aTag.href = URL.createObjectURL(file);
+          aTag.click();
+          if (!isEdge) {
+            URL.revokeObjectURL(aTag.href);
+          }
+          if (navigator.userAgent.indexOf('Firefox') > -1) {
+            const downTag = document.createElement('a');
+            downTag.addEventListener('click', function () {
+              downTag.download = 'nnimanagerLog.json';
+              downTag.href = URL.createObjectURL(file);
+            });
+            let eventMouse = document.createEvent('MouseEvents');
+            eventMouse.initEvent('click', false, false);
+            downTag.dispatchEvent(eventMouse);
+          }
+        }
+      });
+  }
+
+  downDispatcherlog = () => {
+    axios(`${DOWNLOAD_IP}/dispatcher.log`, {
+      method: 'GET'
+    })
+      .then(res => {
+        if (res.status === 200) {
+          const dispatchLogfile = res.data;
+          const aTag = document.createElement('a');
+          const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
+          const file = new Blob([dispatchLogfile], { type: 'application/json' });
+          aTag.download = 'dispatcherLog.json';
+          aTag.href = URL.createObjectURL(file);
+          aTag.click();
+          if (!isEdge) {
+            URL.revokeObjectURL(aTag.href);
+          }
+          if (navigator.userAgent.indexOf('Firefox') > -1) {
+            const downTag = document.createElement('a');
+            downTag.addEventListener('click', function () {
+              downTag.download = 'dispatcherLog.json';
+              downTag.href = URL.createObjectURL(file);
+            });
+            let eventMouse = document.createEvent('MouseEvents');
+            eventMouse.initEvent('click', false, false);
+            downTag.dispatchEvent(eventMouse);
+          }
+        }
+      });
+  }
   getNNIversion = () => {
     axios(`${MANAGER_IP}/version`, {
       method: 'GET'
@@ -92,6 +150,27 @@ class SlideBar extends React.Component<{}, SliderState> {
       });
   }
 
+  handleMenuClick = (e: EventPer) => {
+    if (this._isMounted) { this.setState({ menuVisible: false }); }
+    // download experiment related content
+    switch (e.key) {
+      case '1':
+        this.downExperimentContent();
+        break;
+      case '2':
+        this.downnnimanagerLog();
+        break;
+      case '3':
+        this.downDispatcherlog();
+        break;
+      default:
+    }
+  }
+
+  handleVisibleChange = (flag: boolean) => {
+    this.setState({ menuVisible: flag });
+  }
+
   componentDidMount() {
     this._isMounted = true;
     this.getNNIversion();
@@ -100,8 +179,16 @@ class SlideBar extends React.Component<{}, SliderState> {
   componentWillUnmount() {
     this._isMounted = false;
   }
+
   render() {
-    const { downBool, version } = this.state;
+    const { version, menuVisible } = this.state;
+    const menu = (
+      <Menu onClick={this.handleMenuClick}>
+        <Menu.Item key="1">Experiment Parameters</Menu.Item>
+        <Menu.Item key="2">NNImanager Logfile</Menu.Item>
+        <Menu.Item key="3">Dispatcher Logfile</Menu.Item>
+      </Menu>
+    );
     return (
       <Row className="nav">
         <Col span={8}>
@@ -124,15 +211,16 @@ class SlideBar extends React.Component<{}, SliderState> {
           </ul>
         </Col>
         <Col span={16} className="feedback">
-          <Button
-            type="primary"
-            className="changeBtu download"
-            onClick={this.downExperimentContent}
-            disabled={downBool}
+          <Dropdown
+            className="dropdown"
+            overlay={menu}
+            onVisibleChange={this.handleVisibleChange}
+            visible={menuVisible}
           >
-            <img src={require('../static/img/icon/download.png')} alt="icon" />
-            <span>Download</span>
-          </Button>
+            <a className="ant-dropdown-link" href="#">
+              Download <Icon type="down" />
+            </a>
+          </Dropdown>
           <a href="https://github.com/Microsoft/nni/issues/new" target="_blank">
             <img
               src={require('../static/img/icon/issue.png')}
