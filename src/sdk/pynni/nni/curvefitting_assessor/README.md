@@ -45,7 +45,7 @@ builtinAssessorName: Curvefitting
       epoch_num: 20
 ```
 
-Please note that the current version only support `maximize` mode.
+**Please note that the current version only support `maximize` mode.**
 
 ## 3. File Structure
 The assessor has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
