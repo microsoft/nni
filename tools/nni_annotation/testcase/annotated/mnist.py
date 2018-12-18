@@ -46,14 +46,19 @@ class MnistNetwork(object):
             W_conv1 = weight_variable([self.conv_size, self.conv_size, 1,
                 self.channel_1_num])
             b_conv1 = bias_variable([self.channel_1_num])
-            h_conv1 = nni.function_choice({'tf.nn.relu': lambda : tf.nn.
-                relu(conv2d(x_image, W_conv1) + b_conv1), 'tf.nn.sigmoid': 
-                lambda : tf.nn.sigmoid(conv2d(x_image, W_conv1) + b_conv1),
-                'tf.nn.tanh': lambda : tf.nn.tanh(conv2d(x_image, W_conv1) +
-                b_conv1)}, name='tf.nn.relu')
+            h_conv1 = nni.function_choice({
+                'tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)': lambda :
+                tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1),
+                'tf.nn.sigmoid(conv2d(x_image, W_conv1) + b_conv1)': lambda :
+                tf.nn.sigmoid(conv2d(x_image, W_conv1) + b_conv1),
+                'tf.nn.tanh(conv2d(x_image, W_conv1) + b_conv1)': lambda :
+                tf.nn.tanh(conv2d(x_image, W_conv1) + b_conv1)}, name=
+                'tf.nn.relu')
         with tf.name_scope('pool1'):
-            h_pool1 = nni.function_choice({'max_pool': lambda : max_pool(
-                h_conv1, self.pool_size), 'avg_pool': lambda : avg_pool(
+            h_pool1 = nni.function_choice({
+                'max_pool(h_conv1, self.pool_size)': lambda : max_pool(
+                h_conv1, self.pool_size),
+                'avg_pool(h_conv1, self.pool_size)': lambda : avg_pool(
                 h_conv1, self.pool_size)}, name='max_pool')
         with tf.name_scope('conv2'):
             W_conv2 = weight_variable([self.conv_size, self.conv_size, self

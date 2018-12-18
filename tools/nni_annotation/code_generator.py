@@ -103,12 +103,12 @@ def convert_args_to_dict(call, with_lambda=False):
     """
     keys, values = list(), list()
     for arg in call.args:
-        # if arg is a function, we use its name without arguments as the key
-        if type(arg) is ast.Call:
-            arg_value = astor.to_source(arg).strip('\n"()').split('(')[0]
-            arg_value = ast.Str(str(arg_value))
-        else:
+        if type(arg) in [ast.Str, ast.Num]:
             arg_value = arg
+        else:
+        # if arg is not a string or a number, we use its source code as the key
+            arg_value = astor.to_source(arg).strip('\n"')
+            arg_value = ast.Str(str(arg_value))
         arg = make_lambda(arg) if with_lambda else arg
         keys.append(arg_value)
         values.append(arg)
@@ -122,7 +122,6 @@ def make_lambda(call):
     """Wrap an AST Call node to lambda expression node.
     call: ast.Call node
     """
-    assert type(call) is ast.Call, 'Argument of nni.function_choice is not function call'
     empty_args = ast.arguments(args=[], vararg=None, kwarg=None, defaults=[])
     return ast.Lambda(args=empty_args, body=call)
 

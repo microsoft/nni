@@ -1,4 +1,11 @@
 {
+    "handwrite/__line6/choice": {
+        "_type": "choice",
+        "_value": [
+            "foo",
+            "bar"
+        ]
+    },
     "handwrite/conv_size/choice": {
         "_type": "choice",
         "_value": [
@@ -8,7 +15,16 @@
             7
         ]
     },
-    "handwrite/__line3/function_choice": {
+    "handwrite/abc/choice": {
+        "_type": "choice",
+        "_value": [
+            "2",
+            3,
+            "(5 * 6)",
+            7
+        ]
+    },
+    "handwrite/__line9/function_choice": {
         "_type": "choice",
         "_value": [
             "max_pool",
@@ -16,19 +32,27 @@
             "avg_pool"
         ]
     },
-    "handwrite/__line7/qlognormal": {
+    "handwrite/max_pool/function_choice": {
+        "_type": "choice",
+        "_value": [
+            "max_pool(h_conv1)",
+            "avg_pool(h_conv2, h_conv3)"
+        ]
+    },
+    "handwrite/max_poo/function_choice": {
+        "_type": "choice",
+        "_value": [
+            "max_poo(h_conv1)",
+            "(2 * 3 + 4)",
+            "(lambda x: 1 + x)"
+        ]
+    },
+    "handwrite/__line19/qlognormal": {
         "_type": "qlognormal",
         "_value": [
             1.2,
             3,
             4.5
-        ]
-    },
-    "handwrite/__line12/choice": {
-        "_type": "choice",
-        "_value": [
-            "foo",
-            "bar"
         ]
     },
     "mnist/self.conv_size/choice": {
@@ -59,16 +83,16 @@
     "mnist/tf.nn.relu/function_choice": {
         "_type": "choice",
         "_value": [
-            "tf.nn.relu",
-            "tf.nn.sigmoid",
-            "tf.nn.tanh"
+            "tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)",
+            "tf.nn.sigmoid(conv2d(x_image, W_conv1) + b_conv1)",
+            "tf.nn.tanh(conv2d(x_image, W_conv1) + b_conv1)"
         ]
     },
     "mnist/max_pool/function_choice": {
         "_type": "choice",
         "_value": [
-            "max_pool",
-            "avg_pool"
+            "max_pool(h_conv1, self.pool_size)",
+            "avg_pool(h_conv1, self.pool_size)"
         ]
     },
     "mnist/batch_size/choice": {
@@ -95,11 +119,28 @@
             7
         ]
     },
+    "dir.simple/abc/choice": {
+        "_type": "choice",
+        "_value": [
+            "2",
+            3,
+            "(5 * 6)",
+            7
+        ]
+    },
     "dir.simple/max_pool/function_choice": {
         "_type": "choice",
         "_value": [
-            "max_pool",
-            "avg_pool"
+            "max_pool(h_conv1)",
+            "avg_pool(h_conv2, h_conv3)"
+        ]
+    },
+    "dir.simple/max_poo/function_choice": {
+        "_type": "choice",
+        "_value": [
+            "max_poo(h_conv1)",
+            "(2 * 3 + 4)",
+            "(lambda x: 1 + x)"
         ]
     }
 }
