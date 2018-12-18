@@ -32,7 +32,9 @@ abstract class FrameworkControllerClient extends KubernetesCRDClient{
 
     public async deleteKubernetesJob(labels: Map<string, string>): Promise<boolean> {
         let result: Promise<boolean>;
-        // construct match query from labels for deleting tfjob
+        // construct match query from labels for deleting framework jobs,
+        // framework jobs need body of "propagationPolicy": "Foreground",
+        // refer https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md
         const matchQuery: string = Array.from(labels.keys()).map(labelKey => `${labelKey}=${labels.get(labelKey)}`).join(',');
         try {
             const deleteResult : any = await this.operator().delete({ qs: { 
@@ -54,14 +56,14 @@ abstract class FrameworkControllerClient extends KubernetesCRDClient{
     /**
      * Factory method to generate operator cliet
      */
-    public static generateOperatorClient(): KubernetesCRDClient {
+    public static generateFrameworkControllerClient(): KubernetesCRDClient {
         return new FrameworkControllerClientV1();
     }
 }
 
 class FrameworkControllerClientV1 extends FrameworkControllerClient {
     /**
-     * constructor, to initialize tfjob CRD definition
+     * constructor, to initialize frameworkcontroller CRD definition
      */
     public constructor() {
         super();

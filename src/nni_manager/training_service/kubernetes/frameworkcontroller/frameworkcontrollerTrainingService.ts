@@ -111,7 +111,6 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         // Create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
-        // Write worker file content run_worker.sh to local tmp folders
         const podResources : any = [];
         for(let taskRole of this.frameworkcontrollerTrialConfig.taskRoles) {
             const runScriptContent: string = this.generateRunScript(trialJobId, trialWorkingFolder, 
@@ -208,7 +207,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                         nfsFrameworkControllerClusterConfig.nfs.path
                     );
                 } 
-                this.kubernetesCRDClient = FrameworkControllerClient.generateOperatorClient();
+                this.kubernetesCRDClient = FrameworkControllerClient.generateFrameworkControllerClient();
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 let frameworkcontrollerTrialJsonObjsect = JSON.parse(value);
@@ -238,8 +237,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
      * @param trialJobId trial job id
      * @param trialWorkingFolder working folder
      * @param frameworkcontrollerJobName job name
-     * @param workerPodResources worker pod template
-     * @param nonWorkerPodResources non-worker pod template, like ps or master
+     * @param podResources  pod template
      */
     private generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName : string, podResources : any) : any {
         if(!this.frameworkcontrollerClusterConfig) {

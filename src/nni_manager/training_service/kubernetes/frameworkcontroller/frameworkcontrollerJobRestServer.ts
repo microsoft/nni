@@ -30,10 +30,6 @@ import { KubernetesJobRestServer } from '../kubernetesJobRestServer'
  */
 @component.Singleton
 export class FrameworkControllerJobRestServer extends KubernetesJobRestServer{
-    
-    /**
-     * constructor to provide NNIRestServer's own rest property, e.g. port
-     */
     constructor() {
         super(component.get(FrameworkControllerainingService));
     }  
