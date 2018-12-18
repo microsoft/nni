@@ -85,8 +85,9 @@ Optional('assessor'): Or({
 },{
     'builtinAssessorName': lambda x: x in ['Curvefitting'],
     Optional('classArgs'): {
+        'epoch_num': And(int, lambda x: 0 <= x <= 9999),
         Optional('start_step'): And(int, lambda x: 0 <= x <= 9999),
-        'epoch_num': And(int, lambda x: 0 <= x <= 9999)
+        Optional('threshold'): And(float, lambda x: 0.0 <= x <= 9999.0)
     },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
 },{
