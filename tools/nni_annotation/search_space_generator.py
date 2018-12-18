@@ -75,7 +75,7 @@ class SearchSpaceGenerator(ast.NodeVisitor):
             specified_name = True
         else:
             # generate the missing name automatically
-            name = '__line' + str(node.lineno)
+            name = '__line' + str(str(node.args[-1].lineno))
             specified_name = False
 
         if func in ('choice', 'function_choice'):
