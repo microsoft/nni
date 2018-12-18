@@ -1,10 +1,11 @@
 
 .progress{
-    margin: 15px 20px;
+    margin: 15px 17px;
     .status{
         color: #0573bc;
         font-size: 20px;
         font-weight: bold;
+        margin-top: 5px;
     }
 
     .probar{
@@ -71,24 +72,21 @@
 }
 */
 .inputBox{
-    height: 30px;
-    margin-top: 8px;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 44px;
-    .title{
-        font-size: 14px;
-        margin-right: 10px;
-    }
+    height: 26px;
     .concurrencyInput{
         width: 25%;
-        height: 32px;
+        height: 26px;
+        padding-left: 8px;
         outline: none;
         border: 1px solid #ccc;
     }
     .editStyle{
-        height: 32px;
+        height: 26px;
+        padding: 0 9px;
     }
-
 }
 
-
+.lineBasic{
+    padding-bottom: 14px;
+    border-bottom: 1px solid #ccc;
+}

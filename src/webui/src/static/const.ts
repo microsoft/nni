@@ -1,4 +1,5 @@
 export const MANAGER_IP = `/api/v1/nni`;
+export const DOWNLOAD_IP = `/logs`;
 export const trialJobStatus = [
     'UNKNOWN',
     'WAITING',
