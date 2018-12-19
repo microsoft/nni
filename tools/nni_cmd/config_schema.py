@@ -180,7 +180,7 @@ frameworkcontroller_trial_schema = {
         'codeDir':  os.path.exists,
         'taskRoles': [{
             'name': str,
-            'replicas': int,
+            'taskNum': int,
             'frameworkAttemptCompletionPolicy': {
                 'minFailedTaskCount': int,
                 'minSucceededTaskCount': int

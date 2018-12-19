@@ -36,12 +36,14 @@ export class FrameworkAttemptCompletionPolicy {
 export class FrameworkControllerTrialConfigTemplate extends KubernetesTrialConfigTemplate{
     public readonly frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy;
     public readonly name: string;
-    constructor(replicas: number, command : string, gpuNum : number, 
+    public readonly taskNum: number;
+    constructor(taskNum: number, command : string, gpuNum : number, 
         cpuNum: number, memoryMB: number, image: string, 
         frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy) {
-        super(replicas, command, gpuNum, cpuNum, memoryMB, image);
+        super(command, gpuNum, cpuNum, memoryMB, image);
         this.frameworkAttemptCompletionPolicy = frameworkAttemptCompletionPolicy;
         this.name = name;
+        this.taskNum = taskNum;
     }
 }
 

@@ -71,7 +71,7 @@ export namespace ValidationSchemas {
                 }),
                 taskRoles: joi.array({
                     name: joi.string().min(1),
-                    replicas: joi.number().min(1).required(),
+                    tasnNum: joi.number().min(1).required(),
                     image: joi.string().min(1),
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),

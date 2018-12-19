@@ -117,11 +117,20 @@ export class KubeflowTrialConfig extends KubernetesTrialConfig {
     }
 }
 
-export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfig {
-    public readonly ps?: KubernetesTrialConfigTemplate;
-    public readonly worker: KubernetesTrialConfigTemplate;
+export class KubeflowTrialConfigTemplate extends KubernetesTrialConfigTemplate{
+    public readonly replicas: number;
+    constructor(replicas: number, command : string, gpuNum : number, 
+        cpuNum: number, memoryMB: number, image: string) {
+        super(command, gpuNum, cpuNum, memoryMB, image);
+        this.replicas = replicas;
+    }
+}
 
-    constructor(codeDir: string, worker: KubernetesTrialConfigTemplate,  ps?: KubernetesTrialConfigTemplate) {
+export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfig {
+    public readonly ps?: KubeflowTrialConfigTemplate;
+    public readonly worker: KubeflowTrialConfigTemplate;
+
+    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  ps?: KubeflowTrialConfigTemplate) {
         super(codeDir);
         this.ps = ps;
         this.worker = worker;
@@ -133,10 +142,10 @@ export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfig {
 }
 
 export class KubeflowTrialConfigPytorch extends KubeflowTrialConfig {
-    public readonly master: KubernetesTrialConfigTemplate;
-    public readonly worker?: KubernetesTrialConfigTemplate;
+    public readonly master: KubeflowTrialConfigTemplate;
+    public readonly worker?: KubeflowTrialConfigTemplate;
 
-    constructor(codeDir: string, master: KubernetesTrialConfigTemplate, worker?: KubernetesTrialConfigTemplate) {
+    constructor(codeDir: string, master: KubeflowTrialConfigTemplate, worker?: KubeflowTrialConfigTemplate) {
         super(codeDir);
         this.master = master;
         this.worker = worker;
@@ -153,7 +162,7 @@ export class KubeflowTrialConfigFactory {
         if(operator === 'tf-operator'){
             let kubeflowTrialConfigObject = <KubeflowTrialConfigTensorflow>jsonObject;
             return new KubeflowTrialConfigTensorflow(
-                kubeflowTrialConfigObject.codeDir, 
+                kubeflowTrialConfigObject.codeDir,
                 kubeflowTrialConfigObject.worker,
                 kubeflowTrialConfigObject.ps
             );

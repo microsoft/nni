@@ -104,10 +104,11 @@ export class KubernetesClusterConfigFactory {
 
     public static generateKubernetesClusterConfig(jsonObject: object): KubernetesClusterConfig {
          let storageConfig = <StorageConfig>jsonObject;
-         if(storageConfig.storage && storageConfig.storage === 'azureStorage') {
-            return KubernetesClusterConfigAzure.getInstance(jsonObject);
-         } else if (storageConfig.storage === undefined || storageConfig.storage === 'nfs') {
-            return KubernetesClusterConfigNFS.getInstance(jsonObject);
+         switch(storageConfig.storage) {
+            case 'azureStorage':
+                return KubernetesClusterConfigAzure.getInstance(jsonObject);
+            case  'nfs' || undefined :
+                return KubernetesClusterConfigNFS.getInstance(jsonObject);
          }
          throw new Error(`Invalid json object ${jsonObject}`);
     }
@@ -163,9 +164,6 @@ export class AzureStorage {
  * Trial job configuration for Kubernetes
  */
 export class KubernetesTrialConfigTemplate {
-    /** replication number of current role */
-    public readonly replicas: number;
-
     /** CPU number */
     public readonly cpuNum: number;
 
@@ -181,9 +179,8 @@ export class KubernetesTrialConfigTemplate {
     /** Required GPU number for trial job. The number should be in [0,100] */
     public readonly gpuNum : number;
     
-    constructor(replicas: number, command : string, gpuNum : number, 
+    constructor(command : string, gpuNum : number, 
         cpuNum: number, memoryMB: number, image: string) {
-        this.replicas = replicas;
         this.command = command;
         this.gpuNum = gpuNum;
         this.cpuNum = cpuNum;

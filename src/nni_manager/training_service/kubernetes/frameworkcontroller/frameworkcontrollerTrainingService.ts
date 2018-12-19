@@ -249,7 +249,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
             );
             taskRoles.push({
                 name: this.frameworkcontrollerTrialConfig.taskRoles[index].name,
-                taskNumber: this.frameworkcontrollerTrialConfig.taskRoles[index].replicas,
+                taskNumber: this.frameworkcontrollerTrialConfig.taskRoles[index].taskNum,
                 frameworkAttemptCompletionPolicy: {
                     minFailedTaskCount: this.frameworkcontrollerTrialConfig.taskRoles[index].frameworkAttemptCompletionPolicy.minFailedTaskCount, 
                     minSucceededTaskCount: this.frameworkcontrollerTrialConfig.taskRoles[index].frameworkAttemptCompletionPolicy.minSucceededTaskCount
