@@ -1,6 +1,6 @@
 #barBack{
-    /* status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' */
-    .EXPERIMENT_RUNNING, .STOPPING, .INITIALIZED{
+    /* status: 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' */
+    .RUNNING, .STOPPING, .INITIALIZED{
         /* specific status color */
         color: #0071bc;
         .ant-progress-bg {

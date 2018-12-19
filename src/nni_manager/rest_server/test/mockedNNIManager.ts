@@ -39,7 +39,7 @@ export const testManagerProvider: Provider = {
 export class MockedNNIManager extends Manager {
     public getStatus(): NNIManagerStatus {
         return {
-            status: 'EXPERIMENT_RUNNING',
+            status: 'RUNNING',
             errors: []
         }
     }

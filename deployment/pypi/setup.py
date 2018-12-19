@@ -20,7 +20,7 @@ with open('../../README.md', 'r') as fh:
 
 setuptools.setup(
     name = 'nni',
-    version = '0.4',
+    version = 'NNI_VERSION',
     author = 'Microsoft NNI team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence package',
