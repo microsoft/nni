@@ -2,6 +2,13 @@
 
 NNI (Neural Network Intelligence) is a toolkit to help users run automated machine learning experiments. For each experiment, user only need to define a search space and update a few lines of code, and then leverage NNI build-in algorithms and training services to search the best hyper parameters and/or neural architecture.
 
+>Step 1: [Define search space](SearchSpaceSpec.md)
+
+>Step 2: [Update model codes](howto_1_WriteTrial.md)
+
+>Step 3: [Define Experiment](ExperimentConfig.md)
+
+
 <p align="center">
 <img src="./img/3_steps.jpg" alt="drawing"/>
 </p>
@@ -15,11 +22,6 @@ After user submits the experiment through a command line tool [nnictl](../tools/
 
 User can use the nnictl and/or a visualized Web UI nniboard to monitor and debug a given experiment.
 
-<p align="center">
-<img src="./img/overview.jpg" alt="drawing"/>
-</p>
-
-
 NNI provides a set of examples in the package to get you familiar with the above process. In the following example [/examples/trials/mnist], we had already set up the configuration and updated the training codes for you. You can directly run the following command to start an experiment. 
 
 ## Key Concepts
@@ -30,33 +32,18 @@ NNI provides a set of examples in the package to get you familiar with the above
 **Trial** in NNI is an individual attempt at applying a set of parameters on a model. 
 
 ### **Tuner**
-**Tuner** in NNI is an implementation of Tuner API for a special tuning algorithm. [Read more about the Tuners supported in the latest NNI release](../src/sdk/pynni/nni/README.md)
+**Tuner** in NNI is an implementation of Tuner API for a special tuning algorithm. [Read more about the Tuners supported in the latest NNI release](HowToChooseTuner.md)
 
 ### **Assessor**
 **Assessor** in NNI is an implementation of Assessor API for optimizing the execution of experiment.
 
-
 ## Learn More
 * [Get started](GetStarted.md)
-### **How to**
-* [Installation](InstallNNI_Ubuntu.md)
+* [Install NNI](Installation.md)
 * [Use command line tool nnictl](NNICTLDOC.md)
 * [Use NNIBoard](WebUI.md)
-* [Define search space](InstallNNI_Ubuntu.md)
-* [Use NNI sdk] - *coming soon*
-* [Config an experiment](SearchSpaceSpec.md)
-* [Use annotation](AnnotationSpec.md)
-* [Debug](HowToDebug.md)
+* [Use annotation](howto_1_WriteTrial.md#nni-python-annotation)
 ### **Tutorials**
 * [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
 * [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
-* [Try different tuners and assessors] - *coming soon*
-* [How to run an experiment on K8S services?] - *coming soon*
-* [Implement a customized tuner] - *coming soon*
-* [Implement a customized assessor] - *coming soon*
-* [Implement a custmoized weight sharing algorithm] - *coming soon*
-* [How to integrate NNI with your own custmoized training service] - *coming soon*
-### **Best practice**
-* [Compare different AutoML algorithms] - *coming soon*
-* [Serve NNI as a capability of a ML Platform] - *coming soon*

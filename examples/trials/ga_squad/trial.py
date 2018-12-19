@@ -46,7 +46,7 @@ except:
 
 def get_config():
     '''
-    Get config from arument parser.
+    Get config from argument parser.
     '''
     parser = argparse.ArgumentParser(
         description='This program is using genetic algorithm to search architecture for SQuAD.')
@@ -86,7 +86,7 @@ def get_id(word_dict, word):
 
 def load_embedding(path):
     '''
-    return embedding for a specif file by given file path.
+    return embedding for a specific file by given file path.
     '''
     EMBEDDING_DIM = 300
     embedding_dict = {}
@@ -436,7 +436,7 @@ if __name__ == '__main__':
         qp_pairs, dev_qp_pairs = load_data()
         logger.debug('Init finish.')
 
-        original_params = nni.get_parameters()
+        original_params = nni.get_next_parameter()
         '''
         with open('data.json') as f:
             original_params = json.load(f)

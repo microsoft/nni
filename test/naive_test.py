@@ -1,12 +1,31 @@
-#!/usr/bin/env python3
+# Copyright (c) Microsoft Corporation
+# All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge,
+# to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and
+# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import json
 import subprocess
 import sys
 import time
 import traceback
+import os
 
-from utils import check_experiment_status, fetch_experiment_config, read_last_line, remove_files, setup_experiment
+from utils import check_experiment_status, fetch_nni_log_path, read_last_line, remove_files, setup_experiment
 
 GREEN = '\33[32m'
 RED = '\33[31m'
@@ -14,26 +33,25 @@ CLEAR = '\33[0m'
 
 EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
 
-def run(mode = 'local'):
+def run(mode='local'):
+    '''run naive integration test'''
     assert mode == 'local' or mode == 'remote', '`mode` must be `local` or `remote`'
     config_file = str(mode) + '.yml'
 
     to_remove = ['tuner_search_space.json', 'tuner_result.txt', 'assessor_result.txt']
-    to_remove = list(map(lambda file: 'naive_test/' + file, to_remove))
+    to_remove = list(map(lambda file: os.path.join('naive_test', file), to_remove))
     remove_files(to_remove)
 
-    proc = subprocess.run(['nnictl', 'create', '--config', 'naive_test/' + config_file])
+    proc = subprocess.run(['nnictl', 'create', '--config', os.path.join('naive_test', config_file)])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     print('Spawning trials...')
 
-    nnimanager_log_path = fetch_experiment_config(EXPERIMENT_URL)
+    nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
     current_trial = 0
 
     for _ in range(180):
         time.sleep(1)
-        print(_)
-
         tuner_status = read_last_line('naive_test/tuner_result.txt')
         assessor_status = read_last_line('naive_test/assessor_result.txt')
         experiment_status = check_experiment_status(nnimanager_log_path)
@@ -73,18 +91,8 @@ if __name__ == '__main__':
     installed = (sys.argv[-1] != '--preinstall')
     setup_experiment(installed)
     try:
-        run('remote')
-        # TODO: check the output of rest server
-        print(GREEN + 'PASS' + CLEAR)
-    except Exception as error:
-        print(RED + 'FAIL' + CLEAR)
-        print('%r' % error)
-        traceback.print_exc()
-        sys.exit(1)
-    finally:
-        subprocess.run(['nnictl', 'stop'])
-    try:
         run('local')
+        run('remote')
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:

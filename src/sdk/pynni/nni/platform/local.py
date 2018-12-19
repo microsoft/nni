@@ -22,6 +22,7 @@ import os
 import json
 import time
 import json_tricks
+import subprocess
 
 from ..common import init_logger, env_args
 
@@ -49,13 +50,18 @@ def request_next_parameter():
     })
     send_metric(metric)
 
-def get_parameters():
+def get_next_parameter():
     global _param_index
     params_file_name = ''
     if _multiphase and (_multiphase == 'true' or _multiphase == 'True'):
         params_file_name = ('parameter_{}.cfg'.format(_param_index), 'parameter.cfg')[_param_index == 0]
     else:
-        params_file_name = 'parameter.cfg'
+        if _param_index > 0:
+            return None
+        elif _param_index == 0:
+            params_file_name = 'parameter.cfg'
+        else:
+            raise AssertionError('_param_index value ({}) should >=0'.format(_param_index))
     
     params_filepath = os.path.join(_sysdir, params_file_name)
     if not os.path.isfile(params_filepath):
@@ -72,7 +78,7 @@ def send_metric(string):
     assert len(data) < 1000000, 'Metric too long'
     _metric_file.write(b'ME%06d%b' % (len(data), data))
     _metric_file.flush()
+    subprocess.run(['touch', _metric_file.name], check = True)
 
 def get_sequence_id():
-    with open(os.path.join(_sysdir, '.nni', 'sequence_id'), 'r') as f:
-        return int(f.read().strip())
+    return os.environ['NNI_TRIAL_SEQ_ID']

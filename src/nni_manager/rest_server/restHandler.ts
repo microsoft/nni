@@ -52,7 +52,10 @@ class NNIRestHandler {
 
         // tslint:disable-next-line:typedef
         router.use((req: Request, res: Response, next) => {
-            this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
+            // Don't log useless empty body content
+            if(req.body &&  Object.keys(req.body).length > 0) {
+                this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
+            }
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
             res.header('Access-Control-Allow-Methods', 'PUT,POST,GET,DELETE,OPTIONS');
@@ -61,11 +64,11 @@ class NNIRestHandler {
             next();
         });
 
+        this.version(router);
         this.checkStatus(router);
         this.getExperimentProfile(router);
         this.updateExperimentProfile(router);
         this.startExperiment(router);
-        this.stopExperiment(router);
         this.getTrialJobStatistics(router);
         this.setClusterMetaData(router);
         this.listTrialJobs(router);
@@ -90,9 +93,7 @@ class NNIRestHandler {
         return router;
     }
 
-    private handle_error(err: Error, res: Response): void {
-        this.log.info(err);
-
+    private handle_error(err: Error, res: Response, isFatal: boolean = false): void {
         if (err instanceof NNIError && err.name === NNIErrorNames.NOT_FOUND) {
             res.status(404);
         } else {
@@ -100,6 +101,21 @@ class NNIRestHandler {
         }
         res.send({
             error: err.message
+        });
+
+        // If it's a fatal error, exit process
+        if(isFatal) {
+            this.log.critical(err);
+            process.exit(1);
+        }
+
+        this.log.error(err);
+    }
+
+    private version(router: Router): void {
+        router.get('/version', async (req: Request, res: Response) => {
+            const pkg = await import(path.join(__dirname, '..', 'package.json'));
+            res.send(pkg.version);
         });
     }
 
@@ -146,28 +162,16 @@ class NNIRestHandler {
                         experiment_id: eid
                     });
                 }).catch((err: Error) => {
+                    // Start experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
             } else {
                 this.nniManager.resumeExperiment().then(() => {
                     res.send();
                 }).catch((err: Error) => {
+                    // Resume experiment is a step of initialization, so any exception thrown is a fatal
                     this.handle_error(err, res);
                 });
-            }
-        });
-    }
-
-    private stopExperiment(router: Router): void {
-        router.delete('/experiment', async (req: Request, res: Response) => {
-            try {
-                await this.tb.cleanUp();
-                await this.nniManager.stopExperiment();
-                res.send();
-                this.log.debug('Stopping rest server');
-                await this.restServer.stop();
-            } catch (err) {
-                this.handle_error(err, res);
             }
         });
     }
@@ -195,7 +199,8 @@ class NNIRestHandler {
                 }
                 res.send();
             } catch (err) {
-                this.handle_error(err, res);
+                // setClusterMetata is a step of initialization, so any exception thrown is a fatal
+                this.handle_error(err, res, true);
             }
         });
     }

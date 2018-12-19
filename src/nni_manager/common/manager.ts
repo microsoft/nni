@@ -34,7 +34,8 @@ interface ExperimentParams {
     searchSpace: string;
     trainingServicePlatform: string;
     multiPhase?: boolean;
-    tuner: {
+    multiThread?: boolean;
+    tuner?: {
         className: string;
         builtinTunerName?: string;
         codeDir?: string;
@@ -52,6 +53,15 @@ interface ExperimentParams {
         checkpointDir: string;
         gpuNum?: number;
     };
+    advisor?: {
+        className: string;
+        builtinAdvisorName?: string;
+        codeDir?: string;
+        classArgs?: any;
+        classFileName?: string;
+        checkpointDir: string;
+        gpuNum?: number;
+    };
     clusterMetaData?: {
         key: string;
         value: string;
@@ -62,8 +72,10 @@ interface ExperimentProfile {
     params: ExperimentParams;
     id: string;
     execDuration: number;
+    logDir?: string;
     startTime?: number;
     endTime?: number;
+    maxSequenceId: number;
     revision: number;
 }
 
@@ -73,7 +85,7 @@ interface TrialJobStatistics {
 }
 
 interface NNIManagerStatus {
-    status: 'INITIALIZED' | 'EXPERIMENT_RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE';
+    status: 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL';
     errors: string[];
 }
 

@@ -1,6 +1,8 @@
 **Run an Experiment on Multiple Machines**
 ===
-NNI supports running an experiment on multiple machines, called remote machine mode. Let's say you have multiple machines with the account `bob` (Note: the account is not necessarily the same on multiple machines): 
+NNI supports running an experiment on multiple machines through SSH channel, called `remote` mode. NNI assumes that you have access to those machines, and already setup the environment for running deep learning training code. 
+
+e.g. Three machines and you login in with account `bob` (Note: the account is not necessarily the same on different machine): 
 
 | IP  | Username| Password |
 | -------- |---------|-------|
@@ -8,49 +10,47 @@ NNI supports running an experiment on multiple machines, called remote machine m
 | 10.1.1.2 | bob | bob123    |
 | 10.1.1.3 | bob | bob123    |
 
-## Setup environment
+## Setup NNI environment
 Install NNI on each of your machines following the install guide [here](GetStarted.md).
 
 For remote machines that are used only to run trials but not the nnictl, you can just install python SDK:
 
 * __Install python SDK through pip__
 
-      python3 -m pip install --user git+https://github.com/Microsoft/NeuralNetworkIntelligence.git#subdirectory=src/sdk/pynni
-
-* __Install python SDK through source code__
-
-      git clone https://github.com/Microsoft/NeuralNetworkIntelligence
-      cd src/sdk/pynni
-      python3 setup.py install
+      python3 -m pip install --user --upgrade nni-sdk
 
 ## Run an experiment
-Still using `examples/trials/mnist-annotation` as an example here. The yaml file you need is shown below: 
+Install NNI on another machine which has network accessibility to those three machines above, or you can just use any machine above to run nnictl command line tool.
+
+We use `examples/trials/mnist-annotation` as an example here. `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` to see the detailed configuration file: 
 ```
-authorName: your_name
-experimentName: auto_mnist
-# how many trials could be concurrently running
-trialConcurrency: 2
-# maximum experiment running duration
-maxExecDuration: 3h
-# empty means never stop
-maxTrialNum: 100
-# choice: local, remote, pai
-trainingServicePlatform: local
-# choice: true, false  
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+#choice: local, remote, pai
+trainingServicePlatform: remote
+#choice: true, false
 useAnnotation: true
 tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: TPE
   classArgs:
+    #choice: maximize, minimize
     optimize_mode: maximize
 trial:
-  command: python mnist.py
-  codeDir: /usr/share/nni/examples/trials/mnist-annotation
+  command: python3 mnist.py
+  codeDir: .
   gpuNum: 0
 #machineList can be empty if the platform is local
 machineList:
   - ip: 10.1.1.1
     username: bob
     passwd: bob123
+    #port can be skip if using default ssh port 22
+    #port: 22
   - ip: 10.1.1.2
     username: bob
     passwd: bob123
@@ -58,8 +58,8 @@ machineList:
     username: bob
     passwd: bob123
 ```
-Simply filling the `machineList` section. This yaml file is named `exp_remote.yaml`, then run:
+Simply filling the `machineList` section and then run:
 ```
-nnictl create --config exp_remote.yaml
+nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
 ```
-to start the experiment. This command can be executed on one of those three machines above, and can also be executed on another machine which has NNI installed and has network accessibility to those three machines.
+to start the experiment. 

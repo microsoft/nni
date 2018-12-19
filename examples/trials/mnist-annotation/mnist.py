@@ -14,7 +14,7 @@ logger = logging.getLogger('mnist_AutoML')
 
 class MnistNetwork(object):
     '''
-    MnistNetwork is for initlizing and building basic network for mnist.
+    MnistNetwork is for initializing and building basic network for mnist.
     '''
     def __init__(self,
                  channel_1_num,
@@ -32,7 +32,7 @@ class MnistNetwork(object):
         """@nni.variable(nni.choice(124, 512, 1024), name=self.hidden_size)"""
         self.hidden_size = hidden_size
         self.pool_size = pool_size
-        """@nni.variable(nni.uniform(0.0001, 0.1), name=self.learning_rate)"""
+        """@nni.variable(nni.loguniform(0.0001, 0.1), name=self.learning_rate)"""
         self.learning_rate = learning_rate
         self.x_dim = x_dim
         self.y_dim = y_dim
@@ -157,8 +157,8 @@ def main(params):
     '''
     # Import data
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    print('Mnist download data down.')
-    logger.debug('Mnist download data down.')
+    print('Mnist download data done.')
+    logger.debug('Mnist download data done.')
 
     # Create the model
     # Build the graph for the deep net
@@ -180,15 +180,15 @@ def main(params):
     test_acc = 0.0
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
-        """@nni.variable(nni.choice(50, 250, 500), name=batch_num)"""
-        batch_num = params['batch_num']
-        for i in range(batch_num):
-            batch = mnist.train.next_batch(batch_num)
-            """@nni.variable(nni.choice(1, 5), name=dropout_rate)"""
+        """@nni.variable(nni.choice(1, 4, 8, 16, 32), name=batch_size)"""
+        batch_size = params['batch_size']
+        for i in range(params['batch_num']):
+            batch = mnist.train.next_batch(batch_size)
+            """@nni.variable(nni.choice(0.5, 0.9), name=dropout_rate)"""
             dropout_rate = params['dropout_rate']
             mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
                                                     mnist_network.labels: batch[1],
-                                                    mnist_network.keep_prob: dropout_rate}
+                                                    mnist_network.keep_prob: 1 - dropout_rate}
                                         )
 
             if i % 100 == 0:
@@ -211,7 +211,7 @@ def main(params):
         logger.debug('Send final result done.')
 
 
-def generate_defualt_params():
+def generate_default_params():
     '''
     Generate default parameters for mnist network.
     '''
@@ -224,13 +224,15 @@ def generate_defualt_params():
         'pool_size': 2,
         'hidden_size': 1024,
         'learning_rate': 1e-4,
-        'batch_num': 200}
+        'batch_num': 2000,
+        'batch_size': 32}
     return params
 
 
 if __name__ == '__main__':
+    '''@nni.get_next_parameter()'''
     try:
-        main(generate_defualt_params())
+        main(generate_default_params())
     except Exception as exception:
         logger.exception(exception)
         raise

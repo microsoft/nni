@@ -64,10 +64,10 @@ const expParams2: ExperimentParams = {
 };
 
 const profiles: ExperimentProfile[] = [
-    { params: expParams1, id: '#1', execDuration: 0, startTime: Date.now(), endTime: undefined, revision: 1 },
-    { params: expParams1, id: '#1', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 2 },
-    { params: expParams2, id: '#2', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 2 },
-    { params: expParams2, id: '#2', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 3 }
+    { params: expParams1, id: '#1', execDuration: 0, startTime: Date.now(), endTime: undefined, revision: 1, maxSequenceId: 0 },
+    { params: expParams1, id: '#1', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 2, maxSequenceId: 0 },
+    { params: expParams2, id: '#2', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 2, maxSequenceId: 0 },
+    { params: expParams2, id: '#2', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 3, maxSequenceId: 0 }
 ];
 
 const events: TrialJobEventRecord[] = [
@@ -120,7 +120,7 @@ describe('core/sqlDatabase', () => {
             await (<SqlDB>db).storeExperimentProfile(profile);
         }
         for (const event of events) {
-            await (<SqlDB>db).storeTrialJobEvent(<TrialJobEvent>event.event, event.trialJobId, event.data);
+            await (<SqlDB>db).storeTrialJobEvent(<TrialJobEvent>event.event, event.trialJobId, Date.now(), event.data);
         }
         for (const metric of metrics) {
             await (<SqlDB>db).storeMetricData(metric.trialJobId, JSON.stringify(metric));

@@ -27,7 +27,7 @@ Refer to [SearchSpaceSpec.md](SearchSpaceSpec.md) to learn more about search spa
 2.2 Get predefined parameters
     Use the following code snippet: 
 
-        RECEIVED_PARAMS = nni.get_parameters()
+        RECEIVED_PARAMS = nni.get_next_parameter()
 
     to get hyper-parameters' values assigned by tuner. `RECEIVED_PARAMS` is an object, for example: 
 
@@ -113,7 +113,7 @@ with tf.Session() as sess:
 >>
 >>`@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
 >>
->>Please refer to [Annotation README](../tools/annotation/README.md) for more information about annotation syntax and its usage. 
+>>Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage. 
 
 
 >Step 2 - Enable NNI Annotation

@@ -19,27 +19,17 @@
 
 'use strict';
 
-import { Request, Response, Router } from 'express';
-import * as bodyParser from 'body-parser';
 import * as component from '../../common/component';
-import { getExperimentId } from '../../common/experimentStartupInfo';
 import { Inject } from 'typescript-ioc';
 import { PAITrainingService } from './paiTrainingService';
-import { RestServer } from '../../common/restServer'
+import { ClusterJobRestServer } from '../common/clusterJobRestServer'
 
 /**
  * PAI Training service Rest server, provides rest API to support pai job metrics update
  * 
  */
 @component.Singleton
-export class PAIJobRestServer extends RestServer{
-    /** NNI main rest service default port */
-    private static readonly DEFAULT_PORT: number = 51189;
-
-    private readonly API_ROOT_URL: string = '/api/v1/nni-pai';
-
-    private readonly expId: string = getExperimentId();
-
+export class PAIJobRestServer extends ClusterJobRestServer{
     @Inject
     private readonly paiTrainingService : PAITrainingService;
 
@@ -48,51 +38,17 @@ export class PAIJobRestServer extends RestServer{
      */
     constructor() {
         super();
-        this.port = PAIJobRestServer.DEFAULT_PORT;
         this.paiTrainingService = component.get(PAITrainingService);
     }
 
-    /**
-     * NNIRestServer's own router registration
-     */
-    protected registerRestHandler(): void {
-        this.app.use(bodyParser.json());
-        this.app.use(this.API_ROOT_URL, this.createRestHandler());
-    }
-
-    private createRestHandler() : Router {
-        const router: Router = Router();
-
-        // tslint:disable-next-line:typedef
-        router.use((req: Request, res: Response, next) => {
-            this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
-            res.setHeader('Content-Type', 'application/json');
-            next();
-        });
-
-        router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            try {
-                this.log.info(`Get update-metrics request, trial job id is ${req.params.trialId}`);
-                this.log.info(`update-metrics body is ${JSON.stringify(req.body)}`);
-
-                // Split metrics array into single metric, then emit
-                // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
-                for (const singleMetric of req.body.metrics) {
-                    this.paiTrainingService.MetricsEmitter.emit('metric', {
-                        id : req.body.jobId,
-                        data : singleMetric
-                    });
-                }
-
-                res.send();
-            }
-            catch(err) {
-                this.log.error(`json parse metrics error: ${err}`);
-                res.status(500);
-                res.send(err.message);
-            }
-        });
-
-        return router;
+    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
+        // Split metrics array into single metric, then emit
+        // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
+        for (const singleMetric of metrics) {
+            this.paiTrainingService.MetricsEmitter.emit('metric', {
+                id : jobId,
+                data : singleMetric
+            });
+        }
     }
 }

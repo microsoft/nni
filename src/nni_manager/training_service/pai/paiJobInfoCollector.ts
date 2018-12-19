@@ -20,7 +20,6 @@
 'use strict';
 
 import * as request from 'request';
-import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from '../../common/log';
 import { NNIError, NNIErrorNames } from '../../common/errors';
@@ -40,10 +39,10 @@ export class PAIJobInfoCollector {
     constructor(jobMap: Map<string, PAITrialJobDetail>) {
         this.trialJobsMap = jobMap;
         this.statusesNeedToCheck = ['RUNNING', 'UNKNOWN', 'WAITING'];
-        this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED'];
+        this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'];
     }
 
-    public async updateTrialStatusFromPAI(paiToken? : string, paiClusterConfig?: PAIClusterConfig) : Promise<void> {
+    public async retrieveTrialStatus(paiToken? : string, paiClusterConfig?: PAIClusterConfig) : Promise<void> {
         if (!paiClusterConfig || !paiToken) {
             return Promise.resolve();            
         }
@@ -104,7 +103,9 @@ export class PAIJobInfoCollector {
                             paiTrialJob.status = 'SUCCEEDED';
                             break;
                         case 'STOPPED':
-                            paiTrialJob.status = 'USER_CANCELED';
+                            if (paiTrialJob.status !== 'EARLY_STOPPED') {
+                                paiTrialJob.status = 'USER_CANCELED';
+                            }
                             break;
                         case 'FAILED':
                             paiTrialJob.status = 'FAILED';                            
@@ -123,7 +124,7 @@ export class PAIJobInfoCollector {
                         }
                         // Set pai trial job's url to WebHDFS output path
                         if(paiTrialJob.hdfsLogPath) {
-                            paiTrialJob.url = paiTrialJob.hdfsLogPath;
+                            paiTrialJob.url += `,${paiTrialJob.hdfsLogPath}`;
                         }
                     }
                 }

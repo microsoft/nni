@@ -32,8 +32,8 @@ class TrialTestCase(TestCase):
         self._trial_params = { 'msg': 'hi', 'x': 123, 'dict': { 'key': 'value', 'y': None } }
         nni.trial._params = { 'parameter_id': 'test_param', 'parameters': self._trial_params }
 
-    def test_get_parameters(self):
-        self.assertEqual(nni.get_parameters(), self._trial_params)
+    def test_get_next_parameter(self):
+        self.assertEqual(nni.get_next_parameter(), self._trial_params)
 
     def test_report_intermediate_result(self):
         nni.report_intermediate_result(123)

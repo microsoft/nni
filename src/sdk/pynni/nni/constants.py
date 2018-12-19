@@ -25,8 +25,9 @@ ModuleName = {
     'Evolution': 'nni.evolution_tuner.evolution_tuner',
     'SMAC': 'nni.smac_tuner.smac_tuner',
     'BatchTuner': 'nni.batch_tuner.batch_tuner',
-
-    'Medianstop': 'nni.medianstop_assessor.medianstop_assessor'
+    'Medianstop': 'nni.medianstop_assessor.medianstop_assessor',
+    'GridSearch': 'nni.gridsearch_tuner.gridsearch_tuner',
+    'NetworkMorphism': 'nni.networkmorphism_tuner.networkmorphism_tuner'
 }
 
 ClassName = {
@@ -36,6 +37,8 @@ ClassName = {
     'Evolution': 'EvolutionTuner',
     'SMAC': 'SMACTuner',
     'BatchTuner': 'BatchTuner',
+    'GridSearch': 'GridSearchTuner',
+    'NetworkMorphism':'NetworkMorphismTuner',
 
     'Medianstop': 'MedianstopAssessor'
 }
@@ -50,4 +53,12 @@ ClassArgs = {
     'Anneal': {
         'algorithm_name': 'anneal'
     }
+}
+
+AdvisorModuleName = {
+    'Hyperband': 'nni.hyperband_advisor.hyperband_advisor'
+}
+
+AdvisorClassName = {
+    'Hyperband': 'Hyperband'
 }
