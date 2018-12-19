@@ -45,9 +45,6 @@ import { KubeflowOperatorClient } from './kubeflowApiClient';
 import { KubernetesTrainingService } from '../kubernetesTrainingService'
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 
-var azure = require('azure-storage');
-var base64 = require('js-base64').Base64;
-
 /**
  * Training Service implementation for Kubeflow
  * Refer https://github.com/kubeflow/kubeflow for more info about Kubeflow

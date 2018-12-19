@@ -22,7 +22,7 @@
 import { KubernetesTrialJobDetail} from '../kubernetesData';
 import { KubernetesCRDClient } from '../kubernetesApiClient';
 import { KubernetesJobInfoCollector } from '../kubernetesJobInfoCollector';
-import { FrameworkControllerJobType, FrameworkControllerJobCompleteType } from './frameworkcontrollerConfig';
+import { FrameworkControllerJobStatus, FrameworkControllerJobCompleteStatus } from './frameworkcontrollerConfig';
 
 /**
  * Collector frameworkcontroller jobs info from Kubernetes cluster, and update frameworkcontroller job status locally
@@ -51,7 +51,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
         }
 
         if(kubernetesJobInfo.status && kubernetesJobInfo.status.state) {
-            const frameworkJobType: FrameworkControllerJobType = <FrameworkControllerJobType>kubernetesJobInfo.status.state;
+            const frameworkJobType: FrameworkControllerJobStatus = <FrameworkControllerJobStatus>kubernetesJobInfo.status.state;
             switch(frameworkJobType) {
                 case 'AttemptCreationPending' || 'AttemptCreationRequested' || 'AttemptPreparing':
                     kubernetesTrialJob.status = 'WAITING';
@@ -63,7 +63,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
                     }
                     break;
                 case  'Completed':
-                    const completedJobType : FrameworkControllerJobCompleteType = <FrameworkControllerJobCompleteType>kubernetesJobInfo.status.attemptStatus.completionStatus.type.name;
+                    const completedJobType : FrameworkControllerJobCompleteStatus = <FrameworkControllerJobCompleteStatus>kubernetesJobInfo.status.attemptStatus.completionStatus.type.name;
                     switch(completedJobType) {
                         case 'Succeeded':
                             kubernetesTrialJob.status = 'SUCCEEDED';

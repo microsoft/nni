@@ -22,7 +22,7 @@
 import { KubernetesTrialJobDetail} from '../kubernetesData';
 import { KubernetesCRDClient } from '../kubernetesApiClient';
 import { KubernetesJobInfoCollector } from '../kubernetesJobInfoCollector';
-import { KubeflowJobType } from './kubeflowConfig';
+import { KubeflowJobStatus } from './kubeflowConfig';
 
 /**
  * Collector Kubeflow jobs info from Kubernetes cluster, and update kubeflow job status locally
@@ -52,7 +52,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
 
         if(kubernetesJobInfo.status && kubernetesJobInfo.status.conditions) {
             const latestCondition = kubernetesJobInfo.status.conditions[kubernetesJobInfo.status.conditions.length - 1];
-            const tfJobType : KubeflowJobType = <KubeflowJobType>latestCondition.type;
+            const tfJobType : KubeflowJobStatus = <KubeflowJobStatus>latestCondition.type;
             switch(tfJobType) {
                 case 'Created':
                     kubernetesTrialJob.status = 'WAITING';

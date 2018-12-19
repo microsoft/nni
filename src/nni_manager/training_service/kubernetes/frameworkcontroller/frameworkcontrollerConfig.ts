@@ -55,6 +55,6 @@ export class FrameworkControllerTrialConfig extends KubernetesTrialConfig{
     }
 }
 
-export type FrameworkControllerJobType = 'AttemptRunning' | 'Completed' | 'AttemptCreationPending' | 'AttemptCreationRequested' | 'AttemptPreparing' | 'AttemptCompleted';
+export type FrameworkControllerJobStatus = 'AttemptRunning' | 'Completed' | 'AttemptCreationPending' | 'AttemptCreationRequested' | 'AttemptPreparing' | 'AttemptCompleted';
 
-export type FrameworkControllerJobCompleteType = 'Succeeded' | 'Failed';
+export type FrameworkControllerJobCompleteStatus = 'Succeeded' | 'Failed';

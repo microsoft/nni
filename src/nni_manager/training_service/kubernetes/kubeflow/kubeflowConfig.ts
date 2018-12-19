@@ -26,7 +26,7 @@ import { MethodNotImplementedError } from '../../../common/errors';
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type DistTrainRole = 'worker' | 'ps' | 'master';
-export type KubeflowJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
+export type KubeflowJobStatus = 'Created' | 'Running' | 'Failed' | 'Succeeded';
 export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
 
 export class KubeflowClusterConfig extends KubernetesClusterConfig {

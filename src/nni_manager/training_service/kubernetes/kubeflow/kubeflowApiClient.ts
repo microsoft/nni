@@ -24,10 +24,6 @@ import { KubeflowOperator } from './kubeflowConfig';
 import { KubernetesCRDClient, GeneralK8sClient } from '../kubernetesApiClient';
 
 abstract class KubeflowOperatorClient extends KubernetesCRDClient{
-    constructor() {
-        super();
-    }
-
     /**
      * Factory method to generate operator cliet
      */
