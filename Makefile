@@ -1,6 +1,6 @@
 # Setting variables
 
-PIP_INSTALL := python3 -m pip install
+PIP_INSTALL := python3 -m pip install --no-cache-dir
 PIP_UNINSTALL := python3 -m pip uninstall
 
 ## Colorful output

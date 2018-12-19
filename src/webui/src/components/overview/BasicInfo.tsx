@@ -14,14 +14,10 @@ class BasicInfo extends React.Component<BasicInfoProps, {}> {
 
     constructor(props: BasicInfoProps) {
         super(props);
-
     }
 
     render() {
-        const { trialProfile,
-            // status 
-        } = this.props;
-
+        const { trialProfile } = this.props;
         return (
             <Row className="main">
                 <Col span={8} className="padItem basic">
