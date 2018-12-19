@@ -250,7 +250,14 @@ class NNIDataStore implements DataStore {
 
     private mergeHyperParameters(hyperParamList: string[], newParamStr: string): string[] {
         const mergedHyperParams: any[] = [];
-        const newParam: any = JSON.parse(newParamStr);
+        let newParam: any;
+        try {
+            newParam = JSON.parse(newParamStr);
+        } catch (err) {
+            this.log.error(`Hyper parameter needs to be in json format: ${newParamStr}`);
+
+            return hyperParamList;
+        }
         for (const hyperParamStr of hyperParamList) {
             const hyperParam: any = JSON.parse(hyperParamStr);
             mergedHyperParams.push(hyperParam);
