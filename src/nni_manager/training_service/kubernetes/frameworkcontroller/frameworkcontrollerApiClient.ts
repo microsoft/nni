@@ -44,7 +44,7 @@ abstract class FrameworkControllerClient extends KubernetesCRDClient{
             if(deleteResult.statusCode && deleteResult.statusCode >= 200 && deleteResult.statusCode <= 299) {
                 result = Promise.resolve(true);
             } else {
-                result = Promise.reject(`KubeflowOperatorClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
+                result = Promise.reject(`FrameworkControllerClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
             }
         } catch(err) {
             result = Promise.reject(err);
