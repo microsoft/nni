@@ -10,7 +10,7 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
  - [Batch Tuner](#Batch)
  - [Grid Search](#Grid)
  - [Hyperband](#Hyperband)
- - [Network Morphism](#NetworkMorphism)
+ - [Network Morphism](#NetworkMorphism) (require pyTorch)
 
  ## Supported tuner algorithms
 
