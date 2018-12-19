@@ -23,6 +23,7 @@ import subprocess
 import sys
 import time
 import traceback
+import os
 
 from utils import check_experiment_status, fetch_nni_log_path, read_last_line, remove_files, setup_experiment
 
@@ -38,10 +39,10 @@ def run(mode='local'):
     config_file = str(mode) + '.yml'
 
     to_remove = ['tuner_search_space.json', 'tuner_result.txt', 'assessor_result.txt']
-    to_remove = list(map(lambda file: 'naive_test/' + file, to_remove))
+    to_remove = list(map(lambda file: os.path.join('naive_test', file), to_remove))
     remove_files(to_remove)
 
-    proc = subprocess.run(['nnictl', 'create', '--config', 'naive_test/' + config_file])
+    proc = subprocess.run(['nnictl', 'create', '--config', os.path.join('naive_test', config_file)])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     print('Spawning trials...')
@@ -51,7 +52,6 @@ def run(mode='local'):
 
     for _ in range(180):
         time.sleep(1)
-        print(_)
         tuner_status = read_last_line('naive_test/tuner_result.txt')
         assessor_status = read_last_line('naive_test/assessor_result.txt')
         experiment_status = check_experiment_status(nnimanager_log_path)
