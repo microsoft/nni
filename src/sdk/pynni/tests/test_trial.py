@@ -18,11 +18,6 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-
-import os
-os.environ['NNI_TRIAL_JOB_ID'] = 'test_trial_job_id'
-os.environ['NNI_PLATFORM'] = 'unittest'
-
 import nni
 import nni.platform.test as test_platform
 import nni.trial
