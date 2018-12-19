@@ -22,15 +22,94 @@
 export type KubernetesStorageKind = 'nfs' | 'azureStorage';
 import { MethodNotImplementedError } from '../../common/errors';
 
-export class KubernetesClusterConfig {
+export abstract class KubernetesClusterConfigBase {
     public readonly storage?: KubernetesStorageKind;
+    public readonly apiVersion: string;
     
-    constructor(storage?: KubernetesStorageKind) {
+    constructor(apiVersion: string, storage?: KubernetesStorageKind) {
         this.storage = storage;
+        this.apiVersion = apiVersion;
     }
 
     public get storageType(): KubernetesStorageKind{
         throw new MethodNotImplementedError();
+    }
+}
+
+export class StorageConfig {
+    public readonly storage?: KubernetesStorageKind;
+
+    constructor(storage?: KubernetesStorageKind) {
+        this.storage = storage;
+    }
+}
+
+export class KubernetesClusterConfigNFS extends KubernetesClusterConfigBase{
+    public readonly nfs: NFSConfig;
+
+    constructor(
+            apiVersion: string, 
+            nfs: NFSConfig,
+            storage?: KubernetesStorageKind
+        ) {
+        super(apiVersion, storage);
+        this.nfs = nfs;
+    }
+
+    public get storageType(): KubernetesStorageKind{
+        return 'nfs';
+    }
+
+    public static getInstance(jsonObject: object): KubernetesClusterConfigNFS {
+        let kubernetesClusterConfigObjectNFS = <KubernetesClusterConfigNFS>jsonObject;
+        return new KubernetesClusterConfigNFS(
+            kubernetesClusterConfigObjectNFS.apiVersion,
+            kubernetesClusterConfigObjectNFS.nfs,
+            kubernetesClusterConfigObjectNFS.storage
+        );
+    }
+}
+
+export class KubernetesClusterConfigAzure extends KubernetesClusterConfigBase{
+    public readonly keyVault: keyVaultConfig;
+    public readonly azureStorage: AzureStorage;
+    
+    constructor(
+            apiVersion: string, 
+            keyVault: keyVaultConfig, 
+            azureStorage: AzureStorage, 
+            storage?: KubernetesStorageKind
+        ) {
+        super(apiVersion, storage);
+        this.keyVault = keyVault;
+        this.azureStorage = azureStorage;
+    }
+
+    public get storageType(): KubernetesStorageKind{
+        return 'azureStorage';
+    }
+
+    public static getInstance(jsonObject: object): KubernetesClusterConfigAzure {
+        let kubernetesClusterConfigObjectAzure = <KubernetesClusterConfigAzure>jsonObject;
+        return new KubernetesClusterConfigAzure(
+            kubernetesClusterConfigObjectAzure.apiVersion,
+            kubernetesClusterConfigObjectAzure.keyVault,
+            kubernetesClusterConfigObjectAzure.azureStorage,
+            kubernetesClusterConfigObjectAzure.storage
+        );
+    }
+}
+
+export class KubernetesClusterConfigFactory {
+
+    public static generateKubernetesClusterConfig(jsonObject: object): KubernetesClusterConfigBase {
+         let storageConfig = <StorageConfig>jsonObject;
+         if(storageConfig.storage && storageConfig.storage === 'azureStorage') {
+            return KubernetesClusterConfigAzure.getInstance(jsonObject);
+         } else if (storageConfig.storage === undefined || storageConfig.storage === 'nfs') {
+            return KubernetesClusterConfigNFS.getInstance(jsonObject);
+         }
+         throw new Error(`Invalid json object ${jsonObject}`);
     }
 }
 

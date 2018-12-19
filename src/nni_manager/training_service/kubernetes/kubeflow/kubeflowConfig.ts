@@ -19,99 +19,80 @@
 
 'use strict';
 
-import { KubernetesClusterConfig, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig,
-        KubernetesTrialConfig, KubernetesTrialConfigTemplate } from '../kubernetesConfig'
+import { KubernetesClusterConfigAzure, KubernetesClusterConfigNFS, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig,
+        KubernetesTrialConfig, KubernetesTrialConfigTemplate, StorageConfig, KubernetesClusterConfigBase } from '../kubernetesConfig'
 import { MethodNotImplementedError } from '../../../common/errors';
 
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type DistTrainRole = 'worker' | 'ps' | 'master';
-export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
 export type KubeflowJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
 
-/**
- * Kuberflow cluster configuration
- * 
- */
-export class KubeflowClusterConfigBase extends KubernetesClusterConfig {
-    /** Name of Kubeflow operator, like tf-operator */
+export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly operator: KubeflowOperator;
-    public readonly apiVersion: OperatorApiVersion;
-    public readonly storage?: KubernetesStorageKind;    
-    
-    /**
-     * Constructor
-     * @param userName User name of Kubeflow Cluster
-     * @param passWord password of Kubeflow Cluster
-     * @param host Host IP of Kubeflow Cluster
-     */
-    constructor(operator: KubeflowOperator, apiVersion: OperatorApiVersion, storage?: KubernetesStorageKind) {
-        super(storage)
-        this.operator = operator;
-        this.apiVersion = apiVersion;
-        this.storage = storage;
-    }
-}
-
-export class KubeflowClusterConfigNFS extends KubeflowClusterConfigBase{
-    public readonly nfs: NFSConfig;
-    
     constructor(
             operator: KubeflowOperator, 
-            apiVersion: OperatorApiVersion, 
+            apiVersion: string, 
             nfs: NFSConfig,
             storage?: KubernetesStorageKind
         ) {
-        super(operator, apiVersion, storage);
-        this.nfs = nfs;
+        super(apiVersion, nfs, storage);
+        this.operator = operator;
     }
 
-    public get storageType(): KubernetesStorageKind{
+    public get storageType(): KubernetesStorageKind {
         return 'nfs';
+    }
+
+    public static getInstance(jsonObject: object): KubeflowClusterConfigNFS {
+        let kubeflowClusterConfigObjectNFS = <KubeflowClusterConfigNFS>jsonObject;
+        return new KubeflowClusterConfigNFS(
+            kubeflowClusterConfigObjectNFS.operator,
+            kubeflowClusterConfigObjectNFS.apiVersion,
+            kubeflowClusterConfigObjectNFS.nfs,
+            kubeflowClusterConfigObjectNFS.storage
+        );
     }
 }
 
-export class KubeflowClusterConfigAzure extends KubeflowClusterConfigBase{
-    public readonly keyVault: keyVaultConfig;
-    public readonly azureStorage: AzureStorage;
+export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure{
+    public readonly operator: KubeflowOperator;
     
     constructor(
             operator: KubeflowOperator, 
-            apiVersion: OperatorApiVersion, 
+            apiVersion: string, 
             keyVault: keyVaultConfig, 
             azureStorage: AzureStorage, 
             storage?: KubernetesStorageKind
         ) {
-        super(operator, apiVersion, storage);
-        this.keyVault = keyVault;
-        this.azureStorage = azureStorage;
+        super(apiVersion, keyVault, azureStorage,storage);
+        this.operator = operator;
     }
 
     public get storageType(): KubernetesStorageKind{
         return 'azureStorage';
     }
+
+    public static getInstance(jsonObject: object): KubeflowClusterConfigAzure {
+        let kubeflowClusterConfigObjectAzure = <KubeflowClusterConfigAzure>jsonObject;
+        return new KubeflowClusterConfigAzure(
+            kubeflowClusterConfigObjectAzure.operator,
+            kubeflowClusterConfigObjectAzure.apiVersion,
+            kubeflowClusterConfigObjectAzure.keyVault,
+            kubeflowClusterConfigObjectAzure.azureStorage,
+            kubeflowClusterConfigObjectAzure.storage
+        );
+    }
 }
 
 export class KubeflowClusterConfigFactory {
 
-    public static generateKubeflowClusterConfig(jsonObject: object): KubeflowClusterConfigBase {
-         let kubeflowClusterConfigObject = <KubeflowClusterConfigBase>jsonObject;
-         if(kubeflowClusterConfigObject.storage && kubeflowClusterConfigObject.storage === 'azureStorage') {
-            let kubeflowClusterConfigAzureObject = <KubeflowClusterConfigAzure>jsonObject;
-            return new KubeflowClusterConfigAzure(
-                kubeflowClusterConfigAzureObject.operator, 
-                kubeflowClusterConfigAzureObject.apiVersion,
-                kubeflowClusterConfigAzureObject.keyVault,
-                kubeflowClusterConfigAzureObject.azureStorage,
-                kubeflowClusterConfigAzureObject.storage);
-         } else if (kubeflowClusterConfigObject.storage === undefined || kubeflowClusterConfigObject.storage === 'nfs') {
-            let kubeflowClusterConfigNFSObject = <KubeflowClusterConfigNFS>jsonObject;
-            return new KubeflowClusterConfigNFS(
-                kubeflowClusterConfigNFSObject.operator,
-                kubeflowClusterConfigNFSObject.apiVersion,
-                kubeflowClusterConfigNFSObject.nfs,
-                kubeflowClusterConfigNFSObject.storage
-                );
+    public static generateKubeflowClusterConfig(jsonObject: object): KubernetesClusterConfigBase {
+         let storageConfig = <StorageConfig>jsonObject;
+         if(storageConfig.storage && storageConfig.storage === 'azureStorage') {
+            return KubeflowClusterConfigAzure.getInstance(jsonObject);
+         } else if (storageConfig.storage === undefined || storageConfig.storage === 'nfs') {
+            return KubeflowClusterConfigNFS.getInstance(jsonObject);
          }
          throw new Error(`Invalid json object ${jsonObject}`);
     }

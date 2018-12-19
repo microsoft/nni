@@ -30,29 +30,6 @@ abstract class FrameworkControllerClient extends KubernetesCRDClient{
         super();
     }
 
-    public async deleteKubernetesJob(labels: Map<string, string>): Promise<boolean> {
-        let result: Promise<boolean>;
-        // construct match query from labels for deleting framework jobs,
-        // framework jobs need body of "propagationPolicy": "Foreground",
-        // refer https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md
-        const matchQuery: string = Array.from(labels.keys()).map(labelKey => `${labelKey}=${labels.get(labelKey)}`).join(',');
-        try {
-            const deleteResult : any = await this.operator().delete({ qs: { 
-                labelSelector: matchQuery,
-                propagationPolicy: "Foreground"
-            } });
-            if(deleteResult.statusCode && deleteResult.statusCode >= 200 && deleteResult.statusCode <= 299) {
-                result = Promise.resolve(true);
-            } else {
-                result = Promise.reject(`FrameworkControllerClient, delete labels ${matchQuery} get wrong statusCode ${deleteResult.statusCode}`);
-            }
-        } catch(err) {
-            result = Promise.reject(err);
-        }
-
-        return result;
-    }
-
     /**
      * Factory method to generate operator cliet
      */

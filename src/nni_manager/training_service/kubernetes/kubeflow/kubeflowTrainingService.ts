@@ -37,10 +37,10 @@ import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../../common/utils';
-import { KubeflowClusterConfigBase, KubeflowClusterConfigNFS, KubeflowClusterConfigAzure,
+import { KubeflowClusterConfigNFS, KubeflowClusterConfigAzure,
      KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow, KubeflowClusterConfigFactory, KubeflowTrialConfigFactory,
      KubeflowTrialConfig } from './kubeflowConfig';
-import { NFSConfig } from '../kubernetesConfig'
+import { NFSConfig, KubernetesClusterConfigBase } from '../kubernetesConfig'
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { KubernetesTrialConfig } from '../kubernetesConfig';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
@@ -61,7 +61,7 @@ var base64 = require('js-base64').Base64;
  */
 @component.Singleton
 class KubeflowTrainingService extends KubernetesTrainingService {
-    private kubeflowClusterConfig?: KubeflowClusterConfigBase;
+    private kubeflowClusterConfig?: KubernetesClusterConfigBase;
     private kubeflowTrialConfig?: KubeflowTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
 
@@ -167,14 +167,14 @@ class KubeflowTrainingService extends KubernetesTrainingService {
         workerPodResources.limits = Object.assign({}, workerPodResources.requests);
 
         let nonWorkerResources : any = {};
-        if(this.kubeflowClusterConfig.operator === 'tf-operator') {
+        if(this.kubeflowTrialConfig.operatorType === 'tf-operator') {
             let tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
             if (tensorflowTrialConfig.ps) {
                 nonWorkerResources.requests = this.generatePodResource(tensorflowTrialConfig.ps.memoryMB, tensorflowTrialConfig.ps.cpuNum, 
                     tensorflowTrialConfig.ps.gpuNum)
                     nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
             }
-        }else if(this.kubeflowClusterConfig.operator === 'pytorch-operator'){
+        }else if(this.kubeflowTrialConfig.operatorType === 'pytorch-operator'){
             let pyTorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
             nonWorkerResources.requests = this.generatePodResource(pyTorchTrialConfig.master.memoryMB, pyTorchTrialConfig.master.cpuNum, 
                 pyTorchTrialConfig.master.gpuNum)
