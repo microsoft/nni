@@ -16,9 +16,9 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - task: DownloadSecureFile@1
     inputs:
-      secureFile: id_rsa.pub
+      secureFile: id_rsa
   - script: |
-      cd test && cp $(Agent.TempDirectory)/id_rsa.pub ./id_rsa
+      cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
       source initialize_remote.sh
     displayName: 'Install dependencies in remote machine'
   - script: |
