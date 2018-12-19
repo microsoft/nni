@@ -2,7 +2,9 @@ Curve Fitting Assessor on NNI
 ===
 
 ## 1. Introduction
-Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve, the large set of parametric curve models are chosen from [reference paper][1]. The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
+Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance is worse than the best final performance in the trial history. 
+
+In this algorithm, we use 12 curves to fit the learning curve, the large set of parametric curve models are chosen from [reference paper][1]. The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
 
 <p align="center">
 <img src="./learning_curve.PNG" alt="drawing"/>
@@ -18,8 +20,10 @@ where the new combined parameter vector
 </p>
 Assuming additive a Gaussian noise and the noise parameter is initialized to its maximum likelihood estimate.
 
-This algorithm goes through three stages of learning, predicting and assessing.
-* Step1: Learning. We will learning about the trial history of the current trial and determine the \xi. First of all, We fit each curve using the least squares method(implement by `fit_theta`) to save our time. After we obtained the parameters, we filter the curve and remove the outliers(implement by `filter_curve`). Fially, we use the MCMC sampling method(implement by `mcmc_sampling`) to adjust the weight of each curve. Up to now, we have dertermined all the parameters in \xi.
+We determine the maximum probability value of the new combined parameter vector by learing the historical data. Use such value to predict the future trial performance, and stop the inadequate experiments to save computing resource.
+
+Concretely,this algorithm goes through three stages of learning, predicting and assessing.
+* Step1: Learning. We will learning about the trial history of the current trial and determine the \xi at Bayesian angle. First of all, We fit each curve using the least squares method(implement by `fit_theta`) to save our time. After we obtained the parameters, we filter the curve and remove the outliers(implement by `filter_curve`). Fially, we use the MCMC sampling method(implement by `mcmc_sampling`) to adjust the weight of each curve. Up to now, we have dertermined all the parameters in \xi.
 * Step2: Predicting. Calculates the expected final result accuracy(implement by `f_comb`) at target position(ie the total number of epoch) by the \xi and the formula of the combined model.
 * Step3: If the fitting result doesn't converge, the predicted value will be `None`, in this case we return `AssessResult.Good` to ask for future accuracy information and predict again. Furthermore, we will get a positive value by `predict()` function, if this value is strictly greater than the best final performance in history * `THRESHOLD`(default value = 0.95), return `AssessResult.Good`, otherwise, return  `AssessResult.Bad`
 
@@ -36,7 +40,7 @@ To use Curve Fitting Assessor, you should add the following spec in your experim
 assessor:
     builtinAssessorName: Curvefitting
     classArgs:
-      # (Required)The total number of epoch.
+      # (required)The total number of epoch.
       # We need to know the number of epoch to determine which point we need to predict.
       epoch_num: 20
       # (optional) choice: maximize, minimize

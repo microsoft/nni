@@ -242,7 +242,7 @@ _Usage_:
   assessor:
     builtinAssessorName: Curvefitting
     classArgs:
-      # (Required)The total number of epoch.
+      # (required)The total number of epoch.
       # We need to know the number of epoch to determine which point we need to predict.
       epoch_num: 20
       # (optional) choice: maximize, minimize
