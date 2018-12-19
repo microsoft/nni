@@ -20,7 +20,6 @@
 'use strict';
 
 import * as component from '../../../common/component';
-import { Inject } from 'typescript-ioc';
 import { KubeflowTrainingService } from './kubeflowTrainingService';
 import { KubernetesJobRestServer } from '../kubernetesJobRestServer'
 

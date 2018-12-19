@@ -20,35 +20,28 @@
 'use strict'
 
 import * as assert from 'assert';
-import * as azureStorage from 'azure-storage';
 import * as component from '../../../common/component';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
 
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
-import { EventEmitter } from 'events';
-import { getExperimentId, getInitTrialSequenceId } from '../../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../../common/log';
-import { MethodNotImplementedError } from '../../../common/errors';
+import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import {
-    JobApplicationForm, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
+    JobApplicationForm, TrialJobApplicationForm,
+    TrialJobDetail, NNIManagerIpConfig
 } from '../../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
 import { KubeflowClusterConfigNFS, KubeflowClusterConfigAzure,
      KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow, KubeflowClusterConfigFactory, KubeflowTrialConfigFactory,
-     KubeflowTrialConfig } from './kubeflowConfig';
-import { NFSConfig, KubernetesClusterConfigBase } from '../kubernetesConfig'
+     KubeflowTrialConfig, KubeflowClusterConfig } from './kubeflowConfig';
+import { NFSConfig } from '../kubernetesConfig'
 import { KubernetesTrialJobDetail } from '../kubernetesData';
-import { KubernetesTrialConfig } from '../kubernetesConfig';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
-import { KubernetesJobInfoCollector } from '../kubernetesJobInfoCollector';
 import { validateCodeDir } from '../../common/util';
 import { AzureStorageClientUtility } from '../azureStorageClientUtils';
 import { KubeflowOperatorClient } from './kubeflowApiClient';
-import { GeneralK8sClient } from '../kubernetesApiClient';
 import { KubernetesTrainingService } from '../kubernetesTrainingService'
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 
@@ -61,7 +54,7 @@ var base64 = require('js-base64').Base64;
  */
 @component.Singleton
 class KubeflowTrainingService extends KubernetesTrainingService {
-    private kubeflowClusterConfig?: KubernetesClusterConfigBase;
+    private kubeflowClusterConfig?: KubeflowClusterConfig;
     private kubeflowTrialConfig?: KubeflowTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;
 

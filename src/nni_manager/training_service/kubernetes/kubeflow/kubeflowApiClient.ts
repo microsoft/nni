@@ -20,10 +20,7 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as os from 'os'
-import * as path from 'path';
-import { getLogger, Logger } from '../../../common/log';
-import { KubeflowOperator, OperatorApiVersion } from './kubeflowConfig';
+import { KubeflowOperator } from './kubeflowConfig';
 import { KubernetesCRDClient, GeneralK8sClient } from '../kubernetesApiClient';
 
 abstract class KubeflowOperatorClient extends KubernetesCRDClient{
@@ -35,7 +32,7 @@ abstract class KubeflowOperatorClient extends KubernetesCRDClient{
      * Factory method to generate operator cliet
      */
     public static generateOperatorClient(kubeflowOperator: KubeflowOperator, 
-                                    operatorApiVersion: OperatorApiVersion): KubernetesCRDClient {
+                                    operatorApiVersion: string): KubernetesCRDClient {
         if(kubeflowOperator === 'tf-operator') {
             if(operatorApiVersion == 'v1alpha2') {
                 return new TFOperatorClientV1Alpha2();

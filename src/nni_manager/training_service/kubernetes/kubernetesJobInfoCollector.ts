@@ -20,7 +20,6 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as cpp from 'child-process-promise';
 import { getLogger, Logger } from '../../common/log';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { TrialJobStatus } from '../../common/trainingService';

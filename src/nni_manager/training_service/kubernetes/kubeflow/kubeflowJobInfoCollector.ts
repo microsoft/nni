@@ -19,12 +19,7 @@
 
 'use strict';
 
-import * as assert from 'assert';
-import * as cpp from 'child-process-promise';
-import { getLogger, Logger } from '../../../common/log';
 import { KubernetesTrialJobDetail} from '../kubernetesData';
-import { NNIError, NNIErrorNames } from '../../../common/errors';
-import { TrialJobStatus } from '../../../common/trainingService';
 import { KubernetesCRDClient } from '../kubernetesApiClient';
 import { KubernetesJobInfoCollector } from '../kubernetesJobInfoCollector';
 import { KubeflowJobType } from './kubeflowConfig';

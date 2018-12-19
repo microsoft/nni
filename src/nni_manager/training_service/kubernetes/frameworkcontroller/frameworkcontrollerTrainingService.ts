@@ -19,33 +19,25 @@
 
 'use strict'
 
-import * as assert from 'assert';
-import * as azureStorage from 'azure-storage';
 import * as component from '../../../common/component';
 import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as path from 'path';
 
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
-import { EventEmitter } from 'events';
 import { getExperimentId, getInitTrialSequenceId } from '../../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../../common/log';
-import { MethodNotImplementedError } from '../../../common/errors';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import {
-    JobApplicationForm, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
+    JobApplicationForm, TrialJobApplicationForm,
+    TrialJobDetail, NNIManagerIpConfig
 } from '../../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../../common/utils';
-import { NFSConfig } from '../kubernetesConfig'
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
+import { NFSConfig, KubernetesClusterConfigNFS, KubernetesClusterConfigAzure, KubernetesClusterConfigFactory } from '../kubernetesConfig'
 import { KubernetesTrialJobDetail } from '../kubernetesData';
-import { KubernetesTrialConfig, KubernetesClusterConfig } from '../kubernetesConfig';
 import { validateCodeDir } from '../../common/util';
 import { AzureStorageClientUtility } from '../azureStorageClientUtils';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
-import { FrameworkControllerClusterConfigAzure, FrameworkControllerClusterConfigNFS, FrameworkControllerTrialConfig, 
-    FrameworkControllerClusterConfigFactory } from './frameworkcontrollerConfig';
-import { GeneralK8sClient } from '../kubernetesApiClient';
+import { FrameworkControllerTrialConfig } from './frameworkcontrollerConfig';
 import { FrameworkControllerJobRestServer } from './frameworkcontrollerJobRestServer';
 import { FrameworkControllerClient } from './frameworkcontrollerApiClient';
 import { FrameworkControllerJobInfoCollector } from './frameworkcontrollerJobInfoCollector';
@@ -55,7 +47,6 @@ import { FrameworkControllerJobInfoCollector } from './frameworkcontrollerJobInf
  */
 @component.Singleton
 class FrameworkControllerainingService extends KubernetesTrainingService {
-    private frameworkcontrollerClusterConfig?: KubernetesClusterConfig;
     private frameworkcontrollerTrialConfig?: FrameworkControllerTrialConfig;
     private frameworkcontrollerJobInfoCollector: FrameworkControllerJobInfoCollector;
 
@@ -81,7 +72,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
     }
 
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        if(!this.frameworkcontrollerClusterConfig) {
+        if(!this.kubernetesClusterConfig) {
             throw new Error('frameworkcontrollerClusterConfig is not initialized');
         }
 
@@ -133,7 +124,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         //The output url used in trialJobDetail
         let trialJobOutputUrl: string = '';
 
-        if(this.frameworkcontrollerClusterConfig.storageType === 'azureStorage') {
+        if(this.kubernetesClusterConfig.storageType === 'azureStorage') {
             try{
                 //upload local files to azure storage
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient, 
@@ -144,8 +135,8 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                 this.log.error(error);
                 return Promise.reject(error);
             }
-        } else if(this.frameworkcontrollerClusterConfig.storageType === 'nfs') {
-            let nfsFrameworkControllerClusterConfig: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS>this.frameworkcontrollerClusterConfig;
+        } else if(this.kubernetesClusterConfig.storageType === 'nfs') {
+            let nfsFrameworkControllerClusterConfig: KubernetesClusterConfigNFS = <KubernetesClusterConfigNFS>this.kubernetesClusterConfig;
             // Creat work dir for current trial in NFS directory 
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
             // Copy code files from local dir to NFS mounted dir
@@ -189,9 +180,9 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
             
             case TrialConfigMetadataKey.FRAMEWORKCONTROLLER_CLUSTER_CONFIG:
                 let frameworkcontrollerClusterJsonObject = JSON.parse(value);
-                this.frameworkcontrollerClusterConfig = FrameworkControllerClusterConfigFactory.generateFrameworkControllerClusterConfig(frameworkcontrollerClusterJsonObject);
-                if(this.frameworkcontrollerClusterConfig.storageType === 'azureStorage') {
-                    let azureFrameworkControllerClusterConfig = <FrameworkControllerClusterConfigAzure>this.frameworkcontrollerClusterConfig;
+                this.kubernetesClusterConfig = KubernetesClusterConfigFactory.generateKubernetesClusterConfig(frameworkcontrollerClusterJsonObject);
+                if(this.kubernetesClusterConfig.storageType === 'azureStorage') {
+                    let azureFrameworkControllerClusterConfig = <KubernetesClusterConfigAzure>this.kubernetesClusterConfig;
                     this.azureStorageAccountName = azureFrameworkControllerClusterConfig.azureStorage.accountName;
                     this.azureStorageShare = azureFrameworkControllerClusterConfig.azureStorage.azureShare;
                     await this.createAzureStorage(
@@ -200,8 +191,8 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                         azureFrameworkControllerClusterConfig.azureStorage.accountName,
                         azureFrameworkControllerClusterConfig.azureStorage.azureShare
                     );
-                } else if(this.frameworkcontrollerClusterConfig.storageType === 'nfs') {
-                    let nfsFrameworkControllerClusterConfig = <FrameworkControllerClusterConfigNFS>this.frameworkcontrollerClusterConfig;
+                } else if(this.kubernetesClusterConfig.storageType === 'nfs') {
+                    let nfsFrameworkControllerClusterConfig = <KubernetesClusterConfigNFS>this.kubernetesClusterConfig;
                     await this.createNFSStorage(
                         nfsFrameworkControllerClusterConfig.nfs.server,
                         nfsFrameworkControllerClusterConfig.nfs.path
@@ -240,7 +231,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
      * @param podResources  pod template
      */
     private generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName : string, podResources : any) : any {
-        if(!this.frameworkcontrollerClusterConfig) {
+        if(!this.kubernetesClusterConfig) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }
 
@@ -287,7 +278,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
     }
 
     private generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string, podResources: any): any {
-        if(!this.frameworkcontrollerClusterConfig) {
+        if(!this.kubernetesClusterConfig) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }
 
@@ -296,7 +287,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
         }
 
         let volumeSpecMap = new Map<string, object>();
-        if(this.frameworkcontrollerClusterConfig.storageType === 'azureStorage'){
+        if(this.kubernetesClusterConfig.storageType === 'azureStorage'){
             volumeSpecMap.set('nniVolumes', [
             {
                     name: 'nni-vol',
@@ -307,7 +298,7 @@ class FrameworkControllerainingService extends KubernetesTrainingService {
                     }
             }])
         }else {
-            let frameworkcontrollerClusterConfigNFS: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS> this.frameworkcontrollerClusterConfig;
+            let frameworkcontrollerClusterConfigNFS: KubernetesClusterConfigNFS = <KubernetesClusterConfigNFS> this.kubernetesClusterConfig;
             volumeSpecMap.set('nniVolumes', [
             {
                 name: 'nni-vol',

@@ -19,24 +19,21 @@
 
 'use strict'
 
-import * as assert from 'assert';
 import * as component from '../../common/component';
 import * as cpp from 'child-process-promise';
-import * as fs from 'fs';
 import * as path from 'path';
 
-import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { EventEmitter } from 'events';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
-import { delay, generateParamFileName, getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
+import { getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
 import {
-    JobApplicationForm, TrainingService, TrialJobApplicationForm,
+    JobApplicationForm, TrainingService,
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { KubernetesTrialJobDetail } from './kubernetesData';
-import { KubernetesClusterConfig, KubernetesTrialConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage} from './kubernetesConfig';
+import { KubernetesClusterConfig } from './kubernetesConfig';
 import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
@@ -72,6 +69,7 @@ class KubernetesTrainingService implements TrainingService {
     protected readonly genericK8sClient: GeneralK8sClient;
     protected kubernetesCRDClient?: KubernetesCRDClient;
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
+    protected kubernetesClusterConfig?: KubernetesClusterConfig;
     
     constructor() {
         this.log = getLogger();

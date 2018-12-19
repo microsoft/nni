@@ -22,7 +22,7 @@
 export type KubernetesStorageKind = 'nfs' | 'azureStorage';
 import { MethodNotImplementedError } from '../../common/errors';
 
-export abstract class KubernetesClusterConfigBase {
+export abstract class KubernetesClusterConfig {
     public readonly storage?: KubernetesStorageKind;
     public readonly apiVersion: string;
     
@@ -44,7 +44,7 @@ export class StorageConfig {
     }
 }
 
-export class KubernetesClusterConfigNFS extends KubernetesClusterConfigBase{
+export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
     public readonly nfs: NFSConfig;
 
     constructor(
@@ -70,7 +70,7 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfigBase{
     }
 }
 
-export class KubernetesClusterConfigAzure extends KubernetesClusterConfigBase{
+export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     public readonly keyVault: keyVaultConfig;
     public readonly azureStorage: AzureStorage;
     
@@ -102,7 +102,7 @@ export class KubernetesClusterConfigAzure extends KubernetesClusterConfigBase{
 
 export class KubernetesClusterConfigFactory {
 
-    public static generateKubernetesClusterConfig(jsonObject: object): KubernetesClusterConfigBase {
+    public static generateKubernetesClusterConfig(jsonObject: object): KubernetesClusterConfig {
          let storageConfig = <StorageConfig>jsonObject;
          if(storageConfig.storage && storageConfig.storage === 'azureStorage') {
             return KubernetesClusterConfigAzure.getInstance(jsonObject);

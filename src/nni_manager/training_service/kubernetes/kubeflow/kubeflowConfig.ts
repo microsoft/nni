@@ -20,13 +20,22 @@
 'use strict';
 
 import { KubernetesClusterConfigAzure, KubernetesClusterConfigNFS, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig,
-        KubernetesTrialConfig, KubernetesTrialConfigTemplate, StorageConfig, KubernetesClusterConfigBase } from '../kubernetesConfig'
+        KubernetesTrialConfig, KubernetesTrialConfigTemplate, StorageConfig, KubernetesClusterConfig } from '../kubernetesConfig'
 import { MethodNotImplementedError } from '../../../common/errors';
 
 /** operator types that kubeflow supported */
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type DistTrainRole = 'worker' | 'ps' | 'master';
 export type KubeflowJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
+export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
+
+export class KubeflowClusterConfig extends KubernetesClusterConfig {
+    public readonly operator: KubeflowOperator;
+    constructor(codeDir: string, operator: KubeflowOperator) {
+        super(codeDir);
+        this.operator = operator;
+    }
+}
 
 export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly operator: KubeflowOperator;
@@ -87,7 +96,7 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure{
 
 export class KubeflowClusterConfigFactory {
 
-    public static generateKubeflowClusterConfig(jsonObject: object): KubernetesClusterConfigBase {
+    public static generateKubeflowClusterConfig(jsonObject: object): KubeflowClusterConfig {
          let storageConfig = <StorageConfig>jsonObject;
          if(storageConfig.storage && storageConfig.storage === 'azureStorage') {
             return KubeflowClusterConfigAzure.getInstance(jsonObject);
