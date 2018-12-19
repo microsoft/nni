@@ -1,36 +1,54 @@
-
+$barHeight: 56px;
 .nav{
     list-style: none;
-    width: 100%;
-    height: 80px;
-    li{
-        float: left;
-        margin-right: 40px;
+    width: 94%;
+    height: $barHeight;
+    margin: 0 auto;
+    .tab{
         font-family: 'Segoe';
+        line-height: $barHeight;
         a{
-            display: block;
-            padding: 0 10px;
             font-size: 18px;
             color: #b8c7ce;
             text-decoration: none;
         }
     }
+    .firstTab{
+        margin: 0 32px;
+    }
     .logo{
-        height: 80px;
-        line-height: 80px;  
-    }
-    .tab{
-        position: relative;
-        top: 36px;
-        line-height: 30px;
-
-    }
-    .last{
-        margin-right: 0;
+        margin-top: 2px;
+        max-width: 128px;
     }
 }
 
-.nav li a:hover, .nav a.high{
+.tab a:hover, .tab a.high{
     color: white;
-    border-bottom: 1px solid white;
+    border-bottom: 1px solid #fff;
+}
+
+.feedback{
+    text-align: right;
+    line-height: $barHeight;
+    font-size: 16px;
+    color: #fff;
+    a{
+        color: #fff;
+        text-decoration: none;
+        margin-left: 10px;
+    }
+    img{
+        width: 24px;
+        margin-right: 8px;
+    }
+    .version{
+        margin-left: 16px;
+    }
+}
+
+.link li{
+    float: left;
+}
+.dropdown{
+    margin-right: 10px;
 }

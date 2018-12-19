@@ -11,6 +11,8 @@ else
 	$(error platform $(UNAME_S) not supported)
 endif
 
+NNI_VERSION = $(shell git describe --tags)
+
 .PHONY: build
 build:
 	python3 -m pip install --user --upgrade setuptools wheel
@@ -24,9 +26,10 @@ build:
 	cp -r $(CWD)../../src/nni_manager/dist $(CWD)nni
 	cp -r $(CWD)../../src/webui/build $(CWD)nni/static
 	cp $(CWD)../../src/nni_manager/package.json $(CWD)nni
+	sed -ie 's/NNI_VERSION/$(NNI_VERSION)/' $(CWD)nni/package.json
 	cd $(CWD)nni && yarn --prod
-	cd $(CWD) && python3 setup.py bdist_wheel -p $(WHEEL_SPEC)
-	cd $(CWD)../../src/sdk/pynni && python3 setup.py bdist_wheel
+	cd $(CWD) && sed -ie 's/NNI_VERSION/$(NNI_VERSION)/' setup.py && python3 setup.py bdist_wheel -p $(WHEEL_SPEC)
+	cd $(CWD)../../src/sdk/pynni && sed -ie 's/NNI_VERSION/$(NNI_VERSION)/' setup.py && python3 setup.py bdist_wheel
 	cp -r $(CWD)../../src/sdk/pynni/dist/*.whl $(CWD)dist
 	cd $(CWD)
 
@@ -37,9 +40,9 @@ upload:
 
 .PHONY: clean
 clean:
-	-rm -rf $(CWD)../../src/sdk/pynni/dist/*.whl
-	-rm -rf $(CWD)build
-	-rm -rf $(CWD)dist
-	-rm -rf $(CWD)nni
-	-rm -rf $(CWD)nni.egg-info
-	-rm -rf $(CWD)node-$(OS_SPEC)-x64
+	rm -rf $(CWD)../../src/sdk/pynni/dist
+	rm -rf $(CWD)build
+	rm -rf $(CWD)dist
+	rm -rf $(CWD)nni
+	rm -rf $(CWD)nni.egg-info
+	rm -rf $(CWD)node-$(OS_SPEC)-x64
