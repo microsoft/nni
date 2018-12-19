@@ -202,7 +202,6 @@ class CurveModel(object):
         '''predict the value of target position'''
         self.trial_history = trial_history
         self.point_num = len(trial_history)
-        self.effective_model = []
         self.fit_theta()
         self.filter_curve()
         if self.effective_model_num < LEAST_FITTED_FUNCTION:
