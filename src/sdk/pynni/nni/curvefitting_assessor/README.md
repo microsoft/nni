@@ -36,7 +36,7 @@ To use Curve Fitting Assessor, you should add the following spec in your experim
 assessor:
     builtinAssessorName: Curvefitting
     classArgs:
-      # (Require)The total number of epoch.
+      # (Required)The total number of epoch.
       # We need to know the number of epoch to determine which point we need to predict.
       epoch_num: 20
       # (optional) choice: maximize, minimize
@@ -51,7 +51,7 @@ assessor:
       # (optional) The threshold that we decide to early stop the worse performance curve.
       # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
       * The default value of threshold is 0.95.
-      shreshold: 0.95
+      threshold: 0.95
 ```
 
 ## 3. File Structure

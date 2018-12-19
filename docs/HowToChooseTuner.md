@@ -257,7 +257,7 @@ _Usage_:
       # (optional) The threshold that we decide to early stop the worse performance curve.
       # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
       * The default value of threshold is 0.95.
-      shreshold: 0.95
+      threshold: 0.95
 ```
 
 [1]: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf

@@ -17,7 +17,7 @@
 
 import logging
 from nni.assessor import Assessor, AssessResult
-from .modelfactory import CurveModel
+from .model_factory import CurveModel
 
 logger = logging.getLogger('curvefitting_Assessor')
 
@@ -27,7 +27,7 @@ class CurvefittingAssessor(Assessor):
     It stops a pending trial X at step S if the trial's forecast result at target step is convergence and lower than the
     best performance in the history.
     '''
-    def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.9):
+    def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.95):
         if start_step <= 0:
             logger.warning('It\'s recommended to set start_step to a positive number')
         # Record the target position we predict
@@ -73,7 +73,7 @@ class CurvefittingAssessor(Assessor):
         curr_step = len(trial_history)
         if curr_step < self.start_step:
             return AssessResult.Good
-        if self.set_best_performance is False:
+        if not self.set_best_performance:
             return AssessResult.Good
 
         try:
