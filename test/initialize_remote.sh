@@ -4,7 +4,7 @@
  chmod 600 $key
  echo "Initializing remote machine..."
  pwd
- ll
+ ls
  yes | ssh -i $key $ip "rm -rf pynni"
  echo "Copy nni sdk to remote machine..."
  scp -i $key -r ../src/sdk/pynni $ip:~

@@ -9,27 +9,29 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  - script: python3 -m pip install --upgrade pip setuptools
-    displayName: 'Install python tools'
-  - script: |
-      source install.sh
-    displayName: 'Install nni toolkit via source code'
+  #- script: python3 -m pip install --upgrade pip setuptools
+  #  displayName: 'Install python tools'
+  #- script: |
+  #    source install.sh
+  #  displayName: 'Install nni toolkit via source code'
   - task: DownloadSecureFile@1
     inputs:
       secureFile: id_rsa
   - script: |
+      pwd
+      ls $(Agent.TempDirectory)
       cat $(Agent.TempDirectory)/id_rsa
       cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
       source initialize_remote.sh
     displayName: 'Install dependencies in remote machine'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 naive_test.py
-    displayName: 'Integration tests'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
-    displayName: 'Built-in tuner tests'
+  #- script: |
+  #    cd test
+  #    PATH=$HOME/.local/bin:$PATH python3 naive_test.py
+  #  displayName: 'Integration tests'
+  #- script: |
+  #    cd test
+  #    PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
+  #  displayName: 'Built-in tuner tests'
 
 - job: 'macOS_10_13'
   pool:
