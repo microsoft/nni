@@ -28,6 +28,12 @@ jobs:
       targetFolder: ~/pynni
       overwrite: true
     displayName: 'Copy sdk to remote machine'
+  - script: |
+      pwd
+      ls
+      cd ~
+      pwd
+      ls
   #- task: SSH@0
   #  inputs:
   #    sshEndpoint: remote241
