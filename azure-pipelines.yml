@@ -36,7 +36,7 @@ jobs:
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote241
-      sourceFolder: ../src/sdk/pynni
+      sourceFolder: ~/nni/src/sdk/pynni
       targetFolder: ~/pynni
       overwrite: true
     displayName: 'Copy sdk to remote machine'
