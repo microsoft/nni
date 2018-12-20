@@ -109,6 +109,7 @@ mkDirP(getLogDir()).then(async () => {
         log.info(`Rest server listening on: ${restServer.endPoint}`);
     } catch (err) {
         log.error(`${err.stack}`);
+        throw err;
     }
 }).catch((err: Error) => {
     console.error(`Failed to create log dir: ${err.stack}`);
