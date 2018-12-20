@@ -22,11 +22,17 @@ jobs:
   #    chmod 600 ./id_rsa
   #  displayName: 'Download secure file'
   - script: |
-    pwd
-    ls
-    cd ~
-    pwd
-    ls
+      pwd
+      ls
+      cd ~
+      pwd
+      ls
+      cd ~/work
+      pwd
+      ls
+      cd 1
+      pwd
+      ls
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote241
