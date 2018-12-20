@@ -40,7 +40,7 @@ jobs:
   # Run shell commands or a script on a remote machine using SSH
   - task: SSH@0
     inputs:
-      sshEndpoint: nni@104.210.63.241
+      sshEndpoint: remote241
       #runOptions: 'commands' # Options: commands, script, inline
       #commands: # Required when runOptions == Commands
       #scriptPath: # Required when runOptions == Script
