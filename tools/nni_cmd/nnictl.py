@@ -30,7 +30,7 @@ from .tensorboard_utils import *
 
 def nni_info(*args):
     if args[0].version:
-        print(pkg_resources.get_distribution('nnictl').version)
+        print(pkg_resources.get_distribution('nni').version)
     else:
         print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
