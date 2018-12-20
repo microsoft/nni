@@ -18,6 +18,7 @@ jobs:
     inputs:
       secureFile: id_rsa
   - script: |
+      rm -f ~/.ssh/known_hosts
       cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
       ip="nni@104.210.63.241"
       key="id_rsa"
