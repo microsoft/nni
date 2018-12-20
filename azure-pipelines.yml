@@ -10,7 +10,13 @@ jobs:
 
   steps:
   - script: |
-      echo $(Release.Artifacts.{alias}.BuildURI)
+      echo $(Release.ReleaseUri)
+  - script: |
+      echo $(Agent.TempDirectory)
+  - script: |
+      echo $(Agent.WorkFolder)
+  - script: |
+      echo $(Build.BuildURI)
   #- script: python3 -m pip install --upgrade pip setuptools
   #  displayName: 'Install python tools'
   #- script: |
