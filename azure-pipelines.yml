@@ -14,19 +14,26 @@ jobs:
   #- script: |
   #    source install.sh
   #  displayName: 'Install nni toolkit via source code'
-  - task: DownloadSecureFile@1
+  #- task: DownloadSecureFile@1
+  #  inputs:
+  #    secureFile: id_rsa
+  #- script: |
+  #    cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
+  #    chmod 600 ./id_rsa
+  #  displayName: 'Download secure file'
+  - task: CopyFilesOverSSH@0
     inputs:
-      secureFile: id_rsa
-  - script: |
-      rm -f ~/.ssh/known_hosts
-      cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
-      ip="nni@104.210.63.241"
-      key="id_rsa"
-      #chmod 600 $key
-      echo "Initializing remote machine..."
-      #yes | ssh -i $key $ip "rm -rf pynni"
-      #source initialize_remote.sh
-    displayName: 'Install dependencies in remote machine'
+      sshEndpoint: remote241
+      sourceFolder: ../src/sdk/pynni
+      targetFolder: ~/pynni
+      overwrite: true
+    displayName: 'Copy sdk to remote machine'
+  #- task: SSH@0
+  #  inputs:
+  #    sshEndpoint: remote241
+  #    runOptions: script
+  #    scriptPath: install_sdk_remote.sh
+  #  displayName: 'Install sdk in remote machine'
   #- script: |
   #    cd test
   #    PATH=$HOME/.local/bin:$PATH python3 naive_test.py
@@ -36,17 +43,6 @@ jobs:
   #    PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
   #  displayName: 'Built-in tuner tests'
 
-  # SSH
-  # Run shell commands or a script on a remote machine using SSH
-  - task: SSH@0
-    inputs:
-      sshEndpoint: remote241
-      runOptions: 'commands' # Options: commands, script, inline
-      commands: echo hello
-      #scriptPath: # Required when runOptions == Script
-      #inline: # Required when runOptions == Inline
-      #args: # Optional
-      #failOnStdErr: # Optional
 
 - job: 'macOS_10_13'
   pool:
