@@ -19,9 +19,12 @@ jobs:
       secureFile: id_rsa
   - script: |
       cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
-      cat id_rsa
-      chmod 600 id_rsa
-      source initialize_remote.sh
+      ip="nni@104.210.63.241"
+      key="id_rsa"
+      chmod 600 $key
+      echo "Initializing remote machine..."
+      yes | ssh -i $key $ip "rm -rf pynni"
+      #source initialize_remote.sh
     displayName: 'Install dependencies in remote machine'
   #- script: |
   #    cd test
