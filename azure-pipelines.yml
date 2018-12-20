@@ -9,6 +9,8 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
+  - script: |
+      echo $(Release.ReleaseWebURL)
   #- script: python3 -m pip install --upgrade pip setuptools
   #  displayName: 'Install python tools'
   #- script: |
@@ -21,13 +23,13 @@ jobs:
   #    cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
   #    chmod 600 ./id_rsa
   #  displayName: 'Download secure file'
-  - task: CopyFilesOverSSH@0
-    inputs:
-      sshEndpoint: remote241
-      sourceFolder: src/sdk/pynni
-      targetFolder: ~/pynni
-      overwrite: true
-    displayName: 'Copy sdk to remote machine'
+  #- task: CopyFilesOverSSH@0
+  #  inputs:
+  #    sshEndpoint: remote241
+  #    sourceFolder: src/sdk/pynni
+  #    targetFolder: ~/pynni
+  #    overwrite: true
+  #  displayName: 'Copy sdk to remote machine'
   #- task: SSH@0
   #  inputs:
   #    sshEndpoint: remote241
