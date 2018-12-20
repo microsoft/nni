@@ -24,8 +24,7 @@ jobs:
       key="id_rsa"
       #chmod 600 $key
       echo "Initializing remote machine..."
-      yes | ssh -i $key $ip "rm -rf pynni"
-      yes | ssh -i $key $ip "rm -rf pynni"
+      #yes | ssh -i $key $ip "rm -rf pynni"
       #source initialize_remote.sh
     displayName: 'Install dependencies in remote machine'
   #- script: |
@@ -36,6 +35,18 @@ jobs:
   #    cd test
   #    PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
   #  displayName: 'Built-in tuner tests'
+
+  # SSH
+  # Run shell commands or a script on a remote machine using SSH
+  - task: SSH@0
+    inputs:
+      sshEndpoint: nni@104.210.63.241
+      #runOptions: 'commands' # Options: commands, script, inline
+      #commands: # Required when runOptions == Commands
+      #scriptPath: # Required when runOptions == Script
+      #inline: # Required when runOptions == Inline
+      #args: # Optional
+      #failOnStdErr: # Optional
 
 - job: 'macOS_10_13'
   pool:
