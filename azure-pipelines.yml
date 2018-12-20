@@ -17,6 +17,10 @@ jobs:
       echo $(Agent.WorkFolder)
   - script: |
       echo $(Build.BuildURI)
+  - script: |
+      echo $(Build.SourceBranch)
+  - script: |
+      echo $(Build.SourceBranchName)
   #- script: python3 -m pip install --upgrade pip setuptools
   #  displayName: 'Install python tools'
   #- script: |
