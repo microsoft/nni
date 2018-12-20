@@ -24,7 +24,7 @@ jobs:
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote241
-      sourceFolder: $(Agent.BuildDirectory)/nni/src/sdk/pynni
+      sourceFolder: ./
       targetFolder: ~/pynni
       overwrite: true
     displayName: 'Copy sdk to remote machine'
