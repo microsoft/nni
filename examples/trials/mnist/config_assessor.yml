@@ -16,7 +16,7 @@ tuner:
     #choice: maximize, minimize
     optimize_mode: maximize
 assessor:
-  #choice: Medianstop
+  #choice: Medianstop, Curvefitting
   builtinAssessorName: Medianstop
   classArgs:
     #choice: maximize, minimize
