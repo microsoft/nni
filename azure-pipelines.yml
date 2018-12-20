@@ -23,7 +23,7 @@ jobs:
       key="id_rsa"
       #chmod 600 $key
       echo "Initializing remote machine..."
-      yes | ssh -i $key $ip "rm -rf pynni"
+      ssh -i $key $ip "rm -rf pynni"
       #source initialize_remote.sh
     displayName: 'Install dependencies in remote machine'
   #- script: |
