@@ -508,7 +508,7 @@ class PAITrainingService implements TrainingService {
             } else {
                 if(response.statusCode !== 200){
                     this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
-                    deferred.reject(new Error(`Get PAI token failed, please check paiConfig username or password`));
+                    deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
                 }
                 this.paiToken = body.token;
                 this.paiTokenUpdateTime = new Date().getTime();

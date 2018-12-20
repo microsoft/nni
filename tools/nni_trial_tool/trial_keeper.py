@@ -43,13 +43,13 @@ def main_loop(args):
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
 
-    try:
-        hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
-    except Exception as e:
-        nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
-        raise e
-
-    copyHdfsDirectoryToLocal(args.nni_hdfs_exp_dir, os.getcwd(), hdfs_client)
+    if args.pai_hdfs_host is not None and args.nni_hdfs_exp_dir is not None:
+        try:
+            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
+        except Exception as e:
+            nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
+            raise e
+        copyHdfsDirectoryToLocal(args.nni_hdfs_exp_dir, os.getcwd(), hdfs_client)
 
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     process = Popen(args.trial_command, shell = True, stdout = stdout_file, stderr = stderr_file)
@@ -62,7 +62,7 @@ def main_loop(args):
         
         if retCode is not None:
             nni_log(LogType.Info, 'subprocess terminated. Exit code is {}. Quit'.format(retCode))
-            if NNI_PLATFORM == 'pai':
+            if args.pai_hdfs_output_dir is not None:
                 # Copy local directory to hdfs for OpenPAI
                 nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
                 try:

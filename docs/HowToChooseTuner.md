@@ -210,7 +210,7 @@ _Usage_:
 For now, NNI has supported the following assessor algorithms.
 
  - [Medianstop](#Medianstop)
- - Curve Extrapolation (ongoing)
+ - [Curvefitting](#Curvefitting)
 
 ## Supported Assessor Algorithms
 
@@ -234,6 +234,36 @@ _Usage_:
       start_step: 5
 ```
 
+<a name="Curvefitting"></a>
+**Curvefitting**
+
+Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve, the large set of parametric curve models are chosen from [reference paper][9]. The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
+
+_Suggested scenario_: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance. 
+
+_Usage_:
+```yaml
+  assessor:
+    builtinAssessorName: Curvefitting
+    classArgs:
+      # (required)The total number of epoch.
+      # We need to know the number of epoch to determine which point we need to predict.
+      epoch_num: 20
+      # (optional) choice: maximize, minimize
+      # Kindly reminds that if you choose minimize mode, please adjust the value of threshold >= 1.0 (e.g threshold=1.1)
+      * The default value of optimize_mode is maximize
+      optimize_mode: maximize
+      # (optional) A trial is determined to be stopped or not
+      # In order to save our computing resource, we start to predict when we have more than start_step(default=6) accuracy points.
+      # only after receiving start_step number of reported intermediate results.
+      * The default value of start_step is 6.
+      start_step: 6
+      # (optional) The threshold that we decide to early stop the worse performance curve.
+      # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
+      * The default value of threshold is 0.95.
+      threshold: 0.95
+```
+
 [1]: https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
 [2]: http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf
 [3]: https://arxiv.org/pdf/1703.01041.pdf
@@ -242,3 +272,4 @@ _Usage_:
 [6]: https://arxiv.org/pdf/1603.06560.pdf
 [7]: https://arxiv.org/abs/1806.10282
 [8]: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
+[9]: http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf
