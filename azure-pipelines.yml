@@ -41,8 +41,8 @@ jobs:
   - task: SSH@0
     inputs:
       sshEndpoint: remote241
-      #runOptions: 'commands' # Options: commands, script, inline
-      #commands: # Required when runOptions == Commands
+      runOptions: 'commands' # Options: commands, script, inline
+      commands: echo hello
       #scriptPath: # Required when runOptions == Script
       #inline: # Required when runOptions == Inline
       #args: # Optional
