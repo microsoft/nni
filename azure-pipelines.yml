@@ -18,10 +18,9 @@ jobs:
     inputs:
       secureFile: id_rsa
   - script: |
-      pwd
-      ls $(Agent.TempDirectory)
-      cat $(Agent.TempDirectory)/id_rsa
       cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
+      cat id_rsa
+      chmod 600 id_rsa
       source initialize_remote.sh
     displayName: 'Install dependencies in remote machine'
   #- script: |
