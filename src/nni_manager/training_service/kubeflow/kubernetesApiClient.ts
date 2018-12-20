@@ -36,7 +36,7 @@ class GeneralK8sClient {
     protected readonly log: Logger = getLogger();
 
     constructor() {
-        this.client = new K8SClient({ config: K8SConfig.fromKubeconfig(path.join(os.homedir(), '.kube', 'config')), version: '1.9'});
+        this.client = new K8SClient({ config: K8SConfig.fromKubeconfig(), version: '1.9'});
         this.client.loadSpec();
     }
 
@@ -58,7 +58,7 @@ abstract class KubeflowOperatorClient {
     protected crdSchema: any;
 
     constructor() {
-        this.client = new K8SClient({ config: K8SConfig.fromKubeconfig(path.join(os.homedir(), '.kube', 'config'))});
+        this.client = new K8SClient({ config: K8SConfig.fromKubeconfig() });
         this.client.loadSpec();
     }
 
