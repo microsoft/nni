@@ -50,7 +50,7 @@ import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
  * Refer https://github.com/kubeflow/kubeflow for more info about Kubeflow
  */
 @component.Singleton
-class KubeflowTrainingService extends KubernetesTrainingService {
+class KubeflowTrainingService extends KubernetesTrainingService implements KubernetesTrainingService {
     private kubeflowClusterConfig?: KubeflowClusterConfig;
     private kubeflowTrialConfig?: KubeflowTrialConfig;
     private kubeflowJobInfoCollector: KubeflowJobInfoCollector;

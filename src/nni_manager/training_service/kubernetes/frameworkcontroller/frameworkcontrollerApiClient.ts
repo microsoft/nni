@@ -23,10 +23,6 @@ import * as fs from 'fs';
 import { KubernetesCRDClient, GeneralK8sClient } from '../kubernetesApiClient';
 
 abstract class FrameworkControllerClient extends KubernetesCRDClient{
-    constructor() {
-        super();
-    }
-
     /**
      * Factory method to generate operator cliet
      */

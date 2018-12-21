@@ -46,7 +46,7 @@ import { FrameworkControllerJobInfoCollector } from './frameworkcontrollerJobInf
  * Training Service implementation for frameworkcontroller
  */
 @component.Singleton
-class FrameworkControllerainingService extends KubernetesTrainingService {
+class FrameworkControllerainingService extends KubernetesTrainingService implements KubernetesTrainingService {
     private frameworkcontrollerTrialConfig?: FrameworkControllerTrialConfig;
     private frameworkcontrollerJobInfoCollector: FrameworkControllerJobInfoCollector;
 

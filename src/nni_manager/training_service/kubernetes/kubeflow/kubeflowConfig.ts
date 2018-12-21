@@ -19,6 +19,7 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import { KubernetesClusterConfigAzure, KubernetesClusterConfigNFS, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig,
         KubernetesTrialConfig, KubernetesTrialConfigTemplate, StorageConfig, KubernetesClusterConfig } from '../kubernetesConfig'
 import { MethodNotImplementedError } from '../../../common/errors';
@@ -55,6 +56,7 @@ export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
 
     public static getInstance(jsonObject: object): KubeflowClusterConfigNFS {
         let kubeflowClusterConfigObjectNFS = <KubeflowClusterConfigNFS>jsonObject;
+        assert (kubeflowClusterConfigObjectNFS !== undefined)
         return new KubeflowClusterConfigNFS(
             kubeflowClusterConfigObjectNFS.operator,
             kubeflowClusterConfigObjectNFS.apiVersion,
@@ -98,6 +100,9 @@ export class KubeflowClusterConfigFactory {
 
     public static generateKubeflowClusterConfig(jsonObject: object): KubeflowClusterConfig {
          let storageConfig = <StorageConfig>jsonObject;
+         if(!storageConfig) {
+            throw new Error("Invalid json object as a StorageConfig instance");
+        }
          if(storageConfig.storage && storageConfig.storage === 'azureStorage') {
             return KubeflowClusterConfigAzure.getInstance(jsonObject);
          } else if (storageConfig.storage === undefined || storageConfig.storage === 'nfs') {

@@ -47,6 +47,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
             kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);            
         } catch(error) {
             this.log.error(`Get job ${kubernetesTrialJob.kubernetesJobName} info failed, error is ${error}`);
+            //prepare for job ready
             return Promise.resolve();
         }
 

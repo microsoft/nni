@@ -44,12 +44,8 @@ var base64 = require('js-base64').Base64;
 
 type DistTrainRole = 'worker' | 'ps' | 'master';
 
-/**
- * Training Service implementation for Kubeflow
- * Refer https://github.com/kubeflow/kubeflow for more info about Kubeflow
- */
-@component.Singleton
-class KubernetesTrainingService implements TrainingService {
+
+abstract class KubernetesTrainingService {
     protected readonly NNI_KUBERNETES_TRIAL_LABEL: string = 'nni-kubernetes-trial';
     protected readonly log!: Logger;
     protected readonly metricsEmitter: EventEmitter;
@@ -80,18 +76,6 @@ class KubernetesTrainingService implements TrainingService {
         this.nextTrialSequenceId = -1;
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.genericK8sClient = new GeneralK8sClient();
-    }
-
-    public async run(): Promise<void> {
-        throw new MethodNotImplementedError();
-    }
-
-    public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        throw new MethodNotImplementedError();
-    }
-
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        throw new MethodNotImplementedError();
     }
 
     public generatePodResource(memory: number, cpuNum: number, gpuNum: number) {
@@ -161,7 +145,7 @@ class KubernetesTrainingService implements TrainingService {
         const runScriptLines: string[] = [];
 
         runScriptLines.push('#!/bin/bash');
-        runScriptLines.push('export NNI_PLATFORM=kubeflow');
+        runScriptLines.push('export NNI_PLATFORM=kubernetes');
         runScriptLines.push(`export NNI_SYS_DIR=$PWD/nni/${trialJobId}`);
         runScriptLines.push(`export NNI_OUTPUT_DIR=${path.join(trialWorkingFolder, 'output', `${roleName}_output`)}`);
         runScriptLines.push('export MULTI_PHASE=false');
@@ -286,17 +270,17 @@ class KubernetesTrainingService implements TrainingService {
     public async cleanUp(): Promise<void> {
         this.stopping = true;
 
-        // First, cancel all running kubeflow jobs
-        for(let [trialJobId, kubeflowTrialJob] of this.trialJobsMap) {
-            if(['RUNNING', 'WAITING', 'UNKNOWN'].includes(kubeflowTrialJob.status)) {
+        // First, cancel all running kubernetes jobs
+        for(let [trialJobId, kubernetesTrialJob] of this.trialJobsMap) {
+            if(['RUNNING', 'WAITING', 'UNKNOWN'].includes(kubernetesTrialJob.status)) {
                 try {
                     await this.cancelTrialJob(trialJobId);
                 } catch(error) {} // DONT throw error during cleanup
-                kubeflowTrialJob.status = 'SYS_CANCELED';
+                kubernetesTrialJob.status = 'SYS_CANCELED';
             }
         }
         
-        // Delete all kubeflow jobs whose expId label is current experiment id 
+        // Delete all kubernetes jobs whose expId label is current experiment id 
         try {
             if(this.kubernetesCRDClient) {
                 await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
@@ -307,7 +291,7 @@ class KubernetesTrainingService implements TrainingService {
                 ));
             }
         } catch(error) {
-            this.log.error(`Delete kubeflow job with label: app=${this.NNI_KUBERNETES_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
+            this.log.error(`Delete kubernetes job with label: app=${this.NNI_KUBERNETES_TRIAL_LABEL},expId=${getExperimentId()} failed, error is ${error}`);
         }
 
         // Unmount NFS
@@ -317,15 +301,15 @@ class KubernetesTrainingService implements TrainingService {
             this.log.error(`Unmount ${this.trialLocalNFSTempFolder} failed, error is ${error}`);
         }
 
-        // Stop Kubeflow rest server 
+        // Stop kubernetes rest server 
         if(!this.kubernetesJobRestServer) {
             throw new Error('kubernetesJobRestServer not initialized!');
         }
         try {
             await this.kubernetesJobRestServer.stop();
-            this.log.info('Kubeflow Training service rest server stopped successfully.');
+            this.log.info('Kubernetes Training service rest server stopped successfully.');
         } catch (error) {
-            this.log.error(`Kubeflow Training service rest server stopped failed, error: ${error.message}`);
+            this.log.error(`Kubernetes Training service rest server stopped failed, error: ${error.message}`);
             Promise.reject(error);
         }
 
