@@ -20,7 +20,7 @@
 'use strict';
 
 import * as component from '../../../common/component';
-import { FrameworkControllerainingService } from './frameworkcontrollerTrainingService';
+import { FrameworkControllerTrainingService } from './frameworkcontrollerTrainingService';
 import { KubernetesJobRestServer } from '../kubernetesJobRestServer'
 
 /**
@@ -30,6 +30,6 @@ import { KubernetesJobRestServer } from '../kubernetesJobRestServer'
 @component.Singleton
 export class FrameworkControllerJobRestServer extends KubernetesJobRestServer{
     constructor() {
-        super(component.get(FrameworkControllerainingService));
+        super(component.get(FrameworkControllerTrainingService));
     }  
 }
