@@ -27,7 +27,8 @@ ModuleName = {
     'BatchTuner': 'nni.batch_tuner.batch_tuner',
     'Medianstop': 'nni.medianstop_assessor.medianstop_assessor',
     'GridSearch': 'nni.gridsearch_tuner.gridsearch_tuner',
-    'NetworkMorphism': 'nni.networkmorphism_tuner.networkmorphism_tuner'
+    'NetworkMorphism': 'nni.networkmorphism_tuner.networkmorphism_tuner',
+    'Curvefitting': 'nni.curvefitting_assessor.curvefitting_assessor'
 }
 
 ClassName = {
@@ -40,7 +41,8 @@ ClassName = {
     'GridSearch': 'GridSearchTuner',
     'NetworkMorphism':'NetworkMorphismTuner',
 
-    'Medianstop': 'MedianstopAssessor'
+    'Medianstop': 'MedianstopAssessor',
+    'Curvefitting': 'CurvefittingAssessor'
 }
 
 ClassArgs = {
