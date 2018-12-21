@@ -25,7 +25,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
-import { getExperimentId, getInitTrialSequenceId } from '../../../common/experimentStartupInfo';
+import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import {
     JobApplicationForm, TrialJobApplicationForm,
@@ -104,7 +104,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
 
         const podResources : any = [];
         for(let taskRole of this.frameworkcontrollerTrialConfig.taskRoles) {
-            const runScriptContent: string = this.generateRunScript(trialJobId, trialWorkingFolder, 
+            const runScriptContent: string = this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder, 
                 taskRole.command, curTrialSequenceId.toString(), taskRole.name, taskRole.gpuNum);
             await fs.promises.writeFile(path.join(trialLocalTempFolder, `run_${taskRole.name}.sh`), runScriptContent, { encoding: 'utf8' });
             let resource: any = {};

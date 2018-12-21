@@ -25,15 +25,16 @@ import * as path from 'path';
 import { EventEmitter } from 'events';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
+import { getExperimentRootDir, uniqueString, getJobCancelStatus, getIPV4Address } from '../../common/utils';
 import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
-import { KubernetesTrialJobDetail } from './kubernetesData';
+import { KubernetesTrialJobDetail, KubernetesScriptFormat } from './kubernetesData';
 import { KubernetesClusterConfig } from './kubernetesConfig';
 import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
+import { String } from 'typescript-string-operations';
 
 import * as azureStorage from 'azure-storage';
 var azure = require('azure-storage');
@@ -123,47 +124,6 @@ abstract class KubernetesTrainingService {
         return this.metricsEmitter;
     }
 
-    /**
-     * Genereate run script for different roles(like worker or ps)
-     * @param trialJobId trial job id
-     * @param trialWorkingFolder working folder
-     * @param command 
-     * @param trialSequenceId sequence id
-     */
-    protected generateRunScript(trialJobId: string, trialWorkingFolder: string, 
-                command: string, trialSequenceId: string, roleName: string, gpuNum: number): string {
-        const runScriptLines: string[] = [];
-
-        runScriptLines.push('#!/bin/bash');
-        runScriptLines.push('export NNI_PLATFORM=kubernetes');
-        runScriptLines.push(`export NNI_SYS_DIR=$PWD/nni/${trialJobId}`);
-        runScriptLines.push(`export NNI_OUTPUT_DIR=${path.join(trialWorkingFolder, 'output', `${roleName}_output`)}`);
-        runScriptLines.push('export MULTI_PHASE=false');
-        runScriptLines.push(`export NNI_TRIAL_JOB_ID=${trialJobId}`);
-        runScriptLines.push(`export NNI_EXP_ID=${getExperimentId()}`);
-        runScriptLines.push(`export NNI_CODE_DIR=${trialWorkingFolder}`);
-        runScriptLines.push(`export NNI_TRIAL_SEQ_ID=${trialSequenceId}`);
-        
-        // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
-        // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
-        // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file
-        if(gpuNum === 0) {
-            runScriptLines.push(`export CUDA_VISIBLE_DEVICES=''`);
-        }
-
-        const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
-        runScriptLines.push('mkdir -p $NNI_SYS_DIR');
-        runScriptLines.push('mkdir -p $NNI_OUTPUT_DIR');
-        runScriptLines.push('cp -rT $NNI_CODE_DIR $NNI_SYS_DIR');
-        runScriptLines.push('cd $NNI_SYS_DIR');
-        runScriptLines.push('sh install_nni.sh # Check and install NNI pkg');
-        runScriptLines.push(`python3 -m nni_trial_tool.trial_keeper --trial_command '${command}' `
-        + `--nnimanager_ip '${nniManagerIp}' --nnimanager_port '${this.kubernetesRestServerPort}' `
-        + `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`);
-
-        return runScriptLines.join('\n');
-    }
-
     protected generateSequenceId(): number {
         if (this.nextTrialSequenceId === -1) {
             this.nextTrialSequenceId = getInitTrialSequenceId();
@@ -211,7 +171,40 @@ abstract class KubernetesTrainingService {
         }
         return Promise.resolve();
     }
-
+    
+        /**
+     * Genereate run script for different roles(like worker or ps)
+     * @param trialJobId trial job id
+     * @param trialWorkingFolder working folder
+     * @param command 
+     * @param trialSequenceId sequence id
+     */
+    protected generateRunScript(platform: string, trialJobId: string, trialWorkingFolder: string, 
+                command: string, trialSequenceId: string, roleName: string, gpuNum: number): string {
+        let nvidia_script: string = '';
+        // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
+        // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
+        // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file
+        if(gpuNum === 0) {
+            nvidia_script = `export CUDA_VISIBLE_DEVICES='0'`;
+        }
+        const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
+        const runScript: string = String.Format(
+            KubernetesScriptFormat,
+            platform,
+            trialJobId,
+            path.join(trialWorkingFolder, 'output', `${roleName}_output`),
+            trialJobId,
+            getExperimentId(),
+            trialWorkingFolder,
+            trialSequenceId,
+            nvidia_script,
+            command,
+            nniManagerIp,
+            this.kubernetesRestServerPort
+        );
+        return runScript;
+    }
     protected async createNFSStorage(nfsServer: string, nfsPath: string): Promise<void> {
         await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
         try {
