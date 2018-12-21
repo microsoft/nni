@@ -38,7 +38,7 @@ import {
 } from './training_service/remote_machine/remoteMachineTrainingService';
 import { PAITrainingService } from './training_service/pai/paiTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
-import { FrameworkControllerainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
+import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 
 function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number) {
     const createNew: boolean = (startExpMode === 'new');
@@ -56,7 +56,7 @@ async function initContainer(platformMode: string): Promise<void> {
     } else if (platformMode === 'kubeflow') {
         Container.bind(TrainingService).to(KubeflowTrainingService).scope(Scope.Singleton);
     } else if (platformMode === 'frameworkcontroller') {
-        Container.bind(TrainingService).to(FrameworkControllerainingService).scope(Scope.Singleton);
+        Container.bind(TrainingService).to(FrameworkControllerTrainingService).scope(Scope.Singleton);
     }
     else {
         throw new Error(`Error: unsupported mode: ${mode}`);

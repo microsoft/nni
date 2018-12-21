@@ -19,17 +19,14 @@
 
 'use strict'
 
-import * as component from '../../common/component';
 import * as cpp from 'child-process-promise';
 import * as path from 'path';
 
 import { EventEmitter } from 'events';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { MethodNotImplementedError } from '../../common/errors';
 import { getExperimentRootDir, getIPV4Address, uniqueString, getJobCancelStatus } from '../../common/utils';
 import {
-    JobApplicationForm, TrainingService,
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { KubernetesTrialJobDetail } from './kubernetesData';
@@ -41,9 +38,6 @@ import { KubernetesJobRestServer } from './kubernetesJobRestServer';
 import * as azureStorage from 'azure-storage';
 var azure = require('azure-storage');
 var base64 = require('js-base64').Base64;
-
-type DistTrainRole = 'worker' | 'ps' | 'master';
-
 
 abstract class KubernetesTrainingService {
     protected readonly NNI_KUBERNETES_TRIAL_LABEL: string = 'nni-kubernetes-trial';
@@ -84,10 +78,6 @@ abstract class KubernetesTrainingService {
             'cpu': `${cpuNum}`,
             'nvidia.com/gpu': `${gpuNum}`
         }
-    }
-
-    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
-        throw new MethodNotImplementedError();
     }
 
     public listTrialJobs(): Promise<TrialJobDetail[]> {

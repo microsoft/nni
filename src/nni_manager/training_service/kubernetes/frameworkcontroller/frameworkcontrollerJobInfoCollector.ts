@@ -39,7 +39,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
         }
 
         if(kubernetesCRDClient === undefined) {
-            return Promise.reject('operatorClient is undefined');
+            return Promise.reject('kubernetesCRDClient is undefined');
         }
 
         let kubernetesJobInfo: any;
@@ -47,6 +47,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
             kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);            
         } catch(error) {
             this.log.error(`Get job ${kubernetesTrialJob.kubernetesJobName} info failed, error is ${error}`);
+            //This is not treat as a error status
             return Promise.resolve();
         }
 
