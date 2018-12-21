@@ -39,7 +39,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
         }
 
         if(kubernetesCRDClient === undefined) {
-            return Promise.reject('operatorClient is undefined');
+            return Promise.reject('kubernetesCRDClient is undefined');
         }
 
         let kubernetesJobInfo: any;
