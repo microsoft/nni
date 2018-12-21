@@ -87,6 +87,8 @@ class Layer(object):
         if self.graph_type == LayerType.input.value:
             return
         hasher = hashlib.md5()
+        hasher.update(LayerType(self.graph_type).name.encode('ascii'))
+        hasher.update(str(self.size).encode('ascii'))
         for i in self.input:
             if layers[i].hash_id is None:
                 raise ValueError('Hash id of layer {}: {} not generated!'.format(i, layers[i]))

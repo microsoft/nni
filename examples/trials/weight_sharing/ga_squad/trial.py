@@ -311,8 +311,9 @@ def train_with_graph(p_graph, qp_pairs, dev_qp_pairs):
         dev_model.build_net(is_training=False)
         with tf.Session() as sess:
             if restore_path is not None:
-                logger.debug('init shared variables from {}'.format(restore_path))
-                init_from_checkpoint(restore_path, {'/': '/'})
+                restore_mapping = dict(zip(restore_shared, restore_shared))
+                logger.debug('init shared variables from {}, restore_scopes: {}'.format(restore_path, restore_shared))
+                init_from_checkpoint(restore_path, restore_mapping)
             logger.debug('init variables')
             logger.debug(sess.run(tf.report_uninitialized_variables()))
             init = tf.global_variables_initializer()
@@ -443,13 +444,11 @@ if __name__ == '__main__':
         with open('data.json') as f:
             original_params = json.load(f)
         '''
-        try:
-            p_graph = graph.graph_loads(original_params['graph'])
-        except Exception as err:
-            logger.critical('Can\'t load graph: {}'.format(err))
+        p_graph = graph.graph_loads(original_params['graph'])
         save_path = original_params['save_dir']
         os.makedirs(save_path)
         restore_path = original_params['restore_dir']
+        restore_shared = [hash_id + '/' for hash_id in original_params['shared_id']] + ['word_embed', 'char_embed', 'char_encoding/']
         train_loss, best_acc = train_with_graph(p_graph, qp_pairs, dev_qp_pairs)
 
         logger.debug('Send best acc: %s', str(best_acc))
