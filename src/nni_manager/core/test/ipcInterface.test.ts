@@ -25,6 +25,7 @@ import { Deferred } from 'ts-deferred';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import * as CommandType from '../commands';
 import { createDispatcherInterface, IpcInterface } from '../ipcInterface';
+import { NNIError } from '../../common/errors';
 
 let sentCommands: {[key: string]: string}[] = [];
 const receivedCommands: {[key: string]: string}[] = [];
@@ -105,8 +106,13 @@ describe('core/protocol', (): void => {
     });
 
     it('sendCommand() should throw on too long command', (): void => {
-        assert.equal((<Error>commandTooLong).name, 'RangeError');
-        assert.equal((<Error>commandTooLong).message, 'Command too long');
+        if (commandTooLong === undefined) {
+            assert.fail('Should throw error')
+        } else {
+            const err: Error | undefined =  (<NNIError>commandTooLong).cause;
+            assert(err && err.name === 'RangeError');
+            assert(err && err.message === 'Command too long');
+        }
     });
 
     it('sendCommand() should throw on wrong command type', (): void => {
