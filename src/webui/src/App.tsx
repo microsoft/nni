@@ -8,10 +8,11 @@ class App extends React.Component<{}, {}> {
     return (
       <Row className="nni">
         <Row className="header">
-          <Col span={2} />
+          <Col span={1} />
           <Col className="headerCon" span={22}> 
             <SlideBar />
           </Col>
+          <Col span={1}/>
         </Row>
         <Row className="content">
             {this.props.children}

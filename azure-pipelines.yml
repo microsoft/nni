@@ -14,6 +14,13 @@ jobs:
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: id_rsa
+  - script: |
+      cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
+      source initialize_remote.sh
+    displayName: 'Install dependencies in remote machine'
   - script: |
       cd test
       PATH=$HOME/.local/bin:$PATH python3 naive_test.py

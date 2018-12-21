@@ -157,7 +157,7 @@ export namespace ValidationSchemas {
                 checkpointDir: joi.string()
             }),
             assessor: joi.object({
-                builtinAssessorName: joi.string().valid('Medianstop'),
+                builtinAssessorName: joi.string().valid('Medianstop', 'Curvefitting'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),

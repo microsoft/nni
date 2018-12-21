@@ -41,7 +41,7 @@ describe('Unit Test for PAITrainingService', () => {
     try {
         testPaiClusterInfo = JSON.parse(fs.readFileSync('../../.vscode/paiCluster.json', 'utf8'));
         paiCluster = `{\"userName\":\"${testPaiClusterInfo.userName}\",\"passWord\":\"${testPaiClusterInfo.passWord}\",\"host\":\"${testPaiClusterInfo.host}\"}`;
-        paiTrialConfig = `{\"command\":\"echo hello && ls\",\"codeDir\":\"/home/desy/nni/examples/trials/mnist",\"gpuNum\":\"1\",
+        paiTrialConfig = `{\"command\":\"echo hello && ls\",\"codeDir\":\"/tmp/nni/examples/trials/mnist",\"gpuNum\":\"1\",
 \"cpuNum\":\"1\",\"memoryMB\":\"8196\",\"image\":\"openpai/pai.example.tensorflow\",\"dataDir\":\"\",\"outputDir\":\"\"}`;
     } catch (err) {
         console.log('Please configure rminfo.json to enable remote machine unit test.');

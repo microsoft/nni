@@ -23,6 +23,7 @@ import subprocess
 import sys
 import time
 import traceback
+import os
 
 from utils import check_experiment_status, fetch_nni_log_path, read_last_line, remove_files, setup_experiment
 
@@ -32,13 +33,16 @@ CLEAR = '\33[0m'
 
 EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
 
-def run():
+def run(mode='local'):
     '''run naive integration test'''
+    assert mode == 'local' or mode == 'remote', '`mode` must be `local` or `remote`'
+    config_file = str(mode) + '.yml'
+
     to_remove = ['tuner_search_space.json', 'tuner_result.txt', 'assessor_result.txt']
-    to_remove = list(map(lambda file: 'naive_test/' + file, to_remove))
+    to_remove = list(map(lambda file: os.path.join('naive_test', file), to_remove))
     remove_files(to_remove)
 
-    proc = subprocess.run(['nnictl', 'create', '--config', 'naive_test/local.yml'])
+    proc = subprocess.run(['nnictl', 'create', '--config', os.path.join('naive_test', config_file)])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     print('Spawning trials...')
@@ -46,9 +50,8 @@ def run():
     nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
     current_trial = 0
 
-    for _ in range(120):
+    for _ in range(180):
         time.sleep(1)
-
         tuner_status = read_last_line('naive_test/tuner_result.txt')
         assessor_status = read_last_line('naive_test/assessor_result.txt')
         experiment_status = check_experiment_status(nnimanager_log_path)
@@ -68,7 +71,7 @@ def run():
                     current_trial = trial
                     print('Trial #%d done' % trial)
 
-    assert experiment_status, 'Failed to finish in 2 min'
+    assert experiment_status, 'Failed to finish in 3 min'
 
     ss1 = json.load(open('naive_test/search_space.json'))
     ss2 = json.load(open('naive_test/tuner_search_space.json'))
@@ -88,7 +91,8 @@ if __name__ == '__main__':
     installed = (sys.argv[-1] != '--preinstall')
     setup_experiment(installed)
     try:
-        run()
+        run('local')
+        run('remote')
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:

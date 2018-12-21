@@ -39,10 +39,10 @@ describe('Unit Test for KubeflowTrainingService', () => {
     let testKubeflowTrialConfig : any;
     try {
         testKubeflowConfig = JSON.parse(fs.readFileSync('../../.vscode/kubeflowCluster.json', 'utf8'));
-        testKubeflowTrialConfig = `{\"command\":\"python3 mnist-keras.py\",\"codeDir\":\"/home/desy/nni/examples/trials/mnist",\"gpuNum\":\"1\",\"cpuNum\":\"2\",\"memoryMB\":\"8196\",\"image\":\"msranni/nni:v0.3.3\"}`;
+        testKubeflowTrialConfig = `{\"command\":\"python3 mnist.py\",\"codeDir\":\"/tmp/nni/examples/trials/mnist",\"gpuNum\":\"1\",\"cpuNum\":\"2\",\"memoryMB\":\"8196\",\"image\":\"msranni/nni:latest\"}`;
     } catch (err) {
-        console.log('Please configure rminfo.json to enable remote machine unit test.');
-        //skip = true;
+        console.log('Please configure kubeflowCluster.json to enable kubeflow training service unit test.');
+        skip = true;
     }
 
     let kubeflowTrainingService: KubeflowTrainingService;
@@ -73,17 +73,11 @@ describe('Unit Test for KubeflowTrainingService', () => {
         kubeflowTrainingService.cleanUp();
     });
 
-    it('Simple Test', async () => {
+    it('Set cluster metadata', async () => {
         if (skip) {
             return;
         }
-        kubeflowTrainingService.setClusterMetadata(TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG, testKubeflowConfig),
-        kubeflowTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testKubeflowTrialConfig);
-        try {
-            const trialDetail = await kubeflowTrainingService.submitTrialJob({jobType : 'TRIAL'});
-        } catch(error) {
-            console.log('Submit job failed:' + error);
-            chai.assert(error)            
-        }        
+        await kubeflowTrainingService.setClusterMetadata(TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG, testKubeflowConfig),
+        await kubeflowTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, testKubeflowTrialConfig);                
     });
 });
