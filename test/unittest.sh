@@ -1,13 +1,15 @@
 #!/bin/bash
-
+CWD=${PWD}
 cd scripts
 # -------------For python unittest-------------
 
 ## ------Run sdk test------
-./nni_sdk.sh
+source nni_sdk.sh
 
 ## ------Run annotation test------
-./nni_annotation.sh
+cd ${CWD}
+source nni_annotation.sh
 
 # -------------For typescrip unittest-------------
-./nni_manager.sh
+cd ${CWD}
+source nni_manager.sh
