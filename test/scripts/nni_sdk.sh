@@ -8,4 +8,3 @@ export NNI_PLATFORM=unittest
 echo "Testing: nni_sdk..."
 cd ../../src/sdk/pynni/
 python3 -m unittest discover -v tests
-cd ${CWD}
