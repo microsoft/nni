@@ -43,6 +43,7 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       cd test
+      npm config delete prefix
       source unittest.sh
     displayName: 'Unit test'
   - script: |
