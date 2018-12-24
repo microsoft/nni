@@ -88,13 +88,13 @@ def multihead_attention(queries,
         Q_ = []
         K_ = []
         V_ = []
-        for _ in range(num_heads):
+        for head_i in range(num_heads):
             Q = tf.layers.dense(queries, num_units / num_heads,
-                                activation=tf.nn.relu)  # (N, T_q, C)
+                                activation=tf.nn.relu, name='Query' + str(head_i))  # (N, T_q, C)
             K = tf.layers.dense(keys, num_units / num_heads,
-                                activation=tf.nn.relu)  # (N, T_k, C)
+                                activation=tf.nn.relu, name='Key' + str(head_i))  # (N, T_k, C)
             V = tf.layers.dense(keys, num_units / num_heads,
-                                activation=tf.nn.relu)  # (N, T_k, C)
+                                activation=tf.nn.relu, name='Value' + str(head_i))  # (N, T_k, C)
             Q_.append(Q)
             K_.append(K)
             V_.append(V)
