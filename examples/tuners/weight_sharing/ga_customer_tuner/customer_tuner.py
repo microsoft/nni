@@ -69,13 +69,13 @@ class CustomerTuner(Tuner):
     """
     NAS Tuner using Evolution Algorithm, with weight sharing enabled
     """
-    def __init__(self, optimize_mode, save_dir_root, population_size=32):
+    def __init__(self, optimize_mode, save_dir_root, population_size=32, graph_max_layer=6, graph_min_layer=3):
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.indiv_counter = 0
         self.events = []
         self.thread_lock = Lock()
         self.save_dir_root = save_dir_root
-        self.population = self.init_population(population_size)
+        self.population = self.init_population(population_size, graph_max_layer, graph_min_layer)
         assert len(self.population) == population_size
         logger.debug('init population done.')
         return
@@ -95,12 +95,12 @@ class CustomerTuner(Tuner):
         else:
             return os.path.join(self.save_dir_root, str(indiv_id))
 
-    def init_population(self, population_size=32, graph_max_layer=6):
+    def init_population(self, population_size=32, graph_max_layer, graph_min_layer):
         """
         initialize populations for evolution tuner
         """
         population = []
-        graph = Graph(graph_max_layer,
+        graph = Graph(graph_max_layer, graph_min_layer,
                       inputs=[Layer(LayerType.input.value, output=[4, 5], size='x'), Layer(LayerType.input.value, output=[4, 5], size='y')],
                       output=[Layer(LayerType.output.value, inputs=[4], size='x'), Layer(LayerType.output.value, inputs=[5], size='y')],
                       hide=[Layer(LayerType.attention.value, inputs=[0, 1], output=[2]),
