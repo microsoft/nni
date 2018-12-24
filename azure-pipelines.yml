@@ -14,11 +14,6 @@ jobs:
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
-  - script:
-      cd src/nni_manager
-      yarn
-      yarn test
-    displayName: 'Unit test'
   - script: |
       cd test
       PATH=$HOME/.local/bin:$PATH python3 naive_test.py
