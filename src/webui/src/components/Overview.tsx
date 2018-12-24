@@ -222,7 +222,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                 const acc = getFinalResult(tableData[item].finalMetricData);
                                 // if hyperparameters is undefine, show error message, else, show parameters value
                                 if (tableData[item].hyperParameters) {
-                                    const parameters = JSON.parse(tableData[item].hyperParameters).parameters;
+                                    const parameters = JSON.parse(tableData[item].hyperParameters[0]).parameters;
                                     if (typeof parameters === 'string') {
                                         desJobDetail.parameters = JSON.parse(parameters);
                                     } else {

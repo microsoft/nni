@@ -51,11 +51,6 @@ RUN python3 -m pip --no-cache-dir install \
     numpy==1.14.3 scipy==1.1.0 
 
 #
-#Install NNI
-#
-RUN python3 -m pip install nni
-
-#
 #Tensorflow 1.10.0
 #
 RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
@@ -75,6 +70,11 @@ RUN python3 -m pip install torchvision==0.2.1
 #sklearn 0.20.0
 #
 RUN python3 -m pip --no-cache-dir install scikit-learn==0.20.0
+
+#
+#Install NNI
+#
+RUN python3 -m pip --no-cache-dir install nni
 
 ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/bin:/sbin
 
