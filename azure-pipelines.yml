@@ -9,15 +9,15 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  - script: |
-      cd test
-      source unittest.sh
-    displayName: 'Unit test'
   - script: python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
+  - script: |
+      cd test
+      source unittest.sh
+    displayName: 'Unit test'
   - script: |
       cd test
       PATH=$HOME/.local/bin:$PATH python3 naive_test.py
@@ -36,15 +36,15 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  - script: |
-      cd test
-      source unittest.sh
-    displayName: 'Unit test'
   - script: python3 -m pip install --upgrade pip setuptools
     displayName: 'Install python tools'
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
+  - script: |
+      cd test
+      source unittest.sh
+    displayName: 'Unit test'
   - script: |
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH python3 naive_test.py
