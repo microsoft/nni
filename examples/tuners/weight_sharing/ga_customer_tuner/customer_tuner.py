@@ -95,12 +95,12 @@ class CustomerTuner(Tuner):
         else:
             return os.path.join(self.save_dir_root, str(indiv_id))
 
-    def init_population(self, population_size=32, graph_max_layer, graph_min_layer):
+    def init_population(self, population_size, graph_max_layer, graph_min_layer):
         """
         initialize populations for evolution tuner
         """
         population = []
-        graph = Graph(graph_max_layer, graph_min_layer,
+        graph = Graph(max_layer_num=graph_max_layer, min_layer_num=graph_min_layer,
                       inputs=[Layer(LayerType.input.value, output=[4, 5], size='x'), Layer(LayerType.input.value, output=[4, 5], size='y')],
                       output=[Layer(LayerType.output.value, inputs=[4], size='x'), Layer(LayerType.output.value, inputs=[5], size='y')],
                       hide=[Layer(LayerType.attention.value, inputs=[0, 1], output=[2]),

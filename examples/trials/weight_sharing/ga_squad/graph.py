@@ -87,6 +87,8 @@ class Layer(object):
         if self.graph_type == LayerType.input.value:
             return
         hasher = hashlib.md5()
+        hasher.update(LayerType(self.graph_type).name.encode('ascii'))
+        hasher.update(str(self.size).encode('ascii'))
         for i in self.input:
             if layers[i].hash_id is None:
                 raise ValueError('Hash id of layer {}: {} not generated!'.format(i, layers[i]))
@@ -134,18 +136,22 @@ def graph_loads(graph_json):
     for layer in graph_json['layers']:
         layer_info = Layer(layer['graph_type'], layer['input'], layer['output'], layer['size'], layer['hash_id'])
         layer_info.is_delete = layer['is_delete']
+        _logger.debug('append layer {}'.format(layer_info))
         layers.append(layer_info)
-    graph = Graph(graph_json['max_layer_num'], [], [], [])
+    graph = Graph(graph_json['max_layer_num'], graph_json['min_layer_num'], [], [], [])
     graph.layers = layers
+    _logger.debug('graph {} loaded'.format(graph))
     return graph
 
 class Graph(object):
     '''
     Customed Graph class.
     '''
-    def __init__(self, max_layer_num, inputs, output, hide):
+    def __init__(self, max_layer_num, min_layer_num, inputs, output, hide):
         self.layers = []
         self.max_layer_num = max_layer_num
+        self.min_layer_num = min_layer_num
+        assert min_layer_num < max_layer_num
 
         for layer in inputs:
             self.layers.append(layer)
@@ -254,7 +260,7 @@ class Graph(object):
         if self.layer_num() < self.max_layer_num:
             types.append(0)
             types.append(1)
-        if self.layer_num() > 5 and only_add is False:
+        if self.layer_num() > self.min_layer_num and only_add is False:
             types.append(2)
             types.append(3)
         # 0 : add a layer , delete a edge
