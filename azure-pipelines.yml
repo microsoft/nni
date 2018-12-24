@@ -9,30 +9,19 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  - script: |
-      echo $(Release.ReleaseUri)
-  - script: |
-      echo $(Agent.TempDirectory)
-  - script: |
-      echo $(Agent.WorkFolder)
-  - script: |
-      echo $(Build.BuildURI)
-  - script: |
-      echo $(Build.SourceBranch)
-  - script: |
-      echo $(Build.SourceBranchName)
   #- script: python3 -m pip install --upgrade pip setuptools
   #  displayName: 'Install python tools'
   #- script: |
   #    source install.sh
   #  displayName: 'Install nni toolkit via source code'
-  #- task: DownloadSecureFile@1
-  #  inputs:
-  #    secureFile: id_rsa
-  #- script: |
-  #    cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
-  #    chmod 600 ./id_rsa
-  #  displayName: 'Download secure file'
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: id_rsa2
+  - script: |
+      cd test && cp $(Agent.TempDirectory)/id_rsa2 ./id_rsa
+      chmod 600 ./id_rsa
+      ssh -i id_rsa 13.77.155.238 "echo hello"
+    displayName: 'Download secure file'
   #- task: CopyFilesOverSSH@0
   #  inputs:
   #    sshEndpoint: remote241
@@ -44,9 +33,9 @@ jobs:
   #  inputs:
   #    sshEndpoint: remote241
   #    runOptions: script
-  #    scriptPath: install_sdk_remote.sh
+  #    scriptPath: test_remote.sh
   #  displayName: 'Install sdk in remote machine'
-  #- script: |
+ #- script: |
   #    cd test
   #    PATH=$HOME/.local/bin:$PATH python3 naive_test.py
   #  displayName: 'Integration tests'
