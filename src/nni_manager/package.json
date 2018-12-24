@@ -5,7 +5,7 @@
   "scripts": {
     "postbuild": "cp -rf scripts ./dist/ && cp -rf config ./dist/",
     "build": "tsc",
-    "test": "nyc mocha --include-all-sources -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
+    "test": "nyc mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
     "start": "node dist/main.js"
   },
   "license": "MIT",
