@@ -16,6 +16,10 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       cd test
+      source naive_test.py
+    displayName: 'Unit test'
+  - script: |
+      cd test
       PATH=$HOME/.local/bin:$PATH python3 naive_test.py
     displayName: 'Integration tests'
   - script: |
@@ -37,6 +41,10 @@ jobs:
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
+  - script: |
+      cd test
+      source naive_test.py
+    displayName: 'Unit test'
   - script: |
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH python3 naive_test.py
