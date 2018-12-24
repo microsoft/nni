@@ -91,7 +91,7 @@ if __name__ == '__main__':
     installed = (sys.argv[-1] != '--preinstall')
     setup_experiment(installed)
     try:
-        run('local')
+        # run('local')
         run('remote')
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)

@@ -16,11 +16,11 @@ jobs:
   #  displayName: 'Install nni toolkit via source code'
   - task: DownloadSecureFile@1
     inputs:
-      secureFile: id_rsa2
+      secureFile: id_rsa
   - script: |
-      cd test && cp $(Agent.TempDirectory)/id_rsa2 ./id_rsa
+      cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
       chmod 600 ./id_rsa
-      ssh -i id_rsa 13.77.155.238 "echo hello"
+      # ssh -i id_rsa 13.77.155.238 "echo hello"
     displayName: 'Download secure file'
   #- task: CopyFilesOverSSH@0
   #  inputs:
@@ -35,10 +35,10 @@ jobs:
   #    runOptions: script
   #    scriptPath: test_remote.sh
   #  displayName: 'Install sdk in remote machine'
- #- script: |
-  #    cd test
-  #    PATH=$HOME/.local/bin:$PATH python3 naive_test.py
-  #  displayName: 'Integration tests'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 naive_test.py
+    displayName: 'Integration tests'
   #- script: |
   #    cd test
   #    PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
