@@ -75,11 +75,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         if(!this.kubernetesClusterConfig) {
             throw new Error('frameworkcontrollerClusterConfig is not initialized');
         }
-
-        if(!this.frameworkcontrollerTrialConfig) {
-            throw new Error('frameworkcontroller trial config is not initialized');
-        }
-
         if(!this.kubernetesCRDClient) {
             throw new Error('kubernetesCRDClient is undefined');
         }
@@ -88,40 +83,54 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             const restServer: FrameworkControllerJobRestServer = component.get(FrameworkControllerJobRestServer);
             this.kubernetesRestServerPort = restServer.clusterRestServerPort;
         }
+
         const trialJobId: string = uniqueString(5);
         const curTrialSequenceId: number = this.generateSequenceId();
         // Set trial's NFS working folder
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
-        //create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
-        await cpp.exec(`cp -r ${this.frameworkcontrollerTrialConfig.codeDir} ${trialLocalTempFolder}`);
-        const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
-        // Write NNI installation file to local tmp files
-        await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
-        // Create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
-
-        const podResources : any = [];
-        for(let taskRole of this.frameworkcontrollerTrialConfig.taskRoles) {
-            const runScriptContent: string = this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder, 
-                taskRole.command, curTrialSequenceId.toString(), taskRole.name, taskRole.gpuNum);
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, `run_${taskRole.name}.sh`), runScriptContent, { encoding: 'utf8' });
-            let resource: any = {};
-            resource.requests = this.generatePodResource(taskRole.memoryMB, taskRole.cpuNum, taskRole.gpuNum);
-            resource.limits = Object.assign({}, resource.requests);
-            podResources.push(resource);
-        }
+        const frameworkcontrollerJobName = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();
         
-        // Write file content ( parameter.cfg ) to local tmp folders
-        const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
-        if(trialForm && trialForm.hyperParameters) {
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
-                            trialForm.hyperParameters.value, { encoding: 'utf8' });
-        }
-        const frameworkcontrollerJobName = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();   
+        await this.prepareRunScript(trialLocalTempFolder, curTrialSequenceId, trialJobId, trialWorkingFolder, form);
+        
+        //upload code files
+        let trialJobOutputUrl: string = await this.uploadCodeFiles(trialJobId, trialLocalTempFolder);
+        
+        const trialJobDetail: KubernetesTrialJobDetail = new KubernetesTrialJobDetail(
+            trialJobId,
+            'WAITING',
+            Date.now(),
+            trialWorkingFolder,
+            form,
+            frameworkcontrollerJobName,
+            curTrialSequenceId,
+            trialJobOutputUrl
+        );
 
-        //The output url used in trialJobDetail
+        // Set trial job detail until create frameworkcontroller job successfully 
+        this.trialJobsMap.set(trialJobId, trialJobDetail);
+        
+        // Create frameworkcontroller job based on generated frameworkcontroller job resource config
+        const frameworkcontrollerJobConfig = await this.prepareFrameworkControllerConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName);
+        await this.kubernetesCRDClient.createKubernetesJob(frameworkcontrollerJobConfig);
+
+        // Set trial job detail until create frameworkcontroller job successfully 
+        this.trialJobsMap.set(trialJobId, trialJobDetail);
+
+        return Promise.resolve(trialJobDetail);
+    }
+
+    /**
+     * upload code files to nfs or azureStroage
+     * @param trialJobId 
+     * @param trialLocalTempFolder 
+     * return: trialJobOutputUrl
+     */
+    public async uploadCodeFiles(trialJobId: string, trialLocalTempFolder: string): Promise<string> {
+        if(!this.kubernetesClusterConfig) {
+            throw new Error('Kubeflow Cluster config is not initialized');
+        }
+
         let trialJobOutputUrl: string = '';
 
         if(this.kubernetesClusterConfig.storageType === 'azureStorage') {
@@ -145,32 +154,54 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             const nfsConfig: NFSConfig = nfsFrameworkControllerClusterConfig.nfs;
             trialJobOutputUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`
         }
+        return Promise.resolve(trialJobOutputUrl);
+    }
+    
+    public async prepareRunScript(trialLocalTempFolder: string, curTrialSequenceId: number, trialJobId: string, trialWorkingFolder: string, form: JobApplicationForm): Promise<void> {
+        if(!this.frameworkcontrollerTrialConfig) {
+            throw new Error('frameworkcontroller trial config is not initialized');
+        }
 
-        const trialJobDetail: KubernetesTrialJobDetail = new KubernetesTrialJobDetail(
-            trialJobId,
-            'WAITING',
-            Date.now(),
-            trialWorkingFolder,
-            form,
-            frameworkcontrollerJobName,
-            curTrialSequenceId,
-            trialJobOutputUrl
-        );
+        await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
+        await cpp.exec(`cp -r ${this.frameworkcontrollerTrialConfig.codeDir} ${trialLocalTempFolder}`);
+        const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
+        // Write NNI installation file to local tmp files
+        await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
+        // Create tmp trial working folder locally.
+        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
-        // Set trial job detail until create frameworkcontroller job successfully 
-        this.trialJobsMap.set(trialJobId, trialJobDetail);
+        for(let taskRole of this.frameworkcontrollerTrialConfig.taskRoles) {
+            const runScriptContent: string = this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder, 
+                taskRole.command, curTrialSequenceId.toString(), taskRole.name, taskRole.gpuNum);
+            await fs.promises.writeFile(path.join(trialLocalTempFolder, `run_${taskRole.name}.sh`), runScriptContent, { encoding: 'utf8' });
+        }
 
+        // Write file content ( parameter.cfg ) to local tmp folders
+        const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
+        if(trialForm && trialForm.hyperParameters) {
+            await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
+                            trialForm.hyperParameters.value, { encoding: 'utf8' });
+        }
+    }
+    
+    public async prepareFrameworkControllerConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string): Promise<any> {
+
+        if(!this.frameworkcontrollerTrialConfig) {
+            throw new Error('frameworkcontroller trial config is not initialized');
+        }
+
+        const podResources : any = [];
+        for(let taskRole of this.frameworkcontrollerTrialConfig.taskRoles) {
+            let resource: any = {};
+            resource.requests = this.generatePodResource(taskRole.memoryMB, taskRole.cpuNum, taskRole.gpuNum);
+            resource.limits = Object.assign({}, resource.requests);
+            podResources.push(resource);
+        }
         // Generate frameworkcontroller job resource config object        
         const frameworkcontrollerJobConfig: any = this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
 
-        // Create frameworkcontroller job based on generated frameworkcontroller job resource config
-        await this.kubernetesCRDClient.createKubernetesJob(frameworkcontrollerJobConfig);
-
-        // Set trial job detail until create frameworkcontroller job successfully 
-        this.trialJobsMap.set(trialJobId, trialJobDetail);
-
-        return Promise.resolve(trialJobDetail);
-    }
+        return Promise.resolve(frameworkcontrollerJobConfig);
+    } 
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {

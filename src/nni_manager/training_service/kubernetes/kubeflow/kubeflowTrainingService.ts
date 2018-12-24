@@ -78,14 +78,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
     }
 
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        if(!this.kubeflowClusterConfig) {
-            throw new Error('Kubeflow Cluster config is not initialized');
-        }
-
-        if(!this.kubeflowTrialConfig) {
-            throw new Error('Kubeflow trial config is not initialized');
-        }
-
         if(!this.kubernetesCRDClient) {
             throw new Error('Kubeflow job operator client is undefined');
         }
@@ -94,86 +86,48 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             const restServer: KubeflowJobRestServer = component.get(KubeflowJobRestServer);
             this.kubernetesRestServerPort = restServer.clusterRestServerPort;
         }
-        // initialize kubeflow trial config to specific type
-        let kubeflowTrialConfig;
-        if(this.kubeflowTrialConfig.operatorType === 'tf-operator') {
-            kubeflowTrialConfig = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
-        }else if(this.kubeflowTrialConfig.operatorType === 'pytorch-operator'){
-            kubeflowTrialConfig = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
-        }else {
-            throw Error(`kubeflowTrialConfig is invalid`)
-        }
-
         const trialJobId: string = uniqueString(5);
-        const curTrialSequenceId: number = this.generateSequenceId();
-        // Set trial's NFS working folder
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
-        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
-        //create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
-        await cpp.exec(`cp -r ${kubeflowTrialConfig.codeDir} ${trialLocalTempFolder}`);
-        const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
-        // Write NNI installation file to local tmp files
-        await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
-        // Create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
-
-        // Write worker file content run_worker.sh to local tmp folders
-        if(kubeflowTrialConfig.worker) {
-            const workerRunScriptContent: string = this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
-                    kubeflowTrialConfig.worker.command, curTrialSequenceId.toString(), 'worker', kubeflowTrialConfig.worker.gpuNum);
-
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
-        }
-        // Write parameter server file content run_ps.sh to local tmp folders
-        if(this.kubeflowTrialConfig.operatorType === 'tf-operator') {
-            let tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
-            if(tensorflowTrialConfig.ps){
-                const psRunScriptContent: string = this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
-                    tensorflowTrialConfig.ps.command, curTrialSequenceId.toString(), 'ps', tensorflowTrialConfig.ps.gpuNum);
-                await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
-            }
-        }
-        else if(this.kubeflowTrialConfig.operatorType === 'pytorch-operator') {
-            let pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
-            if(pytorchTrialConfig.master){
-                const masterRunScriptContent: string = this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
-                    pytorchTrialConfig.master.command, curTrialSequenceId.toString(), 'master', pytorchTrialConfig.master.gpuNum);
-                await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), masterRunScriptContent, { encoding: 'utf8' });
-            }
-        }
-        // Write file content ( parameter.cfg ) to local tmp folders
-        const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
-        if(trialForm && trialForm.hyperParameters) {
-            await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
-                            trialForm.hyperParameters.value, { encoding: 'utf8' });
-        }
         const kubeflowJobName = `nni-exp-${this.experimentId}-trial-${trialJobId}`.toLowerCase();
-        
-        const workerPodResources : any = {};
-        if(kubeflowTrialConfig.worker) {
-            workerPodResources.requests = this.generatePodResource(kubeflowTrialConfig.worker.memoryMB, kubeflowTrialConfig.worker.cpuNum, 
-                kubeflowTrialConfig.worker.gpuNum)
+        const curTrialSequenceId: number = this.generateSequenceId();
+        const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
+        //prepare the runscript
+        await this.prepareRunScript(trialLocalTempFolder, trialJobId, trialWorkingFolder, curTrialSequenceId, form);
+        //upload files to sotrage
+        const trialJobOutputUrl: string = await this.uploadCodeFiles(trialJobId, trialLocalTempFolder);
+        const trialJobDetail: KubernetesTrialJobDetail = new KubernetesTrialJobDetail(
+            trialJobId,
+            'WAITING',
+            Date.now(),
+            trialWorkingFolder,
+            form,
+            kubeflowJobName,
+            curTrialSequenceId,
+            trialJobOutputUrl
+        );
+       
+        // Generate kubeflow job resource config object        
+        const kubeflowJobConfig: any = await this.prepareKubeflowConfig(trialJobId, trialWorkingFolder, kubeflowJobName);
+        // Create kubeflow job based on generated kubeflow job resource config
+        await this.kubernetesCRDClient.createKubernetesJob(kubeflowJobConfig);
+
+        // Set trial job detail until create Kubeflow job successfully 
+        this.trialJobsMap.set(trialJobId, trialJobDetail);
+
+        return Promise.resolve(trialJobDetail);
+    }
+    
+    /**
+     * upload code files to nfs or azureStroage
+     * @param trialJobId 
+     * @param trialLocalTempFolder 
+     * return: trialJobOutputUrl
+     */
+    public async uploadCodeFiles(trialJobId: string, trialLocalTempFolder: string): Promise<string> {
+        if(!this.kubeflowClusterConfig) {
+            throw new Error('Kubeflow Cluster config is not initialized');
         }
-        workerPodResources.limits = Object.assign({}, workerPodResources.requests);
 
-        let nonWorkerResources : any = {};
-        if(this.kubeflowTrialConfig.operatorType === 'tf-operator') {
-            let tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
-            if (tensorflowTrialConfig.ps) {
-                nonWorkerResources.requests = this.generatePodResource(tensorflowTrialConfig.ps.memoryMB, tensorflowTrialConfig.ps.cpuNum, 
-                    tensorflowTrialConfig.ps.gpuNum)
-                    nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
-            }
-        }else if(this.kubeflowTrialConfig.operatorType === 'pytorch-operator'){
-            let pyTorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
-            nonWorkerResources.requests = this.generatePodResource(pyTorchTrialConfig.master.memoryMB, pyTorchTrialConfig.master.cpuNum, 
-                pyTorchTrialConfig.master.gpuNum)
-                nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
-            
-        }       
-
-        //The output url used in trialJobDetail
         let trialJobOutputUrl: string = '';
 
         assert(!this.kubeflowClusterConfig.storage 
@@ -202,33 +156,112 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             trialJobOutputUrl = `nfs://${nfsConfig.server}:${path.join(nfsConfig.path, 'nni', getExperimentId(), trialJobId, 'output')}`
         }
 
-        const trialJobDetail: KubernetesTrialJobDetail = new KubernetesTrialJobDetail(
-            trialJobId,
-            'WAITING',
-            Date.now(),
-            trialWorkingFolder,
-            form,
-            kubeflowJobName,
-            curTrialSequenceId,
-            trialJobOutputUrl
-        );
+        return Promise.resolve(trialJobOutputUrl);
+    }
+    
+    public async prepareRunScript(trialLocalTempFolder: string, trialJobId: string, trialWorkingFolder: string, curTrialSequenceId: number, form: JobApplicationForm): Promise<void> {
+        if(!this.kubeflowClusterConfig) {
+            throw new Error('Kubeflow Cluster config is not initialized');
+        }
 
-        // Set trial job detail until create Kubeflow job successfully 
-        this.trialJobsMap.set(trialJobId, trialJobDetail);
+        // initialize kubeflow trial config to specific type
+        let kubeflowTrialConfig;
+        if(this.kubeflowClusterConfig.operator === 'tf-operator') {
+            kubeflowTrialConfig = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
+        }else if(this.kubeflowClusterConfig.operator === 'pytorch-operator'){
+            kubeflowTrialConfig = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
+        }else {
+            throw Error(`operator ${this.kubeflowClusterConfig.operator} is invalid`)
+        }
+    
+       //create tmp trial working folder locally.
+       await cpp.exec(`mkdir -p ${path.dirname(trialLocalTempFolder)}`);
+       await cpp.exec(`cp -r ${kubeflowTrialConfig.codeDir} ${trialLocalTempFolder}`);
+       const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
+       // Write NNI installation file to local tmp files
+       await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
+       // Create tmp trial working folder locally.
+       await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
+
+       // Write worker file content run_worker.sh to local tmp folders
+       if(kubeflowTrialConfig.worker) {
+           const workerRunScriptContent: string = this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
+                   kubeflowTrialConfig.worker.command, curTrialSequenceId.toString(), 'worker', kubeflowTrialConfig.worker.gpuNum);
+
+           await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
+       }
+       // Write parameter server file content run_ps.sh to local tmp folders
+       if(this.kubeflowClusterConfig.operator === 'tf-operator') {
+           let tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
+           if(tensorflowTrialConfig.ps){
+               const psRunScriptContent: string = this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
+                   tensorflowTrialConfig.ps.command, curTrialSequenceId.toString(), 'ps', tensorflowTrialConfig.ps.gpuNum);
+               await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
+           }
+       }
+       else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
+           let pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
+           if(pytorchTrialConfig.master){
+               const masterRunScriptContent: string = this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
+                   pytorchTrialConfig.master.command, curTrialSequenceId.toString(), 'master', pytorchTrialConfig.master.gpuNum);
+               await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), masterRunScriptContent, { encoding: 'utf8' });
+           }
+       }
+       // Write file content ( parameter.cfg ) to local tmp folders
+       const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
+       if(trialForm && trialForm.hyperParameters) {
+           await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
+                           trialForm.hyperParameters.value, { encoding: 'utf8' });
+       }
+    }
+    
+    public async prepareKubeflowConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName: string): Promise<any> {
+        if(!this.kubeflowClusterConfig) {
+            throw new Error('Kubeflow Cluster config is not initialized');
+        }
+
+        if(!this.kubeflowTrialConfig) {
+            throw new Error('Kubeflow trial config is not initialized');
+        }
+
+        // initialize kubeflow trial config to specific type
+        let kubeflowTrialConfig;
+        if(this.kubeflowClusterConfig.operator === 'tf-operator') {
+            kubeflowTrialConfig = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
+        }else if(this.kubeflowClusterConfig.operator === 'pytorch-operator'){
+            kubeflowTrialConfig = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
+        }else {
+            throw Error(`operator ${this.kubeflowClusterConfig.operator} is invalid`)
+        }
+        
+        const workerPodResources : any = {};
+        if(kubeflowTrialConfig.worker) {
+            workerPodResources.requests = this.generatePodResource(kubeflowTrialConfig.worker.memoryMB, kubeflowTrialConfig.worker.cpuNum, 
+                kubeflowTrialConfig.worker.gpuNum)
+        }
+        workerPodResources.limits = Object.assign({}, workerPodResources.requests);
+
+        let nonWorkerResources : any = {};
+        if(this.kubeflowClusterConfig.operator === 'tf-operator') {
+            let tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
+            if (tensorflowTrialConfig.ps) {
+                nonWorkerResources.requests = this.generatePodResource(tensorflowTrialConfig.ps.memoryMB, tensorflowTrialConfig.ps.cpuNum, 
+                    tensorflowTrialConfig.ps.gpuNum)
+                    nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
+            }
+        }else if(this.kubeflowClusterConfig.operator === 'pytorch-operator'){
+            let pyTorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
+            nonWorkerResources.requests = this.generatePodResource(pyTorchTrialConfig.master.memoryMB, pyTorchTrialConfig.master.cpuNum, 
+                pyTorchTrialConfig.master.gpuNum)
+                nonWorkerResources.limits = Object.assign({}, nonWorkerResources.requests); 
+            
+        }       
 
         // Generate kubeflow job resource config object        
         const kubeflowJobConfig: any = this.generateKubeflowJobConfig(trialJobId, trialWorkingFolder, kubeflowJobName, workerPodResources, nonWorkerResources);
 
-        // Create kubeflow job based on generated kubeflow job resource config
-        await this.kubernetesCRDClient.createKubernetesJob(kubeflowJobConfig);
-
-        // Set trial job detail until create Kubeflow job successfully 
-        this.trialJobsMap.set(trialJobId, trialJobDetail);
-
-        return Promise.resolve(trialJobDetail);
-    }
-
-
+        return Promise.resolve(kubeflowJobConfig);
+    } 
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {
