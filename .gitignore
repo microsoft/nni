@@ -67,3 +67,8 @@ typings/
 __pycache__
 build
 *.egg-info
+
+# sphinx cache
+docs/_build
+docs/_static
+docs/_templates
