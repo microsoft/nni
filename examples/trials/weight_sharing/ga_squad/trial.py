@@ -448,7 +448,7 @@ if __name__ == '__main__':
         save_path = original_params['save_dir']
         os.makedirs(save_path)
         restore_path = original_params['restore_dir']
-        restore_shared = [hash_id + '/' for hash_id in original_params['shared_id']] + ['word_embed', 'char_embed', 'char_encoding/']
+        restore_shared = [hash_id + '/' for hash_id in original_params['shared_id']] if original_params['shared_id'] is not None else [] + ['word_embed', 'char_embed', 'char_encoding/']
         train_loss, best_acc = train_with_graph(p_graph, qp_pairs, dev_qp_pairs)
 
         logger.debug('Send best acc: %s', str(best_acc))
