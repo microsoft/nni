@@ -15,6 +15,9 @@ jobs:
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
+      node -v
+    displayName: 'to see'
+  - script: |
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH && source unittest.sh
     displayName: 'Unit test'
