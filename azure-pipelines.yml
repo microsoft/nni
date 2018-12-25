@@ -20,6 +20,8 @@ jobs:
   - script: |
       cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
       chmod 600 ./id_rsa
+      pwd
+      ls
       # ssh -i id_rsa 13.77.155.238 "echo hello"
     displayName: 'Download secure file'
   #- task: CopyFilesOverSSH@0

@@ -30,4 +30,5 @@
    - ip: 104.210.63.241
      username: nni
      port: 22
-     sshKeyPath: id_rsa
+     #sshKeyPath: id_rsa
+     passwd: nniNNI123nniNNI
