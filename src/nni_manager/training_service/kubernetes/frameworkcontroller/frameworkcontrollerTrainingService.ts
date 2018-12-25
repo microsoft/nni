@@ -126,7 +126,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
      * @param trialLocalTempFolder 
      * return: trialJobOutputUrl
      */
-    public async uploadCodeFiles(trialJobId: string, trialLocalTempFolder: string): Promise<string> {
+    private async uploadCodeFiles(trialJobId: string, trialLocalTempFolder: string): Promise<string> {
         if(!this.kubernetesClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -157,7 +157,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         return Promise.resolve(trialJobOutputUrl);
     }
     
-    public async prepareRunScript(trialLocalTempFolder: string, curTrialSequenceId: number, trialJobId: string, trialWorkingFolder: string, form: JobApplicationForm): Promise<void> {
+    private async prepareRunScript(trialLocalTempFolder: string, curTrialSequenceId: number, trialJobId: string, trialWorkingFolder: string, form: JobApplicationForm): Promise<void> {
         if(!this.frameworkcontrollerTrialConfig) {
             throw new Error('frameworkcontroller trial config is not initialized');
         }
@@ -184,7 +184,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         }
     }
     
-    public async prepareFrameworkControllerConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string): Promise<any> {
+    private async prepareFrameworkControllerConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string): Promise<any> {
 
         if(!this.frameworkcontrollerTrialConfig) {
             throw new Error('frameworkcontroller trial config is not initialized');

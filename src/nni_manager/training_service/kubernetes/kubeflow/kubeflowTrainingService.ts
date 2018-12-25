@@ -123,7 +123,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
      * @param trialLocalTempFolder 
      * return: trialJobOutputUrl
      */
-    public async uploadCodeFiles(trialJobId: string, trialLocalTempFolder: string): Promise<string> {
+    private async uploadCodeFiles(trialJobId: string, trialLocalTempFolder: string): Promise<string> {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -159,7 +159,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         return Promise.resolve(trialJobOutputUrl);
     }
     
-    public async prepareRunScript(trialLocalTempFolder: string, trialJobId: string, trialWorkingFolder: string, curTrialSequenceId: number, form: JobApplicationForm): Promise<void> {
+    private async prepareRunScript(trialLocalTempFolder: string, trialJobId: string, trialWorkingFolder: string, curTrialSequenceId: number, form: JobApplicationForm): Promise<void> {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
@@ -215,7 +215,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
        }
     }
     
-    public async prepareKubeflowConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName: string): Promise<any> {
+    private async prepareKubeflowConfig(trialJobId: string, trialWorkingFolder: string, kubeflowJobName: string): Promise<any> {
         if(!this.kubeflowClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
