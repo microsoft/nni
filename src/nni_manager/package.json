@@ -59,8 +59,7 @@
   },
   "nyc": {
     "include": [
-      "**/*.ts",
-      "**/*.tsx"
+      "**/*.ts"
     ],
     "exclude": [
       "**/test/*",
