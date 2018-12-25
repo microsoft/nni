@@ -18,7 +18,7 @@ jobs:
   #  inputs:
   #    secureFile: id_rsa2
   - script: |
-      echo %(Build.BuildId)
+      echo $(Build.BuildId)
       #cd test && cp $(Agent.TempDirectory)/id_rsa2 ./id_rsa
       #pwd
       #ls
