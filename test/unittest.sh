@@ -1,5 +1,6 @@
 #!/bin/bash
 CWD=${PWD}
+
 # -------------For python unittest-------------
 
 ## ------Run annotation test------
