@@ -28,7 +28,7 @@ export namespace ValidationSchemas {
                 username: joi.string().required(),
                 ip: joi.string().ip().required(),
                 port: joi.number().min(1).max(65535).required(),
-                passwd: joi.string().required(),
+                passwd: joi.string(),
                 sshKeyPath: joi.string(),
                 passphrase: joi.string()
             })),
