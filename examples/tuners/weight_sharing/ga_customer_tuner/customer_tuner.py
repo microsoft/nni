@@ -49,7 +49,7 @@ class Individual(object):
         self.info = info
         self.indiv_id = indiv_id
         self.parent_id = None
-        self.shared_ids = {layer.hash_id for layer in self.config.layers}
+        self.shared_ids = {layer.hash_id for layer in self.config.layers if layer.is_delete is False}
 
     def __str__(self):
         return "info: " + str(self.info) + ", config :" + str(self.config) + ", result: " + str(self.result)
@@ -62,7 +62,7 @@ class Individual(object):
         self.info = info
         self.parent_id = self.indiv_id
         self.indiv_id = indiv_id
-        self.shared_ids.intersection_update({layer.hash_id for layer in self.config.layers})
+        self.shared_ids.intersection_update({layer.hash_id for layer in self.config.layers if layer.is_delete is False})
 
 
 class CustomerTuner(Tuner):
@@ -142,7 +142,7 @@ class CustomerTuner(Tuner):
             'graph': graph_param,
             'restore_dir': self.save_dir(indiv.parent_id),
             'save_dir': self.save_dir(indiv.indiv_id),
-            'shared_id': list(indiv.shared_ids),
+            'shared_id': list(indiv.shared_ids) if indiv.parent_id is not None else None,
         }
         logger.debug('generate_parameter return value is:')
         logger.debug(param_json)
