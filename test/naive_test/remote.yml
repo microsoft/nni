@@ -30,4 +30,4 @@
    - ip: 13.77.155.238
      username: t-shya
      port: 8800
-     sshKeyPath: /home/vsts/work/1/s/id_rsa
+     sshKeyPath: /home/vsts/work/1/s/test/id_rsa
