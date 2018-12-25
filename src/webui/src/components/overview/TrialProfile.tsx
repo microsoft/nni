@@ -29,7 +29,7 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
             <div className="profile">
                 <MonacoEditor
                     width="100%"
-                    height="386"
+                    height="380"
                     language="json"
                     theme="vs-light"
                     value={JSON.stringify(showProInfo[0], null, 2)}

@@ -195,6 +195,3 @@ export namespace AzureStorageClientUtility {
         return deferred.promise;
     }
 }
-
-
-

@@ -28,7 +28,7 @@ import re
 from pyhdfs import HdfsClient
 
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
-from .hdfsClientUtility import copyDirectoryToHdfs
+from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
 from .log_utils import LogType, nni_log
 from .metrics_reader import read_experiment_metrics
 
@@ -42,6 +42,15 @@ def main_loop(args):
     
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
+
+    if args.pai_hdfs_host is not None and args.nni_hdfs_exp_dir is not None:
+        try:
+            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
+        except Exception as e:
+            nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
+            raise e
+        copyHdfsDirectoryToLocal(args.nni_hdfs_exp_dir, os.getcwd(), hdfs_client)
+
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     process = Popen(args.trial_command, shell = True, stdout = stdout_file, stderr = stderr_file)
     nni_log(LogType.Info, 'Trial keeper spawns a subprocess (pid {0}) to run command: {1}'.format(process.pid, shlex.split(args.trial_command)))
@@ -53,11 +62,10 @@ def main_loop(args):
         
         if retCode is not None:
             nni_log(LogType.Info, 'subprocess terminated. Exit code is {}. Quit'.format(retCode))
-            if NNI_PLATFORM == 'pai':
+            if args.pai_hdfs_output_dir is not None:
                 # Copy local directory to hdfs for OpenPAI
                 nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
                 try:
-                    hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
                     if copyDirectoryToHdfs(nni_local_output_dir, args.pai_hdfs_output_dir, hdfs_client):
                         nni_log(LogType.Info, 'copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
                     else:
@@ -85,6 +93,7 @@ if __name__ == '__main__':
     PARSER.add_argument('--pai_hdfs_output_dir', type=str, help='the output dir of hdfs')
     PARSER.add_argument('--pai_hdfs_host', type=str, help='the host of hdfs')
     PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
+    PARSER.add_argument('--nni_hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)

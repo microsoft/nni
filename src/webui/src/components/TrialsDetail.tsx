@@ -18,6 +18,7 @@ interface TrialDetailState {
     accNodata: string;
     tableListSource: Array<TableObj>;
     tableBaseSource: Array<TableObj>;
+    experimentStatus: string;
 }
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
@@ -33,7 +34,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             accSource: {},
             accNodata: '',
             tableListSource: [],
-            tableBaseSource: []
+            tableBaseSource: [],
+            experimentStatus: ''
         };
     }
     // trial accuracy graph
@@ -120,8 +122,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     }
 
     drawTableList = () => {
-
-            axios.get(`${MANAGER_IP}/trial-jobs`)
+        this.isOffIntervals();
+        axios.get(`${MANAGER_IP}/trial-jobs`)
             .then(res => {
                 if (res.status === 200) {
                     const trialJobs = res.data;
@@ -148,7 +150,12 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             }
                         }
                         if (trialJobs[item].hyperParameters !== undefined) {
-                            desc.parameters = JSON.parse(trialJobs[item].hyperParameters).parameters;
+                            const getPara = JSON.parse(trialJobs[item].hyperParameters[0]).parameters;
+                            if (typeof getPara === 'string') {
+                                desc.parameters = JSON.parse(getPara);
+                            } else {
+                                desc.parameters = getPara;
+                            }
                         } else {
                             desc.parameters = { error: 'This trial\'s parameters are not available.' };
                         }
@@ -187,11 +194,13 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 break;
 
             case '2':
+                this.isOffIntervals();
                 window.clearInterval(this.interAccuracy);
                 window.clearInterval(Duration.intervalDuration);
                 break;
 
             case '3':
+                this.isOffIntervals();
                 window.clearInterval(this.interAccuracy);
                 window.clearInterval(Para.intervalIDPara);
                 break;
@@ -226,6 +235,28 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         this.drawTableList();
         this.interTableList = window.setInterval(this.drawTableList, 10000);
     }
+
+    isOffIntervals = () => {
+        axios(`${MANAGER_IP}/check-status`, {
+            method: 'GET'
+        })
+            .then(res => {
+                if (res.status === 200 && this._isMounted) {
+                    switch (res.data.status) {
+                        case 'DONE':
+                        case 'ERROR':
+                        case 'STOPPED':
+                            window.clearInterval(this.interAccuracy);
+                            window.clearInterval(this.interTableList);
+                            window.clearInterval(Duration.intervalDuration);
+                            window.clearInterval(Para.intervalIDPara);
+                            break;
+                        default:
+                    }
+                }
+            });
+    }
+
     componentDidMount() {
 
         this._isMounted = true;

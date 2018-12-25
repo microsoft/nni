@@ -1,23 +1,22 @@
 # Setting variables
 
-PIP_INSTALL := python3 -m pip install
+PIP_INSTALL := python3 -m pip install --no-cache-dir
 PIP_UNINSTALL := python3 -m pip uninstall
 
-# detect OS
+## Colorful output
+_INFO := $(shell echo -e '\e[1;36m')
+_WARNING := $(shell echo -e '\e[1;33m')
+_END := $(shell echo -e '\e[0m')
+
+## Detect OS
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
 	OS_SPEC := linux
-	## Colorful output
-	_INFO := $(shell echo -e '\e[1;36m')
-	_WARNING := $(shell echo -e '\e[1;33m')
-	_END := $(shell echo -e '\e[0m')
 else ifeq ($(UNAME_S), Darwin)
 	OS_SPEC := darwin
 else
 	$(error platform $(UNAME_S) not supported)
 endif
-
-
 
 ## Install directories
 ifeq ($(shell id -u), 0)  # is root
@@ -34,7 +33,6 @@ endif
 BASH_COMP_SCRIPT := $(BASH_COMP_PREFIX)/nnictl
 
 NNI_INSTALL_PATH ?= $(INSTALL_PREFIX)/nni
-NNI_TMP_PATH ?= /tmp
 
 BIN_FOLDER ?= $(ROOT_FOLDER)/bin
 NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
@@ -46,6 +44,9 @@ NNI_NODE ?= $(BIN_FOLDER)/node
 NNI_YARN_TARBALL ?= /tmp/nni-yarn.tar.gz
 NNI_YARN_FOLDER ?= /tmp/nni-yarn
 NNI_YARN := PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
+
+## Version number
+NNI_VERSION = $(shell git describe --tags)
 
 # Main targets
 
@@ -159,18 +160,18 @@ install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
 .PHONY: install-python-modules
 install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	cd src/sdk/pynni && $(PIP_INSTALL) $(PIP_MODE) .
+	cd src/sdk/pynni && sed -ie 's/NNI_VERSION/$(NNI_VERSION)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
 	
 	#$(_INFO) Installing nnictl $(_END)
-	cd tools && $(PIP_INSTALL) $(PIP_MODE) .
+	cd tools && sed -ie 's/NNI_VERSION/$(NNI_VERSION)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
 
 .PHONY: dev-install-python-modules
 dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	cd src/sdk/pynni && $(PIP_INSTALL) $(PIP_MODE) -e .
+	cd src/sdk/pynni && sed -ie 's/NNI_VERSION/$(NNI_VERSION)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) -e .
 	
 	#$(_INFO) Installing nnictl $(_END)
-	cd tools && $(PIP_INSTALL) $(PIP_MODE) -e .
+	cd tools && sed -ie 's/NNI_VERSION/$(NNI_VERSION)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) -e .
 
 .PHONY: install-node-modules
 install-node-modules:
@@ -178,6 +179,7 @@ install-node-modules:
 	rm -rf $(NNI_PKG_FOLDER)
 	cp -r src/nni_manager/dist $(NNI_PKG_FOLDER)
 	cp src/nni_manager/package.json $(NNI_PKG_FOLDER)
+	sed -ie 's/NNI_VERSION/$(NNI_VERSION)/' $(NNI_PKG_FOLDER)/package.json
 	$(NNI_YARN) --prod --cwd $(NNI_PKG_FOLDER)
 	cp -r src/webui/build $(NNI_PKG_FOLDER)/static
 
@@ -186,6 +188,8 @@ dev-install-node-modules:
 	#$(_INFO) Installing NNI Package $(_END)
 	rm -rf $(NNI_PKG_FOLDER)
 	ln -sf ${PWD}/src/nni_manager/dist $(NNI_PKG_FOLDER)
+	cp src/nni_manager/package.json $(NNI_PKG_FOLDER)
+	sed -ie 's/NNI_VERSION/$(NNI_VERSION)/' $(NNI_PKG_FOLDER)/package.json
 	ln -sf ${PWD}/src/nni_manager/node_modules $(NNI_PKG_FOLDER)/node_modules
 	ln -sf ${PWD}/src/webui/build $(NNI_PKG_FOLDER)/static
 

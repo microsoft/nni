@@ -25,9 +25,10 @@ ModuleName = {
     'Evolution': 'nni.evolution_tuner.evolution_tuner',
     'SMAC': 'nni.smac_tuner.smac_tuner',
     'BatchTuner': 'nni.batch_tuner.batch_tuner',
+    'Medianstop': 'nni.medianstop_assessor.medianstop_assessor',
     'GridSearch': 'nni.gridsearch_tuner.gridsearch_tuner',
-    
-    'Medianstop': 'nni.medianstop_assessor.medianstop_assessor'
+    'NetworkMorphism': 'nni.networkmorphism_tuner.networkmorphism_tuner',
+    'Curvefitting': 'nni.curvefitting_assessor.curvefitting_assessor'
 }
 
 ClassName = {
@@ -38,8 +39,10 @@ ClassName = {
     'SMAC': 'SMACTuner',
     'BatchTuner': 'BatchTuner',
     'GridSearch': 'GridSearchTuner',
+    'NetworkMorphism':'NetworkMorphismTuner',
 
-    'Medianstop': 'MedianstopAssessor'
+    'Medianstop': 'MedianstopAssessor',
+    'Curvefitting': 'CurvefittingAssessor'
 }
 
 ClassArgs = {
