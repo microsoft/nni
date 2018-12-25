@@ -19,58 +19,98 @@
 
 'use strict';
 
-/** operator types that kubeflow supported */
-export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
-export type KubeflowStorageKind = 'nfs' | 'azureStorage';
-export type DistTrainRole = 'worker' | 'ps' | 'master';
-export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
+export type KubernetesStorageKind = 'nfs' | 'azureStorage';
+import { MethodNotImplementedError } from '../../common/errors';
 
-/**
- * Kuberflow cluster configuration
- * 
- */
-export class KubeflowClusterConfigBase {
-    /** Name of Kubeflow operator, like tf-operator */
-    public readonly operator: KubeflowOperator;
-    public readonly apiVersion: OperatorApiVersion;
-    public readonly storage?: KubeflowStorageKind;    
+export abstract class KubernetesClusterConfig {
+    public readonly storage?: KubernetesStorageKind;
+    public readonly apiVersion: string;
     
-    /**
-     * Constructor
-     * @param userName User name of Kubeflow Cluster
-     * @param passWord password of Kubeflow Cluster
-     * @param host Host IP of Kubeflow Cluster
-     */
-    constructor(operator: KubeflowOperator, apiVersion: OperatorApiVersion, storage?: KubeflowStorageKind) {
-        this.operator = operator;
+    constructor(apiVersion: string, storage?: KubernetesStorageKind) {
+        this.storage = storage;
         this.apiVersion = apiVersion;
+    }
+
+    public get storageType(): KubernetesStorageKind{
+        throw new MethodNotImplementedError();
+    }
+}
+
+export class StorageConfig {
+    public readonly storage?: KubernetesStorageKind;
+
+    constructor(storage?: KubernetesStorageKind) {
         this.storage = storage;
     }
 }
 
-export class KubeflowClusterConfigNFS extends KubeflowClusterConfigBase{
+export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
     public readonly nfs: NFSConfig;
-    
-    constructor(operator: KubeflowOperator, 
-            apiVersion: OperatorApiVersion, 
-            nfs: NFSConfig, storage?: KubeflowStorageKind) {
-        super(operator, apiVersion, storage);
+
+    constructor(
+            apiVersion: string, 
+            nfs: NFSConfig,
+            storage?: KubernetesStorageKind
+        ) {
+        super(apiVersion, storage);
         this.nfs = nfs;
+    }
+
+    public get storageType(): KubernetesStorageKind{
+        return 'nfs';
+    }
+
+    public static getInstance(jsonObject: object): KubernetesClusterConfigNFS {
+        let kubernetesClusterConfigObjectNFS = <KubernetesClusterConfigNFS>jsonObject;
+        return new KubernetesClusterConfigNFS(
+            kubernetesClusterConfigObjectNFS.apiVersion,
+            kubernetesClusterConfigObjectNFS.nfs,
+            kubernetesClusterConfigObjectNFS.storage
+        );
     }
 }
 
-export class KubeflowClusterConfigAzure extends KubeflowClusterConfigBase{
+export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     public readonly keyVault: keyVaultConfig;
     public readonly azureStorage: AzureStorage;
     
-    constructor(operator: KubeflowOperator, 
-            apiVersion: OperatorApiVersion, 
+    constructor(
+            apiVersion: string, 
             keyVault: keyVaultConfig, 
             azureStorage: AzureStorage, 
-            storage?: KubeflowStorageKind) {
-        super(operator, apiVersion, storage);
+            storage?: KubernetesStorageKind
+        ) {
+        super(apiVersion, storage);
         this.keyVault = keyVault;
         this.azureStorage = azureStorage;
+    }
+
+    public get storageType(): KubernetesStorageKind{
+        return 'azureStorage';
+    }
+
+    public static getInstance(jsonObject: object): KubernetesClusterConfigAzure {
+        let kubernetesClusterConfigObjectAzure = <KubernetesClusterConfigAzure>jsonObject;
+        return new KubernetesClusterConfigAzure(
+            kubernetesClusterConfigObjectAzure.apiVersion,
+            kubernetesClusterConfigObjectAzure.keyVault,
+            kubernetesClusterConfigObjectAzure.azureStorage,
+            kubernetesClusterConfigObjectAzure.storage
+        );
+    }
+}
+
+export class KubernetesClusterConfigFactory {
+
+    public static generateKubernetesClusterConfig(jsonObject: object): KubernetesClusterConfig {
+         let storageConfig = <StorageConfig>jsonObject;
+         switch(storageConfig.storage) {
+            case 'azureStorage':
+                return KubernetesClusterConfigAzure.getInstance(jsonObject);
+            case  'nfs' || undefined :
+                return KubernetesClusterConfigNFS.getInstance(jsonObject);
+         }
+         throw new Error(`Invalid json object ${jsonObject}`);
     }
 }
 
@@ -121,12 +161,9 @@ export class AzureStorage {
 }
 
 /**
- * Trial job configuration for Kubeflow
+ * Trial job configuration for Kubernetes
  */
-export class KubeflowTrialConfigTemplate {
-    /** replication number of current role */
-    public readonly replicas: number;
-
+export class KubernetesTrialConfigTemplate {
     /** CPU number */
     public readonly cpuNum: number;
 
@@ -142,9 +179,8 @@ export class KubeflowTrialConfigTemplate {
     /** Required GPU number for trial job. The number should be in [0,100] */
     public readonly gpuNum : number;
     
-    constructor(replicas: number, command : string, gpuNum : number, 
+    constructor(command : string, gpuNum : number, 
         cpuNum: number, memoryMB: number, image: string) {
-        this.replicas = replicas;
         this.command = command;
         this.gpuNum = gpuNum;
         this.cpuNum = cpuNum;
@@ -153,33 +189,10 @@ export class KubeflowTrialConfigTemplate {
     }
 }
 
-export class KubeflowTrialConfigBase {
+export class KubernetesTrialConfig {
     public readonly codeDir: string;
 
     constructor(codeDir: string) {
         this.codeDir = codeDir;
     }
 }
-
-export class KubeflowTrialConfigTensorflow extends KubeflowTrialConfigBase{
-    public readonly ps?: KubeflowTrialConfigTemplate;
-    public readonly worker: KubeflowTrialConfigTemplate;
-
-    constructor(codeDir: string, worker: KubeflowTrialConfigTemplate,  ps?: KubeflowTrialConfigTemplate) {
-        super(codeDir);
-        this.ps = ps;
-        this.worker = worker;
-    }
-}
-
-export class KubeflowTrialConfigPytorch extends KubeflowTrialConfigBase{
-    public readonly master: KubeflowTrialConfigTemplate;
-    public readonly worker?: KubeflowTrialConfigTemplate;
-
-    constructor(codeDir: string, master: KubeflowTrialConfigTemplate, worker?: KubeflowTrialConfigTemplate) {
-        super(codeDir);
-        this.master = master;
-        this.worker = worker;
-    }
-}
-

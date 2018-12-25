@@ -32,6 +32,9 @@ _last_metric = None
 def get_next_parameter():
     return _params
 
+def get_sequence_id():
+    return 0
+
 def send_metric(string):
     global _last_metric
     _last_metric = string

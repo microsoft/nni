@@ -30,5 +30,6 @@ export enum TrialConfigMetadataKey {
     RANDOM_SCHEDULER = 'random_scheduler',
     PAI_CLUSTER_CONFIG = 'pai_config',
     KUBEFLOW_CLUSTER_CONFIG = 'kubeflow_config',
-    NNI_MANAGER_IP = 'nni_manager_ip'
+    NNI_MANAGER_IP = 'nni_manager_ip',
+    FRAMEWORKCONTROLLER_CLUSTER_CONFIG = 'frameworkcontroller_config'
 }
