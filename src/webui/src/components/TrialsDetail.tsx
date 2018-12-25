@@ -178,14 +178,13 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             description: desc
                         });
                     });
-                    // 同步searchResult 情况：表格中有部分数据被用户筛选出来
+                    // search part data
                     const { searchResultSource } = this.state;
                     if (searchResultSource.length !== 0) {
                         const temp: Array<number> = [];
                         Object.keys(searchResultSource).map(index => {
                             temp.push(searchResultSource[index].id);
                         });
-                        // temp = [0, 1, 2, 3] 4条trial
                         const searchResultList: Array<TableObj> = [];
                         for (let i = 0; i < temp.length; i++) {
                             Object.keys(trialTable).map(key => {
