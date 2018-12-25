@@ -26,7 +26,7 @@ import * as tmp from 'tmp';
 import * as component from '../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { KubeflowTrainingService } from '../kubeflow/kubeflowTrainingService';
+import { KubeflowTrainingService } from '../kubernetes/kubeflow/kubeflowTrainingService';
 
 // TODO: copy mockedTrail.py to local folder
 const localCodeDir: string = tmp.dirSync().name
