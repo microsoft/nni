@@ -27,8 +27,7 @@
      codeDir: .
      gpuNum: 0
  machineList:
-   - ip: 104.210.63.241
-     username: nni
-     port: 22
-     #sshKeyPath: id_rsa
-     passwd: nniNNI123nniNNI
+   - ip: 13.77.155.238
+     username: t-shya
+     port: 8800
+     sshKeyPath: /home/vsts/work/1/s/id_rsa
