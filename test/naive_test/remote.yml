@@ -28,6 +28,6 @@
      gpuNum: 0
  machineList:
    - ip: 13.77.155.238
-     username: t-shya
+     username: root
      port: 8800
      sshKeyPath: /home/vsts/work/1/s/test/id_rsa
