@@ -9,11 +9,11 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  - script: python3 -m pip install --upgrade pip setuptools
-    displayName: 'Install python tools'
-  - script: |
-      source install.sh
-    displayName: 'Install nni toolkit via source code'
+  #- script: python3 -m pip install --upgrade pip setuptools
+  #  displayName: 'Install python tools'
+  #- script: |
+  #    source install.sh
+  #  displayName: 'Install nni toolkit via source code'
   - task: DownloadSecureFile@1
     inputs:
       secureFile: id_rsa2
@@ -22,25 +22,20 @@ jobs:
       pwd
       ls
       chmod 600 ./id_rsa
-      echo 'Copy remote_docker.py to remote machine'
-      scp -i id_rsa -r test/remote_docker.py root@13.77.155.238:~/
-      echo $(Build.BuildId)
-      echo $(Build.BuildNumber)
-      ssh -i id_rsa root@13.77.155.238 " python3 remote_docker.py --mode start --name nni_123 --image sparksnail/ssh:latest"
+    displayName: 'doenload secure file'
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: remote238
+      sourceFolder: test/remote_docker.py
+      targetFolder: ~/
+      overwrite: true
+    displayName: 'Copy remote_docker.py to remote machine'
+  - task: SSH@0
+    inputs:
+      sshEndpoint: remote238
+      runOptions: commands
+      commands: python3 remote_docker.py --mode start --name nni_123 --image sparksnail/ssh:latest
     displayName: 'Start docker'
-  #- task: CopyFilesOverSSH@0
-  #  inputs:
-  #    sshEndpoint: remote241
-  #    sourceFolder: src/sdk/pynni
-  #    targetFolder: ~/pynni
-  #    overwrite: true
-  #  displayName: 'Copy sdk to remote machine'
-  #- task: SSH@0
-  #  inputs:
-  #    sshEndpoint: remote241
-  #    runOptions: script
-  #    scriptPath: test_remote.sh
-  #  displayName: 'Install sdk in remote machine'
   #- script: |
   #    cd test
   #    PATH=$HOME/.local/bin:$PATH python3 naive_test.py
