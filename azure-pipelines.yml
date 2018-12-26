@@ -26,7 +26,7 @@ jobs:
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_238
-      sourceFolder: test/remote_docker.py
+      sourceFolder: test
       targetFolder: ~/
       overwrite: true
     displayName: 'Copy remote_docker.py to remote machine'
