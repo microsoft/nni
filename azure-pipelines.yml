@@ -25,15 +25,15 @@ jobs:
     inputs:
       sshEndpoint: remote_238
       sourceFolder: ./
-      targetFolder: ~/.local/123/456
+      targetFolder: ~/.local/nnitest/$(Build.BuildId)
       overwrite: true
     displayName: 'Copy files to remote machine'
-  #- task: SSH@0
-  #  inputs:
-  #    sshEndpoint: remote_238
-  #    runOptions: commands
-  #    commands: python3 remote_docker.py --mode start --name nni_123 --image sparksnail/ssh:latest
-  #  displayName: 'Start docker'
+  - task: SSH@0
+    inputs:
+      sshEndpoint: remote_238
+      runOptions: commands
+      commands: python3 remote_docker.py --mode start --name nnitest_$(Build.BuildId) --image sparksnail/ssh:latest
+    displayName: 'Start docker'
   #- script: |
   #    cd test
   #    PATH=$HOME/.local/bin:$PATH python3 naive_test.py
