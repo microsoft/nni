@@ -18,7 +18,8 @@ jobs:
     inputs:
       secureFile: id_rsa2
   - script: |
-      ls ~/.ssh
+      mkdir ~/.ssh
+      ssh-keyscan 13.77.155.238 >> ~/.ssh/known_hosts
       cd test && cp $(Agent.TempDirectory)/id_rsa2 ./id_rsa
       chmod 600 ./id_rsa
       yes | ssh -i ./id_rsa t-shya@13.77.155.238 -p 22 "pwd"
