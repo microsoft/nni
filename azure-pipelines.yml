@@ -1,6 +1,6 @@
 jobs:
 
-- job: 'Ubuntu_16_04 local'
+- job: 'Ubuntu_16_04_local'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -27,7 +27,7 @@ jobs:
       PATH=$HOME/.local/bin:$PATH python3 sdk_test.py --mode local
     displayName: 'Built-in dispatcher tests'
 
-- job: 'Ubuntu_16_04 remote'
+- job: 'Ubuntu_16_04_remote'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -91,7 +91,7 @@ jobs:
       commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode stop --name $(Build.BuildId)
     displayName: 'Stop docker'
 
-- job: 'macOS_10_13 local'
+- job: 'macOS_10_13_local'
   pool:
     vmImage: 'macOS 10.13'
   strategy:
