@@ -36,6 +36,8 @@ jobs:
       cd test && cp $(Agent.TempDirectory)/id_rsa ./id_rsa
       chmod 600 ./id_rsa
       yes | ssh -i ./id_rsa t-shya@13.77.155.238 -p 22 "cat /tmp/nnitest/$(Build.BuildId)/port" > port
+      ls test/naive_test
+      cat port
       cat test/naive_test/remote.yml port > tmp && mv tmp remote.yml
     displayName: 'Generate remote.yml'
   - script: |
