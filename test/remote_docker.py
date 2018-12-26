@@ -30,7 +30,7 @@ def start_container(image, name):
     commit_id = output.decode('utf-8')
     exec_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '--user', '--no-cache-dir', '/root/src/sdk/pynni/']
     check_call(exec_cmds)
-    with open(source_dir + 'port', 'w') as file:
+    with open(source_dir + '/port', 'w') as file:
         file.write('    port: ' + str(port))
 
 def stop_container(name):
