@@ -80,6 +80,11 @@ def run(mode='local'):
 
     tuner_result = set(open('naive_test/tuner_result.txt'))
     expected = set(open('naive_test/expected_tuner_result.txt'))
+    for res in tuner_result:
+        print(res)
+    for res in expected:
+        print(res)
+
     # Trials may complete before NNI gets assessor's result,
     # so it is possible to have more final result than expected
     assert tuner_result.issuperset(expected), 'Bad tuner result'
