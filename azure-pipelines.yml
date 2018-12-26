@@ -9,11 +9,11 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  #- script: python3 -m pip install --upgrade pip setuptools
-  #  displayName: 'Install python tools'
-  #- script: |
-  #    source install.sh
-  #  displayName: 'Install nni toolkit via source code'
+  - script: python3 -m pip install --upgrade pip setuptools
+    displayName: 'Install python tools'
+  - script: |
+      source install.sh
+    displayName: 'Install nni toolkit via source code'
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_238
