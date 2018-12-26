@@ -49,7 +49,7 @@ class ProtocolTestCase(TestCase):
         _prepare_send()
         exception = None
         try:
-            send(CommandType.NewTrialJob, ' ' * 1_000_000)
+            send(CommandType.NewTrialJob, ' ' * 1000000)
         except AssertionError as e:
             exception = e
         self.assertIsNotNone(exception)
