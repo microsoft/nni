@@ -18,14 +18,14 @@ jobs:
     inputs:
       sshEndpoint: remote_238
       sourceFolder: src/sdk/pynni
-      targetFolder: /tmp/nnitest/$(Build.BuildId)
+      targetFolder: /tmp/nnitest/$(Build.BuildId)/pynni
       overwrite: true
     displayName: 'Copy sdk files to remote machine'
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_238
       sourceFolder: test
-      targetFolder: /tmp/nnitest/$(Build.BuildId)
+      targetFolder: /tmp/nnitest/$(Build.BuildId)/test
       overwrite: true
     displayName: 'Copy test files to remote machine'
   - task: SSH@0
