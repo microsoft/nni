@@ -19,36 +19,17 @@
 
 'use strict';
 
-import * as component from '../../common/component';
-import { Inject } from 'typescript-ioc';
-import { KubeflowTrainingService } from './kubeflowTrainingService';
-import { ClusterJobRestServer } from '../common/clusterJobRestServer'
+import * as component from '../../../common/component';
+import { FrameworkControllerTrainingService } from './frameworkcontrollerTrainingService';
+import { KubernetesJobRestServer } from '../kubernetesJobRestServer'
 
 /**
- * Kubeflow Training service Rest server, provides rest API to support kubeflow job metrics update
+ * frameworkcontroller Training service Rest server, provides rest API to support frameworkcontroller job metrics update
  * 
  */
 @component.Singleton
-export class KubeflowJobRestServer extends ClusterJobRestServer{
-    @Inject
-    private readonly kubeflowTrainingService : KubeflowTrainingService;
-
-    /**
-     * constructor to provide NNIRestServer's own rest property, e.g. port
-     */
+export class FrameworkControllerJobRestServer extends KubernetesJobRestServer{
     constructor() {
-        super();
-        this.kubeflowTrainingService = component.get(KubeflowTrainingService);
-    }
-
-    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
-        // Split metrics array into single metric, then emit
-        // Warning: If not split metrics into single ones, the behavior will  be UNKNOWN
-        for (const singleMetric of metrics) {
-            this.kubeflowTrainingService.MetricsEmitter.emit('metric', {
-                id : jobId,
-                data : singleMetric
-            });
-        }
-    }   
+        super(component.get(FrameworkControllerTrainingService));
+    }  
 }

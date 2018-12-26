@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name = 'nnictl',
-    version = 'NNI_VERSION',
+    version = '999.0.0-developing',
     packages = setuptools.find_packages(exclude=['*test*']),
 
     python_requires = '>=3.5',
