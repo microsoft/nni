@@ -20,6 +20,7 @@ jobs:
   - script: |
       cd test && cp $(Agent.TempDirectory)/id_rsa2 ./id_rsa
       chmod 600 ./id_rsa
+      yes | ssh -i id_rsa root@13.77.155.238 -p 22 "pwd"
     displayName: 'doenload secure file'
   - task: CopyFilesOverSSH@0
     inputs:
@@ -32,11 +33,8 @@ jobs:
     inputs:
       sshEndpoint: remote_238
       runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni > ./output.log
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
     displayName: 'Start docker'
-  - script: |
-      cat ./output.log
-    displayName: 'test output'
   - task: SSH@0
     inputs:
       sshEndpoint: remote_238
