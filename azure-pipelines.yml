@@ -22,7 +22,11 @@ jobs:
       pwd
       ls
       chmod 600 ./id_rsa
+      test=testHello
     displayName: 'doenload secure file'
+  - script: |
+      echo $test
+    displayName: 'test the shell'
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_238
