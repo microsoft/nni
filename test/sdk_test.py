@@ -36,9 +36,9 @@ ASSESSOR_LIST = ['Medianstop']
 EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
 
 
-def switch(dispatch_type, dispatch_name):
+def switch(dispatch_type, dispatch_name, mode='local'):
     '''Change dispatch in config.yml'''
-    config_path = 'sdk_test/local.yml'
+    config_path = os.path.join('sdk_test', str(mode) + '.yml')
     experiment_config = get_yml_content(config_path)
     if dispatch_name in ['GridSearch', 'BatchTuner']:
         experiment_config[dispatch_type.lower()] = {
