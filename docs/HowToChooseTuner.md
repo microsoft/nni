@@ -10,7 +10,7 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
  - [Batch Tuner](#Batch)
  - [Grid Search](#Grid)
  - [Hyperband](#Hyperband)
- - [Network Morphism](#NetworkMorphism)
+ - [Network Morphism](#NetworkMorphism) (require pyTorch)
 
  ## Supported tuner algorithms
 
@@ -179,6 +179,10 @@ _Usage_:
 **Network Morphism**
 
 [Network Morphism](7) provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Next, it estimates the value of child network using the history architecture and metric pairs. Then it selects the most promising one to train. More detail can be referred to [here](../src/sdk/pynni/nni/networkmorphism_tuner/README.md). 
+
+_Installation_: 
+NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so users should install it first.
+
 
 _Suggested scenario_: It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](../examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the cv domain.
 
