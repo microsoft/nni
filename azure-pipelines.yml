@@ -67,11 +67,11 @@ jobs:
   - script: |
       mkdir ~/.ssh
       ssh-keyscan 13.77.155.238 >> ~/.ssh/known_hosts
-      cp $(Agent.TempDirectory)/id_rsa test/naive_test/id_rsa
-      cp $(Agent.TempDirectory)/id_rsa test/sdk_test/id_rsa
-      chmod 600 test/naive_test/id_rsa
-      yes | ssh -i test/naive_test/id_rsa t-shya@13.77.155.238 -p 22 "cat /tmp/nnitest/$(Build.BuildId)/port" > port
-      cat test/naive_test/remote.yml port > tmp && mv tmp remote.yml
+      cp $(Agent.TempDirectory)/id_rsa test/id_rsa
+      chmod 600 test/id_rsa
+      yes | ssh -i test/id_rsa t-shya@13.77.155.238 -p 22 "cat /tmp/nnitest/$(Build.BuildId)/port" > port
+      cat test/naive_test/remote.yml port > tmp && mv tmp test/naive_test/remote.yml
+      cat test/sdk_test/remote.yml port > tmp && mv tmp test/sdk_test/remote.yml
     displayName: 'Generate remote.yml'
   - script: |
       cd test
