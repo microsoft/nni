@@ -132,7 +132,7 @@ class CustomerTuner(Tuner):
             graph_param = json.loads(graph_dumps(indiv.config))
         else:
             random.shuffle(self.population)
-            if self.population[0].result > self.population[1].result:
+            if self.population[0].result < self.population[1].result:
                 self.population[0] = self.population[1]
             indiv = copy.deepcopy(self.population[0])
             self.population.pop(1)
