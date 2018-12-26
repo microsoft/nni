@@ -9,24 +9,25 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  # - script: python3 -m pip install --upgrade pip setuptools
-    # displayName: 'Install python tools'
-  # - script: |
-  #    source install.sh
-  #  displayName: 'Install nni toolkit via source code'
-  #- task: DownloadSecureFile@1
-  #  inputs:
-  #    secureFile: id_rsa2
+   - script: python3 -m pip install --upgrade pip setuptools
+     displayName: 'Install python tools'
+   - script: |
+      source install.sh
+    displayName: 'Install nni toolkit via source code'
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: id_rsa2
   - script: |
+      cd test && cp $(Agent.TempDirectory)/id_rsa2 ./id_rsa
+      pwd
+      ls
+      chmod 600 ./id_rsa
+      echo 'Copy remote_docker.py to remote machine'
+      scp -i id_rsa -r test/remote_docker.py root@13.77.155.238:~/
       echo $(Build.BuildId)
       echo $(Build.BuildNumber)
-      #cd test && cp $(Agent.TempDirectory)/id_rsa2 ./id_rsa
-      #pwd
-      #ls
-      #chmod 600 ./id_rsa
-      #cat id_rsa
-      # ssh -i id_rsa 13.77.155.238 "echo hello"
-    displayName: 'Download secure file'
+      ssh -i id_rsa root@13.77.155.238 " python3 remote_docker.py --mode start --name nni_123 --image sparksnail/ssh:latest"
+    displayName: 'Start docker'
   #- task: CopyFilesOverSSH@0
   #  inputs:
   #    sshEndpoint: remote241
