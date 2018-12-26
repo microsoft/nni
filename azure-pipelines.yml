@@ -37,7 +37,7 @@ jobs:
   - script: |
       cat ./output.log
     displayName: 'test output'
-    - task: SSH@0
+  - task: SSH@0
     inputs:
       sshEndpoint: remote_238
       runOptions: commands
