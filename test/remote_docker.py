@@ -1,6 +1,6 @@
 import os
 import argparse
-from subprocess import check_call
+from subprocess import check_output, check_call
 import socket
 import random
 
@@ -24,16 +24,20 @@ def find_port():
 def start_container(image, name):
     '''Start docker container'''
     port = find_port()
-    cmds = ['docker', 'run', '-d', '-p', str(port) + ':22', '--name', name, image]
-    check_call(cmds)
+    source_dir = '/tmp/nnitest/' + name
+    run_cmds = ['docker', 'run', '-d', '-p', str(port) + ':22', '--name', name, '--mount', 'type=bind,source=' + source_dir + ',target=/root', image]
+    output = check_output(run_cmds)
+    commit_id = output.decode('utf-8')
+    exec_cmds = ['docker', 'exec', name, 'cd ' + source_dir + '/src/sdk/pynni && python3 setup.py']
+    check_call(exec_cmds)
     print(port)
 
 def stop_container(name):
     '''Stop docker container'''
     stop_cmds = ['docker', 'container', 'stop', name]
-    check_call(stop_cmds)
+    check_output(stop_cmds)
     rm_cmds = ['docker', 'container', 'rm', name]
-    check_call(rm_cmds)
+    check_output(rm_cmds)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
