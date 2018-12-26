@@ -1,6 +1,33 @@
 jobs:
 
-- job: 'Ubuntu_16_04'
+- job: 'Ubuntu_16_04 local'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    matrix:
+      Python36:
+        PYTHON_VERSION: '3.6'
+
+  steps:
+  - script: python3 -m pip install --upgrade pip setuptools
+    displayName: 'Install python tools'
+  - script: |
+      source install.sh
+    displayName: 'Install nni toolkit via source code'
+  - script: |
+      cd test
+      source unittest.sh
+    displayName: 'Unit test'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 naive_test.py --mode local
+    displayName: 'Integration tests'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py --mode local
+    displayName: 'Built-in dispatcher tests'
+
+- job: 'Ubuntu_16_04 remote'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -50,21 +77,22 @@ jobs:
       source unittest.sh
     displayName: 'Unit test'
   - script: |
+    continueOnError: boolean
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 naive_test.py
+      PATH=$HOME/.local/bin:$PATH python3 naive_test.py --mode remote
     displayName: 'Integration tests'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py --mode remote
+    displayName: 'Built-in dispatcher tests'
   - task: SSH@0
     inputs:
       sshEndpoint: remote_238
       runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode stop --name $(Build.BuildId)
     displayName: 'Stop docker'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
-    displayName: 'Built-in dispatcher tests'
 
-- job: 'macOS_10_13'
+- job: 'macOS_10_13 local'
   pool:
     vmImage: 'macOS 10.13'
   strategy:
@@ -84,9 +112,9 @@ jobs:
     displayName: 'Unit test'
   - script: |
       cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 naive_test.py
+      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 naive_test.py --mode local
     displayName: 'Integration tests'
   - script: |
       cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 sdk_test.py
+      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 sdk_test.py --mode local
     displayName: 'Built-in dispatcher tests'

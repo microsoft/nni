@@ -24,6 +24,7 @@ import sys
 import time
 import traceback
 import os
+import argparse
 
 from utils import check_experiment_status, fetch_nni_log_path, read_last_line, remove_files, setup_experiment
 
@@ -88,11 +89,13 @@ def run(mode='local'):
     assert assessor_result == expected, 'Bad assessor result'
 
 if __name__ == '__main__':
-    installed = (sys.argv[-1] != '--preinstall')
-    setup_experiment(installed)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--preinstall', type=bool, default=True, dest='preinstall')
+    parser.add_argument('--mode', required=True, choices=['local', 'remote'], dest='mode')
+    args = parser.parse_args()
+    setup_experiment(args.preinstall)
     try:
-        # run('local')
-        run('remote')
+        run(args.mode)
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:

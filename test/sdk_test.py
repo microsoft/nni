@@ -22,6 +22,8 @@ import subprocess
 import sys
 import time
 import traceback
+import argparse
+import os
 
 from utils import get_yml_content, dump_yml_content, setup_experiment, fetch_nni_log_path, check_experiment_status
 
@@ -51,12 +53,13 @@ def switch(dispatch_type, dispatch_name):
         }
     dump_yml_content(config_path, experiment_config)
 
-def test_builtin_dispatcher(dispatch_type, dispatch_name):
+def test_builtin_dispatcher(dispatch_type, dispatch_name, mode='local'):
     '''test a dispatcher whose type is dispatch_type and name is dispatch_name'''
     switch(dispatch_type, dispatch_name)
 
     print('Testing %s...' % dispatch_name)
-    proc = subprocess.run(['nnictl', 'create', '--config', 'sdk_test/local.yml'])
+    config_file = str(mode) + '.yml'
+    proc = subprocess.run(['nnictl', 'create', '--config', os.path.join('sdk_test', config_file)])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
@@ -70,7 +73,7 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name):
 
     assert experiment_status, 'Failed to finish in 1 min'
 
-def run(dispatch_type):
+def run(dispatch_type, mode='local'):
     '''test all dispatchers whose type is dispatch_type'''
     assert dispatch_type in ['Tuner', 'Assessor'], 'Unsupported dispatcher type: %s' % (dispatch_type)
     dipsatcher_list = TUNER_LIST if dispatch_type == 'Tuner' else ASSESSOR_LIST
@@ -78,7 +81,7 @@ def run(dispatch_type):
         try:
             # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
             time.sleep(5)
-            test_builtin_dispatcher(dispatch_type, dispatcher_name)
+            test_builtin_dispatcher(dispatch_type, dispatcher_name, mode)
             print(GREEN + 'Test %s %s: TEST PASS' % (dispatcher_name, dispatch_type) + CLEAR)
         except Exception as error:
             print(RED + 'Test %s %s: TEST FAIL' % (dispatcher_name, dispatch_type) + CLEAR)
@@ -89,8 +92,11 @@ def run(dispatch_type):
             subprocess.run(['nnictl', 'stop'])
 
 if __name__ == '__main__':
-    installed = (sys.argv[-1] != '--preinstall')
-    setup_experiment(installed)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--preinstall', type=bool, default=True, dest='preinstall')
+    parser.add_argument('--mode', required=True, choices=['local', 'remote'], dest='mode')
+    args = parser.parse_args()
+    setup_experiment(args.preinstall)
 
-    run('Tuner')
-    run('Assessor')
+    run('Tuner', args.mode)
+    run('Assessor', args.mode)
