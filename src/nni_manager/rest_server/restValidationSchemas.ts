@@ -28,7 +28,7 @@ export namespace ValidationSchemas {
                 username: joi.string().required(),
                 ip: joi.string().ip().required(),
                 port: joi.number().min(1).max(65535).required(),
-                passwd: joi.string().required(),
+                passwd: joi.string(),
                 sshKeyPath: joi.string(),
                 passphrase: joi.string()
             })),
@@ -68,6 +68,20 @@ export namespace ValidationSchemas {
                     memoryMB: joi.number().min(100),
                     gpuNum: joi.number().min(0).required(),
                     command: joi.string().min(1).required()
+                }),
+                taskRoles: joi.array({
+                    name: joi.string().min(1),
+                    taskNum: joi.number().min(1).required(),
+                    image: joi.string().min(1),
+                    outputDir: joi.string(),
+                    cpuNum: joi.number().min(1),
+                    memoryMB: joi.number().min(100),
+                    gpuNum: joi.number().min(0).required(),
+                    command: joi.string().min(1).required(),
+                    frameworkAttemptCompletionPolicy: joi.object({
+                        minFailedTaskCount: joi.number(),
+                        minSucceededTaskCount: joi.number()
+                    })
                 })
             }),
             pai_config: joi.object({
@@ -79,6 +93,21 @@ export namespace ValidationSchemas {
                 operator: joi.string().min(1).required(),
                 storage: joi.string().min(1),
                 apiVersion: joi.string().min(1),
+                nfs: joi.object({
+                    server: joi.string().min(1).required(),
+                    path: joi.string().min(1).required()
+                }),
+                keyVault: joi.object({
+                    vaultName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/),
+                    name: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/)
+                }),
+                azureStorage: joi.object({
+                    accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
+                    azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
+                })
+            }),
+            frameworkcontroller_config: joi.object({
+                storage: joi.string().min(1),
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()

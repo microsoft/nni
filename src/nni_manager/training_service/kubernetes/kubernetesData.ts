@@ -25,7 +25,7 @@ import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../commo
  * KubeflowTrialJobDetail
  */
 // tslint:disable-next-line:max-classes-per-file
-export class KubeflowTrialJobDetail implements TrialJobDetail {
+export class KubernetesTrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;
     public submitTime: number;
@@ -35,19 +35,19 @@ export class KubeflowTrialJobDetail implements TrialJobDetail {
     public url?: string;
     public workingDirectory: string;
     public form: JobApplicationForm;
-    public kubeflowJobName: string;
+    public kubernetesJobName: string;
     public sequenceId: number;
     public queryJobFailedCount: number;
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
                 workingDirectory: string, form: JobApplicationForm, 
-                kubeflowJobName: string, sequenceId: number, url: string) {
+                kubernetesJobName: string, sequenceId: number, url: string) {
         this.id = id;
         this.status = status;
         this.submitTime = submitTime;
         this.workingDirectory = workingDirectory;
         this.form = form;
-        this.kubeflowJobName = kubeflowJobName;
+        this.kubernetesJobName = kubernetesJobName;
         this.sequenceId = sequenceId;
         this.tags = [];
         this.queryJobFailedCount = 0;
@@ -55,4 +55,21 @@ export class KubeflowTrialJobDetail implements TrialJobDetail {
     }
 }
 
-export type KubeflowTFJobType = 'Created' | 'Running' | 'Failed' | 'Succeeded';
+export const KubernetesScriptFormat =
+`#!/bin/bash
+export NNI_PLATFORM={0}
+export NNI_SYS_DIR=$PWD/nni/{1}
+export NNI_OUTPUT_DIR={2}
+export MULTI_PHASE=false
+export NNI_TRIAL_JOB_ID={3}
+export NNI_EXP_ID={4}
+export NNI_CODE_DIR={5}
+export NNI_TRIAL_SEQ_ID={6}
+{7}
+mkdir -p $NNI_SYS_DIR
+mkdir -p $NNI_OUTPUT_DIR
+cp -rT $NNI_CODE_DIR $NNI_SYS_DIR
+cd $NNI_SYS_DIR
+sh install_nni.sh
+python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' --nnimanager_ip {9} --nnimanager_port {10} `
++ `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`
