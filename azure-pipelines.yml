@@ -70,6 +70,10 @@ jobs:
       cp $(Agent.TempDirectory)/id_rsa test/id_rsa
       chmod 600 test/id_rsa
       yes | ssh -i test/id_rsa t-shya@13.77.155.238 -p 22 "cat /tmp/nnitest/$(Build.BuildId)/port" > port
+      cat test/naive_test/remote.yml
+      cat port
+      cat test/naive_test/remote.yml port > tmp
+      cat tmp
       cat test/naive_test/remote.yml port > tmp && mv tmp test/naive_test/remote.yml
       cat test/sdk_test/remote.yml port > tmp && mv tmp test/sdk_test/remote.yml
       cat test/naive_test/remote.yml
