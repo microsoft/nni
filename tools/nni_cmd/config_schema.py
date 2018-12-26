@@ -28,7 +28,7 @@ Optional('description'): str,
 'trialConcurrency': And(int, lambda n: 1 <=n <= 999999),
 Optional('maxExecDuration'): Regex(r'^[1-9][0-9]*[s|m|h|d]$'),
 Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
-'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai', 'kubeflow']),
+'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller']),
 Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
@@ -184,6 +184,46 @@ kubeflow_config_schema = {
     })
 }
 
+frameworkcontroller_trial_schema = {
+    'trial':{
+        'codeDir':  os.path.exists,
+        'taskRoles': [{
+            'name': str,
+            'taskNum': int,
+            'frameworkAttemptCompletionPolicy': {
+                'minFailedTaskCount': int,
+                'minSucceededTaskCount': int
+            },
+            'command': str,
+            'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+            'memoryMB': int,
+            'image': str
+        }]
+    }
+}
+
+frameworkcontroller_config_schema = {
+    'frameworkcontrollerConfig':Or({
+        Optional('storage'): Or('nfs', 'azureStorage'),
+        'nfs': {
+            'server': str,
+            'path': str
+        }
+    },{
+        Optional('storage'): Or('nfs', 'azureStorage'),
+        'keyVault': {
+            'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
+            'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')
+        },
+        'azureStorage': {
+            'accountName': Regex('([0-9]|[a-z]|[A-Z]|-){3,31}'),
+            'azureShare': Regex('([0-9]|[a-z]|[A-Z]|-){3,63}')
+        }
+    })
+}
+
+
 machine_list_schima = {
 Optional('machineList'):[Or({
     'ip': str,
@@ -206,3 +246,5 @@ REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
 
 KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
+
+FRAMEWORKCONTROLLER_CONFIG_SCHEMA = Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema})

@@ -27,7 +27,7 @@ if env_args.platform is None:
     from .standalone import *
 elif env_args.platform == 'unittest':
     from .test import *
-elif env_args.platform in ('local', 'remote', 'pai', 'kubeflow'):
+elif env_args.platform in ('local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'):
     from .local import *
 else:
     raise RuntimeError('Unknown platform %s' % env_args.platform)
