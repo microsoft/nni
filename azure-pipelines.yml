@@ -32,7 +32,7 @@ jobs:
     inputs:
       sshEndpoint: remote_238
       runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image sparksnail/ssh:latest
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
     displayName: 'Start docker'
   #- script: |
   #    cd test
