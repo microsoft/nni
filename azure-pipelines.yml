@@ -30,8 +30,6 @@ jobs:
   - task: DownloadSecureFile@1
     inputs:
       secureFile: id_rsa
-    inputs:
-      secureFile: remote.yml
   - script: |
       mkdir ~/.ssh
       ssh-keyscan 13.77.155.238 >> ~/.ssh/known_hosts
