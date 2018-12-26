@@ -32,9 +32,12 @@ jobs:
     inputs:
       sshEndpoint: remote_238
       runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni > ./output.log
     displayName: 'Start docker'
-  - task: SSH@0
+  - script: |
+      cat ./output.log
+    displayName: 'test output'
+    - task: SSH@0
     inputs:
       sshEndpoint: remote_238
       runOptions: commands

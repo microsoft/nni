@@ -35,9 +35,9 @@ def start_container(image, name):
 def stop_container(name):
     '''Stop docker container'''
     stop_cmds = ['docker', 'container', 'stop', name]
-    check_output(stop_cmds)
+    check_call(stop_cmds)
     rm_cmds = ['docker', 'container', 'rm', name]
-    check_output(rm_cmds)
+    check_call(rm_cmds)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
