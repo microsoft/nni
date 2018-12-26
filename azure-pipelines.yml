@@ -34,6 +34,12 @@ jobs:
       runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
     displayName: 'Start docker'
+  - task: SSH@1
+    inputs:
+      sshEndpoint: remote_238
+      runOptions: commands
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode stop --name $(Build.BuildId)
+    displayName: 'Stop docker'
   #- script: |
   #    cd test
   #    PATH=$HOME/.local/bin:$PATH python3 naive_test.py
