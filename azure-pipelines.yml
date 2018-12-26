@@ -19,27 +19,21 @@ jobs:
       secureFile: id_rsa2
   - script: |
       cd test && cp $(Agent.TempDirectory)/id_rsa2 ./id_rsa
-      pwd
-      ls
       chmod 600 ./id_rsa
-      test=testHello
     displayName: 'doenload secure file'
-  - script: |
-      echo $test
-    displayName: 'test the shell'
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_238
-      sourceFolder: test
-      targetFolder: ~/
+      sourceFolder: ./
+      targetFolder: ~/.local/123/456
       overwrite: true
-    displayName: 'Copy remote_docker.py to remote machine'
-  - task: SSH@0
-    inputs:
-      sshEndpoint: remote_238
-      runOptions: commands
-      commands: python3 remote_docker.py --mode start --name nni_123 --image sparksnail/ssh:latest
-    displayName: 'Start docker'
+    displayName: 'Copy files to remote machine'
+  #- task: SSH@0
+  #  inputs:
+  #    sshEndpoint: remote_238
+  #    runOptions: commands
+  #    commands: python3 remote_docker.py --mode start --name nni_123 --image sparksnail/ssh:latest
+  #  displayName: 'Start docker'
   #- script: |
   #    cd test
   #    PATH=$HOME/.local/bin:$PATH python3 naive_test.py
