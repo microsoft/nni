@@ -27,7 +27,8 @@
     "webhdfs":"^1.2.0",
     "azure-storage": "^2.10.2",
     "kubernetes-client": "^6.5.0",
-    "js-base64": "^2.4.9"
+    "js-base64": "^2.4.9", 
+    "syslogd": "^1.1.2"
   },
   "devDependencies": {
     "@types/chai": "^4.1.4",

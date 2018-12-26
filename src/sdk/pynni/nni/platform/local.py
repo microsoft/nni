@@ -74,11 +74,14 @@ def get_next_parameter():
     return params
 
 def send_metric(string):
-    data = (string + '\n').encode('utf8')
+    data = (string).encode('utf8')
     assert len(data) < 1000000, 'Metric too long'
-    _metric_file.write(b'ME%06d%b' % (len(data), data))
-    _metric_file.flush()
-    subprocess.run(['touch', _metric_file.name], check = True)
+    # _metric_file.write(b'ME%06d%b' % (len(data), data))
+    # _metric_file.flush()
+    # subprocess.run(['touch', _metric_file.name], check = True)
+    ## TODO: Only for PAI, use print
+    ## print metrics data to stdout
+    print('NNISDK_ME%s' % (data))
 
 def get_sequence_id():
     return os.environ['NNI_TRIAL_SEQ_ID']

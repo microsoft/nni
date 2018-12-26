@@ -18,8 +18,21 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import os
+import sys
+import json
+import logging
+import logging.handlers
+import time
+import threading
+
 from datetime import datetime
 from enum import Enum, unique
+from logging import StreamHandler
+
+from .rest_utils import rest_get, rest_post, rest_put, rest_delete
+from .constants import NNI_EXP_ID, NNI_TRIAL_JOB_ID, STDOUT_API
+from .url_utils import gen_send_stdout_url
 
 @unique
 class LogType(Enum):
@@ -29,7 +42,105 @@ class LogType(Enum):
     Error = 'ERROR'
     Critical = 'CRITICAL'
 
+@unique
+class StdOutputType(Enum):
+    Stdout = 'stdout',
+    Stderr = 'stderr'
+
 def nni_log(log_type, log_message):
     '''Log message into stdout'''
     dt = datetime.now()
     print('[{0}] {1} {2}'.format(dt, log_type.value, log_message))
+
+
+class NNIRestLogHanlder(StreamHandler):
+    def __init__(self, host, port, tag, std_output_type=StdOutputType.Stdout):
+        StreamHandler.__init__(self)
+        self.host = host
+        self.port = port
+        self.tag = tag
+        self.std_output_type = std_output_type
+        self.orig_stdout = sys.__stdout__
+        self.orig_stderr = sys.__stderr__
+
+    def emit(self, record):
+        log_entry = {}
+        log_entry['tag'] = self.tag
+        log_entry['stdOutputType'] = self.std_output_type.name
+        log_entry['msg'] = self.format(record)
+
+        try:
+            response = rest_post(gen_send_stdout_url(self.host, self.port), json.dumps(log_entry), 10, True)
+        except Exception as e:
+            self.orig_stderr.write(str(e) + '\n')
+            self.orig_stderr.flush()
+
+class SysLogger(object):
+    
+    """
+    NNI syslogger
+    """
+    def __init__(self, syslog_host, syslog_port, tag, std_output_type, log_level=logging.INFO):
+        '''
+        constructor
+        '''
+        self.logger = logging.getLogger('nni_syslog_{}'.format(tag))
+        self.log_level = log_level
+        self.logger.setLevel(self.log_level)
+        handler = NNIRestLogHanlder(syslog_host, syslog_port, tag)
+        self.logger.addHandler(handler)
+        if std_output_type == StdOutputType.Stdout:
+            self.orig_stdout = sys.__stdout__
+        else:
+            self.orig_stdout = sys.__stderr__
+
+    def get_syslog_pipe(self):
+        return LogPipe(self.logger, logging.INFO)
+
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            self.orig_stdout.write(line.rstrip() + '\n')
+            self.orig_stdout.flush()
+            try:
+                self.logger.log(self.log_level, line.rstrip())
+            except Exception as e:
+                pass
+                #self.orig_stdout.write(str(e))
+
+class LogPipe(threading.Thread):
+    def __init__(self, logger, log_level=logging.INFO):
+        """Setup the object with a logger and a loglevel
+        and start the thread
+        """
+        threading.Thread.__init__(self)
+        self.logger = logger
+        self.daemon = False
+        self.log_level = log_level
+        self.fdRead, self.fdWrite = os.pipe()
+        self.pipeReader = os.fdopen(self.fdRead)
+        self.orig_stdout = sys.__stdout__
+        self.start()
+
+    def fileno(self):
+        """Return the write file descriptor of the pipe
+        """
+        return self.fdWrite
+
+    def run(self):
+        """Run the thread, logging everything.
+        """
+        for line in iter(self.pipeReader.readline, ''):
+            try:
+                self.logger.log(self.log_level, line.rstrip())
+            except Exception as e:
+                pass
+                #self.orig_stdout.write(str(e))
+            self.orig_stdout.write(line.rstrip() + '\n')
+            self.orig_stdout.flush()
+
+        self.pipeReader.close()
+
+    def close(self):
+        """Close the write end of the pipe.
+        """
+        os.close(self.fdWrite)

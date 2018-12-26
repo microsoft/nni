@@ -46,6 +46,7 @@ import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { String } from 'typescript-string-operations';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
 import { validateCodeDir } from '../common/util';
+import {SysLogServer} from '../common/sysLogServer';
 
 var WebHDFS = require('webhdfs');
 
@@ -92,7 +93,11 @@ class PAITrainingService implements TrainingService {
     public async run(): Promise<void> {
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         await restServer.start();
+
+        const sysLogServer: SysLogServer = new SysLogServer();
+        sysLogServer.start();
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
+        this.log.info(`PAI Training service syslog server listening on: ${sysLogServer.sysLogPort}`);
         while (!this.stopping) {
             await this.updatePaiToken();
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);

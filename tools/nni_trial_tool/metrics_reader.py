@@ -25,14 +25,11 @@ import re
 import requests
 
 from datetime import datetime
-from .constants import BASE_URL
+from .constants import BASE_URL, NNI_EXP_ID, NNI_TRIAL_JOB_ID, NNI_SYS_DIR
 from .log_utils import LogType, nni_log
 from .rest_utils import rest_get, rest_post, rest_put, rest_delete
 from .url_utils import gen_update_metrics_url
 
-NNI_SYS_DIR = os.environ['NNI_SYS_DIR']
-NNI_TRIAL_JOB_ID = os.environ['NNI_TRIAL_JOB_ID']
-NNI_EXP_ID = os.environ['NNI_EXP_ID']
 LEN_FIELD_SIZE = 6
 MAGIC = 'ME'
 
@@ -116,7 +113,7 @@ def read_experiment_metrics(nnimanager_ip, nnimanager_port):
         result['metrics'] = reader.read_trial_metrics()    
         if len(result['metrics']) > 0:
             nni_log(LogType.Info, 'Result metrics is {}'.format(json.dumps(result)))
-            response = rest_post(gen_update_metrics_url(BASE_URL.format(nnimanager_ip), nnimanager_port, NNI_EXP_ID, NNI_TRIAL_JOB_ID), json.dumps(result), 10)
+            response = rest_post(gen_update_metrics_url(nnimanager_ip, nnimanager_port), json.dumps(result), 10)
             nni_log(LogType.Info,'Report metrics to NNI manager completed, http response code is {}'.format(response.status_code))
     except Exception as e:
         #Error logging

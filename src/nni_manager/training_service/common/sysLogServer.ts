@@ -19,37 +19,43 @@
 
 'use strict';
 
-import * as component from '../../common/component';
-import { Inject } from 'typescript-ioc';
-import { PAITrainingService } from './paiTrainingService';
-import { ClusterJobRestServer } from '../common/clusterJobRestServer'
+import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 
-/**
- * PAI Training service Rest server, provides rest API to support pai job metrics update
- * 
- */
-@component.Singleton
-export class PAIJobRestServer extends ClusterJobRestServer{
-    @Inject
-    private readonly paiTrainingService : PAITrainingService;
+import * as assert from 'assert';
+import { getLogger, Logger } from '../../common/log';
 
-    /**
-     * constructor to provide NNIRestServer's own rest property, e.g. port
-     */
+const syslogd = require('syslogd');
+
+class SysLogServer {
+    private readonly sysLogServer: any;
+    private readonly port: number;
+    private readonly log!: Logger;
+
     constructor() {
-        super();
-        this.paiTrainingService = component.get(PAITrainingService);
+        this.log = getLogger();
+        this.sysLogServer  = syslogd((data: any) => {
+            this.log.info(`Syslog get data: ${JSON.stringify(data)}`);
+        });
+        const basePort: number = getBasePort();
+        assert(basePort && basePort > 1024);
+        
+        this.port = basePort + 2;
     }
 
-    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
-        // Split metrics array into single metric, then emit
-        // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
-        for (const singleMetric of metrics) {
-            this.log.info(`singleMetrics is ${singleMetric}`);
-            this.paiTrainingService.MetricsEmitter.emit('metric', {
-                id : jobId,
-                data : singleMetric
-            });
-        }
+    public start() {
+        return;
+        // this.sysLogServer.listen(this.port, (err: any) => {
+        //     if(err) {
+        //       this.log.error(err);
+        //       return;
+        //     }
+        //     this.log.info(`listen on ${this.port}`);
+        //    });
+    }
+
+    public get sysLogPort(): number {
+        return this.port;
     }
 }
+
+export { SysLogServer }

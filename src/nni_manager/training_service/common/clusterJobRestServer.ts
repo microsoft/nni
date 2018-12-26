@@ -23,8 +23,12 @@ import * as assert from 'assert';
 import { Request, Response, Router } from 'express';
 import * as bodyParser from 'body-parser';
 import * as component from '../../common/component';
+import * as fs from 'fs'
+import * as path from 'path'
 import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 import { RestServer } from '../../common/restServer'
+import { getLogDir } from '../../common/utils';
+import { Writable } from 'stream';
 
 /**
  * Cluster Job Training service Rest server, provides rest API to support Cluster job metrics update
@@ -76,6 +80,7 @@ export abstract class ClusterJobRestServer extends RestServer{
             try {
                 this.log.info(`Get update-metrics request, trial job id is ${req.params.trialId}`);
                 this.log.info(`update-metrics body is ${JSON.stringify(req.body)}`);
+                this.log.info(`update-metrics body metrics is ${req.body.metrics}`);
 
                 this.handleTrialMetrics(req.body.jobId, req.body.metrics);
 
@@ -83,6 +88,48 @@ export abstract class ClusterJobRestServer extends RestServer{
             }
             catch(err) {
                 this.log.error(`json parse metrics error: ${err}`);
+                res.status(500);
+                res.send(err.message);
+            }
+        });
+
+        router.post(`/stdout/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            const trialLogPath: string = path.join(getLogDir(), `trial_${req.params.trialId}.log`);
+            try {
+                this.log.info(`Get stdout post request, trial job id is ${req.params.trialId}`);
+                this.log.info(`Stdout post request body is ${JSON.stringify(req.body)}`);
+
+                if(req.body.tag === 'trial') {
+                    const metricsPattern: string = `NNISDK_MEb'(?<metrics>.*?)'`;
+                    //const metricsPattern: string = 'NNISDK_ME';:e
+                    const metricsContent = req.body.msg.match(metricsPattern);
+                    if(req.body.msg && req.body.msg.startsWith(metricsPattern)) {
+                        const metrics = req.body.msg.substring(metricsPattern.length);
+                        this.log.info('Matched metrics is ' + metrics);
+                    }
+                    this.log.info(`NNISDK_ME: matched content is ${JSON.stringify(metricsContent)}`);
+                    if(metricsContent && metricsContent.groups) {
+                        this.log.info(`regex matched content is: ${JSON.stringify(metricsContent)}`);
+                        this.log.info(`Get metrics: ${metricsContent.groups['metrics']}`);
+
+                        const jobMetrics = [metricsContent.groups['metrics']];
+                        this.handleTrialMetrics(req.params.trialId, jobMetrics);
+                    }
+                }
+                // Construct write stream to write remote trial's log into local file
+                const writeStream: Writable = fs.createWriteStream(trialLogPath, {
+                    flags: 'a+',
+                    encoding: 'utf8',
+                    autoClose: true
+                });
+
+                writeStream.write(req.body.msg + '\n');
+                writeStream.end();
+
+                res.send();
+            }
+            catch(err) {
+                this.log.error(`json parse stdout data error: ${err}`);
                 res.status(500);
                 res.send(err.message);
             }
