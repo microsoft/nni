@@ -81,4 +81,4 @@ Trial configuration in frameworkcontroller mode have the following configuration
    * frameworkAttemptCompletionPolicy: the policy to run framework, please refer the [user-manual](https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md) to get the specific information.
 
 ## How to run example
-After you prepare a config file, you could run your experiment by nnictl. The way to start an experiment on frameworkcontroller is similar to kubeflow, please the [document](./KubeflowMode.md) for more information.
+After you prepare a config file, you could run your experiment by nnictl. The way to start an experiment on frameworkcontroller is similar to kubeflow, please refer the [document](./KubeflowMode.md) for more information.
