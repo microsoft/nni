@@ -1,0 +1,6 @@
+site_name: Neural Network Intelligence
+
+nav:
+    - Home: README.md
+
+theme: readthedocs
