@@ -75,10 +75,6 @@ jobs:
     displayName: 'Generate remote.yml'
   - script: |
       cd test
-      source unittest.sh
-    displayName: 'Unit test'
-  - script: |
-      cd test
       PATH=$HOME/.local/bin:$PATH python3 naive_test.py --mode remote
     displayName: 'Integration tests'
   - script: |
