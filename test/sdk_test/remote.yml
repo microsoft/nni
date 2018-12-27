@@ -20,5 +20,5 @@ tuner:
 useAnnotation: false
 machineList:
   - ip: 13.77.155.238
-    username: t-shya
+    username: root
     sshKeyPath: ../id_rsa
