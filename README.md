@@ -127,4 +127,3 @@ We are in construction of the instruction for [How to Debug](docs/HowToDebug.md)
 ## **License** 
 The entire codebase is under [MIT license](https://github.com/Microsoft/nni/blob/master/LICENSE)
 
-
