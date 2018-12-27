@@ -289,7 +289,7 @@ def graph_to_network(input1,
     for _, topo_i in enumerate(topology):
         if topo_i == '|':
             continue
-        with tf.variable_scope(p_graph.layers[topo_i].hash_id):
+        with tf.variable_scope(p_graph.layers[topo_i].hash_id, reuse=tf.AUTO_REUSE):
             if p_graph.layers[topo_i].graph_type == LayerType.input.value:
                 continue
             elif p_graph.layers[topo_i].graph_type == LayerType.attention.value:
