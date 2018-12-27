@@ -30,6 +30,8 @@ from datetime import datetime
 from enum import Enum, unique
 from logging import StreamHandler
 
+from queue import Queue
+
 from .rest_utils import rest_get, rest_post, rest_put, rest_delete
 from .constants import NNI_EXP_ID, NNI_TRIAL_JOB_ID, STDOUT_API
 from .url_utils import gen_send_stdout_url
@@ -105,21 +107,47 @@ class SysLogger(object):
                 self.logger.log(self.log_level, line.rstrip())
             except Exception as e:
                 pass
-                #self.orig_stdout.write(str(e))
 
 class LogPipe(threading.Thread):
     def __init__(self, logger, log_level=logging.INFO):
         """Setup the object with a logger and a loglevel
         and start the thread
         """
+
         threading.Thread.__init__(self)
+        self.queue = Queue()
         self.logger = logger
         self.daemon = False
         self.log_level = log_level
         self.fdRead, self.fdWrite = os.pipe()
         self.pipeReader = os.fdopen(self.fdRead)
         self.orig_stdout = sys.__stdout__
+        self._is_read_completed = False
+        
+
+        def _populateQueue(stream, queue):
+            '''
+            Collect lines from 'stream' and put them in 'quque'.
+            '''
+            time.sleep(5)
+            while True:                
+                try:
+                    line = self.queue.get(True, 5)
+                    try:
+                        self.logger.log(self.log_level, line.rstrip())
+                        self.orig_stdout.write(line.rstrip() + '\n')
+                        self.orig_stdout.flush()
+                    except Exception as e:
+                        pass
+                except Exception as e:                    
+                    self._is_read_completed = True
+                    break
+
+        self.remote_logging_thread = threading.Thread(target = _populateQueue,
+                args = (self.pipeReader, self.queue))
+        self.remote_logging_thread.daemon = True        
         self.start()
+        self.remote_logging_thread.start()
 
     def fileno(self):
         """Return the write file descriptor of the pipe
@@ -130,17 +158,16 @@ class LogPipe(threading.Thread):
         """Run the thread, logging everything.
         """
         for line in iter(self.pipeReader.readline, ''):
-            try:
-                self.logger.log(self.log_level, line.rstrip())
-            except Exception as e:
-                pass
-                #self.orig_stdout.write(str(e))
-            self.orig_stdout.write(line.rstrip() + '\n')
-            self.orig_stdout.flush()
-
+            self.queue.put(line)
         self.pipeReader.close()
 
     def close(self):
         """Close the write end of the pipe.
         """
         os.close(self.fdWrite)
+
+    @property
+    def is_read_completed(self):
+        """Return if read is completed
+        """
+        return self._is_read_completed
