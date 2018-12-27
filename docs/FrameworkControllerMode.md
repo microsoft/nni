@@ -1,6 +1,6 @@
 **Run an Experiment on FrameworkController**
 ===
-NNI supports running experiment using [FrameworkController](https://github.com/Microsoft/frameworkcontroller), called frameworkcontroller mode. FrameworkController is built to orchestrate all kinds of applications on Kubernetes, and you have to set a kubernetes cluster before using frameworkcontroller.
+NNI supports running experiment using [FrameworkController](https://github.com/Microsoft/frameworkcontroller), called frameworkcontroller mode. FrameworkController is built to orchestrate all kinds of applications on Kubernetes, you could use frameworkcontroller as a training service to run your experiment.
 
 ## Set up Kubernetes Service and kubeconfig
 FrameworkController has same prerequisites as kubeflow mode except that you don't need to install kubeflow. Please refer the [document](./KubeflowMode.md) to set up your kubernetes cluster and other prerequisites for nni.
