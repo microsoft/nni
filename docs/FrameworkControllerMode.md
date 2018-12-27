@@ -9,7 +9,7 @@ FrameworkController has same prerequisites as kubeflow mode except that you don'
 Follow the [guideline](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run) to set up the frameworkcontroller in the kubernetes cluster, nni support frameworkcontroller by the statefulset mode.
 
 ## Design
-Please refer the design of [kubeflow training service](./KubeflowMode.md), frameworkcontroller training service pipeline is similar with kubeflow training service.
+Please refer the design of [kubeflow training service](./KubeflowMode.md), frameworkcontroller training service pipeline is similar to kubeflow training service.
 
 ## Example
 
@@ -31,11 +31,11 @@ tuner:
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
-#assessor:
-#  builtinAssessorName: Medianstop
-#  classArgs:
-#    optimize_mode: maximize
-#  gpuNum: 0
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+  gpuNum: 0
 trial:
   codeDir: ~/nni/examples/trials/mnist
   taskRoles:
@@ -55,7 +55,7 @@ frameworkcontrollerConfig:
     server: {your_nfs_server}
     path: {your_nfs_server_exported_path}
 ```
-If you use Azure Kubernetes Service, you should  set `kubeflowConfig` in your config yaml file as follows:
+If you use Azure Kubernetes Service, you should  set `frameworkcontrollerConfig` in your config yaml file as follows:
 ```
 frameworkcontrollerConfig:
   storage: azureStorage
@@ -66,9 +66,9 @@ frameworkcontrollerConfig:
     accountName: {your_storage_account_name}
     azureShare: {your_azure_share_name}
 ```
-Note: You should explicitly set `trainingServicePlatform: frameworkcontroller` in nni config yaml file if you want to start experiment in kubeflow mode. 
+Note: You should explicitly set `trainingServicePlatform: frameworkcontroller` in nni config yaml file if you want to start experiment in frameworkcontrollerConfig mode. 
 
-The trial's config format for nni frameworkcontroller mode is a simple version of frameworkcontroller's offical config, you could refer the [tensorflow example](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) for deeply understanding.  
+The trial's config format for nni frameworkcontroller mode is a simple version of frameworkcontroller's offical config, you could refer the [tensorflow example of frameworkcontroller](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) for deeply understanding.  
 Trial configuration in frameworkcontroller mode have the following configuration keys:
 * taskRoles: you could set multiple task roles in config file, and each task role is a basic unit to process in kubernetes cluster.
    * name: the name of task role specified, like "worker", "ps", "master".
