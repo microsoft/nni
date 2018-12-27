@@ -64,10 +64,10 @@ const expParams2: ExperimentParams = {
 };
 
 const profiles: ExperimentProfile[] = [
-    { params: expParams1, id: '#1', execDuration: 0, startTime: Date.now(), endTime: undefined, revision: 1, maxSequenceId: 0 },
-    { params: expParams1, id: '#1', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 2, maxSequenceId: 0 },
-    { params: expParams2, id: '#2', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 2, maxSequenceId: 0 },
-    { params: expParams2, id: '#2', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 3, maxSequenceId: 0 }
+    { params: expParams1, id: '#1', execDuration: 0, logDir: '/log', startTime: Date.now(), endTime: undefined, maxSequenceId: 0, revision: 1,},
+    { params: expParams1, id: '#1', execDuration: 0, logDir: '/log', startTime: Date.now(), endTime: Date.now(), maxSequenceId: 0, revision: 2 },
+    { params: expParams2, id: '#2', execDuration: 0, logDir: '/log', startTime: Date.now(), endTime: Date.now(), maxSequenceId: 0, revision: 2 },
+    { params: expParams2, id: '#2', execDuration: 0, logDir: '/log', startTime: Date.now(), endTime: Date.now(), maxSequenceId: 0, revision: 3 }
 ];
 
 const events: TrialJobEventRecord[] = [

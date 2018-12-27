@@ -21,7 +21,7 @@
 
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
@@ -35,7 +35,7 @@ import {
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
-import { delay , getLogDir, getCheckpointDir, getMsgDispatcherCommand, mkDirP} from '../common/utils';
+import { delay, getLogDir, getCheckpointDir, getMsgDispatcherCommand, mkDirP } from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
@@ -128,7 +128,7 @@ class NNIManager implements Manager {
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
-                                                                expParams.multiPhase, expParams.multiThread);
+            expParams.multiPhase, expParams.multiThread);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(
@@ -138,7 +138,7 @@ class NNIManager implements Manager {
             checkpointDir);
 
         this.experimentProfile.startTime = Date.now();
-        this.status.status = 'EXPERIMENT_RUNNING';
+        this.status.status = 'RUNNING';
         await this.storeExperimentProfile();
         this.run().catch((err: Error) => {
             this.criticalError(err);
@@ -161,7 +161,7 @@ class NNIManager implements Manager {
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
-                                                                expParams.multiPhase, expParams.multiThread);
+            expParams.multiPhase, expParams.multiThread);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(
@@ -185,7 +185,7 @@ class NNIManager implements Manager {
             this.experimentProfile.endTime) {
             delete this.experimentProfile.endTime;
         }
-        this.status.status = 'EXPERIMENT_RUNNING';
+        this.status.status = 'RUNNING';
 
         // TO DO: update database record for resume event
         this.run().catch((err: Error) => {
@@ -253,7 +253,7 @@ class NNIManager implements Manager {
         if (this.dispatcher !== undefined) {
             return;
         }
-        const stdio: (string | NodeJS.WriteStream)[] = ['ignore', process.stdout, process.stderr, 'pipe', 'pipe'];
+        const stdio: StdioOptions = ['ignore', process.stdout, process.stderr, 'pipe', 'pipe'];
         let newCwd: string;
         if (cwd === undefined || cwd === '') {
             newCwd = getLogDir();
@@ -350,7 +350,7 @@ class NNIManager implements Manager {
         let count: number = 1;
         while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
             await delay(1000 * 1); // 1 seconds
-            if (this.status.status === 'EXPERIMENT_RUNNING') {
+            if (this.status.status === 'RUNNING') {
                 this.experimentProfile.execDuration += 1;
                 if (count % 10 === 0) {
                     await this.storeExperimentProfile();
@@ -387,7 +387,8 @@ class NNIManager implements Manager {
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
                         trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
-                        hyper_params: hyperParams }));
+                        hyper_params: hyperParams
+                    }));
                     break;
                 case 'FAILED':
                 case 'SYS_CANCELED':
@@ -403,7 +404,8 @@ class NNIManager implements Manager {
                     this.dispatcher.sendCommand(TRIAL_END, JSON.stringify({
                         trial_job_id: trialJobDetail.id,
                         event: trialJobDetail.status,
-                        hyper_params: hyperParams}));
+                        hyper_params: hyperParams
+                    }));
                     break;
                 case 'WAITING':
                 case 'RUNNING':
@@ -414,7 +416,7 @@ class NNIManager implements Manager {
                 // TO DO: add warning in log
             }
         }
-        
+
         return finishedTrialJobNum;
     }
 
@@ -460,15 +462,15 @@ class NNIManager implements Manager {
             }
 
             // check maxtrialnum and maxduration here
-            // NO_MORE_TRIAL is more like a subset of EXPERIMENT_RUNNING, because during EXPERIMENT_RUNNING tuner
+            // NO_MORE_TRIAL is more like a subset of RUNNING, because during RUNNING tuner
             // might tell nnimanager that this is no more trials. In NO_MORE_TRIAL state, the experiment is viewed
-            // as still running. DONE could be transfered from EXPERIMENT_RUNNING or NO_MORE_TRIAL.
-            assert(this.status.status === 'EXPERIMENT_RUNNING' ||
+            // as still running. DONE could be transfered from RUNNING or NO_MORE_TRIAL.
+            assert(this.status.status === 'RUNNING' ||
                 this.status.status === 'DONE' ||
                 this.status.status === 'NO_MORE_TRIAL');
             if (this.experimentProfile.execDuration > this.experimentProfile.params.maxExecDuration ||
                 this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
-                if (this.status.status === 'EXPERIMENT_RUNNING' ||
+                if (this.status.status === 'RUNNING' ||
                     this.status.status === 'NO_MORE_TRIAL') {
                     this.experimentProfile.endTime = Date.now();
                     await this.storeExperimentProfile();
@@ -480,7 +482,7 @@ class NNIManager implements Manager {
                     await this.storeExperimentProfile();
                 }
                 if (this.status.status !== 'NO_MORE_TRIAL') {
-                    this.status.status = 'EXPERIMENT_RUNNING';
+                    this.status.status = 'RUNNING';
                 }
                 for (let i: number = this.trialJobs.size; i < this.experimentProfile.params.trialConcurrency; i++) {
                     if (this.waitingTrials.length === 0 ||
@@ -602,7 +604,7 @@ class NNIManager implements Manager {
             case NEW_TRIAL_JOB:
                 if (this.status.status === 'NO_MORE_TRIAL') {
                     this.log.warning('It is not supposed to receive more trials after NO_MORE_TRIAL is set');
-                    this.status.status = 'EXPERIMENT_RUNNING';
+                    this.status.status = 'RUNNING';
                 }
                 this.waitingTrials.push(content);
                 break;
@@ -683,7 +685,7 @@ class NNIManager implements Manager {
 
         return Promise.resolve(chkpDir);
     }
-    
+
     private async storeMaxSequenceId(sequenceId: number): Promise<void> {
         if (sequenceId > this.experimentProfile.maxSequenceId) {
             this.experimentProfile.maxSequenceId = sequenceId;

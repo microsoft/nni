@@ -20,12 +20,38 @@
 import * as path from 'path';
 import * as fs from 'fs';
 import { Deferred } from 'ts-deferred';
+import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger } from '../../common/log';
 
 /**
  * HDFS client utility, including copy file/directory
  */
 export namespace HDFSClientUtility {
+    /**
+     * Get NNI experiment root directory
+     * @param hdfsUserName HDFS user name
+     */
+    function hdfsExpRootDir(hdfsUserName: string): string {
+        return path.join('/', hdfsUserName, 'nni', 'experiments', getExperimentId());
+    }
+
+    /**
+     * Get NNI experiment code directory
+     * @param hdfsUserName HDFS user name
+     */
+    export function getHdfsExpCodeDir(hdfsUserName: string): string {
+        return path.join(hdfsExpRootDir(hdfsUserName), 'codeDir');
+    }
+
+    /**
+     * Get NNI trial working directory
+     * @param hdfsUserName HDFS user name
+     * @param trialId NNI trial ID
+     */
+    export function getHdfsTrialWorkDir(hdfsUserName: string, trialId: string): string {
+        return path.join(hdfsExpRootDir(hdfsUserName), 'trials', trialId);
+    }
+
     /**
      * Copy a local file to hdfs directory
      * 

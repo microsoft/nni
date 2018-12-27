@@ -110,6 +110,6 @@ def _expand_file_annotations(src_path, dst_path):
 
         except Exception as exc:  # pylint: disable=broad-except
             if exc.args:
-                raise RuntimeError(src_path + ' ' + '\n'.join(exc.args))
+                raise RuntimeError(src_path + ' ' + '\n'.join(str(arg) for arg in exc.args))
             else:
                 raise RuntimeError('Failed to expand annotations for %s: %r' % (src_path, exc))

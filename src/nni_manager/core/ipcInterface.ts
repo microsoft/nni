@@ -103,7 +103,7 @@ class IpcInterface {
         try {
             const data: Buffer = encodeCommand(commandType, content);
             if (!this.outgoingStream.write(data)) {
-                this.logger.error('Commands jammed in buffer!');
+                this.logger.warning('Commands jammed in buffer!');
             }
         } catch (err) {
             throw new NNIError('Dispatcher Error', `Dispatcher Error: ${err.message}`, err);

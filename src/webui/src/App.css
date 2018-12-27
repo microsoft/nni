@@ -9,19 +9,19 @@
   left: 0;
   top: 0;
   width: 100%;
-  height: 80px; 
+  height: 56px; 
   background: #0071BC;
   border-right: 1px solid #ccc;
   z-index: 1000;
 }
 .headerCon{
-  min-width: 600px
+  min-width: 1024px;
 }
 .content{
   width: 86%;
   min-width: 1024px;
   margin: 0 auto;
-  margin-top: 90px;
+  margin-top: 74px;
   margin-bottom: 30px;
 }
 

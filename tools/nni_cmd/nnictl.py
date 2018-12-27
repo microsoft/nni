@@ -20,6 +20,7 @@
 
 
 import argparse
+import pkg_resources
 from .launcher import create_experiment, resume_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum
 from .nnictl_utils import *
@@ -27,13 +28,17 @@ from .package_management import *
 from .constants import *
 from .tensorboard_utils import *
 
-def nni_help_info(*args):
-    print('please run "nnictl {positional argument} --help" to see nnictl guidance')
+def nni_info(*args):
+    if args[0].version:
+        print(pkg_resources.get_distribution('nni').version)
+    else:
+        print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
 def parse_args():
     '''Definite the arguments users need to follow and input'''
     parser = argparse.ArgumentParser(prog='nnictl', description='use nnictl command to control nni experiments')
-    parser.set_defaults(func=nni_help_info)
+    parser.add_argument('--version', '-v', action='store_true')
+    parser.set_defaults(func=nni_info)
 
     # create subparsers for args with sub values
     subparsers = parser.add_subparsers()

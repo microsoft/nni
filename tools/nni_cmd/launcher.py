@@ -188,6 +188,25 @@ def set_kubeflow_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
+def set_frameworkcontroller_config(experiment_config, port, config_file_name):
+    '''set kubeflow configuration''' 
+    frameworkcontroller_config_data = dict()
+    frameworkcontroller_config_data['frameworkcontroller_config'] = experiment_config['frameworkcontrollerConfig']
+    response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), 20)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
+    #set trial_config
+    return set_trial_config(experiment_config, port, config_file_name), err_message
+
 def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
     request_data = dict()
@@ -231,6 +250,11 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     elif experiment_config['trainingServicePlatform'] == 'kubeflow':
         request_data['clusterMetaData'].append(
             {'key': 'kubeflow_config', 'value': experiment_config['kubeflowConfig']})
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'frameworkcontroller':
+        request_data['clusterMetaData'].append(
+            {'key': 'frameworkcontroller_config', 'value': experiment_config['frameworkcontrollerConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
 
@@ -337,7 +361,23 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['pkill', '-P', str(rest_process.pid)]
+                cmds = ['pkill', str(rest_process.pid)]
+                call(cmds)
+            except Exception:
+                raise Exception(ERROR_INFO % 'Restful server stopped!')
+            exit(1)
+    
+        #set kubeflow config
+    if experiment_config['trainingServicePlatform'] == 'frameworkcontroller':
+        print_normal('Setting frameworkcontroller config...')
+        config_result, err_msg = set_frameworkcontroller_config(experiment_config, args.port, config_file_name)
+        if config_result:
+            print_normal('Successfully set frameworkcontroller config!')
+        else:
+            if err_msg:
+                print_error('Failed! Error is: {}'.format(err_msg))
+            try:
+                cmds = ['pkill', str(rest_process.pid)]
                 call(cmds)
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')

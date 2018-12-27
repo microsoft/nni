@@ -52,7 +52,10 @@ class NNIRestHandler {
 
         // tslint:disable-next-line:typedef
         router.use((req: Request, res: Response, next) => {
-            this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
+            // Don't log useless empty body content
+            if(req.body &&  Object.keys(req.body).length > 0) {
+                this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
+            }
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
             res.header('Access-Control-Allow-Methods', 'PUT,POST,GET,DELETE,OPTIONS');
@@ -61,6 +64,7 @@ class NNIRestHandler {
             next();
         });
 
+        this.version(router);
         this.checkStatus(router);
         this.getExperimentProfile(router);
         this.updateExperimentProfile(router);
@@ -106,6 +110,13 @@ class NNIRestHandler {
         }
 
         this.log.error(err);
+    }
+
+    private version(router: Router): void {
+        router.get('/version', async (req: Request, res: Response) => {
+            const pkg = await import(path.join(__dirname, '..', 'package.json'));
+            res.send(pkg.version);
+        });
     }
 
     // TODO add validators for request params, query, body
