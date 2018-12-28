@@ -19,12 +19,11 @@ else
 endif
 
 ## Install directories
+ROOT_FOLDER ?= $(shell python3 -c 'from distutils.sysconfig import get_python_lib; from pathlib import Path; print(Path(get_python_lib()).parents[2])')
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
-    ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
     BASH_COMP_PREFIX ?= /usr/share/bash-completion/completions
 else  # is normal user
-    ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getusersitepackages()).parents[2])')
     ifndef VIRTUAL_ENV
         PIP_MODE ?= --user
     endif
