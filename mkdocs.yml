@@ -18,7 +18,7 @@ nav:
         - Configuration: ExperimentConfig.md
         - Search Space: SearchSpaceSpec.md
         - Annotation: AnnotationSpec.md
-    - Contribution: CONTRIBUTING.md
+    - Contribution:
         - Development Setup: SetupNNIDeveloperEnvironment.md
         - Debug HowTO: HowToDebug.md
 theme: readthedocs
