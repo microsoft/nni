@@ -20,5 +20,6 @@ nav:
         - Annotation: AnnotationSpec.md
     - Contribution:
         - Development Setup: SetupNNIDeveloperEnvironment.md
+        - Contribution Guide: CONTRIBUTING.md
         - Debug HowTO: HowToDebug.md
 theme: readthedocs
