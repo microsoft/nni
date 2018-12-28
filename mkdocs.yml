@@ -1,0 +1,25 @@
+site_name: Neural Network Intelligence
+
+nav:
+    - Overview: README.md
+    - What's New: RELEASE.md
+    - Tutorials:
+        - QuickStart: GetStarted.md
+        - Installation: Installation.md
+        - Trial HowTo: howto_1_WriteTrial.md
+        - WebUI: WebUI.md
+        - Tuners: HowToChooseTuner.md
+        - Training Platform:
+            - Remote: RemoteMachineMode.md
+            - PAI: PAIMode.md
+            - Kubeflow: KubeflowMode.md
+    - Reference:
+        - nnictl: NNICTLDOC.md
+        - Configuration: ExperimentConfig.md
+        - Search Space: SearchSpaceSpec.md
+        - Annotation: AnnotationSpec.md
+    - Contribution:
+        - Development Setup: SetupNNIDeveloperEnvironment.md
+        - Contribution Guide: CONTRIBUTING.md
+        - Debug HowTO: HowToDebug.md
+theme: readthedocs
