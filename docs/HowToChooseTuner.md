@@ -205,6 +205,43 @@ _Usage_:
 ```
 
 
+<a name="MetisTuner"></a>
+**Metis Tuner**
+
+[Metis](10) offers the following benefits when it comes to tuning parameters:
+While most tools predicts only the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guess work!
+
+While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter.
+
+While most tools have problems of being exploitation-heavy, Metis' search strategy balances exploration, exploitation, and (optional) re-sampling.
+ 
+Metis belongs to the class of sequential model-based optimization (SMBO), and it is based on the Bayesian Optimization framework. To model the parameter-vs-performance space, Metis uses both Gaussian Process and GMM. Since each trial can impose a high time cost, Metis heavily trades inference computations with naive trial. At each iteration, Metis does two tasks:
+It finds the global optimal point in the Gaussian Process space. This point represents the optimal configuration.
+It identifies the next hyper-parameter candidate. This is achieved by inferring the potential information gain of exploration, exploitation, and re-sampling.
+
+Note that the only acceptable types of search space are `choice`, `quniform`, `randint`.
+
+More details can be found in our paper: https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
+ 
+
+_Installation_: 
+NetworkMorphism requires [sklearn](https://scikit-learn.org/), so users should install it first.
+
+
+_Suggested scenario_:
+Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](../examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis.
+
+_Usage_:
+```yaml
+  # config.yaml
+  tuner:
+    builtinTunerName: MetisTuner
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+```
+
+
 # How to use Assessor that NNI supports?
 
 For now, NNI has supported the following assessor algorithms.
@@ -273,3 +310,4 @@ _Usage_:
 [7]: https://arxiv.org/abs/1806.10282
 [8]: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
 [9]: http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf
+[10]:https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/ 
