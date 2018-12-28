@@ -34,8 +34,8 @@ from .common_utils import get_yml_content, get_json_content, print_error, print_
 from .constants import *
 import time
 import random
-import site
 from pathlib import Path
+from distutils.sysconfig import get_python_lib
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -72,12 +72,11 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         exit(1)
 
     print_normal('Starting restful server...')
-    python_dir = str(Path(site.getusersitepackages()).parents[2])
+    python_dir = str(Path(get_python_lib()).parents[2])
     entry_file = os.path.join(python_dir, 'nni', 'main.js')
     entry_dir = os.path.join(python_dir, 'nni')
     local_entry_dir = entry_dir
     if not os.path.isfile(entry_file):
-        python_dir = str(Path(site.getsitepackages()[0]).parents[2])
         entry_file = os.path.join(python_dir, 'nni', 'main.js')
         entry_dir = os.path.join(python_dir, 'nni')
         if not os.path.isfile(entry_file):
