@@ -25,7 +25,9 @@ ifeq ($(shell id -u), 0)  # is root
     BASH_COMP_PREFIX ?= /usr/share/bash-completion/completions
 else  # is normal user
     ifndef VIRTUAL_ENV
-        PIP_MODE ?= --user
+        ifeq (, $(shell echo $$PATH | grep 'conda'))
+            PIP_MODE ?= --user
+        endif
     endif
     BASH_COMP_PREFIX ?= ${HOME}/.bash_completion.d
 endif
