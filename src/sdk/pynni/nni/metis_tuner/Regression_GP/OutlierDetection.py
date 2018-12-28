@@ -18,7 +18,6 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# OutlierDetection.py -i "../Data/BingAds/datasamples_mlft_example.csv" -x BPS InsertThreshold -y Latency_90
 
 import argparse, json, os, sys
 from multiprocessing.dummy import Pool as ThreadPool
