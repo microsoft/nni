@@ -24,10 +24,10 @@ import os
 import random
 import sys
 
-import lib_acquisition_function
-import lib_constraint_summation
-import lib_data
-import Regression_GP.Prediction
+import nni.metis_tuner.lib_acquisition_function as lib_acquisition_function
+import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
+import nni.metis_tuner.lib_data as lib_data
+import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
@@ -71,16 +71,16 @@ def selection(acquisition_function,
 
     if acquisition_function == "ei":
         outputs = lib_acquisition_function.next_hyperparameter_expected_improvement(\
-                        Regression_GP.Prediction.predict, [regressor_gp], x_bounds, x_types, \
+                        gp_prediction.predict, [regressor_gp], x_bounds, x_types, \
                         samples_y_aggregation, minimize_starting_points, \
                         minimize_constraints_fun=minimize_constraints_fun)
     elif acquisition_function == "lc":
         outputs = lib_acquisition_function.next_hyperparameter_lowest_confidence(\
-                        Regression_GP.Prediction.predict, [regressor_gp], x_bounds, x_types,\
+                        gp_prediction.predict, [regressor_gp], x_bounds, x_types,\
                         minimize_starting_points, minimize_constraints_fun=minimize_constraints_fun)
     elif acquisition_function == "lm":
         outputs = lib_acquisition_function.next_hyperparameter_lowest_mu(\
-                        Regression_GP.Prediction.predict, [regressor_gp], x_bounds, x_types,\
+                        gp_prediction.predict, [regressor_gp], x_bounds, x_types,\
                         minimize_starting_points, minimize_constraints_fun=minimize_constraints_fun)
     return outputs
 

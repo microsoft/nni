@@ -23,9 +23,9 @@
 import argparse, json, os, sys
 from multiprocessing.dummy import Pool as ThreadPool
 
-import Regression_GP.CreateModel
-import Regression_GP.Prediction
-import lib_data
+import nni.metis_tuner.Regression_GP.CreateModel as gp_create_model
+import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
+import nni.metis_tuner.lib_data as lib_data
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
@@ -40,10 +40,10 @@ def _outlierDetection_threaded(inputs):
     outlier = None
     
     # Create a diagnostic regression model which removes the sample that we want to evaluate
-    diagnostic_regressor_gp = Regression_GP.CreateModel.createModel(\
+    diagnostic_regressor_gp = gp_create_model.createModel(\
                                     samples_x[0:samples_idx] + samples_x[samples_idx + 1:],\
                                     samples_y_aggregation[0:samples_idx] + samples_y_aggregation[samples_idx + 1:])
-    mu, sigma = Regression_GP.Prediction.predict(samples_x[samples_idx], diagnostic_regressor_gp['model'])
+    mu, sigma = gp_prediction.predict(samples_x[samples_idx], diagnostic_regressor_gp['model'])
     
     # 2.33 is the z-score for 98% confidence level
     if abs(samples_y_aggregation[samples_idx] - mu) > (2.33 * sigma):
@@ -82,10 +82,10 @@ def outlierDetection(samples_x, samples_y_aggregation):
     for samples_idx in range(0, len(samples_x)):
         #sys.stderr.write("[%s] DEBUG: Evaluating %d of %d samples\n" 
         #  \ % (os.path.basename(__file__), samples_idx + 1, len(samples_x)))
-        diagnostic_regressor_gp = Regression_GP.CreateModel.createModel(\
+        diagnostic_regressor_gp = gp_create_model.createModel(\
                                         samples_x[0:samples_idx] + samples_x[samples_idx + 1:],\
                                         samples_y_aggregation[0:samples_idx] + samples_y_aggregation[samples_idx + 1:])
-        mu, sigma = Regression_GP.Prediction.predict(samples_x[samples_idx],
+        mu, sigma = gp_prediction.predict(samples_x[samples_idx],
                                                      diagnostic_regressor_gp['model'])
         # 2.33 is the z-score for 98% confidence level
         if abs(samples_y_aggregation[samples_idx] - mu) > (2.33 * sigma):

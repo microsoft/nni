@@ -22,9 +22,9 @@ import os
 import random
 import sys
 
-import lib_acquisition_function
-import lib_constraint_summation
-import lib_data
+import nni.metis_tuner.lib_acquisition_function as lib_acquisition_function
+import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
+import nni.metis_tuner.lib_data as lib_data
 
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
