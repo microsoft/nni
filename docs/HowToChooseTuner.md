@@ -11,6 +11,8 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
  - [Grid Search](#Grid)
  - [Hyperband](#Hyperband)
  - [Network Morphism](#NetworkMorphism) (require pyTorch)
+ - [Metis Tuner](#MetisTuner) (require sklearn)
+
 
  ## Supported tuner algorithms
 
@@ -178,7 +180,7 @@ _Usage_:
 <a name="NetworkMorphism"></a>
 **Network Morphism**
 
-[Network Morphism](7) provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Next, it estimates the value of child network using the history architecture and metric pairs. Then it selects the most promising one to train. More detail can be referred to [here](../src/sdk/pynni/nni/networkmorphism_tuner/README.md). 
+[Network Morphism][7] provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Next, it estimates the value of child network using the history architecture and metric pairs. Then it selects the most promising one to train. More detail can be referred to [here](../src/sdk/pynni/nni/networkmorphism_tuner/README.md). 
 
 _Installation_: 
 NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so users should install it first.
@@ -208,7 +210,7 @@ _Usage_:
 <a name="MetisTuner"></a>
 **Metis Tuner**
 
-[Metis](10) offers the following benefits when it comes to tuning parameters:
+[Metis][10] offers the following benefits when it comes to tuning parameters:
 While most tools predicts only the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guess work!
 
 While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter.
