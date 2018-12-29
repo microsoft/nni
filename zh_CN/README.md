@@ -16,12 +16,12 @@ NNI (Neural Network Intelligence) 是用来进行自动机器学习（AutoML）�
 
 * 在本地尝试不同的自动机器学习算法来训练模型。
 * 在分布式环境中加速自动机器学习（如：远程 GPU 工作站和云服务器）。
-* Researchers and data scientists who want to implement their own AutoML algorithms and compare it with other algorithms.
-* ML Platform owners who want to support AutoML in their platform.
+* 定制自动机器学习算法，或比较不同的自动机器学习算法。
+* 在自己的机器学习平台中支持自动机器学习。
 
-## **Install & Verify**
+## **安装和验证**
 
-**Install through pip**
+**通过 pip 命令安装**
 
 * We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`. 
 
@@ -33,7 +33,7 @@ NNI (Neural Network Intelligence) 是用来进行自动机器学习（AutoML）�
   * If you are in docker container (as root), please remove `--user` from the installation command.
   * If there is any error like `Segmentation fault`, please refer to [FAQ](docs/FAQ.md)
 
-**Install through source code**
+**通过源代码安装**
 
 * We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) in our current stage. 
 * Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
@@ -46,7 +46,7 @@ NNI (Neural Network Intelligence) 是用来进行自动机器学习（AutoML）�
 
 For the system requirements of NNI, please refer to [Install NNI](docs/Installation.md)
 
-**Verify install**
+**验证安装**
 
 The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
 
@@ -92,8 +92,8 @@ The following example is an experiment built on TensorFlow. Make sure you have *
 * Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](docs/WebUI.md) are more Web UI pages.
 
 <table style="border: none">
-    <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
-    <th><img src="./docs/img/webui_trialdetail_page.png" alt="drawing" width="410"/></th>
+    <th><img src="./docs/img/webui_overview_page.png" alt="绘图" width="395"/></th>
+    <th><img src="./docs/img/webui_trialdetail_page.png" alt="绘图" width="410"/></th>
 </table>
 
 ## **文档**
@@ -134,6 +134,6 @@ Before start coding, review and get familiar with the NNI Code Contribution Guid
 
 We are in construction of the instruction for [How to Debug](docs/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
 
-## **License**
+## **许可协议**
 
-The entire codebase is under [MIT license](https://github.com/Microsoft/nni/blob/master/LICENSE)
+整个代码库遵循 [MIT 许可协议](https://github.com/Microsoft/nni/blob/master/LICENSE)
