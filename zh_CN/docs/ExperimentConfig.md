@@ -6,6 +6,7 @@
 
 * **简化版（不包含标记 (annotation) 和评估器）** 
 
+    ```
     authorName: 
     experimentName: 
     trialConcurrency: 
@@ -32,11 +33,13 @@
       - ip: 
         port: 
         username: 
-        passwd: 
+        passwd:
+    ``` 
     
 
 * **使用评估器**
 
+    ```
     authorName: 
     experimentName: 
     trialConcurrency: 
@@ -70,11 +73,13 @@
       - ip: 
         port: 
         username: 
-        passwd: 
+        passwd:
+    ``` 
     
 
 * **使用标记**
 
+    ```
     authorName: 
     experimentName: 
     trialConcurrency: 
@@ -107,7 +112,8 @@
       - ip: 
         port: 
         username: 
-        passwd: 
+        passwd:
+    ``` 
     
 
 ## 配置
