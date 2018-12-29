@@ -96,33 +96,33 @@ The following example is an experiment built on TensorFlow. Make sure you have *
     <th><img src="./docs/img/webui_trialdetail_page.png" alt="drawing" width="410"/></th>
 </table>
 
-## **Documentation**
+## **文档**
 
 * [NNI overview](docs/Overview.md)
-* [Quick start](docs/GetStarted.md)
+* [快速入门](docs/GetStarted.md)
 
-## **How to**
+## **入门**
 
 * [Install NNI](docs/Installation.md)
-* [Use command line tool nnictl](docs/NNICTLDOC.md)
-* [Use NNIBoard](docs/WebUI.md)
-* [How to define search space](docs/SearchSpaceSpec.md)
-* [How to define a trial](docs/howto_1_WriteTrial.md)
-* [Config an experiment](docs/ExperimentConfig.md)
-* [How to use annotation](docs/howto_1_WriteTrial.md#nni-python-annotation)
+* [使用命令行工具 nnictl](docs/NNICTLDOC.md)
+* [使用 NNIBoard](docs/WebUI.md)
+* [如何定义搜索空间](docs/SearchSpaceSpec.md)
+* [如何定义一次尝试](docs/howto_1_WriteTrial.md)
+* [配置实验](docs/ExperimentConfig.md)
+* [如何使用标记](docs/howto_1_WriteTrial.md#nni-python-annotation)
 
-## **Tutorials**
+## **教程**
 
-* [Run an experiment on local (with multiple GPUs)?](docs/tutorial_1_CR_exp_local_api.md)
-* [Run an experiment on multiple machines?](docs/tutorial_2_RemoteMachineMode.md)
-* [Run an experiment on OpenPAI?](docs/PAIMode.md)
-* [Run an experiment on Kubeflow?](docs/KubeflowMode.md)
-* [Try different tuners and assessors](docs/tutorial_3_tryTunersAndAssessors.md)
-* [Implement a customized tuner](docs/howto_2_CustomizedTuner.md)
-* [Implement a customized assessor](examples/assessors/README.md)
-* [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](examples/trials/ga_squad/README.md)
+* [在本机运行实验 (支持多 GPU 卡)](docs/tutorial_1_CR_exp_local_api.md)
+* [在多机上运行实验](docs/tutorial_2_RemoteMachineMode.md)
+* [在 OpenPAI 上运行实验](docs/PAIMode.md)
+* [在 Kubeflow 上运行实验。](docs/KubeflowMode.md)
+* [使用不同的调参器和评估器](docs/tutorial_3_tryTunersAndAssessors.md)
+* [实现自定义调参器](docs/howto_2_CustomizedTuner.md)
+* [实现自定义评估器](examples/assessors/README.md)
+* [使用遗传算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
 
-## **Contribute**
+## **贡献**
 
 This project welcomes contributions and suggestions, we use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
 
