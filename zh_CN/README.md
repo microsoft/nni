@@ -23,20 +23,20 @@ NNI (Neural Network Intelligence) 是用来进行自动机器学习（AutoML）�
 
 **通过 pip 命令安装**
 
-* We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`. 
+* 当前支持 Linux 和 MacOS。测试并支持的版本包括：Ubuntu 16.04 及更高版本，MacOS 10.14.1。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。. 
 
 ```bash
     python3 -m pip install --user --upgrade nni
 ```
 
-* Note: 
-  * If you are in docker container (as root), please remove `--user` from the installation command.
-  * If there is any error like `Segmentation fault`, please refer to [FAQ](docs/FAQ.md)
+* 注意： 
+  * 如果在 docker 容器中以 root 运行，需要从上述安装命令中删除 `--user`。
+  * 如果遇到如`Segmentation fault` 这样的任何错误请参考 [常见问题](docs/FAQ.md)。
 
 **通过源代码安装**
 
-* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) in our current stage. 
-* Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
+* 当前支持 Linux（Ubuntu 16.04 及更高版本） 和 MacOS（10.14.1）。 
+* 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
     git clone -b v0.4.1 https://github.com/Microsoft/nni.git
@@ -44,25 +44,25 @@ NNI (Neural Network Intelligence) 是用来进行自动机器学习（AutoML）�
     source install.sh 
 ```
 
-For the system requirements of NNI, please refer to [Install NNI](docs/Installation.md)
+参考[安装 NNI](docs/Installation.md) 了解系统需求。
 
 **验证安装**
 
-The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
+以下示例实验依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow**。
 
-* Download the examples via clone the source code. 
+* 通过克隆源代码下载示例。 
 
 ```bash
     git clone -b v0.4.1 https://github.com/Microsoft/nni.git
 ```
 
-* Run the mnist example.
+* 运行 mnist 示例。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
-* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
+* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明实验已成功启动。 通过命令行输出的 `Web UI url` 来访问实验的界面。
 
     INFO: Starting restful server...
     INFO: Successfully started Restful server!
@@ -89,7 +89,7 @@ The following example is an experiment built on TensorFlow. Make sure you have *
     -----------------------------------------------------------------------
     
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](docs/WebUI.md) are more Web UI pages.
+* 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里的](docs/WebUI.md)更多页面示例。
 
 <table style="border: none">
     <th><img src="./docs/img/webui_overview_page.png" alt="绘图" width="395"/></th>
@@ -98,12 +98,12 @@ The following example is an experiment built on TensorFlow. Make sure you have *
 
 ## **文档**
 
-* [NNI overview](docs/Overview.md)
+* [NNI 概述](docs/Overview.md)
 * [快速入门](docs/GetStarted.md)
 
 ## **入门**
 
-* [Install NNI](docs/Installation.md)
+* [安装 NNI](docs/Installation.md)
 * [使用命令行工具 nnictl](docs/NNICTLDOC.md)
 * [使用 NNIBoard](docs/WebUI.md)
 * [如何定义搜索空间](docs/SearchSpaceSpec.md)
@@ -124,15 +124,15 @@ The following example is an experiment built on TensorFlow. Make sure you have *
 
 ## **贡献**
 
-This project welcomes contributions and suggestions, we use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
+此项目欢迎贡献代码或提交建议，可在 [GitHub issues](https://github.com/Microsoft/nni/issues) 跟踪需求和缺陷。
 
-Issues with the **good first issue** label are simple and easy-to-start ones that we recommend new contributors to start with.
+推荐新贡献者从标有 **good first issue** 的简单需求开始。
 
-To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/SetupNNIDeveloperEnvironment.md)
+如要安装 NNI 开发环境，参考： [配置 NNI 开发环境](docs/SetupNNIDeveloperEnvironment.md)。
 
-Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/CONTRIBUTING.md)
+在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/CONTRIBUTING.md)。
 
-We are in construction of the instruction for [How to Debug](docs/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
+我们正在编写 [如何调试](docs/HowToDebug.md) 的页面，欢迎提交建议和问题。
 
 ## **许可协议**
 
