@@ -116,3 +116,5 @@ jobs:
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH python3 sdk_test.py --mode local
     displayName: 'Built-in dispatcher tests'
+
+    
