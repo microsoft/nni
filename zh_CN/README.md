@@ -1,5 +1,5 @@
 <p align="center">
-<img src="./docs/img/nni_logo.png" alt="logo" width="300"/>
+<img src="../docs/img/nni_logo.png" alt="logo" width="300"/>
 </p>
 
 * * *
@@ -92,8 +92,8 @@ NNI (Neural Network Intelligence) 是用来进行自动机器学习（AutoML）�
 * 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里的](docs/WebUI.md)更多页面示例。
 
 <table style="border: none">
-    <th><img src="./docs/img/webui_overview_page.png" alt="绘图" width="395"/></th>
-    <th><img src="./docs/img/webui_trialdetail_page.png" alt="绘图" width="410"/></th>
+    <th><img src="../docs/img/webui_overview_page.png" alt="绘图" width="395"/></th>
+    <th><img src="../docs/img/webui_trialdetail_page.png" alt="绘图" width="410"/></th>
 </table>
 
 ## **文档**
