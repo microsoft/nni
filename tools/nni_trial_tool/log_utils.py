@@ -54,7 +54,6 @@ def nni_log(log_type, log_message):
     dt = datetime.now()
     print('[{0}] {1} {2}'.format(dt, log_type.value, log_message))
 
-
 class NNIRestLogHanlder(StreamHandler):
     def __init__(self, host, port, tag, std_output_type=StdOutputType.Stdout):
         StreamHandler.__init__(self)
@@ -77,10 +76,9 @@ class NNIRestLogHanlder(StreamHandler):
             self.orig_stderr.write(str(e) + '\n')
             self.orig_stderr.flush()
 
-class SysLogger(object):
-    
+class RemoteLogger(object):
     """
-    NNI syslogger
+    NNI remote logger
     """
     def __init__(self, syslog_host, syslog_port, tag, std_output_type, log_level=logging.INFO):
         '''
@@ -96,10 +94,16 @@ class SysLogger(object):
         else:
             self.orig_stdout = sys.__stderr__
 
-    def get_syslog_pipe(self):
-        return LogPipe(self.logger, logging.INFO)
+    def get_pipelog_reader(self):
+        '''
+        Get pipe for remote logger
+        '''
+        return PipeLogReader(self.logger, logging.INFO)
 
     def write(self, buf):
+        '''
+        Write buffer data into logger/stdout
+        '''
         for line in buf.rstrip().splitlines():
             self.orig_stdout.write(line.rstrip() + '\n')
             self.orig_stdout.flush()
@@ -108,12 +112,14 @@ class SysLogger(object):
             except Exception as e:
                 pass
 
-class LogPipe(threading.Thread):
+class PipeLogReader(threading.Thread):
+    """
+    The reader thread reads log data from pipe
+    """
     def __init__(self, logger, log_level=logging.INFO):
         """Setup the object with a logger and a loglevel
         and start the thread
         """
-
         threading.Thread.__init__(self)
         self.queue = Queue()
         self.logger = logger
@@ -123,7 +129,6 @@ class LogPipe(threading.Thread):
         self.pipeReader = os.fdopen(self.fdRead)
         self.orig_stdout = sys.__stdout__
         self._is_read_completed = False
-        
 
         def _populateQueue(stream, queue):
             '''
@@ -143,11 +148,11 @@ class LogPipe(threading.Thread):
                     self._is_read_completed = True
                     break
 
-        self.remote_logging_thread = threading.Thread(target = _populateQueue,
+        self.pip_log_reader_thread = threading.Thread(target = _populateQueue,
                 args = (self.pipeReader, self.queue))
-        self.remote_logging_thread.daemon = True        
+        self.pip_log_reader_thread.daemon = True
         self.start()
-        self.remote_logging_thread.start()
+        self.pip_log_reader_thread.start()
 
     def fileno(self):
         """Return the write file descriptor of the pipe

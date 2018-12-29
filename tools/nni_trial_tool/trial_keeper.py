@@ -31,7 +31,7 @@ from pyhdfs import HdfsClient
 
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
-from .log_utils import LogType, nni_log, SysLogger, LogPipe, StdOutputType
+from .log_utils import LogType, nni_log, RemoteLogger, PipeLogReader, StdOutputType
 from .metrics_reader import read_experiment_metrics
 
 logger = logging.getLogger('trial_keeper')
@@ -45,9 +45,9 @@ def main_loop(args):
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
     
-    trial_keeper_syslogger = SysLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout)
+    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout)
     # redirect trial keeper's stdout and stderr to syslog
-    trial_syslogger_stdout = SysLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout)
+    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout)
     sys.stdout = sys.stderr = trial_keeper_syslogger
 
     if args.pai_hdfs_host is not None and args.nni_hdfs_exp_dir is not None:
@@ -59,7 +59,7 @@ def main_loop(args):
         copyHdfsDirectoryToLocal(args.nni_hdfs_exp_dir, os.getcwd(), hdfs_client)
 
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
-    log_pipe_stdout = trial_syslogger_stdout.get_syslog_pipe()
+    log_pipe_stdout = trial_syslogger_stdout.get_pipelog_reader()
     process = Popen(args.trial_command, shell = True, stdout = log_pipe_stdout, stderr = log_pipe_stdout)
     nni_log(LogType.Info, 'Trial keeper spawns a subprocess (pid {0}) to run command: {1}'.format(process.pid, shlex.split(args.trial_command)))
 

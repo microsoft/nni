@@ -81,7 +81,6 @@ export abstract class ClusterJobRestServer extends RestServer{
             try {
                 this.log.info(`Get update-metrics request, trial job id is ${req.params.trialId}`);
                 this.log.info(`update-metrics body is ${JSON.stringify(req.body)}`);
-                this.log.info(`update-metrics body metrics is ${req.body.metrics}`);
 
                 this.handleTrialMetrics(req.body.jobId, req.body.metrics);
 

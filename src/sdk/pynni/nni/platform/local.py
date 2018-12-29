@@ -82,6 +82,7 @@ def send_metric(string):
     if _nni_platform == 'pai':
         print('NNISDK_ME%s' % (data))
     else:
+        data += '\n'
         _metric_file.write(b'ME%06d%b' % (len(data), data))
         _metric_file.flush()
         subprocess.run(['touch', _metric_file.name], check = True)

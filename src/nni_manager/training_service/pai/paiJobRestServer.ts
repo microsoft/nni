@@ -45,7 +45,6 @@ export class PAIJobRestServer extends ClusterJobRestServer{
         // Split metrics array into single metric, then emit
         // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
         for (const singleMetric of metrics) {
-            this.log.info(`singleMetrics is ${singleMetric}`);
             this.paiTrainingService.MetricsEmitter.emit('metric', {
                 id : jobId,
                 data : singleMetric
