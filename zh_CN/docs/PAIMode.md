@@ -1,6 +1,6 @@
-# **Run an Experiment on OpenPAI**
+# **在 OpenPAI 上运行实验**
 
-NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai) (aka pai), called pai mode. Before starting to use NNI pai mode, you should have an account to access an [OpenPAI](https://github.com/Microsoft/pai) cluster. See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.
+NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) ( pai) 上运行实验, 称为 pai 模式。 在开始使用NNI pai 模式之前, 您应该有一个访问 [OpenPAI](https://github.com/Microsoft/pai) 群集的账户。 See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.
 
 ## Setup environment
 
