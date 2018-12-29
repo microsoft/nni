@@ -64,6 +64,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 
 * 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明实验已成功启动。 通过命令行输出的 `Web UI url` 来访问实验的界面。
 
+    ```
     INFO: Starting restful server...
     INFO: Successfully started Restful server!
     INFO: Setting local config...
@@ -87,6 +88,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
     6. nnictl trial kill             kill a trial job by id
     7. nnictl --help                 get help information about nnictl
     -----------------------------------------------------------------------
+    ```
     
 
 * 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里的](docs/WebUI.md)更多页面示例。
