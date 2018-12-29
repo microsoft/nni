@@ -9,7 +9,7 @@
 NNI (Neural Network Intelligence) 是用来进行自动机器学习（AutoML）实验的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
 <p align="center">
-<img src="./docs/img/nni_arch_overview.png" alt="绘图"/>
+<img src="../docs/img/nni_arch_overview.png" alt="绘图"/>
 </p>
 
 ## **使用场景**
