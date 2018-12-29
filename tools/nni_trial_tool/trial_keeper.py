@@ -32,6 +32,7 @@ from pyhdfs import HdfsClient
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
 from .log_utils import LogType, nni_log, RemoteLogger, PipeLogReader, StdOutputType
+from .metrics_reader import read_experiment_metrics
 
 logger = logging.getLogger('trial_keeper')
 
@@ -64,7 +65,8 @@ def main_loop(args):
 
     while True:
         retCode = process.poll()
-        # child worker process exits and all stdout data is read
+        ## Read experiment metrics, to avoid missing metrics
+        #read_experiment_metrics(args.nnimanager_ip, args.nnimanager_port)        
         if retCode is not None and log_pipe_stdout.is_read_completed == True:
             nni_log(LogType.Info, 'subprocess terminated. Exit code is {}. Quit'.format(retCode))
             if args.pai_hdfs_output_dir is not None:
