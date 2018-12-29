@@ -1,5 +1,7 @@
+trigger:
+- master
+- dev-remote-ci
 jobs:
-
 - job: 'Ubuntu_16_04_local'
   pool:
     vmImage: 'Ubuntu 16.04'
