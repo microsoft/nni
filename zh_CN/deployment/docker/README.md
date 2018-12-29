@@ -1,8 +1,8 @@
 # Dockerfile
 
-## 1.Description
+## 1. 说明
 
-This is the Dockerfile of nni project. It includes serveral popular deep learning frameworks and NNI. It is tested on `Ubuntu 16.04 LTS`:
+这是 NNI 项目的 Dockerfile 文件。 It includes serveral popular deep learning frameworks and NNI. It is tested on `Ubuntu 16.04 LTS`:
 
     CUDA 9.0, CuDNN 7.0
     numpy 1.14.3,scipy 1.1.0
