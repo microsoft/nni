@@ -480,6 +480,7 @@
   
   If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
 
+    ```
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -500,11 +501,13 @@
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
+    ```
     
 
     Could add assessor configuration in config file if set assessor.
     
 
+    ```
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -533,11 +536,13 @@
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
+    ```
     
 
     Or you could specify your own tuner and assessor file as following:
     
 
+    ```
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -568,12 +573,14 @@
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
+    ```
     
 
 * **remote mode**
 
 If run trial jobs in remote machine, users could specify the remote mahcine information as fllowing format:
 
+    ```
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -611,10 +618,12 @@ If run trial jobs in remote machine, users could specify the remote mahcine info
         username: test
         sshKeyPath: /nni/sshkey
         passphrase: qwert
+    ```
     
 
 * **pai mode**
 
+    ```
     authorName: test
     experimentName: nni_test1
     trialConcurrency: 1
@@ -658,6 +667,7 @@ If run trial jobs in remote machine, users could specify the remote mahcine info
 
 kubeflow use nfs as storage.
 
+    ```
     authorName: default
     experimentName: example_mni
     trialConcurrency: 1
@@ -688,10 +698,12 @@ kubeflow use nfs as storage.
       nfs:
         server: 10.10.10.10
         path: /var/nfs/general
+    ```
     
 
 kubeflow use azure storage
 
+    ```
     authorName: default
     experimentName: example_mni
     trialConcurrency: 1
@@ -731,3 +743,4 @@ kubeflow use azure storage
       azureStorage:
         accountName: storage
         azureShare: share01
+    ```
