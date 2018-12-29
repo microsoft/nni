@@ -1,11 +1,11 @@
-# Makefile and Installation Setup
+# Makefile 文件和安装配置
 
 NNI uses GNU make for building and installing.
 
-The `Makefile` offers standard targets `build`, `install`, and `uninstall`, as well as alternative installation targets for different setup:
+`Makefile` 提供标准的目标 `生成`、`安装` 和 `卸载`, 以及不同设置的安装对象：
 
-* `easy-install`: target for non-expert users, which handles everything automatically;
-* `dev-easy-install`: target for developer users, which handles everything automatically;
+* `dev-easy-install`: 针对非专家用户，自动处理所有内容；
+* `dev-easy-install`: 针对专家用户，自动处理所有内容；
 * `install`: target for NNI normal users, which installs NNI by copying files;
 * `dev-install`: target for NNI contributors, which installs NNI as symlinks instead of copying files;
 * `pip-install`: target in favor of `setup.py`;
