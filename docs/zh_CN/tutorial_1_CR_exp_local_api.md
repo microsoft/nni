@@ -18,22 +18,22 @@
     
             RECEIVED_PARAMS = nni.get_next_parameter()
     
-        来获得 Tuner 分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如：
+        来获得 Tuner 分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如： 
     
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
     
     1.3 返回结果
         使用 API：
     
-            `nni.report_intermediate_result(accuracy)`
+            `nni.report_intermediate_result(accuracy)` 
     
         返回 `accuracy` 的值给 Assessor。
     
         使用 API:
     
-            `nni.report_final_result(accuracy)`
+            `nni.report_final_result(accuracy)` 
     
-        返回 `accuracy` 的值给 Tuner。
+        返回 `accuracy` 的值给 Tuner。 
     
 
 将改动保存到 `mnist.py` 文件中。
@@ -57,7 +57,7 @@
     }
     
 
-参考[定义搜索空间](../Tutorial/SearchSpaceSpec.md)进一步了解。
+参考 [SearchSpaceSpec.md](./SearchSpaceSpec.md) 进一步了解搜索空间。
 
 > 第三步：定义 Experiment
 > 
@@ -85,9 +85,9 @@
       python ~/nni/examples/trials/mnist-annotation/mnist.py
     
 
-上面的命令会写在 YAML 文件中。 参考[这里](../TrialExample/Trials.md)来写出自己的 Experiment 代码。
+上面的命令会写在 YAML 文件中。 参考[这里](Trials.md)来写出自己的 Experiment 代码。
 
-**准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的 Tuner（参考[这里](../Tuner/CustomizeTuner.md)）。下面使用了 NNI 内置的 Tuner：
+**准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的 Tuner（参考[这里](Customize_Tuner.md)）。下面使用了 NNI 内置的 Tuner：
 
       tuner:
         builtinTunerName: TPE
@@ -95,7 +95,7 @@
           optimize_mode: maximize
     
 
-*builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner的参数（内置 Tuner 在[这里](../Tuner/BuiltinTuner.md)），*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
+*builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner的参数（内置 Tuner 在[这里](Builtin_Tuner.md)），*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
 
 **准备配置文件**：实现 Trial 的代码，并选择或实现自定义的 Tuner 后，就要准备 YAML 配置文件了。 NNI 为每个 Trial 样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
 
@@ -111,10 +111,10 @@
     # 可为空，即数量不限
     maxTrialNum: 100
     
-    # 可选值为: local, remote
+    # 可选值为: local, remote  
     trainingServicePlatform: local
     
-    # 可选值为: true, false
+    # 可选值为: true, false  
     useAnnotation: true
     tuner:
       builtinTunerName: TPE
@@ -126,14 +126,14 @@
       gpuNum: 0
     
 
-因为这个 Trial 代码使用了 NNI Annotation 的方法（参考[这里](../Tutorial/AnnotationSpec.md) ），所以*useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
+因为这个 Trial 代码使用了 NNI Annotation 的方法（参考[这里](AnnotationSpec.md) ），所以*useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
 
 完成上述步骤后，可通过下列命令来启动 Experiment：
 
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yml
     
 
-参考[这里](../Tutorial/Nnictl.md)来了解 *nnictl* 命令行工具的更多用法。
+参考[这里](NNICTLDOC.md)来了解 *nnictl* 命令行工具的更多用法。
 
 ## 查看 Experiment 结果
 

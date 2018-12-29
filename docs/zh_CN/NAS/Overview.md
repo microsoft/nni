@@ -14,7 +14,9 @@
 
 ## 支持的 One-shot NAS 算法
 
-NNI 现在支持以下 NAS 算法，并且正在添加更多算法。 用户可以重现算法或在自己的数据集上使用它。 鼓励用户使用 [NNI API](#use-nni-api) 实现其它算法，以使更多人受益。
+* [支持的 One-shot NAS 算法](#supported-one-shot-nas-algorithms)
+* [使用 NNI Experiment 的经典分布式 NAS](.NasInterface.md#classic-distributed-search)
+* [NNI NAS 编程接口](.NasInterface.md)
 
 | 名称                  | 算法简介                                                                                                                                          |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |

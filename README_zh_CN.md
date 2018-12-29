@@ -63,7 +63,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
         <li><b>示例</b></li>
          <ul>
            <li><a href="examples/trials/mnist-pytorch">MNIST-pytorch</li></a>
-           <li><a href="examples/trials/mnist">MNIST-tensorflow</li></a>
+           <li><a href="examples/trials/mnist-tfv1">MNIST-tensorflow</li></a>
            <li><a href="examples/trials/mnist-keras">MNIST-keras</li></a>
            <li><a href="docs/zh_CN/TrialExample/GbdtExample.md">Auto-gbdt</a></li>
            <li><a href="docs/zh_CN/TrialExample/Cifar10Examples.md">Cifar10-pytorch</li></a>
@@ -106,6 +106,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           </ul>
           </ul>  
       </td>
+      
       <td>
       <ul>
         <li><a href="docs/zh_CN/TrainingService/LocalMode.md">本机</a></li>
@@ -168,7 +169,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **安装和验证**
 
-**通过 pip 命令安装**
+在 Windows 本机模式下，并且是第一次使用 PowerShell 来运行脚本，需要**使用管理员权限**运行一次下列命令：
 
 * 当前支持 Linux，MacOS 和 Windows（本机，远程，OpenPAI 模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
@@ -184,13 +185,19 @@ Windows
 python -m pip install --upgrade nni
 ```
 
+Windows
+
+```bash
+python -m pip install --upgrade nni
+```
+
 注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
 * 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/Tutorial/FAQ.md)。
 
-**通过源代码安装**
+* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。
 
 * 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。
 
@@ -218,7 +225,7 @@ Windows
 
 Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/Tutorial/NniOnWindows.md)。
 
-**验证安装**
+For NNI Windows local mode, please refer to [NNI Windows local mode](docs/en_US/WindowsLocalMode.md)
 
 以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow 1.x**。 注意，**目前不支持 TensorFlow 2.0**。
 
@@ -233,7 +240,7 @@ Linux 和 macOS
 * 运行 MNIST 示例。
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml
+    nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
 ```
 
 Windows
@@ -241,7 +248,7 @@ Windows
 * 运行 MNIST 示例。
 
 ```bash
-    nnictl create --config nni\examples\trials\mnist\config_windows.yml
+    nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
 ```
 
 * 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。

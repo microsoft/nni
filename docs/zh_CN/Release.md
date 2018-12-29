@@ -71,6 +71,60 @@
 * [NAS 算法的对比](CommunitySharings/NasComparision.md)
 * [Recommenders 上的实践](CommunitySharings/RecommendersSvd.md)
 
+### 主要功能
+
+* 在 Windows 上支持 NNI 的 OpenPAI 和远程模式 
+    * NNI 可在 Windows 上使用 OpenPAI 模式
+    * NNI 可在 Windows 上使用 OpenPAI 模式
+* GPU 的高级功能 
+    * 在本机或远程模式上，可在同一个 GPU 上运行多个 Trial。
+    * 在已经运行非 NNI 任务的 GPU 上也能运行 Trial
+* 支持 Kubeflow v1beta2 操作符 
+    * 支持 Kubeflow TFJob/PyTorchJob v1beta2
+* [生成 NAS 编程接口](AdvancedFeature/GeneralNasInterfaces.md) 
+    * 实现了 NAS 的编程接口，可通过 NNI Annotation 很容易的表达神经网络架构搜索空间
+    * 提供新命令 `nnictl trial codegen` 来调试 NAS 代码生成部分
+    * 提供 NAS 编程接口教程，NAS 在 MNIST 上的示例，用于 NAS 的可定制的随机 Tuner
+* 支持在恢复 Experiment 时，同时恢复 Tuner 和 Advisor 的状态
+* 在恢复 Experiment 时，Tuner 和 Advisor 会导入已完成的 Trial 的数据。
+* Web 界面 
+    * 改进拷贝 Trial 参数的设计
+    * 在 hyper-parameter 图中支持 'randint' 类型
+    * 使用 ComponentUpdate 来避免不必要的刷新
+
+### Bug 修复和其它更新
+
+* 修复 `nnictl update` 不一致的命令行风格
+* SMAC Tuner 支持导入数据
+* 支持 Experiment 状态从 ERROR 回到 RUNNING
+* 修复表格的 Bug
+* 优化嵌套搜索空间
+* 优化 'randint' 类型，并支持下限
+* [比较不同超参搜索调优算法](CommunitySharings/HpoComparision.md)
+* [NAS 算法的对比](CommunitySharings/NasComparision.md)
+* [Recommenders 上的实践](CommunitySharings/RecommendersSvd.md)
+
+## 发布 0.7 - 4/29/2018
+
+### 主要功能
+
+* [支持在 Windows 上使用 NNI](Tutorial/NniOnWindows.md) 
+  * NNI 可在 Windows 上使用本机模式
+* [支持新的 Advisor: BOHB](Tuner/BohbAdvisor.md) 
+  * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
+* [支持通过 nnictl 来导入导出 Experiment 数据](Tutorial/Nnictl.md#experiment) 
+  * 在 Experiment 执行完后，可生成分析结果报告
+  * 支持将先前的调优数据导入到 Tuner 和 Advisor 中
+* [可为 NNI Trial 任务指定 GPU](Tutorial/ExperimentConfig.md#localConfig) 
+  * 通过 gpuIndices 配置来为 Trial 任务指定GPU。如果 Experiment 配置文件中有 gpuIndices，则只有指定的 GPU 会被用于 NNI 的 Trial 任务。
+* 改进 Web 界面 
+  * 在 Web 界面上使用十进制格式的指标
+  * 添加多阶段训练相关的提示
+  * 可将超参复制为 Python dict 格式
+  * 可将提前终止的 Trial 数据传入 Tuner。
+* 为 nnictl 提供更友好的错误消息 
+  * 为 YAML 文件格式错误提供更有意义的错误信息
+
 ## 发布 0.7 - 4/29/2018
 
 ### 主要功能
@@ -218,7 +272,37 @@
 
 ## 发布 0.4 - 12/6/2018
 
-### 主要功能
+### Major Features
+
+* [Kubeflow 训练平台](TrainingService/KubeflowMode.md) 
+  * 支持 tf-operator
+  * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
+* [遍历搜索 Tuner](Tuner/GridsearchTuner.md)
+* [Hyperband Tuner](Tuner/HyperbandAdvisor.md)
+* 支持在 MAC 上运行 NNI Experiment
+* Web 界面 
+  * 支持 hyperband Tuner
+  * 移除 tensorboard 按钮
+  * 显示 Experiment 的错误消息
+  * 显示搜索空间和 Trial 配置的行号
+  * 支持通过指定的 Trial id 来搜索
+  * 显示 Trial 的 hdfsLogPath
+  * 下载 Experiment 参数
+
+### Others
+
+* 异步调度
+* 更新 Docker 文件，增加 pytorch 库
+* 重构 'nnictl stop' 过程，发送 SIGTERM 给 NNI 管理器进程，而不是调用停止 Restful API.
+* 修复 OpenPAI 训练平台的 Bug 
+  * 在 NNI 管理器中为 OpenPAI 集群配置文件支持 IP 配置(nniManagerIp)，来修复用户计算机没有 eth0 设备的问题。
+  * codeDir 中的文件数量上限改为1000，避免用户无意中填写了 root 目录。
+  * 移除 OpenPAI 作业的 stdout 日志中无用的 ‘metrics is empty’。 在新指标被记录时，仅输出有用的消息，来减少用户检查 OpenPAI Trial 输出时的困惑。
+  * 在 Trial keeper 的开始增加时间戳。
+
+## Release 0.3.0 - 11/2/2018
+
+### NNICTL new features and updates
 
 * [Kubeflow 训练平台](TrainingService/KubeflowMode.md) 
   * 支持 tf-operator
@@ -299,9 +383,9 @@
 * 界面重构，参考[网页文档](Tutorial/WebUI.md)，了解如何使用新界面。
 * 持续集成：NNI 已切换到 Azure pipelines。
 
-## 发布 0.2.0 - 9/29/2018
+## Release 0.2.0 - 9/29/2018
 
-### 主要功能
+### Major Features
 
 * 支持 [OpenPAI](https://github.com/microsoft/pai) (又称 pai) 训练平台 (参考[这里](TrainingService/PaiMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
   * 支持 pai 模式的训练平台。 NNI Trial 可发送至 OpenPAI 集群上运行
@@ -313,11 +397,11 @@
   * 更新 ga squad 样例与相关文档
   * 用户体验改善及 Bug 修复
 
-## 发布 0.1.0 - 9/10/2018 (首个版本)
+## Release 0.1.0 - 9/10/2018 (initial release)
 
-首次发布 Neural Network Intelligence (NNI)。
+Initial release of Neural Network Intelligence (NNI).
 
-### 主要功能
+### Major Features
 
 * 安装和部署 
   * 支持 pip 和源代码安装
