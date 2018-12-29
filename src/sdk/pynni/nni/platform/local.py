@@ -77,12 +77,13 @@ def get_next_parameter():
     return params
 
 def send_metric(string):
-    data = (string).encode('utf8')
-    assert len(data) < 1000000, 'Metric too long'
     if _nni_platform == 'pai':
+        data = (string).encode('utf8')
+        assert len(data) < 1000000, 'Metric too long'    
         print('NNISDK_ME%s' % (data))
     else:
-        data += '\n'
+        data = (string + '\n').encode('utf8')
+        assert len(data) < 1000000, 'Metric too long'    
         _metric_file.write(b'ME%06d%b' % (len(data), data))
         _metric_file.flush()
         subprocess.run(['touch', _metric_file.name], check = True)
