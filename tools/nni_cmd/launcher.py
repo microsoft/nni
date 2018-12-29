@@ -36,6 +36,7 @@ import time
 import random
 from pathlib import Path
 from distutils.sysconfig import get_python_lib
+import site
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -72,15 +73,19 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         exit(1)
 
     print_normal('Starting restful server...')
-    python_dir = str(Path(get_python_lib()).parents[2])
-    entry_file = os.path.join(python_dir, 'nni', 'main.js')
-    entry_dir = os.path.join(python_dir, 'nni')
-    local_entry_dir = entry_dir
-    if not os.path.isfile(entry_file):
+    # Find nni lib from the following locations in order
+    python_dirs = [Path(get_python_lib()), Path(site.getusersitepackages()), Path(site.getsitepackages()[0])]
+    python_dirs = [str(path.parents[2]) for path in python_dirs]
+    for python_dir in python_dirs:
         entry_file = os.path.join(python_dir, 'nni', 'main.js')
         entry_dir = os.path.join(python_dir, 'nni')
-        if not os.path.isfile(entry_file):
-            raise Exception('Fail to find main.js under both %s and %s!' % (local_entry_dir, entry_dir))
+        if os.path.isfile(entry_file):
+            break
+    # Nothing is found
+    if not os.path.isfile(entry_file):
+        cannot_find_location = '" and "'.join([os.path.join(python_dir, 'nni') for python_dir in python_dirs])
+        raise Exception('Fail to find main.js under both "%s"' % cannot_find_location)
+
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]

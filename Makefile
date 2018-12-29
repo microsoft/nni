@@ -20,10 +20,20 @@ endif
 
 ## Install directories
 ROOT_FOLDER ?= $(shell python3 -c 'from distutils.sysconfig import get_python_lib; from pathlib import Path; print(Path(get_python_lib()).parents[2])')
+IS_SYS_PYTHON ?= FALSE
+ifneq (, $(shell echo $(ROOT_FOLDER) | grep 'dist-package'))
+    IS_SYS_PYTHON := TRUE
+endif
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
+    ifeq (TRUE, $(IS_SYS_PYTHON))
+        ROOT_FOLDER := $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
+    endif
     BASH_COMP_PREFIX ?= /usr/share/bash-completion/completions
 else  # is normal user
+    ifeq (TRUE, $(IS_SYS_PYTHON))
+        ROOT_FOLDER := $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getusersitepackages()).parents[2])')
+    endif
     ifndef VIRTUAL_ENV
         ifeq (, $(shell echo $$PATH | grep 'conda'))
             PIP_MODE ?= --user
