@@ -12,10 +12,10 @@ NNI (Neural Network Intelligence) 是用来进行自动机器学习（AutoML）�
 <img src="./docs/img/nni_arch_overview.png" alt="绘图"/>
 </p>
 
-## **Who should consider using NNI**
+## **使用场景**
 
-* Those who want to try different AutoML algorithms in their training code (model) at their local machine.
-* Those who want to run AutoML trial jobs in different environments to speed up search (e.g. remote servers and cloud).
+* 在本地尝试不同的自动机器学习算法来训练模型。
+* 在分布式环境中加速自动机器学习（如：远程 GPU 工作站和云服务器）。
 * Researchers and data scientists who want to implement their own AutoML algorithms and compare it with other algorithms.
 * ML Platform owners who want to support AutoML in their platform.
 
