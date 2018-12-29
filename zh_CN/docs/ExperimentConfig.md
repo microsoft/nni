@@ -1,33 +1,33 @@
-# Experiment config reference
+# 实验（Experiment）配置参考
 
-A config file is needed when create an experiment, the path of the config file is provide to nnictl. The config file is written in yaml format, and need to be written correctly. This document describes the rule to write config file, and will provide some examples and templates.
+创建实验时，需要给 nnictl 命令提供配置文件的路径。 配置文件是 yaml 格式，需要保证其格式正确。 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
-## Template
+## 模板
 
-* **light weight(without Annotation and Assessor)** 
+* **简化版（不包含标记 (annotation) 和评估器）** 
 
     authorName: 
     experimentName: 
     trialConcurrency: 
     maxExecDuration: 
     maxTrialNum: 
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: 
     searchSpacePath: 
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: 
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      #可选项: TPE, Random, Anneal, Evolution
       builtinTunerName:
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode:
       gpuNum: 
     trial:
       command: 
       codeDir: 
       gpuNum: 
-    #machineList can be empty if the platform is local
+    #在本地使用时，machineList 可为空
     machineList:
       - ip: 
         port: 
@@ -35,37 +35,37 @@ A config file is needed when create an experiment, the path of the config file i
         passwd: 
     
 
-* **Use Assessor**
+* **使用评估器**
 
     authorName: 
     experimentName: 
     trialConcurrency: 
     maxExecDuration: 
     maxTrialNum: 
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: 
     searchSpacePath: 
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: 
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      #可选项: TPE, Random, Anneal, Evolution
       builtinTunerName:
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode:
       gpuNum: 
     assessor:
-      #choice: Medianstop
+      #可选项: Medianstop
       builtinAssessorName:
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode:
       gpuNum: 
     trial:
       command: 
       codeDir: 
       gpuNum: 
-    #machineList can be empty if the platform is local
+    #在本地使用时，machineList 可为空
     machineList:
       - ip: 
         port: 
@@ -73,36 +73,36 @@ A config file is needed when create an experiment, the path of the config file i
         passwd: 
     
 
-* **Use Annotation**
+* **使用标记**
 
     authorName: 
     experimentName: 
     trialConcurrency: 
     maxExecDuration: 
     maxTrialNum: 
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: 
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: 
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      #可选项: TPE, Random, Anneal, Evolution
       builtinTunerName:
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode:
       gpuNum: 
     assessor:
-      #choice: Medianstop
+      #可选项: Medianstop
       builtinAssessorName:
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode:
       gpuNum: 
     trial:
       command: 
       codeDir: 
       gpuNum: 
-    #machineList can be empty if the platform is local
+    #在本地使用时，machineList 可为空
     machineList:
       - ip: 
         port: 
@@ -110,17 +110,17 @@ A config file is needed when create an experiment, the path of the config file i
         passwd: 
     
 
-## Configuration
+## 配置
 
 * **authorName**
   
-  * Description
+  * 说明
     
-    **authorName** is the name of the author who create the experiment. TBD: add default value
+    **authorName**是创建实验的作者。 待定: 增加默认值
 
 * **experimentName**
   
-  * Description
+  * 说明
     
     **experimentName** is the name of the experiment created.  
     TBD: add default value
