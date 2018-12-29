@@ -1,5 +1,5 @@
 jobs:
-- job: 'Ubuntu_16_04_local'
+- job: 'Ubuntu_16_04'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -26,68 +26,7 @@ jobs:
       PATH=$HOME/.local/bin:$PATH python3 sdk_test.py --mode local
     displayName: 'Built-in dispatcher tests'
 
-- job: 'Ubuntu_16_04_remote'
-  pool:
-    vmImage: 'Ubuntu 16.04'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
-
-  steps:
-  - script: python3 -m pip install --upgrade pip setuptools
-    displayName: 'Install python tools'
-  - script: |
-      source install.sh
-    displayName: 'Install nni toolkit via source code'
-  - task: CopyFilesOverSSH@0
-    inputs:
-      sshEndpoint: remote_238
-      sourceFolder: src/sdk/pynni
-      targetFolder: /tmp/nnitest/$(Build.BuildId)/pynni
-      overwrite: true
-    displayName: 'Copy sdk files to remote machine'
-  - task: CopyFilesOverSSH@0
-    inputs:
-      sshEndpoint: remote_238
-      sourceFolder: test
-      targetFolder: /tmp/nnitest/$(Build.BuildId)/test
-      overwrite: true
-    displayName: 'Copy test files to remote machine'
-  - task: SSH@0
-    inputs:
-      sshEndpoint: remote_238
-      runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
-    displayName: 'Start docker'
-  - task: DownloadSecureFile@1
-    inputs:
-      secureFile: id_rsa
-  - script: |
-      mkdir ~/.ssh
-      ssh-keyscan 13.77.155.238 >> ~/.ssh/known_hosts
-      cp $(Agent.TempDirectory)/id_rsa test/id_rsa
-      chmod 600 test/id_rsa
-      yes | ssh -i test/id_rsa t-shya@13.77.155.238 -p 22 "cat /tmp/nnitest/$(Build.BuildId)/port" > port
-      cat test/naive_test/remote.yml port > tmp && mv tmp test/naive_test/remote.yml
-      cat test/sdk_test/remote.yml port > tmp && mv tmp test/sdk_test/remote.yml
-    displayName: 'Generate remote.yml'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 naive_test.py --mode remote
-    displayName: 'Integration tests'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py --mode remote
-    displayName: 'Built-in dispatcher tests'
-  - task: SSH@0
-    inputs:
-      sshEndpoint: remote_238
-      runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode stop --name $(Build.BuildId)
-    displayName: 'Stop docker'
-
-- job: 'macOS_10_13_local'
+- job: 'macOS_10_13'
   pool:
     vmImage: 'macOS 10.13'
   strategy:
