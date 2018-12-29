@@ -2,7 +2,7 @@
 
 ## 1. 说明
 
-这是 NNI 项目的 Dockerfile 文件。 It includes serveral popular deep learning frameworks and NNI. It is tested on `Ubuntu 16.04 LTS`:
+这是 NNI 项目的 Dockerfile 文件。 其中包含了 NNI 以及多个流行的深度学习框架。 在 `Ubuntu 16.04 LTS` 上进行过测试：
 
     CUDA 9.0, CuDNN 7.0
     numpy 1.14.3,scipy 1.1.0
@@ -13,34 +13,34 @@
     NNI v0.3
     
 
-You can take this Dockerfile as a reference for your own customized Dockerfile.
+此 Dockerfile 可作为定制的参考。
 
-## 2.How to build and run
+## 2.如何生成和运行
 
-**Use the following command from `nni/deployment/docker` to build docker image**
+**使用 `nni/deployment/docker` 的下列命令来生成 docker 映像。**
 
         docker build -t nni/nni .
     
 
-**Run the docker image**
+**运行 docker 映像**
 
-* If does not use GPU in docker container, simply run the following command
+* 如果 docker 容器中没有 GPU，运行下面的命令
 
         docker run -it nni/nni
     
 
-* If use GPU in docker container, make sure you have installed [NVIDIA Container Runtime](https://github.com/NVIDIA/nvidia-docker), then run the following command
+* 如果 docker 容器中有 GPU，确保安装了 [NVIDIA 容器运行包](https://github.com/NVIDIA/nvidia-docker)，然后运行下面的命令
 
         nvidia-docker run -it nni/nni
     
 
-or
+或者
 
         docker run --runtime=nvidia -it nni/nni
     
 
-## 3.Directly retrieve the docker image
+## 3.拉取 docker 映像
 
-Use the following command to retrieve the NNI docker image from Docker Hub
+使用下列命令从 docker Hub 中拉取 NNI docker 映像。
 
     docker pull msranni/nni:latest
