@@ -24,7 +24,7 @@ IS_SYS_PYTHON ?= FALSE
 ifneq (, $(shell echo $(ROOT_FOLDER) | grep 'dist-package'))
     IS_SYS_PYTHON := TRUE
 else
-    ROOT_FOLDER := ROOT_FOLDER ?= $(shell python3 -c 'from distutils.sysconfig import get_python_lib; from pathlib import Path; print(Path(get_python_lib()).parents[2])')
+    ROOT_FOLDER := $(shell python3 -c 'from distutils.sysconfig import get_python_lib; from pathlib import Path; print(Path(get_python_lib()).parents[2])')
 endif
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
