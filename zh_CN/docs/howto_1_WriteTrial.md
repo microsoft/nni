@@ -117,7 +117,7 @@ with tf.Session() as sess:
 > > 
 > > `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line.
 > > 
-> > Please refer to [Annotation README](../tools/annotation/README.md) for more information about annotation syntax and its usage.
+> > Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage.
 > 
 > Step 2 - Enable NNI Annotation In the yaml configure file, you need to set *useAnnotation* to true to enable NNI annotation:
 
