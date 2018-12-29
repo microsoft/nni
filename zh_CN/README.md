@@ -126,7 +126,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 
 ## **贡献**
 
-此项目欢迎贡献代码或提交建议，可在 [GitHub issues](https://github.com/Microsoft/nni/issues) 跟踪需求和缺陷。
+欢迎贡献代码或提交建议，可在 [GitHub issues](https://github.com/Microsoft/nni/issues) 跟踪需求和缺陷。
 
 推荐新贡献者从标有 **good first issue** 的简单需求开始。
 
