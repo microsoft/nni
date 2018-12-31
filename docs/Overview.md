@@ -1,6 +1,14 @@
 # NNI Overview
 
-NNI (Neural Network Intelligence) is a toolkit to help users run automated machine learning experiments. For each experiment, user only need to define a search space and update a few lines of code, and then leverage NNI build-in algorithms and training services to search the best hyper parameters and/or neural architecture.
+NNI (Neural Network Intelligence) is a toolkit to help users design and tune machine learning models (e.g., hyperparameters), neural network architectures, or complex system's parameters, in an efficient and automatic way. NNI has several appealing properties: easy-to-use, scalability, flexibility, extensibility, efficiency.
+
+* Easy-to-use: NNI can be easily installed through python pip. There are only several lines to added to your code in order to use NNI's power to tune your model. And you can use both a commandline tool and WebUI to view and control your experiments. 
+* Scalability: Model tuning is a computation intensive 
+* Flexibility:
+* Extensibility:
+* Efficiency:
+
+For each experiment, user only need to define a search space and update a few lines of code, and then leverage NNI build-in algorithms and training services to search the best hyper parameters and/or neural architecture.
 
 >Step 1: [Define search space](SearchSpaceSpec.md)
 
