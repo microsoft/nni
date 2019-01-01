@@ -151,11 +151,6 @@ $(NNI_YARN_TARBALL):
 
 .PHONY: install-dependencies
 install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
-	echo $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
-	echo $(shell which python3)
-	echo $(shell python3 -c 'from distutils.sysconfig import get_python_lib; from pathlib import Path; print(Path(get_python_lib()).parents[2])')
-	echo $(IS_SYS_PYTHON)
-	echo $(shell id -u)
 	#$(_INFO) Extracting Node.js $(_END)
 	rm -rf $(NNI_NODE_FOLDER)
 	mkdir $(NNI_NODE_FOLDER)
