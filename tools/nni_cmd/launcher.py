@@ -76,7 +76,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     # Find nni lib from the following locations in order
     sys_wide_python = True
     python_sitepackage = site.getsitepackages()[0]
-    # If system-wide python is used, we will first check if nni exists locally
+    # If system-wide python is used, we will give priority to using user-sitepackage given that nni exists there
     if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
         local_python_dir = str(Path(site.getusersitepackages()).parents[2])
         entry_file = os.path.join(local_python_dir, 'nni', 'main.js')

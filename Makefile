@@ -1,5 +1,5 @@
 # Setting variables
-
+SHELL := /bin/bash
 PIP_INSTALL := python3 -m pip install --no-cache-dir
 PIP_UNINSTALL := python3 -m pip uninstall
 
@@ -19,7 +19,7 @@ else
 endif
 
 ## Install directories
-ROOT_FOLDER := $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
+ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
 IS_SYS_PYTHON ?= $(shell [[ $ROOT_FOLDER == /usr* || $ROOT_FOLDER == /Library* ]] && echo TRUE || echo FALSE)
 
 ifeq ($(shell id -u), 0)  # is root
