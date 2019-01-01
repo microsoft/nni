@@ -32,11 +32,10 @@ from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port
 from .constants import *
-import time
 import random
-from pathlib import Path
-from distutils.sysconfig import get_python_lib
 import site
+import time
+from pathlib import Path
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
