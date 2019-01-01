@@ -3,6 +3,11 @@ SHELL := /bin/bash
 PIP_INSTALL := python3 -m pip install --no-cache-dir
 PIP_UNINSTALL := python3 -m pip uninstall
 
+## Colorful output
+_INFO := $(shell echo -e '\033[1;36m')
+_WARNING := $(shell echo -e '\033[1;33m')
+_END := $(shell echo -e '\033[0m')
+
 ## Detect OS
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
@@ -11,17 +16,6 @@ else ifeq ($(UNAME_S), Darwin)
     OS_SPEC := darwin
 else
 	$(error platform $(UNAME_S) not supported)
-endif
-
-## Colorful output
-ifeq ($(OS_SPEC), linux)
-    _INFO := $(shell echo -e '\e[1;36m')
-    _WARNING := $(shell echo -e '\e[1;33m')
-    _END := $(shell echo -e '\e[0m')
-else
-    _INFO := $(shell echo -e '\033[1;36m')
-    _WARNING := $(shell echo -e '\033[1;31m')
-    _END := $(shell echo -e '\033[0m')
 endif
 
 ## Install directories
