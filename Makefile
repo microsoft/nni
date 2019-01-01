@@ -20,7 +20,7 @@ endif
 
 ## Install directories
 ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
-IS_SYS_PYTHON ?= $(shell [[ $$ROOT_FOLDER == /usr* || $$ROOT_FOLDER == /Library* ]] && echo TRUE || echo FALSE)
+IS_SYS_PYTHON ?= $(shell [[ $(ROOT_FOLDER) == /usr* || $(ROOT_FOLDER) == /Library* ]] && echo TRUE || echo FALSE)
 
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
