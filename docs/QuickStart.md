@@ -31,9 +31,9 @@ For the system requirements of NNI, please refer to [Install NNI][2]
 
 ## First "Hello World" experiment: MNIST
 
-Now let's start to run our first MINIST experiment using NNI.
+Now let's start to run our first MNIST experiment using NNI.
 
-Here is a configuration file in an NNI experiment:
+Here is a configuration file in NNI experiment:
 
 ```yaml
 authorName: default
@@ -56,14 +56,14 @@ trial:
 
 **We did two things here:**
 
-* specify the `range` of hyper-paramaters to be searched for this experiment in `search_space.json`.
+* specify the `range of hyper-paramaters` to be searched for this experiment in `search_space.json`.
 * define a NNI trial in `mnist.py`, an individual attempt at applying a set of parameters on a model.
 
-You can [click here][3] to find the example of `config.yml`, `search_space.json` and `mnist.py` in this example.
+You can [click here][3] to find the `config.yml`, `search_space.json` and `mnist.py` in this example.
 
-Note: Other configurations can be kept by their default value. We will talk about them in the following tutorial.
+Note: other configurations can be kept by their default value. We will talk about them in the following tutorial.
 
-* Everything is ready now! The experiment can be run from the command-line:
+* Everything is ready now! **The experiment can be run from the command-line**:
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
