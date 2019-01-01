@@ -74,17 +74,25 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
 
     print_normal('Starting restful server...')
     # Find nni lib from the following locations in order
-    python_dirs = [Path(get_python_lib()), Path(site.getusersitepackages()), Path(site.getsitepackages()[0])]
-    python_dirs = [str(path.parents[2]) for path in python_dirs]
-    for python_dir in python_dirs:
+    sys_wide_python = True
+    python_sitepackage = site.getsitepackages()[0]
+    # If system-wide python is used, we will first check if nni exists locally
+    if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
+        local_python_dir = str(Path(site.getusersitepackages()).parents[2])
+        entry_file = os.path.join(local_python_dir, 'nni', 'main.js')
+        entry_dir = os.path.join(local_python_dir, 'nni')
+    else:
+        # If this python is not system-wide python, we will use its site-package directly
+        sys_wide_python = False
+
+    if not sys_wide_python or not os.path.isfile(entry_file):
+        python_dir = str(Path(python_sitepackage).parents[2])
         entry_file = os.path.join(python_dir, 'nni', 'main.js')
         entry_dir = os.path.join(python_dir, 'nni')
-        if os.path.isfile(entry_file):
-            break
-    # Nothing is found
-    if not os.path.isfile(entry_file):
-        cannot_find_location = '" and "'.join([os.path.join(python_dir, 'nni') for python_dir in python_dirs])
-        raise Exception('Fail to find main.js under both "%s"' % cannot_find_location)
+        # Nothing is found
+        if not os.path.isfile(entry_file):
+            cannot_find_location = '" and "'.join([os.path.join(python_dir, 'nni') for python_dir in python_dirs])
+            raise Exception('Fail to find nni under both "%s" and "%s"' % (local_python_dir, python_dir))
 
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
