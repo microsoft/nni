@@ -148,17 +148,17 @@
 
 * **maxTrialNum**
   
-  * Description
+  * 说明
     
-    **maxTrialNum** specifies the max number of trial jobs created by nni, including succeeded and failed jobs.
+    **maxTrialNum** 定义了尝试任务的最大数量，成功和失败的都计算在内。
 
 * **trainingServicePlatform**
   
-  * Description
+  * 说明
     
-    **trainingServicePlatform** specifies the platform to run the experiment, including {**local**, **remote**, **pai**, **kubeflow**}.
+    **trainingServicePlatform** 定义运行实验的平台，包括：{**local**, **remote**, **pai**, **kubeflow**}.
     
-    * **local** run an experiment on local ubuntu machine.
+    * **local** 在本机的 ubuntu 上运行实验。
     
     * **remote** submit trial jobs to remote ubuntu machines, and **machineList** field should be filed in order to set up SSH connection to remote machine.
     
