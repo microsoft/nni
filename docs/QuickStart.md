@@ -15,19 +15,7 @@ Two ways for installation: you can get NNI from pypi or clone the repo and insta
 * Note:
   * If you are in docker container (as root), please remove `--user` from the installation command.
   * If there is any error like `Segmentation fault`, please refer to [FAQ][1]
-
-**Install through source code**
-
-* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) in our current stage. 
-* Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
-
-```bash
-    git clone -b v0.4.1 https://github.com/Microsoft/nni.git
-    cd nni
-    source install.sh
-```
-
-For the system requirements of NNI, please refer to [Install NNI][2]
+  * For the system requirements of NNI, please refer to [Install NNI][2]
 
 ## First "Hello World" experiment: MNIST
 
