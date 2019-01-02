@@ -170,34 +170,34 @@
   
   * 说明
     
-    **searchSpacePath** specifies the path of search space file, which should be a valid path in the local linux machine.
+    **searchSpacePath** 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
     
-        Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+        注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
         
 
 * **useAnnotation**
   
-  * Description
+  * 说明
     
-    **useAnnotation** use annotation to analysis trial code and generate search space.
+    **useAnnotation** 定义使用标记来分析代码并生成搜索空间。
     
-        Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+        注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
         
 
 * **nniManagerIp**
   
-  * Description
+  * 说明
     
-    **nniManagerIp** set the IP address of the machine on which nni manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+    **nniManagerIp** 设置 NNI 管理器运行的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
     
-          Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
+          注意: 可在 NNI 管理器机器上运行 ifconfig 来检查 eth0 是否存在。 如果不存在，推荐显式设置 nnimanagerIp。
         
 
 * **tuner**
   
-  * Description
+  * 说明
     
-    **tuner** specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by nni sdk, need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **tuner** 指定了实验的调参器算法。有两种方法可设置调参器。 一种方法是使用 NNI SDK 提供的调参器，需要设置 **builtinTunerName** 和 **classArgs**。 Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
   
   * **builtinTunerName** and **classArgs**
     
