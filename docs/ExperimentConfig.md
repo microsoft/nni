@@ -181,22 +181,22 @@ machineList:
     * __builtinTunerName__
     
 	  __builtinTunerName__ specifies the name of system tuner, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__, __BatchTuner__, __GridSearch__}
-	 * __classArgs__
+    * __classArgs__
 	
 	   __classArgs__ specifies the arguments of tuner algorithm. If the __builtinTunerName__ is in {__TPE__, __Random__, __Anneal__, __Evolution__}, user should set __optimize_mode__.
   * __codeDir__, __classFileName__, __className__ and __classArgs__
-      * __codeDir__
+     * __codeDir__
         
-		__codeDir__ specifies the directory of tuner code.
-	    * __classFileName__
+          __codeDir__ specifies the directory of tuner code.
+     * __classFileName__
 	   
-	  __classFileName__ specifies the name of tuner file.
+          __classFileName__ specifies the name of tuner file.
      * __className__
 	   
-	  __className__ specifies the name of tuner class.
+          __className__ specifies the name of tuner class.
      * __classArgs__
 	   
-	  __classArgs__ specifies the arguments of tuner algorithm.
+          __classArgs__ specifies the arguments of tuner algorithm.
   * __gpuNum__
     
 	  __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
@@ -207,27 +207,27 @@ machineList:
  
   * Description
   
-    __assessor__ specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own tuner file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+    __assessor__ specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
   * __builtinAssessorName__ and __classArgs__
     * __builtinAssessorName__
     
-	  __builtinAssessorName__ specifies the name of system assessor, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__}
-	 * __classArgs__
-	
-	   __classArgs__ specifies the arguments of tuner algorithm
+        __builtinAssessorName__ specifies the name of system assessor, nni sdk provides one kind of assessor {__Medianstop__}
+    * __classArgs__
+
+        __classArgs__ specifies the arguments of assessor algorithm
   * __codeDir__, __classFileName__, __className__ and __classArgs__
-      * __codeDir__
+    * __codeDir__
         
-		__codeDir__ specifies the directory of tuner code.
-	    * __classFileName__
+         __codeDir__ specifies the directory of assessor code.
+    * __classFileName__
 	   
-	  __classFileName__ specifies the name of tuner file.
-     * __className__
+         __classFileName__ specifies the name of assessor file.
+    * __className__
 	   
-	  __className__ specifies the name of tuner class.
-     * __classArgs__
+         __className__ specifies the name of assessor class.
+    * __classArgs__
 	   
-	  __classArgs__ specifies the arguments of tuner algorithm.
+         __classArgs__ specifies the arguments of assessor algorithm.
   * __gpuNum__
     
 	__gpuNum__ specifies the gpu number to run the assessor process. The value of this field should be a positive number.
