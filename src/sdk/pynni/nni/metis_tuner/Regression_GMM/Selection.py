@@ -78,7 +78,7 @@ def selection(x_bounds,
 
 def _rand_with_constraints(x_bounds, x_types):
     '''
-    Random generate the variable wit constraints
+    Random generate the variable with constraints
     '''
     outputs = None
     x_bounds_withconstraints = [x_bounds[i] for i in CONSTRAINT_PARAMS_IDX]

@@ -29,7 +29,7 @@ sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
 def create_model(samples_x, samples_y_aggregation, percentage_goodbatch=0.34):
     '''
-    Create the Gussian Mixture Model
+    Create the Gaussian Mixture Model
     '''
     samples = [samples_x[i] + [samples_y_aggregation[i]] for i in range(0, len(samples_x))]
 
