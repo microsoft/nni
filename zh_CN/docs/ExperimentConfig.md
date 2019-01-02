@@ -480,7 +480,7 @@
   
   如果要在本机运行尝试任务，并使用标记来生成搜索空间，可参考下列配置：
 
-    
+    ```
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -501,13 +501,14 @@
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
+    ```
     
     
 
     如果要设置评估器，可以增加评估器配置：
     
 
-    
+    ```
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -536,13 +537,13 @@
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    
+    ```
     
 
     或者可以指定自定义的调参器和评估器：
     
 
-    
+    ```
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -573,7 +574,7 @@
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    
+    ```
     
 
 * **远程模式**
