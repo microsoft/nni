@@ -24,7 +24,7 @@
 
 通过这种方法，能够轻松的在 NNI 中实现自动调参。
 
-`@nni.variable`, `nni.choice` 为搜索空间的类型，有 10 种方法来表达搜索空间：
+`@nni.variable`, `nni.choice` 为搜索空间的类型，通过以下 10 种方法来定义搜索空间：
 
 1. `@nni.variable(nni.choice(option1,option2,...,optionN),name=variable)`  
     变量值是选项中的一种，这些变量可以是任意的表达式。
@@ -39,7 +39,7 @@
     变量值会是 low 和 high 之间均匀分布的某个值，公式为：round(uniform(low, high) / q) * q
 
 5. `@nni.variable(nni.loguniform(low, high),name=variable)`  
-    Which means the variable value is a value drawn according to exp(uniform(low, high)) so that the logarithm of the return value is uniformly distributed.
+    变量值是 exp(uniform(low, high)) 的点，数值以对数均匀分布。
 
 6. `@nni.variable(nni.qloguniform(low, high, q),name=variable)`  
     Which means the variable value is a value like round(exp(uniform(low, high)) / q) * q
