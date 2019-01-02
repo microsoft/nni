@@ -32,3 +32,5 @@ where `10.10.10.10` should be replaced by the real IP of NFS server machine in p
 ## Weight Sharing Example
 Here we give an example of how to share files between different trials & machines, with [config file](./config.yml), [trial code](./main.py) and [tuner code](../../../tuners/weight_sharing/simple/simple_tuner.py). This example launches totally 4 trials, with 1 father trial and 3 child trials. The father generates a random file, then launch child trials to read & compute checksum of the file. Here child trials should wait until the father trial is done. So multiple thread mode should be enabled with `multithread: True` in `config.yml`, where tuner can schedule the trials using thread synchronization operations in python. 
 
+[1]: https://arxiv.org/abs/1806.09055
+[2]: https://arxiv.org/abs/1806.10282
