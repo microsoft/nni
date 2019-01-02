@@ -10,7 +10,7 @@
     python >= 3.5
     git
     wget
-`
+    `
     
     需要正确安装 Python 的 pip。 可以用 "python3 -m pip -v" 来检查 pip 的版本。
 
