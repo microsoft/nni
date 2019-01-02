@@ -33,10 +33,10 @@
     变量可以是范围 [0, upper) 中的任意整数。
 
 3. `@nni.variable(nni.uniform(low, high),name=variable)`  
-    Which means the variable value is a value uniformly between low and high.
+    变量值会是 low 和 high 之间均匀分布的某个值。
 
-4. `@nni.variable(nni.quniform(low, high, q),name=variable)`  
-    Which means the variable value is a value like round(uniform(low, high) / q) * q
+4. `@nni.variable(nni.uniform(low, high),name=variable)`  
+    变量值会是 low 和 high 之间均匀分布的某个值，公式为：round(uniform(low, high) / q) * q
 
 5. `@nni.variable(nni.loguniform(low, high),name=variable)`  
     Which means the variable value is a value drawn according to exp(uniform(low, high)) so that the logarithm of the return value is uniformly distributed.
@@ -52,6 +52,6 @@
 
 9. `@nni.variable(nni.lognormal(label, mu, sigma),name=variable)`  
     Which means the variable value is a value drawn according to exp(normal(mu, sigma))
-    
-    10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
-        Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
+
+10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
+    Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
