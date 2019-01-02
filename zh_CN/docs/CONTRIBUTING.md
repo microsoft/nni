@@ -1,8 +1,8 @@
-# Contributing to Neural Network Intelligence (NNI)
+# 改进 Neural Network Intelligence (NNI)
 
-Great!! We are always on the lookout for more contributors to our code base.
+欢迎！！ 我们非常欢迎贡献者，特别是代码贡献者。
 
-Firstly, if you are unsure or afraid of anything, just ask or submit the issue or pull request anyways. You won't be yelled at for giving your best effort. The worst that can happen is that you'll be politely asked to change something. We appreciate any sort of contributions and don't want a wall of rules to get in the way of that.
+首先，如果有什么不确定的事情，可随时提交问题或拉取请求。 You won't be yelled at for giving your best effort. The worst that can happen is that you'll be politely asked to change something. We appreciate any sort of contributions and don't want a wall of rules to get in the way of that.
 
 However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover all the points we're looking for in your contributions, raising your chances of quickly merging or addressing your contributions.
 
