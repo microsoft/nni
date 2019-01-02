@@ -72,12 +72,12 @@
       gpuNum: 0
     
 
-You need to fill: `codeDir`, `classFileName`, `className`, and pass parameters to *\_init__ constructor through `classArgs` field if the *\_init__ constructor of your assessor class has required parameters.
+必填项: `codeDir`, `classFileName`, `className`。如果评估器的 __init__ 构造函数有必填参数，需要用 `classArgs` 传入。
 
-**Note that** if you want to access a file (e.g., ```data.txt```) in the directory of your own assessor, you cannot use ```open('data.txt', 'r')```. Instead, you should use the following:
+**注意** 如果需要访问 assessor 目录中的文件 （如： ```data.txt```），不能使用 ```open('data.txt', 'r')```。 要使用：
 
     _pwd = os.path.dirname(__file__)
     _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
     
 
-This is because your assessor is not executed in the directory of your assessor (i.e., ```pwd``` is not the directory of your own assessor).
+因为评估器不是在其自己的目录中执行的。（也就是说， ```pwd``` 不是评估器自己的目录）。
