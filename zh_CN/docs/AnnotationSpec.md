@@ -48,10 +48,10 @@
     变量值为正态分布的实数值，平均值为 mu，标准方差为 sigma。
 
 8. `@nni.variable(nni.qnormal(label, mu, sigma, q),name=variable)`  
-    Which means the variable value is a value like round(normal(mu, sigma) / q) * q
+    变量值分布的公式为： round(normal(mu, sigma) / q) * q
 
 9. `@nni.variable(nni.lognormal(label, mu, sigma),name=variable)`  
-    Which means the variable value is a value drawn according to exp(normal(mu, sigma))
+    变量值分布的公式为： exp(normal(mu, sigma))
 
 10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
-    Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
+    变量值分布的公式为： round(exp(normal(mu, sigma)) / q) * q
