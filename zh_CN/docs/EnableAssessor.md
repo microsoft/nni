@@ -4,7 +4,7 @@
 
 ## 使用 NNI 内置的评估器
 
-以下样例代码在 `examples/trials/mnist-annotation` 目录中。 We use `Medianstop` assessor for this experiment. The yaml configure file is shown below:
+以下样例代码在 `examples/trials/mnist-annotation` 目录中。 此实验使用了 `Medianstop` 评估器。 yaml 配置文件如下：
 
     authorName: your_name
     experimentName: auto_mnist
