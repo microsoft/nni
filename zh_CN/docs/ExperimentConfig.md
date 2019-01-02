@@ -394,28 +394,28 @@
   
   * **ip**
   
-  **ip** is the ip address of remote machine.
+  **ip** 是远程计算机的 ip 地址。
   
   * **port**
   
-  **port** is the ssh port to be used to connect machine.
+  **端口** 是用于连接远程计算机的 ssh 端口。
   
-        Note: if users set port empty, the default value will be 22.
+        注意：如果 port 设为空，则为默认值 22。
       
   
   * **username**
   
-  **username** is the account of remote machine.
+  **username** 是远程计算机的用户名。
   
   * **passwd**
   
-  **passwd** specifies the password of the account.
+  **passwd** 指定了账户的密码。
   
   * **sshKeyPath**
     
-    If users use ssh key to login remote machine, could set **sshKeyPath** in config file. **sshKeyPath** is the path of ssh key file, which should be valid.
+    如果要使用 ssh 密钥登录远程计算机，则需要设置 **sshKeyPath**。 **sshKeyPath** 为有效的 ssh 密钥文件路径。
     
-        Note: if users set passwd and sshKeyPath simultaneously, nni will try passwd.
+        注意：如果同时设置了 passwd 和 sshKeyPath，NNI 会使用 passwd。
         
   
   * **passphrase**
