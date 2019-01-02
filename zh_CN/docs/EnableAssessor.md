@@ -8,15 +8,15 @@
 
     authorName: your_name
     experimentName: auto_mnist
-    # how many trials could be concurrently running
+    # 并发运行数量
     trialConcurrency: 2
-    # maximum experiment running duration
+    # 实验运行时间
     maxExecDuration: 3h
-    # empty means never stop
+    # 可为空，即数量不限
     maxTrialNum: 100
-    # choice: local, remote  
+    # 可选值为: local, remote  
     trainingServicePlatform: local
-    # choice: true, false  
+    # 可选值为: true, false  
     useAnnotation: true
     tuner:
       builtinTunerName: TPE
@@ -32,38 +32,37 @@
       gpuNum: 0
     
 
-For our built-in assessors, you need to fill two fields: `builtinAssessorName` which chooses NNI provided assessors (refer to [here]() for built-in assessors), `optimize_mode` which includes maximize and minimize (you want to maximize or minimize your trial result).
+如使用内置的评估器，需要填写两个字段: `builtinAssessorName`，即所选择的评估器 (参考[这里]())，`optimize_mode` 可选项为 maximize 和 minimize (即需要最大化或最小化的结果)。
 
-## Using user customized Assessor
+## 使用自定义的评估器
 
-You can also write your own assessor following the guidance [here](). For example, you wrote an assessor for `examples/trials/mnist-annotation`. You should prepare the yaml configure below:
+可参考[这里]()，来自定义评估器。 例如，为样例代码 `examples/trials/mnist-annotation` 写一个定制的评估器。 需要准备如下的 yaml 配置文件：
 
     authorName: your_name
     experimentName: auto_mnist
-    # how many trials could be concurrently running
+    # 并发运行数量
     trialConcurrency: 2
-    # maximum experiment running duration
+    # 实验运行时间
     maxExecDuration: 3h
-    # empty means never stop
+    # 可为空，即数量不限
     maxTrialNum: 100
-    # choice: local, remote  
+    # 可选值为: local, remote  
     trainingServicePlatform: local
-    # choice: true, false  
+    # 可选值为: true, false  
     useAnnotation: true
     tuner:
-      # Possible values: TPE, Random, Anneal, Evolution
+      # 可选值为: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
         optimize_mode: maximize
     assessor:
-      # Your assessor code directory
+      # 评估器代码目录
       codeDir: 
-      # Name of the file which contains your assessor class
+      # 评估器类的文件名
       classFileName: 
-      # Your assessor class name, must be a subclass of nni.Assessor
+      # 评估器类名，必须继承于 nni.Assessor
       className: 
-      # Parameter names and literal values you want to pass to
-      # the __init__ constructor of your assessor class
+      # 参数名和需要输入给评估器 __init__ 构造函数的值。
       classArgs:
         arg1: value1
       gpuNum: 0
