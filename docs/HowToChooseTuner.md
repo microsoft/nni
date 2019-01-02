@@ -227,7 +227,7 @@ More details can be found in our paper: https://www.microsoft.com/en-us/research
  
 
 _Installation_: 
-NetworkMorphism requires [sklearn](https://scikit-learn.org/), so users should install it first.
+Metis Tuner requires [sklearn](https://scikit-learn.org/), so users should install it first. User could use `pip3 install sklearn` to install it.
 
 
 _Suggested scenario_:

@@ -84,7 +84,8 @@ def rand(x_bounds, x_types, lowerbound, upperbound, max_retries=100):
                             outputs[x_idx] = random.randint(x_bounds[x_idx][0],
                                                             min(x_bounds[x_idx][-1], budget_max))
 
-                else:  # The last x that we need to assign a random number
+                else:
+                    # The last x that we need to assign a random number
                     randint_lowerbound = lowerbound - budget_allocated
                     randint_lowerbound = 0 if randint_lowerbound < 0 else randint_lowerbound
 
@@ -109,7 +110,7 @@ def rand(x_bounds, x_types, lowerbound, upperbound, max_retries=100):
                     break
                 else:
                     budget_allocated += outputs[x_idx]
-            if (None in outputs) is False:
+            if None not in outputs:
                 break
     return outputs
     

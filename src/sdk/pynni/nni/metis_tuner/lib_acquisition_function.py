@@ -38,7 +38,6 @@ def next_hyperparameter_expected_improvement(fun_prediction,
     '''
     best_x = None
     best_acquisition_value = None
-    # n_params = len(x_bounds)
     x_bounds_minmax = [[i[0], i[-1]] for i in x_bounds]
     x_bounds_minmax = numpy.array(x_bounds_minmax)
 
@@ -107,7 +106,6 @@ def next_hyperparameter_lowest_confidence(fun_prediction,
     '''
     best_x = None
     best_acquisition_value = None
-    # n_params = len(x_bounds)
     x_bounds_minmax = [[i[0], i[-1]] for i in x_bounds]
     x_bounds_minmax = numpy.array(x_bounds_minmax)
 
@@ -163,7 +161,6 @@ def next_hyperparameter_lowest_mu(fun_prediction,
     '''
     best_x = None
     best_acquisition_value = None
-    n_params = len(x_bounds)
     x_bounds_minmax = [[i[0], i[-1]] for i in x_bounds]
     x_bounds_minmax = numpy.array(x_bounds_minmax)
 
