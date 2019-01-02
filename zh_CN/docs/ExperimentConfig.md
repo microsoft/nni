@@ -231,14 +231,14 @@
     
     **gpuNum** 指定了运行调参器进程的 GPU 数量。 此字段的值必须是正整数。
     
-        Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both. 
+        注意: 只能使用一种方法来指定调参器，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。 
         
 
 * **assessor**
   
-  * Description
+  * 说明
     
-    **assessor** specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **assessor** 指定了实验的评估器算法。有两种方法可设置评估器。 一种方法是使用 NNI SDK 提供的评估器，需要设置 **builtinAssessorName** 和 **classArgs**。 Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
   
   * **builtinAssessorName** and **classArgs**
     
