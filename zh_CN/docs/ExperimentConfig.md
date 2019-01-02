@@ -240,89 +240,90 @@
     
     **assessor** 指定了实验的评估器算法。有两种方法可设置评估器。 一种方法是使用 NNI SDK 提供的评估器，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的评估器，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
-  * **builtinAssessorName** and **classArgs**
+  * **builtinAssessorName** 和 **classArgs**
     
     * **builtinAssessorName**
     
-    **builtinAssessorName** specifies the name of system assessor, nni sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**}
+    **builtinAssessorName** 指定了系统评估器的名字，NNI SDK 提供了一种评估器：{**Medianstop**}。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm
+      **classArgs** 指定了评估器算法的参数。
   
-  * **codeDir**, **classFileName**, **className** and **classArgs** * **codeDir**
+  * **codeDir**, **classFileName**, **className** and **classArgs**  
+    * **codeDir**
     
-    **codeDir** specifies the directory of tuner code.
+    **codeDir** 指定评估器代码的目录。
     
         * __classFileName__
         
     
-    **classFileName** specifies the name of tuner file.
+    **classFileName** 指定评估器文件名。
     
     * **className**
     
-    **className** specifies the name of tuner class.
+    **className** 指定评估器类名。
     
     * **classArgs**
     
-    **classArgs** specifies the arguments of tuner algorithm.
+    **classArgs** 指定了评估器算法的参数。
   
   * **gpuNum**
   
-  **gpuNum** specifies the gpu number to run the assessor process. The value of this field should be a positive number.
+  **gpuNum** 指定了运行评估器进程的 GPU 数量。 此字段的值必须是正整数。
   
-          Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty. 
+          注意: 只能使用一种方法来指定评估器，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用评估器，可将其置为空。 
       
 
-* **trial(local, remote)**
+* **trial (local, remote)**
   
   * **command**
     
-        __command__  specifies the command to run trial process.
+        __command__  指定了尝试进程的命令行。
         
   
   * **codeDir**
     
-    **codeDir** specifies the directory of your own trial file.
+    **codeDir** 指定了尝试代码文件的目录。
   
   * **gpuNum**
     
-    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
+    **gpuNum** 指定了运行尝试进程的 GPU 数量。 默认值为 0。
 
-* **trial(pai)**
+* **trial (pai)**
   
   * **command**
     
-        __command__  specifies the command to run trial process.
+        __command__  指定了尝试进程的命令行。
         
   
   * **codeDir**
     
-    **codeDir** specifies the directory of the own trial file.
+    **codeDir** 指定了尝试代码文件的目录。
   
   * **gpuNum**
     
-    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
+    **gpuNum** 指定了运行尝试进程的 GPU 数量。 默认值为 0。
   
   * **cpuNum**
     
-    **cpuNum** is the cpu number of cpu to be used in pai container.
+    **cpuNum** 指定了 OpenPAI 容器中使用的 CPU 数量。
   
   * **memoryMB**
     
-    **memoryMB** set the momory size to be used in pai's container.
+    **memoryMB** 指定了 OpenPAI 容器中使用的内存数量。
   
   * **image**
     
-    **image** set the image to be used in pai.
+    **image** 指定了 OpenPAI 中使用的 docker 映像。
   
   * **dataDir**
     
-    **dataDir** is the data directory in hdfs to be used.
+    **dataDir** 是 HDFS 中用到的数据目录变量。
   
   * **outputDir**
     
-    **outputDir** is the output directory in hdfs to be used in pai, the stdout and stderr files are stored in the directory after job finished.
+    **outputDir** 是 HDFS 中用到的输出目录变量。在 OpenPAI 中，stdout 和 stderr 文件会在作业完成后，存放在此目录中。
 
 * **trial(kubeflow)**
   
