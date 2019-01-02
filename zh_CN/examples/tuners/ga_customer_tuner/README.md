@@ -1,10 +1,10 @@
-# How to use ga_customer_tuner?
+# 如何使用 ga_customer_tuner?
 
-This tuner is a customized tuner which only suitable for trial whose code path is "~/nni/examples/trials/ga_squad", type `cd ~/nni/examples/trials/ga_squad` and check readme.md to get more information for ga_squad trial.
+此定制的调参器仅适用于代码 "~/nni/examples/trials/ga_squad"， 输入 `cd ~/nni/examples/trials/ga_squad` 查看 readme.md 来了解 ga_squad 的更多信息。
 
-# config
+# 配置
 
-If you want to use ga_customer_tuner in your experiment, you could set config file as following format:
+如果要在实验中使用 ga_customer_tuner 可按照下列格式来配置：
 
     tuner:
       codeDir: ~/nni/examples/tuners/ga_customer_tuner
