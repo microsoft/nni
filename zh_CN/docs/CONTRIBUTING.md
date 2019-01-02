@@ -35,7 +35,7 @@
 
 ## 处理现有问题
 
-查看[问题列表](https://github.com/Microsoft/nni/issues)，来找到需要贡献者的问题。 可以找找有 'good-first-issue' 或 'help-wanted' 标签的来开始贡献。
+查看[问题列表](https://github.com/Microsoft/nni/issues)，找到需要贡献的问题。 可以找找有 'good-first-issue' 或 'help-wanted' 标签的来开始贡献。
 
 修改问题的注释和指派人来表明此问题已经开始跟进。 如果上述问题在一周内没有拉取请求或更新状态，这个问题会重新开放给所有人。 高优先级的缺陷和回归问题需在一天内响应。
 
