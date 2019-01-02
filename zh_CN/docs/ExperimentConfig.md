@@ -701,9 +701,9 @@ kubeflow use nfs as storage.
     ```
     
 
-kubeflow use azure storage
+Kubeflow 使用 Azure 存储
 
-    ```
+    
     authorName: default
     experimentName: example_mni
     trialConcurrency: 1
@@ -743,4 +743,3 @@ kubeflow use azure storage
       azureStorage:
         accountName: storage
         azureShare: share01
-    ```
