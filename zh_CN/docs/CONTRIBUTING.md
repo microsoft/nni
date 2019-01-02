@@ -10,20 +10,20 @@
 
 下面是一些简单的贡献指南。
 
-## 提出问题
+## 提交问题
 
-When raising issues, please specify the following:
+在提出问题时，请说明以下事项：
 
-- Setup details needs to be filled as specified in the issue template clearly for the reviewer to check.
-- A scenario where the issue occurred (with details on how to reproduce it).
-- Errors and log messages that are displayed by the software.
-- Any other details that might be useful.
+- 按照问题模板的内容来填写安装的细节，以便评审者检查。
+- 出现问题的场景 (尽量详细，以便重现问题)。
+- 错误和日志消息。
+- 其它可能有用的细节信息。
 
-## Submit Proposals for New Features
+## 提交新功能建议
 
-- There is always something more that is required, to make it easier to suit your use-cases. Feel free to join the discussion on new features or raise a PR with your proposed change.
+- 在适配使用场景时，总会需要一些新的功能。 可以加入新功能的讨论，也可以直接提交新功能的拉取请求。
 
-- Fork the repository under your own github handle. After cloning the repository. Add, commit, push and sqaush (if necessary) the changes with detailed commit messages to your fork. From where you can proceed to making a pull request.
+- 在自己的 github 账户下 fork 存储库。 在 fork 后， 对于 add, commit, push, 或 squash (如需要) 等改动都需要详细的提交消息。 From where you can proceed to making a pull request.
 
 ## Contributing to Source Code and Bug Fixes
 
