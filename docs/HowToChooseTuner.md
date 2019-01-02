@@ -178,7 +178,7 @@ _Usage_:
 <a name="NetworkMorphism"></a>
 **Network Morphism**
 
-[Network Morphism](7) provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Next, it estimates the value of child network using the history architecture and metric pairs. Then it selects the most promising one to train. More detail can be referred to [here](../src/sdk/pynni/nni/networkmorphism_tuner/README.md). 
+[Network Morphism][7] provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Next, it estimates the value of child network using the history architecture and metric pairs. Then it selects the most promising one to train. More detail can be referred to [here](../src/sdk/pynni/nni/networkmorphism_tuner/README.md). 
 
 _Installation_: 
 NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so users should install it first.

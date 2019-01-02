@@ -184,7 +184,7 @@ def train_eval():
 
     # trial report final acc to tuner
     _, acc = net.evaluate(x_test, y_test)
-    logger.debug("Final result is: %d", acc)
+    logger.debug("Final result is: %.3f", acc)
     nni.report_final_result(acc)
 
 
