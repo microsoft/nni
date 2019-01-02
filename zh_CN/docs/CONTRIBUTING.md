@@ -23,22 +23,22 @@
 
 - 在适配使用场景时，总会需要一些新的功能。 可以加入新功能的讨论，也可以直接提交新功能的拉取请求。
 
-- 在自己的 github 账户下 fork 存储库。 在 fork 后， 对于 add, commit, push, 或 squash (如需要) 等改动都需要详细的提交消息。 From where you can proceed to making a pull request.
+- 在自己的 github 账户下 fork 存储库。 在 fork 后， 对于 add, commit, push, 或 squash (如需要) 等改动都需要详细的提交消息。 然后就可以提交拉去请求了。
 
-## Contributing to Source Code and Bug Fixes
+## 参与源代码和缺陷修复
 
-Provide PRs with appropriate tags for bug fixes or enhancements to the source code. Do follow the correct naming conventions and code styles when you work on and do try to implement all code reviews along the way.
+拉去请求需要标记正确的标签，表明是缺陷修复或是改进源代码。 所有代码都需要遵循正确的命名约定和代码风格。
 
-If you are looking for How to develop and debug the NNI source code, you can refer to [How to set up NNI developer environment doc](./SetupNNIDeveloperEnvironment.md) file in the `docs` folder.
+参考[如何配置 NNI 的开发环境](./SetupNNIDeveloperEnvironment.md)，来安装开发环境。
 
-Similarly for [writing trials](./WriteYourTrial.md) or [starting experiments](StartExperiment.md). For everything else, refer [here](https://github.com/Microsoft/nni/tree/master/docs).
+同样，还需参考 [创建尝试](./WriteYourTrial.md) 或 [开始实验](StartExperiment.md)。 更多内容，可直接浏览[这里](https://github.com/Microsoft/nni/tree/master/docs)。
 
-## Solve Existing Issues
+## 处理现有问题
 
-Head over to [issues](https://github.com/Microsoft/nni/issues) to find issues where help is needed from contributors. You can find issues tagged with 'good-first-issue' or 'help-wanted' to contribute in.
+查看[问题列表](https://github.com/Microsoft/nni/issues)，来找到需要贡献者的问题。 可以找找有 'good-first-issue' 或 'help-wanted' 标签的来开始贡献。
 
-A person looking to contribute can take up an issue by claiming it as a comment/assign their Github ID to it. In case there is no PR or update in progress for a week on the said issue, then the issue reopens for anyone to take up again. We need to consider high priority issues/regressions where response time must be a day or so.
+修改问题的注释和指派人来表明此问题已经开始跟进。 如果上述问题在一周内没有拉取请求或更新状态，这个问题会重新开放给所有人。 高优先级的缺陷和回归问题需在一天内响应。
 
-## Code Styles & Naming Conventions
+## 代码风格和命名约定
 
-We follow [PEP8](https://www.python.org/dev/peps/pep-0008/) for Python code and naming conventions, do try to adhere to the same when making a pull request or making a change. One can also take the help of linters such as `flake8` or `pylint`
+NNI 遵循 [PEP8](https://www.python.org/dev/peps/pep-0008/) 的 Python 代码命名约定。在提交拉去请求时，请尽量遵循此规范。 可通过`flake8`或`pylint`的提示工具来帮助遵循规范。
