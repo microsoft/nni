@@ -25,8 +25,8 @@ sudo apt-get install nfs-common
 ```
 Then create & mount the mounted directory of shared files:
 ```bash
-sudo mkdir -p /mnt/nni/
-sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nni
+sudo mkdir -p /mnt/nfs/nni/
+sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 ```
 where `10.10.10.10` should be replaced by the real IP of NFS server machine in practice.
 ## Weight Sharing Example
