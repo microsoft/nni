@@ -622,7 +622,7 @@
 
 * **pai 模式**
 
-    
+    ```
     authorName: test
     experimentName: nni_test1
     trialConcurrency: 1
@@ -659,7 +659,7 @@
       passWord: test
       # OpenPAI 服务器 Ip
       host: 10.10.10.10
-    
+    ```
     
     
 
