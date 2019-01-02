@@ -4,7 +4,7 @@ SimpleTuner for Weight Sharing
 
 import logging
 
-from threading import Event
+from threading import Event, Lock
 from nni.tuner import Tuner
 
 _logger = logging.getLogger('WeightSharingTuner')
@@ -20,9 +20,11 @@ class SimpleTuner(Tuner):
         self.trial_meta = {}
         self.f_id = None  # father
         self.sig_event = Event()
+        self.thread_lock = Lock()
 
     def generate_parameters(self, parameter_id):
         if self.f_id is None:
+            self.thread_lock.acquire()
             self.f_id = parameter_id
             self.trial_meta[parameter_id] = {
                 'prev_id': 0,
@@ -31,20 +33,24 @@ class SimpleTuner(Tuner):
                 'path': '',
             }
             _logger.info('generate parameter for father trial %s' % parameter_id)
+            self.thread_lock.release()
             return {
                 'prev_id': 0,
                 'id': parameter_id,
             }
         else:
             self.sig_event.wait()
+            self.thread_lock.acquire()
             self.trial_meta[parameter_id] = {
                 'id': parameter_id,
                 'prev_id': self.f_id,
                 'prev_path': self.trial_meta[self.f_id]['path']
             }
+            self.thread_lock.release()
             return self.trial_meta[parameter_id]
 
     def receive_trial_result(self, parameter_id, parameters, reward):
+        self.thread_lock.acquire()
         if parameter_id == self.f_id:
             self.trial_meta[parameter_id]['checksum'] = reward['checksum']
             self.trial_meta[parameter_id]['path'] = reward['path']
@@ -52,6 +58,7 @@ class SimpleTuner(Tuner):
         else:
             if reward['checksum'] != self.trial_meta[self.f_id]['checksum'] + str(self.f_id):
                 raise ValueError("Inconsistency in weight sharing!!!")
+        self.thread_lock.release()
 
     def update_search_space(self, search_space):
         pass
