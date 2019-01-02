@@ -92,6 +92,7 @@ class PAITrainingService implements TrainingService {
     public async run(): Promise<void> {
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         await restServer.start();
+
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
             await this.updatePaiToken();

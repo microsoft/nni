@@ -34,4 +34,7 @@ STDOUT_FULL_PATH = os.path.join(LOG_DIR, 'stdout')
 
 STDERR_FULL_PATH = os.path.join(LOG_DIR, 'stderr')
 
-UPDATE_METRICS_API = '/update-metrics'
+STDOUT_API = '/stdout'
+NNI_SYS_DIR = os.environ['NNI_SYS_DIR']
+NNI_TRIAL_JOB_ID = os.environ['NNI_TRIAL_JOB_ID']
+NNI_EXP_ID = os.environ['NNI_EXP_ID']
