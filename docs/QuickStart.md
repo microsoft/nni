@@ -31,9 +31,7 @@ For the system requirements of NNI, please refer to [Install NNI][2]
 
 ## First "Hello World" experiment: MNIST
 
-Now let's start to run our first MNIST experiment using NNI.
-
-Here is a configuration file in NNI experiment:
+Now let's start to run our first NNI experiment, here is a minimal experiment we prepared to teach you how to using NNI:
 
 ```yaml
 authorName: default
@@ -46,20 +44,16 @@ searchSpacePath: search_space.json
 useAnnotation: false
 tuner:
   builtinTunerName: TPE
-  classArgs:
-    optimize_mode: maximize
 trial:
   command: python3 mnist.py
   codeDir: .
   gpuNum: 0
 ```
 
-**We did two things here:**
+**We did two things in this file:**
 
-* specify the `range of hyper-paramaters` to be searched for this experiment in `search_space.json`.
-* define a NNI trial in `mnist.py`, an individual attempt at applying a set of parameters on a model.
-
-You can [click here][3] to find the `config.yml`, `search_space.json` and `mnist.py` in this example.
+* Indicates the path of [search_space.json][3], which specify the `range of hyper-paramaters` to be searched.
+* Define a NNI trial in [mnist.py][4], an individual `attempt` at applying a set of parameters on a model.
 
 Note: other configurations can be kept by their default value. We will talk about them in the following tutorial.
 
@@ -156,4 +150,5 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
 [1]: https://github.com/Microsoft/nni/blob/master/docs/FAQ.md
 [2]: https://github.com/Microsoft/nni/blob/master/docs/Installation.md
-[3]: https://github.com/Microsoft/nni/tree/master/examples/trials/mnist
+[3]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/search_space.json
+[4]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py
