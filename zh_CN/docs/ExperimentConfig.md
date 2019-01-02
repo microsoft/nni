@@ -144,7 +144,7 @@
   
   * 说明
   
-  **maxExecDuration** specifies the max duration time of an experiment.The unit of the time is {**s**, **m**, **h**, **d**}, which means {*seconds*, *minutes*, *hours*, *days*}.
+  **maxExecDuration** 定义实验执行的最长时间。时间单位：{**s**, **m**, **h**, **d**}，分别代表：{*seconds*, *minutes*, *hours*, *days*}。
 
 * **maxTrialNum**
   
