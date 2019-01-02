@@ -420,61 +420,61 @@
   
   * **passphrase**
     
-    **passphrase** is used to protect ssh key, which could be empty if users don't have passphrase.
+    **passphrase** 用于保护 ssh 密钥，如果没有使用，可为空。
 
 * **kubeflowConfig**:
   
   * **operator**
     
-    **operator** specify the kubeflow's operator to be used, nni support **tf-operator** in current version.
+    **operator** 指定了 kubeflow 使用的 operator，NNI 当前版本支持 **tf-operator**。
   
   * **storage**
     
-    **storage** specify the storage type of kubeflow, including {**nfs**, **azureStorage**}. This field is optional, and the default value is **nfs**. If the config use azureStorage, this field must be completed.
+    **storage** 指定了 kubeflow 的存储类型，包括 {**nfs**，**azureStorage**}。 此字段可选，默认值为 **nfs**。 如果使用了 azureStorage，此字段必须填写。
   
   * **nfs**
     
-    **server** is the host of nfs server
+    **server** 是 NFS 服务器的地址
     
-    **path** is the mounted path of nfs
+    **path** 是 NFS 挂载的路径
   
   * **keyVault**
     
-    If users want to use azure kubernetes service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+    如果用户使用 Azure Kubernetes Service，需要设置 keyVault 来使用 Azure 存储账户的私钥。 参考: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
     
     * **vaultName**
       
-      **vaultName** is the value of ```--vault-name``` used in az command.
+      **vaultName** 是 az 命令中的 ```--vault-name``` 。
     
     * **name**
       
-      **name** is the value of ```--name``` used in az command.
+      **name** 是 az 命令中的 ```--name``` 。
   
   * **azureStorage**
     
-    If users use azure kubernetes service, they should set azure storage account to store code files.
+    如果用户使用了 Azure Kubernetes Service，需要设置 Azure 存储账户来存放代码文件。
     
     * **accountName**
       
-      **accountName** is the name of azure storage account.
+      **accountName** 是 Azure 存储账户的名称。
     
     * **azureShare**
       
-      **azureShare** is the share of the azure file storage.
+      **azureShare** 是 Azure 文件存储的共享参数。
 
 * **paiConfig**
   
   * **userName**
     
-    **userName** is the user name of your pai account.
+    **userName** 是 OpenPAI 的用户名。
   
   * **password**
     
-    **password** is the password of the pai account.
+    **password** 是 OpenPAI 用户的密码。
   
   * **host**
     
-    **host** is the host of pai.
+    **host** 是 OpenPAI 的主机地址。
 
 ## 样例
 
