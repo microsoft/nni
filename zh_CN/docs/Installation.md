@@ -20,7 +20,7 @@
 
 * **通过源代码安装 NNI**
     
-    ``` git clone -b v0.4.1 https://github.com/Microsoft/nni.git cd nni source install.sh ```
+    git clone -b v0.4.1 https://github.com/Microsoft/nni.git cd nni source install.sh
 
 * **在 docker 映像中安装 NNI**
     
