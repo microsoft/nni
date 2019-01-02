@@ -8,15 +8,15 @@ In NFS, files are physically stored on a server machine, and trials on the clien
 #### Install NFS on server machine
 First, install NFS server:
 ```bash
-apt-get install nfs-kernel-server
+sudo apt-get install nfs-kernel-server
 ```
 Suppose `/tmp/nni/shared` is used as the physical storage, then run:
 ```bash
-mkdir -p /tmp/nni/shared
-echo "/tmp/nni/shared *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
-service nfs-kernel-server restart
+sudo mkdir -p /tmp/nni/shared
+sudo echo "/tmp/nni/shared *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
+sudo service nfs-kernel-server restart
 ```
-You can check if the above directory is successfully exported by NFS using `showmount -e localhost`
+You can check if the above directory is successfully exported by NFS using `sudo showmount -e localhost`
 
 #### Install NFS on client machine
 First, install NFS client:
