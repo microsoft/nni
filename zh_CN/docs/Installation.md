@@ -1,32 +1,32 @@
-# **Installation of NNI**
+# **安装 NNI**
 
-Currently we only support installation on Linux & Mac.
+当前仅支持 Linux 和 Mac。
 
-## **Installation**
+## **安装**
 
-* **Dependencies**
+* **依赖项**
     
     python >= 3.5 git wget
     
-    python pip should also be correctly installed. You could use "python3 -m pip -v" to check pip version.
+    需要正确安装 Python 的 pip。 可以用 "python3 -m pip -v" 来检查 pip 的版本。
 
-* **Install NNI through pip**
+* **通过 pip 命令安装 NNI**
     
     python3 -m pip install --user --upgrade nni
 
-* **Install NNI through source code**
+* **通过源代码安装 NNI**
     
     git clone -b v0.4.1 https://github.com/Microsoft/nni.git cd nni source install.sh
 
-* **Install NNI in docker image**
+* **在 docker 映像中安装 NNI**
     
-    You can also install NNI in a docker image. Please follow the instructions [here](../deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
+    也可将 NNI 安装到 docker 映像中。 参考[这里](../deployment/docker/README.md)来生成 NNI 的 docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 `docker pull msranni/nni:latest`。
 
-## **System requirements**
+## **系统需求**
 
-Below are the minimum system requirements for NNI on Linux. Due to potential programming changes, the minimum system requirements for NNI may change over time.
+以下是 NNI 在 Linux 下的最小需求。 由于程序变更，NNI 的最小需求会有所更改。
 
-|                      | Minimum Requirements                   | Recommended Specifications                     |
+|                      | 最小需求                                   | Recommended Specifications                     |
 | -------------------- | -------------------------------------- | ---------------------------------------------- |
 | **Operating System** | Ubuntu 16.04 or above                  | Ubuntu 16.04 or above                          |
 | **CPU**              | Intel® Core™ i3 or AMD Phenom™ X3 8650 | Intel® Core™ i5 or AMD Phenom™ II X3 or better |
