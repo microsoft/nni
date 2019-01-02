@@ -72,7 +72,7 @@
       gpuNum: 0
     
 
-必填项: `codeDir`, `classFileName`, `className`。如果评估器的 \__init__ 构造函数有必填参数，需要用 `classArgs` 传入。
+必填项: `codeDir`, `classFileName`, `className`。如果评估器的 `__init__` 构造函数有必填参数，需要用 `classArgs` 传入。
 
 **注意** 如果需要访问 assessor 目录中的文件 （如： ```data.txt```），不能使用 ```open('data.txt', 'r')```。 要使用：
 
@@ -80,4 +80,4 @@
     _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
     
 
-因为评估器不是在其自己的目录中执行的。（也就是说， ```pwd``` 不是评估器自己的目录）。
+因为评估器不是在其自己的目录中执行的。（也就是说 ```pwd``` 不是评估器自己的目录）。
