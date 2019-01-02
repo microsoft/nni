@@ -212,24 +212,24 @@
   * **codeDir**, **classFileName**, **className** 和**classArgs**  
     * **codeDir**
     
-    **codeDir** specifies the directory of tuner code.
+    **codeDir** 指定调参器代码的目录。
     
         * __classFileName__
         
     
-    **classFileName** specifies the name of tuner file.
+    **classFileName** 指定调参器文件名。
     
     * **className**
     
-    **className** specifies the name of tuner class.
+    **className** 指定调参器类名。
     
     * **classArgs**
     
-    **classArgs** specifies the arguments of tuner algorithm.
+    **classArgs** 指定了调参器算法的参数。
   
   * **gpuNum**
     
-    **gpuNum** specifies the gpu number to run the tuner process. The value of this field should be a positive number.
+    **gpuNum** 指定了运行调参器进程的 GPU 数量。 此字段的值必须是正整数。
     
         Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both. 
         
