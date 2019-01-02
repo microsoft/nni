@@ -197,19 +197,20 @@
   
   * 说明
     
-    **tuner** 指定了实验的调参器算法。有两种方法可设置调参器。 一种方法是使用 NNI SDK 提供的调参器，需要设置 **builtinTunerName** 和 **classArgs**。 Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **tuner** 指定了实验的调参器算法。有两种方法可设置调参器。 一种方法是使用 NNI SDK 提供的调参器，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的调参器，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
-  * **builtinTunerName** and **classArgs**
+  * **builtinTunerName** 和 **classArgs**
     
     * **builtinTunerName**
     
-    **builtinTunerName** specifies the name of system tuner, nni sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}
+    **builtinTunerName** 指定了系统调参器的名字，NNI SDK 提供了多种调参器，如：{**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm. If the **builtinTunerName** is in {**TPE**, **Random**, **Anneal**, **Evolution**}, user should set **optimize_mode**.
+      **classArgs** 指定了调参器算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
   
-  * **codeDir**, **classFileName**, **className** and **classArgs** * **codeDir**
+  * **codeDir**, **classFileName**, **className** 和**classArgs**  
+    * **codeDir**
     
     **codeDir** specifies the directory of tuner code.
     
