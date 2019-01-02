@@ -133,16 +133,16 @@
 
 * **trialConcurrency**
   
-  * Description
+  * 说明
     
-    **trialConcurrency** specifies the max num of trial jobs run simultaneously.
+    **trialConcurrency** 定义了并发尝试任务的最大数量。
     
-        Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
+        注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的尝试任务数量还没达到 trialConcurrency，尝试任务会被放入队列，等待分配 GPU 资源。
         
 
 * **maxExecDuration**
   
-  * Description
+  * 说明
   
   **maxExecDuration** specifies the max duration time of an experiment.The unit of the time is {**s**, **m**, **h**, **d**}, which means {*seconds*, *minutes*, *hours*, *days*}.
 
@@ -474,13 +474,13 @@
     
     **host** is the host of pai.
 
-## Examples
+## 样例
 
-* **local mode**
+* **本机模式**
   
-  If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
+  如果要在本机运行尝试任务，并使用标记来生成搜索空间，可参考下列配置：
 
-    ```
+    
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -501,13 +501,13 @@
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    ```
+    
     
 
-    Could add assessor configuration in config file if set assessor.
+    如果要设置评估器，可以增加评估器配置：
     
 
-    ```
+    
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -536,13 +536,13 @@
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    ```
+    
     
 
-    Or you could specify your own tuner and assessor file as following:
+    或者可以指定自定义的调参器和评估器：
     
 
-    ```
+    
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -573,14 +573,13 @@
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    ```
+    
     
 
-* **remote mode**
+* **远程模式**
 
-If run trial jobs in remote machine, users could specify the remote mahcine information as fllowing format:
+如果在远程服务器上运行尝试任务，需要增加服务器信息：
 
-    ```
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -618,12 +617,12 @@ If run trial jobs in remote machine, users could specify the remote mahcine info
         username: test
         sshKeyPath: /nni/sshkey
         passphrase: qwert
-    ```
+    
     
 
-* **pai mode**
+* **pai 模式**
 
-    ```
+    
     authorName: test
     experimentName: nni_test1
     trialConcurrency: 1
@@ -647,7 +646,7 @@ If run trial jobs in remote machine, users could specify the remote mahcine info
       gpuNum: 4
       cpuNum: 2
       memoryMB: 10000
-      # 在 OpenPAI 上用来运行 NNI 作业的 docker 映像
+      # 在 OpenPAI 上用来运行 Nni 作业的 docker 映像
       image: msranni/nni:latest
       # 在 OpenPAI 的 hdfs 上存储数据的目录，如：'hdfs://host:port/directory'
       dataDir: hdfs://10.11.12.13:9000/test
@@ -658,16 +657,17 @@ If run trial jobs in remote machine, users could specify the remote mahcine info
       userName: test
       # OpenPAI 密码
       passWord: test
-      # OpenPAI 服务器 IP
+      # OpenPAI 服务器 Ip
       host: 10.10.10.10
     
     
+    
 
-* **kubeflow mode**
+* **Kubeflow 模式**
 
-kubeflow use nfs as storage.
+Kubeflow 使用 NFS 作为存储。
 
-    ```
+    
     authorName: default
     experimentName: example_mni
     trialConcurrency: 1
@@ -698,7 +698,7 @@ kubeflow use nfs as storage.
       nfs:
         server: 10.10.10.10
         path: /var/nfs/general
-    ```
+    
     
 
 Kubeflow 使用 Azure 存储
