@@ -325,71 +325,71 @@
     
     **outputDir** 是 HDFS 中用到的输出目录变量。在 OpenPAI 中，stdout 和 stderr 文件会在作业完成后，存放在此目录中。
 
-* **trial(kubeflow)**
+* **trial (kubeflow)**
   
   * **codeDir**
     
-    **codeDir** is the local directory where the code files in.
+    **codeDir** 指定了代码文件的本机路径。
   
-  * **ps(optional)**
+  * **ps (可选)**
     
-    **ps** is the configuration for kubeflow's tensorflow-operator.
+    **ps** 是 Kubeflow 的 Tensorflow-operator 配置。
     
     * **replicas**
       
-      **replicas** is the replica number of **ps** role.
+      **replicas** 是 **ps** 角色的副本数量。
     
     * **command**
       
-      **command** is the run script in **ps**'s container.
+      **command** 是在 **ps** 的容器中运行的脚本命令。
     
     * **gpuNum**
       
-      **gpuNum** set the gpu number to be used in **ps** container.
+      **gpuNum** 是在 **ps** 容器中使用的 GPU 数量。
     
     * **cpuNum**
       
-      **cpuNum** set the cpu number to be used in **ps** container.
+      **cpuNum** 是在 **ps** 容器中使用的 CPU 数量。
     
     * **memoryMB**
       
-      **memoryMB** set the memory size of the container.
+      **memoryMB** 指定了容器中使用的内存数量。
     
     * **image**
       
-      **iamge** set the image to be used in **ps**.
+      **iamge** 设置了 **ps** 使用的 docker 映像。
   
   * **worker**
     
-    **worker** is the configuration for kubeflow's tensorflow-operator.
+    **worker** 是 Kubeflow 的 Tensorflow-operator 配置。
     
     * **replicas**
       
-      **replicas** is the replica number of **worker** role.
+      **replicas** 是 **worker** 角色的副本数量。
     
     * **command**
       
-      **command** is the run script in **worker**'s container.
+      **command** 是在 **worker** 的容器中运行的脚本命令。
     
     * **gpuNum**
       
-      **gpuNum** set the gpu number to be used in **worker** container.
+      **gpuNum** 是在 **worker** 容器中使用的 GPU 数量。
     
     * **cpuNum**
       
-      **cpuNum** set the cpu number to be used in **worker** container.
+      **cpuNum** 是在 **worker** 容器中使用的 CPU 数量。
     
     * **memoryMB**
       
-      **memoryMB** set the memory size of the container.
+      **memoryMB** 指定了容器中使用的内存数量。
     
     * **image**
       
-      **iamge** set the image to be used in **worker**.
+      **iamge** 设置了 **worker** 使用的 docker 映像。
 
 * **machineList**
   
-       __machineList__ should be set if users set __trainingServicePlatform__=remote, or it could be empty.
+       __machineList__ 要在 __trainingServicePlatform__=remote 时设置，否则其应为空。
       
   
   * **ip**
