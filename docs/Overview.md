@@ -1,11 +1,10 @@
 # NNI Overview
 
-NNI (Neural Network Intelligence) is a toolkit to help users design and tune machine learning models (e.g., hyperparameters), neural network architectures, or complex system's parameters, in an efficient and automatic way. NNI has several appealing properties: easy-to-use, scalability, flexibility, extensibility, efficiency.
+NNI (Neural Network Intelligence) is a toolkit to help users design and tune machine learning models (e.g., hyperparameters), neural network architectures, or complex system's parameters, in an efficient and automatic way. NNI has several appealing properties: easy-to-use, scalability, flexibility, and efficiency.
 
-* **Easy-to-use**: NNI can be easily installed through python pip. There are only several lines to added to your code in order to use NNI's power to tune your model. And you can use both a commandline tool and WebUI to view and control your experiments. 
-* **Scalability**: Tuning hyperparameters or neural architecture often demands large amount of computation resource, while NNI is designed to fully leverage different computation resources, such as remote machines, training platforms (e.g., PAI, Kubernetes). NNI could run thousands of parallel trials depends on the capacity of your configured training platforms.
-* **Flexibility**: Besides rich built-in algorithms, NNI allows users to customize various hyperparameter tuning algorithms, neural architecture search algorithms, early stopping algorithms, etc.
-* **Extensibility**: Users could extend NNI with more training platforms, running trials on those computation resources. For example, connecting NNI with virtual machines, kubernetes service, etc. on the cloud, such as Azure, AWS, Aliyun. Users could also connect NNI to external environments to tune the applications/models on them.
+* **Easy-to-use**: NNI can be easily installed through python pip. Minimal code modification and user configuration. You can use both a commandline tool and WebUI to view and control your experiments.
+* **Scalability**: Tuning hyperparameters or neural architecture often demands large amount of computation resource, while NNI is designed to fully leverage different computation resources, such as remote machines, training platforms (e.g., PAI, Kubernetes). Thousands of trials could run in parallel by depending on the capacity of your configured training platforms.
+* **Flexibility**: Besides rich built-in algorithms, NNI allows users to customize various hyperparameter tuning algorithms, neural architecture search algorithms, early stopping algorithms, etc. Users could also extend NNI with more training platforms, such as virtual machines, kubernetes service on the cloud. Moreover, NNI can connect to external environments to tune special applications/models on them.
 * **Efficiency**: We are intensively working on more efficient model tuning from both system level and algorithm level. For example, leveraging early feedback to speedup tuning procedure.
 
 ## Key Concepts
@@ -16,9 +15,9 @@ NNI (Neural Network Intelligence) is a toolkit to help users design and tune mac
 
 * *Configuration*: A configuration is an instance from the search space, that is, each hyperparameter has a specific value.
 
-* *Trial*: Trial is an individual attempt at applying a new configuration, for example, a set of hyperparameter values on a model, or a specific nerual architecture.
+* *Trial*: Trial is an individual attempt at applying a new configuration (e.g., a set of hyperparameter values, a specific nerual architecture). Trial code should be able to run with the provided configuration.
 
-* *Tuner*: Tuner is an AutoML algorithm, which generates a new configuration for the next try. A new trial runs with this configuration.
+* *Tuner*: Tuner is an AutoML algorithm, which generates a new configuration for the next try. A new trial will run with this configuration.
 
 * *Assessor*: Assessor analyzes trial's intermediate results (e.g., periodically evaluated accuracy on test dataset) to tell whether this trial can be early stopped or not.
 
