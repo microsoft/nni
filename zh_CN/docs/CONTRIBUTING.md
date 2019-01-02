@@ -2,15 +2,15 @@
 
 欢迎！！ 我们非常欢迎贡献者，特别是代码贡献者。
 
-首先，如果有什么不确定的事情，可随时提交问题或拉取请求。 You won't be yelled at for giving your best effort. The worst that can happen is that you'll be politely asked to change something. We appreciate any sort of contributions and don't want a wall of rules to get in the way of that.
+首先，如果有什么不确定的事情，可随时提交问题或拉取请求。 不会有人因此而抱怨。:) 最有可能的是，会有礼貌的请求你修改一些内容。 我们会感激任何形式的贡献，不想用一堆规则来阻止这些贡献。
 
-However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover all the points we're looking for in your contributions, raising your chances of quickly merging or addressing your contributions.
+不管怎样，如果想要更有效的贡献代码，可以阅读以下内容。 本文档包括了所有在贡献中需要注意的要点，会加快合并代码、解决问题的速度。
 
-Looking for a quickstart, get acquainted with our [Get Started](./GetStarted.md) guide.
+查看[快速入门](./GetStarted.md)来初步了解。
 
-There are a few simple guidelines that you need to follow before providing your hacks.
+下面是一些简单的贡献指南。
 
-## Raising Issues
+## 提出问题
 
 When raising issues, please specify the following:
 
