@@ -1,5 +1,5 @@
 # Weight Sharing in NNI
-Many of the NAS(Neural Architecture Search) algorithms leverages the technique of weight sharing. For example, DARTS[1] treats both model weights and network connection as trainable parameters; In Morphism[2] algorithm, each new layer is inserted among existing trained layers and initialized in a way which is equivalent as before. Since trial is the basic unit of NNI's searching, we developed a way of sharing model weights across trials. 
+Many of the NAS(Neural Architecture Search) algorithms leverages the technique of weight sharing. For example, [DARTS][1] treats both model weights and network connection as trainable parameters; In [Morphism][2] algorithm, each new layer is inserted among existing trained layers and initialized in a way which is equivalent as before. Since trial is the basic unit of NNI's searching, we developed a way of sharing model weights across trials. 
 
 ## Dependencies
 Currently we support weight sharing through NFS.
