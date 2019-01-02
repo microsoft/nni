@@ -5,21 +5,25 @@
 ## **安装**
 
 * **依赖项**
-    
-    python >= 3.5 git wget
-    
+
+      python >= 3.5
+      git
+      wget
+
     需要正确安装 Python 的 pip。 可以用 "python3 -m pip -v" 来检查 pip 的版本。
 
 * **通过 pip 命令安装 NNI**
-    
-    python3 -m pip install --user --upgrade nni
+
+      python3 -m pip install --user --upgrade nni
 
 * **通过源代码安装 NNI**
-    
-    ``` git clone -b v0.4.1 https://github.com/Microsoft/nni.git cd nni source install.sh ```
+
+      git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+      cd nni source
+      install.sh
 
 * **在 docker 映像中安装 NNI**
-    
+
     也可将 NNI 安装到 docker 映像中。 参考[这里](../deployment/docker/README.md)来生成 NNI 的 docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 `docker pull msranni/nni:latest`。
 
 ## **系统需求**
