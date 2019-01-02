@@ -1,36 +1,36 @@
 # NNI 标记
 
-For good user experience and reduce user effort, we need to design a good annotation grammar.
+为了获得良好的用户体验并减少用户负担，NNI 设计了通过注释来使用的语法。
 
-If users use NNI system, they only need to:
+使用 NNI 时，只需要:
 
-1. Use nni.get_next_parameter() to retrieve hyper parameters from Tuner, before using other annotation, use following annotation at the begining of trial code: '''@nni.get_next_parameter()'''
+1. 在使用其它标记前，用 nni.get_next_parameter() 从调参器获得超参： '''@nni.get_next_parameter()'''
 
-2. Annotation variable in code as:
+2. 在超参变量前加上如下标记：
     
     '''@nni.variable(nni.choice(2,3,5,7),name=self.conv_size)'''
 
-3. Annotation intermediate in code as:
+3. 在中间结果前加上：
     
     '''@nni.report_intermediate_result(test_acc)'''
 
-4. Annotation output in code as:
+4. 在输出结果前加上：
     
     '''@nni.report_final_result(test_acc)'''
 
-5. Annotation `function_choice` in code as:
+5. 在代码中使用函数 `function_choice`：
     
     '''@nni.function_choice(max_pool(h_conv1, self.pool_size),avg_pool(h_conv1, self.pool_size),name=max_pool)'''
 
-In this way, they can easily implement automatic tuning on NNI.
+通过这种方法，能够轻松的在 NNI 中实现自动调参。
 
-For `@nni.variable`, `nni.choice` is the type of search space and there are 10 types to express your search space as follows:
+`@nni.variable`, `nni.choice` 为搜索空间的类型，有 10 种方法来表达搜索空间：
 
 1. `@nni.variable(nni.choice(option1,option2,...,optionN),name=variable)`  
-    Which means the variable value is one of the options, which should be a list The elements of options can themselves be stochastic expressions
+    变量值是选项中的一种，这些变量可以是任意的表达式。
 
 2. `@nni.variable(nni.randint(upper),name=variable)`  
-    Which means the variable value is a random integer in the range [0, upper).
+    变量可以是范围 [0, upper) 中的任意整数。
 
 3. `@nni.variable(nni.uniform(low, high),name=variable)`  
     Which means the variable value is a value uniformly between low and high.
