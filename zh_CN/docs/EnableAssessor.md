@@ -1,10 +1,10 @@
-# **Enable Assessor in your expeirment**
+# **使用评估器**
 
-Assessor module is for assessing running trials. One common use case is early stopping, which terminates unpromising trial jobs based on their intermediate results.
+评估器模块用于评估正在运行的尝试。 最常用的情况是提前中止尝试。如果尝试的中间结果不够好，则可提前终止。
 
-## Using NNI built-in Assessor
+## 使用 NNI 内置的评估器
 
-Here we use the same example `examples/trials/mnist-annotation`. We use `Medianstop` assessor for this experiment. The yaml configure file is shown below:
+以下样例代码在 `examples/trials/mnist-annotation` 目录中。 We use `Medianstop` assessor for this experiment. The yaml configure file is shown below:
 
     authorName: your_name
     experimentName: auto_mnist
