@@ -1,12 +1,12 @@
-This page is for frequent asked questions and answers.
+此页为常见问题
 
-### tmp folder fulled
+### tmp 目录没空间了
 
-nnictl will use tmp folder as a temporary folder to copy files under codeDir when executing experimentation creation. When met errors like below, try to clean up **tmp** folder first.
+nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下的文件。 当遇到下列错误时，先试试清空 **tmp** 目录。
 
 > OSError: [Errno 28] No space left on device
 
-### Cannot get trials' metrics in OpenPAI mode
+### OpenPAI 模式下无法获得尝试的数据
 
 In OpenPAI training mode, we start a rest server which listens on 51189 port in nniManager to receive metrcis reported from trials running in OpenPAI cluster. If you didn't see any metrics from WebUI in OpenPAI mode, check your machine where nniManager runs on to make sure 51189 port is turned on in the firewall rule.
 
