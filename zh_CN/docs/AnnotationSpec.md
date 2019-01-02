@@ -1,4 +1,4 @@
-# NNI Annotation
+# NNI 标记
 
 For good user experience and reduce user effort, we need to design a good annotation grammar.
 
