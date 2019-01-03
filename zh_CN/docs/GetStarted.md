@@ -34,7 +34,7 @@
 * 准备 yaml 的实验配置文件
 * (可选) 编写或选择评估器
 
-**准备尝试**: 先从简单样例开始，如：NNI 样例中的 mnist。 After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example:
+**准备尝试**: 先从简单样例开始，如：NNI 样例中的 mnist。 NNI 样例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有实验的样例。 You can simply execute the following command to run the NNI mnist example:
 
     python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 
