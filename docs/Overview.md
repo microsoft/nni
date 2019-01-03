@@ -10,7 +10,7 @@ NNI (Neural Network Intelligence) is a toolkit to help users design and tune mac
 The figure below shows high-level architecture of NNI.
 
 <p align="center">
-<img src="./img/highlevelarchi.png" alt="drawing" width="600"/>
+<img src="./img/highlevelarchi.png" alt="drawing" width="700"/>
 </p> 
 
 ## Key Concepts
