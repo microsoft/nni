@@ -8,7 +8,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 ### OpenPAI 模式下无法获得尝试的数据
 
-In OpenPAI training mode, we start a rest server which listens on 51189 port in nniManager to receive metrcis reported from trials running in OpenPAI cluster. If you didn't see any metrics from WebUI in OpenPAI mode, check your machine where nniManager runs on to make sure 51189 port is turned on in the firewall rule.
+在 OpenPAI 的训练模式下，nniManager 会在端口 51189 启动一个 RESTful 服务，来接收 OpenPAI 集群中尝试任务的回调数据。 If you didn't see any metrics from WebUI in OpenPAI mode, check your machine where nniManager runs on to make sure 51189 port is turned on in the firewall rule.
 
 ### Segmentation Fault (core dumped) when installing from source code
 
