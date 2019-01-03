@@ -34,6 +34,10 @@ from nni.multi_phase.multi_phase_dispatcher import MultiPhaseMsgDispatcher
 logger = logging.getLogger('nni.main')
 logger.debug('START')
 
+if os.environ.get('COVERAGE_PROCESS_START'):
+    import coverage
+    coverage.process_startup()
+
 def augment_classargs(input_class_args, classname):
     if classname in ClassArgs:
         for key, value in ClassArgs[classname].items():
