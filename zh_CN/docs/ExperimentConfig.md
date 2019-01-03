@@ -135,9 +135,9 @@
   
   * 说明
     
-    **trialConcurrency** 定义了并发尝试任务的最大数量。
-    
-        注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的尝试任务数量还没达到 trialConcurrency，尝试任务会被放入队列，等待分配 GPU 资源。
+        __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
+        
+        Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
         
 
 * **maxExecDuration**
@@ -170,9 +170,9 @@
   
   * 说明
     
-    **searchSpacePath** 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
-    
-        注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
+        __searchSpacePath__ specifies the path of search space file, which should be a valid path in the local linux machine.
+        
+        Note: if set useAnnotation=True, the searchSpacePath field should be removed.
         
 
 * **useAnnotation**
@@ -181,8 +181,7 @@
     
     **useAnnotation** 定义使用标记来分析代码并生成搜索空间。
     
-        注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
-        
+    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
 
 * **nniManagerIp**
   
@@ -190,8 +189,7 @@
     
     **nniManagerIp** 设置 NNI 管理器运行的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
     
-          注意: 可在 NNI 管理器机器上运行 ifconfig 来检查 eth0 是否存在。 如果不存在，推荐显式设置 nnimanagerIp。
-        
+    Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
 
 * **tuner**
   
@@ -209,71 +207,81 @@
       
       **classArgs** 指定了调参器算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
   
-  * **codeDir**, **classFileName**, **className** 和**classArgs**  
+  * **codeDir**, **classFileName**, **className** and **classArgs**
+    
     * **codeDir**
+      
+            __codeDir__ specifies the directory of tuner code.
+          
     
-    **codeDir** 指定调参器代码的目录。
-    
-        * __classFileName__
-        
-    
-    **classFileName** 指定调参器文件名。
+    * **classFileName**
+      
+            __classFileName__ specifies the name of tuner file.
+          
     
     * **className**
-    
-    **className** 指定调参器类名。
+      
+            __className__ specifies the name of tuner class.
+          
     
     * **classArgs**
-    
-    **classArgs** 指定了调参器算法的参数。
+      
+            __classArgs__ specifies the arguments of tuner algorithm.
+          
   
   * **gpuNum**
     
-    **gpuNum** 指定了运行调参器进程的 GPU 数量。 此字段的值必须是正整数。
-    
-        注意: 只能使用一种方法来指定调参器，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。 
+        __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
+        
+        Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both. 
         
 
 * **assessor**
   
   * 说明
     
-    **assessor** 指定了实验的评估器算法。有两种方法可设置评估器。 一种方法是使用 NNI SDK 提供的评估器，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的评估器，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
+    **assessor** 指定了实验的评估器算法。有两种方法可设置评估器。 一种方法是使用 NNI SDK 提供的评估器，需要设置 **builtinAssessorName** 和 **classArgs**。 Another way is to use users' own assessor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
   
   * **builtinAssessorName** 和 **classArgs**
     
     * **builtinAssessorName**
-    
-    **builtinAssessorName** 指定了系统评估器的名字，NNI SDK 提供了一种评估器：{**Medianstop**}。
+      
+          __builtinAssessorName__ specifies the name of system assessor, nni sdk provides one kind of assessor {__Medianstop__}
+          
     
     * **classArgs**
       
-      **classArgs** 指定了评估器算法的参数。
+          __classArgs__ specifies the arguments of assessor algorithm
+          
   
-  * **codeDir**, **classFileName**, **className** and **classArgs**  
+  * **codeDir**, **classFileName**, **className** and **classArgs**
+    
     * **codeDir**
+      
+           __codeDir__ specifies the directory of assessor code.
+          
     
-    **codeDir** 指定评估器代码的目录。
-    
-        * __classFileName__
-        
-    
-    **classFileName** 指定评估器文件名。
+    * **classFileName**
+      
+           __classFileName__ specifies the name of assessor file.
+          
     
     * **className**
-    
-    **className** 指定评估器类名。
+      
+           __className__ specifies the name of assessor class.
+          
     
     * **classArgs**
-    
-    **classArgs** 指定了评估器算法的参数。
+      
+           __classArgs__ specifies the arguments of assessor algorithm.
+          
   
   * **gpuNum**
-  
-  **gpuNum** 指定了运行评估器进程的 GPU 数量。 此字段的值必须是正整数。
-  
-          注意: 只能使用一种方法来指定评估器，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用评估器，可将其置为空。 
-      
+    
+        __gpuNum__ specifies the gpu number to run the assessor process. The value of this field should be a positive number.
+        
+        Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty. 
+        
 
 * **trial (local, remote)**
   
@@ -284,11 +292,13 @@
   
   * **codeDir**
     
-    **codeDir** 指定了尝试代码文件的目录。
+        __codeDir__ specifies the directory of your own trial file.
+        
   
   * **gpuNum**
     
-    **gpuNum** 指定了运行尝试进程的 GPU 数量。 默认值为 0。
+        __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0. 
+        
 
 * **trial (pai)**
   
@@ -299,7 +309,8 @@
   
   * **codeDir**
     
-    **codeDir** 指定了尝试代码文件的目录。
+        __codeDir__ specifies the directory of the own trial file.
+        
   
   * **gpuNum**
     
@@ -357,7 +368,7 @@
     
     * **image**
       
-      **iamge** 设置了 **ps** 使用的 docker 映像。
+      **image** set the image to be used in **ps**.
   
   * **worker**
     
@@ -385,7 +396,7 @@
     
     * **image**
       
-      **iamge** 设置了 **worker** 使用的 docker 映像。
+      **image** set the image to be used in **worker**.
 
 * **machineList**
   
@@ -400,27 +411,25 @@
   
   **端口** 是用于连接远程计算机的 ssh 端口。
   
-        注意：如果 port 设为空，则为默认值 22。
-      
+  Note: if users set port empty, the default value will be 22.
   
   * **username**
   
-  **username** 是远程计算机的用户名。
+  **username** is the account of remote machine.
   
   * **passwd**
   
-  **passwd** 指定了账户的密码。
+  **passwd** specifies the password of the account.
   
   * **sshKeyPath**
     
     如果要使用 ssh 密钥登录远程计算机，则需要设置 **sshKeyPath**。 **sshKeyPath** 为有效的 ssh 密钥文件路径。
-    
-        注意：如果同时设置了 passwd 和 sshKeyPath，NNI 会使用 passwd。
-        
+  
+  Note: if users set passwd and sshKeyPath simultaneously, nni will try passwd.
   
   * **passphrase**
     
-    **passphrase** 用于保护 ssh 密钥，如果没有使用，可为空。
+    **passphrase** is used to protect ssh key, which could be empty if users don't have passphrase.
 
 * **kubeflowConfig**:
   
@@ -588,25 +597,24 @@
     trialConcurrency: 3
     maxExecDuration: 1h
     maxTrialNum: 10
-    #可选项: local, remote, pai, kubeflow
+    #choice: local, remote, pai, kubeflow
     trainingServicePlatform: remote
     searchSpacePath: /nni/search_space.json
-    #可选项: true, false
+    #choice: true, false
     useAnnotation: false
     tuner:
-      #可选项: TPE, Random, Anneal, Evolution
+      #choice: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
-        #可选项: maximize, minimize
+        #choice: maximize, minimize
         optimize_mode: maximize
       gpuNum: 0
     trial:
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    # 如果是本地实验，machineList 可为空。
+    #machineList can be empty if the platform is local
     machineList:
-    
       - ip: 10.10.10.10
         port: 22
         username: test
@@ -620,7 +628,6 @@
         username: test
         sshKeyPath: /nni/sshkey
         passphrase: qwert
-    
     
 
 * **pai 模式**
@@ -663,7 +670,6 @@
       # OpenPAI 服务器 Ip
       host: 10.10.10.10
     ```
-    
     
 
 * **Kubeflow 模式**
