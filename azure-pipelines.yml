@@ -1,3 +1,7 @@
+trigger:
+- master
+- dev-remote-ci
+
 jobs:
 
 - job: 'Ubuntu_16_04'
@@ -16,12 +20,16 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       cd test
+      source unittest.sh
+    displayName: 'Unit test'
+  - script: |
+      cd test
       PATH=$HOME/.local/bin:$PATH python3 naive_test.py
     displayName: 'Integration tests'
   - script: |
       cd test
       PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
-    displayName: 'Built-in tuner tests'
+    displayName: 'Built-in dispatcher tests'
 
 - job: 'macOS_10_13'
   pool:
@@ -39,9 +47,13 @@ jobs:
     displayName: 'Install nni toolkit via source code'
   - script: |
       cd test
+      PATH=$HOME/Library/Python/3.7/bin:$PATH && source unittest.sh
+    displayName: 'Unit test'
+  - script: |
+      cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH python3 naive_test.py
     displayName: 'Integration tests'
   - script: |
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH python3 sdk_test.py
-    displayName: 'Built-in tuner tests'
+    displayName: 'Built-in dispatcher tests'

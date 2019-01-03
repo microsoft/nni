@@ -27,7 +27,7 @@ def read(fname):
 
 setuptools.setup(
     name = 'nni-sdk',
-    version = 'NNI_VERSION',
+    version = '999.0.0-developing',
     packages = setuptools.find_packages(exclude=['tests']),
 
     python_requires = '>=3.5',
@@ -35,7 +35,8 @@ setuptools.setup(
         'hyperopt',
         'json_tricks',
         'numpy',
-        'scipy'
+        'scipy',
+        'coverage'
     ],
     package_data = {'nni': ['**/requirements.txt']},
 
