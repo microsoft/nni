@@ -27,14 +27,14 @@
 
 ## **快速入门：运行自定义的实验**
 
-An experiment is to run multiple trial jobs, each trial job tries a configuration which includes a specific neural architecture (or model) and hyper-parameter values. To run an experiment through NNI, you should:
+实验会运行多个尝试任务，每个尝试任务会使用特定的神经网络（或模型）结构以及超参的值。 运行 NNI 实验，需要如下准备：
 
-* Provide a runnable trial
-* Provide or choose a tuner
-* Provide a yaml experiment configure file
-* (optional) Provide or choose an assessor
+* 可运行的尝试的代码
+* 编写或选择调参器
+* 准备 yaml 的实验配置文件
+* (可选) 编写或选择评估器
 
-**Prepare trial**: Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example:
+**准备尝试**: 先从简单样例开始，如：NNI 样例中的 mnist。 After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example:
 
     python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 
