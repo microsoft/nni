@@ -44,11 +44,12 @@ BIN_FOLDER ?= $(ROOT_FOLDER)/bin
 NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
 
 ## Dependency information
-NNI_NODE_TARBALL ?= /tmp/$(USER)/nni-node-$(OS_SPEC)-x64.tar.xz
-NNI_NODE_FOLDER = /tmp/$(USER)/nni-node-$(OS_SPEC)-x64
+NNI_DEPENDENCY_FOLDER = /tmp/$(USER)
+NNI_NODE_TARBALL ?= $(NNI_DEPENDENCY_FOLDER)/nni-node-$(OS_SPEC)-x64.tar.xz
+NNI_NODE_FOLDER = $(NNI_DEPENDENCY_FOLDER)/nni-node-$(OS_SPEC)-x64
 NNI_NODE ?= $(BIN_FOLDER)/node
-NNI_YARN_TARBALL ?= /tmp/$(USER)/nni-yarn.tar.gz
-NNI_YARN_FOLDER ?= /tmp/$(USER)/nni-yarn
+NNI_YARN_TARBALL ?= $(NNI_DEPENDENCY_FOLDER)/nni-yarn.tar.gz
+NNI_YARN_FOLDER ?= $(NNI_DEPENDENCY_FOLDER)/nni-yarn
 NNI_YARN := PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 
 ## Version number
@@ -143,12 +144,11 @@ clean:
 
 $(NNI_NODE_TARBALL):
 	#$(_INFO) Downloading Node.js $(_END)
-	mkdir -p $(NNI_NODE_TARBALL)
+	mkdir -p $(NNI_DEPENDENCY_FOLDER)
 	wget https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(NNI_NODE_TARBALL)
 
 $(NNI_YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
-	mkdir -p $(NNI_YARN_TARBALL)
 	wget https://aka.ms/yarn-download -O $(NNI_YARN_TARBALL)
 
 .PHONY: install-dependencies
