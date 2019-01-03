@@ -135,9 +135,9 @@
   
   * 说明
     
-        __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
+        <strong>trialConcurrency</strong> 定义了并发尝试任务的最大数量。  
         
-        Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
+        注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的尝试任务数量还没达到 trialConcurrency，尝试任务会被放入队列，等待分配 GPU 资源。
         
 
 * **maxExecDuration**
@@ -170,9 +170,9 @@
   
   * 说明
     
-        __searchSpacePath__ specifies the path of search space file, which should be a valid path in the local linux machine.
+        <strong>searchSpacePath</strong> 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
         
-        Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+        注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
         
 
 * **useAnnotation**
@@ -181,7 +181,7 @@
     
     **useAnnotation** 定义使用标记来分析代码并生成搜索空间。
     
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+    注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
 * **nniManagerIp**
   
@@ -189,7 +189,7 @@
     
     **nniManagerIp** 设置 NNI 管理器运行的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
     
-    Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
+    注意: 可在 NNI 管理器机器上运行 ifconfig 来检查 eth0 是否存在。 如果不存在，推荐显式设置 nnimanagerIp。
 
 * **tuner**
   
@@ -211,76 +211,76 @@
     
     * **codeDir**
       
-            __codeDir__ specifies the directory of tuner code.
+            __codeDir__ 指定了调参器代码目录。
           
     
     * **classFileName**
       
-            __classFileName__ specifies the name of tuner file.
+            __classFileName__ 指定了调参器文件名。
           
     
     * **className**
       
-            __className__ specifies the name of tuner class.
+            __className__ 指定了调参器类名。
           
     
     * **classArgs**
       
-            __classArgs__ specifies the arguments of tuner algorithm.
+            __classArgs__ 指定了调参器算法的参数。
           
   
   * **gpuNum**
     
-        __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
+        __gpuNum__ 指定了运行调参器进程的 GPU 数量。 此字段的值必须是正整数。
         
-        Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both. 
+        注意: 只能使用一种方法来指定调参器，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。 
         
 
 * **assessor**
   
   * 说明
     
-    **assessor** 指定了实验的评估器算法。有两种方法可设置评估器。 一种方法是使用 NNI SDK 提供的评估器，需要设置 **builtinAssessorName** 和 **classArgs**。 Another way is to use users' own assessor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **assessor** 指定了实验的评估器算法。有两种方法可设置评估器。 一种方法是使用 NNI SDK 提供的评估器，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的评估器，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
   * **builtinAssessorName** 和 **classArgs**
     
     * **builtinAssessorName**
       
-          __builtinAssessorName__ specifies the name of system assessor, nni sdk provides one kind of assessor {__Medianstop__}
+          __builtinAssessorName__ 指定了系统评估器的名称， NNI 内置评估器 {__Medianstop__}
           
     
     * **classArgs**
       
-          __classArgs__ specifies the arguments of assessor algorithm
+          __classArgs__ 指定了评估器算法的参数。
           
   
   * **codeDir**, **classFileName**, **className** and **classArgs**
     
     * **codeDir**
       
-           __codeDir__ specifies the directory of assessor code.
+           __codeDir__ 指定了评估器代码目录。
           
     
     * **classFileName**
       
-           __classFileName__ specifies the name of assessor file.
+           __classFileName__ 指定了调参器文件名。
           
     
     * **className**
       
-           __className__ specifies the name of assessor class.
+           __className__ 指定了评估器类名。
           
     
     * **classArgs**
       
-           __classArgs__ specifies the arguments of assessor algorithm.
+           __classArgs__ 指定了评估器算法的参数。
           
   
   * **gpuNum**
     
-        __gpuNum__ specifies the gpu number to run the assessor process. The value of this field should be a positive number.
+        __gpuNum__ 指定了运行评估器进程的 GPU 数量。 此字段的值必须是正整数。
         
-        Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty. 
+        注意: 只能使用一种方法来指定评估器，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用评估器，可将其置为空。 
         
 
 * **trial (local, remote)**
@@ -292,12 +292,12 @@
   
   * **codeDir**
     
-        __codeDir__ specifies the directory of your own trial file.
+        __codeDir__ 指定了尝试代码文件的目录。
         
   
   * **gpuNum**
     
-        __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0. 
+        __gpuNum__ 指定了运行尝试进程的 GPU 数量。 默认值为 0。 
         
 
 * **trial (pai)**
@@ -309,7 +309,7 @@
   
   * **codeDir**
     
-        __codeDir__ specifies the directory of the own trial file.
+        __codeDir__ 指定了尝试代码文件的目录。
         
   
   * **gpuNum**
@@ -368,7 +368,7 @@
     
     * **image**
       
-      **image** set the image to be used in **ps**.
+      **iamge** 设置了 **ps** 使用的 docker 映像。
   
   * **worker**
     
@@ -396,7 +396,7 @@
     
     * **image**
       
-      **image** set the image to be used in **worker**.
+      **iamge** 设置了 **worker** 使用的 docker 映像。
 
 * **machineList**
   
@@ -411,25 +411,25 @@
   
   **端口** 是用于连接远程计算机的 ssh 端口。
   
-  Note: if users set port empty, the default value will be 22.
+  注意：如果 port 设为空，则为默认值 22。
   
   * **username**
   
-  **username** is the account of remote machine.
+  **username** 是远程计算机的用户名。
   
   * **passwd**
   
-  **passwd** specifies the password of the account.
+  **passwd** 指定了账户的密码。
   
   * **sshKeyPath**
     
     如果要使用 ssh 密钥登录远程计算机，则需要设置 **sshKeyPath**。 **sshKeyPath** 为有效的 ssh 密钥文件路径。
   
-  Note: if users set passwd and sshKeyPath simultaneously, nni will try passwd.
+  注意：如果同时设置了 passwd 和 sshKeyPath，NNI 会使用 passwd。
   
   * **passphrase**
     
-    **passphrase** is used to protect ssh key, which could be empty if users don't have passphrase.
+    **passphrase** 用于保护 ssh 密钥，如果没有使用，可为空。
 
 * **kubeflowConfig**:
   
