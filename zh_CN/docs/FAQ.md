@@ -27,12 +27,12 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 ### 使用 `nnictl stop` 无法停止实验
 
-If you upgrade your nni or you delete some config files of nni when there is an experiment running, this kind of issue may happen because the loss of config file. You could use `ps -ef | grep node` to find the pid of your experiment, and use `kill -9 {pid}` to kill it manually.
+如果在实验运行时，升级了 nni 或删除了一些配置文件，会因为丢失配置文件而出现这类错误。 可以使用 `ps -ef | grep node` 命令来找到实验的 pid，并用 `kill -9 {pid}` 命令来停止实验进程。
 
-### Could not get `default metric` in webUI of virtual machines
+### 无法在虚拟机的 NNI 网页中看到 `默认指标`
 
-Config the network mode to bridge mode or other mode that could make virtual machine's host accessible from external machine, and make sure the port of virtual machine is not forbidden by firewall.
+将虚拟机的网络配置为桥接模式来让虚拟机能被网络访问，并确保虚拟机的防火墙没有禁止相关端口。
 
-### Help us improve
+### 帮助改进
 
-Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.
+在创建新问题前，请在 https://github.com/Microsoft/nni/issues 查看是否有人已经报告了相似的问题。
