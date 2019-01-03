@@ -18,8 +18,8 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-from .constants import API_ROOT_URL, UPDATE_METRICS_API
+from .constants import API_ROOT_URL, BASE_URL, STDOUT_API, NNI_TRIAL_JOB_ID, NNI_EXP_ID
 
-def gen_update_metrics_url(base_url, port, exp_id, trial_job_id):
-    '''Generate update trial metrics url'''
-    return '{0}:{1}{2}{3}/{4}/:{5}'.format(base_url, port, API_ROOT_URL, UPDATE_METRICS_API, exp_id, trial_job_id)
+def gen_send_stdout_url(ip, port):
+    '''Generate send stdout url'''
+    return '{0}:{1}{2}{3}/{4}/{5}'.format(BASE_URL.format(ip), port, API_ROOT_URL, STDOUT_API, NNI_EXP_ID, NNI_TRIAL_JOB_ID)
