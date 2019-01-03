@@ -170,7 +170,7 @@
   
   * 说明
     
-        <strong>searchSpacePath</strong> 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
+        __searchSpacePath__  定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
         
         注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
         
@@ -592,29 +592,31 @@
 
 如果在远程服务器上运行尝试任务，需要增加服务器信息：
 
+    
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
     maxExecDuration: 1h
     maxTrialNum: 10
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: remote
     searchSpacePath: /nni/search_space.json
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: false
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      #可选项: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: maximize
       gpuNum: 0
     trial:
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    #machineList can be empty if the platform is local
+    # 如果是本地实验，machineList 可为空。
     machineList:
+    
       - ip: 10.10.10.10
         port: 22
         username: test
@@ -628,6 +630,7 @@
         username: test
         sshKeyPath: /nni/sshkey
         passphrase: qwert
+    
     
 
 * **pai 模式**
