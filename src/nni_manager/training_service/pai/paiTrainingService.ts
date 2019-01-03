@@ -113,7 +113,7 @@ class PAITrainingService implements TrainingService {
         return Promise.resolve(jobs);
     }
 
-    public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
+    public async getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
         if(!this.paiClusterConfig) {
             throw new Error('PAI Cluster config is not initialized');
         }
