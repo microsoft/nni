@@ -19,7 +19,9 @@ Two ways for installation: you can get NNI from pypi or clone the repo and insta
 
 ## First "Hello World" experiment: MNIST
 
-Now let's start to run our first NNI experiment, here is a minimal experiment we prepared to teach you how to using NNI:
+Now let's start to run our first NNI experiment, here is a minimal experiment we prepared to teach you how to using NNI.
+
+Below is a [config.yml][5] file we prepared:
 
 ```yaml
 authorName: default
@@ -141,3 +143,4 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 [2]: https://github.com/Microsoft/nni/blob/master/docs/Installation.md
 [3]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/search_space.json
 [4]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py
+[5]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config.yml
