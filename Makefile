@@ -143,10 +143,12 @@ clean:
 
 $(NNI_NODE_TARBALL):
 	#$(_INFO) Downloading Node.js $(_END)
+	mkdir -p $(NNI_NODE_TARBALL)
 	wget https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(NNI_NODE_TARBALL)
 
 $(NNI_YARN_TARBALL):
 	#$(_INFO) Downloading Yarn $(_END)
+	mkdir -p $(NNI_YARN_TARBALL)
 	wget https://aka.ms/yarn-download -O $(NNI_YARN_TARBALL)
 
 .PHONY: install-dependencies
