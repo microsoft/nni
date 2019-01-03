@@ -44,11 +44,11 @@ BIN_FOLDER ?= $(ROOT_FOLDER)/bin
 NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
 
 ## Dependency information
-NNI_NODE_TARBALL ?= /tmp/nni-node-$(OS_SPEC)-x64.tar.xz
-NNI_NODE_FOLDER = /tmp/nni-node-$(OS_SPEC)-x64
+NNI_NODE_TARBALL ?= /tmp/$(USER)/nni-node-$(OS_SPEC)-x64.tar.xz
+NNI_NODE_FOLDER = /tmp/$(USER)/nni-node-$(OS_SPEC)-x64
 NNI_NODE ?= $(BIN_FOLDER)/node
-NNI_YARN_TARBALL ?= /tmp/nni-yarn.tar.gz
-NNI_YARN_FOLDER ?= /tmp/nni-yarn
+NNI_YARN_TARBALL ?= /tmp/$(USER)/nni-yarn.tar.gz
+NNI_YARN_FOLDER ?= /tmp/$(USER)/nni-yarn
 NNI_YARN := PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 
 ## Version number
