@@ -10,7 +10,7 @@ NNI (Neural Network Intelligence) is a toolkit to help users design and tune mac
 The figure below shows high-level architecture of NNI.
 
 <p align="center">
-<img src="./img/3_steps.jpg" alt="drawing"/>
+<img src="./img/highlevelarchi.png" alt="drawing"/>
 </p> 
 
 ## Key Concepts
@@ -31,7 +31,7 @@ The figure below shows high-level architecture of NNI.
 
 Basically, an experiment runs as follows: Tuner receives search space and generates configurations. These configurations will be submitted to training platforms, such as local machine, remote machines, or training clusters. Their performances are reported back to Tuner. Then, new configurations are generated and submitted.
 
-For each experiment, user only needs to define a search space and update a few lines of code, and then leverage NNI built-in Tuner/Assessor and training platforms to search the best hyper parameters and/or neural architecture. There are basically 3 steps:
+For each experiment, user only needs to define a search space and update a few lines of code, and then leverage NNI built-in Tuner/Assessor and training platforms to search the best hyperparameters and/or neural architecture. There are basically 3 steps:
 
 >Step 1: [Define search space](SearchSpaceSpec.md)
 
