@@ -1,4 +1,4 @@
-# **Get Started with NNI**
+# **开始使用 NNI**
 
 ## **Installation**
 
