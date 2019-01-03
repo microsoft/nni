@@ -209,6 +209,10 @@ class Overview extends React.Component<{}, OverviewState> {
                                 profile.failTrial += 1;
                                 break;
 
+                            case 'RUNNING':
+                                profile.runTrial += 1;
+                                break;
+
                             case 'USER_CANCELED':
                             case 'SYS_CANCELED':
                                 profile.stopTrial += 1;
