@@ -1,24 +1,31 @@
 # **开始使用 NNI**
 
-## **Installation**
+## **安装**
 
-* **Dependencies**
+* **依赖项**
     
-    python >= 3.5 git wget
+        python >= 3.5
+        git
+        wget
+        
     
-    python pip should also be correctly installed. You could use "python3 -m pip -v" to check in Linux.
+    需要正确安装 Python 的 pip。 可以用 "python3 -m pip -v" 来检查 pip 版本。
     
-    * Note: we don't support virtual environment in current releases.
+    * 注意：当前版本不支持虚拟环境。
 
-* **Install NNI through pip**
+* **通过 pip 命令安装 NNI**
     
-    python3 -m pip install --user --upgrade nni
+        python3 -m pip install --user --upgrade nni
+        
 
-* **Install NNI through source code**
+* **通过源代码安装 NNI**
     
-    git clone -b v0.4.1 https://github.com/Microsoft/nni.git cd nni source install.sh
+        git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+        cd nni
+        source install.sh
+        
 
-## **Quick start: run a customized experiment**
+## **快速入门：运行自定义的实验**
 
 An experiment is to run multiple trial jobs, each trial job tries a configuration which includes a specific neural architecture (or model) and hyper-parameter values. To run an experiment through NNI, you should:
 
@@ -29,18 +36,16 @@ An experiment is to run multiple trial jobs, each trial job tries a configuratio
 
 **Prepare trial**: Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example:
 
-      python3 ~/nni/examples/trials/mnist-annotation/mnist.py
-    
+    python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 
 This command will be filled in the yaml configure file below. Please refer to [here](howto_1_WriteTrial.md) for how to write your own trial.
 
 **Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](howto_2_CustomizedTuner.md), but for simplicity, here we choose a tuner provided by NNI as below:
 
-      tuner:
+    tuner:
         builtinTunerName: TPE
         classArgs:
           optimize_mode: maximize
-    
 
 *builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner, *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
 
