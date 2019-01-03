@@ -104,11 +104,11 @@ class PAITrainingService implements TrainingService {
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
         const jobs: TrialJobDetail[] = [];
         
-        this.trialJobsMap.forEach(async (value: PAITrialJobDetail, key: string) => {
+        for (const [key, value] of this.trialJobsMap) { 
             if (value.form.jobType === 'TRIAL') {
                 jobs.push(await this.getTrialJob(key));
             }
-        });
+        };
 
         return Promise.resolve(jobs);
     }
