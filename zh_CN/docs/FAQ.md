@@ -21,11 +21,11 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 计算机没有 eth0 设备，需要在配置文件中手动设置 nniManagerIp。 [参考此处](https://github.com/Microsoft/nni/blob/master/docs/ExperimentConfig.md)
 
-### Exceed the MaxDuration but didn't stop
+### 运行时间超过了 MaxDuration ，但没有停止
 
-When the duration of experiment reaches the maximum duration, nniManager will not create new trials, but the existing trials will continue unless user manually stop the experiment.
+当实验到达最长运行时间时，nniManager 不会创建新的尝试，但除非手动停止实验，运行中的尝试会继续。
 
-### Could not stop an experiment using `nnictl stop`
+### 使用 `nnictl stop` 无法停止实验
 
 If you upgrade your nni or you delete some config files of nni when there is an experiment running, this kind of issue may happen because the loss of config file. You could use `ps -ef | grep node` to find the pid of your experiment, and use `kill -9 {pid}` to kill it manually.
 
