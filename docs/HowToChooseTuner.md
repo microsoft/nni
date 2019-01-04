@@ -211,7 +211,7 @@ _Usage_:
 **Metis Tuner**
 
 [Metis][10] offers the following benefits when it comes to tuning parameters:
-While most tools predicts only the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guess work!
+While most tools only predicts the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guess work!
 
 While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter.
 
@@ -221,7 +221,7 @@ Metis belongs to the class of sequential model-based optimization (SMBO), and it
 It finds the global optimal point in the Gaussian Process space. This point represents the optimal configuration.
 It identifies the next hyper-parameter candidate. This is achieved by inferring the potential information gain of exploration, exploitation, and re-sampling.
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `randint`.
+Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
 
 More details can be found in our paper: https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
  
@@ -231,7 +231,7 @@ Metis Tuner requires [sklearn](https://scikit-learn.org/), so users should insta
 
 
 _Suggested scenario_:
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](../examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis.
+Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](../examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK.
 
 _Usage_:
 ```yaml

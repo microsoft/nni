@@ -65,9 +65,18 @@ class MetisTuner(Tuner):
                  selection_num_starting_points=10, cold_start_num=10):
         '''
         optimize_mode: is a string that including two mode "maximize" and "minimize"
-        key_order: is a list that contains all name of parameters, same index as samples_x
-        no_resampling: True or False
-        no_candidates: True or False
+        
+        no_resampling: True or False. Should Metis consider re-sampling as part of the search strategy?
+        If you are confident that the training dataset is noise-free, then you do not need re-sampling.
+        
+        no_candidates: True or False. Should Metis suggest parameters for the next benchmark?
+        If you do not plan to do more benchmarks, Metis can skip this step.
+        
+        selection_num_starting_points: how many times Metis should try to find the global optimal in the search space?
+        The higher the number, the longer it takes to output the solution.
+        
+        cold_start_num: Metis need some trial result to get cold start. when the number of trial result is less than
+        cold_start_num, Metis will randomly sample hyper-parameter for trial.
         '''
         self.samples_x = []
         self.samples_y = []
@@ -150,7 +159,7 @@ class MetisTuner(Tuner):
         This function is for generate parameters to trial. 
         If the number of trial result is lower than cold start number,
         metis will first random generate some parameters.
-        Otherwise, metis wiil choose the parameters by the Gussian Process Model and the Gussian Mixture Model.
+        Otherwise, metis will choose the parameters by the Gussian Process Model and the Gussian Mixture Model.
         '''
         if self.samples_x or len(self.samples_x) < self.cold_start_num:
             init_parameter = _rand_init(self.x_bounds, self.x_types, 1)[0]
@@ -170,12 +179,10 @@ class MetisTuner(Tuner):
     def receive_trial_result(self, parameter_id, parameters, value):
         '''
         Tuner receive result from trial.
-        Note: the value must be a dict, and contains the value of 'sample_x' 
-        and 'sample_y' and 'sample_y_aggregation'. 
         An value example as follow:
-            value: {'sample_x': {'IBS': 5, 'Latency': 6}, 'sample_y':[1], 'sample_y_aggregation': 1}
+            value: 99.5%
         '''
-
+        value = self.extract_scalar_reward(value)
         if self.optimize_mode == OptimizeMode.Maximize:
             value = -value
 
@@ -206,7 +213,6 @@ class MetisTuner(Tuner):
 
             # calculate y aggregation
             self.samples_y_aggregation.append([value])
-
 
 
     def _selection(self, samples_x, samples_y_aggregation, samples_y,
