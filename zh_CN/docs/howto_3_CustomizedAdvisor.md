@@ -26,15 +26,15 @@ class CustomizedAdvisor(MsgDispatcherBase):
 
 **3) 在实验的 yaml 文件中配置好自定义的 Advisor**
 
-Similar to tuner and assessor. NNI needs to locate your customized Advisor class and instantiate the class, so you need to specify the location of the customized Advisor class and pass literal values as parameters to the \_\_init__ constructor.
+与调参器和评估器类似。 NNI 需要定位到自定义的 Advisor 类，并实例化它，因此需要指定自定义 Advisor 类的文件位置，并将参数值传给 \_\_init__ 构造函数。
 
 ```yaml
 advisor:
   codeDir: /home/abc/myadvisor
   classFileName: my_customized_advisor.py
   className: CustomizedAdvisor
-  # Any parameter need to pass to your advisor class __init__ constructor
-  # can be specified in this optional classArgs field, for example 
+  # 任何传入 __init__ 构造函数的参数
+  # 都需要声明在 classArgs 字段中，如：
   classArgs:
     arg1: value1
 ```
