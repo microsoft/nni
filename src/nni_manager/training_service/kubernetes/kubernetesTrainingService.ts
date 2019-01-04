@@ -93,7 +93,7 @@ abstract class KubernetesTrainingService {
         return Promise.resolve(jobs);
     }
 
-    public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
+    public async getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
 
         const kubernetesTrialJob: TrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
