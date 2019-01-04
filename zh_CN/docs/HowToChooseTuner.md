@@ -1,18 +1,18 @@
-# How to use Tuner that NNI supports?
+# 如何使用 NNI 支持的调参器？
 
-For now, NNI has supported the following tuner algorithms. Note that NNI installation only installs a subset of those algorithms, other algorithms should be installed through `nnictl package install` before you use them. For example, for SMAC the installation command is `nnictl package install --name=SMAC`.
+目前，NNI 已支持下列调参器算法。 注意，NNI 只安装了部分下列算法，其它算法在使用前需要通过 `nnictl package install` 命令安装。 例如，安装 SMAC 算法的命令为 `nnictl package install --name=SMAC`。
 
 * [TPE](#TPE)
-* [Random Search](#Random)
-* [Anneal](#Anneal)
-* [Naive Evolution](#Evolution)
-* [SMAC](#SMAC) (to install through `nnictl`)
+* [Random Search（随机搜索）](#Random)
+* [Anneal（退火算法）](#Anneal)
+* [Naive Evolution（遗传算法）](#Evolution)
+* [SMAC](#SMAC) (需要通过 `nnictl` 命令安装)
 * [Batch Tuner](#Batch)
-* [Grid Search](#Grid)
+* [Grid Search（网格搜索）](#Grid)
 * [Hyperband](#Hyperband)
-* [Network Morphism](#NetworkMorphism) (require pyTorch)
+* [Network Morphism](#NetworkMorphism) (需要安装 pyTorch)
     
-    ## Supported tuner algorithms
+    ## 支持的调参器算法
 
 We will introduce some basic knowledge about the tuner algorithms, suggested scenarios for each tuner, and their example usage (for complete usage spec, please refer to [here]()).
 
