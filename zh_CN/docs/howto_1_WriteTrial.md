@@ -69,20 +69,20 @@
 
 ## NNI 标记
 
-另一种编写尝试的方法是使用 Python 注释来标记 NNI。 就像其它标记，NNI 的标记和代码中的注释一样。 You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
+另一种编写尝试的方法是使用 Python 注释来标记 NNI。 就像其它标记，NNI 的标记和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI 标记，就能够：
 
-* annotate the variables you want to tune 
-* specify in which range you want to tune the variables
-* annotate which variable you want to report as intermediate result to `assessor`
-* annotate which variable you want to report as the final result (e.g. model accuracy) to `tuner`. 
+* 标记需要调整的参数变量 
+* 指定变量的搜索空间范围
+* 标记哪个变量需要作为中间结果范围给`评估器`
+* 标记哪个变量需要作为最终结果（例如：模型精度）返回给`调参器`。 
 
-Again, take MNIST as an example, it only requires 2 steps to write a trial with NNI Annotation.
+同样以 MNIST 为例，只需要两步就能用 NNI 标记来编写尝试代码。
 
 > 第一步：在代码中加入标记
 
-Please refer the following tensorflow code snippet for NNI Annotation, the highlighted 4 lines are annotations that help you to: (1) tune batch\_size and (2) dropout\_rate, (3) report test\_acc every 100 steps, and (4) at last report test\_acc as final result.
+参考下列 tensorflow 的 NNI 标记的代码片段，高亮的 4 行标记实现了： (1) 调整 batch\_size 和 (2) dropout\_rate, (3) 每 100 步返回一次 test\_acc ，并且 (4) 在最后返回 test\_acc 作为最终结果。
 
-> What noteworthy is: as these new added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
+> 值得注意的是，新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
 
 ```diff
 with tf.Session() as sess:
@@ -111,19 +111,19 @@ with tf.Session() as sess:
 +   """@nni.report_final_result(test_acc)"""
 ```
 
-> NOTE
+> 注意
 > 
-> > `@nni.variable` will take effect on its following line
+> > `@nni.variable` 会影响下面紧接的一行。
 > > 
-> > `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line.
+> > `@nni.report_intermediate_result`/`@nni.report_final_result` 会在那行将数据发送给评估器、调参器。
 > > 
-> > Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage.
+> > 参考 [标记](../tools/nni_annotation/README.md) 了解更多关于标记的语法和用法。
 > 
 > 第二步：启用 NNI 标记 在 yaml 配置文件中，将 *useAnnotation* 设置为 true 来启用 NNI 标记。
 
     useAnnotation: true
     
 
-## More Trial Example
+## 更多尝试的样例
 
-* [Automatic Model Architecture Search for Reading Comprehension.](../examples/trials/ga_squad/README.md)
+* [在阅读理解上使用自动模型架构搜索。](../../examples/trials/ga_squad/README.md)
