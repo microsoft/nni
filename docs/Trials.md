@@ -35,7 +35,7 @@ First we should define a SearchSpace file so NNI could generate different sets o
     }
     ```
 
-Refer to [SearchSpaceSpec.md](SearchSpaceSpec.md) to learn more about search space.
+For more information about search space, please refer to [SearchSpaceSpec.md](SearchSpaceSpec.md).
 
 > Step 2 - Update model codes
 
@@ -122,7 +122,7 @@ with tf.Session() as sess:
 - `@nni.variable` will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword `name` in `@nni.variable`.
 - `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
 
-Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage. 
+For more information about annotation syntax and its usage, please refer to [Annotation README](../tools/nni_annotation/README.md) . 
 
 
 >Step 2 - Enable NNI Annotation
