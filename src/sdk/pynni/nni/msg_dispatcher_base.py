@@ -46,7 +46,7 @@ class MsgDispatcherBase(Recoverable):
         while True:
             _logger.debug('waiting receive_message')
             command, data = receive()
-            if command is None:
+            if command is None or command is CommandType.Terminate:
                 break
             if multi_thread_enabled():
                 self.pool.map_async(self.handle_request, [(command, data)])
@@ -63,11 +63,6 @@ class MsgDispatcherBase(Recoverable):
         command, data = request
 
         _logger.debug('handle request: command: [{}], data: [{}]'.format(command, data))
-
-        if command is CommandType.Terminate:
-            # if receive Terminate command, exit process
-            _logger.info('Receive Terminate command from NNI manager, terminating')
-            exit(0)
 
         data = json_tricks.loads(data)
 
