@@ -99,10 +99,10 @@ tuner:
 
 更多样例，可参考：
 
-> - [evolution-tuner](../src/sdk/pynni/nni/evolution_tuner)
-> - [hyperopt-tuner](../src/sdk/pynni/nni/hyperopt_tuner)
-> - [evolution-based-customized-tuner](../examples/tuners/ga_customer_tuner)
+> - [evolution-tuner](../../src/sdk/pynni/nni/evolution_tuner)
+> - [hyperopt-tuner](../../src/sdk/pynni/nni/hyperopt_tuner)
+> - [evolution-based-customized-tuner](../../examples/tuners/ga_customer_tuner)
 
-## Write a more advanced automl algorithm
+## 实现更高级的自动机器学习算法
 
-The methods above are usually enough to write a general tuner. However, users may also want more methods, for example, intermediate results, trials' state (e.g., the methods in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called `advisor` which directly inherits from `MsgDispatcherBase` in [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../src/sdk/pynni/nni/msg_dispatcher_base.py). Please refer to [here](./howto_3_CustomizedAdvisor.md) for how to write a customized advisor.
+上述内容足够写出通用的调参器。 但有时可能需要更多的信息，例如，中间结果，尝试的状态等等，从而能够实现更强大的自动机器学习算法。 因此，有另一个叫做 `advisor` 的类，直接继承于 `MsgDispatcherBase`，它位于 [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../../src/sdk/pynni/nni/msg_dispatcher_base.py)。 参考[这里](./howto_3_CustomizedAdvisor.md)来了解如何实现自定义的 advisor。
