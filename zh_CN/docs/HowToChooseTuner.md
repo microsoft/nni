@@ -5,7 +5,7 @@
 * [TPE](#TPE)
 * [Random Search（随机搜索）](#Random)
 * [Anneal（退火算法）](#Anneal)
-* [Naive Evolution（遗传算法）](#Evolution)
+* [Naive Evolution（进化算法）](#Evolution)
 * [SMAC](#SMAC) (需要通过 `nnictl` 命令安装)
 * [Batch Tuner](#Batch)
 * [Grid Search（网格搜索）](#Grid)
@@ -51,7 +51,7 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 <a name="Anneal"></a>
 **Anneal（退火算法）**
 
-这种简单的退火算法从先前的采样开始，但随着时间的推理，会越来越靠近发现的最佳点取样。 此算法是随机搜索的简单变体，利用了反应曲面的平滑性。 退火率不是自适应的。
+这种简单的退火算法从先前的采样开始，会越来越靠近发现的最佳点取样。 此算法是随机搜索的简单变体，利用了反应曲面的平滑性。 退火率不是自适应的。
 
 *建议场景*：当每个尝试的时间不长，并且有足够的计算资源时使用（与随机搜索基本相同）。 或者搜索空间的变量能从一些先验分布中采样。
 
@@ -67,11 +67,11 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 ```
 
 <a name="Evolution"></a>
-**Naive Evolution（遗传算法）**
+**Naive Evolution（进化算法）**
 
-Naive Evolution comes from [Large-Scale Evolution of Image Classifiers](https://arxiv.org/pdf/1703.01041.pdf). It randomly initializes a population based on search space. For each generation, it chooses better ones and do some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naive Evolution requires many trials to works, but it's very simple and easily to expand new features.
+进化算法来自于 [Large-Scale Evolution of Image Classifiers](https://arxiv.org/pdf/1703.01041.pdf)。 它会基于搜索空间随机生成一个种群。 在每一代中，会选择较好的结果，并对其下一代进行一些变异（例如，改动一个超参，增加或减少一层）。 进化算法需要很多次尝试才能有效，但它也非常简单，也很容易扩展新功能。
 
-*Suggested scenario*: Its requirement of computation resource is relatively high. Specifically, it requires large inital population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
+*建议场景*：它需要相对较多的计算资源。 需要非常大的初始种群，以免落入局部最优中。 如果尝试时间很短，或者利用了评估器，这个调参器就非常合适。 And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
 
 *Usage*:
 
