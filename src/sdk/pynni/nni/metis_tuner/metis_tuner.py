@@ -61,7 +61,7 @@ class MetisTuner(Tuner):
     Metis Tuner
     '''
 
-    def __init__(self, optimize_mode, no_resampling=True, no_candidates=True,
+    def __init__(self, optimize_mode="maximize", no_resampling=True, no_candidates=True,
                  selection_num_starting_points=10, cold_start_num=10):
         '''
         optimize_mode: is a string that including two mode "maximize" and "minimize"
