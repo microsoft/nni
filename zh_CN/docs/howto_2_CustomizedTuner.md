@@ -47,7 +47,7 @@ class CustomizedTuner(Tuner):
     ...
 ```
 
-    receive_trial_result will receive ```the parameter_id, parameters, value``` as parameters input. Also, Tuner will receive the ```value``` object are exactly same value that Trial send.
+`receive_trial_result` will receive `the parameter_id, parameters, value` as parameters input. Also, Tuner will receive the `value` object are exactly same value that Trial send.
 
 The ```your_parameters``` return from ```generate_parameters``` function, will be package as json object by NNI SDK. NNI SDK will unpack json object so the Trial will receive the exact same ```your_parameters``` from Tuner.
 
@@ -65,16 +65,18 @@ For example: If the you implement the ```generate_parameters``` like this:
 
 It means your Tuner will always generate parameters ```{"dropout": 0.3, "learning_rate": 0.4}```. Then Trial will receive ```{"dropout": 0.3, "learning_rate": 0.4}``` by calling API ```nni.get_next_parameter()```. Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API ```nni.report_final_result()```, for example ```nni.report_final_result(0.93)```. Then your Tuner's ```receive_trial_result``` function will receied the result like：
 
-    parameter_id = 82347
-    parameters = {"dropout": 0.3, "learning_rate": 0.4}
-    value = 0.93
-    
+```python
+parameter_id = 82347
+parameters = {"dropout": 0.3, "learning_rate": 0.4}
+value = 0.93
+```
 
 **Note that** if you want to access a file (e.g., ```data.txt```) in the directory of your own tuner, you cannot use ```open('data.txt', 'r')```. Instead, you should use the following:
 
-    _pwd = os.path.dirname(__file__)
-    _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
-    
+```python
+_pwd = os.path.dirname(__file__)
+_fd = open(os.path.join(_pwd, 'data.txt'), 'r')
+```
 
 This is because your tuner is not executed in the directory of your tuner (i.e., ```pwd``` is not the directory of your own tuner).
 
