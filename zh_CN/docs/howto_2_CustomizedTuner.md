@@ -65,7 +65,7 @@ class CustomizedTuner(Tuner):
         return {"dropout": 0.3, "learning_rate": 0.4}
 ```
 
-这表示调参器会一直生成参数 `{"dropout": 0.3, "learning_rate": 0.4}`。 然后尝试进程也会在调用 API `nni.get_next_parameter()` 时得到 `{"dropout": 0.3, "learning_rate": 0.4}`。 Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API `nni.report_final_result()`, for example `nni.report_final_result(0.93)`. Then your Tuner's `receive_trial_result` function will receied the result like：
+这表示调参器会一直生成参数 `{"dropout": 0.3, "learning_rate": 0.4}`。 而尝试进程也会在调用 API `nni.get_next_parameter()` 时得到 `{"dropout": 0.3, "learning_rate": 0.4}`。 尝试结束后的返回值（通常是某个指标），通过调用 API `nni.report_final_result()` 返回给调参器。如： `nni.report_final_result(0.93)`。 而调参器的 `receive_trial_result` 函数会收到如下结果：
 
 ```python
 parameter_id = 82347
@@ -73,18 +73,18 @@ parameters = {"dropout": 0.3, "learning_rate": 0.4}
 value = 0.93
 ```
 
-**Note that** if you want to access a file (e.g., `data.txt`) in the directory of your own tuner, you cannot use `open('data.txt', 'r')`. Instead, you should use the following:
+**注意** 如果需要存取自定义的调参器目录里的文件 (如, `data.txt`)，不能使用 `open('data.txt', 'r')`。 要使用：
 
 ```python
 _pwd = os.path.dirname(__file__)
 _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
 ```
 
-This is because your tuner is not executed in the directory of your tuner (i.e., `pwd` is not the directory of your own tuner).
+这是因为自定义的调参器不是在自己的目录里执行的。（即，`pwd` 返回的目录不是调参器的目录）。
 
 **3) 在实验的 yaml 文件中配置好自定义的调参器**
 
-NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the \_\_init__ constructor.
+NNI 需要定位到自定义的调参器类，并实例化它，因此需要指定自定义调参器类的文件位置，并将参数值传给 \_\_init__ 构造函数。
 
 ```yaml
 tuner:
@@ -97,7 +97,7 @@ tuner:
     arg1: value1
 ```
 
-More detail example you could see:
+更多样例，可参考：
 
 > - [evolution-tuner](../src/sdk/pynni/nni/evolution_tuner)
 > - [hyperopt-tuner](../src/sdk/pynni/nni/hyperopt_tuner)
