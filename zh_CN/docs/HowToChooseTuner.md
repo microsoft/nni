@@ -20,9 +20,9 @@
 **TPE**
 
 Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimization（SMBO，即基于序列模型优化）的方法。 SMBO 方法根据历史指标数据来按顺序构造模型，来估算超参的性能，随后基于此模型来选择新的超参。 TPE 方法对 P(x|y) 和 P(y) 建模，其中 x 表示超参，y 表示相关的评估指标。 P(x|y) 通过变换超参的生成过程来建模，用非参数密度（non-parametric densities）代替配置的先验分布。 细节可参考 [Algorithms for Hyper-Parameter Optimization](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)。 ​  
-*建议场景*： TPE 作为黑盒的优化方法，能在广泛的场景中使用，通常都能得到较好的结果。 特别是在计算资源有限，只能进行少量尝试时。 从大量的实验中，我们 发现 TPE 的性能远远优于随机搜索。
+*建议场景*： TPE 作为黑盒的优化方法，能在广泛的场景中使用，通常都能得到较好的结果。 特别是在计算资源有限，只能进行少量尝试时。 从大量的实验中，我们发现 TPE 的性能远远优于随机搜索。
 
-*用法*:
+*用法*：
 
 ```yaml
   # config.yaml
@@ -34,13 +34,13 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 ```
 
 <a name="Random"></a>
-**随机搜索**
+**Random Search（随机搜索）**
 
-[Random Search for Hyper-Parameter Optimization](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf) 中介绍了随机搜索惊人的简单和效果。 We suggests that we could use Random Search as baseline when we have no knowledge about the prior distribution of hyper-parameters.
+[Random Search for Hyper-Parameter Optimization](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf) 中介绍了随机搜索惊人的简单和效果。 建议当不清楚超参的先验分布时，采用随机搜索作为基准。
 
-*Suggested scenario*: Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space. Random Search could be considered as baseline of search algorithm.
+*建议场景*：在每个尝试运行时间不长（例如，能够非常快的完成，或者很快的被评估器终止），并有充足计算资源的情况下。 或者需要均匀的探索搜索空间。 随机搜索可作为搜索算法的基准线。
 
-*Usage*:
+*用法*：
 
 ```yaml
   # config.yaml
@@ -49,25 +49,25 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 ```
 
 <a name="Anneal"></a>
-**Anneal**
+**Anneal（退火算法）**
 
-This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on random search that leverages smoothness in the response surface. The annealing rate is not adaptive.
+这种简单的退火算法从先前的采样开始，但随着时间的推理，会越来越靠近发现的最佳点取样。 此算法是随机搜索的简单变体，利用了反应曲面的平滑性。 退火率不是自适应的。
 
-*Suggested scenario*: Anneal is suggested when each trial does not take too long, and you have enough computation resource(almost same with Random Search). Or the variables in search space could be sample from some prior distribution.
+*建议场景*：当每个尝试的时间不长，并且有足够的计算资源时使用（与随机搜索基本相同）。 或者搜索空间的变量能从一些先验分布中采样。
 
-*Usage*:
+*用法*：
 
 ```yaml
   # config.yaml
   tuner:
     builtinTunerName: Anneal
     classArgs:
-      # choice: maximize, minimize
+      # 可选项: maximize, minimize
       optimize_mode: maximize
 ```
 
 <a name="Evolution"></a>
-**Naive Evolution**
+**Naive Evolution（遗传算法）**
 
 Naive Evolution comes from [Large-Scale Evolution of Image Classifiers](https://arxiv.org/pdf/1703.01041.pdf). It randomly initializes a population based on search space. For each generation, it chooses better ones and do some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naive Evolution requires many trials to works, but it's very simple and easily to expand new features.
 
@@ -144,7 +144,7 @@ Note that the search space that BatchTuner supported like:
 The search space file including the high-level key `combine_params`. The type of params in search space must be `choice` and the `values` including all the combined-params value.
 
 <a name="Grid"></a>
-**Grid Search**
+**Grid Search（网格搜索）**
 
 Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](./SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
 
