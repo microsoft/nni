@@ -13,6 +13,8 @@ NNI provide two approaches for you to define a trial: `NNI API` and `NNI Python 
 ## NNI API
 > Step 1 - Prepare a SearchSpace parameters file. 
 
+First we should define a SearchSpace file so NNI could generate different sets of hyper-parameter, each of which is used to run an individual trial.
+
 - An example of a SearchSpace parameters file is shown below: 
     ```
     {
@@ -55,11 +57,11 @@ Refer to [SearchSpaceSpec.md](SearchSpaceSpec.md) to learn more about search spa
 
 
 **NOTE**: 
-~~~~
+
 - accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
 - assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
 - tuner    - The tuner will generate next parameters/architecture based on the explore history (final result of all trials).
-~~~~
+
 
 > Step 3 - Enable NNI API
 
@@ -116,9 +118,9 @@ with tf.Session() as sess:
 +   """@nni.report_final_result(test_acc)"""
 ```
 
-- NOTE
-  - `@nni.variable` will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword `name` in `@nni.variable`.
-  - `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
+**NOTE**: 
+- `@nni.variable` will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword `name` in `@nni.variable`.
+- `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
 
 Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage. 
 
