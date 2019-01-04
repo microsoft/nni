@@ -1,12 +1,14 @@
 # **指南** - 自定义调参器
 
-*调参器从尝试接收指标结果，来评估一组参数配置的性能。 And tuner send next hyper-parameter or architecture configure to Trial.*
+*调参器从尝试接收指标结果，来评估一组超参或网络结构的性能。 然后调参器会将下一组超参或网络结构的配置发送给新的尝试。*
 
-So, if user want to implement a customized Tuner, she/he only need to:
+因此，如果要自定义调参器，需要：
 
-1) Inherit a tuner of a base Tuner class 2) Implement receive_trial_result and generate_parameter function 3) Configure your customized tuner in experiment yaml config file
+1. 从基类 Tuner 继承，创建新的调参器类
+2. 实现 receive_trial_result 和 generate_parameter 函数
+3. 在实验的 yaml 文件中配置好自定义的调参器
 
-Here ia an example:
+样例如下：
 
 **1) Inherit a tuner of a base Tuner class**
 
