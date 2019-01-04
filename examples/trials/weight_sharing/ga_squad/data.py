@@ -34,6 +34,7 @@ class WhitespaceTokenizer:
     '''
     Tokenizer for whitespace
     '''
+
     def tokenize(self, text):
         '''
         tokenize function in Tokenizer.
@@ -171,7 +172,8 @@ def get_char_input(data, char_dict, max_char_length):
         batch_data = data[batch_idx]
         for sample_idx in range(0, min(len(batch_data), sequence_length)):
             word = batch_data[sample_idx]['word']
-            char_lengths[sample_idx, batch_idx] = min(len(word), max_char_length)
+            char_lengths[sample_idx, batch_idx] = min(
+                len(word), max_char_length)
             for i in range(0, min(len(word), max_char_length)):
                 char_id[i, sample_idx, batch_idx] = get_id(char_dict, word[i])
     return char_id, char_lengths

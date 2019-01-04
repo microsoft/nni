@@ -31,10 +31,12 @@ def _get_variable(variable_dict, name, shape, initializer=None, dtype=tf.float32
             name=name, shape=shape, initializer=initializer, dtype=dtype)
     return variable_dict[name]
 
+
 class DotAttention:
     '''
     DotAttention
     '''
+
     def __init__(self, name,
                  hidden_dim,
                  is_vanilla=True,
