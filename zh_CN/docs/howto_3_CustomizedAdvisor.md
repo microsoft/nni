@@ -1,6 +1,6 @@
 # **指南** - 自定义 advisor
 
-*Advisor targets the scenario that the automl algorithm wants the methods of both tuner and assessor. Advisor is similar to tuner on that it receives trial configuration request, final results, and generate trial configurations. Also, it is similar to assessor on that it receives intermediate results, trial's end state, and could send trial kill command. Note that, if you use Advisor, tuner and assessor are not allowed to be used at the same time.*
+*Advisor 用于同时需要调参器和评估器方法的自动机器学习算法。 Advisor 与调参器类似，它接收尝试的参数请求，最终结果，并生成尝试的参数。 另外，它也能像评估器一样接收中间结果，尝试的最终状态，并可以发送终止尝试的命令。 Note that, if you use Advisor, tuner and assessor are not allowed to be used at the same time.*
 
 So, if user want to implement a customized Advisor, she/he only need to:
 
