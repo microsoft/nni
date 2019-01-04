@@ -50,9 +50,9 @@
 
 **注意**：
 
-    accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
-    assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
-    tuner    - The tuner will generate next parameters/architecture based on the explore history (final result of all trials).
+    accuracy - 如果使用 NNI 内置的调参器/评估器，那么 `accuracy` 必须是数值（如 float, int）。在定制调参器/评估器时 `accuracy` 可以是任何类型的 Python 对象。
+    评估器 - 会根据尝试的历史值（即其中间结果），来决定这次尝试是否应该提前终止。
+    调参器 - 会根据探索的历史（所有尝试的最终结果）来生成下一组参数、架构。
     
 
 > 第三步：启用 NNI API
