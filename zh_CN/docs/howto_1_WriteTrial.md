@@ -18,7 +18,7 @@
     }
     
 
-参考 <SearchSpaceSpec.md> 进一步了解搜索空间。
+参考 [SearchSpaceSpec.md](./SearchSpaceSpec.md) 进一步了解搜索空间。
 
 > 第二步：更新模型代码
 
