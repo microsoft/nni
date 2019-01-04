@@ -122,7 +122,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * [使用不同的调参器和评估器](docs/tutorial_3_tryTunersAndAssessors.md)
 * [实现自定义调参器](docs/howto_2_CustomizedTuner.md)
 * [实现自定义评估器](examples/assessors/README.md)
-* [使用遗传算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
+* [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
 
 ## **贡献**
 
