@@ -57,19 +57,19 @@
 
 > 第三步：启用 NNI API
 
-To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of SearchSpace file (you just defined in step 1):
+要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径（即第一步中定义的文件）：
 
     useAnnotation: false
     searchSpacePath: /path/to/your/search_space.json
     
 
-You can refer to [here](ExperimentConfig.md) for more information about how to set up experiment configurations.
+参考 [here](ExperimentConfig.md) 进一步了解如何配置实验。
 
-(../examples/trials/README.md) for more information about how to write trial code using NNI APIs.
+参考 \[这里\](../examples/trials/README.md) 进一步了解如何使用 NNI 的 API 来编写尝试的代码。
 
-## NNI Python Annotation
+## NNI 标记
 
-An alternative to write a trial is to use NNI's syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
+另一种编写尝试的方法是使用 Python 注释来标记 NNI。 就像其它标记，NNI 的标记和代码中的注释一样。 You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
 
 * annotate the variables you want to tune 
 * specify in which range you want to tune the variables
