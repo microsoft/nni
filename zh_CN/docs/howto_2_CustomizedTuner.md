@@ -1,6 +1,6 @@
 # **指南** - 自定义调参器
 
-*Tuner receive result from Trial as a matric to evaluate the performance of a specific parameters/architecture configure. And tuner send next hyper-parameter or architecture configure to Trial.*
+*调参器从尝试接收指标结果，来评估一组参数配置的性能。 And tuner send next hyper-parameter or architecture configure to Trial.*
 
 So, if user want to implement a customized Tuner, she/he only need to:
 
