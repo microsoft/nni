@@ -40,7 +40,7 @@
 
 上面的命令会写在 yaml 文件中。 参考[这里](howto_1_WriteTrial.md)来写出自己的实验代码。
 
-**准备调参器**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（遗传算法）等等。 也可以实现自己的调参器（参考[这里](howto_2_CustomizedTuner.md)）。下面使用了 NNI 内置的调参器：
+**准备调参器**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的调参器（参考[这里](howto_2_CustomizedTuner.md)）。下面使用了 NNI 内置的调参器：
 
     tuner:
         builtinTunerName: TPE
