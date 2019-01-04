@@ -63,9 +63,9 @@
     searchSpacePath: /path/to/your/search_space.json
     
 
-参考 [here](ExperimentConfig.md) 进一步了解如何配置实验。
+参考 [这里](ExperimentConfig.md) 进一步了解如何配置实验。
 
-参考 \[这里\](../examples/trials/README.md) 进一步了解如何使用 NNI 的 API 来编写尝试的代码。
+参考 [README.md](../../examples/trials/README.md) 进一步了解如何使用 NNI 的 API 来编写尝试的代码。
 
 ## NNI 标记
 
