@@ -21,8 +21,11 @@ echarts.registerTheme('my_theme', {
 });
 
 interface TableListProps {
+    entries: number;
     tableSource: Array<TableObj>;
+    searchResult: Array<TableObj>;
     updateList: Function;
+    isHasSearch: boolean;
 }
 
 interface TableListState {
@@ -150,7 +153,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     render() {
 
-        const { tableSource } = this.props;
+        const { entries, tableSource, searchResult, isHasSearch } = this.props;
         const { intermediateOption, modalVisible } = this.state;
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
@@ -160,6 +163,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 value: item
             });
         });
+
         const columns = [{
             title: 'Trial No.',
             dataIndex: 'sequenceId',
@@ -328,7 +332,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 <span className="error">'This trial's parameters are not available.'</span>
                             </div>
                     }
-                    <LogPath logStr={logPathRow}/>
+                    <LogPath logStr={logPathRow} />
                 </pre>
             );
         };
@@ -339,9 +343,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     <Table
                         columns={columns}
                         expandedRowRender={openRow}
-                        dataSource={tableSource}
+                        dataSource={isHasSearch ? searchResult : tableSource}
                         className="commonTableStyle"
-                        pagination={{ pageSize: 20 }}
+                        pagination={{ pageSize: entries }}
                     />
                     <Modal
                         title="Intermediate Result"
