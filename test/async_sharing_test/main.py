@@ -1,3 +1,8 @@
+"""
+Test code for weight sharing
+need NFS setup and mounted as `/mnt/nfs/nni`
+"""
+
 import hashlib
 import os
 import random
@@ -7,6 +12,9 @@ import nni
 
 
 def generate_rand_file(fl_name):
+    """
+    generate random file and write to `fl_name`
+    """
     fl_size = random.randint(1024, 102400)
     fl_dir = os.path.split(fl_name)[0]
     if not os.path.exists(fl_dir):
@@ -15,14 +23,17 @@ def generate_rand_file(fl_name):
         fout.write(os.urandom(fl_size))
 
 
-def check_sum(fl_name, id=None):
+def check_sum(fl_name, tid=None):
+    """
+    compute checksum for generated file of `fl_name`
+    """
     hasher = hashlib.md5()
     with open(fl_name, 'rb') as fin:
         for chunk in iter(lambda: fin.read(4096), b""):
             hasher.update(chunk)
     ret = hasher.hexdigest()
-    if id is not None:
-        ret = ret + str(id)
+    if tid is not None:
+        ret = ret + str(tid)
     return ret
 
 

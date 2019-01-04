@@ -9,7 +9,7 @@ trainingServicePlatform: remote
 useAnnotation: false
 multiThread: true
 tuner:
-  codeDir: ../../../tuners/weight_sharing/simple
+  codeDir: .
   classFileName: simple_tuner.py
   className: SimpleTuner
 trial:
