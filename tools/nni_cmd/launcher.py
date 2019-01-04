@@ -90,7 +90,6 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         entry_dir = os.path.join(python_dir, 'nni')
         # Nothing is found
         if not os.path.isfile(entry_file):
-            cannot_find_location = '" and "'.join([os.path.join(python_dir, 'nni') for python_dir in python_dirs])
             raise Exception('Fail to find nni under both "%s" and "%s"' % (local_python_dir, python_dir))
 
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
