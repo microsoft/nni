@@ -1,14 +1,14 @@
 # **在 NNI 上编写 Trial（尝试）代码**
 
-A **Trial** in NNI is an individual attempt at applying a set of parameters on a model.
+**Trial（尝试）**是将一组参数在模型上独立的一次尝试。
 
-To define a NNI trial, you need to firstly define the set of parameters and then update the model. NNI provide two approaches for you to define a trial: `NNI API` and `NNI Python annotation`.
+定义 NNI 的尝试，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来定义尝试：`NNI API` 和 `NNI 标记`.
 
 ## NNI API
 
-> Step 1 - Prepare a SearchSpace parameters file.
+> 步骤1 - 准备搜索空间参数文件。
 
-An example is shown below:
+样例如下：
 
     {
         "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
@@ -18,7 +18,7 @@ An example is shown below:
     }
     
 
-Refer to <SearchSpaceSpec.md> to learn more about search space.
+参考 <SearchSpaceSpec.md> 进一步了解搜索空间。
 
 > Step 2 - Update model codes
 
