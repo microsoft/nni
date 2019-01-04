@@ -52,6 +52,9 @@ const getFinal = (final: FinalResult) => {
     let showDefault: FinalType;
     if (final) {
         showDefault = JSON.parse(final[0].data);
+        if (typeof showDefault === 'number') {
+            showDefault = { default: showDefault };
+        }
         return showDefault;
     } else {
         return undefined;
@@ -59,6 +62,6 @@ const getFinal = (final: FinalResult) => {
 };
 
 export {
-    convertTime, convertDuration, getFinalResult, 
+    convertTime, convertDuration, getFinalResult,
     getFinal
 };
