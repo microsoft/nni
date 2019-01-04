@@ -51,9 +51,9 @@ class CustomizedTuner(Tuner):
 
 `receive_trial_result` 从输入中会接收 `parameter_id, parameters, value` 参数。 调参器会收到尝试进程发送的完全一样的 `value` 值。
 
-    your_parameters 返回自 ```generate_parameters``` 函数，它会被 NNI SDK 打包为 json 对象。 NNI SDK 会解包 json 对象，因此，尝试也会收到完全相同来自 ```your_parameters``` 的数据。
+`generate_parameters` 函数返回的 `your_parameters`，会被 NNI SDK 打包为 json。 然后 NNI SDK 会将 json 对象解包给尝试进程。因此，尝试进程会收到来自调参器的完全相同的 `your_parameters`。
 
-例如，如下实现 ```generate_parameters``` ：
+例如， 如下实现了 `generate_parameters`：
 
 ```python
     def generate_parameters(self, parameter_id):
@@ -65,7 +65,7 @@ class CustomizedTuner(Tuner):
         return {"dropout": 0.3, "learning_rate": 0.4}
 ```
 
-这也表示调参器总会生成参数 ```{"dropout": 0.3, "learning_rate": 0.4}```。 尝试会收到 ```{"dropout": 0.3, "learning_rate": 0.4}``` by calling API ```nni.get_next_parameter()```. Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API ```nni.report_final_result()```, for example ```nni.report_final_result(0.93)```. Then your Tuner's ```receive_trial_result``` function will receied the result like：
+这表示调参器会一直生成参数 `{"dropout": 0.3, "learning_rate": 0.4}`。 然后尝试进程也会在调用 API `nni.get_next_parameter()` 时得到 `{"dropout": 0.3, "learning_rate": 0.4}`。 Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API `nni.report_final_result()`, for example `nni.report_final_result(0.93)`. Then your Tuner's `receive_trial_result` function will receied the result like：
 
 ```python
 parameter_id = 82347
@@ -73,14 +73,14 @@ parameters = {"dropout": 0.3, "learning_rate": 0.4}
 value = 0.93
 ```
 
-**Note that** if you want to access a file (e.g., ```data.txt```) in the directory of your own tuner, you cannot use ```open('data.txt', 'r')```. Instead, you should use the following:
+**Note that** if you want to access a file (e.g., `data.txt`) in the directory of your own tuner, you cannot use `open('data.txt', 'r')`. Instead, you should use the following:
 
 ```python
 _pwd = os.path.dirname(__file__)
 _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
 ```
 
-This is because your tuner is not executed in the directory of your tuner (i.e., ```pwd``` is not the directory of your own tuner).
+This is because your tuner is not executed in the directory of your tuner (i.e., `pwd` is not the directory of your own tuner).
 
 **3) 在实验的 yaml 文件中配置好自定义的调参器**
 
@@ -91,8 +91,8 @@ tuner:
   codeDir: /home/abc/mytuner
   classFileName: my_customized_tuner.py
   className: CustomizedTuner
-  # Any parameter need to pass to your tuner class __init__ constructor
-  # can be specified in this optional classArgs field, for example 
+  # 任何传入 __init__ 构造函数的参数
+  # 都需要声明在 classArgs 字段中，如：
   classArgs:
     arg1: value1
 ```
