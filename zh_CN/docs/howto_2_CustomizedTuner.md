@@ -1,4 +1,4 @@
-# **How To** - Customize Your Own Tuner
+# **指南** - 自定义调参器
 
 *Tuner receive result from Trial as a matric to evaluate the performance of a specific parameters/architecture configure. And tuner send next hyper-parameter or architecture configure to Trial.*
 
