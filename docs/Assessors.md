@@ -2,11 +2,11 @@
 
 ## Overview
 
-In order to save our computing resources, NNI supports an early stop policy and create **Assessor** to finish this job.
+In order to save our computing resources, NNI supports an early stop policy and creates **Assessor** to finish this job.
 
-Assessor receive intermediate result from Trial and decide whether the Trial should be killed. Once the Trial experiment meets the early stop conditions, the assessor will kill the Trial.
+Assessor receives intermediate result from Trial and decides whether the Trial should be killed. Once the Trial experiment meets the early stop conditions, the assessor will kill the Trial.
 
-Assessor module is for assessing running trials, which terminates unpromising trial jobs based on their intermediate results. In other words, assesor uses the intermediate results and evaluates the results by specific algorithm. If assessor is pessimistic about the final results, assessor will stop this trial and the status of experiement will be `"Early Stoped"`.
+In other words, assesor uses the intermediate results and evaluates the results by specific algorithm. If assessor is pessimistic about the final results, assessor will stop this trial and the status of experiement will be `"Early Stoped"`.
 
 In NNI, we support two approaches to set the assessor.
 
@@ -20,7 +20,7 @@ In NNI, we support two approaches to set the assessor.
 
 For now, NNI has supported the following assessor algorithms:
 
-|Tuner|Brief introduction to the algorithm|Suggested scenario|Reference|
+|Assessor|Brief introduction to the algorithm|Suggested scenario|Reference|
 |---|---|---|---|
 |**Medianstop**|Medianstop is a simple early stopping rule mentioned. It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.|It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.|Usage: [Medianstop Usage][1] Paper: [Google Vizier: A Service for Black-Box Optimization][2]|
 |**Curvefitting**|Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve|It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.|Usage: [Curvefitting Usage][3] Paper:[Speeding up Automatic Hyperparameter Optimization of Deep Neural Networks by Extrapolation of Learning Curves][4]|
@@ -29,7 +29,7 @@ For now, NNI has supported the following assessor algorithms:
 
 ### Example of Builtin Assessor Usage
 
-Our NNI integrates state-of-the-art assessing algorithm. We strongly recommend you to use our builtin assessors. You can easily use our builtin assessors by declare the `builtinAssessorName` and `classArguments` in config file.
+Our NNI integrates state-of-the-art assessing algorithm. You can easily use our builtin assessors by declare the `builtinAssessorName` and `classArguments` in config file.
 
 For example, if you chose to use "Medianstop" assessor, you can set the `config.yml` like this:
 
@@ -79,17 +79,18 @@ According to different usage scenarios and requirements, we encourage users to u
 
 Notes:
 
-* The `classArg` below is **Optional**, we show the default value.
+* The `classArg` in `Bold` is **Requried**, must be assigned when using.
+* Other cases of `classArg` below is **Optional**, we show the default value.
 * Keywords **Unsupported** means we don't support this classArg.
 
 |Assessor|builtinAssessorName|optimize_mode|start_step|Unique classArg|
 |---|---|---|---|---|
 |**Medianstop**|Medianstop|'maximize'|5||
-|**Curvefitting**|Curvefitting|'maximize'|6|['epoch_num']:int, ['threshold']:float|
+|**Curvefitting**|Curvefitting|'maximize'|6|['**epoch_num**']:int, ['threshold']:float|
 
 ## Customize Assessor
 
-If you want to implement a customized Assessor, they only need to:
+If you want to implement a customized Assessor, you only need to:
 
 **1. Inherit an assessor of a base Assessor class**
 
@@ -132,13 +133,13 @@ def main():
     ...
     FLAGS, unparsed = parser.parse_known_args()
 
-    tuner = CustomizedAssessor(...)
-    tuner.run()
+    assessor = CustomizedAssessor(...)
+    assessor.run()
 
 main()
 ```
 
-Please noted in 2). The object ```trial_history``` are exact the object that Trial send to Assesor by using SDK ```report_intermediate_result``` function.
+Please noted in **2**. The object ```trial_history``` are exact the object that Trial send to Assesor by using SDK ```report_intermediate_result``` function.
 
 Also, user could override the ```run``` function in Assessor to control the process logic.
 
