@@ -1,4 +1,4 @@
-# **Write a Trial Run on NNI**
+# **在 NNI 上编写 Trial（尝试）代码**
 
 A **Trial** in NNI is an individual attempt at applying a set of parameters on a model.
 
