@@ -45,6 +45,7 @@ NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
 
 ## Dependency information
 NNI_DEPENDENCY_FOLDER = /tmp/$(USER)
+$(shell mkdir -p $(NNI_DEPENDENCY_FOLDER))
 NNI_NODE_TARBALL ?= $(NNI_DEPENDENCY_FOLDER)/nni-node-$(OS_SPEC)-x64.tar.xz
 NNI_NODE_FOLDER = $(NNI_DEPENDENCY_FOLDER)/nni-node-$(OS_SPEC)-x64
 NNI_NODE ?= $(BIN_FOLDER)/node
@@ -144,7 +145,6 @@ clean:
 
 $(NNI_NODE_TARBALL):
 	#$(_INFO) Downloading Node.js $(_END)
-	mkdir -p $(NNI_DEPENDENCY_FOLDER)
 	wget https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(NNI_NODE_TARBALL)
 
 $(NNI_YARN_TARBALL):
