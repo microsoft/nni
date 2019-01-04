@@ -10,7 +10,7 @@
 
 样例如下：
 
-**1) Inherit a tuner of a base Tuner class**
+**1) 从基类 Tuner 继承，创建新的调参器类**
 
 ```python
 from nni.tuner import Tuner
@@ -20,7 +20,7 @@ class CustomizedTuner(Tuner):
         ...
 ```
 
-**2) Implement receive_trial_result and generate_parameter function**
+**2) 实现 receive_trial_result 和 generate_parameter 函数**
 
 ```python
 from nni.tuner import Tuner
@@ -49,23 +49,23 @@ class CustomizedTuner(Tuner):
     ...
 ```
 
-`receive_trial_result` will receive `the parameter_id, parameters, value` as parameters input. Also, Tuner will receive the `value` object are exactly same value that Trial send.
+`receive_trial_result` 从输入中会接收 `parameter_id, parameters, value` 参数。 调参器会收到尝试进程发送的完全一样的 `value` 值。
 
-The ```your_parameters``` return from ```generate_parameters``` function, will be package as json object by NNI SDK. NNI SDK will unpack json object so the Trial will receive the exact same ```your_parameters``` from Tuner.
+    your_parameters 返回自 ```generate_parameters``` 函数，它会被 NNI SDK 打包为 json 对象。 NNI SDK 会解包 json 对象，因此，尝试也会收到完全相同来自 ```your_parameters``` 的数据。
 
-For example: If the you implement the ```generate_parameters``` like this:
+例如，如下实现 ```generate_parameters``` ：
 
 ```python
     def generate_parameters(self, parameter_id):
         '''
-        Returns a set of trial (hyper-)parameters, as a serializable object
+        返回尝试的超参组合的序列化对象
         parameter_id: int
         '''
-        # your code implements here.
+        # 代码实现位置
         return {"dropout": 0.3, "learning_rate": 0.4}
 ```
 
-It means your Tuner will always generate parameters ```{"dropout": 0.3, "learning_rate": 0.4}```. Then Trial will receive ```{"dropout": 0.3, "learning_rate": 0.4}``` by calling API ```nni.get_next_parameter()```. Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API ```nni.report_final_result()```, for example ```nni.report_final_result(0.93)```. Then your Tuner's ```receive_trial_result``` function will receied the result like：
+这也表示调参器总会生成参数 ```{"dropout": 0.3, "learning_rate": 0.4}```。 尝试会收到 ```{"dropout": 0.3, "learning_rate": 0.4}``` by calling API ```nni.get_next_parameter()```. Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API ```nni.report_final_result()```, for example ```nni.report_final_result(0.93)```. Then your Tuner's ```receive_trial_result``` function will receied the result like：
 
 ```python
 parameter_id = 82347
@@ -82,7 +82,7 @@ _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
 
 This is because your tuner is not executed in the directory of your tuner (i.e., ```pwd``` is not the directory of your own tuner).
 
-**3) Configure your customized tuner in experiment yaml config file**
+**3) 在实验的 yaml 文件中配置好自定义的调参器**
 
 NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the \_\_init__ constructor.
 
