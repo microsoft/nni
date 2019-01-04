@@ -80,6 +80,12 @@ def run(mode='local'):
 
     tuner_result = set(open('naive_test/tuner_result.txt'))
     expected = set(open('naive_test/expected_tuner_result.txt'))
+    print('----------tuner result------------')
+    for result in tuner_result:
+        print(result)
+    print('----------expected tuner result-------')
+    for result in expected:
+        print(result)
 
     # Trials may complete before NNI gets assessor's result,
     # so it is possible to have more final result than expected
@@ -87,6 +93,12 @@ def run(mode='local'):
 
     assessor_result = set(open('naive_test/assessor_result.txt'))
     expected = set(open('naive_test/expected_assessor_result.txt'))
+    print('----------assessor result------------')
+    for result in assessor_result:
+        print(result)
+    print('----------expected assessor result-------')
+    for result in expected:
+        print(result)
     assert assessor_result == expected, 'Bad assessor result'
 
 if __name__ == '__main__':
