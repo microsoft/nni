@@ -275,7 +275,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     nni_config = Config(config_file_name)
 
     # check packages for tuner
-    if experiment_config.get('tuner') and experiment_config['tunner'].get('builtinTunerName'):
+    if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
         tuner_name = experiment_config['tuner']['builtinTunerName']
         module_name = ModuleName[tuner_name]
         try:
