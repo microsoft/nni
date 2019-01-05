@@ -214,6 +214,14 @@ class Bracket():
         self.num_configs_to_run.append(len(hyper_configs))
         self.increase_i()
 
+def extract_scalar_reward(self, value, scalar_key='default'):
+    if isinstance(value, float) or isinstance(value, int):
+        reward = value
+    elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
+        reward = value[scalar_key]
+    else:
+        raise RuntimeError('Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__)) 
+    return reward
 
 class Hyperband(MsgDispatcherBase):
     '''
@@ -348,9 +356,10 @@ class Hyperband(MsgDispatcherBase):
         if data['type'] == 'FINAL':
             self.completed_hyper_configs.append(data)
         elif data['type'] == 'PERIODICAL':
+            value = extract_scalar_reward(data['value'])
             bracket_id, i, _ = data['parameter_id'].split('_')
             bracket_id = int(bracket_id)
-            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], data['value'])
+            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
 
