@@ -6,7 +6,7 @@ nav:
     - Tutorials:
         - QuickStart: GetStarted.md
         - Installation: Installation.md
-        - Trial HowTo: howto_1_WriteTrial.md
+        - Trials: Trials.md
         - WebUI: WebUI.md
         - Tuners: HowToChooseTuner.md
         - Training Platform:

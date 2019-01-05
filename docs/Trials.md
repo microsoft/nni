@@ -88,11 +88,10 @@ Again, take MNIST as an example, it only requires 2 steps to write a trial with 
 
 > Step 1 - Update codes with annotations 
 
-The following is a tensorflow code snippet for NNI Annotation, where the highlighted 4 lines are annotations that help you to: 
-  1. tune batch\_size and
-  2. dropout\_rate
-  3. report test\_acc every 100 steps, and
-  4. at last report test\_acc as final result.
+The following is a tensorflow code snippet for NNI Annotation, where the highlighted four lines are annotations that help you to: 
+  1. tune batch\_size and dropout\_rate
+  2. report test\_acc every 100 steps
+  3. at last report test\_acc as final result.
 
 What noteworthy is: as these new added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
 

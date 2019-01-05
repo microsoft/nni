@@ -4,24 +4,22 @@ For good user experience and reduce user effort, we need to design a good annota
 
 If users use NNI system, they only need to:
 
- 1. Use nni.get_next_parameter() to retrieve hyper parameters from Tuner, before using other annotation, use following annotation at the begining of trial code:
-    '''@nni.get_next_parameter()'''
+ 1. Annotate variables in code as:
 
- 2. Annotation variable in code as:
+    `'''@nni.variable(nni.choice(2,3,5,7),name=self.conv_size)'''`
 
-    '''@nni.variable(nni.choice(2,3,5,7),name=self.conv_size)'''
+ 2. Annotate functions in code as:
 
- 3. Annotation intermediate in code as:
+    `'''@nni.function_choice(max_pool(h_conv1, self.pool_size), avg_pool(h_conv1, self.pool_size), name=max_pool)'''`
 
-    '''@nni.report_intermediate_result(test_acc)'''
+ 3. Annotate intermediate result in code as:
 
- 4. Annotation output in code as:
+    `'''@nni.report_intermediate_result(test_acc)'''`
 
-    '''@nni.report_final_result(test_acc)'''
+ 4. Annotate final result in code as:
 
- 5. Annotation `function_choice` in code as:
+    `'''@nni.report_final_result(test_acc)'''`
 
-    '''@nni.function_choice(max_pool(h_conv1, self.pool_size),avg_pool(h_conv1, self.pool_size),name=max_pool)'''
 
 In this way, they can easily implement automatic tuning on NNI. 
 
