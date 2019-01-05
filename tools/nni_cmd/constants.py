@@ -82,3 +82,16 @@ COLOR_RED_FORMAT = '\033[1;31;31m%s\033[0m'
 COLOR_GREEN_FORMAT = '\033[1;32;32m%s\033[0m'
 
 COLOR_YELLOW_FORMAT = '\033[1;33;33m%s\033[0m'
+
+ModuleName = {
+    'TPE': 'nni.hyperopt_tuner.hyperopt_tuner',
+    'Random': 'nni.hyperopt_tuner.hyperopt_tuner',
+    'Anneal': 'nni.hyperopt_tuner.hyperopt_tuner',
+    'Evolution': 'nni.evolution_tuner.evolution_tuner',
+    'SMAC': 'nni.smac_tuner.smac_tuner',
+    'BatchTuner': 'nni.batch_tuner.batch_tuner',
+    'Medianstop': 'nni.medianstop_assessor.medianstop_assessor',
+    'GridSearch': 'nni.gridsearch_tuner.gridsearch_tuner',
+    'NetworkMorphism': 'nni.networkmorphism_tuner.networkmorphism_tuner',
+    'Curvefitting': 'nni.curvefitting_assessor.curvefitting_assessor'
+}
