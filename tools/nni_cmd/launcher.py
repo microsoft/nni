@@ -21,9 +21,10 @@
 
 import json
 import os
+import sys
 import shutil
 import string
-from subprocess import Popen, PIPE, call, check_output
+from subprocess import Popen, PIPE, call, check_output, check_call
 import tempfile
 from nni_annotation import *
 from .launcher_utils import validate_all_content
@@ -272,6 +273,17 @@ def set_experiment(experiment_config, mode, port, config_file_name):
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(config_file_name)
+
+    # check packages for tuner
+    if experiment_config.get('tuner'):
+        tuner_name = experiment_config['tuner']['builtinTunerName']
+        module_name = ModuleName[tuner_name]
+        try:
+            check_call([sys.executable, '-c', 'import %s'%(module_name)])
+        except:
+            print_error('The tuner %s should be installed through nnictl'%(tuner_name))
+            exit(1)
+
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id)
     nni_config.set_config('restServerPid', rest_process.pid)
