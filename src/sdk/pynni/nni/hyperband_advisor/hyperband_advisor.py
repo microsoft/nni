@@ -214,7 +214,7 @@ class Bracket():
         self.num_configs_to_run.append(len(hyper_configs))
         self.increase_i()
 
-def extract_scalar_reward(self, value, scalar_key='default'):
+def extract_scalar_reward(value, scalar_key='default'):
     if isinstance(value, float) or isinstance(value, int):
         reward = value
     elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
