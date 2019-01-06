@@ -93,30 +93,30 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 
 *安装*：
 
-* Install swig first. (`sudo apt-get install swig` for Ubuntu users)
-* Run `nnictl package install --name=SMAC`
+* 安装 swig。 (Ubuntu 下使用 `sudo apt-get install swig`)
+* 运行 `nnictl package install --name=SMAC`
 
-*Suggested scenario*: Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.
+*建议场景*：与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒调参器。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。
 
-*Usage*:
+*用法*：
 
 ```yaml
   # config.yaml
   tuner:
     builtinTunerName: SMAC
     classArgs:
-      # choice: maximize, minimize
+      # 可选项: maximize, minimize
       optimize_mode: maximize
 ```
 
 <a name="Batch"></a>
 **Batch tuner**
 
-Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type `choice` in [search space spec](./SearchSpaceSpec.md).
+Batch tuner 能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都完成后，实验即结束。 Batch tuner 的[搜索空间](./SearchSpaceSpec.md)只支持 `choice`。
 
-*Suggested sceanrio*: If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner.
+*建议场景*：如果需要实验的配置已经决定好了，可通过 batch tuner 将它们列到搜索空间中运行即可。
 
-*Usage*:
+*用法*：
 
 ```yaml
   # config.yaml
@@ -124,7 +124,7 @@ Batch tuner allows users to simply provide several configurations (i.e., choices
     builtinTunerName: BatchTuner
 ```
 
-Note that the search space that BatchTuner supported like:
+注意 BatchTuner 支持的搜索空间文件如下例：
 
 ```json
 {
@@ -141,12 +141,12 @@ Note that the search space that BatchTuner supported like:
 }
 ```
 
-The search space file including the high-level key `combine_params`. The type of params in search space must be `choice` and the `values` including all the combined-params value.
+搜索空间文件使用了键 `combine_params`。 参数类型必须是 `choice` ，并且 `values` 要包含所有需要实验的参数组合。
 
 <a name="Grid"></a>
 **Grid Search（网格搜索）**
 
-Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](./SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
+网格搜索会穷举定义在搜索空间文件中的所有超参组合。 Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](./SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
 
 *Suggested scenario*: It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space.
 
