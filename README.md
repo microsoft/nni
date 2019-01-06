@@ -36,7 +36,7 @@ We encourage researchers and students leverage these projects to accelerate the 
 **Install through pip** 	
 * We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.	
 ```bash	
-    python3 -m pip install --user --upgrade nni
+    python3 -m pip install --upgrade nni
 ```
 * Note:
   * If you are in docker container (as root), please remove `--user` from the installation command.
