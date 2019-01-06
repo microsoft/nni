@@ -9,19 +9,27 @@ Two ways for installation: you can get NNI from pypi or clone the repo and insta
 * We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
 
 ```bash
-    python3 -m pip install --user --upgrade nni
+    python3 -m pip install --upgrade nni
 ```
 
 * Note:
-  * If you are in docker container (as root), please remove `--user` from the installation command.
+  * `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
   * If there is any error like `Segmentation fault`, please refer to [FAQ][1]
   * For the system requirements of NNI, please refer to [Install NNI][2]
 
 ## First "Hello World" experiment: MNIST
 
-Now let's start to run our first NNI experiment, here is a minimal experiment we prepared to teach you how to using NNI.
+As long as you provide data sets, training methods and search spaces, nni can automatically generate training experiments, adjust hyper-parameters, and find the optimal hyper-parameter configuration within the given time or number of experiments.
 
-Below is a [config.yml][5] file we prepared:
+Here is a QuickStart example to run a NNI experiment on MNIST. 
+
+**Three things required when using NNI**
+
+1. Give a `Search Space` file in json, includes the `name` and the `range` of hyper-parameters you need to search. For example: [search_space.json][3]
+2. Prepare a `trial` job in python for training model, which define the methods to trian the model when we get a set of parameters. For example: [mnist.py][4]
+3. Define a `config` in yaml format like below. Here we declare the path to SearchSpace and trial, also give information such as tuning algorithm, runtime and name arguments.
+
+*MNIST [config.yml][5] file we prepared:*
 
 ```yaml
 authorName: default
@@ -40,14 +48,7 @@ trial:
   gpuNum: 0
 ```
 
-**We did two things in this file:**
-
-* Indicates the path of [search_space.json][3], which specify the `range of hyper-paramaters` to be searched.
-* Define a NNI trial in [mnist.py][4], an individual `attempt` at applying a set of parameters on a model.
-
-Note: other configurations can be kept by their default value. We will talk about them in the following tutorial.
-
-* Everything is ready now! **The experiment can be run from the command-line**:
+* Everything is ready! **Now run the config.yml from the command-line**:
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
