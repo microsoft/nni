@@ -71,27 +71,27 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 
 进化算法来自于 [Large-Scale Evolution of Image Classifiers](https://arxiv.org/pdf/1703.01041.pdf)。 它会基于搜索空间随机生成一个种群。 在每一代中，会选择较好的结果，并对其下一代进行一些变异（例如，改动一个超参，增加或减少一层）。 进化算法需要很多次尝试才能有效，但它也非常简单，也很容易扩展新功能。
 
-*建议场景*：它需要相对较多的计算资源。 需要非常大的初始种群，以免落入局部最优中。 如果尝试时间很短，或者利用了评估器，这个调参器就非常合适。 And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
+*建议场景*：它需要相对较多的计算资源。 需要非常大的初始种群，以免落入局部最优中。 如果尝试时间很短，或者利用了评估器，这个调参器就非常合适。 如果尝试代码支持权重迁移，即每次尝试会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。
 
-*Usage*:
+*用法*：
 
 ```yaml
   # config.yaml
   tuner:
     builtinTunerName: Evolution
     classArgs:
-      # choice: maximize, minimize
+      # 可选项: maximize, minimize
       optimize_mode: maximize
 ```
 
 <a name="SMAC"></a>
 **SMAC**
 
-[SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on [the SMAC3 github repo](https://github.com/automl/SMAC3).
+[SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
 
-Note that SMAC on nni only supports a subset of the types in [search space spec](./SearchSpaceSpec.md), including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
+NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，包括`choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`。
 
-*Installation*:
+*安装*：
 
 * Install swig first. (`sudo apt-get install swig` for Ubuntu users)
 * Run `nnictl package install --name=SMAC`
