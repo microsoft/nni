@@ -146,11 +146,11 @@ Batch tuner 能让用户简单的提供几组配置（如，超参选项的组�
 <a name="Grid"></a>
 **Grid Search（网格搜索）**
 
-网格搜索会穷举定义在搜索空间文件中的所有超参组合。 Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](./SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
+网格搜索会穷举定义在搜索空间文件中的所有超参组合。 注意，搜索空间仅支持 `choice`, `quniform`, `qloguniform`。 `quniform` 和 `qloguniform` 中的 **数字 `q` 有不同的含义（与[搜索空间](./SearchSpaceSpec.md)说明不同）。 在这里意味着会在 `low` 和 `high` 之间均匀取值的数量。</p> 
 
-*Suggested scenario*: It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space.
+*建议场景*：当搜索空间比较小，能够遍历整个搜索空间。
 
-*Usage*:
+*用法*：
 
 ```yaml
   # config.yaml
