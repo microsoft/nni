@@ -19,7 +19,7 @@ Two ways for installation: you can get NNI from pypi or clone the repo and insta
 
 ## First "Hello World" experiment: MNIST
 
-As long as you provide data sets, training methods and search spaces, nni can automatically generate training experiments, adjust hyper-parameters, and find the optimal hyper-parameter configuration within the given time or number of experiments.
+As long as you provide data sets, training methods and search spaces, NNI can automatically generate training experiments, adjust hyper-parameters, and find the optimal hyper-parameter configuration within the given time or number of experiments.
 
 Here is a QuickStart example to run a NNI experiment on MNIST. 
 
