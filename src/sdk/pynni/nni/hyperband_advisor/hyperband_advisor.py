@@ -357,7 +357,7 @@ class Hyperband(MsgDispatcherBase):
         bracket_id, i, _ = data['parameter_id'].split('_')
         bracket_id = int(bracket_id)
         self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
-        _logger.debug('zql type: , sequence: ', data['type'], data['sequence'])
+        _logger.debug('zql type: %s, sequence: %d', data['type'], data['sequence'])
         if data['type'] == 'FINAL':
             self.completed_hyper_configs.append(data)
 
