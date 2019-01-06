@@ -65,10 +65,6 @@ build:
 	cd src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
 	#$(_INFO) Building WebUI $(_END)
 	cd src/webui && $(NNI_YARN) && $(NNI_YARN) build
-	#$(_INFO) Building Python SDK $(_END)
-	cd src/sdk/pynni && python3 setup.py build
-	#$(_INFO) Building nnictl $(_END)
-	cd tools && python3 setup.py build
 
 # All-in-one target for non-expert users
 # Installs NNI as well as its dependencies, and update bashrc to set PATH
