@@ -353,15 +353,13 @@ class Hyperband(MsgDispatcherBase):
         '''
         data: it is an object which has keys 'parameter_id', 'value', 'trial_job_id', 'type', 'sequence'.
         '''
+        value = extract_scalar_reward(data['value'])
+        bracket_id, i, _ = data['parameter_id'].split('_')
+        bracket_id = int(bracket_id)
+        self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+        _logger.debug('zql type: , sequence: ', data['type'], data['sequence'])
         if data['type'] == 'FINAL':
             self.completed_hyper_configs.append(data)
-        elif data['type'] == 'PERIODICAL':
-            value = extract_scalar_reward(data['value'])
-            bracket_id, i, _ = data['parameter_id'].split('_')
-            bracket_id = int(bracket_id)
-            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
-        else:
-            raise ValueError('Data type not supported: {}'.format(data['type']))
 
         return True
 
