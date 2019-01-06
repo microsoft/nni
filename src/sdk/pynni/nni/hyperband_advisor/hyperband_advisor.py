@@ -22,6 +22,7 @@ hyperband_tuner.py
 '''
 
 from enum import Enum, unique
+import sys
 import math
 import copy
 import logging
@@ -140,13 +141,6 @@ class Bracket():
         value: latest result with sequence number seq
         '''
         if parameter_id in self.configs_perf[i]:
-            # this should always be true if there is no retry in training service
-            _logger.debug('assertion: %d %d, %s %s\n',
-                          self.configs_perf[i][parameter_id][0],
-                          seq,
-                          str(type(self.configs_perf[i][parameter_id][0])),
-                          str(type(seq)))
-            # assert self.configs_perf[i][parameter_id][0] < seq
             if self.configs_perf[i][parameter_id][0] < seq:
                 self.configs_perf[i][parameter_id] = [seq, value]
         else:
@@ -356,10 +350,15 @@ class Hyperband(MsgDispatcherBase):
         value = extract_scalar_reward(data['value'])
         bracket_id, i, _ = data['parameter_id'].split('_')
         bracket_id = int(bracket_id)
-        self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
-        _logger.debug('zql type: %s, sequence: %d', data['type'], data['sequence'])
         if data['type'] == 'FINAL':
+            # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
+            # and PERIODICAL metric are independent, thus, not comparable.
+            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
             self.completed_hyper_configs.append(data)
+        elif data['type'] == 'PERIODICAL':
+            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+        else:
+            raise ValueError('Data type not supported: {}'.format(data['type']))
 
         return True
 
