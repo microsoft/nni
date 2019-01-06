@@ -4,6 +4,7 @@ nav:
     - Overview: README.md
     - What's New: RELEASE.md
     - Tutorials:
+        - Overview: Overview.md
         - QuickStart: GetStarted.md
         - Installation: Installation.md
         - Trial HowTo: howto_1_WriteTrial.md
