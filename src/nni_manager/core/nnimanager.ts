@@ -425,14 +425,10 @@ class NNIManager implements Manager {
             throw new Error('Error: tuner has not been setup');
         }
         let allFinishedTrialJobNum: number = 0;
+        let waitSubmittedToFinish: number;
         while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
-
             allFinishedTrialJobNum += finishedTrialJobNum;
-            if (allFinishedTrialJobNum >= this.experimentProfile.params.maxTrialNum) {
-                // write this log for travis CI
-                this.log.info('Experiment done.');
-            }
 
             // requestTrialNum is the number of trials that will be requested from tuner.
             // If trialConcurrency does not change, requestTrialNum equals finishedTrialJobNum.
@@ -467,21 +463,29 @@ class NNIManager implements Manager {
             // as still running. DONE could be transfered from RUNNING or NO_MORE_TRIAL.
             assert(this.status.status === 'RUNNING' ||
                 this.status.status === 'DONE' ||
-                this.status.status === 'NO_MORE_TRIAL');
+                this.status.status === 'NO_MORE_TRIAL' ||
+                this.status.status === 'TUNER_NO_MORE_TRIAL');
             if (this.experimentProfile.execDuration > this.experimentProfile.params.maxExecDuration ||
                 this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
-                if (this.status.status === 'RUNNING' ||
-                    this.status.status === 'NO_MORE_TRIAL') {
-                    this.experimentProfile.endTime = Date.now();
-                    await this.storeExperimentProfile();
+                if (this.status.status !== 'DONE') {
+                    this.status.status = 'NO_MORE_TRIAL';
+                    waitSubmittedToFinish = this.currSubmittedTrialNum;
+
+                    assert(allFinishedTrialJobNum <= waitSubmittedToFinish);
+                    if (allFinishedTrialJobNum >= waitSubmittedToFinish) {
+                        this.status.status = 'DONE';
+                        this.experimentProfile.endTime = Date.now();
+                        await this.storeExperimentProfile();
+                        // write this log for travis CI
+                        this.log.info('Experiment done.');
+                    }
                 }
-                this.status.status = 'DONE';
             } else {
                 if (this.status.status === 'DONE') {
                     delete this.experimentProfile.endTime;
                     await this.storeExperimentProfile();
                 }
-                if (this.status.status !== 'NO_MORE_TRIAL') {
+                if (this.status.status !== 'TUNER_NO_MORE_TRIAL') {
                     this.status.status = 'RUNNING';
                 }
                 for (let i: number = this.trialJobs.size; i < this.experimentProfile.params.trialConcurrency; i++) {
@@ -602,7 +606,7 @@ class NNIManager implements Manager {
                 this.requestTrialJobs(this.experimentProfile.params.trialConcurrency);
                 break;
             case NEW_TRIAL_JOB:
-                if (this.status.status === 'NO_MORE_TRIAL') {
+                if (this.status.status === 'TUNER_NO_MORE_TRIAL') {
                     this.log.warning('It is not supposed to receive more trials after NO_MORE_TRIAL is set');
                     this.status.status = 'RUNNING';
                 }
@@ -625,7 +629,7 @@ class NNIManager implements Manager {
                     'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
                 break;
             case NO_MORE_TRIAL_JOBS:
-                this.status.status = 'NO_MORE_TRIAL';
+                this.status.status = 'TUNER_NO_MORE_TRIAL';
                 break;
             case KILL_TRIAL_JOB:
                 await this.trainingService.cancelTrialJob(JSON.parse(content), true);
