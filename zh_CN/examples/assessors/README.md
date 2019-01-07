@@ -38,11 +38,11 @@ class CustomizedAssessor(Assessor):
 ```python
 import argparse
 
-import CustomizedAssesor
+import CustomizedAssessor
 
 def main():
     parser = argparse.ArgumentParser(description='parse command line parameters.')
-    # 在这里解析评估器的参数
+    # parse your assessor arg here.
     ...
     FLAGS, unparsed = parser.parse_known_args()
 
@@ -52,10 +52,10 @@ def main():
 main()
 ```
 
-注意 2) 中。 对象 ```trial_history``` are exact the object that Trial send to Assesor by using SDK ```report_intermediate_result``` function.
+注意 2) 中， 对象 `trial_history` 和 `report_intermediate_result` 函数返回给评估器的完全一致。
 
-Also, user could override the ```run``` function in Assessor to control the process logic.
+也可以重载评估器的 `run` 函数来控制过程逻辑。
 
-More detail example you could see:
+更多样例，可参考：
 
 > - [Base-Assessor](https://msrasrg.visualstudio.com/NeuralNetworkIntelligenceOpenSource/_git/Default?_a=contents&path=%2Fsrc%2Fsdk%2Fpynni%2Fnni%2Fassessor.py&version=GBadd_readme)
