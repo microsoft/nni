@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 ### 3. 更新配置
 
-Modify `examples/trials/network_morphism/cifar10/config.yaml` to fit your own task, note that searchSpacePath is not required in our configuration. Here is the default configuration:
+修改 `examples/trials/network_morphism/cifar10/config.yaml` 来适配自己的任务。注意，searchSpacePath 在配置中不需要。 默认配置：
 
 ```yaml
 authorName: default
@@ -26,83 +26,83 @@ experimentName: example_cifar10-network-morphism
 trialConcurrency: 1
 maxExecDuration: 48h
 maxTrialNum: 200
-#choice: local, remote, pai
+#可选项: local, remote, pai
 trainingServicePlatform: local
-#choice: true, false
+#可选项: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, NetworkMorphism
-  #SMAC (SMAC should be installed through nnictl) 
+  #可选项: TPE, Random, Anneal, Evolution, BatchTuner, NetworkMorphism
+  #SMAC (SMAC 需要通过 nnictl 安装) 
   builtinTunerName: NetworkMorphism
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode: maximize
-    #for now, this tuner only supports cv domain
+    #当前仅支持视觉领域
     task: cv
-    #modify to fit your input image width
+    #修改来适配自己的图像大小
     input_width: 32
-    #modify to fit your input image channel
+    #修改来适配自己的图像通道
     input_channel: 3
-    #modify to fit your number of classes
+    #修改来适配自己的分类数量
     n_output_node: 10
 trial:
-  # your own command here
+  # 自己的命令
   command: python3 cifar10_keras.py
   codeDir: .
   gpuNum: 0
 ```
 
-In the "trial" part, if you want to use GPU to perform the architecture search, change `gpuNum` from `0` to `1`. You need to increase the `maxTrialNum` and `maxExecDuration`, according to how long you want to wait for the search result.
+在 "trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
 
-`trialConcurrency` is the number of trials running concurrently, which is the number of GPUs you want to use, if you are setting `gpuNum` to 1.
+`trialConcurrency` 是并发运行的尝试的数量。如果将 `gpuNum` 设置为 1，则需要与 GPU 数量一致。
 
-### 4. Call "json\_to\_graph()" function in your own code
+### 4. 在代码中调用 "json\_to\_graph()" 函数
 
-Modify your code and call "json\_to\_graph()" function to build a pytorch model or keras model from received json string. Here is the simple example.
+修改代码来调用 "json\_to\_graph()" 函数来从收到的 JSON 字符串生成一个 Pytorch 或 Keras 模型。 简单样例：
 
 ```python
 import nni
 from nni.networkmorphism_tuner.graph import json_to_graph
 
 def build_graph_from_json(ir_model_json):
-    """build a pytorch model from json representation
+    """从 JSON 生成 Pytorch 模型
     """
     graph = json_to_graph(ir_model_json)
     model = graph.produce_torch_model()
     return model
 
-# trial get next parameter from network morphism tuner
+# 从网络形态调参器中获得下一组参数
 RCV_CONFIG = nni.get_next_parameter()
-# call the function to build pytorch model or keras model
+# 调用函数来生成 Pytorch 或 Keras 模型
 net = build_graph_from_json(RCV_CONFIG)
 
-# training procedure
+# 训练过程
 # ....
 
-# report the final accuracy to nni
+# 将最终精度返回给 NNI
 nni.report_final_result(best_acc)
 ```
 
-### 5. Submit this job
+### 5. 提交任务
 
 ```bash
-# You can use nni command tool "nnictl" to create the a job which submit to the nni
-# finally you successfully commit a Network Morphism Job to nni
+# 可以使用命令行工具 "nnictl" 来创建任务
+# 最终会成功提交一个网络形态任务到 NNI
 nnictl create --config config.yaml
 ```
 
-## Trial Examples
+## 尝试样例
 
-The trial has some examples which can guide you which located in `examples/trials/network_morphism/`. You can refer to it and modify to your own task. Hope this will help you to build your code.
+下面的代码可在 `examples/trials/network_morphism/` 中找到。 可参考此代码来更新自己的任务。 希望它对你有用。
 
 ### FashionMNIST
 
-`Fashion-MNIST` is a dataset of [Zalando](https://jobs.zalando.com/tech/)'s article images—consisting of a training set of 60,000 examples and a test set of 10,000 examples. Each example is a 28x28 grayscale image, associated with a label from 10 classes. It is a modern image classification dataset widely used to replacing MNIST as a baseline dataset, because the dataset MNIST is too easy and overused.
+`Fashion-MNIST` 是来自 [Zalando](https://jobs.zalando.com/tech/) 文章的图片 — 有 60,000 个样例的训练集和 10,000 个样例的测试集。 每个样例是 28x28 的灰度图，分为 10 个类别。 由于 MNIST 数据集过于简单，该数据集现在开始被广泛使用，用来替换 MNIST 作为基准数据集。
 
-There are two examples, [FashionMNIST-keras.py](./FashionMNIST/FashionMNIST_keras.py) and [FashionMNIST-pytorch.py](./FashionMNIST/FashionMNIST_pytorch.py). Attention, you should change the `input_width` to 28 and `input_channel` to 1 in `config.yaml` for this dataset.
+这里有两个样例，[FashionMNIST-keras.py](./FashionMNIST/FashionMNIST_keras.py) 和 [FashionMNIST-pytorch.py](./FashionMNIST/FashionMNIST_pytorch.py)。 注意，在 `config.yaml` 中，需要为此数据集修改 `input_width` 为 28，以及 `input_channel` 为 1。
 
 ### Cifar10
 
-The `CIFAR-10` dataset [Canadian Institute For Advanced Research](https://www.cifar.ca/) is a collection of images that are commonly used to train machine learning and computer vision algorithms. It is one of the most widely used datasets for machine learning research. The CIFAR-10 dataset contains 60,000 32x32 color images in 10 different classes.
+`CIFAR-10` 数据集 [Canadian Institute For Advanced Research](https://www.cifar.ca/) 是广泛用于机器学习和视觉算法训练的数据集。 它是机器学习领域最广泛使用的数据集之一。 The CIFAR-10 dataset contains 60,000 32x32 color images in 10 different classes.
 
 There are two examples, [cifar10-keras.py](./cifar10/cifar10_keras.py) and [cifar10-pytorch.py](./cifar10/cifar10_pytorch.py). The value `input_width` is 32 and the value `input_channel` is 3 in `config.yaml` for this dataset.
