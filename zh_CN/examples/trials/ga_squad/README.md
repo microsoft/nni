@@ -152,13 +152,13 @@
 * `attention.py` 包含了 Tensorflow 注意力算法的实现。
 * `data.py` 包含了数据处理函数。
 * `evaluate.py` 包含了评估脚本。
-* `graph.py` contains the definition of the computation graph.
-* `rnn.py` contains an implementation for GRU in Tensorflow.
-* `train_model.py` is a wrapper for the whole question answering model.
+* `graph.py` 包含了计算图的定义。
+* `rnn.py` 包含了 TensorFlow 的 GRU 实现。
+* `train_model.py` 是整个文档模型的封装。
 
-Among those files, `trial.py` and `graph_to_tf.py` is special.
+这些文件中，`trial.py` 和 `graph_to_tf.py` 非常特别。
 
-`graph_to_tf.py` has a function named as `graph_to_network`, here is its skeleton code:
+`graph_to_tf.py` 有一个叫做 `graph_to_network`的函数，其框架代码如下：
 
     def graph_to_network(input1,
                          input2,
@@ -187,15 +187,15 @@ Among those files, `trial.py` and `graph_to_tf.py` is special.
                 # ......
             elif graph.layers[topo_i].graph_type == LayerType.attention.value:
                 # ......
-            # More layers to handle
+            # 处理更多层
     
 
-As we can see, this function is actually a compiler, that converts the internal model DAG configuration (which will be introduced in the `Model configuration format` section) `graph`, to a Tensorflow computation graph.
+正如我们看到的，这个函数实际上是个编译器。它将内部模型的 DAG 配置`图`（在`模型配置格式`章节介绍）转换为 Tensorflow 的计算图。
 
     topology = graph.is_topology()
     
 
-performs topological sorting on the internal graph representation, and the code inside the loop:
+将内部图表示进行拓扑排序，代码在下列循环中：
 
     for _, topo_i in enumerate(topology):
     
