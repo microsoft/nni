@@ -9,37 +9,37 @@ NNI 提供了简单的方法来设置不同的参数优化算法，以及提前�
         必填字段：builtinTunerName 和 classArgs。 
         
 
-2. Customize your own tuner file
+2. 自定义调参器文件
     
-        required fields: codeDirectory, classFileName, className and classArgs.
+        必填字段：codeDirectory, classFileName, className 和 classArgs。
         
 
-### **Learn More about tuners**
+### **了解有关调参器的更多信息**
 
-* For detailed defintion and usage aobut the required field, please refer to [Config an experiment](ExperimentConfig.md)
-* [Tuners in the latest NNI release](HowToChooseTuner.md)
-* [How to implement your own tuner](howto_2_CustomizedTuner.md)
+* 有关所需字段的详细定义和用法，参考[配置实验](ExperimentConfig.md)。
+* [NNI 最新版本支持的调参器](HowToChooseTuner.md)
+* [如何自定义调参器](howto_2_CustomizedTuner.md)
 
-**Assessor** specifies the algorithm you use to apply early stop policy. In NNI, there are two approaches to set theassessor.
+**评估器** 指定了用于提前终止尝试的策略。 在 NNI 中，支持两种方法来设置评估器。
 
-1. Directly use assessor provided by nni sdk
+1. 直接使用 NNI 提供的评估器
     
-        required fields: builtinAssessorName and classArgs. 
+        必填字段：builtinAssessorName 和 classArgs。 
         
 
-2. Customize your own assessor file
+2. 自定义评估器文件
     
-        required fields: codeDirectory, classFileName, className and classArgs.
+        必填字段：codeDirectory, classFileName, className 和 classArgs。
         
 
-### **Learn More about assessor**
+### **了解有关评估器的更多信息**
 
-* For detailed defintion and usage aobut the required field, please refer to [Config an experiment](ExperimentConfig.md)
-* Find more about the detailed instruction about [enable assessor](EnableAssessor.md)
-* [How to implement your own assessor](../examples/assessors/README.md)
+* 有关所需字段的详细定义和用法，参考[配置实验](ExperimentConfig.md)。
+* 查看[启用评估器](EnableAssessor.md)，了解更多信息。
+* [如何自定义评估器](../examples/assessors/README.md)
 
-## **Learn More**
+## **了解更多信息**
 
-* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
-* [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PAIMode.md)
+* [如何在本机运行实验 (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
+* [如何在多机上运行实验？](tutorial_2_RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行实验？](PAIMode.md)
