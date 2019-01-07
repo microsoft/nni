@@ -1,6 +1,6 @@
-# **Run an Experiment on Multiple Machines**
+**Run an Experiment on Multiple Machines**
 
-NNI supports running an experiment on multiple machines through SSH channel, called `remote` mode. NNI assumes that you have access to those machines, and already setup the environment for running deep learning training code.
+=== NNI supports running an experiment on multiple machines through SSH channel, called `remote` mode. NNI assumes that you have access to those machines, and already setup the environment for running deep learning training code.
 
 e.g. Three machines and you login in with account `bob` (Note: the account is not necessarily the same on different machine):
 
@@ -18,7 +18,9 @@ For remote machines that are used only to run trials but not the nnictl, you can
 
 * **Install python SDK through pip**
     
+    ```bash
     python3 -m pip install --user --upgrade nni-sdk
+    ```
 
 ## Run an experiment
 
@@ -26,45 +28,46 @@ Install NNI on another machine which has network accessibility to those three ma
 
 We use `examples/trials/mnist-annotation` as an example here. `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` to see the detailed configuration file:
 
-    authorName: default
-    experimentName: example_mnist
-    trialConcurrency: 1
-    maxExecDuration: 1h
-    maxTrialNum: 10
-    #choice: local, remote, pai
-    trainingServicePlatform: remote
-    #choice: true, false
-    useAnnotation: true
-    tuner:
-      #choice: TPE, Random, Anneal, Evolution, BatchTuner
-      #SMAC (SMAC should be installed through nnictl)
-      builtinTunerName: TPE
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode: maximize
-    trial:
-      command: python3 mnist.py
-      codeDir: .
-      gpuNum: 0
-    #machineList can be empty if the platform is local
-    machineList:
-    
-      - ip: 10.1.1.1
-        username: bob
-        passwd: bob123
-        #port can be skip if using default ssh port 22
-        #port: 22
-      - ip: 10.1.1.2
-        username: bob
-        passwd: bob123
-      - ip: 10.1.1.3
-        username: bob
-        passwd: bob123
-    
+```yaml
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+#choice: local, remote, pai
+trainingServicePlatform: remote
+#choice: true, false
+useAnnotation: true
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 0
+#machineList can be empty if the platform is local
+machineList:
+  - ip: 10.1.1.1
+    username: bob
+    passwd: bob123
+    #port can be skip if using default ssh port 22
+    #port: 22
+  - ip: 10.1.1.2
+    username: bob
+    passwd: bob123
+  - ip: 10.1.1.3
+    username: bob
+    passwd: bob123
+```
 
 Simply filling the `machineList` section and then run:
 
-    nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
-    
+```bash
+nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
+```
 
 to start the experiment.
