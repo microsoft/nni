@@ -16,13 +16,37 @@ Note:
 
 ## "Hello World" example: MNIST
 
-As long as you provide data sets, training methods and search spaces, NNI can automatically generate training experiments, adjust hyper-parameters, and find the optimal hyper-parameter configuration within the given time or number of experiments.
+As long as you provide data sets, training methods and search spaces, NNI can automatically generate different sets of hyper-parameters, start corresponding training trials and find the optimal hyper-parameter configuration within the given time or number of experiments.
 
-Here is a QuickStart example to run a NNI experiment on MNIST.
+Here is a QuickStart example on MNIST.
+
+|Script to train CNN on MNIST|The same script using NNI|
+|---|---|
+|
+```python
+import logging
+import math
+import tempfile
+import tensorflow as tf
+
+from tensorflow.examples.tutorials.mnist import input_data
+```
+|
+```python
+import logging
+import math
+import tempfile
+import tensorflow as tf
+
+from tensorflow.examples.tutorials.mnist import input_data
+
+import nni
+```
+|
 
 **Three things required to do when using NNI**
 
-1. Give a `Search Space` file in json, includes the `name` and the `range` (discrete valued or continuous valued) of hyper-parameters you need to search. For example: [search_space.json][3]
+1. Give a `Search Space` file in json, includes the `name` and the `distribution` (discrete valued or continuous valued) of hyper-parameters you need to search. For example: [search_space.json][3]
 2. Prepare a `Trial` file in python, which define an individual attempt to `try a set of hyper-parameters` and return the result matrix. For example: [mnist.py][4]
 3. Define a `Config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, runtime and name arguments.
 
