@@ -20,27 +20,27 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 <img src="../../docs/img/nni_arch_overview.png" alt="drawing"/>
 </p>
 
-User can use the nnictl and/or a visualized Web UI nniboard to monitor and debug a given experiment.
+用户可以用 nnictl 或可视化的 WEB 界面 NNIBoard 来查看并调试指定的实验。
 
-NNI provides a set of examples in the package to get you familiar with the above process. In the following example [/examples/trials/mnist], we had already set up the configuration and updated the training codes for you. You can directly run the following command to start an experiment.
+NNI 提供了一组样例来帮助熟悉以上过程。
 
-## Key Concepts
+## 主要概念
 
-**Experiment** in NNI is a method for testing different assumptions (hypotheses) by Trials under conditions constructed and controlled by NNI. During the experiment, one or more conditions are allowed to change in an organized manner and effects of these changes on associated conditions.
+**Experiment（实验）**，在 NNI 中是通过 Trial（尝试）在给定的条件来测试不同的假设情况。 在实验过程中，会有条理的修改一个或多个条件，以便测试它们对相关条件的影响。
 
-### **Trial**
+### **Trial（尝试）**
 
-**Trial** in NNI is an individual attempt at applying a set of parameters on a model.
+**Trial（尝试）**是将一组参数在模型上独立的一次尝试。
 
-### **Tuner**
+### **Tuner（调参器）**
 
-**Tuner** in NNI is an implementation of Tuner API for a special tuning algorithm. [Read more about the Tuners supported in the latest NNI release](HowToChooseTuner.md)
+**Tuner（调参器）**，在 NNI 中是实现了调参器 API 的某个超参调优算法。 [了解 NNI 中最新内置的调参器](HowToChooseTuner.md)
 
-### **Assessor**
+### **Assessor（评估器）**
 
-**Assessor** in NNI is an implementation of Assessor API for optimizing the execution of experiment.
+**Assessor（评估器）**，实现了评估器 API，用来加速实验执行过程。
 
-## Learn More
+## 了解更多信息
 
 * [Get started](GetStarted.md)
 * [Install NNI](Installation.md)
