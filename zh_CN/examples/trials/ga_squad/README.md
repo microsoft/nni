@@ -1,10 +1,10 @@
-# Automatic Model Architecture Search for Reading Comprehension
+# 在阅读理解上使用自动模型架构搜索
 
-This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension task.
+该样例展示了如何使用遗传算法为阅读理解任务找到好的模型架构。
 
-## Search Space
+## 搜索空间
 
-Since attention and recurrent neural network (RNN) module have been proven effective in Reading Comprehension. We conclude the search space as follow:
+对于阅读理解项目，注意力和循环神经网络（RNN）模块已经被证明非常有效。 使用的搜索空间如下：
 
 1. IDENTITY (Effectively means keep training).
 2. INSERT-RNN-LAYER (Inserts a LSTM. Comparing the performance of GRU and LSTM in our experiment, we decided to use LSTM here.)
