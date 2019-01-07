@@ -103,6 +103,6 @@ nnictl create --config config.yaml
 
 ### Cifar10
 
-`CIFAR-10` 数据集 [Canadian Institute For Advanced Research](https://www.cifar.ca/) 是广泛用于机器学习和视觉算法训练的数据集。 它是机器学习领域最广泛使用的数据集之一。 The CIFAR-10 dataset contains 60,000 32x32 color images in 10 different classes.
+`CIFAR-10` 数据集 [Canadian Institute For Advanced Research](https://www.cifar.ca/) 是广泛用于机器学习和视觉算法训练的数据集。 它是机器学习领域最广泛使用的数据集之一。 CIFAR-10 数据集包含了 60,000 张 32x32 的彩色图片，分为 10 类。
 
-There are two examples, [cifar10-keras.py](./cifar10/cifar10_keras.py) and [cifar10-pytorch.py](./cifar10/cifar10_pytorch.py). The value `input_width` is 32 and the value `input_channel` is 3 in `config.yaml` for this dataset.
+这里有两个样例，[cifar10-keras.py](./cifar10/cifar10_keras.py) 和 [cifar10-pytorch.py](./cifar10/cifar10_pytorch.py)。 在 `config.yaml` 中，该数据集 `input_width` 的值是 32，并且 `input_channel` 是 3。
