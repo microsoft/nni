@@ -31,8 +31,15 @@ For each trial, we will upload all the files in your local codeDir path (configu
 ## Supported operator
 NNI only support tf-operator and pytorch-operator of kubeflow, other operators is not tested.
 Users could set operator type in config file.
+The setting of tf-operator:
 ```
-operator: tf-operator
+kubeflowConfig:
+  operator: tf-operator
+```
+The setting of pytorch-operator:
+```
+kubeflowConfig:
+  operator: pytorch-operator
 ```
 If users want to use tf-operator, he could set `ps` and `worker` in trial config. If users want to use pytorch-operator, he could set `master` and `worker` in trial config. 
 
@@ -41,8 +48,6 @@ NNI support NFS and Azure Storage to store the code and output files, users coul
 The setting for NFS storage are as follows:
 ```
 kubeflowConfig:
-  operator: tf-operator
-  apiVersion: v1alpha2
   storage: nfs
   nfs:
     # Your NFS server IP, like 10.10.10.10
@@ -53,8 +58,6 @@ kubeflowConfig:
 If you use Azure storage, you should  set `kubeflowConfig` in your config yaml file as follows:
 ```
 kubeflowConfig:
-  operator: tf-operator
-  apiVersion: v1alpha2
   storage: azureStorage
   keyVault:
     vaultName: {your_vault_name}
