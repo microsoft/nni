@@ -105,18 +105,18 @@ kubeflow 模式的配置有下列主键：
     * gpuNum
     * image 
         * 必填。 在 kubeflow 模式中，Kubernetes 会安排尝试程序在 [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) 中执行。 此键用来指定尝试程序的 pod 使用的 Docker 映像。 
-        * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](../deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
-* ps (optional). This config section is used to configure tensorflow parameter server role.
+        * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI 实验所依赖的所有 Python 包，Node 模块和 JavaScript。 用来生成此映像的文件在[这里](../deployment/Dockerfile.build.base)。 可以直接使用此映像，或参考它来生成自己的映像。
+* ps (可选)。 此部分用于配置 TensorFlow 的 parameter 服务器角色。
 
-Once complete to fill nni experiment config file and save (for example, save as exp_kubeflow.yaml), then run the following command
+完成并保存 NNI 实验配置文件后（例如可保存为：exp_kubeflow.yaml），运行以下命令：
 
     nnictl create --config exp_kubeflow.yaml
     
 
-to start the experiment in kubeflow mode. NNI will create Kubeflow tfjob for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. You can see the kubeflow tfjob created by NNI in your Kubernetes dashboard.
+来在 Kubeflow 模式下启动实验。 NNI 会为每个尝试创建 Kubeflow tfjob，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 Kubernetes 面板中看到创建的 Kubeflow tfjob。
 
-Notice: In kubeflow mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
+注意：Kubeflow 模式下，NNIManager 会启动 RESTful 服务，监听端口为 NNI 网页服务器的端口加1。 例如，如果网页端口为`8080`，那么 RESTful 服务器会监听在 `8081`端口，来接收运行在 Kubernetes 中的尝试作业的指标。 因此，需要在防火墙中启用端口 `8081` 的 TCP 协议，以允许传入流量。
 
-Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information.
+当一个尝试作业完成后，可以在 NNI 网页的概述页面（如：http://localhost:8080/oview）中查看尝试的信息。
 
-Any problems when using NNI in kubeflow mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni), or send mail to nni@microsoft.com
+如果在使用 Kubeflow 模式时遇到任何问题，请到 [NNI github](https://github.com/Microsoft/nni)中创建问题，或发信给 nni@microsoft.com。
