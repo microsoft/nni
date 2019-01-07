@@ -4,11 +4,11 @@ nnictl
 
 ## 介绍
 
-**nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc.
+**nnictl** 是一个命令行工具，用来控制 NNI 实验，如启动、停止、继续实验，启动、停止 NNIBoard 等等。
 
-## Commands
+## 命令
 
-nnictl support commands:
+nnictl 支持的命令：
 
 ```bash
 nnictl create
@@ -24,70 +24,68 @@ nnictl tensorboard
 nnictl top
 ```
 
-### Manage an experiment
+### 管理实验
 
 * **nnictl create**
   
-  * Description
+  * 说明
     
-        You can use this command to create a new experiment, using the configuration specified in config file.
-            After this command is successfully done, the context will be set as this experiment,
-            which means the following command you issued is associated with this experiment,
-            unless you explicitly changes the context(not supported yet).
+        此命令使用参数中的配置文件，来创建新的实验。
+            此命令成功完成后，上下文会被设置为此实验。这意味着如果不显式改变上下文（暂不支持），输入的以下命令，都作用于此实验。
         
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl create [OPTIONS]
     ```
     
-    Options:  
+    选项：  
     
     
-    | Name, shorthand | Required | Default | Description                           |
-    | --------------- | -------- | ------- | ------------------------------------- |
-    | --config, -c    | True     |         | yaml configure file of the experiment |
-    | --port, -p      | False    |         | the port of restful server            |
+    | 参数及缩写        | 是否必需  | 默认值 | 说明            |
+    | ------------ | ----- | --- | ------------- |
+    | --config, -c | True  |     | 实验的 yaml 配置文件 |
+    | --port, -p   | False |     | RESTful 服务的端口 |
 
 * **nnictl resume**
   
-  * Description
+  * 说明
     
-    You can use this command to resume a stopped experiment.
+    使用此命令恢复已停止的实验。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl resume [OPTIONS]
     ```
     
-    Options:
+    选项：
     
-    | Name, shorthand | Required | Default | Description                                    |
-    | --------------- | -------- | ------- | ---------------------------------------------- |
-    | id              | False    |         | The id of the experiment you want to resume    |
-    | --port, -p      | False    |         | Rest port of the experiment you want to resume |
+    | 参数及缩写      | 是否必需  | 默认值 | 说明                     |
+    | ---------- | ----- | --- | ---------------------- |
+    | id         | False |     | 要恢复的实验标识               |
+    | --port, -p | False |     | 要恢复的实验使用的 RESTful 服务端口 |
 
 * **nnictl stop**
   
-  * Description
+  * 说明
     
-    You can use this command to stop a running experiment or multiple experiments.
+    使用此命令来停止正在运行的单个或多个实验。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl stop [id]
     ```
   
-  * Detail
+  * 详细说明
     
-    1. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
+    1. 如果指定了 id，并且此 id 匹配正在运行的实验，nnictl 会停止相应的实验，否则会输出错误信息。
     
-    2. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
+    2. 如果没有指定 id，并且当前有运行的实验，则会停止该实验，否则会输出错误信息。
     
-    3. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
+    3. 如果 id 以 * 结尾，nnictl 会停止所有匹配此通配符的实验。
     
     4. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
     
