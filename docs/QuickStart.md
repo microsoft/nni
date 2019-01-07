@@ -45,6 +45,7 @@ def main(params):
             feed_dict={mnist_network.images: mnist.test.images,
                        mnist_network.labels: mnist.test.labels,
                        mnist_network.keep_prob: 1.0})
+        print ("The final accuracy is ", test_acc)
 
 if __name__ == '__main__':
     try:
@@ -57,8 +58,6 @@ if __name__ == '__main__':
 ```
 
 Note: We display the important part instead of complete file in the doc. If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_without_nni.py][7]
-
-Without NNI, user have to manually tune the configuration and start each trial. It requires high degree of expertise and a lot of experience, and NNI targets to automatically do this work. NNI will automatically tune and optimal the hyper-parameters sets by collecting the intermediate and final results matrix with the-state-of-art tuning algorithms.
 
 If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you have to do three more things:
 
@@ -111,6 +110,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
               feed_dict={mnist_network.images: mnist.test.images,
                         mnist_network.labels: mnist.test.labels,
                         mnist_network.keep_prob: 1.0})
+-         print ("The final accuracy is ", test_acc)
 +         # report final result matrix when the trial finished all the epoch
 +         nni.report_final_result(test_acc)
 
