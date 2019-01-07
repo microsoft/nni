@@ -2,40 +2,40 @@
 
 ## 1. 简介
 
-There are few steps to start an new experiment of nni, here are the process. <img src="../../docs/img/experiment_process.jpg" width="50%" height="50%" />
+NNI 实验的启动分为几步，流程如下。 <img src="../../docs/img/experiment_process.jpg" width="50%" height="50%" />
 
-## 2.Details
+## 2. 详细说明
 
-### 2.1 Check environment
+### 2.1 检查环境
 
-1. Check if there is an old experiment running 
-2. Check if the port of restfurl server is free. 
-3. Validate the content of config yaml file. 
-4. Prepare a config file to to record the information of this experiment. 
+1. 检查是否有旧的实验正在运行。 
+2. 检查 RESTful 服务端口是否可用。 
+3. 验证 yaml 配置文件的内容。 
+4. 准备配置文件来记录实验信息。 
 
-### 2.2 Start restful server
+### 2.2 启动 RESTful 服务
 
-Start an restful server process to manage nni experiment, the default port is 8080.
+启动 RESTful 服务进程来管理 NNI 实验，默认端口为 8080。
 
-### 2.3 Check restful server
+### 2.3 检查 RESTful 服务
 
-Check whether restful server process is successfully started and could get a response when send message to restful server.
+检查是否 RESTful 服务进程成功启动，发送到 RESTful 服务的消息是否正常返回。
 
-### 2.4 Set experiment config
+### 2.4 设置实验配置
 
-Call restful server to set experiment config before starting an experiment, experiment config includes the config values in config yaml file.
+在启动实验前调用 RESTful 服务来设置实验配置，包括 yaml 配置文件中的值。
 
-### 2.5 Check experiment cofig
+### 2.5 检查实验配置
 
-Check the response content of restful srver, if the status code of response is 200, the config is successfully set.
+检查 RESTful 服务的返回内容，如果状态为 200，则表示配置设置成功。
 
-### 2.6 Start Experiment
+### 2.6 启动实验
 
-Call restful server process to setup an experiment.
+调用 RESTful 服务进程来设置实验。
 
-### 2.7 Check experiment
+### 2.7 检查实验
 
-1. Check the response of restful server.
-2. Handle error information.
-3. Print success or error information to screen.
-4. Save configuration information to config file of nnictl.
+1. 检查 RESTful 服务的返回值。
+2. 处理错误信息。
+3. 输出成功或失败信息。
+4. 保存配置信息到 nnictl 的配置文件。
