@@ -1,6 +1,7 @@
 # Tutorial for Advanced Neural Architecture Search
 Currently many of the NAS algorithms leverage the technique of **weight sharing** among trials to accelerate its training process. For example, [ENAS][1] delivers 1000x effiency with '_parameter sharing between child models_', compared with the previous [NASNet][2] algorithm. Other NAS algorithms such as [DARTS][3], [Network Morphism][4], and [Evolution][5] is also leveraging, or has the potential to leverage weight sharing.
-This is a tutorial on how to enable weight sharing in NNI. The example we use is based on the example of [Neural Architecture Search for Reading Comprehension](../examples/trials/ga_squad/), and is placed [here](../examples/trials/weight_sharing/ga_squad).
+
+This is a tutorial on how to enable weight sharing in NNI. 
 
 ## Weight Sharing among trials
 Currently we recommend sharing weights through NFS (Network File System), which supports sharing files across machines, and is light-weighted, (relatively) efficient. We also welcome contributions from the community on more efficient techniques.
@@ -33,57 +34,16 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 ```
 where `10.10.10.10` should be replaced by the real IP of NFS server machine in practice.
 
-### Example code for trial
-In our example, we assign each layer a `hash_id` to identify whether a previously trained model weight is sharable,and construct the tensorflow graph using `hash_id` as the variable scope name:
+### Weight Sharing through NFS file
+With the NFS setup, trial code can share model weight through loading & saving files. For example, in tensorflow:
 ```python
-with tf.variable_scope(p_graph.layers[i].hash_id, reuse=tf.AUTO_REUSE):
-    # generate tensorflow operators for p_graph.layers[i]
-    ...
+# save models
+saver = tf.train.Saver()
+saver.save(sess, os.path.join(params['save_path'], 'model.ckpt'))
+# load models
+tf.init_from_checkpoint(params['restore_path'])
 ```
-With hashes of all the sharable layer fed as `shared_id` hyper parameter, we can automatically initialize all the sharable layer from the previous trained model:
-```python
-tf.init_from_checkpoint(param['restore_path'], dict(zip(param['shared_id'], param['shared_id'])))
-```
-Where `param` is retrieved from customized tuner with `nni.get_next_parameter()`. An example configuration is shown as follows:
-```json
-{
-    "shared_id": [
-        "4a11b2ef9cb7211590dfe81039b27670",
-        "370af04de24985e5ea5b3d72b12644c9",
-        "11f646e9f650f5f3fedc12b6349ec60f",
-        "0604e5350b9c734dd2d770ee877cfb26",
-        "6dbeb8b022083396acb721267335f228",
-        "ba55380d6c84f5caeb87155d1c5fa654"
-    ],
-    "graph": {
-        "layers": [
-            ...
-            {
-                "hash_id": "ba55380d6c84f5caeb87155d1c5fa654",
-                "is_delete": false,
-                "size": "x",
-                "graph_type": 0,
-                "output": [
-                    6
-                ],
-                "output_size": 1,
-                "input": [
-                    7,
-                    1
-                ],
-                "input_size": 2
-            },
-            ...
-        ]
-    },
-    "restore_dir": "/mnt/nfs/nni/ga_squad/87",
-    "save_dir": "/mnt/nfs/nni/ga_squad/95"
-}
-```
-
-### Tuner customization for sharing policy
-We recommend implementing sharing policy for customized tuner through the calculation of `Layer.hash_id`. In our example, a layer is sharable iff. the configurations of the layer itself and all its previous layers are not changed. For details, see `Layer.update_hash` and `Graph.update_hash` function in [graph.py](../examples/tuners/weight_sharing/ga_customer_tuner/graph.py)
-
+where `'save_path'` and `'restore_path'` in hyper-parameter can be managed by the tuner.
 
 ## Asynchornous Dispatcher Mode for trial dependency control
 The feature of weight sharing enables trials from different machines, in which most of the time **read after write** consistency must be assured. After all, the child model should not load parent model before parent trial finishes training. To deal with this, users can enable **asynchronous dispatcher mode** with `multiThread: true` in `config.yml` in NNI, where the dispatcher assign a tuner thread each time a `NEW_TRIAL` request comes in, and the tuner thread can decide when to submit a new trial by blocking and unblocking the thread itself. For example:

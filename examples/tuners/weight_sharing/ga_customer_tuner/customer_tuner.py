@@ -113,7 +113,48 @@ class CustomerTuner(Tuner):
 
     def generate_parameters(self, parameter_id):
         """Returns a set of trial graph config, as a serializable object.
-        parameter_id : int
+        An example configuration:
+        ```json
+        {
+            "shared_id": [
+                "4a11b2ef9cb7211590dfe81039b27670",
+                "370af04de24985e5ea5b3d72b12644c9",
+                "11f646e9f650f5f3fedc12b6349ec60f",
+                "0604e5350b9c734dd2d770ee877cfb26",
+                "6dbeb8b022083396acb721267335f228",
+                "ba55380d6c84f5caeb87155d1c5fa654"
+            ],
+            "graph": {
+                "layers": [
+                    ...
+                    {
+                        "hash_id": "ba55380d6c84f5caeb87155d1c5fa654",
+                        "is_delete": false,
+                        "size": "x",
+                        "graph_type": 0,
+                        "output": [
+                            6
+                        ],
+                        "output_size": 1,
+                        "input": [
+                            7,
+                            1
+                        ],
+                        "input_size": 2
+                    },
+                    ...
+                ]
+            },
+            "restore_dir": "/mnt/nfs/nni/ga_squad/87",
+            "save_dir": "/mnt/nfs/nni/ga_squad/95"
+        }
+        ```
+        `restore_dir` means the path in which to load the previous trained model weights. if null, init from stratch.
+        `save_dir` means the path to save trained model for current trial.
+        `graph` is the configuration of model network.
+                Note: each configuration of layers has a `hash_id` property,
+                which tells tuner & trial code whether to share trained weights or not.
+        `shared_id` is the hash_id of layers that should be shared with previously trained model.
         """
         logger.debug('acquiring lock for param {}'.format(parameter_id))
         self.thread_lock.acquire()

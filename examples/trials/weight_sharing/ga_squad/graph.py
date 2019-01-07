@@ -82,7 +82,7 @@ class Layer(object):
 
     def update_hash(self, layers: Iterable):
         """
-        update hash_id of Layer
+        Calculation of `hash_id` of Layer. Which is determined by the properties of itself, and the `hash_id`s of input layers
         """
         if self.graph_type == LayerType.input.value:
             return
