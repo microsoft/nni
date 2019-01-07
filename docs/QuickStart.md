@@ -10,10 +10,11 @@
     python3 -m pip install --upgrade nni
 ```
 
-* Note:
-  * `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
-  * If there is any error like `Segmentation fault`, please refer to [FAQ][1]
-  * For the system requirements of NNI, please refer to [Install NNI][2]
+Note:
+
+* `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
+* If there is any error like `Segmentation fault`, please refer to [FAQ][1]
+* For the system requirements of NNI, please refer to [Install NNI][2]
 
 ## "Hello World" example: MNIST
 
