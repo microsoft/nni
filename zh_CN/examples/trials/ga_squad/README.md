@@ -200,17 +200,17 @@
     for _, topo_i in enumerate(topology):
     
 
-performs actually conversion that maps each layer to a part in Tensorflow computation graph.
+执行实际转换，将每层映射为 TensorFlow 计算图中的一部分。
 
-### The tuner
+### 调参器
 
-The tuner is much more simple than the trial. They actually share the same `graph.py`. Besides, the tuner has a `customer_tuner.py`, the most important class in which is `CustomerTuner`:
+调参器比尝试代码简单很多。 它们共用了同样的 `graph.py`。 此外，调参器有 `customer_tuner.py`，其中最重要的类是 `CustomerTuner`：
 
     class CustomerTuner(Tuner):
         # ......
     
         def generate_parameters(self, parameter_id):
-            """Returns a set of trial graph config, as a serializable object.
+            """将一组尝试图配置作为序列化对象返回。
             parameter_id : int
             """
             if len(self.population) <= 0:
@@ -238,14 +238,14 @@ The tuner is much more simple than the trial. They actually share the same `grap
         # ......
     
 
-As we can see, the overloaded method `generate_parameters` implements a pretty naive mutation algorithm. The code lines:
+重载函数 `generate_parameters` 实现了简单的变异算法。 代码如下：
 
                 if self.population[0].result > self.population[1].result:
                     self.population[0] = self.population[1]
                 indiv = copy.deepcopy(self.population[0])
     
 
-controls the mutation process. It will always take two random individuals in the population, only keeping and mutating the one with better result.
+控制突变过程。 It will always take two random individuals in the population, only keeping and mutating the one with better result.
 
 ## Model configuration format
 
