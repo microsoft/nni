@@ -95,26 +95,26 @@
           optimize_mode: maximize
     
 
-*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found [here]()), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
+*builtinTunerName* 用来指定 NNI 中的调参器，*classArgs* 是传入到调参器的参数（内置调参器在[这里]()），*optimization_mode* 表明需要最大化还是最小化尝试的结果。
 
-**Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the yaml configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
+**准备配置文件**：实现尝试的代码，并选择或实现自定义的调参器后，就要准备 yaml 配置文件了。 NNI 为每个尝试样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
 
     authorName: your_name
     experimentName: auto_mnist
     
-    # how many trials could be concurrently running
-    trialConcurrency: 1
+    # 并发运行数量
+    trialConcurrency: 2
     
-    # maximum experiment running duration
+    # 实验运行时间
     maxExecDuration: 3h
     
-    # empty means never stop
+    # 可为空，即数量不限
     maxTrialNum: 100
     
-    # choice: local, remote  
+    # 可选值为: local, remote  
     trainingServicePlatform: local
     
-    # choice: true, false  
+    # 可选值为: true, false  
     useAnnotation: true
     tuner:
       builtinTunerName: TPE
@@ -126,28 +126,28 @@
       gpuNum: 0
     
 
-Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here](../tools/annotation/README.md) for details). For trial, we should provide *trialCommand* which is the command to run the trial, provide *trialCodeDir* where the trial code is. The command will be executed in this directory. We should also provide how many GPUs a trial requires.
+因为这个尝试代码使用了 NNI 标记的方法（参考[这里](../tools/annotation/README.md) ），所以*useAnnotation* 为 true。 *command* 是运行尝试代码所需要的命令，*codeDir* 是尝试代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个尝试进程所需的 GPU 数量。
 
-With all these steps done, we can run the experiment with the following command:
+完成上述步骤后，可通过下列命令来启动实验：
 
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yml
     
 
-You can refer to [here](NNICTLDOC.md) for more usage guide of *nnictl* command line tool.
+参考[这里](NNICTLDOC.md)来了解 *nnictl* 命令行工具的更多用法。
 
-## View experiment results
+## 查看实验结果
 
-The experiment has been running now. Oher than *nnictl*, NNI also provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features.
+实验应该一直在运行。 除了 *nnictl* 以外，还可以通过 NNI 的网页来查看实验进程，进行控制和其它一些有意思的功能。
 
-## Using multiple local GPUs to speed up search
+## 使用多个本地 GPU 加快搜索速度
 
-The following steps assume that you have 4 NVIDIA GPUs installed at local and [tensorflow with GPU support](https://www.tensorflow.org/install/gpu). The demo enables 4 concurrent trail jobs and each trail job uses 1 GPU.
+下列步骤假设本机有 4 块 NVIDIA GPUs，参考 [tensorflow with GPU support](https://www.tensorflow.org/install/gpu)。 演示启用了 4 个并发的尝试任务，每个尝试任务使用了 1 块 GPU。
 
-**Prepare configure file**: NNI provides a demo configuration file for the setting above, `cat ~/nni/examples/trials/mnist-annotation/config_gpu.yml` to see it. The trailConcurrency and gpuNum are different from the basic configure file:
+**准备配置文件**：NNI 提供了演示用的配置文件，使用 `cat examples/trials/mnist-annotation/config_gpu.yml` 来查看。 trailConcurrency 和 gpuNum 与基本配置文件不同：
 
     ...
     
-    # how many trials could be concurrently running
+    # 可同时运行的尝试数量
     trialConcurrency: 4
     
     ...
@@ -158,9 +158,9 @@ The following steps assume that you have 4 NVIDIA GPUs installed at local and [t
       gpuNum: 1
     
 
-We can run the experiment with the following command:
+用下列命令运行实验：
 
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config_gpu.yml
     
 
-You can use *nnictl* command line tool or WebUI to trace the training progress. *nvidia_smi* command line tool can also help you to monitor the GPU usage during training.
+可以用 *nnictl* 命令行工具或网页界面来跟踪训练过程。 *nvidia_smi* 命令行工具能在训练过程中查看 GPU 使用情况。
