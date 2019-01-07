@@ -36,15 +36,15 @@
 
 ## 查看尝试状态
 
-Click the tab "Trials Detail" to see the status of the all trials. Specifically:
+点击 "Trials Detail" 标签查看所有尝试的状态。 特别是：
 
-* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
-* If you run a pai experiment, you can also see the hdfsLogPath.
+* 尝试详情：尝试的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
+* 如果在 pai 模式下，还可以看到 hdfsLogPath。
 
 ![](../../docs/img/table_openrow.png)
 
-* Kill: you can kill a job that status is running.
-* Support to search for a specific trial.
-* Intermediate Result Graph.
+* Kill: 可终止正在运行的任务。
+* 支持搜索某个特定的尝试。
+* 中间结果图。
 
 ![](../../docs/img/intermediate.png)
