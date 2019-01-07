@@ -6,48 +6,48 @@
 
 要有一个使用卷积层对 MNIST 分类的代码，如 `mnist_before.py`。
 
-> Step 1 - Update model codes
+> 第一步：更新模型代码
 
-To enable NNI API, make the following changes:
+对代码进行以下改动来启用 NNI API：
 
-    1.1 Declare NNI API
-        Include `import nni` in your trial code to use NNI APIs. 
+    1.1 声明 NNI API
+        在尝试代码中通过 `import nni` 来导入 NNI API。 
     
-    1.2 Get predefined parameters
-        Use the following code snippet: 
+    1.2 获取预定义的参数
+        参考下列代码片段： 
     
             RECEIVED_PARAMS = nni.get_next_parameter()
     
-        to get hyper-parameters' values assigned by tuner. `RECEIVED_PARAMS` is an object, for example: 
+        来获得调参器分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如： 
     
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
     
-    1.3 Report NNI results
-        Use the API: 
+    1.3 向 NNI 返回结果
+        使用 API：
     
             `nni.report_intermediate_result(accuracy)` 
     
-        to send `accuracy` to assessor.
+        返回 `accuracy` 的值给评估器。
     
-        Use the API:
+        使用 API:
     
             `nni.report_final_result(accuracy)` 
     
-        to send `accuracy` to tuner. 
+        返回 `accuracy` 的值给调参器。 
     
 
-We had made the changes and saved it to `mnist.py`.
+将改动保存到 `mnist.py` 文件中。
 
-**NOTE**:
+**注意**：
 
-    accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
-    assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
-    tuner    - The tuner will generate next parameters/architecture based on the explore history (final result of all trials).
+    accuracy - 如果使用 NNI 内置的调参器/评估器，那么 `accuracy` 必须是数值（如 float, int）。在定制调参器/评估器时 `accuracy` 可以是任何类型的 Python 对象。
+    评估器 - 会根据尝试的历史值（即其中间结果），来决定这次尝试是否应该提前终止。
+    调参器 - 会根据探索的历史（所有尝试的最终结果）来生成下一组参数、架构。
     
 
-> Step 2 - Define SearchSpace
+> 第二步：定义搜索空间
 
-The hyper-parameters used in `Step 1.2 - Get predefined parameters` is defined in a `search_space.json` file like below:
+在 `Step 1.2 获取预定义的参数` 中使用的超参定义在 `search_space.json` 文件中：
 
     {
         "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
@@ -57,37 +57,37 @@ The hyper-parameters used in `Step 1.2 - Get predefined parameters` is defined i
     }
     
 
-Refer to <SearchSpaceSpec.md> to learn more about search space.
+参考 [SearchSpaceSpec.md](./SearchSpaceSpec.md) 进一步了解搜索空间。
 
-> Step 3 - Define Experiment
+> 第三步：定义实验
 > 
-> > 3.1 enable NNI API mode
+> > 3.1 启用 NNI API 模式
 
-To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of SearchSpace file (you just defined in step 1):
+要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径（即第一步中定义的文件）：
 
     useAnnotation: false
     searchSpacePath: /path/to/your/search_space.json
     
 
-To run an experiment in NNI, you only needed:
+在 NNI 中运行实验，只需要：
 
-* Provide a runnable trial
-* Provide or choose a tuner
-* Provide a yaml experiment configure file
-* (optional) Provide or choose an assessor
+* 可运行的尝试的代码
+* 实现或选择调参器
+* 准备 yaml 的实验配置文件
+* (可选) 实现或选择评估器
 
-**Prepare trial**:
+**准备尝试**：
 
-> A set of examples can be found in ~/nni/examples after your installation, run `ls ~/nni/examples/trials` to see all the trial examples.
+> 在克隆代码后，可以在 ~/nni/examples 中找到一些样例，运行 `ls examples/trials` 查看所有尝试样例。
 
-Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example:
+先从 NNI 提供的简单尝试样例，如 MNIST 开始。 NNI 样例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有实验的样例。 执行下面的命令可轻松运行 NNI 的 mnist 样例：
 
       python ~/nni/examples/trials/mnist-annotation/mnist.py
     
 
-This command will be filled in the yaml configure file below. Please refer to [here](howto_1_WriteTrial) for how to write your own trial.
+上面的命令会写在 yaml 文件中。 参考[这里](./howto_1_WriteTrial.md)来写出自己的实验代码。
 
-**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](CustomizedTuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
+**准备调参器**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的调参器（参考[这里](./CustomizedTuner.md)）。下面使用了 NNI 内置的调参器：
 
       tuner:
         builtinTunerName: TPE
