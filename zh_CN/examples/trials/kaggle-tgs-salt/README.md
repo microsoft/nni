@@ -5,46 +5,46 @@
     nnictl create --config config.yml
     
 
-This code can still run standalone, the code is for reference, it requires at least one week effort to reproduce the competition result.
+此代码仍然能够单独运行，但需要至少一周来重现竞赛的结果。
 
-[Solution summary](https://www.kaggle.com/c/tgs-salt-identification-challenge/discussion/69593)
+[解决方案概述](https://www.kaggle.com/c/tgs-salt-identification-challenge/discussion/69593)
 
-Preparation:
+准备：
 
-Download competition data, run preprocess.py to prepare training data.
+下载完整的数据，运行 preprocess.py 来准备数据。
 
-Stage 1:
+阶段 1：
 
-Train fold 0-3 for 100 epochs, for each fold, train 3 models:
+将目录 0-3 训练 100 个 epoch，对于每个目录，训练三个模型：
 
     python3 train.py --ifolds 0 --epochs 100 --model_name UNetResNetV4 
     python3 train.py --ifolds 0 --epochs 100 --model_name UNetResNetV5 --layers 50
     python3 train.py --ifolds 0 --epochs 100 --model_name UNetResNetV6
     
 
-Stage 2:
+阶段 2：
 
-Fine tune stage 1 models for 300 epochs with cosine annealing lr scheduler:
+使用余弦退火学习率调度器运行 300 次 epoch 来微调阶段 1 的模型：
 
     python3 train.py --ifolds 0 --epochs 300 --lrs cosine --lr 0.001 --min_lr 0.0001 --model_name UNetResNetV4 
     
 
-Stage 3:
+阶段 3：
 
-Fine tune Stage 2 models with depths channel:
+用深度通道微调阶段 2 的模型：
 
     python3 train.py --ifolds 0 --epochs 300 --lrs cosine --lr 0.001 --min_lr 0.0001 --model_name UNetResNetV4 --depths
     
 
-Stage 4:
+阶段 4：
 
-Make prediction for each model, then ensemble the result to generate peasdo labels.
+为每个模型进行预测，组合结果生成伪标签。
 
-Stage 5:
+阶段 5：
 
-Fine tune stage 3 models with pseudo labels
+用伪标签微调阶段 3 的模型
 
     python3 train.py --ifolds 0 --epochs 300 --lrs cosine --lr 0.001 --min_lr 0.0001 --model_name UNetResNetV4 --depths --pseudo
     
 
-Stage 6: Ensemble all stage 3 and stage 5 models.
+阶段 6： 将所有阶段 3 和阶段 5 的模型组合起来。
