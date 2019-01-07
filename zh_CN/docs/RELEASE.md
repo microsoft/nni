@@ -1,9 +1,9 @@
-# Release 0.4 - 12/6/2018
+# 发布 0.4 - 12/6/2018
 
-## Major Features
+## 主要功能
 
-* [Kubeflow Training service](./KubeflowMode.md) 
-    * Support tf-operator
+* [Kubeflow 训练服务](./KubeflowMode.md) 
+    * 支持 tf-operator
     * [Distributed trial example](../examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
 * [Grid search tuner](../src/sdk/pynni/nni/README.md#Grid) 
 * [Hyperband tuner](../src/sdk/pynni/nni/README.md#Hyperband)
