@@ -28,28 +28,28 @@ NNI 支持在 [Kubeflow](https://github.com/kubeflow/kubeflow)上运行，称为
 
 ![](../../docs/img/kubeflow_training_design.png) Kubeflow 训练服务会实例化一个 kubernetes 客户端来与 Kubernetes 集群的 API 服务器交互。
 
-对于每个尝试，会上传本机 codeDir 路径（在 nni_config.yaml 中配置）中的所有文件，包括 parameter.cfg 这样的生成的文件到存储卷中。 当前支持两种存储卷：[nfs](https://en.wikipedia.org/wiki/Network_File_System) 和 [Azure 文件存储](https://azure.microsoft.com/en-us/services/storage/files/)，需要在 NNI 的 yaml 文件中进行配置。 当文件准备好后，Kubeflow 训练服务会调用 Kubernetes 的 API 来创建 Kubeflow 作业 ([tf-operator](https://github.com/kubeflow/tf-operator) 作业或 [pytorch-operator](https://github.com/kubeflow/pytorch-operator) 作业) ，并将存储卷挂载到作业的 pod 中。 Output files of kubeflow job, like stdout, stderr, trial.log or model files, will also be copied back to the storage volumn. NNI will show the storage volumn's URL for each trial in WebUI, to allow user browse the log files and job's output files.
+对于每个尝试，会上传本机 codeDir 路径（在 nni_config.yaml 中配置）中的所有文件，包括 parameter.cfg 这样的生成的文件到存储卷中。 当前支持两种存储卷：[nfs](https://en.wikipedia.org/wiki/Network_File_System) 和 [Azure 文件存储](https://azure.microsoft.com/en-us/services/storage/files/)，需要在 NNI 的 yaml 文件中进行配置。 当文件准备好后，Kubeflow 训练服务会调用 Kubernetes 的 API 来创建 Kubeflow 作业 ([tf-operator](https://github.com/kubeflow/tf-operator) 作业或 [pytorch-operator](https://github.com/kubeflow/pytorch-operator) 作业) ，并将存储卷挂载到作业的 pod 中。 Kubeflow 作业的输出文件，例如 stdout, stderr, trial.log 以及模型文件，也会被复制回存储卷。 NNI 会在网页中显示每个尝试的存储卷的 URL，以便浏览日志和输出文件。
 
-## Run an experiment
+## 运行实验
 
-Use `examples/trials/mnist` as an example. The nni config yaml file's content is like:
+以 `examples/trials/mnist` 为例。 NNI 的 yaml 配置文件如下：
 
     authorName: your_name
     experimentName: example_mnist
-    # how many trials could be concurrently running
+    # 并发运行数量
     trialConcurrency: 4
-    # maximum experiment running duration
+    # 实验的最长运行时间
     maxExecDuration: 3h
-    # empty means never stop
+    # 空意味着一直运行
     maxTrialNum: 100
-    # choice: local, remote, pai, kubeflow
+    # 可选的项目: local, remote, pai, kubeflow
     trainingServicePlatform: kubeflow
-    # choice: true, false  
+    # 可选的项目: true, false  
     useAnnotation: false
     tuner:
       builtinTunerName: TPE
       classArgs:
-        #choice: maximize, minimize
+        #可选的项目: maximize, minimize
         optimize_mode: maximize
     trial:
       codeDir: ~/nni/examples/trials/mnist
@@ -75,7 +75,7 @@ Use `examples/trials/mnist` as an example. The nni config yaml file's content is
         path: {your_nfs_server_exported_path}
     
 
-If you use Azure Kubernetes Service, you should set `kubeflowConfig` in your config yaml file as follows:
+如果使用了 Azure Kubernetes Service，需要在 yaml 文件中如下设置 `kubeflowConfig`：
 
     kubeflowConfig:
       operator: tf-operator
@@ -88,23 +88,23 @@ If you use Azure Kubernetes Service, you should set `kubeflowConfig` in your con
         azureShare: {your_azure_share_name}
     
 
-Note: You should explicitly set `trainingServicePlatform: kubeflow` in nni config yaml file if you want to start experiment in kubeflow mode.
+注意：如果用 kubeflow 模式运行，需要在 yaml 文件中显式设置 `trainingServicePlatform: kubeflow`。
 
-Trial configuration in kubeflow mode have the following configuration keys:
+kubeflow 模式的配置有下列主键：
 
 * codeDir 
-    * code directory, where you put training code and config files
-* worker (required). This config section is used to configure tensorflow worker role 
+    * 代码目录，存放训练代码和配置文件
+* worker (必填)。 此部分用于配置 TensorFlow 的 worker 角色 
     * replicas 
-        * Required key. Should be positive number depends on how many replication your want to run for tensorflow worker role.
+        * 必填。 需要运行的 TensorFlow woker 角色的数量，必须为正数。
     * command 
-        * Required key. Command to launch your trial job, like ```python mnist.py```
+        * 必填。 用来运行尝试作业的命令，例如： ```python mnist.py```
     * memoryMB 
-        * Required key. Should be positive number based on your trial program's memory requirement
+        * 必填。 尝试程序的内存需求，必须为正数。
     * cpuNum
     * gpuNum
     * image 
-        * Required key. In kubeflow mode, your trial program will be scheduled by Kubernetes to run in [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/). This key is used to specify the Docker image used to create the pod where your trail program will run. 
+        * 必填。 在 kubeflow 模式中，Kubernetes 会安排尝试程序在 [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) 中执行。 此键用来指定尝试程序的 pod 使用的 Docker 映像。 
         * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](../deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
 * ps (optional). This config section is used to configure tensorflow parameter server role.
 
