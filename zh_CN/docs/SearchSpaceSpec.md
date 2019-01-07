@@ -26,18 +26,18 @@
 
 * {"_type":"randint","_value":[upper]}
    
-   * 此变量为范围 [0, upper) 之间的随机整数。 这种分布的语义，在较远整数与附近整数之间的损失函数无太大关系， 这是用来描述随机种子的较好分布。 如果损失函数与较近的整数更相关，则应该使用某个"quantized"的连续分布，如quniform, qloguniform, qnormal 或 qlognormal。 Note that if you want to change lower bound, you can use `quniform` for now.   
+   * 此变量为范围 [0, upper) 之间的随机整数。 这种分布的语义，在较远整数与附近整数之间的损失函数无太大关系， 这是用来描述随机种子的较好分布。 如果损失函数与较近的整数更相关，则应该使用某个"quantized"的连续分布，如quniform, qloguniform, qnormal 或 qlognormal。 注意，如果需要改动数字下限，可以使用 `quniform`。   
       
 
 * {"_type":"uniform","_value":[low, high]}
    
-   * Which means the variable value is a value uniformly between low and high.
+   * 变量是 low 和 high 之间均匀分布的值。
    * When optimizing, this variable is constrained to a two-sided interval.   
       
 
 * {"_type":"quniform","_value":[low, high, q]}
    
-   * Which means the variable value is a value like round(uniform(low, high) / q) * q
+   * 这表示变量值会类似于 round(uniform(low, high) / q) * q
    * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.   
       
 
