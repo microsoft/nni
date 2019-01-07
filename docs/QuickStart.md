@@ -78,7 +78,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
 
 *Implemented code directory: [search_space.json][3]*
 
-2. Modified your  `Trial` file to report the intermedian and final result to NNI and update your hyper-parameter sets.
+2. Modified your  `Trial` file to report the intermedian and final result to NNI and get the next hyper-parameter set from NNI.
 
 ```diff
   # Please refer to source code to see the detail implementation.
