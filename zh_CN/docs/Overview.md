@@ -17,7 +17,7 @@ After user submits the experiment through a command line tool [nnictl](../tools/
 ## Architecture Overview
 
 <p align="center">
-<img src="../../docs/nni_arch_overview.png" alt="drawing"/>
+<img src="../../docs/img/nni_arch_overview.png" alt="drawing"/>
 </p>
 
 User can use the nnictl and/or a visualized Web UI nniboard to monitor and debug a given experiment.
