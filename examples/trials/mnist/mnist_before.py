@@ -7,6 +7,8 @@ import tensorflow as tf
 
 from tensorflow.examples.tutorials.mnist import input_data
 
+import nni
+
 FLAGS = None
 
 logger = logging.getLogger('mnist_AutoML')
@@ -140,32 +142,15 @@ def bias_variable(shape):
     initial = tf.constant(0.1, shape=shape)
     return tf.Variable(initial)
 
-
-def main(params):
-    '''
-    Main function, build mnist network.
-    '''
-    # Import data
-    mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    print('Mnist download data down.')
-    logger.debug('Mnist download data down.')
-
-    # Create the model
-    # Build the graph for the deep net
-    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
-                                 channel_2_num=params['channel_2_num'],
-                                 conv_size=params['conv_size'],
-                                 hidden_size=params['hidden_size'],
-                                 pool_size=params['pool_size'],
-                                 learning_rate=params['learning_rate'])
-    mnist_network.build_network()
-    logger.debug('Mnist build network done.')
-
+def write_log():
     # Write log
     graph_location = tempfile.mkdtemp()
     logger.debug('Saving graph to: %s', graph_location)
     train_writer = tf.summary.FileWriter(graph_location)
     train_writer.add_graph(tf.get_default_graph())
+
+def predict(mnist, mnist_network):
+    write_log()
 
     test_acc = 0.0
     with tf.Session() as sess:
@@ -183,41 +168,51 @@ def main(params):
                                mnist_network.labels: mnist.test.labels,
                                mnist_network.keep_prob: 1.0})
 
-                logger.debug('test accuracy %g', test_acc)
-                logger.debug('Pipe send intermediate result done.')
-
         test_acc = mnist_network.accuracy.eval(
             feed_dict={mnist_network.images: mnist.test.images,
                        mnist_network.labels: mnist.test.labels,
                        mnist_network.keep_prob: 1.0})
-
         logger.debug('Final result is %g', test_acc)
         logger.debug('Send final result done.')
+        return test_acc
 
-
-def generate_default_params():
+def run_trial(params):
     '''
-    Generate default parameters for mnist network.
+    Main function, build mnist network, run and send result to NNI.
     '''
-    params = {
-        'data_dir': '/tmp/tensorflow/mnist/input_data',
-        'dropout_rate': 0.5,
-        'channel_1_num': 32,
-        'channel_2_num': 64,
-        'conv_size': 5,
-        'pool_size': 2,
-        'hidden_size': 1024,
-        'learning_rate': 1e-4,
-        'batch_num': 2000,
-        'batch_size': 32}
-    return params
+    # Import data
+    mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
+    print('Mnist download data down.')
+    logger.debug('Mnist download data down.')
 
+    # Create the model
+    # Build the graph for the deep net
+    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
+                                 channel_2_num=params['channel_2_num'],
+                                 conv_size=params['conv_size'],
+                                 hidden_size=params['hidden_size'],
+                                 pool_size=params['pool_size'],
+                                 learning_rate=params['learning_rate'])
+    mnist_network.build_network()
+    logger.debug('Mnist build network done.')
+
+    acc = predict(mnist, mnist_network)
+    print ('Final result is ', acc)
 
 if __name__ == '__main__':
     try:
-        # run
-        params = generate_default_params()
-        main(params)
+        params = {
+            'data_dir': '/tmp/tensorflow/mnist/input_data',
+            'dropout_rate': 0.5,
+            'channel_1_num': 32,
+            'channel_2_num': 64,
+            'conv_size': 5,
+            'pool_size': 2,
+            'hidden_size': 1024,
+            'learning_rate': 1e-4,
+            'batch_num': 2000,
+            'batch_size': 32}
+        run_trial(params)
     except Exception as exception:
         logger.exception(exception)
         raise

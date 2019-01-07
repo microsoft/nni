@@ -142,32 +142,15 @@ def bias_variable(shape):
     initial = tf.constant(0.1, shape=shape)
     return tf.Variable(initial)
 
-
-def main(params):
-    '''
-    Main function, build mnist network, run and send result to NNI.
-    '''
-    # Import data
-    mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    print('Mnist download data down.')
-    logger.debug('Mnist download data down.')
-
-    # Create the model
-    # Build the graph for the deep net
-    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
-                                 channel_2_num=params['channel_2_num'],
-                                 conv_size=params['conv_size'],
-                                 hidden_size=params['hidden_size'],
-                                 pool_size=params['pool_size'],
-                                 learning_rate=params['learning_rate'])
-    mnist_network.build_network()
-    logger.debug('Mnist build network done.')
-
+def write_log():
     # Write log
     graph_location = tempfile.mkdtemp()
     logger.debug('Saving graph to: %s', graph_location)
     train_writer = tf.summary.FileWriter(graph_location)
     train_writer.add_graph(tf.get_default_graph())
+
+def predict(mnist, mnist_network):
+    write_log()
 
     test_acc = 0.0
     with tf.Session() as sess:
@@ -193,11 +176,32 @@ def main(params):
             feed_dict={mnist_network.images: mnist.test.images,
                        mnist_network.labels: mnist.test.labels,
                        mnist_network.keep_prob: 1.0})
-
-        nni.report_final_result(test_acc)
         logger.debug('Final result is %g', test_acc)
         logger.debug('Send final result done.')
+        return test_acc
 
+def run_trial(params):
+    '''
+    Main function, build mnist network, run and send result to NNI.
+    '''
+    # Import data
+    mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
+    print('Mnist download data down.')
+    logger.debug('Mnist download data down.')
+
+    # Create the model
+    # Build the graph for the deep net
+    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
+                                 channel_2_num=params['channel_2_num'],
+                                 conv_size=params['conv_size'],
+                                 hidden_size=params['hidden_size'],
+                                 pool_size=params['pool_size'],
+                                 learning_rate=params['learning_rate'])
+    mnist_network.build_network()
+    logger.debug('Mnist build network done.')
+
+    acc = predict(mnist, mnist_network)
+    nni.report_final_result(acc)
 
 def generate_default_params():
     '''
@@ -225,7 +229,7 @@ if __name__ == '__main__':
         # run
         params = generate_default_params()
         params.update(RCV_PARAMS)
-        main(params)
+        run_trial(params)
     except Exception as exception:
         logger.exception(exception)
         raise

@@ -14,61 +14,53 @@ Note:
 * If there is any error like `Segmentation fault`, please refer to [FAQ][1]
 * For the `system requirements` of NNI, please refer to [Install NNI][2]
 
-## "Hello World" example: MNIST
+## "Hello World" example on MNIST
 
-As long as you provide data sets, training methods and search spaces, NNI can automatically generate different sets of hyper-parameters, start corresponding training trials and find the optimal hyper-parameter configuration within the given time or number of experiments.
+NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the finding hyperparameters, running trials, getting results, tuning hyperparameters, running trials process.
 
 Here is an example script to train a CNN on MNIST dataset **without NNI**:
 
 ```python
 # Please refer to source code to see the detail implementation.
-def main(params):
-    '''skipped the model training code'''
-    print ("The final accuracy is ", test_acc)
+def run_trial(params):
+    mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
 
-def generate_default_params():
-    params = {
-        'data_dir': '/tmp/tensorflow/mnist/input_data',
-        'dropout_rate': 0.5,
-        'channel_1_num': 32,
-        'channel_2_num': 64,
-        'conv_size': 5,
-        'pool_size': 2,
-        'hidden_size': 1024,
-        'learning_rate': 1e-4,
-        'batch_num': 2000,
-        'batch_size': 32}
-    return params
+    mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
+    mnist_network.build_network()
+
+    acc = predict(mnist, mnist_network)
 
 if __name__ == '__main__':
     try:
-        # run
-        params = generate_default_params()
-        main(params)
+        params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64, 'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
+        run_trial(params)
 ```
 
 Note: We display the important part instead of complete file in the doc. If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_without_nni.py][7]
 
-If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you have to do three more things:
+The above code can only try one set of parameters at a time, if we want to tune learning rate, we need to manually analysis and tune the hyperparameters.
+
+NNI can help user do the tuning jobs, the process is presented below:
+
+```
+input: search space, trial code, config file
+output: one optimal hyperparameter configuration
+
+1: For t = 0, 1, 2, ..., maxTrialNum,
+2:      hyper_params_set = nni.get_next_parameter()
+3:      accuracy = run_trial(hyper_params_set)
+4:      nni.report_final_result(accuracy)
+```
+
+If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you have to do three changes base on your code:
 
 **Three things required to do when using NNI**
 
-1. Give a `Search Space` file in json, includes the `name` and the `distribution` (discrete valued or continuous valued) of hyper-parameters you need to search. 
+1. Give a `Search Space` file in json, includes the `name` and the `distribution` (discrete valued or continuous valued) of all the hyperparameters you need to search.
 
 ```diff
-- def generate_default_params():
--   params = {
--       'data_dir': '/tmp/tensorflow/mnist/input_data',
--       'dropout_rate': 0.5,
--       'channel_1_num': 32,
--       'channel_2_num': 64,
--       'conv_size': 5,
--       'pool_size': 2,
--       'hidden_size': 1024,
--       'learning_rate': 1e-4,
--       'batch_num': 2000,
--       'batch_size': 32}
--   return params
+-   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
+-   'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
 + {
 +     "dropout_rate":{"_type":"uniform","_value":[0.5, 0.9]},
 +     "conv_size":{"_type":"choice","_value":[2,3,5,7]},
@@ -80,30 +72,31 @@ If you want to use NNI to automatically train your model and find the optimal hy
 
 *Implemented code directory: [search_space.json][3]*
 
-2. Modified your  `Trial` file to report the intermedian and final result to NNI and get the next hyper-parameter set from NNI.
+1. Modified your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
 
 ```diff
 # Please refer to source code to see the detail implementation.
-+ import nni
++   import nni
+    def run_trial(params):
+        mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
 
-  def main(params):
-      '''skipped the model training code''' 
--     print ("The final accuracy is ", test_acc)
-+     # report final result matrix when the trial finished all the epoch
-+     nni.report_final_result(test_acc)
+        mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
+        mnist_network.build_network()
 
-  if __name__ == '__main__':
-      try:
-          # run
--         params = generate_default_params()
-+         # get parameters from tuner
-+         RCV_PARAMS = nni.get_next_parameter()
-          main(params)
+        acc = predict(mnist, mnist_network)
++       nni.report_final_result(acc)
+
+    if __name__ == '__main__':
+        try:
+-           params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
+-           'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
++           params = nni.get_next_parameter()
+            run_trial(params)
 ```
 
 *Implemented code directory: [mnist.py][4]*
 
-3. Define a `config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, runtime and name arguments.
+1. Define a `config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
 
 ```diff
 + authorName: default
@@ -126,7 +119,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
 
 *Implemented code directory: [config.yml][5]*
 
-All the code above are stored in [examples/trials/mnist/][8]. When everything is ready, **run the config.yml file from your command line**.
+All the codes above are already prepared and stored in [examples/trials/mnist/][8]. When these things are done, **run the config.yml file from your command line to start the experiment**.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
