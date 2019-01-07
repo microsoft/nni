@@ -1,22 +1,22 @@
-# Network Morphism for Automatic Model Architecture Search in NNI
+# 在 NNI 中用网络形态算法来进行自动模型结构搜索
 
-The Network Morphism is a build-in Tuner using network morphism techniques to search and evaluate the new network architecture. This example shows us how to use it to find good model architectures for deep learning.
+Network Morphism （网络形态）是内置的调参器，它使用了网络形态技术来搜索和评估新的网络结构。 该样例展示了如何使用它来为深度学习找到好的模型架构。
 
-## How to run this example?
+## 如何运行此样例？
 
-### 1. Training framework support
+### 1. 训练框架支持
 
-The network morphism now is framework-based, and we have not implemented the framework-free methods. The training frameworks which we have supported yet are Pytorch and Keras. If you get familiar with the intermediate JSON format, you can build your own model in your own training framework. In the future, we will change to intermediate format from JSON to ONNX in order to get a [standard intermediate representation spec](https://github.com/onnx/onnx/blob/master/docs/IR.md).
+网络形态当前基于框架，还没有实现与框架脱离的方法。 当前支持 Pytorch 和 Keras。 如果熟悉 JSON 中间格式，可以在自定义的训练框架中生成自己的模型。 随后，我们会将中间结果从 JSON 转换为 ONNX，从而能够成为[标准的中间表达](https://github.com/onnx/onnx/blob/master/docs/IR.md)。
 
-### 2. Install the requirements
+### 2. 安装需求
 
 ```bash
-# install the requirements packages
+# 安装依赖包
 cd examples/trials/network_morphism/
 pip install -r requirements.txt
 ```
 
-### 3. Update configuration
+### 3. 更新配置
 
 Modify `examples/trials/network_morphism/cifar10/config.yaml` to fit your own task, note that searchSpacePath is not required in our configuration. Here is the default configuration:
 
