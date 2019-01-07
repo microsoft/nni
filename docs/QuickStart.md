@@ -23,17 +23,12 @@ Here is an example script to train a CNN on MNIST dataset **without NNI**:
 ```python
 # Please refer to source code to see the detail implementation.
 def main(params):
-    # Import data [skipped a piece of code here]
-    # Create the model [skipped a piece of code here]
-    # Write log [skipped a piece of code here]
+    # Import data, Create the model and Write the log [skipped a piece of code here]
     with tf.Session() as sess:
         '''[skipped a piece of code here]'''
         print ("The final accuracy is ", test_acc)
 
 def generate_default_params():
-    '''
-    Generate default parameters for mnist network.
-    '''
     params = {
         'data_dir': '/tmp/tensorflow/mnist/input_data',
         'dropout_rate': 0.5,
@@ -64,9 +59,6 @@ If you want to use NNI to automatically train your model and find the optimal hy
 
 ```diff
 - def generate_default_params():
--   '''
--   Generate default parameters for mnist network.
--   '''
 -   params = {
 -       'data_dir': '/tmp/tensorflow/mnist/input_data',
 -       'dropout_rate': 0.5,
@@ -98,9 +90,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
   '''[skipped a piece of code here]'''
 
   def main(params):
-    # Import data [skipped a piece of code here]
-    # Create the model [skipped a piece of code here]
-    # Write log [skipped a piece of code here]
+    # Import data, Create the model and Write the log [skipped a piece of code here]
     with tf.Session() as sess:
         '''[skipped a piece of code here]'''
 -       print ("The final accuracy is ", test_acc)
