@@ -10,37 +10,38 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 以 `examples/trials/mnist-annotation` 为例。 NNI 的 yaml 配置文件如下：
 
-    authorName: your_name
-    experimentName: auto_mnist
-    # 并发运行的尝试数量
-    trialConcurrency: 2
-    # 实验的最长持续运行时间
-    maxExecDuration: 3h
-    # 空表示一直运行
-    maxTrialNum: 100
-    # 可选项: local, remote, pai
-    trainingServicePlatform: pai
-    # 可选项: true, false  
-    useAnnotation: true
-    tuner:
-      builtinTunerName: TPE
-      classArgs:
-        optimize_mode: maximize
-    trial:
-      command: python3 mnist.py
-      codeDir: ~/nni/examples/trials/mnist-annotation
-      gpuNum: 0
-      cpuNum: 1
-      memoryMB: 8196
-      image: openpai/pai.example.tensorflow
-      dataDir: hdfs://10.1.1.1:9000/nni
-      outputDir: hdfs://10.1.1.1:9000/nni
-    # 配置访问的 OpenPAI 集群
-    paiConfig:
-      userName: your_pai_nni_user
-      passWord: your_pai_password
-      host: 10.1.1.1
-    
+```yaml
+authorName: your_name
+experimentName: auto_mnist
+# 并发运行的尝试数量
+trialConcurrency: 2
+# 实验的最长持续运行时间
+maxExecDuration: 3h
+# 空表示一直运行
+maxTrialNum: 100
+# 可选项: local, remote, pai
+trainingServicePlatform: pai
+# 可选项: true, false  
+useAnnotation: true
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: ~/nni/examples/trials/mnist-annotation
+  gpuNum: 0
+  cpuNum: 1
+  memoryMB: 8196
+  image: openpai/pai.example.tensorflow
+  dataDir: hdfs://10.1.1.1:9000/nni
+  outputDir: hdfs://10.1.1.1:9000/nni
+# 配置访问的 OpenPAI 集群
+paiConfig:
+  userName: your_pai_nni_user
+  passWord: your_pai_password
+  host: 10.1.1.1
+```
 
 注意：如果用 pai 模式运行，需要在 yaml 文件中设置 `trainingServicePlatform: pai`。
 
@@ -65,16 +66,16 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 来在 pai 模式下启动实验。 NNI 会为每个尝试创建 OpenPAI 作业，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 OpenPAI 集群的网站中看到 NNI 创建的作业，例如： ![](../../docs/img/nni_pai_joblist.jpg)
 
-Notice: In pai mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
+注意：pai 模式下，NNIManager 会启动 RESTful 服务，监听端口为 NNI 网页服务器的端口加1。 例如，如果网页端口为`8080`，那么 RESTful 服务器会监听在 `8081`端口，来接收运行在 Kubernetes 中的尝试作业的指标。 因此，需要在防火墙中启用端口 `8081` 的 TCP 协议，以允许传入流量。
 
-Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information.
+当一个尝试作业完成后，可以在 NNI 网页的概述页面（如：http://localhost:8080/oview）中查看尝试的信息。
 
-Expand a trial information in trial list view, click the logPath link like: ![](../../docs/img/nni_webui_joblist.jpg)
+在尝试列表页面中展开尝试信息，点击如下的 logPath： ![](../../docs/img/nni_webui_joblist.jpg)
 
-And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS: ![](../../docs/img/nni_trial_hdfs_output.jpg)
+接着将会打开 HDFS 的 WEB 界面，并浏览到尝试的输出文件： ![](../../docs/img/nni_trial_hdfs_output.jpg)
 
-You can see there're three fils in output folder: stderr, stdout, and trial.log
+在输出目录中可以看到三个文件：stderr, stdout, 以及 trial.log
 
-If you also want to save trial's other output into HDFS, like model files, you can use environment variable `NNI_OUTPUT_DIR` in your trial code to save your own output files, and NNI SDK will copy all the files in `NNI_OUTPUT_DIR` from trial's container to HDFS.
+如果希望将尝试的模型数据等其它输出保存到HDFS中，可在尝试代码中使用 `NNI_OUTPUT_DIR` 来自己保存输出文件，NNI SDK会从尝试的容器中将 `NNI_OUTPUT_DIR` 中的文件复制到 HDFS 中。
 
-Any problems when using NNI in pai mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni), or send mail to nni@microsoft.com
+如果在使用 pai 模式时遇到任何问题，请到 [NNI github](https://github.com/Microsoft/nni)中创建问题，或发信给 nni@microsoft.com。
