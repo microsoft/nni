@@ -7,7 +7,7 @@
 * [Anneal（退火算法）](#Anneal)
 * [Naive Evolution（进化算法）](#Evolution)
 * [SMAC](#SMAC) (需要通过 `nnictl` 命令安装)
-* [Batch Tuner](#Batch)
+* [Batch Tuner（批量调参器）](#Batch)
 * [Grid Search（网格搜索）](#Grid)
 * [Hyperband](#Hyperband)
 * [Network Morphism](#NetworkMorphism) (需要安装 pyTorch)
@@ -110,11 +110,11 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 ```
 
 <a name="Batch"></a>
-**Batch tuner**
+**Batch tuner（批量调参器）**
 
-Batch tuner 能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都完成后，实验即结束。 Batch tuner 的[搜索空间](./SearchSpaceSpec.md)只支持 `choice`。
+批量调参器能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都完成后，实验即结束。 批量调参器 的[搜索空间](./SearchSpaceSpec.md)只支持 `choice`。
 
-*建议场景*：如果需要实验的配置已经决定好了，可通过 batch tuner 将它们列到搜索空间中运行即可。
+*建议场景*：如果需要实验的配置已经决定好了，可通过批量调参器将它们列到搜索空间中运行即可。
 
 *用法*：
 
@@ -124,7 +124,7 @@ Batch tuner 能让用户简单的提供几组配置（如，超参选项的组�
     builtinTunerName: BatchTuner
 ```
 
-注意 BatchTuner 支持的搜索空间文件如下例：
+注意批量调参器支持的搜索空间文件如下例：
 
 ```json
 {
@@ -176,41 +176,41 @@ Batch tuner 能让用户简单的提供几组配置（如，超参选项的组�
       optimize_mode: maximize
       # R: 可分配给尝试的最大的 STEPS（可以是小批量或 epoch 的数量）。 每个尝试都需要用 STEPS 来控制运行的时间。
       R: 60
-      # eta: proportion of discarded trials
+      # eta: 丢弃的尝试的比例
       eta: 3
 ```
 
 <a name="NetworkMorphism"></a>
 **Network Morphism**
 
-[Network Morphism](7) provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Next, it estimates the value of child network using the history architecture and metric pairs. Then it selects the most promising one to train. More detail can be referred to [here](../src/sdk/pynni/nni/networkmorphism_tuner/README.md).
+[Network Morphism](7) 提供了深度学习模型的自动架构搜索功能。 每个子网络都继承于父网络的知识和形态，并变换网络的不同形态，包括深度，宽度，跳层连接（skip-connection）。 接着，使用历史的架构和指标，来估计子网络的值。 然后会选择最有希望的模型进行训练。 参考[这里](../src/sdk/pynni/nni/networkmorphism_tuner/README.md)，了解更多信息。
 
-*Installation*: NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so users should install it first.
+*安装*： NetworkMorphism 需要 [pyTorch](https://pytorch.org/get-started/locally)，必须提前安装它。
 
-*Suggested scenario*: It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](../examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the cv domain.
+*建议场景*：需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 可修改[样例](../examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此调参器仅支持视觉领域。
 
-*Usage*:
+*用法*：
 
 ```yaml
   # config.yaml
   tuner:
     builtinTunerName: NetworkMorphism
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
-      #for now, this tuner only supports cv domain
+      #当前，仅支持 cv（视觉）领域
       task: cv
-      #input image width
+      #输入图像宽度
       input_width: 32
-      #input image channel
+      #输入图像通道数量
       input_channel: 3
-      #number of classes
+      #分类的数量
       n_output_node: 10
 ```
 
-# How to use Assessor that NNI supports?
+# 如何使用 NNI 支持的评估器？
 
-For now, NNI has supported the following assessor algorithms.
+目前，NNI 已支持下列评估器算法。
 
 * [Medianstop](#Medianstop)
 * [Curvefitting](#Curvefitting)
