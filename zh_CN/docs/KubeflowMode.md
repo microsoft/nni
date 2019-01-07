@@ -2,7 +2,7 @@
 
 NNI 支持在 [Kubeflow](https://github.com/kubeflow/kubeflow)上运行，称为 kubeflow 模式。 在开始使用 NNI 的 kubeflow 模式前，需要现有一个 kubernetes 集群，可以是私有部署的，或者是 [Azure Kubernetes Service(AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/)，并且需要一台配置好 [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) 的 Ubuntu 计算机连接到此 kubernetes 集群。 如果不熟悉 kubernetes，可以先浏览[这里](https://kubernetes.io/docs/tutorials/kubernetes-basics/)。 在 kubeflow 模式下，每个尝试程序会在 kubernetes 集群中作为一个 kubeflow 作业来运行。
 
-## 私有部署的 Kubernetes 的先决条件
+## 私有部署的 Kubernetes 的准备工作
 
 1. 采用 Kubernetes 1.8 或更高版本。 根据[指南](https://kubernetes.io/docs/setup/)来安装 Kubernetes。
 2. 在 Kubernetes 集群中下载、安装、部署 **Kubelow**。 根据[指南](https://www.kubeflow.org/docs/started/getting-started/)安装 Kubeflow。
@@ -14,9 +14,9 @@ NNI 支持在 [Kubeflow](https://github.com/kubeflow/kubeflow)上运行，称为
         apt-get install nfs-common 
         
 
-7. Install **NNI**, follow the install guide [here](GetStarted.md).
+7. 参考[指南](GetStarted.md)安装 **NNI**。
 
-## Prerequisite for Azure Kubernetes Service
+## Azure 部署的 Kubernetes 的准备工作
 
 1. NNI support kubeflow based on Azure Kubernetes Service, follow the [guideline](https://azure.microsoft.com/en-us/services/kubernetes-service/) to set up Azure Kubernetes Service.
 2. Install [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) and **kubectl**. Use `az login` to set azure account, and connect kubectl client to AKS, refer this [guideline](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster).
