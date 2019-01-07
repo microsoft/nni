@@ -6,7 +6,7 @@
 
 对于阅读理解项目，注意力和循环神经网络（RNN）模块已经被证明非常有效。 使用的搜索空间如下：
 
-1. IDENTITY (Effectively means keep training).
+1. IDENTITY (Effectively 表示继续训练)。
 2. INSERT-RNN-LAYER (Inserts a LSTM. Comparing the performance of GRU and LSTM in our experiment, we decided to use LSTM here.)
 3. REMOVE-RNN-LAYER
 4. INSERT-ATTENTION-LAYER(Inserts a attention layer.)
@@ -14,7 +14,7 @@
 6. ADD-SKIP (Identity between random layers).
 7. REMOVE-SKIP (Removes random skip).
 
-![ga-squad-logo](./ga_squad.png)
+![ga-squad-logo](../../../../examples/trials/ga_squad/ga_squad.png)
 
 ## New version
 
