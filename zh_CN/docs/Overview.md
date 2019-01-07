@@ -42,14 +42,14 @@ NNI 提供了一组样例来帮助熟悉以上过程。
 
 ## 了解更多信息
 
-* [Get started](GetStarted.md)
-* [Install NNI](Installation.md)
-* [Use command line tool nnictl](NNICTLDOC.md)
-* [Use NNIBoard](WebUI.md)
-* [Use annotation](howto_1_WriteTrial.md#nni-python-annotation)
+* [开始使用](GetStarted.md)
+* [安装 NNI](Installation.md)
+* [使用命令行工具 nnictl](NNICTLDOC.md)
+* [使用 NNIBoard](WebUI.md)
+* [使用标记](howto_1_WriteTrial.md#nni-python-annotation)
 
-### **Tutorials**
+### **教程**
 
-* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
-* [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PAIMode.md)
+* [如何在本机运行实验 (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
+* [如何在多机上运行实验？](tutorial_2_RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行实验？](PAIMode.md)
