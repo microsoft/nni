@@ -1,4 +1,4 @@
-# How to write a Trial running on NNI?
+# 如何在 NNI 中实现尝试的代码？
 
 *Trial receive the hyper-parameter/architecture configure from Tuner, and send intermediate result to Assessor and final result to Tuner.*
 
@@ -6,7 +6,7 @@ So when user want to write a Trial running on NNI, she/he should:
 
 **1)Have an original Trial could run**,
 
-Trial's code could be any machine learning code that could run in local. Here we use ```mnist-keras.py``` as example:
+Trial's code could be any machine learning code that could run in local. 这里使用 `mnist-kraas. py` 作为样例：
 
 ```python
 import argparse
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
 **2)Get configure from Tuner**
 
-User import ```nni``` and use ```nni.get_next_parameter()``` to receive configure. Please noted **10**, **24** and **25** line in the following code.
+User import `nni` and use `nni.get_next_parameter()` to receive configure. Please noted **10**, **24** and **25** line in the following code.
 
 ```python
 import argparse
@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
 **3) Send intermediate result**
 
-Use ```nni.report_intermediate_result``` to send intermediate result to Assessor. Please noted **5** line in the following code.
+Use `nni.report_intermediate_result` to send intermediate result to Assessor. Please noted **5** line in the following code.
 
 ```python
 ...
@@ -142,7 +142,7 @@ def train(args, params):
 
 **4) Send final result**
 
-Use ```nni.report_final_result``` to send final result to Trial. Please noted **15** line in the following code.
+Use `nni.report_final_result` to send final result to Trial. Please noted **15** line in the following code.
 
 ```python
 ...
@@ -163,7 +163,7 @@ def train(args, params):
 ...    
 ```
 
-Here is the complete example:
+这是完整的样例：
 
 ```python
 import argparse
@@ -186,7 +186,7 @@ NUM_CLASSES = 10
 
 def create_mnist_model(hyper_params, input_shape=(H, W, 1), num_classes=NUM_CLASSES):
     '''
-    Create simple convolutional model
+    创建简单的卷积模型
     '''
     layers = [
         Conv2D(32, kernel_size=(3, 3), activation='relu', input_shape=input_shape),
@@ -209,7 +209,7 @@ def create_mnist_model(hyper_params, input_shape=(H, W, 1), num_classes=NUM_CLAS
 
 def load_mnist_data(args):
     '''
-    Load MNIST dataset
+    加载 MNIST 数据集
     '''
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
@@ -225,18 +225,18 @@ def load_mnist_data(args):
 
 class SendMetrics(keras.callbacks.Callback):
     '''
-    Keras callback to send metrics to NNI framework
+    Keras 回调来返回中间结果给 NNI
     '''
     def on_epoch_end(self, epoch, logs={}):
         '''
-        Run on end of each epoch
+        在每个 epoch 结束时运行
         '''
         LOG.debug(logs)
         nni.report_intermediate_result(logs)
 
 def train(args, params):
     '''
-    Train model
+    训练模型
     '''
     x_train, y_train, x_test, y_test = load_mnist_data(args)
     model = create_mnist_model(params)
@@ -250,7 +250,7 @@ def train(args, params):
 
 def generate_default_params():
     '''
-    Generate default hyper parameters
+    生成默认超参
     '''
     return {
         'optimizer': 'Adam',
@@ -267,12 +267,12 @@ if __name__ == '__main__':
     ARGS, UNKNOWN = PARSER.parse_known_args()
 
     try:
-        # get parameters from tuner
+        # 从调参器中获取参数
         RECEIVED_PARAMS = nni.get_next_parameter()
         LOG.debug(RECEIVED_PARAMS)
         PARAMS = generate_default_params()
         PARAMS.update(RECEIVED_PARAMS)
-        # train
+        # 训练
         train(ARGS, PARAMS)
     except Exception as e:
         LOG.exception(e)
