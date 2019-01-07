@@ -23,10 +23,8 @@ Here is an example script to train a CNN on MNIST dataset **without NNI**:
 ```python
 # Please refer to source code to see the detail implementation.
 def main(params):
-    # Import data, Create the model and Write the log [skipped a piece of code here]
-    with tf.Session() as sess:
-        '''[skipped a piece of code here]'''
-        print ("The final accuracy is ", test_acc)
+    '''skipped the model training code'''
+    print ("The final accuracy is ", test_acc)
 
 def generate_default_params():
     params = {
@@ -87,15 +85,12 @@ If you want to use NNI to automatically train your model and find the optimal hy
 ```diff
 # Please refer to source code to see the detail implementation.
 + import nni
-  '''[skipped a piece of code here]'''
 
   def main(params):
-    # Import data, Create the model and Write the log [skipped a piece of code here]
-    with tf.Session() as sess:
-        '''[skipped a piece of code here]'''
--       print ("The final accuracy is ", test_acc)
-+       # report final result matrix when the trial finished all the epoch
-+       nni.report_final_result(test_acc)
+      '''skipped the model training code''' 
+-     print ("The final accuracy is ", test_acc)
++     # report final result matrix when the trial finished all the epoch
++     nni.report_final_result(test_acc)
 
   if __name__ == '__main__':
       try:
