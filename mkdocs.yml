@@ -13,6 +13,8 @@ nav:
             - Remote: RemoteMachineMode.md
             - PAI: PAIMode.md
             - Kubeflow: KubeflowMode.md
+    - Examples:
+        - MNIST Examples: mnist_examples.md
     - Reference:
         - nnictl: NNICTLDOC.md
         - Configuration: ExperimentConfig.md
