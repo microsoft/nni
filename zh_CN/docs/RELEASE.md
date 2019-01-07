@@ -4,37 +4,37 @@
 
 * [Kubeflow 训练服务](./KubeflowMode.md) 
     * 支持 tf-operator
-    * [Distributed trial example](../examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
-* [Grid search tuner](../src/sdk/pynni/nni/README.md#Grid) 
-* [Hyperband tuner](../src/sdk/pynni/nni/README.md#Hyperband)
-* Support launch NNI experiment on MAC
+    * Kubeflow 上的[分布式尝试样例](../examples/trials/mnist-distributed/dist_mnist.py)
+* [网格搜索调参器](../src/sdk/pynni/nni/README.md#Grid) 
+* [Hyperband 调参器](../src/sdk/pynni/nni/README.md#Hyperband)
+* 支持在 MAC 上运行 NNI 实验
 * WebUI 
-    * UI support for hyperband tuner
-    * Remove tensorboard button 
-    * Show experiment error message 
-    * Show line numbers in search space and trial profile
-    * Support search a specific trial by trial number
-    * Show trial's hdfsLogPath
-    * Download experiment parameters
+    * 支持 hyperband 调参器
+    * 移除 tensorboard 按钮 
+    * 显示实验的错误消息 
+    * 显示搜索空间和尝试配置的行号
+    * 支持通过指定的尝试 id 来搜索
+    * 显示尝试的 hdfsLogPath
+    * 下载实验参数
 
-## Others
+## 其它
 
-* Asynchronous dispatcher
-* Docker file update, add pytorch library 
-* Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API. 
-* OpenPAI training service bug fix 
-    * Support NNI Manager IP configuration(nniManagerIp) in PAI cluster config file, to fix the issue that user’s machine has no eth0 device 
-    * File number in codeDir is capped to 1000 now, to avoid user mistakenly fill root dir for codeDir
-    * Don’t print useless ‘metrics is empty’ log int PAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks PAI trial’s output for debugging purpose
-    * Add timestamp at the beginning of each log entry in trial keeper.
+* 异步调度
+* 更新 Docker 文件，增加 pytorch 库 
+* 重构 'nnictl stop' 过程，发送 SIGTERM 给 NNI 管理器进程，而不是调用停止 Restful API. 
+* OpenPAI 训练服务修复缺陷 
+    * 在 NNI 管理器中为 PAI 集群配置文件支持 IP 配置(nniManagerIp)，来修复用户计算机没有 eth0 设备的问题。 
+    * codeDir 中的文件数量上限改为1000，避免用户无意中填写了 root 目录。
+    * 移除 PAI 作业的 stdout 日志中无用的 ‘metrics is empty’。 在新指标被记录时，仅输出有用的消息，来减少用户检查 PAI 尝试输出时的困惑。
+    * 在尝试 keeper 的开始增加时间戳。
 
-# Release 0.3.0 - 11/2/2018
+# 发布 0.3.0 - 11/2/2018
 
-## NNICTL new features and updates
+## NNICTL 的新功能和更新
 
-* Support running multiple experiments simultaneously.
+* 支持同时运行多个实验。
     
-    Before v0.3, NNI only supports running single experiment once a time. After this realse, users are able to run multiple experiments simultaneously. Each experiment will require a unique port, the 1st experiment will be set to the default port as previous versions. You can specify a unique port for the rest experiments as below:
+    在 v0.3 以前，NNI 仅支持一次运行一个实验。 此版本开始，用户可以同时运行多个实验。 Each experiment will require a unique port, the 1st experiment will be set to the default port as previous versions. You can specify a unique port for the rest experiments as below:
     
         nnictl create --port 8081 --config <config file path>
 
