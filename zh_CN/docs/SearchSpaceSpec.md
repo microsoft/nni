@@ -38,46 +38,46 @@
 * {"_type":"quniform","_value":[low, high, q]}
    
    * 这表示变量值会类似于 round(uniform(low, high) / q) * q
-   * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.   
+   * 适用于离散，同时反映了某种"平滑"的数值，但上下限都有限制。 如果需要从范围 [low, high] 中均匀选择整数，可以如下定义 `_value`：`[low, high, 1]`。   
       
 
 * {"_type":"loguniform","_value":[low, high]}
    
-   * Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution like exp(uniform(log(low), log(high))), so that the logarithm of the return value is uniformly distributed.
-   * When optimizing, this variable is constrained to be positive.   
+   * 变量值在范围 [low, high] 中是 loguniform 分布，如 exp(uniform(log(low), log(high)))，因此返回值是对数均匀分布的。
+   * 当优化时，此变量必须是正数。   
       
 
 * {"_type":"qloguniform","_value":[low, high, q]}
    
-   * Which means the variable value is a value like round(loguniform(low, high)) / q) * q
-   * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.   
+   * 这表示变量值会类似于 round(loguniform(low, high)) / q) * q
+   * 适用于值是“平滑”的离散变量，但上下限均有限制。   
       
 
 * {"_type":"normal","_value":[label, mu, sigma]}
    
-   * Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma. When optimizing, this is an unconstrained variable.   
+   * 变量值为实数，且为正态分布，均值为 mu，标准方差为 sigma。 优化时，此变量不受约束。   
       
 
 * {"_type":"qnormal","_value":[label, mu, sigma, q]}
    
-   * Which means the variable value is a value like round(normal(mu, sigma) / q) * q
-   * Suitable for a discrete variable that probably takes a value around mu, but is fundamentally unbounded.   
+   * 这表示变量值会类似于 round(normal(mu, sigma) / q) * q
+   * 适用于在 mu 周围的离散变量，且没有上下限限制。   
       
 
 * {"_type":"lognormal","_value":[label, mu, sigma]}
    
-   * Which means the variable value is a value drawn according to exp(normal(mu, sigma)) so that the logarithm of the return value is normally distributed. When optimizing, this variable is constrained to be positive.   
+   * 变量值为 exp(normal(mu, sigma)) 分布，范围值是对数的正态分布。 当优化时，此变量必须是正数。   
       
 
 * {"_type":"qlognormal","_value":[label, mu, sigma, q]}
    
-   * Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
-   * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.   
+   * 这表示变量值会类似于 round(exp(normal(mu, sigma)) / q) * q
+   * 适用于值是“平滑”的离散变量，但某一边有界。   
       
 
-Note that SMAC only supports a subset of the types above, including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`. In the current version, SMAC does not support cascaded search space (i.e., conditional variable in SMAC).
+注意：SMAC 仅支持部分类型，包括 `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`。 当前版本中，SMAC 不支持级联搜索空间（即，SMAC中的条件变量）。
 
-Note that GridSearch Tuner only supports a subset of the types above, including `choic`, `quniform` and `qloguniform`, where q here specifies the number of values that will be sampled. Details about the last two type as follows
+注意，网格搜索调参器仅支持部分类型，包括 `choice`, `quniform` and `qloguniform`, 这里的 q 指定了采样的数量。 最后两种类型的细节如下：
 
-* Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
+* 类型 'quniform' 接收三个值 [low, high, q]， 其中 [low, high] 指定了范围，而 'q' 指定了会被均匀采样的值的数量。 注意 q 至少为 2。 它的第一个采样值为 'low'，每个采样值都会比前一个大 (high-low)/q 。
 * Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
