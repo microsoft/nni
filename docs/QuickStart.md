@@ -2,8 +2,6 @@
 
 ## Installation
 
-Two ways for installation: you can get NNI from pypi or clone the repo and install it from there.
-
 **Install through pip**
 
 * We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
@@ -17,16 +15,16 @@ Two ways for installation: you can get NNI from pypi or clone the repo and insta
   * If there is any error like `Segmentation fault`, please refer to [FAQ][1]
   * For the system requirements of NNI, please refer to [Install NNI][2]
 
-## First "Hello World" experiment: MNIST
+## "Hello World" example: MNIST
 
 As long as you provide data sets, training methods and search spaces, NNI can automatically generate training experiments, adjust hyper-parameters, and find the optimal hyper-parameter configuration within the given time or number of experiments.
 
-Here is a QuickStart example to run a NNI experiment on MNIST. 
+Here is a QuickStart example to run a NNI experiment on MNIST.
 
-**Three things required when using NNI**
+**Three things required to do when using NNI**
 
 1. Give a `Search Space` file in json, includes the `name` and the `range` of hyper-parameters you need to search. For example: [search_space.json][3]
-2. Prepare a `trial` job in python for training model, which define the methods to trian the model when we get a set of parameters. For example: [mnist.py][4]
+2. Prepare a `model training method(trial)` in python, which define an individual attempt at applying a set of hyper-parameters. For example: [mnist.py][4]
 3. Define a `config` in yaml format like below. Here we declare the path to SearchSpace and trial, also give information such as tuning algorithm, runtime and name arguments.
 
 *MNIST [config.yml][5] file we prepared:*
@@ -38,23 +36,25 @@ trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
 trainingServicePlatform: local
+# The path to Search Space
 searchSpacePath: search_space.json
 useAnnotation: false
 tuner:
   builtinTunerName: TPE
 trial:
+  # The path and the running command of model training method(trial)
   command: python3 mnist.py
   codeDir: .
   gpuNum: 0
 ```
 
-* Everything is ready! **Now run the config.yml from the command-line**:
+Everything is ready! **Now run the config.yml from the command-line**:
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
-* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
+Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
 
 ```
 INFO: Starting restful server...
@@ -90,7 +90,7 @@ After you start your experiment in NNI successfully, you can find a message in t
 The Web UI urls are: http://223.255.255.1:8080   http://127.0.0.1:8080
 ```
 
-Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
+Open the `Web UI url`(In this information is: `http://223.255.255.1:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
 
 ### View summary page
 
