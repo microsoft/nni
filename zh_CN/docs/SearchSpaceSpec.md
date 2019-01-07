@@ -80,4 +80,4 @@
 注意，网格搜索调参器仅支持部分类型，包括 `choice`, `quniform` and `qloguniform`, 这里的 q 指定了采样的数量。 最后两种类型的细节如下：
 
 * 类型 'quniform' 接收三个值 [low, high, q]， 其中 [low, high] 指定了范围，而 'q' 指定了会被均匀采样的值的数量。 注意 q 至少为 2。 它的第一个采样值为 'low'，每个采样值都会比前一个大 (high-low)/q 。
-* Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
+* 类型 'qloguniform' 的行为与 'quniform' 类似，不同处在于首先将范围改为 [log(low), log(high)] 采样后，再将数值还原。
