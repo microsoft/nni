@@ -1,50 +1,55 @@
-# **Get Started with NNI**
+# **开始使用 NNI**
 
-## **Installation**
+## **安装**
 
-* **Dependencies**
+* **依赖项**
     
-    python >= 3.5 git wget
+        python >= 3.5
+        git
+        wget
+        
     
-    python pip should also be correctly installed. You could use "python3 -m pip -v" to check in Linux.
+    需要正确安装 Python 的 pip。 可以用 "python3 -m pip -v" 来检查 pip 版本。
     
-    * Note: we don't support virtual environment in current releases.
+    * 注意：当前版本不支持虚拟环境。
 
-* **Install NNI through pip**
+* **通过 pip 命令安装 NNI**
     
-    python3 -m pip install --user --upgrade nni
+        python3 -m pip install --user --upgrade nni
+        
 
-* **Install NNI through source code**
+* **通过源代码安装 NNI**
     
-    git clone -b v0.4.1 https://github.com/Microsoft/nni.git cd nni source install.sh
+        git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+        cd nni
+        source install.sh
+        
 
-## **Quick start: run a customized experiment**
+## **快速入门：运行自定义的实验**
 
-An experiment is to run multiple trial jobs, each trial job tries a configuration which includes a specific neural architecture (or model) and hyper-parameter values. To run an experiment through NNI, you should:
+实验会运行多个尝试任务，每个尝试任务会使用特定的神经网络（或模型）结构以及超参的值。 运行 NNI 实验，需要如下准备：
 
-* Provide a runnable trial
-* Provide or choose a tuner
-* Provide a yaml experiment configure file
-* (optional) Provide or choose an assessor
+* 可运行的尝试的代码
+* 实现或选择调参器
+* 准备 yaml 的实验配置文件
+* (可选) 实现或选择评估器
 
-**Prepare trial**: Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example:
+**准备尝试**: 先从简单样例开始，如：NNI 样例中的 mnist。 NNI 样例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有实验的样例。 执行下面的命令可轻松运行 NNI 的 mnist 样例：
 
-      python3 ~/nni/examples/trials/mnist-annotation/mnist.py
-    
+    python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 
-This command will be filled in the yaml configure file below. Please refer to [here](howto_1_WriteTrial.md) for how to write your own trial.
+上面的命令会写在 yaml 文件中。 参考[这里](howto_1_WriteTrial.md)来写出自己的实验代码。
 
-**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](howto_2_CustomizedTuner.md), but for simplicity, here we choose a tuner provided by NNI as below:
+**准备调参器**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的调参器（参考[这里](howto_2_CustomizedTuner.md)）。下面使用了 NNI 内置的调参器：
 
-      tuner:
+    tuner:
         builtinTunerName: TPE
         classArgs:
           optimize_mode: maximize
-    
 
-*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner, *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
+*builtinTunerName* 用来指定 NNI 中的调参器，*classArgs* 是传入到调参器的参数，*optimization_mode* 表明需要最大化还是最小化尝试的结果。
 
-**Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the yaml configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
+**准备配置文件**：实现尝试的代码，并选择或实现自定义的调参器后，就要准备 yaml 配置文件了。 NNI 为每个尝试样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
 
     authorName: your_name
     experimentName: auto_mnist
@@ -73,28 +78,28 @@ This command will be filled in the yaml configure file below. Please refer to [h
       gpuNum: 0
     
 
-Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here](../tools/annotation/README.md) for details). For trial, we should provide *trialCommand* which is the command to run the trial, provide *trialCodeDir* where the trial code is. The command will be executed in this directory. We should also provide how many GPUs a trial requires.
+因为这个尝试代码使用了 NNI 标记的方法（参考[这里](../tools/annotation/README.md) ），所以*useAnnotation* 为 true。 *command* 是运行尝试代码所需要的命令，*codeDir* 是尝试代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个尝试进程所需的 GPU 数量。
 
-With all these steps done, we can run the experiment with the following command:
+完成上述步骤后，可通过下列命令来启动实验：
 
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yml
     
 
-You can refer to [here](NNICTLDOC.md) for more usage guide of *nnictl* command line tool.
+参考[这里](NNICTLDOC.md)来了解 *nnictl* 命令行工具的更多用法。
 
-## View experiment results
+## 查看实验结果
 
-The experiment has been running now, NNI provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features. The WebUI is opened by default by `nnictl create`.
+实验开始运行后，可以通过 NNI 的网页来查看实验进程，并进行控制等。 网页界面默认会通过 `nnictl create` 命令打开。
 
-## Read more
+## 更多内容
 
-* [Tuners supported in the latest NNI release](./HowToChooseTuner.md)
-* [Overview](Overview.md)
-* [Installation](Installation.md)
-* [Use command line tool nnictl](NNICTLDOC.md)
-* [Use NNIBoard](WebUI.md)
-* [Define search space](SearchSpaceSpec.md)
-* [Config an experiment](ExperimentConfig.md)
-* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
-* [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PAIMode.md)
+* [NNI 最新版本支持的调参器](./HowToChooseTuner.md)
+* [概述](Overview.md)
+* [安装](Installation.md)
+* [使用命令行工具 nnictl](NNICTLDOC.md)
+* [使用 NNIBoard](WebUI.md)
+* [定制搜索空间](SearchSpaceSpec.md)
+* [配置实验](ExperimentConfig.md)
+* [如何在本机运行实验 (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
+* [如何在多机上运行实验？](tutorial_2_RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行实验？](PAIMode.md)

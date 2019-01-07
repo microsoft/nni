@@ -135,8 +135,8 @@
   
   * 说明
     
-    **trialConcurrency** 定义了并发尝试任务的最大数量。
-    
+        <strong>trialConcurrency</strong> 定义了并发尝试任务的最大数量。  
+        
         注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的尝试任务数量还没达到 trialConcurrency，尝试任务会被放入队列，等待分配 GPU 资源。
         
 
@@ -170,8 +170,8 @@
   
   * 说明
     
-    **searchSpacePath** 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
-    
+        __searchSpacePath__  定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
+        
         注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
         
 
@@ -181,8 +181,7 @@
     
     **useAnnotation** 定义使用标记来分析代码并生成搜索空间。
     
-        注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
-        
+    注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
 * **nniManagerIp**
   
@@ -190,8 +189,7 @@
     
     **nniManagerIp** 设置 NNI 管理器运行的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
     
-          注意: 可在 NNI 管理器机器上运行 ifconfig 来检查 eth0 是否存在。 如果不存在，推荐显式设置 nnimanagerIp。
-        
+    注意: 可在 NNI 管理器机器上运行 ifconfig 来检查 eth0 是否存在。 如果不存在，推荐显式设置 nnimanagerIp。
 
 * **tuner**
   
@@ -209,271 +207,283 @@
       
       **classArgs** 指定了调参器算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
   
-  * **codeDir**, **classFileName**, **className** 和**classArgs**  
+  * **codeDir**, **classFileName**, **className** and **classArgs**
+    
     * **codeDir**
+      
+            __codeDir__ 指定了调参器代码目录。
+          
     
-    **codeDir** specifies the directory of tuner code.
-    
-        * __classFileName__
-        
-    
-    **classFileName** specifies the name of tuner file.
+    * **classFileName**
+      
+            __classFileName__ 指定了调参器文件名。
+          
     
     * **className**
-    
-    **className** specifies the name of tuner class.
+      
+            __className__ 指定了调参器类名。
+          
     
     * **classArgs**
-    
-    **classArgs** specifies the arguments of tuner algorithm.
+      
+            __classArgs__ 指定了调参器算法的参数。
+          
   
   * **gpuNum**
     
-    **gpuNum** specifies the gpu number to run the tuner process. The value of this field should be a positive number.
-    
-        Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both. 
+        __gpuNum__ 指定了运行调参器进程的 GPU 数量。 此字段的值必须是正整数。
+        
+        注意: 只能使用一种方法来指定调参器，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。 
         
 
 * **assessor**
   
-  * Description
+  * 说明
     
-    **assessor** specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **assessor** 指定了实验的评估器算法。有两种方法可设置评估器。 一种方法是使用 NNI SDK 提供的评估器，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的评估器，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
-  * **builtinAssessorName** and **classArgs**
+  * **builtinAssessorName** 和 **classArgs**
     
     * **builtinAssessorName**
-    
-    **builtinAssessorName** specifies the name of system assessor, nni sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**}
+      
+          __builtinAssessorName__ 指定了系统评估器的名称， NNI 内置评估器 {__Medianstop__}
+          
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm
+          __classArgs__ 指定了评估器算法的参数。
+          
   
-  * **codeDir**, **classFileName**, **className** and **classArgs** * **codeDir**
+  * **codeDir**, **classFileName**, **className** and **classArgs**
     
-    **codeDir** specifies the directory of tuner code.
+    * **codeDir**
+      
+           __codeDir__ 指定了评估器代码目录。
+          
     
-        * __classFileName__
-        
-    
-    **classFileName** specifies the name of tuner file.
+    * **classFileName**
+      
+           __classFileName__ 指定了调参器文件名。
+          
     
     * **className**
-    
-    **className** specifies the name of tuner class.
+      
+           __className__ 指定了评估器类名。
+          
     
     * **classArgs**
-    
-    **classArgs** specifies the arguments of tuner algorithm.
-  
-  * **gpuNum**
-  
-  **gpuNum** specifies the gpu number to run the assessor process. The value of this field should be a positive number.
-  
-          Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty. 
       
+           __classArgs__ 指定了评估器算法的参数。
+          
+  
+  * **gpuNum**
+    
+        __gpuNum__ 指定了运行评估器进程的 GPU 数量。 此字段的值必须是正整数。
+        
+        注意: 只能使用一种方法来指定评估器，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用评估器，可将其置为空。 
+        
 
-* **trial(local, remote)**
+* **trial (local, remote)**
   
   * **command**
     
-        __command__  specifies the command to run trial process.
+        __command__  指定了尝试进程的命令行。
         
   
   * **codeDir**
     
-    **codeDir** specifies the directory of your own trial file.
+        __codeDir__ 指定了尝试代码文件的目录。
+        
   
   * **gpuNum**
     
-    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
+        __gpuNum__ 指定了运行尝试进程的 GPU 数量。 默认值为 0。 
+        
 
-* **trial(pai)**
+* **trial (pai)**
   
   * **command**
     
-        __command__  specifies the command to run trial process.
+        __command__  指定了尝试进程的命令行。
         
   
   * **codeDir**
     
-    **codeDir** specifies the directory of the own trial file.
+        __codeDir__ 指定了尝试代码文件的目录。
+        
   
   * **gpuNum**
     
-    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
+    **gpuNum** 指定了运行尝试进程的 GPU 数量。 默认值为 0。
   
   * **cpuNum**
     
-    **cpuNum** is the cpu number of cpu to be used in pai container.
+    **cpuNum** 指定了 OpenPAI 容器中使用的 CPU 数量。
   
   * **memoryMB**
     
-    **memoryMB** set the momory size to be used in pai's container.
+    **memoryMB** 指定了 OpenPAI 容器中使用的内存数量。
   
   * **image**
     
-    **image** set the image to be used in pai.
+    **image** 指定了 OpenPAI 中使用的 docker 映像。
   
   * **dataDir**
     
-    **dataDir** is the data directory in hdfs to be used.
+    **dataDir** 是 HDFS 中用到的数据目录变量。
   
   * **outputDir**
     
-    **outputDir** is the output directory in hdfs to be used in pai, the stdout and stderr files are stored in the directory after job finished.
+    **outputDir** 是 HDFS 中用到的输出目录变量。在 OpenPAI 中，stdout 和 stderr 文件会在作业完成后，存放在此目录中。
 
-* **trial(kubeflow)**
+* **trial (kubeflow)**
   
   * **codeDir**
     
-    **codeDir** is the local directory where the code files in.
+    **codeDir** 指定了代码文件的本机路径。
   
-  * **ps(optional)**
+  * **ps (可选)**
     
-    **ps** is the configuration for kubeflow's tensorflow-operator.
+    **ps** 是 Kubeflow 的 Tensorflow-operator 配置。
     
     * **replicas**
       
-      **replicas** is the replica number of **ps** role.
+      **replicas** 是 **ps** 角色的副本数量。
     
     * **command**
       
-      **command** is the run script in **ps**'s container.
+      **command** 是在 **ps** 的容器中运行的脚本命令。
     
     * **gpuNum**
       
-      **gpuNum** set the gpu number to be used in **ps** container.
+      **gpuNum** 是在 **ps** 容器中使用的 GPU 数量。
     
     * **cpuNum**
       
-      **cpuNum** set the cpu number to be used in **ps** container.
+      **cpuNum** 是在 **ps** 容器中使用的 CPU 数量。
     
     * **memoryMB**
       
-      **memoryMB** set the memory size of the container.
+      **memoryMB** 指定了容器中使用的内存数量。
     
     * **image**
       
-      **iamge** set the image to be used in **ps**.
+      **iamge** 设置了 **ps** 使用的 docker 映像。
   
   * **worker**
     
-    **worker** is the configuration for kubeflow's tensorflow-operator.
+    **worker** 是 Kubeflow 的 Tensorflow-operator 配置。
     
     * **replicas**
       
-      **replicas** is the replica number of **worker** role.
+      **replicas** 是 **worker** 角色的副本数量。
     
     * **command**
       
-      **command** is the run script in **worker**'s container.
+      **command** 是在 **worker** 的容器中运行的脚本命令。
     
     * **gpuNum**
       
-      **gpuNum** set the gpu number to be used in **worker** container.
+      **gpuNum** 是在 **worker** 容器中使用的 GPU 数量。
     
     * **cpuNum**
       
-      **cpuNum** set the cpu number to be used in **worker** container.
+      **cpuNum** 是在 **worker** 容器中使用的 CPU 数量。
     
     * **memoryMB**
       
-      **memoryMB** set the memory size of the container.
+      **memoryMB** 指定了容器中使用的内存数量。
     
     * **image**
       
-      **iamge** set the image to be used in **worker**.
+      **iamge** 设置了 **worker** 使用的 docker 映像。
 
 * **machineList**
   
-       __machineList__ should be set if users set __trainingServicePlatform__=remote, or it could be empty.
+       __machineList__ 要在 __trainingServicePlatform__=remote 时设置，否则其应为空。
       
   
   * **ip**
   
-  **ip** is the ip address of remote machine.
+  **ip** 是远程计算机的 ip 地址。
   
   * **port**
   
-  **port** is the ssh port to be used to connect machine.
+  **端口** 是用于连接远程计算机的 ssh 端口。
   
-        Note: if users set port empty, the default value will be 22.
-      
+  注意：如果 port 设为空，则为默认值 22。
   
   * **username**
   
-  **username** is the account of remote machine.
+  **username** 是远程计算机的用户名。
   
   * **passwd**
   
-  **passwd** specifies the password of the account.
+  **passwd** 指定了账户的密码。
   
   * **sshKeyPath**
     
-    If users use ssh key to login remote machine, could set **sshKeyPath** in config file. **sshKeyPath** is the path of ssh key file, which should be valid.
-    
-        Note: if users set passwd and sshKeyPath simultaneously, nni will try passwd.
-        
+    如果要使用 ssh 密钥登录远程计算机，则需要设置 **sshKeyPath**。 **sshKeyPath** 为有效的 ssh 密钥文件路径。
+  
+  注意：如果同时设置了 passwd 和 sshKeyPath，NNI 会使用 passwd。
   
   * **passphrase**
     
-    **passphrase** is used to protect ssh key, which could be empty if users don't have passphrase.
+    **passphrase** 用于保护 ssh 密钥，如果没有使用，可为空。
 
 * **kubeflowConfig**:
   
   * **operator**
     
-    **operator** specify the kubeflow's operator to be used, nni support **tf-operator** in current version.
+    **operator** 指定了 kubeflow 使用的 operator，NNI 当前版本支持 **tf-operator**。
   
   * **storage**
     
-    **storage** specify the storage type of kubeflow, including {**nfs**, **azureStorage**}. This field is optional, and the default value is **nfs**. If the config use azureStorage, this field must be completed.
+    **storage** 指定了 kubeflow 的存储类型，包括 {**nfs**，**azureStorage**}。 此字段可选，默认值为 **nfs**。 如果使用了 azureStorage，此字段必须填写。
   
   * **nfs**
     
-    **server** is the host of nfs server
+    **server** 是 NFS 服务器的地址
     
-    **path** is the mounted path of nfs
+    **path** 是 NFS 挂载的路径
   
   * **keyVault**
     
-    If users want to use azure kubernetes service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+    如果用户使用 Azure Kubernetes Service，需要设置 keyVault 来使用 Azure 存储账户的私钥。 参考: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
     
     * **vaultName**
       
-      **vaultName** is the value of ```--vault-name``` used in az command.
+      **vaultName** 是 az 命令中的 ```--vault-name``` 。
     
     * **name**
       
-      **name** is the value of ```--name``` used in az command.
+      **name** 是 az 命令中的 ```--name``` 。
   
   * **azureStorage**
     
-    If users use azure kubernetes service, they should set azure storage account to store code files.
+    如果用户使用了 Azure Kubernetes Service，需要设置 Azure 存储账户来存放代码文件。
     
     * **accountName**
       
-      **accountName** is the name of azure storage account.
+      **accountName** 是 Azure 存储账户的名称。
     
     * **azureShare**
       
-      **azureShare** is the share of the azure file storage.
+      **azureShare** 是 Azure 文件存储的共享参数。
 
 * **paiConfig**
   
   * **userName**
     
-    **userName** is the user name of your pai account.
+    **userName** 是 OpenPAI 的用户名。
   
   * **password**
     
-    **password** is the password of the pai account.
+    **password** 是 OpenPAI 用户的密码。
   
   * **host**
     
-    **host** is the host of pai.
+    **host** 是 OpenPAI 的主机地址。
 
 ## 样例
 
@@ -582,6 +592,7 @@
 
 如果在远程服务器上运行尝试任务，需要增加服务器信息：
 
+    
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -662,7 +673,6 @@
       # OpenPAI 服务器 Ip
       host: 10.10.10.10
     ```
-    
     
 
 * **Kubeflow 模式**

@@ -1,14 +1,14 @@
-# **Write a Trial Run on NNI**
+# **实现 NNI 的 Trial（尝试）代码**
 
-A **Trial** in NNI is an individual attempt at applying a set of parameters on a model.
+**Trial（尝试）**是将一组参数在模型上独立的一次尝试。
 
-To define a NNI trial, you need to firstly define the set of parameters and then update the model. NNI provide two approaches for you to define a trial: `NNI API` and `NNI Python annotation`.
+定义 NNI 的尝试，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来定义尝试：`NNI API` 和 `NNI 标记`.
 
 ## NNI API
 
-> Step 1 - Prepare a SearchSpace parameters file.
+> 第一步：准备搜索空间参数文件。
 
-An example is shown below:
+样例如下：
 
     {
         "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
@@ -18,71 +18,71 @@ An example is shown below:
     }
     
 
-Refer to <SearchSpaceSpec.md> to learn more about search space.
+参考 [SearchSpaceSpec.md](./SearchSpaceSpec.md) 进一步了解搜索空间。
 
-> Step 2 - Update model codes
+> 第二步：更新模型代码
 
-    2.1 Declare NNI API
-        Include `import nni` in your trial code to use NNI APIs. 
+    2.1 声明 NNI API
+        在尝试代码中通过 `import nni` 来导入 NNI API。 
     
-    2.2 Get predefined parameters
-        Use the following code snippet: 
+    2.2 获取预定义的参数
+        参考下列代码片段： 
     
             RECEIVED_PARAMS = nni.get_next_parameter()
     
-        to get hyper-parameters' values assigned by tuner. `RECEIVED_PARAMS` is an object, for example: 
+        来获得调参器分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如： 
     
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
     
-    2.3 Report NNI results
-        Use the API: 
+    2.3 向 NNI 返回结果
+        使用 API：
     
             `nni.report_intermediate_result(accuracy)` 
     
-        to send `accuracy` to assessor.
+        返回 `accuracy` 的值给评估器。
     
-        Use the API:
+        使用 API:
     
             `nni.report_final_result(accuracy)` 
     
-        to send `accuracy` to tuner. 
+        返回 `accuracy` 的值给调参器。 
     
 
-**NOTE**:
+**注意**：
 
-    accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
-    assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
-    tuner    - The tuner will generate next parameters/architecture based on the explore history (final result of all trials).
+    accuracy - 如果使用 NNI 内置的调参器/评估器，那么 `accuracy` 必须是数值（如 float, int）。在定制调参器/评估器时 `accuracy` 可以是任何类型的 Python 对象。
+    评估器 - 会根据尝试的历史值（即其中间结果），来决定这次尝试是否应该提前终止。
+    调参器 - 会根据探索的历史（所有尝试的最终结果）来生成下一组参数、架构。
     
 
-> Step 3 - Enable NNI API
+> 第三步：启用 NNI API
 
-To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of SearchSpace file (you just defined in step 1):
+要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径（即第一步中定义的文件）：
 
     useAnnotation: false
     searchSpacePath: /path/to/your/search_space.json
     
 
-You can refer to [here](ExperimentConfig.md) for more information about how to set up experiment configurations.
+参考 [这里](ExperimentConfig.md) 进一步了解如何配置实验。
 
-(../examples/trials/README.md) for more information about how to write trial code using NNI APIs.
+参考 [README.md](../../examples/trials/README.md) 进一步了解如何使用 NNI 的 API 来实现尝试的代码。
 
-## NNI Python Annotation
+## NNI 标记
 
-An alternative to write a trial is to use NNI's syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
+另一种实现尝试的方法是使用 Python 注释来标记 NNI。 就像其它标记，NNI 的标记和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI 标记，就能够：
 
-* annotate the variables you want to tune 
-* specify in which range you want to tune the variables
-* annotate which variable you want to report as intermediate result to `assessor`
-* annotate which variable you want to report as the final result (e.g. model accuracy) to `tuner`. 
+* 标记需要调整的参数变量 
+* 指定变量的搜索空间范围
+* 标记哪个变量需要作为中间结果范围给`评估器`
+* 标记哪个变量需要作为最终结果（例如：模型精度）返回给`调参器`。 
 
-Again, take MNIST as an example, it only requires 2 steps to write a trial with NNI Annotation.
+同样以 MNIST 为例，只需要两步就能用 NNI 标记来实现尝试代码。
 
-> Step 1 - Update codes with annotations
+> 第一步：在代码中加入标记
 
-Please refer the following tensorflow code snippet for NNI Annotation, the highlighted 4 lines are annotations that help you to: (1) tune batch\_size and (2) dropout\_rate, (3) report test\_acc every 100 steps, and (4) at last report test\_acc as final result.
+参考下列 tensorflow 的 NNI 标记的代码片段，高亮的 4 行标记实现了： (1) 调整 batch\_size 和 (2) dropout\_rate, (3) 每 100 步返回一次 test\_acc ，并且 (4) 在最后返回 test\_acc 作为最终结果。
 
-> What noteworthy is: as these new added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
+> 值得注意的是，新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
 
 ```diff
 with tf.Session() as sess:
@@ -111,19 +111,19 @@ with tf.Session() as sess:
 +   """@nni.report_final_result(test_acc)"""
 ```
 
-> NOTE
+> 注意
 > 
-> > `@nni.variable` will take effect on its following line
+> > `@nni.variable` 会影响下面紧接的一行。
 > > 
-> > `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line.
+> > `@nni.report_intermediate_result`/`@nni.report_final_result` 会在那行将数据发送给评估器、调参器。
 > > 
-> > Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage.
+> > 参考 [标记](../tools/nni_annotation/README.md) 了解更多关于标记的语法和用法。
 > 
-> Step 2 - Enable NNI Annotation In the yaml configure file, you need to set *useAnnotation* to true to enable NNI annotation:
+> 第二步：启用 NNI 标记 在 yaml 配置文件中，将 *useAnnotation* 设置为 true 来启用 NNI 标记。
 
     useAnnotation: true
     
 
-## More Trial Example
+## 更多尝试的样例
 
-* [Automatic Model Architecture Search for Reading Comprehension.](../examples/trials/ga_squad/README.md)
+* [在阅读理解上使用自动模型架构搜索。](../../examples/trials/ga_squad/README.md)
