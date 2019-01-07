@@ -23,28 +23,28 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 
 以开发和先进技术为目标，[Microsoft Research (MSR)](https://www.microsoft.com/en-us/research/group/systems-research-group-asia/) 发布了一些开源项目。
 
-* [OpenPAI](https://github.com/Microsoft/pai) : an open source platform that provides complete AI model training and resource management capabilities, it is easy to extend and supports on-premise, cloud and hybrid environments in various scale.
-* [FrameworkController](https://github.com/Microsoft/frameworkcontroller) : an open source general-purpose Kubernetes Pod Controller that orchestrate all kinds of applications on Kubernetes by a single controller.
-* [MMdnn](https://github.com/Microsoft/MMdnn) : A comprehensive, cross-framework solution to convert, visualize and diagnose deep neural network models. The "MM" in MMdnn stands for model management and "dnn" is an acronym for deep neural network. We encourage researchers and students leverage these projects to accelerate the AI development and research.
+* [OpenPAI](https://github.com/Microsoft/pai)：作为开源平台，提供了完整的 AI 模型训练和资源管理能力，能轻松扩展，并支持各种规模的私有部署、云和混合环境。
+* [FrameworkController](https://github.com/Microsoft/frameworkcontroller)：开源的通用 Kubernetes Pod 控制器，通过单个控制器来编排 Kubernetes 上所有类型的应用。
+* [MMdnn](https://github.com/Microsoft/MMdnn)：一个完成、跨框架的解决方案，能够转换、可视化、诊断深度神经网络模型。 MMdnn 中的 "MM" 表示model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。 我们鼓励研究人员和学生利用这些项目来加速 AI 开发和研究。
 
 ## **安装和验证**
 
-**Install through pip**
+**通过 pip 命令安装**
 
-* We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`. 
+* 当前支持 Linux 和 MacOS。测试并支持的版本包括：Ubuntu 16.04 及更高版本，MacOS 10.14.1。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。 
 
 ```bash
     python3 -m pip install --upgrade nni
 ```
 
-* Note: 
-  * If you are in docker container (as root), please remove `--user` from the installation command.
-  * If there is any error like `Segmentation fault`, please refer to [FAQ](docs/FAQ.md)
+* 注意： 
+  * 如果在 docker 容器中以 root 运行，需要从上述安装命令中删除 `--user`。
+  * 如果遇到如`Segmentation fault` 这样的任何错误请参考 [常见问题](docs/FAQ.md)。
 
-**Install through source code**
+**通过源代码安装**
 
-* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) in our current stage. 
-* Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
+* 当前支持 Linux（Ubuntu 16.04 及更高版本） 和 MacOS（10.14.1）。 
+* 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
     git clone -b v0.4.1 https://github.com/Microsoft/nni.git
@@ -52,25 +52,25 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
     source install.sh 
 ```
 
-For the system requirements of NNI, please refer to [Install NNI](docs/Installation.md)
+参考[安装 NNI](docs/Installation.md) 了解系统需求。
 
-**Verify install**
+**验证安装**
 
-The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
+以下示例实验依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow**。
 
-* Download the examples via clone the source code. 
+* 通过克隆源代码下载示例。 
 
 ```bash
     git clone -b v0.4.1 https://github.com/Microsoft/nni.git
 ```
 
-* Run the mnist example.
+* 运行 mnist 示例。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
-* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
+* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明实验已成功启动。 通过命令行输出的 `Web UI url` 来访问实验的界面。
 
     ```
     INFO: Starting restful server...
@@ -99,51 +99,51 @@ The following example is an experiment built on TensorFlow. Make sure you have *
     ```
     
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](docs/WebUI.md) are more Web UI pages.
+* 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里的](docs/WebUI.md)更多页面示例。
 
 <table style="border: none">
     <th><img src="../docs/img/webui_overview_page.png" alt="绘图" width="395"/></th>
     <th><img src="../docs/img/webui_trialdetail_page.png" alt="绘图" width="410"/></th>
 </table>
 
-## **Documentation**
+## **文档**
 
-* [NNI overview](docs/Overview.md)
-* [Quick start](docs/GetStarted.md)
+* [NNI 概述](docs/Overview.md)
+* [快速入门](docs/GetStarted.md)
 
-## **How to**
+## **入门**
 
-* [Install NNI](docs/Installation.md)
-* [Use command line tool nnictl](docs/NNICTLDOC.md)
-* [Use NNIBoard](docs/WebUI.md)
-* [How to define search space](docs/SearchSpaceSpec.md)
-* [How to define a trial](docs/howto_1_WriteTrial.md)
-* [Config an experiment](docs/ExperimentConfig.md)
-* [How to use annotation](docs/howto_1_WriteTrial.md#nni-python-annotation)
+* [安装 NNI](docs/Installation.md)
+* [使用命令行工具 nnictl](docs/NNICTLDOC.md)
+* [使用 NNIBoard](docs/WebUI.md)
+* [如何定义搜索空间](docs/SearchSpaceSpec.md)
+* [如何定义一次尝试](docs/howto_1_WriteTrial.md)
+* [配置实验](docs/ExperimentConfig.md)
+* [如何使用标记](docs/howto_1_WriteTrial.md#nni-python-annotation)
 
-## **Tutorials**
+## **教程**
 
-* [Run an experiment on local (with multiple GPUs)?](docs/tutorial_1_CR_exp_local_api.md)
-* [Run an experiment on multiple machines?](docs/tutorial_2_RemoteMachineMode.md)
-* [Run an experiment on OpenPAI?](docs/PAIMode.md)
-* [Run an experiment on Kubeflow?](docs/KubeflowMode.md)
-* [Try different tuners and assessors](docs/tutorial_3_tryTunersAndAssessors.md)
-* [Implement a customized tuner](docs/howto_2_CustomizedTuner.md)
-* [Implement a customized assessor](examples/assessors/README.md)
-* [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](examples/trials/ga_squad/README.md)
+* [在本机运行实验 (支持多 GPU 卡)](docs/tutorial_1_CR_exp_local_api.md)
+* [在多机上运行实验](docs/tutorial_2_RemoteMachineMode.md)
+* [在 OpenPAI 上运行实验](docs/PAIMode.md)
+* [在 Kubeflow 上运行实验。](docs/KubeflowMode.md)
+* [使用不同的调参器和评估器](docs/tutorial_3_tryTunersAndAssessors.md)
+* [实现自定义调参器](docs/howto_2_CustomizedTuner.md)
+* [实现自定义评估器](examples/assessors/README.md)
+* [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
 
-## **Contribute**
+## **贡献**
 
-This project welcomes contributions and suggestions, we use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
+欢迎贡献代码或提交建议，可在 [GitHub issues](https://github.com/Microsoft/nni/issues) 跟踪需求和缺陷。
 
-Issues with the **good first issue** label are simple and easy-to-start ones that we recommend new contributors to start with.
+推荐新贡献者从标有 **good first issue** 的简单需求开始。
 
-To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/SetupNNIDeveloperEnvironment.md)
+如要安装 NNI 开发环境，参考： [配置 NNI 开发环境](docs/SetupNNIDeveloperEnvironment.md)。
 
-Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/CONTRIBUTING.md)
+在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/CONTRIBUTING.md)。
 
-We are in construction of the instruction for [How to Debug](docs/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
+我们正在编写 [如何调试](docs/HowToDebug.md) 的页面，欢迎提交建议和问题。
 
-## **License**
+## **许可协议**
 
-The entire codebase is under [MIT license](https://github.com/Microsoft/nni/blob/master/LICENSE)
+整个代码库遵循 [MIT 许可协议](https://github.com/Microsoft/nni/blob/master/LICENSE)
