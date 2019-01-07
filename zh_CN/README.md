@@ -19,15 +19,15 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * 定制自动机器学习算法，或比较不同的自动机器学习算法。
 * 在自己的机器学习平台中支持自动机器学习。
 
-## Related Projects
+## 相关项目
 
-Targeting at openness and advancing state-of-art technology, [Microsoft Research (MSR)](https://www.microsoft.com/en-us/research/group/systems-research-group-asia/) had also released few other open source projects.
+以开发和先进技术为目标，[Microsoft Research (MSR)](https://www.microsoft.com/en-us/research/group/systems-research-group-asia/) 发布了一些开源项目。
 
 * [OpenPAI](https://github.com/Microsoft/pai) : an open source platform that provides complete AI model training and resource management capabilities, it is easy to extend and supports on-premise, cloud and hybrid environments in various scale.
 * [FrameworkController](https://github.com/Microsoft/frameworkcontroller) : an open source general-purpose Kubernetes Pod Controller that orchestrate all kinds of applications on Kubernetes by a single controller.
 * [MMdnn](https://github.com/Microsoft/MMdnn) : A comprehensive, cross-framework solution to convert, visualize and diagnose deep neural network models. The "MM" in MMdnn stands for model management and "dnn" is an acronym for deep neural network. We encourage researchers and students leverage these projects to accelerate the AI development and research.
 
-## **Install & Verify**
+## **安装和验证**
 
 **Install through pip**
 
