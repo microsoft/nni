@@ -48,14 +48,14 @@
     
         git clone -b v0.3 https://github.com/Microsoft/nni.git
 
-* **nni.report_final_result(result)** API supports more data types for result parameter. It can be of following types: 
+* **nni.report_final_result(result)** API 支持了更多结果参数的类型。 可用类型： 
     * int
     * float
-    * A python dict containing 'default' key, the value of 'default' key should be of type int or float. The dict can contain any other key value pairs.
+    * 包含有 'default' 键值的 dict，'default' 的值必须为 int 或 float。 dict 可以包含任何其它键值对。
 
-## New tuner support
+## 新的内置调参器
 
-* **Batch Tuner** which iterates all parameter combination, can be used to submit batch trial jobs.
+* **Batch Tuner（批处理调参器）** 会执行所有曹参组合，可被用来批量提交尝试任务。
 
 ## New examples
 
