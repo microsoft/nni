@@ -35,16 +35,18 @@ Execute the following command to download needed files using the downloading scr
 ### Download manually
 
 1. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
-
+    
+    ```bash
     wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
     wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
-    
+    ```
 
 2. download "glove.840B.300d.txt" in https://nlp.stanford.edu/projects/glove/
-
+    
+    ```bash
     wget http://nlp.stanford.edu/data/glove.840B.300d.zip
     unzip glove.840B.300d.zip
-    
+    ```
 
 ### Update configuration
 
