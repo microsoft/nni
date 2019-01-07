@@ -1,8 +1,8 @@
-## How to define search space?
+## 如何定义搜索空间？
 
-### Hyper-parameter Search Space
+### 超参搜索空间
 
-* A search space configure example as follow:
+* 超参搜索空间配置样例：
 
 ```python
 {
@@ -15,18 +15,18 @@
 
 ```
 
-The example define ```dropout_rate``` as variable which priori distribution is uniform distribution, and its value from ```0.1``` and ```0.5```. The tuner will sample parameters/architecture by understanding the search space first.
+此样例定义了 `dropout_rate` 变量，它的先验分布为均匀分布，值在 `0.1` 与 `0.5` 之间。 调参器会首先了解搜索空间，然后从中采样。
 
-User should define the name of variable, type and candidate value of variable. The candidate type and value for variable is here:
+用户需要定义变量名、类型和取值范围。 变量类型和取值范围包括：
 
 * {"_type":"choice","_value":options}
    
-   * Which means the variable value is one of the options, which should be a list The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.   
+   * 变量值会是列表中的 options 之一。options 的元素可以是 [nested] 嵌套的随机表达式。 在这种情况下，随机选项仅会出现在某些选项满足条件时。   
       
 
 * {"_type":"randint","_value":[upper]}
    
-   * Which means the variable value is a random integer in the range [0, upper). The semantics of this distribution is that there is no more correlation in the loss function between nearby integer values, as compared with more distant integer values. This is an appropriate distribution for describing random seeds for example. If the loss function is probably more correlated for nearby integer values, then you should probably use one of the "quantized" continuous distributions, such as either quniform, qloguniform, qnormal or qlognormal. Note that if you want to change lower bound, you can use `quniform` for now.   
+   * 此变量为范围 [0, upper) 之间的随机整数。 这种分布的语义，在较远整数与附近整数之间的损失函数无太大关系， 这是用来描述随机种子的较好分布。 如果损失函数与较近的整数更相关，则应该使用某个"quantized"的连续分布，如quniform, qloguniform, qnormal 或 qlognormal。 Note that if you want to change lower bound, you can use `quniform` for now.   
       
 
 * {"_type":"uniform","_value":[low, high]}
