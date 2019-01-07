@@ -39,16 +39,18 @@ Note: If you want to see the full implementation, please refer to [examples/tria
 
 The above code can only try one set of parameters at a time, if we want to tune learning rate, we need to manually tune the hyperparameters and start the trial again and again.
 
-NNI is born for helping user do the tuning jobs, the process is presented below:
+NNI is born for helping user do the tuning jobs, the NNI working process is presented below:
 
 ```
 input: search space, trial code, config file
 output: one optimal hyperparameter configuration
 
 1: For t = 0, 1, 2, ..., maxTrialNum,
-2:      hyper_params_set = nni.get_next_parameter()
-3:      accuracy = run_trial(hyper_params_set)
-4:      nni.report_final_result(accuracy)
+2:      hyperparameter = chose a set of parameter from search space
+3:      run trial with hyperparameter
+4:      report final result to NNI
+5:      If reach the upper limit time,
+6:          Stop the experiment
 ```
 
 If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you have to do three changes base on your code:
