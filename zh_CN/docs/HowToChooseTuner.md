@@ -161,7 +161,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 <a name="Hyperband"></a>
 **Hyperband**
 
-[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 尝试用有限的资源来探索尽量多的组合，从最有可能的组合中找到最好结果。 它的基本思路是生成大量的配置，并运行少量的步骤来找到有可能好的配置，然后继续训练找到其中更好的配置。 参考 [这里](../src/sdk/pynni/nni/hyperband_advisor/README.md)，了解更多信息。
+[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 尝试用有限的资源来探索尽量多的组合，从最有可能的组合中找到最好结果。 它的基本思路是生成大量的配置，并运行少量的步骤来找到有可能好的配置，然后继续训练找到其中更好的配置。 参考[这里](../src/sdk/pynni/nni/hyperband_advisor/README.md)，了解更多信息。
 
 *建议场景*：当搜索空间很大，但计算资源有限时建议使用。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。
 
@@ -183,7 +183,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 <a name="NetworkMorphism"></a>
 **Network Morphism**
 
-[Network Morphism](7) 提供了深度学习模型的自动架构搜索功能。 每个子网络都继承于父网络的知识和形态，并变换网络的不同形态，包括深度，宽度，跳层连接（skip-connection）。 接着，使用历史的架构和指标，来估计子网络的值。 然后会选择最有希望的模型进行训练。 参考[这里](../src/sdk/pynni/nni/networkmorphism_tuner/README.md)，了解更多信息。
+[Network Morphism](7) 提供了深度学习模型的自动架构搜索功能。 每个子网络都继承于父网络的知识和形态，并变换网络的不同形态，包括深度，宽度，跨层连接（skip-connection）。 接着，使用历史的架构和指标，来估计子网络的值。 然后会选择最有希望的模型进行训练。 参考[这里](../src/sdk/pynni/nni/networkmorphism_tuner/README.md)，了解更多信息。
 
 *安装*： NetworkMorphism 需要 [pyTorch](https://pytorch.org/get-started/locally)，必须提前安装它。
 
