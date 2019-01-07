@@ -212,37 +212,35 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 
 目前，NNI 已支持下列评估器算法。
 
-* [Medianstop](#Medianstop)
-* [Curvefitting](#Curvefitting)
+* [Medianstop（中位数终止）](#Medianstop)
+* [Curvefitting（曲线拟合）](#Curvefitting)
 
-## Supported Assessor Algorithms
+## 支持的评估器算法
 
 <a name="Medianstop"></a>
-**Medianstop**
+**Medianstop（中位数终止）**
 
-Medianstop is a simple early stopping rule mentioned in the [paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf). It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.
+Medianstop 是一种简单的提前停止规则，可参考[论文](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf)。 如果尝试 X 的在步骤 S 的最好目标值比所有已完成尝试的步骤 S 的中位数值明显低，就会停止运行尝试 X。
 
-*Suggested scenario*: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.
+*建议场景*：它适用于各种性能曲线，因而能被用到各种场景中来加速优化过程。
 
-*Usage*:
+*用法*：
 
 ```yaml
   assessor:
     builtinAssessorName: Medianstop
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
-      # (optional) A trial is determined to be stopped or not, 
-
-      * only after receiving start_step number of reported intermediate results.
-      * The default value of start_step is 0.
+      # (可选) 尽在接收到 start_step 数量个中间结果后，才判断尝试是否需要停止。
+      # start_step 的默认值是 0。
       start_step: 5
 ```
 
 <a name="Curvefitting"></a>
-**Curvefitting**
+**Curvefitting（曲线拟合）**
 
-Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve, the large set of parametric curve models are chosen from [reference paper](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf). The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
+Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的尝试 X 在 step S 比性能最好的尝试要差，就会提前终止它。 此算法中，使用了 12 条曲线来拟合精度曲线，从[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)中选择了大量的参数曲线模型。 The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
 
 *Suggested scenario*: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.
 
