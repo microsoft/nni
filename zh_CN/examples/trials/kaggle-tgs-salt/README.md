@@ -1,6 +1,6 @@
 ## Kaggle 比赛 [TGS Salt Identification Chanllenge](https://www.kaggle.com/c/tgs-salt-identification-challenge) 第 33 名的解决方案
 
-This example shows how to enable AutoML for competition code by running it on NNI without any code change. To run this code on NNI, firstly you need to run it standalone, then configure the config.yml and:
+此样例展示了如何在没有任何代码改动的情况下通过 NNI 来为竞赛代码使用自动机器学习。 要在 NNI 上运行此代码，首先需要单独运行它，然后配置 config.yml：
 
     nnictl create --config config.yml
     
