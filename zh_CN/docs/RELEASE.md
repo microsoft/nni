@@ -57,21 +57,21 @@
 
 * **Batch Tuner（批处理调参器）** 会执行所有曹参组合，可被用来批量提交尝试任务。
 
-## New examples
+## 新样例
 
-* A NNI Docker image for public usage: ```docker pull msranni/nni:latest```
-* New trial example: [NNI Sklearn Example](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
-* New competition example: [Kaggle Competition TGS Salt Example](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
+* 公共的 NNI Docker 映像： ```docker pull msranni/nni:latest```
+* 新的尝试样例： [NNI Sklearn 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
+* 新的竞赛样例：[Kaggle Competition TGS Salt](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
-## Others
+## 其它
 
-* UI refactoring, refer to [WebUI doc](WebUI.md) for how to work with the new UI.
-* Continuous Integration: NNI had switched to Azure pipelines
-* [Known Issues in release 0.3.0](https://github.com/Microsoft/nni/labels/nni030knownissues).
+* 界面重构，参考[网页文档](WebUI.md)，了解如何使用新界面。
+* 持续集成：NNI 已切换到 Azure pipelines。
+* [0.3.0 的已知问题](https://github.com/Microsoft/nni/labels/nni030knownissues)。
 
-# Release 0.2.0 - 9/29/2018
+# 发布 0.2.0 - 9/29/2018
 
-## Major Features
+## 主要功能
 
 * Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode) 
     * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
