@@ -25,8 +25,8 @@ Here is a QuickStart example to run a NNI experiment on MNIST.
 **Three things required to do when using NNI**
 
 1. Give a `Search Space` file in json, includes the `name` and the `range` of hyper-parameters you need to search. For example: [search_space.json][3]
-2. Prepare a `model training method(trial)` in python, which define an individual attempt at applying a set of hyper-parameters. For example: [mnist.py][4]
-3. Define a `config` in yaml format like below. Here we declare the path to SearchSpace and trial, also give information such as tuning algorithm, runtime and name arguments.
+2. Prepare a `trial` in python, which define an individual attempt to `try a set of hyper-parameters` and return the result matrix. For example: [mnist.py][4]
+3. Define a `config` in yaml format below. which declare the path to SearchSpace and trial, also give information such as tuning algorithm, runtime and name arguments.
 
 *MNIST [config.yml][5] file we prepared:*
 
@@ -49,7 +49,7 @@ trial:
   gpuNum: 0
 ```
 
-Everything is ready! **Now run the config.yml from the command-line**:
+Everything is ready! **Now run the config.yml from your command-line**:
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
