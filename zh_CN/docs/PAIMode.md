@@ -1,26 +1,26 @@
 # **在 OpenPAI 上运行实验**
 
-NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运行实验，即 pai 模式。 在使用 NNI 的 pai 模式前, 需要有 [OpenPAI](https://github.com/Microsoft/pai) 群集的账户。 See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.
+NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运行实验，即 pai 模式。 在使用 NNI 的 pai 模式前, 需要有 [OpenPAI](https://github.com/Microsoft/pai) 群集的账户。 如果没有 OpenPAI 账户，参考[这里](https://github.com/Microsoft/pai#how-to-deploy)来进行部署。 在 pai 模式中，会在 Docker 创建的容器中运行尝试程序。
 
-## Setup environment
+## 设置环境
 
-Install NNI, follow the install guide [here](GetStarted.md).
+参考[指南](GetStarted.md)安装 NNI。
 
-## Run an experiment
+## 运行实验
 
-Use `examples/trials/mnist-annotation` as an example. The nni config yaml file's content is like:
+以 `examples/trials/mnist-annotation` 为例。 NNI 的 yaml 配置文件如下：
 
     authorName: your_name
     experimentName: auto_mnist
-    # how many trials could be concurrently running
+    # 并发运行的尝试数量
     trialConcurrency: 2
-    # maximum experiment running duration
+    # 实验的最长持续运行时间
     maxExecDuration: 3h
-    # empty means never stop
+    # 空表示一直运行
     maxTrialNum: 100
-    # choice: local, remote, pai
+    # 可选项: local, remote, pai
     trainingServicePlatform: pai
-    # choice: true, false  
+    # 可选项: true, false  
     useAnnotation: true
     tuner:
       builtinTunerName: TPE
@@ -35,35 +35,35 @@ Use `examples/trials/mnist-annotation` as an example. The nni config yaml file's
       image: openpai/pai.example.tensorflow
       dataDir: hdfs://10.1.1.1:9000/nni
       outputDir: hdfs://10.1.1.1:9000/nni
-    # Configuration to access OpenPAI Cluster
+    # 配置访问的 OpenPAI 集群
     paiConfig:
       userName: your_pai_nni_user
       passWord: your_pai_password
       host: 10.1.1.1
     
 
-Note: You should set `trainingServicePlatform: pai` in nni config yaml file if you want to start experiment in pai mode.
+注意：如果用 pai 模式运行，需要在 yaml 文件中设置 `trainingServicePlatform: pai`。
 
-Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have five additional keys:
+与本机模式，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的尝试有额外的配置：
 
 * cpuNum 
-    * Required key. Should be positive number based on your trial program's CPU requirement
+    * 必填。 尝试程序的 CPU 需求，必须为正数。
 * memoryMB 
-    * Required key. Should be positive number based on your trial program's memory requirement
+    * 必填。 尝试程序的内存需求，必须为正数。
 * image 
-    * Required key. In pai mode, your trial program will be scheduled by OpenPAI to run in [Docker container](https://www.docker.com/). This key is used to specify the Docker image used to create the container in which your traill will run. 
-    * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](../deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
+    * 必填。 在 pai 模式中，尝试程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定尝试程序的容器使用的 Docker 映像。 
+    * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI 实验所依赖的所有 Python 包，Node 模块和 JavaScript。 用来生成此映像的文件在[这里](../deployment/Dockerfile.build.base)。 可以直接使用此映像，或参考它来生成自己的映像。
 * dataDir 
-    * Optional key. It specifies the HDFS data direcotry for trial to download data. The format should be something like hdfs://{your HDFS host}:9000/{your data directory}
+    * 可选。 指定了尝试用于下载数据的 HDFS 数据目录。 格式应为 hdfs://{your HDFS host}:9000/{数据目录}
 * outputDir 
-    * Optional key. It specifies the HDFS output direcotry for trial. Once the trial is completed (either succeed or fail), trial's stdout, stderr will be copied to this directory by NNI sdk automatically. The format should be something like hdfs://{your HDFS host}:9000/{your output directory}
+    * 可选。 指定了尝试的 HDFS 输出目录。 尝试在完成（成功或失败）后，尝试的 stdout， stderr 会被 NNI 自动复制到此目录中。 格式应为 hdfs://{your HDFS host}:9000/{输出目录}
 
-Once complete to fill nni experiment config file and save (for example, save as exp_pai.yaml), then run the following command
+完成并保存 NNI 实验配置文件后（例如可保存为：exp_pai.yaml），运行以下命令：
 
     nnictl create --config exp_pai.yaml
     
 
-to start the experiment in pai mode. NNI will create OpanPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. You can see the pai jobs created by NNI in your OpenPAI cluster's web portal, like: ![](./img/nni_pai_joblist.jpg)
+来在 pai 模式下启动实验。 NNI will create OpanPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. You can see the pai jobs created by NNI in your OpenPAI cluster's web portal, like: ![](./img/nni_pai_joblist.jpg)
 
 Notice: In pai mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
 
