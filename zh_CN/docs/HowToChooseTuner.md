@@ -161,7 +161,7 @@ Batch tuner 能让用户简单的提供几组配置（如，超参选项的组�
 <a name="Hyperband"></a>
 **Hyperband**
 
-[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be referred to [here](../src/sdk/pynni/nni/hyperband_advisor/README.md).
+[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 尝试用有限的资源来探索尽量多的组合，从最有可能的组合中找到最好结果。 The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be referred to [here](../src/sdk/pynni/nni/hyperband_advisor/README.md).
 
 *Suggested scenario*: It is suggested when you have limited computation resource but have relatively large search space. It performs good in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.
 
