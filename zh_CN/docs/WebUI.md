@@ -2,39 +2,39 @@
 
 ## 查看概要页面
 
-Click the tab "Overview".
+点击标签 "Overview"。
 
-* See the experiment trial profile and search space message.
-* Support to download the experiment result.
+* 查看实验的配置和搜索空间内容。
+* 支持下载实验结果。
 
 ![](../../docs/img/over1.png)
 
-* See good performance trials.
+* 查看最好结果的尝试。
 
 ![](../../docs/img/over2.png)
 
-## View job default metric
+## 查看任务默认指标
 
-Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
+点击 "Default Metric" 来查看所有尝试的点图。 悬停鼠标来查看默认指标和搜索空间信息。
 
 ![](../../docs/img/accuracy.png)
 
-## View hyper parameter
+## 查看超参
 
-Click the tab "Hyper Parameter" to see the parallel graph.
+点击 "Hyper Parameter" 标签查看图像。
 
-* You can select the percentage to see top trials.
-* Choose two axis to swap its positions
+* 可选择百分比查看最好的尝试。
+* 选择两个轴来交换位置。
 
 ![](../../docs/img/hyperPara.png)
 
-## View Trial Duration
+## 查看尝试运行时间
 
-Click the tab "Trial Duration" to see the bar graph.
+点击 "Trial Duration" 标签来查看柱状图。
 
 ![](../../docs/img/trial_duration.png)
 
-## View trials status
+## 查看尝试状态
 
 Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
