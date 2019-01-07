@@ -34,17 +34,17 @@
 
 * 支持同时运行多个实验。
     
-    在 v0.3 以前，NNI 仅支持一次运行一个实验。 此版本开始，用户可以同时运行多个实验。 Each experiment will require a unique port, the 1st experiment will be set to the default port as previous versions. You can specify a unique port for the rest experiments as below:
+    在 v0.3 以前，NNI 仅支持一次运行一个实验。 此版本开始，用户可以同时运行多个实验。 每个实验都需要一个唯一的端口，第一个实验会像以前版本一样使用默认端口。 需要为其它实验指定唯一端口：
     
         nnictl create --port 8081 --config <config file path>
 
-* Support updating max trial number. use ```nnictl update --help``` to learn more. Or refer to [NNICTL Spec](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md) for the fully usage of NNICTL.
+* 支持更新最大尝试的数量。 使用 ```nnictl update --help``` 了解更多信息。 或参考 [NNICTL 说明](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md)来查看完整帮助。
 
-## API new features and updates
+## API 的新功能和更新
 
-* <span style="color:red"><strong>breaking change</strong></span>: nn.get_parameters() is refactored to nni.get_next_parameter. All examples of prior releases can not run on v0.3, please clone nni repo to get new examples. If you had applied NNI to your own codes, please update the API accordingly.
+* <span style="color:red"><strong>不兼容的改动</strong></span>：nn.get_parameters() 改为 nni.get_next_parameter。 所有以前版本的样例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新样例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
 
-* New API **nni.get_sequence_id()**. Each trial job is allocated a unique sequence number, which can be retrieved by nni.get_sequence_id() API.
+* 新 API **nni.get_sequence_id()**。 每个尝试任务都会被分配一个唯一的序列数字，可通过 nni.get_sequence_id() API 来获取。
     
         git clone -b v0.3 https://github.com/Microsoft/nni.git
 
