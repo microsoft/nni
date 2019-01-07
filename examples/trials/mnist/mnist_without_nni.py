@@ -7,8 +7,6 @@ import tensorflow as tf
 
 from tensorflow.examples.tutorials.mnist import input_data
 
-import nni
-
 FLAGS = None
 
 logger = logging.getLogger('mnist_AutoML')
@@ -145,7 +143,7 @@ def bias_variable(shape):
 
 def main(params):
     '''
-    Main function, build mnist network, run and send result to NNI.
+    Main function, build mnist network.
     '''
     # Import data
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
@@ -185,7 +183,6 @@ def main(params):
                                mnist_network.labels: mnist.test.labels,
                                mnist_network.keep_prob: 1.0})
 
-                nni.report_intermediate_result(test_acc)
                 logger.debug('test accuracy %g', test_acc)
                 logger.debug('Pipe send intermediate result done.')
 
@@ -194,7 +191,6 @@ def main(params):
                        mnist_network.labels: mnist.test.labels,
                        mnist_network.keep_prob: 1.0})
 
-        nni.report_final_result(test_acc)
         logger.debug('Final result is %g', test_acc)
         logger.debug('Send final result done.')
 
@@ -219,12 +215,8 @@ def generate_default_params():
 
 if __name__ == '__main__':
     try:
-        # get parameters from tuner
-        RCV_PARAMS = nni.get_next_parameter()
-        logger.debug(RCV_PARAMS)
         # run
         params = generate_default_params()
-        params.update(RCV_PARAMS)
         main(params)
     except Exception as exception:
         logger.exception(exception)

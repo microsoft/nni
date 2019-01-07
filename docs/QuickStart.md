@@ -18,64 +18,152 @@ Note:
 
 As long as you provide data sets, training methods and search spaces, NNI can automatically generate different sets of hyper-parameters, start corresponding training trials and find the optimal hyper-parameter configuration within the given time or number of experiments.
 
-Here is a QuickStart example on MNIST.
+Here is an example script to train a CNN on MNIST dataset without NNI:
 
-|Script to train CNN on MNIST|The same script using NNI|
-|---|---|
-|
 ```python
-import logging
-import math
-import tempfile
+# Please refer to source code to see the detail implementation.
 import tensorflow as tf
-
-from tensorflow.examples.tutorials.mnist import input_data
-```
-|
-```python
-import logging
-import math
-import tempfile
-import tensorflow as tf
-
 from tensorflow.examples.tutorials.mnist import input_data
 
-import nni
+'''[skipped a piece of code here]'''
+
+def main(params):
+    # Import data
+    '''[skipped a piece of code here]'''
+    # Create the model
+    '''[skipped a piece of code here]'''
+    # Write log
+    '''[skipped a piece of code here]'''
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        for i in range(params['batch_num']):
+            '''[skipped a piece of code here]'''
+            if i % 100 == 0:
+                test_acc = mnist_network.accuracy.eval(
+                    feed_dict={mnist_network.images: mnist.test.images,
+                               mnist_network.labels: mnist.test.labels,
+                               mnist_network.keep_prob: 1.0})
+        '''[skipped a piece of code here]'''
+        test_acc = mnist_network.accuracy.eval(
+            feed_dict={mnist_network.images: mnist.test.images,
+                       mnist_network.labels: mnist.test.labels,
+                       mnist_network.keep_prob: 1.0})
+
+if __name__ == '__main__':
+    try:
+        # run
+        params = generate_default_params()
+        main(params)
+    except Exception as exception:
+        logger.exception(exception)
+        raise
 ```
-|
+
+Note: We display the important part instead of complete file in the doc. If you want to see the full implementation, please refer to the following link:
+
+`Implemented code directory`: [examples/trials/mnist/mnist_without_nni.py][7]
+
+Without NNI, user have to manually tune the configuration and start each trial. It requires high degree of expertise and a lot of experience, and NNI targets to automatically do this work. NNI will automatically tune and optimal the hyper-parameters set by collecting the intermediate and final results matrix with the state of art tuning algorithms.
+
+If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you have to do three more things:
 
 **Three things required to do when using NNI**
 
-1. Give a `Search Space` file in json, includes the `name` and the `distribution` (discrete valued or continuous valued) of hyper-parameters you need to search. For example: [search_space.json][3]
-2. Prepare a `Trial` file in python, which define an individual attempt to `try a set of hyper-parameters` and return the result matrix. For example: [mnist.py][4]
-3. Define a `Config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, runtime and name arguments.
+1. Give a `Search Space` file in json, includes the `name` and the `distribution` (discrete valued or continuous valued) of hyper-parameters you need to search. 
 
-*MNIST [config.yml][5] file we prepared:*
-
-```yaml
-authorName: default
-experimentName: example_mnist
-trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 10
-trainingServicePlatform: local
-# The path to Search Space
-searchSpacePath: search_space.json
-useAnnotation: false
-tuner:
-  builtinTunerName: TPE
-trial:
-  # The path and the running command of model training method(trial)
-  command: python3 mnist.py
-  codeDir: .
-  gpuNum: 0
+```diff
++ {
++     "dropout_rate":{"_type":"uniform","_value":[0.5, 0.9]},
++     "conv_size":{"_type":"choice","_value":[2,3,5,7]},
++     "hidden_size":{"_type":"choice","_value":[124, 512, 1024]},
++     "batch_size": {"_type":"choice", "_value": [1, 4, 8, 16, 32]},
++     "learning_rate":{"_type":"choice","_value":[0.0001, 0.001, 0.01, 0.1]}
++ }
 ```
 
-Everything is ready! **Now run the config.yml file from your command-line**:
+`Implemented code directory`: [search_space.json][3]
+
+2. Prepare a `Trial` file in python, which define an individual attempt to `try a set of hyper-parameters` and return the result matrix. For example: [mnist.py][4]
+
+```diff
+  # Please refer to source code to see the detail implementation.
+  import tensorflow as tf
++ import nni 
+  from tensorflow.examples.tutorials.mnist import input_data
+
+  '''[skipped a piece of code here]'''
+
+  def main(params):
+      # Import data
+      '''[skipped a piece of code here]'''
+      # Create the model
+      '''[skipped a piece of code here]'''
+      # Write log
+      '''[skipped a piece of code here]'''
+      with tf.Session() as sess:
+          sess.run(tf.global_variables_initializer())
+          for i in range(params['batch_num']):
+              '''[skipped a piece of code here]'''
+              if i % 100 == 0:
+                  test_acc = mnist_network.accuracy.eval(
+                      feed_dict={mnist_network.images: mnist.test.images,
+                                mnist_network.labels: mnist.test.labels,
+                                mnist_network.keep_prob: 1.0})
++                 # report the imtermediate result matrix after finish each epoch
++                 nni.report_intermediate_result(test_acc)
+          '''[skipped a piece of code here]'''
+          test_acc = mnist_network.accuracy.eval(
+              feed_dict={mnist_network.images: mnist.test.images,
+                        mnist_network.labels: mnist.test.labels,
+                        mnist_network.keep_prob: 1.0})
++         # report final result matrix when the trial finished all the epoch
++         nni.report_final_result(test_acc)
+
+  if __name__ == '__main__':
+      try:
+          # run
++         # get parameters from tuner
++         RCV_PARAMS = nni.get_next_parameter()
+          params = generate_default_params()
++         # Start the trial with the latest parameters
++         params.update(RCV_PARAMS)
+          main(params)
+      except Exception as exception:
+          logger.exception(exception)
+          raise
+```
+
+`Implemented code directory`: [mnist.py][4]
+
+3. Define a `Config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, runtime and name arguments.
+
+```diff
++ authorName: default
++ experimentName: example_mnist
++ trialConcurrency: 1
++ maxExecDuration: 1h
++ maxTrialNum: 10
++ trainingServicePlatform: local
++ # The path to Search Space
++ searchSpacePath: search_space.json
++ useAnnotation: false
++ tuner:
++   builtinTunerName: TPE
++ trial:
++   # The path and the running command of model training method(trial)
++   command: python3 mnist.py
++   codeDir: .
++   gpuNum: 0
+```
+
+`Implemented code directory`: [config.yml][5]
+
+All the code above are stored in [examples/trials/mnist/][8]. When everything is ready, **run the config.yml file from your command-line**.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
+
 Note: **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here][6] for more usage of `nnictl`
 
 Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
@@ -105,6 +193,8 @@ You can use these commands to get more information about the experiment
 8. nnictl --help                 get help information about nnictl
 -----------------------------------------------------------------------
 ```
+
+If you prepare `trial`, `search space` and `config` according to the above steps and successfully create a NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameters sets for each trial according to the requirements you set. You can clearly sees its progress by NNI WebUI.
 
 ## WebUI
 
@@ -170,3 +260,5 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 [4]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py
 [5]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config.yml
 [6]: https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md
+[7]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py
+[8]: https://github.com/Microsoft/nni/tree/master/examples/trials/mnist
