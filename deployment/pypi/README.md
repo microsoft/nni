@@ -22,6 +22,14 @@ make
 ```
 
 ## 3.How to upload
+
+### upload for testing
+```bash
+TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/ make upload
+```
+You may need to input the account and password of https://test.pypi.org during this process.
+
+### upload for release
 ```bash
 make upload
 ```

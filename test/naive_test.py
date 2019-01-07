@@ -46,7 +46,7 @@ def run():
     nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
     current_trial = 0
 
-    for _ in range(60):
+    for _ in range(120):
         time.sleep(1)
 
         tuner_status = read_last_line('naive_test/tuner_result.txt')
@@ -68,7 +68,7 @@ def run():
                     current_trial = trial
                     print('Trial #%d done' % trial)
 
-    assert experiment_status, 'Failed to finish in 1 min'
+    assert experiment_status, 'Failed to finish in 2 min'
 
     ss1 = json.load(open('naive_test/search_space.json'))
     ss2 = json.load(open('naive_test/tuner_search_space.json'))

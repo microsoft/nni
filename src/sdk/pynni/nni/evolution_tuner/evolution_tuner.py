@@ -35,7 +35,7 @@ import random
 import numpy as np
 
 from nni.tuner import Tuner
-from . import parameter_expressions
+from .. import parameter_expressions
 
 
 @unique

@@ -28,7 +28,7 @@ export namespace ValidationSchemas {
                 username: joi.string().required(),
                 ip: joi.string().ip().required(),
                 port: joi.number().min(1).max(65535).required(),
-                passwd: joi.string().required(),
+                passwd: joi.string(),
                 sshKeyPath: joi.string(),
                 passphrase: joi.string()
             })),
@@ -59,6 +59,29 @@ export namespace ValidationSchemas {
                         memoryMB: joi.number().min(100),
                         gpuNum: joi.number().min(0).required(),
                         command: joi.string().min(1).required()
+                }),
+                master: joi.object({
+                    replicas: joi.number().min(1).required(),
+                    image: joi.string().min(1),
+                    outputDir: joi.string(),
+                    cpuNum: joi.number().min(1),
+                    memoryMB: joi.number().min(100),
+                    gpuNum: joi.number().min(0).required(),
+                    command: joi.string().min(1).required()
+                }),
+                taskRoles: joi.array({
+                    name: joi.string().min(1),
+                    taskNum: joi.number().min(1).required(),
+                    image: joi.string().min(1),
+                    outputDir: joi.string(),
+                    cpuNum: joi.number().min(1),
+                    memoryMB: joi.number().min(100),
+                    gpuNum: joi.number().min(0).required(),
+                    command: joi.string().min(1).required(),
+                    frameworkAttemptCompletionPolicy: joi.object({
+                        minFailedTaskCount: joi.number(),
+                        minSucceededTaskCount: joi.number()
+                    })
                 })
             }),
             pai_config: joi.object({
@@ -68,11 +91,27 @@ export namespace ValidationSchemas {
             }),
             kubeflow_config: joi.object({
                 operator: joi.string().min(1).required(),
+                storage: joi.string().min(1),
+                apiVersion: joi.string().min(1),
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()
                 }),
-                kubernetesServer: joi.string().min(1),
+                keyVault: joi.object({
+                    vaultName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/),
+                    name: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/)
+                }),
+                azureStorage: joi.object({
+                    accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
+                    azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
+                })
+            }),
+            frameworkcontroller_config: joi.object({
+                storage: joi.string().min(1),
+                nfs: joi.object({
+                    server: joi.string().min(1).required(),
+                    path: joi.string().min(1).required()
+                }),
                 keyVault: joi.object({
                     vaultName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/),
                     name: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){1,127}$/)
@@ -99,23 +138,32 @@ export namespace ValidationSchemas {
             maxExecDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
+            advisor: joi.object({
+                builtinAdvisorName: joi.string().valid('Hyperband'),
+                codeDir: joi.string(),
+                classFileName: joi.string(),
+                className: joi.string(),
+                classArgs: joi.any(),
+                gpuNum: joi.number().min(0),
+                checkpointDir: joi.string().allow('')
+            }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
                 gpuNum: joi.number().min(0),
-                checkpointDir: joi.string()
-            }).required(),
+                checkpointDir: joi.string().allow('')
+            }),
             assessor: joi.object({
-                builtinAssessorName: joi.string().valid('Medianstop'),
+                builtinAssessorName: joi.string().valid('Medianstop', 'Curvefitting'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
                 classArgs: joi.any(),
                 gpuNum: joi.number().min(0),
-                checkpointDir: joi.string()
+                checkpointDir: joi.string().allow('')
             }),
             clusterMetaData: joi.array().items(joi.object({
                 key: joi.string(),
@@ -130,7 +178,7 @@ export namespace ValidationSchemas {
         body: {
             id: joi.string().required(),
             revision: joi.number().min(0).required(),
-            params: joi.object(STARTEXPERIMENT.body).required(),
+            params: joi.object(STARTEXPERIMENT.body),
             execDuration: joi.number().required(),
             startTime: joi.number(),
             endTime: joi.number(),

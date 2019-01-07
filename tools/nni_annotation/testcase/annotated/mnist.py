@@ -3,15 +3,12 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
 import nni
-
 import logging
 import math
 import tempfile
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
-
 logger = logging.getLogger('mnist')
 FLAGS = None
 
@@ -23,8 +20,10 @@ class MnistNetwork(object):
         y_dim=10):
         self.channel_1_num = channel_1_num
         self.channel_2_num = channel_2_num
-        self.conv_size = nni.choice(2, 3, 5, 7, name='self.conv_size')
-        self.hidden_size = nni.choice(124, 512, 1024, name='self.hidden_size')
+        self.conv_size = nni.choice({2: 2, 3: 3, 5: 5, 7: 7}, name=
+            'self.conv_size')
+        self.hidden_size = nni.choice({124: 124, 512: 512, 1024: 1024},
+            name='self.hidden_size')
         self.pool_size = pool_size
         self.learning_rate = nni.randint(2, 3, 5, name='self.learning_rate')
         self.x_dim = x_dim
@@ -47,14 +46,20 @@ class MnistNetwork(object):
             W_conv1 = weight_variable([self.conv_size, self.conv_size, 1,
                 self.channel_1_num])
             b_conv1 = bias_variable([self.channel_1_num])
-            h_conv1 = nni.function_choice(lambda : tf.nn.relu(conv2d(
-                x_image, W_conv1) + b_conv1), lambda : tf.nn.sigmoid(conv2d
-                (x_image, W_conv1) + b_conv1), lambda : tf.nn.tanh(conv2d(
-                x_image, W_conv1) + b_conv1), name='tf.nn.relu')
+            h_conv1 = nni.function_choice({
+                'tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)': lambda :
+                tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1),
+                'tf.nn.sigmoid(conv2d(x_image, W_conv1) + b_conv1)': lambda :
+                tf.nn.sigmoid(conv2d(x_image, W_conv1) + b_conv1),
+                'tf.nn.tanh(conv2d(x_image, W_conv1) + b_conv1)': lambda :
+                tf.nn.tanh(conv2d(x_image, W_conv1) + b_conv1)}, name=
+                'tf.nn.relu')
         with tf.name_scope('pool1'):
-            h_pool1 = nni.function_choice(lambda : max_pool(h_conv1, self.
-                pool_size), lambda : avg_pool(h_conv1, self.pool_size),
-                name='max_pool')
+            h_pool1 = nni.function_choice({
+                'max_pool(h_conv1, self.pool_size)': lambda : max_pool(
+                h_conv1, self.pool_size),
+                'avg_pool(h_conv1, self.pool_size)': lambda : avg_pool(
+                h_conv1, self.pool_size)}, name='max_pool')
         with tf.name_scope('conv2'):
             W_conv2 = weight_variable([self.conv_size, self.conv_size, self
                 .channel_1_num, self.channel_2_num])
@@ -135,9 +140,10 @@ def main():
         sess.run(tf.global_variables_initializer())
         batch_num = 200
         for i in range(batch_num):
-            batch_size = nni.choice(50, 250, 500, name='batch_size')
+            batch_size = nni.choice({50: 50, 250: 250, 500: 500}, name=
+                'batch_size')
             batch = mnist.train.next_batch(batch_size)
-            dropout_rate = nni.choice(1, 5, name='dropout_rate')
+            dropout_rate = nni.choice({1: 1, 5: 5}, name='dropout_rate')
             mnist_network.train_step.run(feed_dict={mnist_network.x: batch[
                 0], mnist_network.y: batch[1], mnist_network.keep_prob:
                 dropout_rate})

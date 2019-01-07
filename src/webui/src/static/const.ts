@@ -1,4 +1,5 @@
 export const MANAGER_IP = `/api/v1/nni`;
+export const DOWNLOAD_IP = `/logs`;
 export const trialJobStatus = [
     'UNKNOWN',
     'WAITING',
@@ -14,3 +15,7 @@ export const CONTROLTYPE = [
     'TRIAL_CONCURRENCY',
     'MAX_EXEC_DURATION'
 ];
+export const MONACO = {
+    readOnly: true,
+    automaticLayout: true
+};
