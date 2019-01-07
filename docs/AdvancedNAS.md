@@ -1,7 +1,7 @@
 # Tutorial for Advanced Neural Architecture Search
 Currently many of the NAS algorithms leverage the technique of **weight sharing** among trials to accelerate its training process. For example, [ENAS][1] delivers 1000x effiency with '_parameter sharing between child models_', compared with the previous [NASNet][2] algorithm. Other NAS algorithms such as [DARTS][3], [Network Morphism][4], and [Evolution][5] is also leveraging, or has the potential to leverage weight sharing.
 
-This is a tutorial on how to enable weight sharing in NNI. 
+This is a tutorial on how to enable weight sharing in NNI.
 
 ## Weight Sharing among trials
 Currently we recommend sharing weights through NFS (Network File System), which supports sharing files across machines, and is light-weighted, (relatively) efficient. We also welcome contributions from the community on more efficient techniques.
@@ -63,6 +63,8 @@ The feature of weight sharing enables trials from different machines, in which m
         self.events[parameter_id].set()
 ```
 
+## Examples
+For details, please refer to this [simple weight sharing example](../test/async_sharing_test). We also provided a [practice example](../examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](../examples/trials/ga_squad) example.
 
 [1]: https://arxiv.org/abs/1802.03268
 [2]: https://arxiv.org/abs/1707.07012
