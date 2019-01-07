@@ -1,4 +1,4 @@
-# **Tutorial: Create and Run an Experiment on local with NNI API**
+# **教程：使用 NNI API 在本地创建和运行实验**
 
 In this tutorial, we will use the example in [~/examples/trials/mnist] to explain how to create and run an experiment on local with NNI API.
 
