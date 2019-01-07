@@ -2,7 +2,7 @@ nnictl
 
 ===
 
-## Introduction
+## 介绍
 
 **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc.
 
@@ -38,16 +38,17 @@ nnictl top
   
   * Usage
     
-        ```bash
-        nnictl create [OPTIONS]
-        ```
-        
-        Options:  
-        | Name, shorthand | Required|Default | Description |
-        | ------ | ------ | ------ |------ |
-        | --config, -c|  True| |yaml configure file of the experiment|
-        | --port, -p  |  False| |the port of restful server|
-        
+    ```bash
+    nnictl create [OPTIONS]
+    ```
+    
+    Options:  
+    
+    
+    | Name, shorthand | Required | Default | Description                           |
+    | --------------- | -------- | ------- | ------------------------------------- |
+    | --config, -c    | True     |         | yaml configure file of the experiment |
+    | --port, -p      | False    |         | the port of restful server            |
 
 * **nnictl resume**
   
@@ -258,34 +259,33 @@ nnictl top
   
   * Usage
     
-        ```bash
-        nnictl experiment status
-        ```
-        
-        Options:
-        
-        | Name, shorthand | Required|Default | Description |
-        | ------ | ------ | ------ |------ |
-        | id|  False| |ID of the experiment you want to set|
-        
+    ```bash
+    nnictl experiment status
+    ```
+    
+    Options:
+    
+    | Name, shorthand | Required | Default | Description                          |
+    | --------------- | -------- | ------- | ------------------------------------ |
+    | id              | False    |         | ID of the experiment you want to set |
 
 * **nnictl experiment list**
   
   * Description
     
     Show the information of all the (running) experiments.
+  
+  * Usage
     
-    * Usage
-      
-      ```bash
-      nnictl experiment list
-      ```
-      
-      Options:
-      
-      | Name, shorthand | Required | Default | Description                                             |
-      | --------------- | -------- | ------- | ------------------------------------------------------- |
-      | all             | False    | False   | Show all of experiments, including stopped experiments. |
+    ```bash
+    nnictl experiment list
+    ```
+    
+    Options:
+    
+    | Name, shorthand | Required | Default | Description                                             |
+    | --------------- | -------- | ------- | ------------------------------------------------------- |
+    | all             | False    | False   | Show all of experiments, including stopped experiments. |
 
 * **nnictl config show**
   
@@ -309,19 +309,18 @@ nnictl top
   
   * Usage
     
-        ```bash
-        nnictl log stdout [options]
-        ```
-        
-        Options:
-        
-        | Name, shorthand | Required|Default | Description |
-        | ------ | ------ | ------ |------ |
-        | id|  False| |ID of the experiment you want to set|
-        | --head, -h| False| |show head lines of stdout|
-        | --tail, -t|  False| |show tail lines of stdout|
-        | --path, -p|  False| |show the path of stdout file|
-        
+    ```bash
+    nnictl log stdout [options]
+    ```
+    
+    Options:
+    
+    | Name, shorthand | Required | Default | Description                          |
+    | --------------- | -------- | ------- | ------------------------------------ |
+    | id              | False    |         | ID of the experiment you want to set |
+    | --head, -h      | False    |         | show head lines of stdout            |
+    | --tail, -t      | False    |         | show tail lines of stdout            |
+    | --path, -p      | False    |         | show the path of stdout file         |
 
 * **nnictl log stderr**
   
