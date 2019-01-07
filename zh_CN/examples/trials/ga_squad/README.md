@@ -7,59 +7,59 @@
 对于阅读理解项目，注意力和循环神经网络（RNN）模块已经被证明非常有效。 使用的搜索空间如下：
 
 1. IDENTITY (Effectively 表示继续训练)。
-2. INSERT-RNN-LAYER (Inserts a LSTM. Comparing the performance of GRU and LSTM in our experiment, we decided to use LSTM here.)
+2. INSERT-RNN-LAYER (插入 LSTM。 在实验中比较了 GRU 和 LSTM 的性能后，我们决定在这里采用 LSTM。)
 3. REMOVE-RNN-LAYER
-4. INSERT-ATTENTION-LAYER(Inserts a attention layer.)
+4. INSERT-ATTENTION-LAYER (插入注意力层。)
 5. REMOVE-ATTENTION-LAYER
-6. ADD-SKIP (Identity between random layers).
-7. REMOVE-SKIP (Removes random skip).
+6. ADD-SKIP (在随机层之间一致).
+7. REMOVE-SKIP (移除随机跳过).
 
 ![ga-squad-logo](../../../../examples/trials/ga_squad/ga_squad.png)
 
-## New version
+## 新版本
 
-Also we have another version which time cost is less and performance is better. We will release soon.
+另一个时间更快，性能更好的版本正在开发中。 很快将发布。
 
-# How to run this example?
+# 如何运行此样例？
 
-## Run this example on local or remote
+## 在本机或远程上运行此样例
 
-### Use downloading script to download data
+### 使用下载脚本来下载数据
 
-Execute the following command to download needed files using the downloading script:
+执行下列命令来下载所需要的数据：
 
     chmod +x ./download.sh
     ./download.sh
     
 
-### Download manually
+### 手动下载
 
-1. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
+1. 在 https://rajpurkar.github.io/SQuAD-explorer/ 下载 "dev-v1.1.json" 和 "train-v1.1.json"。
     
     ```bash
     wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
     wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
     ```
 
-2. download "glove.840B.300d.txt" in https://nlp.stanford.edu/projects/glove/
+2. 在 https://nlp.stanford.edu/projects/glove/ 下载 "glove.840B.300d.txt"。
     
     ```bash
     wget http://nlp.stanford.edu/data/glove.840B.300d.zip
     unzip glove.840B.300d.zip
     ```
 
-### Update configuration
+### 更新配置
 
-Modify `nni/examples/trials/ga_squad/config.yml`, here is the default configuration:
+修改 `nni/examples/trials/ga_squad/config.yml`，以下是默认配置：
 
     authorName: default
     experimentName: example_ga_squad
     trialConcurrency: 1
     maxExecDuration: 1h
     maxTrialNum: 1
-    #choice: local, remote
+    #可选项: local, remote
     trainingServicePlatform: local
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: false
     tuner:
       codeDir: ~/nni/examples/tuners/ga_customer_tuner
@@ -73,33 +73,33 @@ Modify `nni/examples/trials/ga_squad/config.yml`, here is the default configurat
       gpuNum: 0
     
 
-In the "trial" part, if you want to use GPU to perform the architecture search, change `gpuNum` from `0` to `1`. You need to increase the `maxTrialNum` and `maxExecDuration`, according to how long you want to wait for the search result.
+在 "trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
 
-`trialConcurrency` is the number of trials running concurrently, which is the number of GPUs you want to use, if you are setting `gpuNum` to 1.
+`trialConcurrency` 是并发运行的尝试的数量。如果将 `gpuNum` 设置为 1，则需要与 GPU 数量一致。
 
-### submit this job
+### 提交任务
 
     nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
     
 
-## Run this example on OpenPAI
+## 在 OpenPAI 上运行此样例
 
-Due to the memory limitation of upload, we only upload the source code and complete the data download and training on OpenPAI. This experiment requires sufficient memory that `memoryMB >= 32G`, and the training may last for several hours.
+根据上传大小的限制，仅上传源代码，并在训练过程中下载数据。 本实验需要的内存 `memoryMB >= 32G`，训练过程可能需要数小时。
 
-### Update configuration
+### 更新配置
 
-Modify `nni/examples/trials/ga_squad/config_pai.yaml`, here is the default configuration:
+修改 `nni/examples/trials/ga_squad/config_pai.yaml`，以下是默认配置：
 
     authorName: default
     experimentName: example_ga_squad
     trialConcurrency: 1
     maxExecDuration: 1h
     maxTrialNum: 10
-    #choice: local, remote, pai
+    #可选项: local, remote, pai
     trainingServicePlatform: pai
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: false
-    #Your nni_manager ip
+    # nni_manager 的 ip
     nniManagerIp: 10.10.10.10
     tuner:
       codeDir: ../../tuners/ga_customer_tuner
