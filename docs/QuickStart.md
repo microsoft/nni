@@ -2,9 +2,7 @@
 
 ## Installation
 
-**Install through pip**
-
-* We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
 
 ```bash
     python3 -m pip install --upgrade nni
@@ -24,9 +22,9 @@ Here is a QuickStart example to run a NNI experiment on MNIST.
 
 **Three things required to do when using NNI**
 
-1. Give a `Search Space` file in json, includes the `name` and the `range` of hyper-parameters you need to search. For example: [search_space.json][3]
-2. Prepare a `trial` in python, which define an individual attempt to `try a set of hyper-parameters` and return the result matrix. For example: [mnist.py][4]
-3. Define a `config` in yaml format below. which declare the path to SearchSpace and trial, also give information such as tuning algorithm, runtime and name arguments.
+1. Give a `Search Space` file in json, includes the `name` and the `range` (discrete valued or continuous valued) of hyper-parameters you need to search. For example: [search_space.json][3]
+2. Prepare a `Trial` file in python, which define an individual attempt to `try a set of hyper-parameters` and return the result matrix. For example: [mnist.py][4]
+3. Define a `Config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, runtime and name arguments.
 
 *MNIST [config.yml][5] file we prepared:*
 
@@ -49,11 +47,12 @@ trial:
   gpuNum: 0
 ```
 
-Everything is ready! **Now run the config.yml from your command-line**:
+Everything is ready! **Now run the config.yml file from your command-line**:
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
+Note: **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here][6] for more usage of `nnictl`
 
 Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
 
@@ -146,3 +145,4 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 [3]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/search_space.json
 [4]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py
 [5]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config.yml
+[6]: https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md
