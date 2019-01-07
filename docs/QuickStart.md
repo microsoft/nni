@@ -12,13 +12,13 @@ Note:
 
 * `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
 * If there is any error like `Segmentation fault`, please refer to [FAQ][1]
-* For the system requirements of NNI, please refer to [Install NNI][2]
+* For the `system requirements` of NNI, please refer to [Install NNI][2]
 
 ## "Hello World" example: MNIST
 
 As long as you provide data sets, training methods and search spaces, NNI can automatically generate different sets of hyper-parameters, start corresponding training trials and find the optimal hyper-parameter configuration within the given time or number of experiments.
 
-Here is an example script to train a CNN on MNIST dataset without NNI:
+Here is an example script to train a CNN on MNIST dataset **without NNI**:
 
 ```python
 # Please refer to source code to see the detail implementation.
@@ -28,12 +28,9 @@ from tensorflow.examples.tutorials.mnist import input_data
 '''[skipped a piece of code here]'''
 
 def main(params):
-    # Import data
-    '''[skipped a piece of code here]'''
-    # Create the model
-    '''[skipped a piece of code here]'''
-    # Write log
-    '''[skipped a piece of code here]'''
+    # Import data [skipped a piece of code here]
+    # Create the model [skipped a piece of code here]
+    # Write log [skipped a piece of code here]
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(params['batch_num']):
@@ -59,11 +56,9 @@ if __name__ == '__main__':
         raise
 ```
 
-Note: We display the important part instead of complete file in the doc. If you want to see the full implementation, please refer to the following link:
+Note: We display the important part instead of complete file in the doc. If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_without_nni.py][7]
 
-`Implemented code directory`: [examples/trials/mnist/mnist_without_nni.py][7]
-
-Without NNI, user have to manually tune the configuration and start each trial. It requires high degree of expertise and a lot of experience, and NNI targets to automatically do this work. NNI will automatically tune and optimal the hyper-parameters set by collecting the intermediate and final results matrix with the state of art tuning algorithms.
+Without NNI, user have to manually tune the configuration and start each trial. It requires high degree of expertise and a lot of experience, and NNI targets to automatically do this work. NNI will automatically tune and optimal the hyper-parameters sets by collecting the intermediate and final results matrix with the-state-of-art tuning algorithms.
 
 If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you have to do three more things:
 
@@ -81,14 +76,14 @@ If you want to use NNI to automatically train your model and find the optimal hy
 + }
 ```
 
-`Implemented code directory`: [search_space.json][3]
+*Implemented code directory: [search_space.json][3]*
 
-2. Prepare a `Trial` file in python, which define an individual attempt to `try a set of hyper-parameters` and return the result matrix. For example: [mnist.py][4]
+2. Modified your  `Trial` file to report the intermedian and final result to NNI and update your hyper-parameter sets.
 
 ```diff
   # Please refer to source code to see the detail implementation.
   import tensorflow as tf
-+ import nni 
++ import nni
   from tensorflow.examples.tutorials.mnist import input_data
 
   '''[skipped a piece of code here]'''
@@ -133,9 +128,9 @@ If you want to use NNI to automatically train your model and find the optimal hy
           raise
 ```
 
-`Implemented code directory`: [mnist.py][4]
+*Implemented code directory: [mnist.py][4]*
 
-3. Define a `Config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, runtime and name arguments.
+3. Define a `config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, runtime and name arguments.
 
 ```diff
 + authorName: default
@@ -156,9 +151,9 @@ If you want to use NNI to automatically train your model and find the optimal hy
 +   gpuNum: 0
 ```
 
-`Implemented code directory`: [config.yml][5]
+*Implemented code directory: [config.yml][5]*
 
-All the code above are stored in [examples/trials/mnist/][8]. When everything is ready, **run the config.yml file from your command-line**.
+All the code above are stored in [examples/trials/mnist/][8]. When everything is ready, **run the config.yml file from your command line**.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
@@ -260,5 +255,5 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 [4]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py
 [5]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config.yml
 [6]: https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md
-[7]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py
+[7]: https://github.com/Microsoft/nni/blob/43981d732fefee9d938620f2c959bf8411bd3a29/examples/trials/mnist/mnist_without_nni.py
 [8]: https://github.com/Microsoft/nni/tree/master/examples/trials/mnist
