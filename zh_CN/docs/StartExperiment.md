@@ -1,8 +1,8 @@
-# How to start an experiment
+# 如何启动实验
 
-## 1.Introduce
+## 1. 简介
 
-There are few steps to start an new experiment of nni, here are the process. <img src="./img/experiment_process.jpg" width="50%" height="50%" />
+There are few steps to start an new experiment of nni, here are the process. <img src="../../docs/img/experiment_process.jpg" width="50%" height="50%" />
 
 ## 2.Details
 
