@@ -22,39 +22,36 @@ Here is an example script to train a CNN on MNIST dataset **without NNI**:
 
 ```python
 # Please refer to source code to see the detail implementation.
-import tensorflow as tf
-from tensorflow.examples.tutorials.mnist import input_data
-
-'''[skipped a piece of code here]'''
-
 def main(params):
     # Import data [skipped a piece of code here]
     # Create the model [skipped a piece of code here]
     # Write log [skipped a piece of code here]
     with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        for i in range(params['batch_num']):
-            '''[skipped a piece of code here]'''
-            if i % 100 == 0:
-                test_acc = mnist_network.accuracy.eval(
-                    feed_dict={mnist_network.images: mnist.test.images,
-                               mnist_network.labels: mnist.test.labels,
-                               mnist_network.keep_prob: 1.0})
         '''[skipped a piece of code here]'''
-        test_acc = mnist_network.accuracy.eval(
-            feed_dict={mnist_network.images: mnist.test.images,
-                       mnist_network.labels: mnist.test.labels,
-                       mnist_network.keep_prob: 1.0})
         print ("The final accuracy is ", test_acc)
+
+def generate_default_params():
+    '''
+    Generate default parameters for mnist network.
+    '''
+    params = {
+        'data_dir': '/tmp/tensorflow/mnist/input_data',
+        'dropout_rate': 0.5,
+        'channel_1_num': 32,
+        'channel_2_num': 64,
+        'conv_size': 5,
+        'pool_size': 2,
+        'hidden_size': 1024,
+        'learning_rate': 1e-4,
+        'batch_num': 2000,
+        'batch_size': 32}
+    return params
 
 if __name__ == '__main__':
     try:
         # run
         params = generate_default_params()
         main(params)
-    except Exception as exception:
-        logger.exception(exception)
-        raise
 ```
 
 Note: We display the important part instead of complete file in the doc. If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_without_nni.py][7]
@@ -66,6 +63,22 @@ If you want to use NNI to automatically train your model and find the optimal hy
 1. Give a `Search Space` file in json, includes the `name` and the `distribution` (discrete valued or continuous valued) of hyper-parameters you need to search. 
 
 ```diff
+- def generate_default_params():
+-   '''
+-   Generate default parameters for mnist network.
+-   '''
+-   params = {
+-       'data_dir': '/tmp/tensorflow/mnist/input_data',
+-       'dropout_rate': 0.5,
+-       'channel_1_num': 32,
+-       'channel_2_num': 64,
+-       'conv_size': 5,
+-       'pool_size': 2,
+-       'hidden_size': 1024,
+-       'learning_rate': 1e-4,
+-       'batch_num': 2000,
+-       'batch_size': 32}
+-   return params
 + {
 +     "dropout_rate":{"_type":"uniform","_value":[0.5, 0.9]},
 +     "conv_size":{"_type":"choice","_value":[2,3,5,7]},
@@ -80,52 +93,27 @@ If you want to use NNI to automatically train your model and find the optimal hy
 2. Modified your  `Trial` file to report the intermedian and final result to NNI and get the next hyper-parameter set from NNI.
 
 ```diff
-  # Please refer to source code to see the detail implementation.
-  import tensorflow as tf
+# Please refer to source code to see the detail implementation.
 + import nni
-  from tensorflow.examples.tutorials.mnist import input_data
-
   '''[skipped a piece of code here]'''
 
   def main(params):
-      # Import data
-      '''[skipped a piece of code here]'''
-      # Create the model
-      '''[skipped a piece of code here]'''
-      # Write log
-      '''[skipped a piece of code here]'''
-      with tf.Session() as sess:
-          sess.run(tf.global_variables_initializer())
-          for i in range(params['batch_num']):
-              '''[skipped a piece of code here]'''
-              if i % 100 == 0:
-                  test_acc = mnist_network.accuracy.eval(
-                      feed_dict={mnist_network.images: mnist.test.images,
-                                mnist_network.labels: mnist.test.labels,
-                                mnist_network.keep_prob: 1.0})
-+                 # report the imtermediate result matrix after finish each epoch
-+                 nni.report_intermediate_result(test_acc)
-          '''[skipped a piece of code here]'''
-          test_acc = mnist_network.accuracy.eval(
-              feed_dict={mnist_network.images: mnist.test.images,
-                        mnist_network.labels: mnist.test.labels,
-                        mnist_network.keep_prob: 1.0})
--         print ("The final accuracy is ", test_acc)
-+         # report final result matrix when the trial finished all the epoch
-+         nni.report_final_result(test_acc)
+    # Import data [skipped a piece of code here]
+    # Create the model [skipped a piece of code here]
+    # Write log [skipped a piece of code here]
+    with tf.Session() as sess:
+        '''[skipped a piece of code here]'''
+-       print ("The final accuracy is ", test_acc)
++       # report final result matrix when the trial finished all the epoch
++       nni.report_final_result(test_acc)
 
   if __name__ == '__main__':
       try:
           # run
+-         params = generate_default_params()
 +         # get parameters from tuner
 +         RCV_PARAMS = nni.get_next_parameter()
-          params = generate_default_params()
-+         # Start the trial with the latest parameters
-+         params.update(RCV_PARAMS)
           main(params)
-      except Exception as exception:
-          logger.exception(exception)
-          raise
 ```
 
 *Implemented code directory: [mnist.py][4]*
