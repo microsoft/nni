@@ -1,4 +1,4 @@
-## 33rd place solution code for Kaggle [TGS Salt Identification Chanllenge](https://www.kaggle.com/c/tgs-salt-identification-challenge)
+## Kaggle 比赛 [TGS Salt Identification Chanllenge](https://www.kaggle.com/c/tgs-salt-identification-challenge) 第 33 名的解决方案
 
 This example shows how to enable AutoML for competition code by running it on NNI without any code change. To run this code on NNI, firstly you need to run it standalone, then configure the config.yml and:
 
