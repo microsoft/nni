@@ -1,10 +1,10 @@
-# Define your own Assessor
+# 自定义评估器
 
-*Assessor receive intermediate result from Trial and decide whether the Trial should be killed. Once the Trial experiment meets the early stop conditions, the assessor will kill the Trial.*
+*评估器从尝试中接收中间结果，并决定此尝试是否应该终止。 一旦尝试满足提前终止条件，评估器将终止此尝试。*
 
-So, if users want to implement a customized Assessor, they only need to:
+因此，如果要自定义评估器，需要：
 
-**1) Inherit an assessor of a base Assessor class**
+**1) 继承于 Assessor 基类，创建评估器类**
 
 ```python
 from nni.assessor import Assessor
@@ -14,7 +14,7 @@ class CustomizedAssessor(Assessor):
         ...
 ```
 
-**2) Implement assess trial function**
+**2) 实现评估尝试的函数**
 
 ```python
 from nni.assessor import Assessor, AssessResult
@@ -25,15 +25,15 @@ class CustomizedAssessor(Assessor):
 
     def assess_trial(self, trial_history):
         """
-        Determines whether a trial should be killed. Must override.
-        trial_history: a list of intermediate result objects.
-        Returns AssessResult.Good or AssessResult.Bad.
+        决定是否应该终止尝试。 必须重载。
+        trial_history: 中间结果列表对象。
+        返回 AssessResult.Good 或 AssessResult.Bad。
         """
-        # you code implement here.
+        # 代码实现于此处。
         ...
 ```
 
-**3) Write a script to run Assessor**
+**3) 实现脚本来运行评估器**
 
 ```python
 import argparse
@@ -42,7 +42,7 @@ import CustomizedAssesor
 
 def main():
     parser = argparse.ArgumentParser(description='parse command line parameters.')
-    # parse your assessor arg here.
+    # 在这里解析评估器的参数
     ...
     FLAGS, unparsed = parser.parse_known_args()
 
@@ -52,7 +52,7 @@ def main():
 main()
 ```
 
-Please noted in 2). The object ```trial_history``` are exact the object that Trial send to Assesor by using SDK ```report_intermediate_result``` function.
+注意 2) 中。 对象 ```trial_history``` are exact the object that Trial send to Assesor by using SDK ```report_intermediate_result``` function.
 
 Also, user could override the ```run``` function in Assessor to control the process logic.
 
