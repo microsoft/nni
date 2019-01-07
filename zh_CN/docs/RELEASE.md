@@ -5,8 +5,8 @@
 * [Kubeflow 训练服务](./KubeflowMode.md) 
     * 支持 tf-operator
     * Kubeflow 上的[分布式尝试样例](../examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索调参器](../../src/sdk/pynni/nni/README.md#Grid) 
-* [Hyperband 调参器](../../src/sdk/pynni/nni/README.md#Hyperband)
+* [网格搜索调参器](../src/sdk/pynni/nni/README.md#Grid) 
+* [Hyperband 调参器](../src/sdk/pynni/nni/README.md#Hyperband)
 * 支持在 MAC 上运行 NNI 实验
 * WebUI 
     * 支持 hyperband 调参器
