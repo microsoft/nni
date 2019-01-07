@@ -63,8 +63,7 @@ def init_logger(logger_file_path):
     elif env_args.log_dir is not None:
         logger_file_path = os.path.join(env_args.log_dir, logger_file_path)
     logger_file = open(logger_file_path, 'w')
-
-    fmt = '[%(asctime)s] %(levelname)s (%(name)s) %(message)s'
+    fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
     formatter = logging.Formatter(fmt, _time_format)
 
     handler = logging.StreamHandler(logger_file)

@@ -18,35 +18,34 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import argparse
+import heapq
+import json
 import os
+import pickle
 
 import logging
 logger = logging.getLogger('ga_squad')
 
-try:
-    import argparse
-    import heapq
-    import json
-    import numpy as np
-    import pickle
-    import graph
+import numpy as np
+from tensorflow.train import init_from_checkpoint
 
-    from util import Timer
+import graph
 
-    import nni
-    import data
-    import evaluate
-    from train_model import *
+from util import Timer
 
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-except:
-    logger.exception('Catch exception in trial.py.')
-    raise
+import nni
+import data
+import evaluate
+from train_model import *
+
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def get_config():
     '''
-    Get config from argument parser.
+    Get config from arument parser.
     '''
     parser = argparse.ArgumentParser(
         description='This program is using genetic algorithm to search architecture for SQuAD.')
@@ -86,7 +85,7 @@ def get_id(word_dict, word):
 
 def load_embedding(path):
     '''
-    return embedding for a specific file by given file path.
+    return embedding for a specif file by given file path.
     '''
     EMBEDDING_DIM = 300
     embedding_dict = {}
@@ -299,19 +298,24 @@ def generate_data(path, tokenizer, char_vcb, word_vcb, is_training=False):
     return qp_pairs
 
 
-def train_with_graph(graph, qp_pairs, dev_qp_pairs):
+def train_with_graph(p_graph, qp_pairs, dev_qp_pairs):
     '''
     Train a network from a specific graph.
     '''
     global sess
     with tf.Graph().as_default():
-        train_model = GAG(cfg, embed, graph)
+        train_model = GAG(cfg, embed, p_graph)
         train_model.build_net(is_training=True)
         tf.get_variable_scope().reuse_variables()
-        dev_model = GAG(cfg, embed, graph)
+        dev_model = GAG(cfg, embed, p_graph)
         dev_model.build_net(is_training=False)
         with tf.Session() as sess:
+            if restore_path is not None:
+                restore_mapping = dict(zip(restore_shared, restore_shared))
+                logger.debug('init shared variables from {}, restore_scopes: {}'.format(restore_path, restore_shared))
+                init_from_checkpoint(restore_path, restore_mapping)
             logger.debug('init variables')
+            logger.debug(sess.run(tf.report_uninitialized_variables()))
             init = tf.global_variables_initializer()
             sess.run(init)
             # writer = tf.summary.FileWriter('%s/graph/'%execution_path, sess.graph)
@@ -338,6 +342,7 @@ def train_with_graph(graph, qp_pairs, dev_qp_pairs):
                 answers = generate_predict_json(
                     position1, position2, ids, contexts)
                 if save_path is not None:
+                    logger.info('save prediction file to {}'.format(save_path))
                     with open(os.path.join(save_path, 'epoch%d.prediction' % epoch), 'w') as file:
                         json.dump(answers, file)
                 else:
@@ -359,7 +364,8 @@ def train_with_graph(graph, qp_pairs, dev_qp_pairs):
                     bestacc = acc
 
                     if save_path is not None:
-                        saver.save(os.path.join(sess, save_path + 'epoch%d.model' % epoch))
+                        logger.info('save model & prediction to {}'.format(save_path))
+                        saver.save(sess, os.path.join(save_path, 'epoch%d.model' % epoch))
                         with open(os.path.join(save_path, 'epoch%d.score' % epoch), 'wb') as file:
                             pickle.dump(
                                 (position1, position2, ids, contexts), file)
@@ -421,7 +427,6 @@ if __name__ == '__main__':
         root_path = os.path.expanduser(args.root_path)
         input_file = os.path.expanduser(args.input_file)
         dev_file = os.path.expanduser(args.dev_file)
-        save_path = None
         max_epoch = args.max_epoch
 
         cfg = GAGConfig()
@@ -441,11 +446,12 @@ if __name__ == '__main__':
         with open('data.json') as f:
             original_params = json.load(f)
         '''
-        try:
-            graph = graph.graph_loads(original_params)
-        except Exception:
-            logger.debug('Can\'t load graph.')
-        train_loss, best_acc = train_with_graph(graph, qp_pairs, dev_qp_pairs)
+        p_graph = graph.graph_loads(original_params['graph'])
+        save_path = original_params['save_dir']
+        os.makedirs(save_path)
+        restore_path = original_params['restore_dir']
+        restore_shared = [hash_id + '/' for hash_id in original_params['shared_id']] if original_params['shared_id'] is not None else [] + ['word_embed', 'char_embed', 'char_encoding/']
+        train_loss, best_acc = train_with_graph(p_graph, qp_pairs, dev_qp_pairs)
 
         logger.debug('Send best acc: %s', str(best_acc))
         nni.report_final_result(best_acc)
