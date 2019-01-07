@@ -44,6 +44,13 @@ __all__ = [
 
 # pylint: disable=unused-argument
 
+def get_layer_output(layer, layer_name):
+    input_candidate = [layer['input_candidates'][x] for x in nni.get_candidate(layer_name)]
+    if layer['input_aggregate'] is not None:
+        aggregated_output = layer['input_aggregate'](input_candidate)
+
+    return layer['layer_choice'][nni.get_layer_choice('layer_1')](aggregated_output)
+
 if env_args.platform is None:
     def choice(*options, name=None):
         return random.choice(options)
