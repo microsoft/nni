@@ -161,21 +161,20 @@ Batch tuner 能让用户简单的提供几组配置（如，超参选项的组�
 <a name="Hyperband"></a>
 **Hyperband**
 
-[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 尝试用有限的资源来探索尽量多的组合，从最有可能的组合中找到最好结果。 The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be referred to [here](../src/sdk/pynni/nni/hyperband_advisor/README.md).
+[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 尝试用有限的资源来探索尽量多的组合，从最有可能的组合中找到最好结果。 它的基本思路是生成大量的配置，并运行少量的步骤来找到有可能好的配置，然后继续训练找到其中更好的配置。 参考 [这里](../src/sdk/pynni/nni/hyperband_advisor/README.md)，了解更多信息。
 
-*Suggested scenario*: It is suggested when you have limited computation resource but have relatively large search space. It performs good in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.
+*建议场景*：当搜索空间很大，但计算资源有限时建议使用。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。
 
-*Usage*:
+*用法*：
 
 ```yaml
   # config.yaml
   advisor:
     builtinAdvisorName: Hyperband
     classArgs:
-      # choice: maximize, minimize
+      # 可选项: maximize, minimize
       optimize_mode: maximize
-      # R: the maximum STEPS (could be the number of mini-batches or epochs) can be
-      #    allocated to a trial. Each trial should use STEPS to control how long it runs.
+      # R: 可分配给尝试的最大的 STEPS（可以是小批量或 epoch 的数量）。 每个尝试都需要用 STEPS 来控制运行的时间。
       R: 60
       # eta: proportion of discarded trials
       eta: 3
