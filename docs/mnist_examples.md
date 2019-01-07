@@ -16,7 +16,7 @@ CNN MNIST classifier for deep learning is similar to `hello world` for programmi
 
 This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer. We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc. It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an exmaple yaml file which enables assessor.
 
-`code directory:` [examples/trials/mnist/](nni/tree/master/examples/trials/mnist/)
+`code directory: examples/trials/mnist/`
 
 <a name="mnist-annotation"></a>
 **MNIST with NNI annotation**
