@@ -1,12 +1,12 @@
-# Tutorial - Try different Tuners and Assessors
+# 教程 - 尝试不同的调参器和评估器
 
-NNI provides an easy to adopt approach to set up parameter tuning algorithms as well as early stop policies, we call them **Tuners** and **Assessors**.
+NNI 提供了简单的方法来设置不同的参数优化算法，以及提前终止策略。NNI 将它们分别称为**调参器**和**评估器**。
 
-**Tuner** specifies the algorithm you use to generate hyperparameter sets for each trial. In NNI, we support two approaches to set the tuner.
+**调参器** 指定了为每个尝试生成参数的算法。 在 NNI 中，有两种方法来设置调参器。
 
-1. Directly use tuner provided by nni sdk
+1. 直接使用 NNI 提供的调参器
     
-        required fields: builtinTunerName and classArgs. 
+        必填字段：builtinTunerName 和 classArgs。 
         
 
 2. Customize your own tuner file
