@@ -1,6 +1,6 @@
-# **Set up NNI developer environment**
+# **设置 NNI 开发环境**
 
-## Best practice for debug NNI source code
+## 调试 NNI 源代码的最佳实践
 
 For debugging NNI source code, your development environment should be under Ubuntu 16.04 (or above) system with python 3 and pip 3 installed, then follow the below steps.
 
