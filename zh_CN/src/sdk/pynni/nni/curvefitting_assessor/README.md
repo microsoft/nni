@@ -28,48 +28,48 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 
 具体来说，该算法有学习、预测和评估三个阶段。
 
-* Step1: 学习。 从当前尝试的历史中学习，并从贝叶斯角度决定 \xi 。 首先，使用最小二乘法 (由 `fit_theta` 实现) 来节省时间。 获得参数后，过滤曲线并移除异常点（由 `filter_curve` 实现）。 最后，使用 MCMC 采样方法 (由 `mcmc_sampling` 实现) 来调整每个曲线的权重。 至此，确定了 \xi 中的所有参数。
-* 步骤 2: 预测。 Calculates the expected final result accuracy(implement by `f_comb`) at target position(ie the total number of epoch) by the \xi and the formula of the combined model.
-* Step3: If the fitting result doesn't converge, the predicted value will be `None`, in this case we return `AssessResult.Good` to ask for future accuracy information and predict again. Furthermore, we will get a positive value by `predict()` function, if this value is strictly greater than the best final performance in history * `THRESHOLD`(default value = 0.95), return `AssessResult.Good`, otherwise, return `AssessResult.Bad`
+* 步骤 1：学习。 从当前尝试的历史中学习，并从贝叶斯角度决定 \xi 。 首先，使用最小二乘法 (由 `fit_theta` 实现) 来节省时间。 获得参数后，过滤曲线并移除异常点（由 `filter_curve` 实现）。 最后，使用 MCMC 采样方法 (由 `mcmc_sampling` 实现) 来调整每个曲线的权重。 至此，确定了 \xi 中的所有参数。
+* 步骤 2：预测。 用 \xi 和混合模型公式，在目标位置（例如 epoch 的总数）来计算期望的最终结果精度（由 `f_comb` 实现）。
+* 步骤 3：如果拟合结果没有收敛，预测结果会是 `None`，并返回 `AssessResult.Good`，待下次有了更多精确信息后再次预测。 此外，会通过 `predict()` 函数获得正数。如果该值大于 __历史最好结果__ * `THRESHOLD`(默认为 0.95)，则返回 `AssessResult.Good`，否则返回 `AssessResult.Bad`。
 
-The figure below is the result of our algorithm on MNIST trial history data, where the green point represents the data obtained by Assessor, the blue point represents the future but unknown data, and the red line is the Curve predicted by the Curve fitting assessor.
+下图显示了此算法在 MNIST 尝试历史数据上结果。其中旅店表示评估器获得的数据，蓝点表示将来，但未知的数据，红色线条是 Curve fitting 评估器的预测曲线。
 
 <p align="center">
 <img src="./example_of_curve_fitting.PNG" alt="drawing"/>
 </p>
 
-## 2. Usage
+## 2. 用法
 
-To use Curve Fitting Assessor, you should add the following spec in your experiment's yaml config file:
+要使用 Curve Fitting 评估器，需要在实验的 yaml 配置文件进行如下改动。
 
     assessor:
         builtinAssessorName: Curvefitting
         classArgs:
-          # (required)The total number of epoch.
-          # We need to know the number of epoch to determine which point we need to predict.
+          # (必须) epoch 的总数。
+          # 需要此数据来决定需要预测的点。
           epoch_num: 20
-          # (optional) choice: maximize, minimize
-          * The default value of optimize_mode is maximize
+          # (可选项) choice: maximize, minimize
+          # 如果选择了 minimize 模式，需要调整阈值为 >= 1.0 (例如：threshold=1.1)
+          * optimize_mode 的默认值是 maximize
           optimize_mode: maximize
-          # Kindly reminds that if you choose minimize mode, please adjust the value of threshold >= 1.0 (e.g threshold=1.1)
-          # (optional) A trial is determined to be stopped or not
-          # In order to save our computing resource, we start to predict when we have more than start_step(default=6) accuracy points.
-          # only after receiving start_step number of reported intermediate results.
-          * The default value of start_step is 6.
+          # (可选项) 决定尝试是否应被停止的次数
+          # 为了节省资源，只有在大于 start_step(default=6) 的精度点才开始预测。
+          # 只有在收到 start_step 个中间结果之后。
+          # start_step 的默认值是 6。
           start_step: 6
-          # (optional) The threshold that we decide to early stop the worse performance curve.
-          # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
-          * The default value of threshold is 0.95.
+          # (可选) 决定是否提前终止的阈值。
+          # 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在尝试的预测值低于 0.95 * 0.9 = 0.855 时停止。
+          * 阈值的默认值是 0.95。
           threshold: 0.95
     
 
-## 3. File Structure
+## 3. 文件结构
 
-The assessor has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
+评估器有大量的文件、函数和类。 这里只简单介绍最重要的文件：
 
-* `curvefunctions.py` includes all the function expression and default parameters.
-* `modelfactory.py` includes learning and predicting, the corresponding calculation part is also implemented here.
-* `curvefitting_assessor.py` is a assessor which receives the trial history and assess whether to early stop the trial.
+* `curvefunctions.py` 包含了所有函数表达式和默认参数。
+* `modelfactory.py` 包括学习和预测部分，并实现了相应的计算部分。
+* `curvefitting_assessor.py` 是接收尝试历史数据并评估是否需要提前终止的评估器。
 
 ## 4. TODO
 
