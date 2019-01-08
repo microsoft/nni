@@ -2,7 +2,7 @@
 
 ## 1. 简介
 
-NNI 实验的启动分为几步，流程如下。 <img src="../../docs/img/experiment_process.jpg" width="50%" height="50%" />
+NNI 实验的启动分为几步，流程如下。 <img src="./img/experiment_process.jpg" width="50%" height="50%" />
 
 ## 2. 详细说明
 
