@@ -51,4 +51,4 @@
 
 当前实现的 Hyperband 算法可以通过改进支持的提前终止算法来提高，原因是最好的 `n/eta` 个配置并不一定都表现很好。 不好的配置可以更早的终止。
 
-在当前实现中，遵循了[此论文](https://arxiv.org/pdf/1603.06560.pdf)的设计，配置都是随机生成的。 To further improve, configurations could be generated more wisely by leveraging advanced algorithms.
+在当前实现中，遵循了[此论文](https://arxiv.org/pdf/1603.06560.pdf)的设计，配置都是随机生成的。 要进一步提升，配置生成过程可以利用更高级的算法。
