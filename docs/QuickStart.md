@@ -22,12 +22,19 @@ Here is an example script to train a CNN on MNIST dataset **without NNI**:
 
 ```python
 def run_trial(params):
+    # Input data
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-
+    # Build MNIST network
     mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
     mnist_network.build_network()
 
-    acc = predict(mnist, mnist_network)
+    test_acc = 0.0
+    with tf.Session() as sess:
+        # Train MNIST network
+        mnist_network.train(sess, mnist)
+        # Evaluate MNIST network
+        test_acc = mnist_network.evaluate(mnist)
+        print ("Final result is", test_acc)
 
 if __name__ == '__main__':
     try:
@@ -77,14 +84,18 @@ Step 2: Modified your `Trial` file to get the hyperparameter set from NNI and re
 
 ```diff
 + import nni
+
   def run_trial(params):
       mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
 
       mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
       mnist_network.build_network()
 
-      acc = predict(mnist, mnist_network)
-+     nni.report_final_result(acc)
+      with tf.Session() as sess:
+          mnist_network.train(sess, mnist)
+          test_acc = mnist_network.evaluate(mnist)
+-         print ("Final result is", test_acc)
++         nni.report_final_result(acc)
 
   if __name__ == '__main__':
       try:

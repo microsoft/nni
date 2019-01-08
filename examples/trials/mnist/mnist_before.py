@@ -118,6 +118,30 @@ class MnistNetwork(object):
                 tf.argmax(y_conv, 1), tf.argmax(self.labels, 1))
             self.accuracy = tf.reduce_mean(
                 tf.cast(correct_prediction, tf.float32))
+    
+    def train(self, sess, mnist):
+        sess.run(tf.global_variables_initializer())
+        for i in range(params['batch_num']):
+            batch = mnist.train.next_batch(params['batch_size'])
+            self.train_step.run(feed_dict={self.images: batch[0],
+                                                    self.labels: batch[1],
+                                                    self.keep_prob: 1 - params['dropout_rate']}
+                                        )
+
+            if i % 100 == 0:
+                test_acc = self.accuracy.eval(
+                    feed_dict={self.images: mnist.test.images,
+                               self.labels: mnist.test.labels,
+                               self.keep_prob: 1.0})
+
+    def evaluate(self, mnist):
+        test_acc = self.accuracy.eval(
+            feed_dict={self.images: mnist.test.images,
+                       self.labels: mnist.test.labels,
+                       self.keep_prob: 1.0})
+        logger.debug('Final result is %g', test_acc)
+        logger.debug('Send final result done.')
+        return test_acc
 
 
 def conv2d(x_input, w_matrix):
@@ -147,34 +171,7 @@ def write_log():
     graph_location = tempfile.mkdtemp()
     logger.debug('Saving graph to: %s', graph_location)
     train_writer = tf.summary.FileWriter(graph_location)
-    train_writer.add_graph(tf.get_default_graph())
-
-def predict(mnist, mnist_network):
-    write_log()
-
-    test_acc = 0.0
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        for i in range(params['batch_num']):
-            batch = mnist.train.next_batch(params['batch_size'])
-            mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
-                                                    mnist_network.labels: batch[1],
-                                                    mnist_network.keep_prob: 1 - params['dropout_rate']}
-                                        )
-
-            if i % 100 == 0:
-                test_acc = mnist_network.accuracy.eval(
-                    feed_dict={mnist_network.images: mnist.test.images,
-                               mnist_network.labels: mnist.test.labels,
-                               mnist_network.keep_prob: 1.0})
-
-        test_acc = mnist_network.accuracy.eval(
-            feed_dict={mnist_network.images: mnist.test.images,
-                       mnist_network.labels: mnist.test.labels,
-                       mnist_network.keep_prob: 1.0})
-        logger.debug('Final result is %g', test_acc)
-        logger.debug('Send final result done.')
-        return test_acc
+    train_writer.add_graph(tf.get_default_graph())     
 
 def run_trial(params):
     '''
@@ -196,8 +193,13 @@ def run_trial(params):
     mnist_network.build_network()
     logger.debug('Mnist build network done.')
 
-    acc = predict(mnist, mnist_network)
-    print ('Final result is ', acc)
+    write_log()
+
+    test_acc = 0.0
+    with tf.Session() as sess:
+        mnist_network.train(sess, mnist)
+        test_acc = mnist_network.evaluate(mnist)
+        print ("Final result is", test_acc)
 
 if __name__ == '__main__':
     try:
