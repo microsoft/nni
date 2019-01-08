@@ -1,12 +1,12 @@
 # 如何在 NNI 中实现尝试的代码？
 
-*Trial receive the hyper-parameter/architecture configure from Tuner, and send intermediate result to Assessor and final result to Tuner.*
+*尝试从调参器中接收超参和架构配置，并将中间结果发送给评估器，最终结果发送给调参器。*
 
-So when user want to write a Trial running on NNI, she/he should:
+当用户需要在 NNI 上运行尝试时，需要：
 
-**1)Have an original Trial could run**,
+**1) 写好原始的训练代码**。
 
-Trial's code could be any machine learning code that could run in local. 这里使用 `mnist-kraas. py` 作为样例：
+尝试的代码可以是任何能在本机运行的机器学习代码。 这里使用 `mnist-kraas. py` 作为样例：
 
 ```python
 import argparse
@@ -84,9 +84,9 @@ if __name__ == '__main__':
     train(ARGS, PARAMS)
 ```
 
-**2)Get configure from Tuner**
+**2) 从调参器获取配置**
 
-User import `nni` and use `nni.get_next_parameter()` to receive configure. Please noted **10**, **24** and **25** line in the following code.
+导入 `NNI` 并用 `nni.get_next_parameter()` 来接收参数。 注意代码中的 **10**, **24** 和 **25** 行。
 
 ```python
 import argparse
@@ -117,9 +117,9 @@ if __name__ == '__main__':
     train(ARGS, PARAMS)
 ```
 
-**3) Send intermediate result**
+**3) 发送中间结果**
 
-Use `nni.report_intermediate_result` to send intermediate result to Assessor. Please noted **5** line in the following code.
+用 `nni.report_intermediate_result` 将中间结果发送给评估器。 注意第 **5** 行。
 
 ```python
 ...
@@ -140,9 +140,9 @@ def train(args, params):
 ...    
 ```
 
-**4) Send final result**
+**4) 发送最终结果**
 
-Use `nni.report_final_result` to send final result to Trial. Please noted **15** line in the following code.
+用 `nni.report_final_result` 将最终结果发送给调参器。 注意第 **15** 行。
 
 ```python
 ...
