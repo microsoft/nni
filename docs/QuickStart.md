@@ -184,28 +184,28 @@ Click the tab "Overview".
 
 Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also support `download these information and parameters` through the **Download** button. You can download the experiment result anytime in the middle for the running or at the end of the execution, etc.
 
-![](./img/WebUI_overview1.PNG)
+![](./img/QuickStart1.png)
 
 Top 10 trials will be listed in the Overview page, you can browse all the trials in "Trials Detail" page.
 
-![](./img/WebUI_overview2.PNG)
+![](./img/QuickStart2.png)
 
 ### View trials detail page
 
 Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
-![](./img/WebUI_overview3.PNG)
+![](./img/QuickStart3.png)
 
 Click the tab "Hyper Parameter" to see the parallel graph.
 
 * You can select the percentage to see top trials.
 * Choose two axis to swap its positions
 
-![](./img/WebUI_overview4.PNG)
+![](./img/QuickStart4.png)
 
 Click the tab "Trial Duration" to see the bar graph.
 
-![](./img/WebUI_overview5.PNG)
+![](./img/QuickStart5.png)
 
 Below is the status of the all trials. Specifically:
 
@@ -214,11 +214,11 @@ Below is the status of the all trials. Specifically:
 * Kill: you can kill a job that status is running.
 * Support to search for a specific trial.
 
-![](./img/WebUI_overview6.PNG)
+![](./img/QuickStart6.png)
 
 * Intermediate Result Grap
 
-![](./img/WebUI_overview7.PNG)
+![](./img/QuickStart7.png)
 
 ## Related Topic
 
