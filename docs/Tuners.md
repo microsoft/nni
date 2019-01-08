@@ -35,9 +35,9 @@ For now, NNI has supported the following tuner algorithms:
 
 ### Example of Builtin Tuner Usage
 
-Our NNI integrates state-of-the-art tuning algorithm. We strongly recommend you to use our builtin tuners. You can easily use our builtin tuners by declare the `builtinTunerName` and `classArguments` in config file.
+Our NNI integrates state-of-the-art tuning algorithm. We strongly recommend you to use our builtin tuners. You can easily use our builtin tuners by declare the `builtinTunerName` and `classArguments` in config file. Below is some example:
 
-For example, if you chose to use "TPE" tuner, you can set the `config.yml` like this:
+If you chose to use "TPE" tuner, you can set the `config.yml` like this:
 
 ```yaml
 tuner:
@@ -61,7 +61,9 @@ tuner:
     optimize_mode: maximize
 ```
 
-If you chose to use "Network Morphism" tuner, you can set the `config.yml` like this:
+NNI provides a variety of easy-to-use tuner, such as 'Random Search', 'Naive Evolution', 'SMAC', 'Batch tuner', 'Grid Search', all of which can be used like 'TPE' and 'Anneal'.
+
+In addition, there are some tuner that require you to give more parameters when you use them. For example, if you chose to use "Network Morphism" tuner, it required the classArg such as 'task', 'input_width', 'input_channel', etc. you can set the `config.yml` like this:
 
 ```yaml
 tuner:

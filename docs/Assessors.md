@@ -8,6 +8,12 @@ Assessor receives intermediate result from Trial and decides whether the Trial s
 
 In other words, assesor uses the intermediate results and evaluates the results by specific algorithm. If assessor is pessimistic about the final results, assessor will stop this trial and the status of experiement will be `"Early Stoped"`.
 
+Here is the experimental result of MNIST after using 'MedianStop' Assessor, you can see that bad parameter configurations are **early stopped**.
+
+![](./img/Assesor.png)
+
+*Implemented code directory: [config_assessor.yml][5]*
+
 In NNI, we support two approaches to set the assessor.
 
 1. Directly use assessor provided by nni sdk
@@ -92,3 +98,4 @@ Notes:
 [2]: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
 [3]: https://github.com/Microsoft/nni/blob/5b5861e9073ad591e0b761af940c52d930c5007a/docs/HowToChooseTuner.md
 [4]: http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf
+[5]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config_assessor.yml

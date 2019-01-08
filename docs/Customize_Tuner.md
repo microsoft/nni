@@ -2,6 +2,8 @@
 
 ## Customize Tuner
 
+NNI provides the-state-of-art tuning algorithm in our builtin-tuners. But we also support building a tuner by yourself to adjust your tuning demand.
+
 If you want to implement and use your own tuning algorithm, you can implement a customized Tuner, there are three things for you to do:
 
 1) Inherit a tuner of a base Tuner class

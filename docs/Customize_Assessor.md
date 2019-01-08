@@ -2,7 +2,13 @@
 
 ## Customize Assessor
 
-If you want to implement a customized Assessor, you only need to:
+NNI also support building a assessor by yourself to adjust your tuning demand.
+
+If you want to implement a customized Assessor, there are three things for you to do:
+
+1) Inherit a assessor of a base Assessor class
+2) Implement assess_trial function
+3) Write a script to run Assessor
 
 **1. Inherit an assessor of a base Assessor class**
 
@@ -56,4 +62,5 @@ Please noted in **2**. The object ```trial_history``` are exact the object that 
 Also, user could override the ```run``` function in Assessor to control the process logic.
 
 More detail example you could see:
-> * [Base-Assessor](https://msrasrg.visualstudio.com/NeuralNetworkIntelligenceOpenSource/_git/Default?_a=contents&path=%2Fsrc%2Fsdk%2Fpynni%2Fnni%2Fassessor.py&version=GBadd_readme)
+> * [medianstop-assessor](../src/sdk/pynni/nni/medianstop_assessor)
+> * [curvefitting-assessor](../src/sdk/pynni/nni/curvefitting_assessor)
