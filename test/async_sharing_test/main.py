@@ -38,19 +38,20 @@ def check_sum(fl_name, tid=None):
 
 
 if __name__ == '__main__':
-    nfs_path = '/mnt/nfs/nni'
+    nfs_path = '/mnt/nfs/nni/test'
     params = nni.get_next_parameter()
     print(params)
-    if params['prev_id'] == 0:
+    if params['id'] == 0:
         model_file = os.path.join(nfs_path, str(params['id']), 'model.dat')
-        time.sleep(10)
         generate_rand_file(model_file)
+        time.sleep(10)
         nni.report_final_result({
-            'checksum': check_sum(model_file),
+            'checksum': check_sum(model_file, tid=params['id']),
             'path': model_file
         })
     else:
         model_file = params['prev_path']
+        time.sleep(10)
         nni.report_final_result({
-            'checksum': check_sum(model_file, params['prev_id'])
+            'checksum': check_sum(model_file, tid=params['prev_id'])
         })

@@ -72,9 +72,14 @@ def f1_score(prediction, ground_truth):
     num_same = sum(common.values())
     if num_same == 0:
         return 0
+    if not prediction_tokens:
+        raise ValueError("empty prediction tokens")
     precision = 1.0 * num_same / len(prediction_tokens)
+
+    if not ground_truth_tokens:
+        raise ValueError("empty groundtruth tokens")
     recall = 1.0 * num_same / len(ground_truth_tokens)
-    f1_result = (2 * precision * recall) / (precision + recall)
+    f1_result = (2 * precision * recall) / (precision + recall + 1e-10)
     return f1_result
 
 
