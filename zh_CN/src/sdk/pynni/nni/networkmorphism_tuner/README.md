@@ -196,4 +196,4 @@ nni.report_final_result(best_acc)
 
 ## 5. TODO
 
-Next step, we will change the API from fixed network generator to more network operator generator. Besides, we will use ONNX instead of JSON later as the intermediate representation spec in the future.
+下一步，会将 API 从固定的网络生成方法改为更多的网络操作生成方法。 此外，还会使用 ONNX 格式来替代 JSON 作为中间表示结果。
