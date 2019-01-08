@@ -1,5 +1,5 @@
 <p align="center">
-<img src="../docs/img/nni_logo.png" alt="logo" width="300"/>
+<img src="./docs/img/nni_logo.png" alt="logo" width="300"/>
 </p>
 
 * * *
@@ -9,7 +9,7 @@
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
 <p align="center">
-<img src="../docs/img/nni_arch_overview.png" alt="绘图"/>
+<img src="./docs/img/nni_arch_overview.png" alt="绘图"/>
 </p>
 
 ## **使用场景**
@@ -102,8 +102,8 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里的](docs/WebUI.md)更多页面示例。
 
 <table style="border: none">
-    <th><img src="../docs/img/webui_overview_page.png" alt="绘图" width="395"/></th>
-    <th><img src="../docs/img/webui_trialdetail_page.png" alt="绘图" width="410"/></th>
+    <th><img src="./docs/img/webui_overview_page.png" alt="绘图" width="395"/></th>
+    <th><img src="./docs/img/webui_trialdetail_page.png" alt="绘图" width="410"/></th>
 </table>
 
 ## **文档**
