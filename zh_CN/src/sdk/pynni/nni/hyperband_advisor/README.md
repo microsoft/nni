@@ -26,13 +26,13 @@
         optimize_mode: maximize
     
 
-注意，一旦使用了 Advisor，就不能在配置文件中添加调参器和评估器。 If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received by a trial, there is one more key called `STEPS` besides the hyperparameters defined by user. By using this `STEPS`, the trial can control how long it runs.
+注意，一旦使用了 Advisor，就不能在配置文件中添加调参器和评估器。 使用 Hyperband 时，尝试代码收到的超参（如键值对）中，除了用户定义的超参，会多一个 `STEPS`。 使用 `STEPS`，尝试代码可以控制运行的时间。
 
-`R` and `eta` are the parameters of Hyperband that you can change. `R` means the maximum STEPS that can be allocated to a configuration. Here, STEPS could mean the number of epochs or mini-batches. This `STEPS` should be used by the trial to control how long it runs. Refer to the example under `examples/trials/mnist-hyperband/` for details.
+`R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` 表示可以分配给配置的最大步数（STEPS）。 这里，STEPS 可以代表 epoch 或 批处理数量。 `STEPS` 应该被尝试代码用来控制运行的次数。 参考样例 `examples/trials/mnist-hyperband/` ，了解详细信息。
 
-`eta` means `n/eta` configurations from `n` configurations will survive and rerun using more STEPS.
+`eta` 表示 `n` 个配置中的 `n/eta` 个配置会留存下来，并用更多的 STEPS 来运行。
 
-Here is a concrete example of `R=81` and `eta=3`:
+下面是 `R=81` 且 `eta=3` 时的样例：
 
 |   | s=4  | s=3  | s=2  | s=1  | s=0  |
 | - | ---- | ---- | ---- | ---- | ---- |
@@ -43,12 +43,12 @@ Here is a concrete example of `R=81` and `eta=3`:
 | 3 | 3 27 | 1 81 |      |      |      |
 | 4 | 1 81 |      |      |      |      |
 
-`s` means bracket, `n` means the number of configurations that are generated, the corresponding `r` means how many STEPS these configurations run. `i` means round, for example, bracket 4 has 5 rounds, bracket 3 has 4 rounds.
+`s` 表示分组， `n` 表示生成的配置数量，相应的 `r` 表示配置会运行多少 STEPS。 `i` 表示轮数，如分组 4 有 5 轮，分组 3 有 4 轮。
 
-About how to write trial code, please refer to the instructions under `examples/trials/mnist-hyperband/`.
+关于如何实现尝试代码，参考 `examples/trials/mnist-hyperband/` 中的说明。
 
-## 4. To be improved
+## 4. 待改进
 
-The current implementation of Hyperband can be further improved by supporting simple early stop algorithm, because it is possible that not all the configurations in the top `n/eta` perform good. The unpromising configurations can be stopped early.
+当前实现的 Hyperband 算法可以通过改进支持的提前终止算法来提高，原因是最好的 `n/eta` 个配置并不一定都表现很好。 不好的配置可以更早的终止。
 
-In the current implementation, configurations are generated randomly, which follows the design in the [paper](https://arxiv.org/pdf/1603.06560.pdf). To further improve, configurations could be generated more wisely by leveraging advanced algorithms.
+在当前实现中，遵循了[此论文](https://arxiv.org/pdf/1603.06560.pdf)的设计，配置都是随机生成的。 To further improve, configurations could be generated more wisely by leveraging advanced algorithms.
