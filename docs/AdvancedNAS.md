@@ -6,6 +6,31 @@ This is a tutorial on how to enable weight sharing in NNI.
 ## Weight Sharing among trials
 Currently we recommend sharing weights through NFS (Network File System), which supports sharing files across machines, and is light-weighted, (relatively) efficient. We also welcome contributions from the community on more efficient techniques.
 
+### Weight Sharing through NFS file
+With the NFS setup (see below), trial code can share model weight through loading & saving files. Here we recommend that user feed the tuner with the storage path:
+```yaml
+tuner:
+  codeDir: path/to/customer_tuner
+  classFileName: customer_tuner.py 
+  className: CustomerTuner
+  classArgs:
+    ...
+    save_dir_root: /nfs/storage/path/
+```
+And let tuner decide where to save & load weights and feed the paths to trials through `nni.get_next_parameters()`:
+
+![weight_sharing_design](./img/weight_sharing.png)
+
+ For example, in tensorflow:
+```python
+# save models
+saver = tf.train.Saver()
+saver.save(sess, os.path.join(params['save_path'], 'model.ckpt'))
+# load models
+tf.init_from_checkpoint(params['restore_path'])
+```
+where `'save_path'` and `'restore_path'` in hyper-parameter can be managed by the tuner.
+
 ### NFS Setup
 In NFS, files are physically stored on a server machine, and trials on the client machine can read/write those files in the same way that they access local files.
 
@@ -33,17 +58,6 @@ sudo mkdir -p /mnt/nfs/nni/
 sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 ```
 where `10.10.10.10` should be replaced by the real IP of NFS server machine in practice.
-
-### Weight Sharing through NFS file
-With the NFS setup, trial code can share model weight through loading & saving files. For example, in tensorflow:
-```python
-# save models
-saver = tf.train.Saver()
-saver.save(sess, os.path.join(params['save_path'], 'model.ckpt'))
-# load models
-tf.init_from_checkpoint(params['restore_path'])
-```
-where `'save_path'` and `'restore_path'` in hyper-parameter can be managed by the tuner.
 
 ## Asynchornous Dispatcher Mode for trial dependency control
 The feature of weight sharing enables trials from different machines, in which most of the time **read after write** consistency must be assured. After all, the child model should not load parent model before parent trial finishes training. To deal with this, users can enable **asynchronous dispatcher mode** with `multiThread: true` in `config.yml` in NNI, where the dispatcher assign a tuner thread each time a `NEW_TRIAL` request comes in, and the tuner thread can decide when to submit a new trial by blocking and unblocking the thread itself. For example:
