@@ -1,10 +1,6 @@
 import * as React from 'react';
 import {
-    Row,
-    Col,
-    Popover,
-    Button,
-    message
+    Row, Col, Popover, Button, message
 } from 'antd';
 import axios from 'axios';
 import { MANAGER_IP, CONTROLTYPE } from '../../static/const';
@@ -87,15 +83,16 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                             updateFile();
                                         }
                                     })
-                                    .catch(error => {
-                                        if (error.response.status === 500) {
-                                            if (error.response.data.error) {
-                                                message.error(error.response.data.error);
-                                            } else {
-                                                message.error(`Update ${CONTROLTYPE[1].toLocaleLowerCase()} failed`);
+                                        .catch(error => {
+                                            if (error.response.status === 500) {
+                                                if (error.response.data.error) {
+                                                    message.error(error.response.data.error);
+                                                } else {
+                                                    message.error(
+                                                        `Update ${CONTROLTYPE[1].toLocaleLowerCase()} failed`);
+                                                }
                                             }
-                                        }
-                                    });
+                                        });
                                     // btn -> edit
                                     this.setState(() => ({
                                         btnName: 'Edit',
@@ -179,29 +176,47 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         return (
             <Row className="progress" id="barBack">
                 <Row className="basic lineBasic">
-                    <Col span={12}>
-                        <p>Status</p>
-                        <div className="status">
-                            <span className={status}>{status}</span>
-                            {
-                                status === 'ERROR'
-                                    ?
-                                    <Popover
-                                        placement="rightTop"
-                                        content={errorContent}
-                                        title="Error"
-                                        trigger="hover"
-                                    >
-                                        <span className="errorBtn">i</span>
-                                    </Popover>
-                                    :
-                                    <span />
-                            }
-                        </div>
+                    <p>Status</p>
+                    <div className="status">
+                        <span className={status}>{status}</span>
+                        {
+                            status === 'ERROR'
+                                ?
+                                <Popover
+                                    placement="rightTop"
+                                    content={errorContent}
+                                    title="Error"
+                                    trigger="hover"
+                                >
+                                    <span className="errorBtn">i</span>
+                                </Popover>
+                                :
+                                <span />
+                        }
+                    </div>
+                </Row>
+                <ProgressBar
+                    who="Duration"
+                    percent={percent}
+                    description={runDuration}
+                    bgclass={status}
+                    maxString={`MaxDuration: ${convertTime(trialProfile.maxDuration)}`}
+                />
+                <ProgressBar
+                    who="TrialNum"
+                    percent={bar2Percent}
+                    description={bar2.toString()}
+                    bgclass={status}
+                    maxString={`MaxTrialNumber: ${trialProfile.MaxTrialNum}`}
+                />
+                <Row className="basic colorOfbasic mess">
+                    <Col span={10}>
+                        <p>best metric</p>
+                        <div>{bestAccuracy.toFixed(6)}</div>
                     </Col>
-                    <Col span={12}>
+                    <Col span={14}>
                         {/* modify concurrency */}
-                        <p>Concurrency</p>
+                        <p>concurrency</p>
                         <Row className="inputBox">
                             <input
                                 type="number"
@@ -226,24 +241,6 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                             </Button>
                         </Row>
                     </Col>
-                </Row>
-                <ProgressBar
-                    who="Duration"
-                    percent={percent}
-                    description={runDuration}
-                    bgclass={status}
-                    maxString={`MaxDuration: ${convertTime(trialProfile.maxDuration)}`}
-                />
-                <ProgressBar
-                    who="TrialNum"
-                    percent={bar2Percent}
-                    description={bar2.toString()}
-                    bgclass={status}
-                    maxString={`MaxTrialNumber: ${trialProfile.MaxTrialNum}`}
-                />
-                <Row className="basic colorOfbasic mess">
-                    <p>best metric</p>
-                    <div>{bestAccuracy}</div>
                 </Row>
                 <Row className="mess">
                     <Col span={8}>

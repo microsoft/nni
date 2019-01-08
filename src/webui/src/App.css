@@ -17,12 +17,18 @@
 .headerCon{
   min-width: 1024px;
 }
+.contentBox{
+  width: 100%;
+  height: 100%;
+  background: #f2f2f2;
+}
 .content{
   width: 86%;
   min-width: 1024px;
   margin: 0 auto;
   margin-top: 74px;
   margin-bottom: 30px;
+  background: #fff;
 }
 
 

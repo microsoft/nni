@@ -1,6 +1,7 @@
 #barBack{
     /* status: 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' */
-    .RUNNING, .STOPPING, .INITIALIZED{
+    /* status: 'TUNER_NO_MORE_TRIAL' | 'NO_MORE_TRIAL' */
+    .RUNNING, .STOPPING, .INITIALIZED, .NO_MORE_TRIAL, .TUNER_NO_MORE_TRIAL{
         /* specific status color */
         color: #0071bc;
         .ant-progress-bg {
