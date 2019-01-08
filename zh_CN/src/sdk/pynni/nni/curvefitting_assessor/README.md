@@ -7,7 +7,7 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 此算法中，使用了 12 条曲线来拟合学习曲线，从[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)中选择了大量的参数曲线模型。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
 
 <p align="center">
-<img src="../../../../../../src/sdk/pynni/nni/learning_curve.PNG" alt="drawing"/>
+<img src="./learning_curve.PNG" alt="drawing"/>
 </p>
 
 We combine all learning curve models into a single, more powerful model. This combined model is given by a weighted linear combination:
