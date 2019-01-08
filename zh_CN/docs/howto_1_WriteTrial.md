@@ -126,4 +126,4 @@ with tf.Session() as sess:
 
 ## 更多尝试的样例
 
-* [在阅读理解上使用自动模型架构搜索。](../../examples/trials/ga_squad/README.md)
+* [在阅读理解上使用自动模型架构搜索。](../examples/trials/ga_squad/README.md)
