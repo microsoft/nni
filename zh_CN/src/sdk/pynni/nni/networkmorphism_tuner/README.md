@@ -27,7 +27,7 @@ tuner:
     n_output_node: 10
 ```
 
-在训练过程中，会生成一个 JSON 文件来表达网络图。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。
+在训练过程中，会生成一个 JSON 文件来表示网络图。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。
 
 ```python
 import nni
@@ -58,26 +58,26 @@ nni.report_final_result(best_acc)
 
 - `networkmorphism_tuner.py` 是使用 network morphism 算法的调参器。
 
-- `bayesian.py` is Bayesian method to estimate the metric of unseen model based on the models we have already searched.
+- `bayesian.py` 是用来基于已经搜索道德模型来预测未知模型指标的贝叶斯算法。
 
-- `graph.py` is the meta graph data structure. Class Graph is representing the neural architecture graph of a model. 
-  - Graph extracts the neural architecture graph from a model. 
-  - Each node in the graph is a intermediate tensor between layers.
-  - Each layer is an edge in the graph.
-  - Notably, multiple edges may refer to the same layer.
+- `graph.py` 是元图数据结构。 类 Graph 表示了模型的神经网络图。 
+  - Graph 从模型中抽取神经网络。 
+  - 图中的每个节点都是层之间的中间张量。
+  - 在图中，边表示层。
+  - 注意，多条边可能会表示同一层。
 
-- `graph_transformer.py` includes some graph transformer to wider, deeper or add a skip-connection into the graph.
+- `graph_transformer.py` 包含了一些图转换，包括变宽，变深，或在图中增加跳跃连接。
 
-- `layers.py` includes all the layers we use in our model.
+- `layers.py` 包括模型中用到的所有层。
 
-- `layer_transformer.py` includes some layer transformer to wider, deeper or add a skip-connection into the layer.
-- `nn.py` includes the class to generate network class initially.
-- `metric.py` some metric classes including Accuracy and MSE.
-- `utils.py` is the example search network architectures in dataset `cifar10` by using Keras.
+- `layer_transformer.py` 包含了一些层转换，包括变宽，变深，或在层中增加跳跃连接。
+- `nn.py` 包含生成初始化网的类。
+- `metric.py` 包括了一些指标类，如 Accuracy 和 MSE。
+- `utils.py` 是使用 Keras 在数据集 `cifar10` 上搜索神经网络的样例。
 
-## 4. The Network Representation Json Example
+## 4. 网络表示的 JSON 样例
 
-Here is an example of the intermediate representation JSON file we defined, which is passed from the tuner to the trial in the architecture search procedure. The example is as follows.
+这是样例定义的中间表示 JSON 文件，它会在架构搜索过程中从调参器传入尝试代码。 样例如下。
 
 ```json
 {
@@ -170,10 +170,10 @@ Here is an example of the intermediate representation JSON file we defined, whic
  }
 ```
 
-The definition of each model is a JSON object(also you can consider the model as a DAG graph), where:
+每个模型都由 JSON 对象来定义（也可以认为模型是个有向无环图）：
 
-- `input_shape` is a list of integers, which does not include the batch axis.
-- `weighted` means whether the weights and biases in the neural network should be included in the graph.
+- `input_shape` 是整数的列表，不包括批量维度。
+- `weighted` 表示是否权重和偏移值应该包含在此神经网络图中。
 - `operation_history` is the number of inputs the layer has.
 - `layer_id_to_input_node_ids` is a dictionary instance mapping from layer identifiers to their input nodes identifiers.
 - `layer_id_to_output_node_ids` is a dictionary instance mapping from layer identifiers to their output nodes identifiers
