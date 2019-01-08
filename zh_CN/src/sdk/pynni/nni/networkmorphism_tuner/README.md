@@ -1,62 +1,62 @@
-# Network Morphism Tuner on NNI
+# NNI 中的 Network Morphism 调参器
 
-## 1. Intorduction
+## 1. 简介
 
-[Autokeras](https://arxiv.org/abs/1806.10282) is a popular automl tools using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression estimate its metric value from history trained results of network and metric value pair. Next, it chooses the the child which has best estimated performance and adds it to the training queue. Inspired by its work and referring to its [code](https://github.com/jhfjhfj1/autokeras), we implement our Network Morphism method in our NNI platform.
+[Autokeras](https://arxiv.org/abs/1806.10282) 是使用 Network Morphism 算法的流行的自动机器学习工具。 Autokeras 的基本理念是使用贝叶斯回归来预测神经网络架构的指标。 每次都会从父网络生成几个子网络。 然后使用朴素贝叶斯回归，从网络的历史训练结果来预测它的指标值。 接下来，会选择预测结果最好的子网络加入训练队列中。 在[此代码](https://github.com/jhfjhfj1/autokeras)的启发下，我们在 NNI 中实现了 Network Morphism 算法。
 
-If you want to know about network morphism trial usage, please check [Readme.md](../../../../../examples/trials/network-morphism/README.md) of the trial to get more detail.
+要了解 Network Morphism 尝试的用法，参考 [Readme.md](../../../../../examples/trials/network-morphism/README.md)，了解更多细节。
 
-## 2. Usage
+## 2. 用法
 
-To use Network Morphism, you should modify the following spec in your `config.yml` file:
+要使用 Network Morphism，需要如下配置 `config.yml` 文件：
 
 ```yaml
 tuner:
-  #choice: NetworkMorphism
+  #选择: NetworkMorphism
   builtinTunerName: NetworkMorphism
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode: maximize
-    #for now, this tuner only supports cv domain
+    #当前仅支持 cv 领域
     task: cv
-    #modify to fit your input image width
+    #修改来支持实际图像宽度
     input_width: 32
-    #modify to fit your input image channel
+    #修改来支持实际图像通道
     input_channel: 3
-    #modify to fit your number of classes
+    #修改来支持实际的分类数量
     n_output_node: 10
 ```
 
-In the training procedure, it generate a JSON file which represent a Network Graph. Users can call "json\_to\_graph()" function to build a pytorch model or keras model from this JSON file.
+在训练过程中，会生成一个 JSON 文件来表达网络图。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。
 
 ```python
 import nni
 from nni.networkmorphism_tuner.graph import json_to_graph
 
 def build_graph_from_json(ir_model_json):
-    """build a pytorch model from json representation
+    """从 JSON 生成 Pytorch 模型
     """
     graph = json_to_graph(ir_model_json)
     model = graph.produce_torch_model()
     return model
 
-# trial get next parameter from network morphism tuner
+# 从网络形态调参器中获得下一组参数
 RCV_CONFIG = nni.get_next_parameter()
-# call the function to build pytorch model or keras model
+# 调用函数来生成 Pytorch 或 Keras 模型
 net = build_graph_from_json(RCV_CONFIG)
 
-# training procedure
+# 训练过程
 # ....
 
-# report the final accuracy to nni
+# 将最终精度返回给 NNI
 nni.report_final_result(best_acc)
 ```
 
-## 3. File Structure
+## 3. 文件结构
 
-The tuner has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
+调参器有大量的文件、函数和类。 这里只简单介绍最重要的文件：
 
-- `networkmorphism_tuner.py` is a tuner which using network morphism techniques.
+- `networkmorphism_tuner.py` 是使用 network morphism 算法的调参器。
 
 - `bayesian.py` is Bayesian method to estimate the metric of unseen model based on the models we have already searched.
 
