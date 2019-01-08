@@ -133,7 +133,7 @@ class MnistNetwork(object):
                     feed_dict={self.images: mnist.test.images,
                                self.labels: mnist.test.labels,
                                self.keep_prob: 1.0})
-
+                logger.debug('test accuracy %g', test_acc)
     def evaluate(self, mnist):
         test_acc = self.accuracy.eval(
             feed_dict={self.images: mnist.test.images,
@@ -192,7 +192,6 @@ def run_trial(params):
                                  learning_rate=params['learning_rate'])
     mnist_network.build_network()
     logger.debug('Mnist build network done.')
-
     write_log()
 
     test_acc = 0.0

@@ -16,7 +16,7 @@ Note:
 
 ## "Hello World" example on MNIST
 
-NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, tuning hyperparameters. Next, we show how to use NNI to help you find the optimal hyperparameters.
+NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, tuning hyperparameters. Now, we show how to use NNI to help you find the optimal hyperparameters.
 
 Here is an example script to train a CNN on MNIST dataset **without NNI**:
 
