@@ -57,8 +57,9 @@ class SimpleTuner(Tuner):
             self.trial_meta[parameter_id]['path'] = reward['path']
             self.sig_event.set()
         else:
-            if reward['checksum'] != self.trial_meta[self.f_id]['checksum'] + str(self.f_id):
-                raise ValueError("Inconsistency in weight sharing!!!")
+            if reward['checksum'] != self.trial_meta[self.f_id]['checksum']:
+                raise ValueError("Inconsistency in weight sharing: {} != {}".format(
+                    reward['checksum'], self.trial_meta[self.f_id]['checksum']))
         self.thread_lock.release()
 
     def update_search_space(self, search_space):
