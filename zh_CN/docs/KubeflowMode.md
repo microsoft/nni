@@ -32,19 +32,19 @@ NNI 支持在 [Kubeflow](https://github.com/kubeflow/kubeflow)上运行，称为
 
 ## 支持的操作符（operator）
 
-NNI only support tf-operator and pytorch-operator of kubeflow, other operators is not tested. Users could set operator type in config file. The setting of tf-operator:
+NNI 仅支持 kubeflow 的 tf-operator 和 pytorch-operator，其它操作符未经测试。 可以在配置文件中设置操作符类型。 这是 tf-operator 的设置：
 
     kubeflowConfig:
       operator: tf-operator
     
 
-The setting of pytorch-operator:
+这是 pytorch-operator 的设置：
 
     kubeflowConfig:
       operator: pytorch-operator
     
 
-If users want to use tf-operator, he could set `ps` and `worker` in trial config. If users want to use pytorch-operator, he could set `master` and `worker` in trial config.
+如果要使用 tf-operator，需要在尝试配置中设置 `ps` 和 `worker`。如果要使用 pytorch-operator，需要在尝试配置中设置 `master` 和 `worker`。
 
 ## Supported sotrage type
 
