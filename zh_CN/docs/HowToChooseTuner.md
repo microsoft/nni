@@ -184,7 +184,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 <a name="NetworkMorphism"></a>
 **Network Morphism**
 
-[Network Morphism](https://arxiv.org/abs/1806.10282) provides functions to automatically search for architecture of deep learning models. 每个子网络都继承于父网络的知识和形态，并变换网络的不同形态，包括深度，宽度，跨层连接（skip-connection）。 接着，使用历史的架构和指标，来估计子网络的值。 然后会选择最有希望的模型进行训练。 参考[这里](../src/sdk/pynni/nni/networkmorphism_tuner/README.md)，了解更多信息。
+[Network Morphism](https://arxiv.org/abs/1806.10282) 提供了深度学习模型的自动架构搜索功能。 每个子网络都继承于父网络的知识和形态，并变换网络的不同形态，包括深度，宽度，跨层连接（skip-connection）。 接着，使用历史的架构和指标，来估计子网络的值。 然后会选择最有希望的模型进行训练。 参考[这里](../src/sdk/pynni/nni/networkmorphism_tuner/README.md)，了解更多信息。
 
 *安装*： NetworkMorphism 需要 [pyTorch](https://pytorch.org/get-started/locally)，必须提前安装它。
 
@@ -210,7 +210,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 ```
 
 <a name="MetisTuner"></a>
-**Metis Tuner**
+**Metis 调参器**
 
 [Metis](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/) offers the following benefits when it comes to tuning parameters: While most tools only predicts the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guess work!
 
@@ -244,63 +244,61 @@ More details can be found in our paper: https://www.microsoft.com/en-us/research
 
 # 如何使用 NNI 支持的评估器？
 
-For now, NNI has supported the following assessor algorithms.
+目前，NNI 已支持下列评估器算法。
 
-* [Medianstop](#Medianstop)
-* [Curvefitting](#Curvefitting)
+* [Medianstop（中位数终止）](#Medianstop)
+* [Curvefitting（曲线拟合）](#Curvefitting)
 
 ## 支持的评估器算法
 
 <a name="Medianstop"></a>
-**Medianstop**
+**Medianstop（中位数终止）**
 
-Medianstop is a simple early stopping rule mentioned in the [paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf). It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.
+Medianstop 是一种简单的提前停止规则，可参考[论文](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf)。 如果尝试 X 的在步骤 S 的最好目标值比所有已完成尝试的步骤 S 的中位数值明显低，就会停止运行尝试 X。
 
-*Suggested scenario*: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.
+*建议场景*：它适用于各种性能曲线，因而能被用到各种场景中来加速优化过程。
 
-*Usage*:
+*用法*：
 
 ```yaml
   assessor:
     builtinAssessorName: Medianstop
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
-      # (optional) A trial is determined to be stopped or not, 
-
-      * only after receiving start_step number of reported intermediate results.
-      * The default value of start_step is 0.
+      # (可选) 尽在接收到 start_step 数量个中间结果后，才判断尝试是否需要停止。
+      # start_step 的默认值是 0。
       start_step: 5
 ```
 
 <a name="Curvefitting"></a>
-**Curvefitting**
+**Curvefitting（曲线拟合）**
 
-Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve, the large set of parametric curve models are chosen from [reference paper](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf). The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
+Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的尝试 X 在 step S 比性能最好的尝试要差，就会提前终止它。 此算法中，使用了 12 条曲线来拟合精度曲线，从[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)中选择了大量的参数曲线模型。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
 
-*Suggested scenario*: It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.
+*建议场景*：它适用于各种性能曲线，因而能被用到各种场景中来加速优化过程。 更好的是，它能够处理并评估性能类似的曲线。
 
-*Usage*:
+*用法*：
 
 ```yaml
   assessor:
     builtinAssessorName: Curvefitting
     classArgs:
-      # (required)The total number of epoch.
-      # We need to know the number of epoch to determine which point we need to predict.
+      # (必须) epoch 的总数。
+      # 需要此数据来决定需要预测的点。
       epoch_num: 20
-      # (optional) choice: maximize, minimize
-      # Kindly reminds that if you choose minimize mode, please adjust the value of threshold >= 1.0 (e.g threshold=1.1)
+      # (可选项) choice: maximize, minimize
+      # 如果选择了 minimize 模式，需要调整阈值为 >= 1.0 (例如：threshold=1.1)
 
-      * The default value of optimize_mode is maximize
+      * optimize_mode 的默认值是 maximize
       optimize_mode: maximize
-      # (optional) A trial is determined to be stopped or not
-      # In order to save our computing resource, we start to predict when we have more than start_step(default=6) accuracy points.
-      # only after receiving start_step number of reported intermediate results.
-      * The default value of start_step is 6.
+      # (可选项) 决定尝试是否应被停止的次数
+      # 为了节省资源，只有在大于 start_step(default=6) 的精度点才开始预测。
+      # 只有在收到 start_step 个中间结果之后。
+      # start_step 的默认值是 6。
       start_step: 6
-      # (optional) The threshold that we decide to early stop the worse performance curve.
-      # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
-      * The default value of threshold is 0.95.
+      # (可选) 决定是否提前终止的阈值。
+      # 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在尝试的预测值低于 0.95 * 0.9 = 0.855 时停止。
+      * 阈值的默认值是 0.95。
       threshold: 0.95
 ```
