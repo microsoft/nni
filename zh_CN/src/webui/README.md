@@ -1,37 +1,32 @@
-# WebUI
+# Web 界面
 
-## View summary page
+## 查看概要页面
 
-Click the tab "Overview".
+点击标签 "Overview"。
 
-* See the experiment parameters.
-* See good performance trial.
-* See search_space json.
+* 查看实验参数。
+* 查看最好结果的尝试。
+* 查看搜索空间 JSON 文件。
 
-## View job accuracy
+## 查看任务准确度
 
-Click the tab "Optimization Progress" to see the point graph of all trials. Hover every point to see its specific accuracy.
+点击 "Default Metric" 来查看所有尝试的点图。 将鼠标悬停到某个点查看其准确度。
 
-## View hyper parameter
+## 查看超参
 
-Click the tab "Hyper Parameter" to see the parallel graph.
+点击 "Hyper Parameter" 标签查看图像。
 
-* You can select the percentage to see top trials.
-* Choose two axis to swap its positions
+* 可选择百分比查看最好的尝试。
+* 选择两个轴来交换位置。
 
-## View trial status
+## 查看尝试状态
 
-Click the tab "Trial Status" to see the status of the all trials. Specifically:
+点击 "Trials Detail" 标签查看所有尝试的状态。 特别是：
 
-* Trial duration: trial's duration in the bar graph.
-* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
-* Kill: you can kill a job that status is running.
-* Tensor: you can see a job in the tensorflow graph, it will link to the Tensorboard page.
+* Trial duration：尝试执行时间的条形图。
+* 尝试详情：尝试的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
+* Kill: 可终止正在运行的任务。
 
-## Control
+## 反馈
 
-Click the tab "Control" to add a new trial or update the search_space file and some experiment parameters.
-
-## Feedback
-
-[Known Issues](https://github.com/Microsoft/nni/issues).
+[已知问题](https://github.com/Microsoft/nni/issues)
