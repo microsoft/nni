@@ -174,9 +174,9 @@ nni.report_final_result(best_acc)
 
 - `input_shape` 是整数的列表，不包括批量维度。
 - `weighted` 表示是否权重和偏移值应该包含在此神经网络图中。
-- `operation_history` is the number of inputs the layer has.
-- `layer_id_to_input_node_ids` is a dictionary instance mapping from layer identifiers to their input nodes identifiers.
-- `layer_id_to_output_node_ids` is a dictionary instance mapping from layer identifiers to their output nodes identifiers
+- `operation_history` 是层的输入的数量。
+- `layer_id_to_input_node_ids` 是字典实例，将层的标识映射到输入节点标识。
+- `layer_id_to_output_node_ids` 是字典实例，将层的标识映射到输出节点标识。
 - `adj_list` is a two dimensional list. The adjacency list of the graph. The first dimension is identified by tensor identifiers. In each edge list, the elements are two-element tuples of (tensor identifier, layer identifier).
 - `reverse_adj_list` is a A reverse adjacent list in the same format as adj_list.
 - `node_list` is a list of integers. The indices of the list are the identifiers.
