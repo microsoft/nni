@@ -430,11 +430,11 @@ nnictl --version
 
 * **nnictl --version**
   
-  * Description
+  * 说明
     
-    Describe the current version of nni installed.
+    显示当前安装的 NNI 的版本。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl --version
