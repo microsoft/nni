@@ -1,13 +1,13 @@
-# Curve Fitting Assessor on NNI
+# NNI 中的 Curve Fitting 评估器
 
-## 1. Introduction
+## 1. 介绍
 
-Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance is worse than the best final performance in the trial history.
+Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的尝试 X 在 step S 比性能最好的尝试要差，就会提前终止它。
 
-In this algorithm, we use 12 curves to fit the learning curve, the large set of parametric curve models are chosen from [reference paper](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf). The learning curves' shape coincides with our prior knowlwdge about the form of learning curves: They are typically increasing, saturating functions.
+此算法中，使用了 12 条曲线来拟合学习曲线，从[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)中选择了大量的参数曲线模型。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
 
 <p align="center">
-<img src="./learning_curve.PNG" alt="drawing"/>
+<img src="../../../../../../src/sdk/pynni/nni/learning_curve.PNG" alt="drawing"/>
 </p>
 
 We combine all learning curve models into a single, more powerful model. This combined model is given by a weighted linear combination:
