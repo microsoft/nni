@@ -127,40 +127,40 @@ nnictl --version
       | id|  False| |ID of the experiment you want to set|
       | --value, -v|  True| |the number of allowed concurrent trials|
 
-    * __nnictl update duration__  
-      * Description
+  * __nnictl update duration__  
+    * Description
 
-        You can use this command to update an experiment's duration.  
+      You can use this command to update an experiment's duration.  
 
-      * Usage
+    * Usage
 
-        ```bash
-        nnictl update duration [OPTIONS]
-        ```
+      ```bash
+      nnictl update duration [OPTIONS]
+      ```
 
-        Options:
+      Options:
 
-        | Name, shorthand | Required|Default | Description |
-        | ------ | ------ | ------ |------ |
-        | id|  False| |ID of the experiment you want to set|
-        | --value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|  
+      | Name, shorthand | Required|Default | Description |
+      | ------ | ------ | ------ |------ |
+      | id|  False| |ID of the experiment you want to set|
+      | --value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|  
 
-    * __nnictl update trialnum__  
-      * Description
+  * __nnictl update trialnum__  
+    * Description
 
-        You can use this command to update an experiment's maxtrialnum.
+      You can use this command to update an experiment's maxtrialnum.
 
-      * Usage
+    * Usage
 
-        ```bash
-        nnictl update trialnum [OPTIONS]
-        ```
-        Options:
+      ```bash
+      nnictl update trialnum [OPTIONS]
+      ```
+      Options:
 
-        | Name, shorthand | Required|Default | Description |
-        | ------ | ------ | ------ |------ |
-        | id|  False| |ID of the experiment you want to set|
-        | --value, -v|  True| |the new number of maxtrialnum you want to set|
+      | Name, shorthand | Required|Default | Description |
+      | ------ | ------ | ------ |------ |
+      | id|  False| |ID of the experiment you want to set|
+      | --value, -v|  True| |the new number of maxtrialnum you want to set|
 
 * __nnictl trial__
 
