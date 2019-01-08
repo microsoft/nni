@@ -54,4 +54,4 @@
     变量值分布的公式为： exp(normal(mu, sigma))
     
     10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
-        Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
+        变量值分布的公式为： round(exp(normal(mu, sigma)) / q) * q
