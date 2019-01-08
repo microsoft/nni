@@ -182,49 +182,54 @@ Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser,
 
 Click the tab "Overview".
 
-* See the experiment trial profile and search space message.
-* Support to download the experiment result.
+Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also support `download these information and parameters` through the **Download** button. You can download the experiment result anytime in the middle for the running or at the end of the execution, etc.
 
-![](./img/over1.png)
-* See good performance trials.
+![](./img/WebUI_overview1.PNG)
 
-![](./img/over2.png)
+Top 10 trials will be listed in the Overview page, you can browse all the trials in "Trials Detail" page.
 
-### View job default metric
+![](./img/WebUI_overview2.PNG)
+
+### View trials detail page
 
 Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
-![](./img/accuracy.png)
-
-### View hyper parameter
+![](./img/WebUI_overview3.PNG)
 
 Click the tab "Hyper Parameter" to see the parallel graph.
 
 * You can select the percentage to see top trials.
 * Choose two axis to swap its positions
 
-![](./img/hyperPara.png)
-
-### View Trial Duration
+![](./img/WebUI_overview4.PNG)
 
 Click the tab "Trial Duration" to see the bar graph.
 
-![](./img/trial_duration.png)
+![](./img/WebUI_overview5.PNG)
 
-### View trials status 
-
-Click the tab "Trials Detail" to see the status of the all trials. Specifically:
+Below is the status of the all trials. Specifically:
 
 * Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
 * If you run a pai experiment, you can also see the hdfsLogPath.
-
-![](./img/table_openrow.png)
-
 * Kill: you can kill a job that status is running.
 * Support to search for a specific trial.
-* Intermediate Result Graph.
 
-![](./img/intermediate.png)
+![](./img/WebUI_overview6.PNG)
+
+* Intermediate Result Grap
+
+![](./img/WebUI_overview7.PNG)
+
+## Related Topic
+
+* [How to use command line tool nnictl][16]
+* [How to write a trial][9]
+* [Try different Tuners][10]
+* [Try different Assessors][11]
+* [How to run an experiment on local (with multiple GPUs)?][12]
+* [How to run an experiment on multiple machines?][13]
+* [How to run an experiment on OpenPAI?][14]
+* [How to run an experiment on Kubeflow?][15]
 
 [1]: https://github.com/Microsoft/nni/blob/master/docs/FAQ.md
 [2]: https://github.com/Microsoft/nni/blob/master/docs/Installation.md
@@ -234,3 +239,11 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 [6]: https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md
 [7]: https://github.com/Microsoft/nni/blob/5000ae8b746aa5438d48db26cdc1e7104c9afa20/examples/trials/mnist/mnist_before.py
 [8]: https://github.com/Microsoft/nni/tree/master/examples/trials/mnist
+[9]: https://github.com/Microsoft/nni/blob/master/docs/howto_1_WriteTrial.md
+[10]: https://github.com/Microsoft/nni/blob/master/docs/tutorial_3_tryTunersAndAssessors.md
+[11]: https://github.com/Microsoft/nni/blob/master/docs/tutorial_3_tryTunersAndAssessors.md
+[12]: https://github.com/Microsoft/nni/blob/master/docs/tutorial_1_CR_exp_local_api.md
+[13]: https://github.com/Microsoft/nni/blob/master/docs/tutorial_2_RemoteMachineMode.md
+[14]: https://github.com/Microsoft/nni/blob/master/docs/PAIMode.md
+[15]: https://github.com/Microsoft/nni/blob/master/docs/KubeflowMode.md
+[16]: https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md
