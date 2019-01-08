@@ -4,15 +4,13 @@
 
 In order to save our computing resources, NNI supports an early stop policy and creates **Assessor** to finish this job.
 
-Assessor receives intermediate result from Trial and decides whether the Trial should be killed. Once the Trial experiment meets the early stop conditions, the assessor will kill the Trial.
+Assessor receives intermediate result from Trial and decides whether the Trial should be killed by specific algorithm. Once the Trial experiment meets the early stop conditions(which means assessor is pessimistic about the final results), the assessor will kill the trial and the status of experiement will be `"EARLY_STOPPED"`.
 
-In other words, assesor uses the intermediate results and evaluates the results by specific algorithm. If assessor is pessimistic about the final results, assessor will stop this trial and the status of experiement will be `"Early Stoped"`.
-
-Here is the experimental result of MNIST after using 'Curvefitting' Assessor with 'maximize' mode, you can see that assessor successfully **early stopped** many bad parameters in advance. Under the same computing resources, we may get a better hyperparameters.
-
-![](./img/Assessor.png)
+Here is an experimental result of MNIST after using 'Curvefitting' Assessor in 'maximize' mode, you can see that assessor successfully **early stopped** many trials with bad hyperparameters in advance. If you use assessor, we may get a better hyperparameters under the same computing resources.
 
 *Implemented code directory: [config_assessor.yml][5]*
+
+![](./img/Assessor.png)
 
 In NNI, we support two approaches to set the assessor.
 
