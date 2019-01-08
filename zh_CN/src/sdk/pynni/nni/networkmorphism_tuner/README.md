@@ -177,22 +177,22 @@ nni.report_final_result(best_acc)
 - `operation_history` 是层的输入的数量。
 - `layer_id_to_input_node_ids` 是字典实例，将层的标识映射到输入节点标识。
 - `layer_id_to_output_node_ids` 是字典实例，将层的标识映射到输出节点标识。
-- `adj_list` is a two dimensional list. The adjacency list of the graph. The first dimension is identified by tensor identifiers. In each edge list, the elements are two-element tuples of (tensor identifier, layer identifier).
-- `reverse_adj_list` is a A reverse adjacent list in the same format as adj_list.
-- `node_list` is a list of integers. The indices of the list are the identifiers.
-- `layer_list` is a list of stub layers. The indices of the list are the identifiers.
+- `adj_list` 是二维列表。 是图的邻接列表。 第一维是张量标识。 在每条边的列表中，元素是两元组（张量标识，层标识）。
+- `reverse_adj_list` 是与 adj_list 格式一样的反向邻接列表。
+- `node_list` 是一个整数列表。 列表的索引是标识。
+- `layer_list` 是层的列表。 列表的索引是标识。
   
-  - For `StubConv (StubConv1d, StubConv2d, StubConv3d)`, the number follows is its node input id(or id list), node output id, input_channel, filters, kernel_size, stride and padding.
+  - 对于 `StubConv (StubConv1d, StubConv2d, StubConv3d)`，后面的数字表示节点的输入 id（或 id 列表），节点输出 id，input_channel，filters，kernel_size，stride 和 padding。
   
-  - For `StubDense`, the number follows is its node input id(or id list), node output id, input_units and units.
+  - 对于 `StubDense`，后面的数字表示节点的输入 id （或 id 列表），节点输出 id，input_units 和 units。
   
-  - For `StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)`, the number follows is its node input id(or id list), node output id and features numbers.
+  - 对于 `StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)`，后面的数字表示节点输入 id（或 id 列表），节点输出 id，和特征数量。
   
-  - For `StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)`, the number follows is its node input id(or id list), node output id and dropout rate.
+  - 对于 `StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)`，后面的数字表示节点的输入 id （或 id 列表），节点的输出 id 和 dropout 率。
   
-  - For `StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`, the number follows is its node input id(or id list), node output id, kernel_size, stride and padding.
+  - 对于 `StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`后面的数字表示节点的输入 id（或 id 列表），节点输出 id，kernel_size, stride 和 padding。
   
-  - For else layers, the number follows is its node input id(or id list) and node output id.
+  - 对于其它层，后面的数字表示节点的输入 id（或 id 列表）以及节点的输出 id。
 
 ## 5. TODO
 
