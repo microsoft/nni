@@ -1,8 +1,8 @@
-# Hyperband on nni
+# NNI 中使用 Hyperband
 
-## 1. Introduction
+## 1. 介绍
 
-[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) is a popular automl algorithm. The basic idea of Hyperband is that it creates several brackets, each bracket has `n` randomly generated hyperparameter configurations, each configuration uses `r` resource (e.g., epoch number, batch number). After the `n` configurations is finished, it chooses top `n/eta` configurations and runs them using increased `r*eta` resource. At last, it chooses the best configuration it has found so far.
+[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 是一种流行的自动机器学习算法。 The basic idea of Hyperband is that it creates several brackets, each bracket has `n` randomly generated hyperparameter configurations, each configuration uses `r` resource (e.g., epoch number, batch number). After the `n` configurations is finished, it chooses top `n/eta` configurations and runs them using increased `r*eta` resource. At last, it chooses the best configuration it has found so far.
 
 ## 2. Implementation with fully parallelism
 
