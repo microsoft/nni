@@ -90,13 +90,13 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
     
     1. nnictl experiment show        show the information of experiments
     2. nnictl trial ls               list all of trial jobs
-    3. nnictl log stderr             show stderr log content
-    4. nnictl log stdout             show stdout log content
-    5. nnictl stop                   stop an experiment
-    6. nnictl trial kill             kill a trial job by id
-    7. nnictl --help                 get help information about nnictl
+    3. nnictl top                    monitor the status of running experiments
+    4. nnictl log stderr             show stderr log content
+    5. nnictl log stdout             show stdout log content
+    6. nnictl stop                   stop an experiment
+    7. nnictl trial kill             kill a trial job by id
+    8. nnictl --help                 get help information about nnictl
     -----------------------------------------------------------------------
-    ```
     
 
 * 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里的](docs/WebUI.md)更多页面示例。
