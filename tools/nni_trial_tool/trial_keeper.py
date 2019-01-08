@@ -65,7 +65,7 @@ def main_loop(args):
     while True:
         retCode = process.poll()
         # child worker process exits and all stdout data is read
-        if retCode is not None and log_pipe_stdout.is_read_completed == True:
+        if retCode is not None and log_pipe_stdout.set_process_exit() and log_pipe_stdout.is_read_completed == True:
             nni_log(LogType.Info, 'subprocess terminated. Exit code is {}. Quit'.format(retCode))
             if args.pai_hdfs_output_dir is not None:
                 # Copy local directory to hdfs for OpenPAI
