@@ -36,17 +36,17 @@ chmod +x ./download.sh
 
 1. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
 
-```
-wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
-wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
-```
+    ```bash
+    wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
+    wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
+    ```
 
 2. download "glove.840B.300d.txt" in https://nlp.stanford.edu/projects/glove/
 
-```
-wget http://nlp.stanford.edu/data/glove.840B.300d.zip
-unzip glove.840B.300d.zip
-```
+    ```bash
+    wget http://nlp.stanford.edu/data/glove.840B.300d.zip
+    unzip glove.840B.300d.zip
+    ```
 
 ### Update configuration
 Modify `nni/examples/trials/ga_squad/config.yml`, here is the default configuration:

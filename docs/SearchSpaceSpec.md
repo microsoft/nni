@@ -15,7 +15,7 @@
 
 ```
 
-The example define ```dropout_rate``` as variable which priori distribution is uniform distribution, and its value from ```0.1``` and ```0.5```.
+The example define `dropout_rate` as variable which priori distribution is uniform distribution, and its value from `0.1` and `0.5`.
 The tuner will sample parameters/architecture by understanding the search space first.
 
 User should define the name of variable, type and candidate value of variable.
@@ -69,6 +69,6 @@ The candidate type and value for variable is here:
 
 Note that SMAC only supports a subset of the types above, including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`. In the current version, SMAC does not support cascaded search space (i.e., conditional variable in SMAC).
 
-Note that GridSearch Tuner only supports a subset of the types above, including `choic`, `quniform` and `qloguniform`, where q here specifies the number of values that will be sampled. Details about the last two type as follows
+Note that GridSearch Tuner only supports a subset of the types above, including `choice`, `quniform` and `qloguniform`, where q here specifies the number of values that will be sampled. Details about the last two type as follows
 * Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
 * Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.

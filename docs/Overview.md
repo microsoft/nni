@@ -22,7 +22,7 @@ After user submits the experiment through a command line tool [nnictl](../tools/
 
 User can use the nnictl and/or a visualized Web UI nniboard to monitor and debug a given experiment.
 
-NNI provides a set of examples in the package to get you familiar with the above process. In the following example [/examples/trials/mnist], we had already set up the configuration and updated the training codes for you. You can directly run the following command to start an experiment. 
+NNI provides a set of examples in the package to get you familiar with the above process.
 
 ## Key Concepts
 

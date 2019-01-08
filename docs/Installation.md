@@ -6,25 +6,31 @@ Currently we only support installation on Linux & Mac.
 ## **Installation**
 * __Dependencies__
 
-      python >= 3.5
-      git
-      wget
+  ```bash
+  python >= 3.5
+  git
+  wget
+  ```
 
-    python pip should also be correctly installed. You could use "python3 -m pip -v" to check pip version. 
+  python pip should also be correctly installed. You could use "python3 -m pip -v" to check pip version. 
 
 * __Install NNI through pip__
 
-      python3 -m pip install --user --upgrade nni
+  ```bash
+  python3 -m pip install --user --upgrade nni
+  ```
 
 * __Install NNI through source code__
-   
-      git clone -b v0.4.1 https://github.com/Microsoft/nni.git
-      cd nni
-      source install.sh
+
+  ```bash
+  git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+  cd nni
+  source install.sh
+  ```
 
 * __Install NNI in docker image__
 
-    You can also install NNI in a docker image. Please follow the instructions [here](../deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
+  You can also install NNI in a docker image. Please follow the instructions [here](../deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
 ## **System requirements**
 
@@ -52,8 +58,8 @@ Below are the minimum system requirements for NNI on macOS. Due to potential pro
 |**Internet**|Boardband internet connection|
 |**Resolution**|1024 x 768 minimum display resolution|
 
-
 ## Further reading
+
 * [Overview](Overview.md)
 * [Use command line tool nnictl](NNICTLDOC.md)
 * [Use NNIBoard](WebUI.md)

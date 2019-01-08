@@ -12,12 +12,12 @@ NNI provides an easy to adopt approach to set up parameter tuning algorithms as 
         required fields: codeDirectory, classFileName, className and classArgs.
 
 ### **Learn More about tuners**
-* For detailed defintion and usage aobut the required field, please refer to [Config an experiment](ExperimentConfig.md)
+* For detailed defintion and usage about the required field, please refer to [Config an experiment](ExperimentConfig.md)
 * [Tuners in the latest NNI release](HowToChooseTuner.md)
 * [How to implement your own tuner](howto_2_CustomizedTuner.md)
 
 
-**Assessor** specifies the algorithm you use to apply early stop policy. In NNI, there are two approaches to set theassessor. 
+**Assessor** specifies the algorithm you use to apply early stop policy. In NNI, there are two approaches to set the assessor.
 1. Directly use assessor provided by nni sdk
 
         required fields: builtinAssessorName and classArgs. 
