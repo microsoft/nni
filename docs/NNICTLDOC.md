@@ -409,3 +409,17 @@ nnictl top
     | Name, shorthand | Required|Default | Description |
     | ------ | ------ | ------ |------ |
     | id|  False| |ID of the experiment you want to set|
+
+### Check nni version
+
+* __nnictl --version__
+
+  * Description
+
+    Describe the current version of nni installed.
+  
+  * Usage
+
+    ```bash
+    nnictl --version
+    ```
