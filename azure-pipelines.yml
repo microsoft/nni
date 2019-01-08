@@ -28,7 +28,7 @@ jobs:
     displayName: 'Integration tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
+      PATH=$HOME/.local/bin:$PATH python3 tuner_test.py
     displayName: 'Built-in dispatcher tests'
 
 - job: 'macOS_10_13'
@@ -55,5 +55,5 @@ jobs:
     displayName: 'Integration tests'
   - script: |
       cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 sdk_test.py
+      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 tuner_test.py
     displayName: 'Built-in dispatcher tests'
