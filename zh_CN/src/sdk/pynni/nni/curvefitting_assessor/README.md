@@ -73,4 +73,4 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 
 ## 4. TODO
 
-* Further improve the accuracy of the prediction and test it on more models.
+* 进一步提高预测精度，并在更多模型上测试。
