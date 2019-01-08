@@ -9,7 +9,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 > 第三步：[定义实验配置](ExperimentConfig.md)
 
 <p align="center">
-<img src="../../docs/img/3_steps.jpg" alt="drawing"/>
+<img src="./img/3_steps.jpg" alt="drawing"/>
 </p>
 
 用户通过命令行工具 [nnictl](../tools/README.md) 创建实验后，守护进程（NNI 管理器）会开始搜索过程。 NNI 管理器不断地通过搜索配置的优化算法来生成参数配置，并通过训练服务组件，在目标训练环境中（例如：本机、远程服务器、云服务等），来调度并运行尝试的任务。 尝试任务的模型精度等结果会返回给优化算法，以便生成更好的参数配置。 NNI 管理器会在找到最佳模型后停止搜索过程。
@@ -17,7 +17,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 ## 体系结构概述
 
 <p align="center">
-<img src="../../docs/img/nni_arch_overview.png" alt="drawing"/>
+<img src="./img/nni_arch_overview.png" alt="drawing"/>
 </p>
 
 用户可以用 nnictl 或可视化的 WEB 界面 NNIBoard 来查看并调试指定的实验。
