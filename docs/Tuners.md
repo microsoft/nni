@@ -29,6 +29,7 @@ For now, NNI has supported the following tuner algorithms:
 |**Grid Search**|Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, qloguniform. The number q in quniform and qloguniform has special meaning (different from the spec in search space spec). It means the number of values that will be sampled evenly from the range low and high.|It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space.|Usage: [GridSearchUsage][11]|
 |**Hyperband**|Hyperband tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.|It is suggested when you have limited computation resource but have relatively large search space. It performs good in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.|Usage: [HyperbandUsage][12] Paper: [Hyperband: A Novel Bandit-Based Approach to Hyperparameter Optimization][13]|
 |**Network Morphism**|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Next, it estimates the value of child network using the history architecture and metric pairs. Then it selects the most promising one to train.|It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the example to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the cv domain.|Usage: [NetworkMorphismUsage][14] Paper: [Auto-Keras: Efficient Neural Architecture Search with Network Morphism][15]|
+|**Metis Tuner**|Metis offers the following benefits when it comes to tuning parameters: While most tools only predicts the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guess work. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter.|Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an example about the use of Metis. User only need to send the final result like accuracy to tuner, by calling the nni SDK.|Usage: [MetisTunerUsage][17] Paper: [Metis: Robustly Optimizing Tail Latencies of Cloud Systems][18]|
 
 ## Try Different Tuners
 
@@ -100,6 +101,7 @@ Notes:
 |**Grid Search**|Grid Search|Unsupported||
 |**Hyperband**|Hyperband|'maximize'|['R']: int, ['eta']: int|
 |**Network Morphism**|NetworkMorphism|'maximize'|['task']: {'cv', 'nlp', 'common'}, ['input_width']: int, ['input_channel']: int, ['n_output_node']: int|
+|**Metis Tuner**|MetisTuner|'maximize'||
 
 
 [1]: https://github.com/Microsoft/nni/blob/master/docs/HowToChooseTuner.md
@@ -118,3 +120,5 @@ Notes:
 [14]: https://github.com/Microsoft/nni/blob/master/docs/HowToChooseTuner.md
 [15]: https://arxiv.org/pdf/1806.10282.pdf
 [16]: https://github.com/Microsoft/nni/blob/master/docs/HowToChooseTuner.md
+[17]: https://github.com/Microsoft/nni/blob/master/docs/HowToChooseTuner.md
+[18]: https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/

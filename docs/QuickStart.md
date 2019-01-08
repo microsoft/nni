@@ -37,9 +37,8 @@ def run_trial(params):
         print ("Final result is", test_acc)
 
 if __name__ == '__main__':
-    try:
-        params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64, 'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
-        run_trial(params)
+    params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64, 'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
+    run_trial(params)
 ```
 
 Note: If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_before.py][7]
@@ -60,7 +59,7 @@ output: one optimal hyperparameter configuration
 6:          Stop the experiment
 ```
 
-If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you have to do three changes base on your code:
+If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes base on your code:
 
 **Three things required to do when using NNI**
 
@@ -98,11 +97,10 @@ Step 2: Modified your `Trial` file to get the hyperparameter set from NNI and re
 +         nni.report_final_result(acc)
 
   if __name__ == '__main__':
-      try:
--         params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
--         'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
-+         params = nni.get_next_parameter()
-          run_trial(params)
+-     params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
+-     'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
++     params = nni.get_next_parameter()
+      run_trial(params)
 ```
 
 *Implemented code directory: [mnist.py][4]*
@@ -151,7 +149,7 @@ INFO: Starting experiment...
 INFO: Successfully started experiment!
 -----------------------------------------------------------------------
 The experiment id is egchD4qy
-The Web UI urls are: http://223.255.255.1:8080   http://127.0.0.1:8080
+The Web UI urls are: [Your IP]:8080
 -----------------------------------------------------------------------
 
 You can use these commands to get more information about the experiment
@@ -175,10 +173,10 @@ If you prepare `trial`, `search space` and `config` according to the above steps
 After you start your experiment in NNI successfully, you can find a message in the command-line interface to tell you `Web UI url` like this:
 
 ```
-The Web UI urls are: http://223.255.255.1:8080   http://127.0.0.1:8080
+The Web UI urls are: [Your IP]:8080
 ```
 
-Open the `Web UI url`(In this information is: `http://223.255.255.1:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
+Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
 
 ### View summary page
 
