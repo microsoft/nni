@@ -242,45 +242,45 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                     maxString={`MaxTrialNumber: ${trialProfile.MaxTrialNum}`}
                 />
                 <Row className="basic colorOfbasic mess">
-                    <p>Best Default Metric</p>
+                    <p>best metric</p>
                     <div>{bestAccuracy}</div>
                 </Row>
                 <Row className="mess">
                     <Col span={8}>
                         <Row className="basic colorOfbasic">
-                            <p>Time Spent</p>
+                            <p>spent</p>
                             <div>{convertTime(trialProfile.execDuration)}</div>
                         </Row>
                     </Col>
                     <Col span={9}>
                         <Row className="basic colorOfbasic">
-                            <p>Remaining Time</p>
+                            <p>remaining</p>
                             <div>{remaining}</div>
                         </Row>
                     </Col>
                     <Col span={7}>
                         <Row className="basic colorOfbasic">
-                            <p>MaxDuration</p>
-                            <div>{convertTime(trialProfile.maxDuration)}</div>
+                            <p>running</p>
+                            <div>{trialNumber.runTrial}</div>
                         </Row>
                     </Col>
                 </Row>
                 <Row className="mess">
                     <Col span={8}>
                         <Row className="basic colorOfbasic">
-                            <p>Succeed Trial</p>
+                            <p>succeed</p>
                             <div>{trialNumber.succTrial}</div>
                         </Row>
                     </Col>
                     <Col span={9}>
                         <Row className="basic">
-                            <p>Stopped Trial</p>
+                            <p>stopped</p>
                             <div>{trialNumber.stopTrial}</div>
                         </Row>
                     </Col>
                     <Col span={7}>
                         <Row className="basic">
-                            <p>Failed Trial</p>
+                            <p>failed</p>
                             <div>{trialNumber.failTrial}</div>
                         </Row>
                     </Col>
