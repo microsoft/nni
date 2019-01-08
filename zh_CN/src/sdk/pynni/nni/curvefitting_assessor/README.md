@@ -10,7 +10,7 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 <img src="./learning_curve.PNG" alt="drawing"/>
 </p>
 
-We combine all learning curve models into a single, more powerful model. This combined model is given by a weighted linear combination:
+所有学习曲线模型被合并到了单个，更强大的模型中。 合并的模型通过加权线性混合：
 
 <p align="center">
 <img src="./f_comb.gif" alt="drawing"/>
