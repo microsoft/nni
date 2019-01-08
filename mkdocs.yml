@@ -8,8 +8,12 @@ nav:
         - Installation: Installation.md
         - Trial HowTo: howto_1_WriteTrial.md
         - WebUI: WebUI.md
-        - Tuners: Tuners.md
-        - Assessors: Assessors.md
+        - Tuners:
+            - Try Builtin Tuners: Tuners.md
+            - Customized Tuners: Customize_Tuner.md
+        - Assessors:
+            - Try Builtin Assessors: Assessors.md
+            - Customized Assessors: Customize_Assessor.md
         - Training Platform:
             - Remote: RemoteMachineMode.md
             - PAI: PAIMode.md
