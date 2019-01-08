@@ -22,6 +22,7 @@ nnictl log
 nnictl webui
 nnictl tensorboard
 nnictl top
+nnictl --version
 ```
 
 ### Manage an experiment

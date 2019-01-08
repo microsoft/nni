@@ -1,4 +1,4 @@
-import { FinalResult } from './interface';
+import { FinalResult, FinalType } from './interface';
 
 const convertTime = (num: number) => {
     if (num % 3600 === 0) {
@@ -28,6 +28,7 @@ const convertDuration = (num: number) => {
 };
 
 // get final result value
+// draw Accuracy point graph
 const getFinalResult = (final: FinalResult) => {
     let acc;
     let showDefault = 0;
@@ -46,6 +47,21 @@ const getFinalResult = (final: FinalResult) => {
     }
 };
 
+// get final result value // acc obj 
+const getFinal = (final: FinalResult) => {
+    let showDefault: FinalType;
+    if (final) {
+        showDefault = JSON.parse(final[0].data);
+        if (typeof showDefault === 'number') {
+            showDefault = { default: showDefault };
+        }
+        return showDefault;
+    } else {
+        return undefined;
+    }
+};
+
 export {
-    convertTime, convertDuration, getFinalResult
+    convertTime, convertDuration, getFinalResult,
+    getFinal
 };
