@@ -63,15 +63,15 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
     nnictl create --config exp_pai.yaml
     
 
-来在 pai 模式下启动实验。 NNI will create OpanPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 可以在 OpenPAI 集群的网站中看到 NNI 创建的作业，例如： ![](../../docs/img/nni_pai_joblist.jpg)
+来在 pai 模式下启动实验。 NNI will create OpanPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 可以在 OpenPAI 集群的网站中看到 NNI 创建的作业，例如： ![](./img/nni_pai_joblist.jpg)
 
 注意：pai 模式下，NNIManager 会启动 RESTful 服务，监听端口为 NNI 网页服务器的端口加1。 例如，如果网页端口为`8080`，那么 RESTful 服务器会监听在 `8081`端口，来接收运行在 Kubernetes 中的尝试作业的指标。 因此，需要在防火墙中启用端口 `8081` 的 TCP 协议，以允许传入流量。
 
 当一个尝试作业完成后，可以在 NNI 网页的概述页面（如：http://localhost:8080/oview）中查看尝试的信息。
 
-在尝试列表页面中展开尝试信息，点击如下的 logPath： ![](../../docs/img/nni_webui_joblist.jpg)
+在尝试列表页面中展开尝试信息，点击如下的 logPath： ![](./img/nni_webui_joblist.jpg)
 
-接着将会打开 HDFS 的 WEB 界面，并浏览到尝试的输出文件： ![](../../docs/img/nni_trial_hdfs_output.jpg)
+接着将会打开 HDFS 的 WEB 界面，并浏览到尝试的输出文件： ![](./img/nni_trial_hdfs_output.jpg)
 
 在输出目录中可以看到三个文件：stderr, stdout, 以及 trial.log
 
