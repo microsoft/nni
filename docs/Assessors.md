@@ -8,9 +8,9 @@ Assessor receives intermediate result from Trial and decides whether the Trial s
 
 In other words, assesor uses the intermediate results and evaluates the results by specific algorithm. If assessor is pessimistic about the final results, assessor will stop this trial and the status of experiement will be `"Early Stoped"`.
 
-Here is the experimental result of MNIST after using 'MedianStop' Assessor, you can see that bad parameter configurations are **early stopped**.
+Here is the experimental result of MNIST after using 'Curvefitting' Assessor with 'maximize' mode, you can see that assessor successfully **early stopped** many bad parameters in advance. Under the same computing resources, we may get a better hyperparameters.
 
-![](./img/Assesor.png)
+![](./img/Assessor.png)
 
 *Implemented code directory: [config_assessor.yml][5]*
 
