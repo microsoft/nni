@@ -3,3 +3,5 @@ files:
     ignore:
       - README.Makefile.md
     translation: /%locale_with_underscore%/%original_path%/%original_file_name%
+  - source: /**/*.png
+    translation: /%locale_with_underscore%/%original_path%/%original_file_name%
