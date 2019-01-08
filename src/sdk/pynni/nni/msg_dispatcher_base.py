@@ -38,6 +38,7 @@ class MsgDispatcherBase(Recoverable):
     def __init__(self):
         if multi_thread_enabled():
             self.pool = ThreadPool()
+            self.thread_results = []
 
     def run(self):
         """Run the tuner.
@@ -53,7 +54,11 @@ class MsgDispatcherBase(Recoverable):
             if command is None:
                 break
             if multi_thread_enabled():
-                self.pool.map_async(self.handle_request_thread, [(command, data)])
+                result = self.pool.map_async(self.handle_request_thread, [(command, data)])
+                self.thread_results.append(result)
+                if any([thread_result.ready() and not thread_result.successful() for thread_result in self.thread_results]):
+                    _logger.debug('Caught thread exception')
+                    break
             else:
                 self.handle_request((command, data))
 
@@ -69,7 +74,7 @@ class MsgDispatcherBase(Recoverable):
                 self.handle_request(request)
             except Exception as e:
                 _logger.exception(str(e))
-                sys.exit(-1)
+                raise
         else:
             pass
 
