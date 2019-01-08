@@ -26,6 +26,7 @@ import shutil
 import string
 from subprocess import Popen, PIPE, call, check_output, check_call
 import tempfile
+from nni.constants import ModuleName
 from nni_annotation import *
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
@@ -280,7 +281,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         module_name = ModuleName[tuner_name]
         try:
             check_call([sys.executable, '-c', 'import %s'%(module_name)])
-        except:
+        except ModuleNotFoundError as e:
             print_error('The tuner %s should be installed through nnictl'%(tuner_name))
             exit(1)
 
