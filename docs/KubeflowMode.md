@@ -197,4 +197,3 @@ Notice: In kubeflow mode, NNIManager will start a rest server and listen on a po
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information. 
 
 Any problems when using NNI in kubeflow mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni), or send mail to nni@microsoft.com
-
