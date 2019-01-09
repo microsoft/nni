@@ -91,7 +91,7 @@ def get_succeeded_trial_num(trial_jobs_url):
     print(trial_jobs)
     num_succeed = 0
     for trial_job in trial_jobs:
-        if trial_job['status'] == 'SUCCEEDED':
+        if trial_job['status'] in ['SUCCEEDED', 'EARLY_STOPPED']:
             num_succeed += 1
     print('num_succeed:', num_succeed)
     return num_succeed

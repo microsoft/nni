@@ -3,6 +3,9 @@ from nni.tuner import Tuner
 
 
 class MultiThreadTuner(Tuner):
+    def __init__(self):
+        self.parent_done = False
+
     def generate_parameters(self, parameter_id):
         if parameter_id == 0:
             return {'x': 0}

@@ -3,6 +3,7 @@ experimentName: default_test
 maxExecDuration: 5m
 maxTrialNum: 2
 trialConcurrency: 2
+searchSpacePath: ../../../examples/trials/sklearn/classification/search_space.json
 
 tuner:
   builtinTunerName: Random
@@ -13,11 +14,11 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-annotation
-  command: python3 mnist.py --batch_num 100
+  codeDir: ../../../examples/trials/sklearn/classification
+  command: python3 main.py
   gpuNum: 0
 
-useAnnotation: true
+useAnnotation: false
 multiPhase: false
 multiThread: false
 

@@ -1,8 +1,9 @@
 authorName: nni
 experimentName: default_test
-maxExecDuration: 5m
+maxExecDuration: 15m
 maxTrialNum: 2
 trialConcurrency: 2
+searchSpacePath: ./cifar10_search_space.json
 
 tuner:
   builtinTunerName: Random
@@ -13,11 +14,11 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-annotation
-  command: python3 mnist.py --batch_num 100
-  gpuNum: 0
+  codeDir: ../../../examples/trials/cifar10_pytorch
+  command: python3 main.py --epochs 2
+  gpuNum: 1
 
-useAnnotation: true
+useAnnotation: false
 multiPhase: false
 multiThread: false
 
