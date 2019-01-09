@@ -43,7 +43,7 @@ kubeflowConfig:
 ```
 If users want to use tf-operator, he could set `ps` and `worker` in trial config. If users want to use pytorch-operator, he could set `master` and `worker` in trial config. 
 
-## Supported sotrage type
+## Supported storage type
 NNI support NFS and Azure Storage to store the code and output files, users could set storage type in config file and set the corresponding config.  
 The setting for NFS storage are as follows:
 ```
