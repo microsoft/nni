@@ -1,8 +1,12 @@
-## How to define search space?
+# Search Space
 
-### Hyper-parameter Search Space
+## Overview
 
-* A search space configure example as follow:
+In NNI, tuner will sample parameters/architecture according to the search space, which is defined as a json file.
+
+To define a search space, users should define the name of variable, the type of sampling strategy and its parameters.
+
+* A example of search space definition as follow:
 
 ```python
 {
@@ -15,10 +19,10 @@
 
 ```
 
-The example define ```dropout_rate``` as variable which priori distribution is uniform distribution, and its value from ```0.1``` and ```0.5```.
-The tuner will sample parameters/architecture by understanding the search space first.
 
-User should define the name of variable, type and candidate value of variable.
+Take the first line as an example. ```dropout_rate``` is defined as a variable whose priori distribution is a uniform distribution of a range from ```0.1``` and ```0.5```.
+
+
 The candidate type and value for variable is here:
 
 * {"_type":"choice","_value":options}

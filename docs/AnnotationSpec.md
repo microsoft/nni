@@ -1,8 +1,31 @@
 # NNI Annotation 
 
+
+## Overview
+
 For good user experience and reduce user effort, we need to design a good annotation grammar.
 
-If users use NNI system, they only need to:
+Below is an example:
+
+```python
+'''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
+learning_rate = 0.1
+```
+
+Here, this first line is nni annotation, which is totally a single string. Following is an assignment statement. What nni done here is to replace the right value according to the information provided by the annotation line.
+
+In the annotation line, notice that:
+
+- `nni.varialbe` is an outer function which means the hyper-parameter is an varible.
+- The first argument in this function is another nni API `nni.choice`, which specifies how to choose the hyper-parameter.
+- The second variable means the variable name that this hyper-parameter will be assigned to, which should be the same as the left value of the following assignment statement.
+
+Note that every annotation should be followed by an assign statement. In this way, users could either run the python code directly or launch nni to tune hyper-parameter in this code, without changing any codes.
+
+
+## Types
+
+### In NNI, there are mainly four types of annotation:
 
  1. Annotate variables in code as:
 
@@ -21,36 +44,58 @@ If users use NNI system, they only need to:
     `'''@nni.report_final_result(test_acc)'''`
 
 
-In this way, they can easily implement automatic tuning on NNI. 
+### For `@nni.variable`, **`nni.choice`** is the type of search space and there are 10 types to express your search space as follows:
 
-For `@nni.variable`, `nni.choice` is the type of search space and there are 10 types to express your search space as follows:
+* nni.choice(option1,option2,...,optionN)
+   * Which means the variable value is one of the options, which should be a list The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
+<br/>
 
- 1. `@nni.variable(nni.choice(option1,option2,...,optionN),name=variable)`  
-    Which means the variable value is one of the options, which should be a list The elements of options can themselves be stochastic expressions
+* nni.randint(upper)
+   * Which means the variable value is a random integer in the range [0, upper). The semantics of this distribution is that there is no more correlation in the loss function between nearby integer values, as compared with more distant integer values. This is an appropriate distribution for describing random seeds for example. If the loss function is probably more correlated for nearby integer values, then you should probably use one of the "quantized" continuous distributions, such as either quniform, qloguniform, qnormal or qlognormal. Note that if you want to change lower bound, you can use `quniform` for now.
+<br/>
 
- 2. `@nni.variable(nni.randint(upper),name=variable)`  
-    Which means the variable value is a random integer in the range [0, upper).
+* nni.uniform(low, high, q)
+   * Which means the variable value is a value uniformly between low and high.
+   * When optimizing, this variable is constrained to a two-sided interval.
+<br/>
 
- 3. `@nni.variable(nni.uniform(low, high),name=variable)`  
-    Which means the variable value is a value uniformly between low and high.
+* nni.quniform(low, high, q)
+   * Which means the variable value is a value like round(uniform(low, high) / q) * q
+   * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.
+<br/>
 
- 4. `@nni.variable(nni.quniform(low, high, q),name=variable)`  
-    Which means the variable value is a value like round(uniform(low, high) / q) * q
+* nni.loguniform(low, high)
+   * Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution like exp(uniform(log(low), log(high))), so that the logarithm of the return value is uniformly distributed.
+   * When optimizing, this variable is constrained to be positive.
+<br/>
 
- 5. `@nni.variable(nni.loguniform(low, high),name=variable)`  
-    Which means the variable value is a value drawn according to exp(uniform(low, high)) so that the logarithm of the return value is uniformly distributed.
+* nni.qloguniform(low, high, q)
+   * Which means the variable value is a value like round(loguniform(low, high)) / q) * q
+   * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
+<br/>
 
- 6. `@nni.variable(nni.qloguniform(low, high, q),name=variable)`  
-    Which means the variable value is a value like round(exp(uniform(low, high)) / q) * q
+* nni.normal(label, mu, sigma)
+   * Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma. When optimizing, this is an unconstrained variable.
+<br/>
 
- 7. `@nni.variable(nni.normal(label, mu, sigma),name=variable)`  
-    Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma.
+* nni.qnormal(label, mu, sigma, q)
+   * Which means the variable value is a value like round(normal(mu, sigma) / q) * q
+   * Suitable for a discrete variable that probably takes a value around mu, but is fundamentally unbounded.
+<br/>
 
- 8. `@nni.variable(nni.qnormal(label, mu, sigma, q),name=variable)`  
-    Which means the variable value is a value like round(normal(mu, sigma) / q) * q
+* nni.lognormal(label, mu, sigma)
+   * Which means the variable value is a value drawn according to exp(normal(mu, sigma)) so that the logarithm of the return value is normally distributed. When optimizing, this variable is constrained to be positive.
+<br/>
 
- 9. `@nni.variable(nni.lognormal(label, mu, sigma),name=variable)`  
-    Which means the variable value is a value drawn according to exp(normal(mu, sigma))
+* nni.qlognormal(label, mu, sigma, q)
+   * Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
+   * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
+<br/>
 
-10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
-    Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
+Note that SMAC only supports a subset of the types above, including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`. In the current version, SMAC does not support cascaded search space (i.e., conditional variable in SMAC).
+
+Note that GridSearch Tuner only supports a subset of the types above, including `choic`, `quniform` and `qloguniform`, where q here specifies the number of values that will be sampled. Details about the last two type as follows:
+
+* Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
+* Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
+
