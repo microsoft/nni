@@ -3,7 +3,7 @@
 
 ## Overview
 
-For improve user experience and reduce user effort, we design a good annotation grammar.
+To improve user experience and reduce user effort, we design a good annotation grammar.
 
 Below is an example:
 
