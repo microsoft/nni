@@ -1,0 +1,31 @@
+authorName: default
+experimentName: ga_squad_weight_sharing
+trialConcurrency: 2
+maxExecDuration: 1h
+maxTrialNum: 200
+#choice: local, remote, pai
+trainingServicePlatform: remote
+#choice: true, false
+useAnnotation: false
+multiThread: true
+tuner:
+  codeDir: ../../../tuners/weight_sharing/ga_customer_tuner
+  classFileName: customer_tuner.py 
+  className: CustomerTuner
+  classArgs:
+    optimize_mode: maximize
+    population_size: 32
+    save_dir_root: /mnt/nfs/nni/ga_squad
+trial:
+  command: python3 trial.py --input_file /mnt/nfs/nni/train-v1.1.json --dev_file /mnt/nfs/nni/dev-v1.1.json --max_epoch 1 --embedding_file /mnt/nfs/nni/glove.6B.300d.txt
+  codeDir: .
+  gpuNum: 1
+machineList:
+  - ip: remote-ip-0
+    port: 8022
+    username: root 
+    passwd: screencast
+  - ip: remote-ip-1
+    port: 8022
+    username: root 
+    passwd: screencast

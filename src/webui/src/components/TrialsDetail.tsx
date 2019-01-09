@@ -21,6 +21,7 @@ interface TrialDetailState {
     isHasSearch: boolean;
     experimentStatus: string;
     entriesTable: number;
+    experimentPlatform: string;
 }
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
@@ -43,6 +44,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             experimentStatus: '',
             entriesTable: 20,
             isHasSearch: false,
+            experimentPlatform: ''
         };
     }
     // trial accuracy graph
@@ -370,6 +372,26 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         alert('TableList component was not properly initialized.');
     }
 
+    checkExperimentPlatform = () => {
+        axios(`${MANAGER_IP}/experiment`, {
+            method: 'GET'
+        })
+            .then(res => {
+                if (res.status === 200) {
+                    const trainingPlatform = res.data.params.trainingServicePlatform !== undefined
+                    ?
+                    res.data.params.trainingServicePlatform
+                    :
+                    '';
+                    if (this._isMounted) {
+                        this.setState({
+                            experimentPlatform: trainingPlatform
+                        });
+                    }
+                }
+            });
+    }
+
     componentDidMount() {
 
         this._isMounted = true;
@@ -377,6 +399,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         this.drawPointGraph();
         this.interTableList = window.setInterval(this.drawTableList, 10000);
         this.interAccuracy = window.setInterval(this.drawPointGraph, 10000);
+        this.checkExperimentPlatform();
     }
 
     componentWillUnmount() {
@@ -386,7 +409,10 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     }
 
     render() {
-        const { accSource, accNodata, tableListSource, entriesTable, searchResultSource, isHasSearch } = this.state;
+        const { accSource, accNodata, tableListSource, 
+            entriesTable, searchResultSource, isHasSearch,
+            experimentPlatform
+        } = this.state;
         const titleOfacc = (
             <Title1 text="Default Metric" icon="3.png" />
         );
@@ -463,6 +489,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     updateList={this.drawTableList}
                     searchResult={searchResultSource}
                     isHasSearch={isHasSearch}
+                    platform={experimentPlatform}
                     ref={(tabList) => this.tableList = tabList}
                 />
             </div>
