@@ -20,8 +20,8 @@
 
 
 import ast
-
 import astor
+from nni_cmd.common_utils import print_warning
 
 # pylint: disable=unidiomatic-typecheck
 
@@ -217,6 +217,10 @@ class Transformer(ast.NodeTransformer):
             self.annotated = True
         else:
             return node  # not an annotation, ignore it
+
+        if string.startswith('@nni.get_next_parameter('):
+            deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. Please remove this line in the trial code."
+            print_warning(deprecated_message)
 
         if string.startswith('@nni.report_intermediate_result(')  \
                 or string.startswith('@nni.report_final_result(') \

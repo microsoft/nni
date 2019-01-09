@@ -6,13 +6,14 @@ trialConcurrency: 2
 searchSpacePath: ../../../examples/trials/mnist-keras/search_space.json
 
 tuner:
-  builtinTunerName: Random
+  builtinTunerName: MetisTuner
   classArgs:
     optimize_mode: maximize
 assessor:
-  builtinAssessorName: Medianstop
+  builtinAssessorName: Curvefitting
   classArgs:
     optimize_mode: maximize
+    epoch_num: 3
 trial:
   codeDir: ../../../examples/trials/mnist-keras
   command: python3 mnist-keras.py --num_train 200 --epochs 1
