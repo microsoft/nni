@@ -12,20 +12,25 @@ Below is an example:
 learning_rate = 0.1
 ```
 
-Here, this first line is nni annotation, which is totally a single string. Following is an assignment statement. What nni done here is to replace the right value according to the information provided by the annotation line.
+Here, this first line is a nni annotation, which is simply a single string. Following is an assignment statement. What nni does here is to replace the right value of this assignment statement according to the information provided by the annotation line.
 
 In the annotation line, notice that:
 
 - `nni.varialbe` is an outer function which means the hyper-parameter is an varible.
-- The first argument in this function is another nni API `nni.choice`, which specifies how to choose the hyper-parameter.
-- The second variable means the variable name that this hyper-parameter will be assigned to, which should be the same as the left value of the following assignment statement.
+- The first argument in this function is another nni function -- `nni.choice`, which specifies how to choose the hyper-parameter.
+- The second variable means the name of the variable that this hyper-parameter will be assigned to, which should be the same as the left value of the following assignment statement.
 
-Note that every annotation should be followed by an assign statement. In this way, users could either run the python code directly or launch nni to tune hyper-parameter in this code, without changing any codes.
+Note that every annotation should be followed by an assignment statement.
+
+In this way, users could either run the python code directly or launch nni to tune hyper-parameter in this code, without changing any codes.
 
 
 ## Types
 
-### In NNI, there are mainly four types of annotation:
+### Types of Annotation:
+
+In NNI, there are mainly four types of annotation:
+
 
  1. Annotate variables in code as:
 
@@ -44,7 +49,9 @@ Note that every annotation should be followed by an assign statement. In this wa
     `'''@nni.report_final_result(test_acc)'''`
 
 
-### For `@nni.variable`, **`nni.choice`** is the type of search space and there are 10 types to express your search space as follows:
+### Types of Search Space
+
+For `@nni.variable`, **`nni.choice`** is the type of search space and there are 10 types to express your search space as follows:
 
 * nni.choice(option1,option2,...,optionN)
    * Which means the variable value is one of the options, which should be a list The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
