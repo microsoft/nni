@@ -22,8 +22,9 @@ To define a search space, users should define the name of variable, the type of 
 
 Take the first line as an example. ```dropout_rate``` is defined as a variable whose priori distribution is a uniform distribution of a range from ```0.1``` and ```0.5```.
 
+## Types
 
-The candidate type and value for variable is here:
+All types of sampling strategies and their parameter are listed here:
 
 * {"_type":"choice","_value":options}
    * Which means the variable value is one of the options, which should be a list The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
