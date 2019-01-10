@@ -6,7 +6,7 @@
 
 **1) 写好原始的训练代码**。
 
-尝试的代码可以是任何能在本机运行的机器学习代码。 这里使用 `mnist-kraas. py` 作为样例：
+Trial's code could be any machine learning code that could run in local. Here we use ```mnist-keras.py``` as example:
 
 ```python
 import argparse
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
 **2) 从调参器获取配置**
 
-导入 `NNI` 并用 `nni.get_next_parameter()` 来接收参数。 注意代码中的 **10**, **24** 和 **25** 行。
+User import ```nni``` and use ```nni.get_next_parameter()``` to receive configure. Please noted **10**, **24** and **25** line in the following code.
 
 ```python
 import argparse
@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
 **3) 发送中间结果**
 
-用 `nni.report_intermediate_result` 将中间结果发送给评估器。 注意第 **5** 行。
+Use ```nni.report_intermediate_result``` to send intermediate result to Assessor. Please noted **5** line in the following code.
 
 ```python
 ...
@@ -142,7 +142,7 @@ def train(args, params):
 
 **4) 发送最终结果**
 
-用 `nni.report_final_result` 将最终结果发送给调参器。 注意第 **15** 行。
+Use ```nni.report_final_result``` to send final result to Trial. Please noted **15** line in the following code.
 
 ```python
 ...
