@@ -10,7 +10,7 @@
 
 ## 查看任务准确度
 
-点击 "Default Metric" 来查看所有尝试的点图。 将鼠标悬停到某个点查看其准确度。
+Click the tab "Optimization Progress" to see the point graph of all trials. 将鼠标悬停到某个点查看其准确度。
 
 ## 查看超参
 
@@ -21,12 +21,17 @@
 
 ## 查看尝试状态
 
-点击 "Trials Detail" 标签查看所有尝试的状态。 特别是：
+Click the tab "Trial Status" to see the status of the all trials. 特别是：
 
 * Trial duration：尝试执行时间的条形图。
 * 尝试详情：尝试的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
 * Kill: 可终止正在运行的任务。
+* Tensor: you can see a job in the tensorflow graph, it will link to the Tensorboard page.
 
-## 反馈
+## Control
 
-[已知问题](https://github.com/Microsoft/nni/issues)
+Click the tab "Control" to add a new trial or update the search_space file and some experiment parameters.
+
+## Feedback
+
+[Known Issues](https://github.com/Microsoft/nni/issues).
