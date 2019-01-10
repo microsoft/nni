@@ -44,21 +44,12 @@ class SearchSpaceGenerator(ast.NodeVisitor):
     """Generate search space from smart parater APIs"""
 
     def __init__(self, module_name):
+        self.layer_dict_name = 'nni_layer_info'
         self.module_name = module_name
         self.search_space = {}
         self.last_line = 0  # last parsed line, useful for error reporting
 
-    def visit_Call(self, node):  # pylint: disable=invalid-name
-        self.generic_visit(node)
-
-        # ignore if the function is not 'nni.*'
-        if type(node.func) is not ast.Attribute:
-            return
-        if type(node.func.value) is not ast.Name:
-            return
-        if node.func.value.id != 'nni':
-            return
-
+    def general_annotation(self, node):
         # ignore if its not a search space function (e.g. `report_final_result`)
         func = node.func.attr
         if func not in _ss_funcs:
@@ -102,6 +93,32 @@ class SearchSpaceGenerator(ast.NodeVisitor):
             assert key not in self.search_space, 'Only one smart parameter is allowed in a line'
 
         self.search_space[key] = value
+
+    def architecture_search(self, node):
+        # if it is not a update function
+        if node.func.attr != 'update':
+            return
+
+        self.last_line = node.lineno
+
+        assert len(node.args) == 1, 'update function has more than one arg'
+        update_dict = eval(node.args[0])
+        self.search_space.update(update_dict)
+
+
+    def visit_Call(self, node):  # pylint: disable=invalid-name
+        self.generic_visit(node)
+
+        # ignore if the function is not 'nni.*'
+        if type(node.func) is not ast.Attribute:
+            return
+        if type(node.func.value) is not ast.Name:
+            return
+        if node.func.value.id == self.layer_dict_name:
+            self.architecture_search(node)
+        elif node.func.value.id == 'nni':
+            self.general_annotation(node)
+
 
 
 def generate(module_name, code):
