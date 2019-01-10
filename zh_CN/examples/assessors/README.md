@@ -38,7 +38,7 @@ class CustomizedAssessor(Assessor):
 ```python
 import argparse
 
-import CustomizedAssessor
+import CustomizedAssesor
 
 def main():
     parser = argparse.ArgumentParser(description='parse command line parameters.')
@@ -52,9 +52,9 @@ def main():
 main()
 ```
 
-注意 2) 中， 对象 `trial_history` 和 `report_intermediate_result` 函数返回给评估器的完全一致。
+Please noted in 2). The object ```trial_history``` are exact the object that Trial send to Assesor by using SDK ```report_intermediate_result``` function.
 
-也可以重载评估器的 `run` 函数来控制过程逻辑。
+Also, user could override the ```run``` function in Assessor to control the process logic.
 
 更多样例，可参考：
 
