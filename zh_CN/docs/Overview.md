@@ -22,7 +22,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 
 用户可以用 nnictl 或可视化的 WEB 界面 NNIBoard 来查看并调试指定的实验。
 
-NNI 提供了一组样例来帮助熟悉以上过程。
+NNI provides a set of examples in the package to get you familiar with the above process. In the following example [/examples/trials/mnist], we had already set up the configuration and updated the training codes for you. You can directly run the following command to start an experiment.
 
 ## 主要概念
 
