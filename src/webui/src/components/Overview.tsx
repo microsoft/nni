@@ -209,8 +209,13 @@ class Overview extends React.Component<{}, OverviewState> {
                                 profile.failTrial += 1;
                                 break;
 
+                            case 'RUNNING':
+                                profile.runTrial += 1;
+                                break;
+
                             case 'USER_CANCELED':
                             case 'SYS_CANCELED':
+                            case 'EARLY_STOPPED':
                                 profile.stopTrial += 1;
                                 break;
                             case 'SUCCEEDED':
@@ -457,7 +462,10 @@ class Overview extends React.Component<{}, OverviewState> {
                         </Row>
                     </Col>
                     <Col span={16} id="succeTable">
-                        <SuccessTable tableSource={tableData} />
+                        <SuccessTable
+                            tableSource={tableData}
+                            trainingPlatform={trialProfile.trainingServicePlatform}
+                        />
                     </Col>
                 </Row>
             </div>

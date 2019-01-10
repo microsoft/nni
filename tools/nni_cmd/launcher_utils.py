@@ -21,7 +21,7 @@
 import os
 import json
 from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA
-from .common_utils import get_json_content, print_error, print_warning
+from .common_utils import get_json_content, print_error, print_warning, print_normal
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -32,7 +32,7 @@ def parse_relative_path(root_path, experiment_config, key):
     '''Change relative path to absolute path'''
     if experiment_config.get(key) and not os.path.isabs(experiment_config.get(key)):
         absolute_path = os.path.join(root_path, experiment_config.get(key))
-        print_warning('expand %s: %s to %s ' % (key, experiment_config[key], absolute_path))
+        print_normal('expand %s: %s to %s ' % (key, experiment_config[key], absolute_path))
         experiment_config[key] = absolute_path
 
 def parse_time(experiment_config):
