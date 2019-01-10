@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { Row, Button } from 'antd';
+import { Row, 
+    // Button
+} from 'antd';
 import { DOWNLOAD_IP } from '../../static/const';
 
 interface PaiTrialChildProps {
@@ -17,7 +19,9 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
     }
 
     render() {
-        const { logString, id, showLogModal, isdisLogbtn } = this.props;
+        const { logString, id, 
+            // showLogModal, isdisLogbtn
+         } = this.props;
         return (
             <div>
                 {
@@ -35,7 +39,7 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
                                     trial stdout
                                 </a>
                             </Row>
-                            <Row>
+                            {/* <Row>
                                 <Button
                                     disabled={isdisLogbtn}
                                     type="primary"
@@ -44,7 +48,7 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
                                 >
                                     View
                                 </Button>
-                            </Row>
+                            </Row> */}
                         </Row>
                 }
             </div>

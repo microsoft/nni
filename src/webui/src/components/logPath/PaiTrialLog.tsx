@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { Row, Button } from 'antd';
+import { Row, 
+    // Button
+} from 'antd';
 import { DOWNLOAD_IP } from '../../static/const';
 import PaiTrialChild from './PaiTrialChild';
 
@@ -44,7 +46,7 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                                     </a>
                                     <a target="_blank" href={logStr.split(',')[1]}>hdfsLog</a>
                                 </Row>
-                                <Row>
+                                {/* <Row>
                                     <Button
                                         disabled={isdisLogbutton}
                                         type="primary"
@@ -53,7 +55,7 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                                     >
                                         View
                                     </Button>
-                                </Row>
+                                </Row> */}
                             </Row>
                             :
                             <PaiTrialChild
