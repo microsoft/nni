@@ -1,12 +1,14 @@
 # **指南** - 自定义 advisor
 
-*Advisor 用于同时需要调参器和评估器方法的自动机器学习算法。 Advisor is similar to tuner on that it receives trial configuration request, final results, and generate trial configurations. 另外，它也能像评估器一样接收中间结果，尝试的最终状态，并可以发送终止尝试的命令。 注意，在使用 Advisor 时，不能同时使用调参器和评估器。*
+*Advisor 用于同时需要调参器和评估器方法的自动机器学习算法。 Advisor is similar to tuner on that it receives trial parameters request, final results, and generate trial parameters. 另外，它也能像评估器一样接收中间结果，尝试的最终状态，并可以发送终止尝试的命令。 注意，在使用 Advisor 时，不能同时使用调参器和评估器。*
 
 如果要自定义 Advisor，需要：
 
-1) Define an Advisor inheriting from the MsgDispatcherBase class 2) Implement the methods with prefix `handle_` except `handle_request` 3) Configure your customized Advisor in experiment yaml config file
+1. Define an Advisor inheriting from the MsgDispatcherBase class
+2. Implement the methods with prefix `handle_` except `handle_request`
+3. Configure your customized Advisor in experiment yaml config file
 
-Here ia an example:
+Here is an example:
 
 **1) Define an Advisor inheriting from the MsgDispatcherBase class**
 
