@@ -2,18 +2,24 @@ import * as React from 'react';
 import axios from 'axios';
 import JSONTree from 'react-json-tree';
 import ReactEcharts from 'echarts-for-react';
-import { Row, Table, Button, Popconfirm, Modal, message, Checkbox } from 'antd';
+import {
+    Row, Input, Table, Tabs, Button, Popconfirm, Modal, message, Checkbox
+} from 'antd';
+const { TextArea } = Input;
+const TabPane = Tabs.TabPane;
 const CheckboxGroup = Checkbox.Group;
-import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
+import { MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
 import { convertDuration } from '../../static/function';
 import { TableObjFianl, TrialJob } from '../../static/interface';
-import LogPath from '../logPath/LogPath';
+import PaiTrialLog from '../logPath/PaiTrialLog';
+import TrialLog from '../logPath/TrialLog';
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
 require('../../static/style/search.scss');
 require('../../static/style/table.scss');
 require('../../static/style/button.scss');
+require('../../static/style/tableList.scss');
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
@@ -28,6 +34,7 @@ interface TableListProps {
     searchResult: Array<TableObjFianl>;
     updateList: Function;
     isHasSearch: boolean;
+    platform: string;
 }
 
 interface TableListState {
@@ -36,6 +43,8 @@ interface TableListState {
     isObjFinal: boolean;
     isShowColumn: boolean;
     columnSelected: Array<string>; // user select columnKeys
+    logModal: boolean;
+    logMessage: string;
 }
 
 interface ColumnIndex {
@@ -46,6 +55,9 @@ interface ColumnIndex {
 class TableList extends React.Component<TableListProps, TableListState> {
 
     public _isMounted = false;
+    public intervalTrialLog = 10;
+    public _trialId: string;
+
     constructor(props: TableListProps) {
         super(props);
 
@@ -54,7 +66,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             modalVisible: false,
             isObjFinal: false,
             isShowColumn: false,
+            logModal: false,
             columnSelected: COLUMN,
+            logMessage: ''
         };
     }
 
@@ -88,6 +102,51 @@ class TableList extends React.Component<TableListProps, TableListState> {
         if (this._isMounted) {
             this.setState({
                 modalVisible: false
+            });
+        }
+    }
+
+    updateTrialLogMessage = (id: string) => {
+        this._trialId = id;
+        axios(`${DOWNLOAD_IP}/trial_${this._trialId}.log`, {
+            method: 'GET'
+        })
+            .then(res => {
+                if (res.status === 200) {
+                    if (this._isMounted) {
+                        this.setState(() => ({
+                            logMessage: res.data
+                        }));
+                    }
+                }
+            })
+            .catch(error => {
+                if (error.response.status === 500) {
+                    if (this._isMounted) {
+                        this.setState(() => ({
+                            logMessage: 'failed to get log message'
+                        }));
+                    }
+                }
+            });
+    }
+
+    showLogModal = (id: string) => {
+        this.updateTrialLogMessage(id);
+        this.intervalTrialLog = window.setInterval(this.updateTrialLogMessage.bind(this, this._trialId), 10000);
+        if (this._isMounted) {
+            this.setState({
+                logModal: true
+            });
+        }
+    }
+
+    hideLogModal = () => {
+        window.clearInterval(this.intervalTrialLog);
+        if (this._isMounted) {
+            this.setState({
+                logModal: false,
+                logMessage: ''
             });
         }
     }
@@ -235,11 +294,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     render() {
 
-        const { entries, tableSource, searchResult, isHasSearch } = this.props;
+        const { entries, tableSource, searchResult, isHasSearch, platform } = this.props;
         const { intermediateOption, modalVisible, isShowColumn, columnSelected,
+            logMessage, logModal
         } = this.state;
-
         let showTitle = COLUMN;
+        let bgColor = '';
+        const trialJob: Array<TrialJob> = [];
+        const showColumn: Array<object> = [];
         if (tableSource.length >= 1) {
             const temp = tableSource[0].acc;
             if (temp !== undefined && typeof temp === 'object') {
@@ -256,16 +318,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 }
             }
         }
-
-        let bgColor = '';
-        const trialJob: Array<TrialJob> = [];
         trialJobStatus.map(item => {
             trialJob.push({
                 text: item,
                 value: item
             });
         });
-        const showColumn: Array<object> = [];
         Object.keys(columnSelected).map(key => {
             const item = columnSelected[key];
             switch (item) {
@@ -473,24 +531,49 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 record.description.logPath
                 :
                 'This trial\'s logPath are not available.';
+            const isdisLogbutton = record.status === 'WAITING'
+                ?
+                true
+                :
+                false;
             return (
                 <pre id="allList" className="hyperpar">
-                    {
-                        isHasParameters
-                            ?
-                            < JSONTree
-                                hideRoot={true}
-                                shouldExpandNode={() => true}  // default expandNode
-                                getItemString={() => (<span />)}  // remove the {} items
-                                data={parametersRow}
-                            />
-                            :
-                            <div className="logpath">
-                                <span className="logName">Error: </span>
-                                <span className="error">'This trial's parameters are not available.'</span>
-                            </div>
-                    }
-                    <LogPath logStr={logPathRow} />
+                    <Row className="openRowContent">
+                        <Tabs tabPosition="left" className="card">
+                            <TabPane tab="Parameters" key="1">
+                                {
+                                    isHasParameters
+                                        ?
+                                        <JSONTree
+                                            hideRoot={true}
+                                            shouldExpandNode={() => true}  // default expandNode
+                                            getItemString={() => (<span />)}  // remove the {} items
+                                            data={parametersRow}
+                                        />
+                                        :
+                                        <div className="logpath">
+                                            <span className="logName">Error: </span>
+                                            <span className="error">'This trial's parameters are not available.'</span>
+                                        </div>
+                                }
+                            </TabPane>
+                            <TabPane tab="Log" key="2">
+                                {
+                                    platform === 'pai' || platform === 'kubeflow'
+                                        ?
+                                        <PaiTrialLog
+                                            logStr={logPathRow}
+                                            id={record.id}
+                                            showLogModal={this.showLogModal}
+                                            trialStatus={record.status}
+                                            isdisLogbutton={isdisLogbutton}
+                                        />
+                                        :
+                                        <TrialLog logStr={logPathRow} id={record.id} />
+                                }
+                            </TabPane>
+                        </Tabs>
+                    </Row>
                 </pre>
             );
         };
@@ -523,6 +606,24 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             theme="my_theme"
                         />
                     </Modal>
+
+                    {/* trial log modal */}
+                    <Modal
+                        title="trial log"
+                        visible={logModal}
+                        onCancel={this.hideLogModal}
+                        footer={null}
+                        destroyOnClose={true}
+                        width="80%"
+                    >
+                        <div id="trialLogContent" style={{ height: window.innerHeight * 0.6 }}>
+                            <TextArea
+                                value={logMessage}
+                                disabled={true}
+                                className="logcontent"
+                            />
+                        </div>
+                    </Modal>
                 </div>
                 {/* Add Column Modal */}
                 <Modal
@@ -540,6 +641,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         className="titleColumn"
                     />
                 </Modal>
+
             </Row>
         );
     }
