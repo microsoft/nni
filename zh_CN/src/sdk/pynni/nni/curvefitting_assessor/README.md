@@ -28,8 +28,10 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 
 具体来说，该算法有学习、预测和评估三个阶段。
 
-* 步骤 1：学习。 从当前尝试的历史中学习，并从贝叶斯角度决定 \xi 。 首先，使用最小二乘法 (由 `fit_theta` 实现) 来节省时间。 获得参数后，过滤曲线并移除异常点（由 `filter_curve` 实现）。 最后，使用 MCMC 采样方法 (由 `mcmc_sampling` 实现) 来调整每个曲线的权重。 至此，确定了 \xi 中的所有参数。
+* 步骤 1：学习。 从当前尝试的历史中学习，并从贝叶斯角度决定 \xi 。 首先，使用最小二乘法 (由 `fit_theta` 实现) 来节省时间。 获得参数后，过滤曲线并移除异常点（由 `filter_curve` 实现）。 Finally, we use the MCMC sampling method(implement by `mcmc_sampling`) to adjust the weight of each curve. 至此，确定了 \xi 中的所有参数。
+
 * 步骤 2：预测。 用 \xi 和混合模型公式，在目标位置（例如 epoch 的总数）来计算期望的最终结果精度（由 `f_comb` 实现）。
+
 * 步骤 3：如果拟合结果没有收敛，预测结果会是 `None`，并返回 `AssessResult.Good`，待下次有了更多精确信息后再次预测。 此外，会通过 `predict()` 函数获得正数。如果该值大于 __历史最好结果__ * `THRESHOLD`(默认为 0.95)，则返回 `AssessResult.Good`，否则返回 `AssessResult.Bad`。
 
 下图显示了此算法在 MNIST 尝试历史数据上结果。其中旅店表示评估器获得的数据，蓝点表示将来，但未知的数据，红色线条是 Curve fitting 评估器的预测曲线。
