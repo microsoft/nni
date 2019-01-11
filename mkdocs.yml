@@ -7,10 +7,10 @@ nav:
         - QuickStart: QuickStart.md
         - Installation: Installation.md
         - Trial HowTo: howto_1_WriteTrial.md
-        - WebUI: WebUI.md
         - Tuners:
             - Try Builtin Tuners: Tuners.md
             - Customized Tuners: Customize_Tuner.md
+            - Customized Advisor: howto_3_CustomizedAdvisor.md
         - Assessors:
             - Try Builtin Assessors: Assessors.md
             - Customized Assessors: Customize_Assessor.md
