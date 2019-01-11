@@ -10,15 +10,16 @@
 
 样例如下：
 
-    {
-        "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
-        "conv_size":{"_type":"choice","_value":[2,3,5,7]},
-        "hidden_size":{"_type":"choice","_value":[124, 512, 1024]},
-        "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
-    }
-    
+```json
+{
+    "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
+    "conv_size":{"_type":"choice","_value":[2,3,5,7]},
+    "hidden_size":{"_type":"choice","_value":[124, 512, 1024]},
+    "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
+}
+```
 
-参考 [SearchSpaceSpec.md](./SearchSpaceSpec.md) 进一步了解搜索空间。
+Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search space.
 
 > 第二步：更新模型代码
 
@@ -30,22 +31,22 @@
     
             RECEIVED_PARAMS = nni.get_next_parameter()
     
-        来获得调参器分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如： 
+        来获得调参器分配的超参值。 `RECEIVED_PARAMS` is an object, for example: 
     
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
     
-    2.3 向 NNI 返回结果
-        使用 API：
+    2.3 Report NNI results
+        Use the API:
     
-            `nni.report_intermediate_result(accuracy)` 
+            `nni.report_intermediate_result(accuracy)`
     
-        返回 `accuracy` 的值给评估器。
+        to send `accuracy` to assessor.
     
-        使用 API:
+        Use the API:
     
-            `nni.report_final_result(accuracy)` 
+            `nni.report_final_result(accuracy)`
     
-        返回 `accuracy` 的值给调参器。 
+        to send `accuracy` to tuner.
     
 
 **注意**：
@@ -63,9 +64,9 @@
     searchSpacePath: /path/to/your/search_space.json
     
 
-参考 [这里](ExperimentConfig.md) 进一步了解如何配置实验。
+You can refer to [here](./ExperimentConfig.md) for more information about how to set up experiment configurations.
 
-参考 [README.md](../../examples/trials/README.md) 进一步了解如何使用 NNI 的 API 来实现尝试的代码。
+You can refer to [here](../examples/trials/README.md) for more information about how to write trial code using NNI APIs.
 
 ## NNI 标记
 
@@ -74,7 +75,7 @@
 * 标记需要调整的参数变量 
 * 指定变量的搜索空间范围
 * 标记哪个变量需要作为中间结果范围给`评估器`
-* 标记哪个变量需要作为最终结果（例如：模型精度）返回给`调参器`。 
+* 标记哪个变量需要作为最终结果（例如：模型精度）返回给`调参器`。
 
 同样以 MNIST 为例，只需要两步就能用 NNI 标记来实现尝试代码。
 
@@ -121,8 +122,9 @@ with tf.Session() as sess:
 > 
 > 第二步：启用 NNI 标记 在 yaml 配置文件中，将 *useAnnotation* 设置为 true 来启用 NNI 标记。
 
-    useAnnotation: true
-    
+```yaml
+useAnnotation: true
+```
 
 ## 更多尝试的样例
 
