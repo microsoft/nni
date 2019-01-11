@@ -23,8 +23,11 @@ Assuming additive a Gaussian noise and the noise parameter is initialized to its
 We determine the maximum probability value of the new combined parameter vector by learing the historical data. Use such value to predict the future trial performance, and stop the inadequate experiments to save computing resource.
 
 Concretely,this algorithm goes through three stages of learning, predicting and assessing.
-* Step1: Learning. We will learning about the trial history of the current trial and determine the \xi at Bayesian angle. First of all, We fit each curve using the least squares method(implement by `fit_theta`) to save our time. After we obtained the parameters, we filter the curve and remove the outliers(implement by `filter_curve`). Fially, we use the MCMC sampling method(implement by `mcmc_sampling`) to adjust the weight of each curve. Up to now, we have dertermined all the parameters in \xi.
+
+* Step1: Learning. We will learning about the trial history of the current trial and determine the \xi at Bayesian angle. First of all, We fit each curve using the least squares method(implement by `fit_theta`) to save our time. After we obtained the parameters, we filter the curve and remove the outliers(implement by `filter_curve`). Finally, we use the MCMC sampling method(implement by `mcmc_sampling`) to adjust the weight of each curve. Up to now, we have dertermined all the parameters in \xi.
+
 * Step2: Predicting. Calculates the expected final result accuracy(implement by `f_comb`) at target position(ie the total number of epoch) by the \xi and the formula of the combined model.
+
 * Step3: If the fitting result doesn't converge, the predicted value will be `None`, in this case we return `AssessResult.Good` to ask for future accuracy information and predict again. Furthermore, we will get a positive value by `predict()` function, if this value is strictly greater than the best final performance in history * `THRESHOLD`(default value = 0.95), return `AssessResult.Good`, otherwise, return  `AssessResult.Bad`
 
 The figure below is the result of our algorithm on MNIST trial history data, where the green point represents the data obtained by Assessor, the blue point represents the future but unknown data, and the red line is the Curve predicted by the Curve fitting assessor.
