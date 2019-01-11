@@ -26,6 +26,10 @@ jobs:
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local
+    displayName: 'Examples on local machine tests'
+  - script: |
+      cd test
       source unittest.sh
     displayName: 'Unit test'
   - script: |
@@ -36,10 +40,6 @@ jobs:
       cd test
       PATH=$HOME/.local/bin:$PATH python3 tuner_test.py
     displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local
-    displayName: 'Examples on local machine tests'
 
 - job: 'macOS_10_13'
   pool:
@@ -55,6 +55,12 @@ jobs:
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
+  - script: |
+      python3 -m pip install sklearn --user
+      python3 -m pip install torchvision --user
+      python3 -m pip install keras --user
+      python3 -m pip install tensorflow --user
+    displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH && source unittest.sh
