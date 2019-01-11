@@ -78,10 +78,6 @@ export namespace ValidationSchemas {
                     memoryMB: joi.number().min(100),
                     gpuNum: joi.number().min(0).required(),
                     command: joi.string().min(1).required(),
-                    frameworkAttemptCompletionPolicy: joi.object({
-                        minFailedTaskCount: joi.number(),
-                        minSucceededTaskCount: joi.number()
-                    })
                 })
             }),
             pai_config: joi.object({

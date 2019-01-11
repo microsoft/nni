@@ -281,10 +281,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             taskRoles.push({
                 name: this.frameworkcontrollerTrialConfig.taskRoles[index].name,
                 taskNumber: this.frameworkcontrollerTrialConfig.taskRoles[index].taskNum,
-                frameworkAttemptCompletionPolicy: {
-                    minFailedTaskCount: this.frameworkcontrollerTrialConfig.taskRoles[index].frameworkAttemptCompletionPolicy.minFailedTaskCount, 
-                    minSucceededTaskCount: this.frameworkcontrollerTrialConfig.taskRoles[index].frameworkAttemptCompletionPolicy.minSucceededTaskCount
-                },
                 task: taskRole
             });
         }

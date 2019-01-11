@@ -200,10 +200,6 @@ frameworkcontroller_trial_schema = {
         'taskRoles': [{
             'name': str,
             'taskNum': int,
-            'frameworkAttemptCompletionPolicy': {
-                'minFailedTaskCount': int,
-                'minSucceededTaskCount': int
-            },
             'command': str,
             'gpuNum': And(int, lambda x: 0 <= x <= 99999),
             'cpuNum': And(int, lambda x: 0 <= x <= 99999),
