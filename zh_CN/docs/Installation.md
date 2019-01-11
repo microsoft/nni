@@ -6,17 +6,27 @@
 
 * **依赖项**
     
-    python >= 3.5 git wget
+    ```bash
+    python >= 3.5
+    git
+    wget
+    ```
     
     python pip should also be correctly installed. You could use "python3 -m pip -v" to check pip version.
 
 * **通过 pip 命令安装 NNI**
     
+    ```bash
     python3 -m pip install --user --upgrade nni
+    ```
 
 * **通过源代码安装 NNI**
     
-    git clone -b v0.4.1 https://github.com/Microsoft/nni.git cd nni source install.sh
+    ```bash
+    git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+    cd nni
+    source install.sh
+    ```
 
 * **在 docker 映像中安装 NNI**
     
