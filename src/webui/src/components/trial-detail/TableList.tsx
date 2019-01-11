@@ -559,7 +559,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             </TabPane>
                             <TabPane tab="Log" key="2">
                                 {
-                                    platform === 'pai' || platform === 'kubeflow'
+                                    platform === 'pai' || platform === 'kubeflow' || platform === 'frameworkcontroller'
                                         ?
                                         <PaiTrialLog
                                             logStr={logPathRow}
