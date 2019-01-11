@@ -134,7 +134,7 @@ class MetisTuner(Tuner):
                     self.x_bounds[idx] = key_range
 
                     for key_value in key_range:
-                        if (not isinstance(key_value, int)) and (not isinstance(key_value, float)):
+                        if not isinstance(key_value, (int, float)):
                             raise RuntimeError("Metis Tuner only support numerical choice.")
 
                     self.x_types[idx] = 'discrete_int'
