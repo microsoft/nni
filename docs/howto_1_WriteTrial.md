@@ -6,10 +6,12 @@ A **Trial** in NNI is an individual attempt at applying a set of parameters on a
 To define a NNI trial, you need to firstly define the set of parameters and then update the model. NNI provide two approaches for you to define a trial: `NNI API` and `NNI Python annotation`.
 
 ## NNI API
+
 >Step 1 - Prepare a SearchSpace parameters file. 
 
-An example is shown below: 
-```
+An example is shown below:
+
+```json
 {
     "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
     "conv_size":{"_type":"choice","_value":[2,3,5,7]},
@@ -17,9 +19,11 @@ An example is shown below:
     "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
 }
 ```
-Refer to [SearchSpaceSpec.md](SearchSpaceSpec.md) to learn more about search space.
+
+Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search space.
 
 >Step 2 - Update model codes
+
 ~~~~
 2.1 Declare NNI API
     Include `import nni` in your trial code to use NNI APIs. 
@@ -34,20 +38,21 @@ Refer to [SearchSpaceSpec.md](SearchSpaceSpec.md) to learn more about search spa
         {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
 
 2.3 Report NNI results
-    Use the API: 
-
-        `nni.report_intermediate_result(accuracy)` 
-    
-    to send `accuracy` to assessor.
-    
     Use the API:
 
-        `nni.report_final_result(accuracy)` 
-        
-    to send `accuracy` to tuner. 
+        `nni.report_intermediate_result(accuracy)`
+
+    to send `accuracy` to assessor.
+
+    Use the API:
+
+        `nni.report_final_result(accuracy)`
+
+    to send `accuracy` to tuner.
 ~~~~
 
-**NOTE**: 
+**NOTE**:
+
 ~~~~
 accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
 assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
@@ -63,16 +68,17 @@ useAnnotation: false
 searchSpacePath: /path/to/your/search_space.json
 ```
 
-You can refer to [here](ExperimentConfig.md) for more information about how to set up experiment configurations.
+You can refer to [here](./ExperimentConfig.md) for more information about how to set up experiment configurations.
 
-(../examples/trials/README.md) for more information about how to write trial code using NNI APIs.
+You can refer to [here](../examples/trials/README.md) for more information about how to write trial code using NNI APIs.
 
 ## NNI Python Annotation
+
 An alternative to write a trial is to use NNI's syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
 * annotate the variables you want to tune 
 * specify in which range you want to tune the variables
 * annotate which variable you want to report as intermediate result to `assessor`
-* annotate which variable you want to report as the final result (e.g. model accuracy) to `tuner`. 
+* annotate which variable you want to report as the final result (e.g. model accuracy) to `tuner`.
 
 Again, take MNIST as an example, it only requires 2 steps to write a trial with NNI Annotation.
 
@@ -113,14 +119,16 @@ with tf.Session() as sess:
 >>
 >>`@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
 >>
->>Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage. 
+>>Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage.
 
 
 >Step 2 - Enable NNI Annotation
 In the yaml configure file, you need to set *useAnnotation* to true to enable NNI annotation:
-```
+
+```yaml
 useAnnotation: true
 ```
 
 ## More Trial Example
+
 * [Automatic Model Architecture Search for Reading Comprehension.](../examples/trials/ga_squad/README.md)
