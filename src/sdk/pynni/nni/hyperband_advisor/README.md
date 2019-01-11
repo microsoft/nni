@@ -2,12 +2,12 @@ Hyperband on nni
 ===
 
 ## 1. Introduction
-[Hyperband][1] is a popular automl algorithm. The basic idea of Hyperband is that it creates several brackets, each bracket has `n` randomly generated hyperparameter configurations, each configuration uses `r` resource (e.g., epoch number, batch number). After the `n` configurations is finished, it chooses top `n/eta` configurations and runs them using increased `r*eta` resource. At last, it chooses the best configuration it has found so far.
+[Hyperband][1] is a popular automl algorithm. The basic idea of Hyperband is that it creates several buckets, each bucket has `n` randomly generated hyperparameter configurations, each configuration uses `r` resource (e.g., epoch number, batch number). After the `n` configurations is finished, it chooses top `n/eta` configurations and runs them using increased `r*eta` resource. At last, it chooses the best configuration it has found so far.
 
 ## 2. Implementation with fully parallelism
 Frist, this is an example of how to write an automl algorithm based on MsgDispatcherBase, rather than Tuner and Assessor. Hyperband is implemented in this way because it integrates the functions of both Tuner and Assessor, thus, we call it advisor.
 
-Second, this implementation fully leverages Hyperband's internal parallelism. More specifically, the next bracket is not started strictly after the current bracket, instead, it starts when there is available resource.
+Second, this implementation fully leverages Hyperband's internal parallelism. More specifically, the next bucket is not started strictly after the current bucket, instead, it starts when there is available resource.
 
 ## 3. Usage
 To use Hyperband, you should add the following spec in your experiment's yaml config file:
@@ -43,7 +43,7 @@ Here is a concrete example of `R=81` and `eta=3`:
 |3     |3 27 |1 81 |     |     |     |
 |4     |1 81 |     |     |     |     |
 
-`s` means bracket, `n` means the number of configurations that are generated, the corresponding `r` means how many STEPS these configurations run. `i` means round, for example, bracket 4 has 5 rounds, bracket 3 has 4 rounds.
+`s` means bucket, `n` means the number of configurations that are generated, the corresponding `r` means how many STEPS these configurations run. `i` means round, for example, bucket 4 has 5 rounds, bucket 3 has 4 rounds.
 
 About how to write trial code, please refer to the instructions under `examples/trials/mnist-hyperband/`.
 

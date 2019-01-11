@@ -5,17 +5,17 @@ In this tutorial, we will use the example in [~/examples/trials/mnist] to explai
 
 >Before starts
 
-You have an implementation for MNIST classifer using convolutional layers, the Python code is in `mnist_before.py`. 
+You have an implementation for MNIST classifer using convolutional layers, the Python code is in `mnist_before.py`.
 
 >Step 1 - Update model codes
 
 To enable NNI API, make the following changes:
 ~~~~
 1.1 Declare NNI API
-    Include `import nni` in your trial code to use NNI APIs. 
+    Include `import nni` in your trial code to use NNI APIs.
 
 1.2 Get predefined parameters
-    Use the following code snippet: 
+    Use the following code snippet:
 
         RECEIVED_PARAMS = nni.get_next_parameter()
 
@@ -83,9 +83,9 @@ Let's use a simple trial example, e.g. mnist, provided by NNI. After you install
 
       python ~/nni/examples/trials/mnist-annotation/mnist.py
 
-This command will be filled in the yaml configure file below. Please refer to [here](howto_1_WriteTrial) for how to write your own trial.
+This command will be filled in the yaml configure file below. Please refer to [here](./howto_1_WriteTrial.md) for how to write your own trial.
 
-**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](CustomizedTuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
+**Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](./howto_2_CustomizedTuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
 
       tuner:
         builtinTunerName: TPE
@@ -133,7 +133,7 @@ With all these steps done, we can run the experiment with the following command:
 You can refer to [here](NNICTLDOC.md) for more usage guide of *nnictl* command line tool.
 
 ## View experiment results
-The experiment has been running now. Oher than *nnictl*, NNI also provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features.
+The experiment has been running now. Other than *nnictl*, NNI also provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features.
 
 ## Using multiple local GPUs to speed up search
 The following steps assume that you have 4 NVIDIA GPUs installed at local and [tensorflow with GPU support](https://www.tensorflow.org/install/gpu). The demo enables 4 concurrent trail jobs and each trail job uses 1 GPU. 
