@@ -46,7 +46,7 @@ NNI 仅支持 kubeflow 的 tf-operator 和 pytorch-operator，其它操作符未
 
 如果要使用 tf-operator，需要在尝试配置中设置 `ps` 和 `worker`。如果要使用 pytorch-operator，需要在尝试配置中设置 `master` 和 `worker`。
 
-## 支持的存储类型
+## Supported storage type
 
 NNI support NFS and Azure Storage to store the code and output files, users could set storage type in config file and set the corresponding config.  
 The setting for NFS storage are as follows:
