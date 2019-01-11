@@ -12,11 +12,11 @@ NNI provides the-state-of-art tuning algorithm in our builtin-tuners, and makes 
 
 |Tuner|Brief introduction to the algorithm|Usage|
 |---|---|---|
-|**TPE**|The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model.|[TPEUsage](#TPE)|
-|**Random Search**|In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggests that we could use Random Search as baseline when we have no knowledge about the prior distribution of hyper-parameters.|[RandomSearchUsage](#Random)|
-|**Anneal**|This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on random search that leverages smoothness in the response surface. The annealing rate is not adaptive.|[AnnealUsage](#Anneal)|
-|**Naive Evolution**|Naive Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population based on search space. For each generation, it chooses better ones and do some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naive Evolution requires many trials to works, but it's very simple and easily to expand new features.|[NaiveEvolutionUsage](#Evolution)|
-|**SMAC**|SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on the SMAC3 github repo.|[SMACUsage](#SMAC)|
+|[TPE][1|The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model.|[TPEUsage](#TPE)|
+|[Random Search][2]|In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggests that we could use Random Search as baseline when we have no knowledge about the prior distribution of hyper-parameters.|[RandomSearchUsage](#Random)|
+|[Anneal][3]|This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on random search that leverages smoothness in the response surface. The annealing rate is not adaptive.|[AnnealUsage](#Anneal)|
+|[Naive Evolution][4]|Naive Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population based on search space. For each generation, it chooses better ones and do some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naive Evolution requires many trials to works, but it's very simple and easily to expand new features.|[NaiveEvolutionUsage](#Evolution)|
+|[SMAC][5]|SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on the SMAC3 github repo.|[SMACUsage](#SMAC)|
 |**Batch tuner**|Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.|[BatchTunerUsage](#Batch)|
 |**Grid Search**|Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, qloguniform. The number q in quniform and qloguniform has special meaning (different from the spec in search space spec). It means the number of values that will be sampled evenly from the range low and high.|[GridSearchUsage](#Grid)|
 |**Hyperband**|Hyperband tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.|Usage: [HyperbandUsage](#Hyperband)|
@@ -41,7 +41,7 @@ TPE, as a black-box optimization, can be used in various scenarios, and shows go
 
 *Requirement of classArg:*
 
-* **optimize_mode** (sequence of (`maximize` or `minimize`), optional, default = 'maximize') - If `maximize`, tuners will return the hyperparameter set with larger expectation. If `minimize`, tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** ('maximize' or 'minimize'), optional, default = 'maximize') - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 *Usage example:*
 
@@ -62,6 +62,8 @@ tuner:
 Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space. Random Search could be considered as baseline of search algorithm.
 
 *Requirement of classArg:*
+
+* **optimize_mode** ('maximize' or 'minimize'), optional, default = 'maximize') - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 * **optimize_mode** (sequence of (`maximize` or `minimize`), optional, default = 'maximize') - If `maximize`, tuners will return the hyperparameter set with larger expectation. If `minimize`, tuner will return the hyperparameter set with smaller expectation.
 
@@ -85,6 +87,8 @@ Anneal is suggested when each trial does not take too long, and you have enough 
 
 *Requirement of classArg:*
 
+* **optimize_mode** ('maximize' or 'minimize'), optional, default = 'maximize') - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+
 * **optimize_mode** (sequence of (`maximize` or `minimize`), optional, default = 'maximize') - If `maximize`, tuners will return the hyperparameter set with larger expectation. If `minimize`, tuner will return the hyperparameter set with smaller expectation.
 
 *Usage example:*
@@ -107,6 +111,8 @@ Its requirement of computation resource is relatively high. Specifically, it req
 
 *Requirement of classArg:*
 
+* **optimize_mode** ('maximize' or 'minimize'), optional, default = 'maximize') - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+
 * **optimize_mode** (sequence of (`maximize` or `minimize`), optional, default = 'maximize') - If `maximize`, tuners will return the hyperparameter set with larger expectation. If `minimize`, tuner will return the hyperparameter set with smaller expectation.
 
 *Usage example:*
@@ -128,6 +134,8 @@ tuner:
 Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.
 
 *Requirement of classArg:*
+
+* **optimize_mode** ('maximize' or 'minimize'), optional, default = 'maximize') - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 * **optimize_mode** (sequence of (`maximize` or `minimize`), optional, default = 'maximize') - If `maximize`, tuners will return the hyperparameter set with larger expectation. If `minimize`, tuner will return the hyperparameter set with smaller expectation.
 
@@ -206,6 +214,8 @@ It is suggested when you have limited computation resource but have relatively l
 
 *Requirement of classArg:*
 
+* **optimize_mode** ('maximize' or 'minimize'), optional, default = 'maximize') - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+
 * **optimize_mode** (sequence of (`maximize` or `minimize`), optional, default = 'maximize') - If `maximize`, tuners will return the hyperparameter set with larger expectation. If `minimize`, tuner will return the hyperparameter set with smaller expectation.
 * **R** (int, optional, default = 60) - the maximum STEPS (could be the number of mini-batches or epochs) can be allocated to a trial. Each trial should use STEPS to control how long it runs.
 * **eta** (int, optional, default = 3) - proportion of discarded trials
@@ -226,23 +236,25 @@ advisor:
 
 ### Network Morphism
 
-*Installation:*
+===================
+
+#### Installation
 
 NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so users should install it first.
 
-*Suggested scenario:*
+#### Suggested scenario
 
 It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](../examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the cv domain.
 
-*Requirement of classArg:*
+#### Requirement of classArg
 
-* **optimize_mode** (sequence of (`maximize` or `minimize`), optional, default = 'maximize') - If `maximize`, tuners will return the hyperparameter set with larger expectation. If `minimize`, tuner will return the hyperparameter set with smaller expectation.
-* **task** (sequence of (`cv`), optional, default = 'cv') - The domain of experiment, for now, this tuner only supports cv domain.
-* **input_width** (int, optional, default = 32) - input image width
-* **input_channel** (int, optional, default = 3) - input image channel
-* **n_output_node** (int, optional, default = 10) - number of classes
+* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **task** (*sequence of ('cv'), optional, default = 'cv'*) - The domain of experiment, for now, this tuner only supports cv domain.
+* **input_width** (*int, optional, default = 32*) - input image width
+* **input_channel** (*int, optional, default = 3*) - input image channel
+* **n_output_node** (*int, optional, default = 10*) - number of classes
 
-*Usage example:*
+#### Usage example
 
 ```yaml
 # config.yml
@@ -272,7 +284,7 @@ Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long
 
 *Requirement of classArg:*
 
-* **optimize_mode** (sequence of (`maximize` or `minimize`), optional, default = 'maximize') - If `maximize`, tuners will return the hyperparameter set with larger expectation. If `minimize`, tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** ('maximize' or 'minimize'), optional, default = 'maximize') - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 *Usage example:*
 
