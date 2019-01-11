@@ -132,6 +132,11 @@ class MetisTuner(Tuner):
                     self.x_types[idx] = 'range_continuous'
                 elif key_type == 'choice':
                     self.x_bounds[idx] = key_range
+
+                    for key_value in key_range:
+                        if (not isinstance(key_value, int)) and (not isinstance(key_value, float)):
+                            raise RuntimeError("Metis Tuner only support numerical choice.")
+
                     self.x_types[idx] = 'discrete_int'
                 else:
                     logger.info("Metis Tuner doesn't support this kind of variable: " + str(key_type))
