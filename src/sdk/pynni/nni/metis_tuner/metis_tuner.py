@@ -134,8 +134,8 @@ class MetisTuner(Tuner):
                     self.x_bounds[idx] = key_range
                     self.x_types[idx] = 'discrete_int'
                 else:
-                    logger.info("Metis Tuner doesn't support this kind of variable.")
-                    raise RuntimeError("Metis Tuner doesn't support this kind of variable.")
+                    logger.info("Metis Tuner doesn't support this kind of variable: " + str(key_type))
+                    raise RuntimeError("Metis Tuner doesn't support this kind of variable: " + str(key_type))
         else:
             logger.info("The format of search space is not a dict.")
             raise RuntimeError("The format of search space is not a dict.")
