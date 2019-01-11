@@ -41,7 +41,7 @@ sudo apt-get install nfs-kernel-server
 ```
 Suppose `/tmp/nni/shared` is used as the physical storage, then run:
 ```bash
-sudo mkdir -p /tmp/nni/shared
+mkdir -p /tmp/nni/shared
 sudo echo "/tmp/nni/shared *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
 sudo service nfs-kernel-server restart
 ```

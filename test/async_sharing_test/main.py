@@ -38,7 +38,7 @@ def check_sum(fl_name, tid=None):
 
 
 if __name__ == '__main__':
-    nfs_path = '/mnt/nfs/nni/test'
+    nfs_path = '/tmp/nni/shared'
     params = nni.get_next_parameter()
     print(params)
     if params['id'] == 0:
