@@ -19,6 +19,13 @@ jobs:
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
+      pip3 install sklearn
+      pip3 install https://download.pytorch.org/whl/cpu/torch-1.0.0-cp36-cp36m-linux_x86_64.whl
+      pip3 install torchvision
+      pip3 install keras
+      pip3 install tensorflow
+    displayName: 'Install dependencies for integration tests'
+  - script: |
       cd test
       source unittest.sh
     displayName: 'Unit test'
