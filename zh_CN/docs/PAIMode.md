@@ -10,37 +10,38 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 以 `examples/trials/mnist-annotation` 为例。 NNI 的 yaml 配置文件如下：
 
-    authorName: your_name
-    experimentName: auto_mnist
-    # 并发运行的尝试数量
-    trialConcurrency: 2
-    # 实验的最长持续运行时间
-    maxExecDuration: 3h
-    # 空表示一直运行
-    maxTrialNum: 100
-    # 可选项: local, remote, pai
-    trainingServicePlatform: pai
-    # 可选项: true, false  
-    useAnnotation: true
-    tuner:
-      builtinTunerName: TPE
-      classArgs:
-        optimize_mode: maximize
-    trial:
-      command: python3 mnist.py
-      codeDir: ~/nni/examples/trials/mnist-annotation
-      gpuNum: 0
-      cpuNum: 1
-      memoryMB: 8196
-      image: openpai/pai.example.tensorflow
-      dataDir: hdfs://10.1.1.1:9000/nni
-      outputDir: hdfs://10.1.1.1:9000/nni
-    # 配置访问的 OpenPAI 集群
-    paiConfig:
-      userName: your_pai_nni_user
-      passWord: your_pai_password
-      host: 10.1.1.1
-    
+```yaml
+authorName: your_name
+experimentName: auto_mnist
+# 并发运行的尝试数量
+trialConcurrency: 2
+# 实验的最长持续运行时间
+maxExecDuration: 3h
+# 空表示一直运行
+maxTrialNum: 100
+# 可选项: local, remote, pai
+trainingServicePlatform: pai
+# 可选项: true, false  
+useAnnotation: true
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: ~/nni/examples/trials/mnist-annotation
+  gpuNum: 0
+  cpuNum: 1
+  memoryMB: 8196
+  image: openpai/pai.example.tensorflow
+  dataDir: hdfs://10.1.1.1:9000/nni
+  outputDir: hdfs://10.1.1.1:9000/nni
+# 配置访问的 OpenPAI 集群
+paiConfig:
+  userName: your_pai_nni_user
+  passWord: your_pai_password
+  host: 10.1.1.1
+```
 
 注意：如果用 pai 模式运行，需要在 yaml 文件中设置 `trainingServicePlatform: pai`。
 
@@ -63,7 +64,7 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
     nnictl create --config exp_pai.yaml
     
 
-来在 pai 模式下启动实验。 NNI will create OpanPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 可以在 OpenPAI 集群的网站中看到 NNI 创建的作业，例如： ![](./img/nni_pai_joblist.jpg)
+来在 pai 模式下启动实验。 NNI will create OpenPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 可以在 OpenPAI 集群的网站中看到 NNI 创建的作业，例如： ![](./img/nni_pai_joblist.jpg)
 
 注意：pai 模式下，NNIManager 会启动 RESTful 服务，监听端口为 NNI 网页服务器的端口加1。 例如，如果网页端口为`8080`，那么 RESTful 服务器会监听在 `8081`端口，来接收运行在 Kubernetes 中的尝试作业的指标。 因此，需要在防火墙中启用端口 `8081` 的 TCP 协议，以允许传入流量。
 
