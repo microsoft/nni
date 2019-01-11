@@ -19,7 +19,7 @@ You can take this Dockerfile as a reference for your own customized Dockerfile.
 ## 2.How to build and run
 __Use the following command from `nni/deployment/docker` to build docker image__
 ```    
-    docker build -t nni/nni .
+    docker build --build-arg CACHEBUST=$(date+%s) -t nni/nni .
 ```
 __Run the docker image__
 * If does not use GPU in docker container, simply run the following command
