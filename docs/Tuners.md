@@ -10,7 +10,7 @@ In NNI, we support two approaches to set the tuner: first is directly use builti
 
 NNI provides the-state-of-art tuning algorithm in our builtin-tuners, and makes them easy to use. Below is the brief overview of NNI current builtin Tuners:
 
-|Tuner|Brief introduction to the algorithm|
+|Tuner|Brief Introduction of Algorithm|
 |---|---|
 |**TPE**<br>[(Usage)](#TPE)|The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model.|
 |**Random Search**<br>[(Usage)](#Random)|In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggests that we could use Random Search as baseline when we have no knowledge about the prior distribution of hyper-parameters.|
@@ -23,6 +23,8 @@ NNI provides the-state-of-art tuning algorithm in our builtin-tuners, and makes 
 |[Network Morphism][2]<br>[(Usage)](#NetworkMorphism)|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Next, it estimates the value of child network using the history architecture and metric pairs. Then it selects the most promising one to train.|
 |**Metis Tuner**<br>[(Usage)](#MetisTuner)|Metis offers the following benefits when it comes to tuning parameters: While most tools only predicts the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guess work. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter.|
 
+<br>
+
 ## Usage of Builtin Tuners
 
 Use builtin tuner provided by NNI sdk requires to declare the  **builtinTunerName** and **classArgs** in `config.yml` file. In this part, we will introduce the detailed usage about the suggested scenarios, classArg requirments and example for each tuner.
@@ -31,7 +33,9 @@ Note: Please follow the format when you write your `config.yml` file.
 
 <a name="TPE"></a>
 
-> **TPE**
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of TPE`
+
+> Builtin Tuner Name: **TPE**
 
 **Suggested scenario**
 
@@ -51,9 +55,13 @@ tuner:
     optimize_mode: maximize
 ```
 
+<br>
+
 <a name="Random"></a>
 
-> **Random Search**
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Random Search`
+
+> Builtin Tuner Name: **Random**
 
 **Suggested scenario**
 
@@ -73,9 +81,13 @@ tuner:
     optimize_mode: maximize
 ```
 
+<br>
+
 <a name="Anneal"></a>
 
-> **Anneal**
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Anneal`
+
+> Builtin Tuner Name: **Anneal**
 
 **Suggested scenario**
 
@@ -95,9 +107,13 @@ tuner:
     optimize_mode: maximize
 ```
 
+<br>
+
 <a name="Evolution"></a>
 
-> Naive Evolution
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Naive Evolution`
+
+> Builtin Tuner Name: **Evolution**
 
 **Suggested scenario**
 
@@ -117,9 +133,13 @@ tuner:
     optimize_mode: maximize
 ```
 
+<br>
+
 <a name="SMAC"></a>
 
-> SMAC
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of SMAC`
+
+> Builtin Tuner Name: **SMAC**
 
 **Suggested scenario**
 
@@ -139,11 +159,15 @@ tuner:
     optimize_mode: maximize
 ```
 
+<br>
+
 <a name="Batch"></a>
 
-> Batch Tuner
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Batch Tuner`
 
-**Suggested scenario**  
+> Builtin Tuner Name: BatchTuner
+
+**Suggested scenario**
 
 If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner.
 
@@ -154,6 +178,8 @@ If the configurations you want to try have been decided, you can list them in se
 tuner:
   builtinTunerName: BatchTuner
 ```
+
+<br>
 
 Note that the search space that BatchTuner supported like:
 
@@ -176,7 +202,9 @@ The search space file including the high-level key `combine_params`. The type of
 
 <a name="GridSearch"></a>
 
-> Grid Search
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Grid Search`
+
+> Builtin Tuner Name: **Grid Search**
 
 **Suggested scenario**
 
@@ -189,14 +217,16 @@ It is suggested when search space is small, it is feasible to exhaustively sweep
 ```yaml
 # config.yml
 tuner:
-  builtinTunerName: SMAC
-  classArgs:
-    optimize_mode: maximize
+  builtinTunerName: GridSearch
 ```
+
+<br>
 
 <a name="Hyperband"></a>
 
-> Hyperband
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Hyperband`
+
+> Builtin Advisor Name: **Hyperband**
 
 **Suggested scenario**
 
@@ -220,9 +250,13 @@ advisor:
     eta: 3
 ```
 
+<br>
+
 <a name="NetworkMorphism"></a>
 
-> Network Morphism
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Network Morphism`
+
+> Builtin Tuner Name: **NetworkMorphism**
 
 **Installation**
 
@@ -254,9 +288,13 @@ tuner:
       n_output_node: 10
 ```
 
+<br>
+
 <a name="MetisTuner"></a>
 
-> Metis Tuner
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Metis Tuner`
+
+> Builtin Tuner Name: **MetisTuner**
 
 Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
 

@@ -12,88 +12,78 @@ Here is an experimental result of MNIST after using 'Curvefitting' Assessor in '
 
 ![](./img/Assessor.png)
 
-In NNI, we support two approaches to set the assessor.
+NNI provides the-state-of-art tuning algorithm in our builtin-assessors, and makes them easy to use. Below is the brief overview of NNI current builtin Assessors:
 
-1. Directly use assessor provided by nni sdk
+|Assessor|Brief Introduction of Algorithm|
+|---|---|
+|**Medianstop**<br>[(Usage)](#MedianStop)|Medianstop is a simple early stopping rule mentioned in the paper[1]. It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.|It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.|
+|[Curvefitting][2]<br>[(Usage)](#Curvefitting)|Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve|It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.|
 
-        required fields: builtinAssessorName and classArgs.
+<br>
 
-2. Customize your own assessor file
+## Usage of Builtin Assessors
 
-        required fields: codeDirectory, classFileName, className and classArgs.
+Use builtin assessors provided by NNI sdk requires to declare the  **builtinAssessorName** and **classArgs** in `config.yml` file. In this part, we will introduce the detailed usage about the suggested scenarios, classArg requirments and example for each assessor.
 
-For now, NNI has supported the following assessor algorithms:
+Note: Please follow the format when you write your `config.yml` file.
 
-|Assessor|Brief introduction to the algorithm|Suggested scenario|Reference|
-|---|---|---|---|
-|**Medianstop**|Medianstop is a simple early stopping rule mentioned. It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.|It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.|Usage: [MedianstopUsage][1] Paper: [Google Vizier: A Service for Black-Box Optimization][2]|
-|**Curvefitting**|Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve|It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.|Usage: [CurvefittingUsage][3] Paper:[Speeding up Automatic Hyperparameter Optimization of Deep Neural Networks by Extrapolation of Learning Curves][4]|
+<a name="MedianStop"></a>
 
-## Try Different Assessors
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Median Stop Assessor`
 
-### Example of Builtin Assessor Usage
+> Builtin Assessor Name: **Medianstop**
 
-Our NNI integrates state-of-the-art assessing algorithm. You can easily use our builtin assessors by declare the `builtinAssessorName` and `classArguments` in config file.
+**Suggested scenario**
 
-For example, if you chose to use "Medianstop" assessor, you can set the `config.yml` like this:
+It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.
+
+**Requirement of classArg**
+
+* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **start_step** (*int, optional, default = 0*) - A trial is determined to be stopped or not, only after receiving start_step number of reported intermediate results.
+
+**Usage example:**
 
 ```yaml
+# config.yml
 assessor:
     builtinAssessorName: Medianstop
     classArgs:
-      #choice: maximize, minimize
       optimize_mode: maximize
-      # (optional) A trial is determined to be stopped or not, 
-      * only after receiving start_step number of reported intermediate results.
-      * The default value of start_step is 0.
       start_step: 5
 ```
 
-If you chose to use "Curvefitting" assessor, you can set the `config.yml` like this:
+<br>
+
+<a name="Curvefitting"></a>
+
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Curve Fitting Assessor`
+
+> Builtin Assessor Name: **Curvefitting**
+
+**Suggested scenario**
+
+It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.
+
+**Requirement of classArg**
+
+* **epoch_num** (*int, **required***) - The total number of epoch. We need to know the number of epoch to determine which point we need to predict.
+* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **start_step** (*int, optional, default = 6*) - A trial is determined to be stopped or not, we start to predict only after receiving start_step number of reported intermediate results.
+* **threshold** (*float, optional, default = 0.95*) - The threshold that we decide to early stop the worse performance curve. For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
+
+**Usage example:**
 
 ```yaml
+# config.yml
 assessor:
     builtinAssessorName: Curvefitting
     classArgs:
-      # (required)The total number of epoch.
-      # We need to know the number of epoch to determine which point we need to predict.
       epoch_num: 20
-      # (optional) choice: maximize, minimize
-      # Kindly reminds that if you choose minimize mode, please adjust the value of threshold >= 1.0 (e.g threshold=1.1)
-      * The default value of optimize_mode is maximize
       optimize_mode: maximize
-      # (optional) A trial is determined to be stopped or not
-      # In order to save our computing resource, we start to predict when we have more than start_step(default=6) accuracy points.
-      # only after receiving start_step number of reported intermediate results.
-      * The default value of start_step is 6.
       start_step: 6
-      # (optional) The threshold that we decide to early stop the worse performance curve.
-      # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
-      * The default value of threshold is 0.95.
       threshold: 0.95
 ```
 
-Note:
-
-* Please write the .yml file in this format correctly.
-
-### Requirements of each Assessor
-
-According to different usage scenarios and requirements, we encourage users to use different assessors to better adjust the hyper-parameters. The following lists the names of our current builtin assessor and the corresponding classArg.
-
-Notes:
-
-* The `classArg` in `Bold` is **Requried**, must be assigned when using.
-* Other cases of `classArg` below is **Optional**, we show the default value.
-* Keywords **Unsupported** means we don't support this classArg.
-
-|Assessor|builtinAssessorName|optimize_mode|start_step|Unique classArg|
-|---|---|---|---|---|
-|**Medianstop**|Medianstop|'maximize'|5||
-|**Curvefitting**|Curvefitting|'maximize'|6|['**epoch_num**']:int, ['threshold']:float|
-
-[1]: https://github.com/Microsoft/nni/blob/5b5861e9073ad591e0b761af940c52d930c5007a/docs/HowToChooseTuner.md
-[2]: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
-[3]: https://github.com/Microsoft/nni/blob/5b5861e9073ad591e0b761af940c52d930c5007a/docs/HowToChooseTuner.md
-[4]: http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf
-[5]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config_assessor.yml
+[1]: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
+[2]: https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/curvefitting_assessor/README.md

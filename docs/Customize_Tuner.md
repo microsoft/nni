@@ -36,7 +36,7 @@ class CustomizedTuner(Tuner):
     Record an observation of the objective function and Train
     parameter_id: int
     parameters: object created by 'generate_parameters()'
-    value: final metrics of the trial, including reward
+    value: final metrics of the trial, including default matrix
     '''
     # your code implements here.
     ...
@@ -51,7 +51,7 @@ class CustomizedTuner(Tuner):
     ...
 ```
 
-```receive_trial_result``` will receive ```the parameter_id, parameters, value``` as parameters input. Also, Tuner will receive the ```value``` object are exactly same value that Trial send.
+```receive_trial_result``` will receive the ```parameter_id, parameters, value``` as parameters input. Also, Tuner will receive the ```value``` object are exactly same value that Trial send.
 
 The ```your_parameters``` return from ```generate_parameters``` function, will be package as json object by NNI SDK. NNI SDK will unpack json object so the Trial will receive the exact same ```your_parameters``` from Tuner.
 
@@ -116,35 +116,3 @@ More detail example you could see:
 ### Write a more advanced automl algorithm
 
 The methods above are usually enough to write a general tuner. However, users may also want more methods, for example, intermediate results, trials' state (e.g., the methods in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called `advisor` which directly inherits from `MsgDispatcherBase` in [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../src/sdk/pynni/nni/msg_dispatcher_base.py). Please refer to [here](./howto_3_CustomizedAdvisor.md) for how to write a customized advisor.
-
-## More advanced Tuner -- Advisor
-
-Now let's talk about a special Tuner: Adivor. **The concept of adivisor is the advanced feature of tuner, skip this section will not affect using NNI.**
-
-Advisor targets the scenario that the automl algorithm wants the methods of both tuner and assessor. Advisor is similar to tuner on that it receives trial configuration request, final results, and generate trial configurations. Also, it is similar to assessor on that it receives intermediate results, trial's end state, and could send trial kill command. Note that, if you use Advisor, tuner and assessor are not allowed to be used at the same time.
-
-Currently NNI only have hyperband to use Advisor. Hyperband tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.
-
-Suggested scenario: Its requirement of computation resource is relatively high. Specifically, it requires large inital population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
-
-If you want to use hyperband, here is the usage example:
-
-```yaml
-
-  # config.yaml
-  advisor:
-    builtinAdvisorName: Hyperband
-    classArgs:
-      # choice: maximize, minimize
-      optimize_mode: maximize
-      # R: the maximum STEPS (could be the number of mini-batches or epochs) can be
-      #    allocated to a trial. Each trial should use STEPS to control how long it runs.
-      R: 60
-      # eta: proportion of discarded trials
-      eta: 3
-
-```
-
-If you want to implement a customized Advisor, please refor to [How To - Customize Your Own Advisor][1]
-
-[1]: https://github.com/Microsoft/nni/blob/master/docs/howto_3_CustomizedAdvisor.md
