@@ -53,17 +53,18 @@ output: one optimal hyperparameter configuration
 
 1: For t = 0, 1, 2, ..., maxTrialNum,
 2:      hyperparameter = chose a set of parameter from search space
-3:      run trial with hyperparameter
+3:      final result = run_trial_and_evaluate(hyperparameter)
 4:      report final result to NNI
 5:      If reach the upper limit time,
 6:          Stop the experiment
+7: return hyperparameter value with best final result
 ```
 
 If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes base on your code:
 
 **Three things required to do when using NNI**
 
-Step 1: Give a `Search Space` file in json, includes the `name` and the `distribution` (discrete valued or continuous valued) of all the hyperparameters you need to search.
+**Step 1**: Give a `Search Space` file in json, includes the `name` and the `distribution` (discrete valued or continuous valued) of all the hyperparameters you need to search.
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -79,7 +80,7 @@ Step 1: Give a `Search Space` file in json, includes the `name` and the `distrib
 
 *Implemented code directory: [search_space.json][3]*
 
-Step 2: Modified your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
+**Step 2**: Modified your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
 
 ```diff
 + import nni
@@ -105,7 +106,7 @@ Step 2: Modified your `Trial` file to get the hyperparameter set from NNI and re
 
 *Implemented code directory: [mnist.py][4]*
 
-Step 3: Define a `config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
+**Step 3**: Define a `config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
 
 ```diff
 + authorName: default
