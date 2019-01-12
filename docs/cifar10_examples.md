@@ -16,7 +16,7 @@ In this example, we have selected the following common deep learning optimizer:
 
 #### Preparations
 
-This example requires pytorch. pytorch install package should be chosen based on python version and cuda version.
+This example requires pytorch. Pytorch install package should be chosen based on python version and cuda version.
 
 Here is an example of the environment python==3.5 and cuda == 8.0, then using the following commands to install [pytorch][2]:
 
@@ -29,7 +29,7 @@ python3 -m pip install torchvision
 
 **Search Space**
 
-As we stated in the target, we target to find out the best `optimizer` for training CIFAR-10 classification. When using different optimizers, we also need to adjust `learning rates` and `network structure` accordingly. so we adjust these three parameters as hyperparameters and write the following search space.
+As we stated in the target, we target to find out the best `optimizer` for training CIFAR-10 classification. When using different optimizers, we also need to adjust `learning rates` and `network structure` accordingly. so we chose these three parameters as hyperparameters and write the following search space.
 
 ```json
 {
@@ -39,15 +39,19 @@ As we stated in the target, we target to find out the best `optimizer` for train
 }
 ```
 
+*Implemented code directory: [search_space.json][8]*
+
 **Trial**
 
-The code for CNN training of each hyperparameters set, paying particular attention to the following points that are specific when using NNI:
+The code for CNN training of each hyperparameters set, paying particular attention to the following points are specific for NNI:
 
 * Use `nni.get_next_parameter()` to get next training hyperparameter set.
 * Use `nni.report_intermediate_result(acc)` to report the intermedian result after finish each epoch.
 * Use `nni.report_intermediate_result(acc)` to report the final result before the trial end.
 
-You can use your previous code directly, refer to [How to define a trial][5] for more details.
+*Implemented code directory: [main.py][9]*
+
+You can also use your previous code directly, refer to [How to define a trial][5] for modify.
 
 **Config**
 
@@ -59,7 +63,7 @@ Here is the example of running this experiment on OpenPAI:
 
 code directory: [examples/trials/cifar10_pytorch/config_pai.yml][7]
 
- You can see the examples we have implemented in [examples/trials/cifar10_pytorch/][1]
+*The complete examples we have implemented: [examples/trials/cifar10_pytorch/][1]*
 
 #### Lauch the experiment
 
@@ -69,18 +73,6 @@ We are ready for the experiment, let's now **run the config.yml file from your c
     nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
 ```
 
-The following is the result of this experiment on WebUI. Please note that due to our tuner may have some exploration, the results of each run will not be exactly the same.
-
-* NNI help us to run 10 trials automatically, and you can see the detailed information and result of each trial
-
-![](./img/cifar10_example1.png)
-
-* In overview, you can find the optimal hyperparameter sets.
-  
-As you can see, after we run 10 trials, we find the best hyperparameters set is {'lr': 0.01, 'optimizer': Adam, 'model': resnet18}}
-
-![](./img/cifar10_example2.png)
-
 [1]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
 [2]: https://pytorch.org/
 [3]: https://www.cs.toronto.edu/~kriz/cifar.html
@@ -88,3 +80,5 @@ As you can see, after we run 10 trials, we find the best hyperparameters set is 
 [5]: https://github.com/Microsoft/nni/blob/master/docs/howto_1_WriteTrial.md
 [6]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml
 [7]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml
+[8]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/search_space.json
+[9]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py
