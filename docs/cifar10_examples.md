@@ -1,21 +1,35 @@
 # CIFAR10 examples
 
-The CIFAR-10 dataset is a collection of images that are commonly used to train machine learning and computer vision algorithms. It is one of the most widely used datasets for machine learning research. The CIFAR-10 dataset contains 60,000 32x32 color images in 10 different classes. There are 6,000 images of each class. Thus, we use CIFAR10 as example to introduce using NNI in the field of computer vision.
+## Overview
 
-**cifar10 with NNI**
+[CIFAR-10][3] classification is a common benchmark problem in machine learning. The CIFAR-10 dataset is the collection of images. It is one of the most widely used datasets for machine learning research which contains 60,000 32x32 color images in 10 different classes. Thus, we use CIFAR-10 classification as an example to introduce NNI usage.
+
+### **Goals**
+
+As we all know, the choice of model optimizer is directly affects the performance of the final matrix. The goal of this tutorial is to **tune a better performace optimizer** to train a relatively small convolutional neural network (CNN) for recognizing images.
+
+In this example, we have selected the following common deep learning optimizer:
+
+> "SGD", "Adadelta", "Adagrad", "Adam", "Adamax"
+
+### **Experimental**
+
+#### Preparations
 
 This example requires pytorch. pytorch install package should be chosen based on python version and cuda version.
 
-Here is an example of the environment python==3.5 and cuda == 8.0, then using the following commands to install pytorch:
+Here is an example of the environment python==3.5 and cuda == 8.0, then using the following commands to install [pytorch][2]:
 
 ```bash
 python3 -m pip install http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp35m-linux_x86_64.whl
 python3 -m pip install torchvision
 ```
 
-In this experiment, we will search the optimal hyperparamters for **learning rates**, **optimizeation methods** and **network structures**.
+#### CIFAR-10 with NNI
 
-We give the choices for these three hyperparameters in `search_space.json` below. That is, NNI will select a set of parameters (For example: {'lr': 0.01, 'optimizer': Adam, 'model': resnet18}) on each trial base on the specified tuning algorithm.
+**Search Space**
+
+As we stated in the target, we target to find out the best `optimizer` for training CIFAR-10 classification. When using different optimizers, we also need to adjust `learning rates` and `network structure` accordingly. so we adjust these three parameters as hyperparameters and write the following search space.
 
 ```json
 {
@@ -25,9 +39,31 @@ We give the choices for these three hyperparameters in `search_space.json` below
 }
 ```
 
-In addition, as we mentioned in the example in QuickStart, you also need to write the corresponding trial and config code. You can see the examples we have implemented in [examples/trials/cifar10_pytorch/][1]
+**Trial**
 
-When these things are done, **run the config.yml file from your command line to start the experiment**.
+The code for CNN training of each hyperparameters set, paying particular attention to the following points that are specific when using NNI:
+
+* Use `nni.get_next_parameter()` to get next training hyperparameter set.
+* Use `nni.report_intermediate_result(acc)` to report the intermedian result after finish each epoch.
+* Use `nni.report_intermediate_result(acc)` to report the final result before the trial end.
+
+You can use your previous code directly, refer to [How to define a trial][5] for more details.
+
+**Config**
+
+Here is the example of running this experiment on local(with multiple GPUs):
+
+code directory: [examples/trials/cifar10_pytorch/config.yml][6]
+
+Here is the example of running this experiment on OpenPAI:
+
+code directory: [examples/trials/cifar10_pytorch/config_pai.yml][7]
+
+ You can see the examples we have implemented in [examples/trials/cifar10_pytorch/][1]
+
+#### Lauch the experiment
+
+We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
 
  ```bash
     nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
@@ -46,3 +82,9 @@ As you can see, after we run 10 trials, we find the best hyperparameters set is 
 ![](./img/cifar10_example2.png)
 
 [1]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
+[2]: https://pytorch.org/
+[3]: https://www.cs.toronto.edu/~kriz/cifar.html
+[4]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
+[5]: https://github.com/Microsoft/nni/blob/master/docs/howto_1_WriteTrial.md
+[6]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml
+[7]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml
