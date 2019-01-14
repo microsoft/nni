@@ -99,4 +99,4 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
 ## 样例
 
-详细用法，请参考 [简单权重共享样例](../test/async_sharing_test)。 We also provided a [practice example](../examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](../examples/trials/ga_squad) example.
+详细用法，请参考 [简单权重共享样例](../test/async_sharing_test)。 还有根据 [ga_squad](../examples/trials/ga_squad) 改动的阅读理解的[实际样例](../examples/trials/weight_sharing/ga_squad)。
