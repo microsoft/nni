@@ -2,7 +2,7 @@
 
 ## 1. 简介
 
-There are few steps to start an new experiment of nni, here are the process.
+NNI 实验的启动分为几步，流程如下。
 
 <img src="./img/experiment_process.jpg" width="50%" height="50%" />
 
@@ -29,7 +29,7 @@ There are few steps to start an new experiment of nni, here are the process.
 
 ### 2.5 检查实验配置
 
-Check the response content of restful server, if the status code of response is 200, the config is successfully set.
+检查 RESTful 服务的返回内容，如果状态为 200，则表示配置设置成功。
 
 ### 2.6 启动实验
 
