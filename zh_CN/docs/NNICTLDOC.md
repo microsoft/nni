@@ -8,7 +8,7 @@ nnictl
 
 ## 命令
 
-nnictl support commands:
+nnictl 支持的命令：
 
 ```bash
 nnictl create
@@ -31,7 +31,7 @@ nnictl --version
   
   * 说明
     
-    此命令使用参数中的配置文件，来创建新的实验。 After this command is successfully done, the context will be set as this experiment, which means the following command you issued is associated with this experiment, unless you explicitly changes the context(not supported yet).
+    此命令使用参数中的配置文件，来创建新的实验。 此命令成功完成后，上下文会被设置为此实验。这意味着如果不显式改变上下文（暂不支持），输入的以下命令，都作用于此实验。
   
   * 用法
     
@@ -39,13 +39,13 @@ nnictl --version
     nnictl create [OPTIONS]
     ```
     
-    Options:  
+    选项：  
     
     
-    | Name, shorthand | Required | Default | Description                           |
-    | --------------- | -------- | ------- | ------------------------------------- |
-    | --config, -c    | True     |         | yaml configure file of the experiment |
-    | --port, -p      | False    |         | the port of restful server            |
+    | 参数及缩写        | 是否必需  | 默认值 | 说明                                    |
+    | ------------ | ----- | --- | ------------------------------------- |
+    | --config, -c | True  |     | yaml configure file of the experiment |
+    | --port, -p   | False |     | the port of restful server            |
 
 * **nnictl resume**
   
@@ -59,7 +59,7 @@ nnictl --version
     nnictl resume [OPTIONS]
     ```
     
-    Options:
+    选项：
     
     | 参数及缩写      | 是否必需  | 默认值 | 说明                     |
     | ---------- | ----- | --- | ---------------------- |
@@ -80,17 +80,17 @@ nnictl --version
   
   * 详细说明
     
-    1. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
+    1. 如果指定了 id，并且此 id 匹配正在运行的实验，nnictl 会停止相应的实验，否则会输出错误信息。
     
-    2. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
+    2. 如果没有指定 id，并且当前有运行的实验，则会停止该实验，否则会输出错误信息。
     
-    3. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
+    3. 如果 id 以 * 结尾，nnictl 会停止所有匹配此通配符的实验。
     
-    4. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
+    4. 如果 id 不存在，但匹配了某个实验的 id 前缀，nnictl 会停止匹配的实验。
     
-    5. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
+    5. 如果 id 不存在，但匹配多个实验 id 的前缀，nnictl 会输出这些 id 的信息。
     
-    6. Users could use 'nnictl stop all' to stop all experiments
+    6. 可使用 'nnictl stop all' 来停止所有的实验。
 
 * **nnictl update**
   
@@ -106,7 +106,7 @@ nnictl --version
       nnictl update searchspace [OPTIONS]
       ```
       
-      Options:
+      选项：
       
       | 参数及缩写          | 是否必需  | 默认值 | 说明          |
       | -------------- | ----- | --- | ----------- |
@@ -115,60 +115,60 @@ nnictl --version
   
   * **nnictl update concurrency**
     
-    * Description
+    * 说明
       
       You can use this command to update an experiment's concurrency.
     
-    * Usage
+    * 用法
       
       ```bash
       nnictl update concurrency [OPTIONS]
       ```
       
-      Options:
+      选项：
       
-      | Name, shorthand | Required | Default | Description                             |
-      | --------------- | -------- | ------- | --------------------------------------- |
-      | id              | False    |         | ID of the experiment you want to set    |
-      | --value, -v     | True     |         | the number of allowed concurrent trials |
+      | 参数及缩写       | 是否必需  | 默认值 | 说明                                      |
+      | ----------- | ----- | --- | --------------------------------------- |
+      | id          | False |     | 需要设置的实验的 id                             |
+      | --value, -v | True  |     | the number of allowed concurrent trials |
   
   * **nnictl update duration**
     
-    * Description
+    * 说明
       
-      You can use this command to update an experiment's duration.
+      可以用此命令来更新实验的运行时间。
     
-    * Usage
+    * 用法
       
       ```bash
       nnictl update duration [OPTIONS]
       ```
       
-      Options:
+      选项：
       
-      | Name, shorthand | Required | Default | Description                                                                                                                                  |
-      | --------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-      | id              | False    |         | ID of the experiment you want to set                                                                                                         |
-      | --value, -v     | True     |         | the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days. |
+      | 参数及缩写       | 是否必需  | 默认值 | 说明                                                                                                                                           |
+      | ----------- | ----- | --- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+      | id          | False |     | 需要设置的实验的 id                                                                                                                                  |
+      | --value, -v | True  |     | the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days. |
   
   * **nnictl update trialnum**
     
-    * Description
+    * 说明
       
       You can use this command to update an experiment's maxtrialnum.
     
-    * Usage
+    * 用法
       
       ```bash
       nnictl update trialnum [OPTIONS]
       ```
       
-      Options:
+      选项：
       
-      | Name, shorthand | Required | Default | Description                                   |
-      | --------------- | -------- | ------- | --------------------------------------------- |
-      | id              | False    |         | ID of the experiment you want to set          |
-      | --value, -v     | True     |         | the new number of maxtrialnum you want to set |
+      | 参数及缩写       | 是否必需  | 默认值 | 说明                                            |
+      | ----------- | ----- | --- | --------------------------------------------- |
+      | id          | False |     | 需要设置的实验的 id                                   |
+      | --value, -v | True  |     | the new number of maxtrialnum you want to set |
 
 * **nnictl trial**
   
@@ -184,11 +184,11 @@ nnictl --version
       nnictl trial ls
       ```
       
-      Options:
+      选项：
       
-      | Name, shorthand | Required | Default | Description                          |
-      | --------------- | -------- | ------- | ------------------------------------ |
-      | id              | False    |         | ID of the experiment you want to set |
+      | 参数及缩写 | 是否必需  | 默认值 | 说明          |
+      | ----- | ----- | --- | ----------- |
+      | id    | False |     | 需要设置的实验的 id |
   
   * **nnictl trial kill**
     
@@ -242,7 +242,7 @@ nnictl --version
     nnictl experiment show
     ```
     
-    Options:
+    选项：
     
     | 参数及缩写 | 是否必需  | 默认值 | 说明          |
     | ----- | ----- | --- | ----------- |
@@ -260,7 +260,7 @@ nnictl --version
     nnictl experiment status
     ```
     
-    Options:
+    选项：
     
     | 参数及缩写 | 是否必需  | 默认值 | 说明          |
     | ----- | ----- | --- | ----------- |
@@ -278,7 +278,7 @@ nnictl --version
     nnictl experiment list
     ```
     
-    Options:
+    选项：
     
     | 参数及缩写 | 是否必需  | 默认值   | 说明               |
     | ----- | ----- | ----- | ---------------- |
@@ -331,7 +331,7 @@ nnictl --version
     nnictl log stderr [options]
     ```
     
-    Options:
+    选项：
     
     | 参数及缩写      | 是否必需  | 默认值 | 说明               |
     | ---------- | ----- | --- | ---------------- |
@@ -352,7 +352,7 @@ nnictl --version
     nnictl log trial [options]
     ```
     
-    Options:
+    选项：
     
     | 参数及缩写 | 是否必需  | 默认值 | 说明     |
     | ----- | ----- | --- | ------ |
