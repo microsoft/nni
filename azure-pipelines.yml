@@ -22,7 +22,7 @@ jobs:
       python3 -m pip install sklearn --user
       python3 -m pip install torchvision --user
       python3 -m pip install keras --user
-      python3 -m pip install tensorflow --user
+      python3 -m pip install tensorflow==1.9.0 --user
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
@@ -59,7 +59,7 @@ jobs:
       python3 -m pip install sklearn --user
       python3 -m pip install torchvision --user
       python3 -m pip install keras --user
-      python3 -m pip install tensorflow --user
+      python3 -m pip install tensorflow==1.9.0 --user
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
