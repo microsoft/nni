@@ -221,17 +221,17 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶斯优化框架。 为了对超参-性能空间建模，Metis 同时使用了高斯过程（Gaussian Process）和高斯混合模型（GMM）。 由于每次尝试都可能有很高的时间成本，Metis 大量使用了已有模型来进行推理计算。 在每次迭代中，Metis 执行两个任务：
 
 * 在高斯过程空间中找到全局最优点。 这一点表示了最佳配置。
-* 它会标识出下一个超参的候选项。 This is achieved by inferring the potential information gain of exploration, exploitation, and re-sampling.
+* 它会标识出下一个超参的候选项。 这是通过推断发展、开发和重新采样的潜在信息的优势来实现的。
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
+注意，搜索空间仅支持 `choice`, `quniform`, `uniform` 和 `randint`。
 
-More details can be found in our paper: https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
+更多详情，参考论文：https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
 
-*Installation*: Metis Tuner requires [sklearn](https://scikit-learn.org/), so users should install it first. User could use `pip3 install sklearn` to install it.
+*安装*: Metis 调参器需要提前安装 [sklearn](https://scikit-learn.org/)。 可通过 `pip3 install sklearn` 命令来安装。
 
-*Suggested scenario*: Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](../examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK.
+*建议场景*：与 TPE 和 SMAC 类似，Metris 是黑盒调参器。 如果系统需要很长时间才能完成一次尝试，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的尝试提供了候选。 参考关于如何使用 Metis 的[样例](../examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给调参器。
 
-*Usage*:
+*用法*：
 
 ```yaml
   # config.yaml
