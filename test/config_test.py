@@ -117,9 +117,9 @@ if __name__ == '__main__':
     parser.add_argument("--config", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai'], default='local')
     parser.add_argument("--local_gpu", action='store_true')
+    parser.add_argument("--preinstall", action='store_true')
     args = parser.parse_args()
 
-    installed = (sys.argv[-1] != '--preinstall')
-    setup_experiment(installed)
+    setup_experiment(args.preinstall)
 
     run(args)
