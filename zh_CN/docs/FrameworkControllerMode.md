@@ -1,6 +1,6 @@
-# **Run an Experiment on FrameworkController**
+# **在 FrameworkController 上运行实验**
 
-NNI supports running experiment using [FrameworkController](https://github.com/Microsoft/frameworkcontroller), called frameworkcontroller mode. FrameworkController is built to orchestrate all kinds of applications on Kubernetes, you don't need to install kubeflow for specific deeplearning framework like tf-operator or pytorch-operator. Now you can use frameworkcontroller as the training service to run NNI experiment.
+NNI 支持使用 [FrameworkController](https://github.com/Microsoft/frameworkcontroller)，来运行实验，称之为 frameworkcontroller 模式。 FrameworkController 构建于 Kubernetes 上，用于编排各种应用。不需要为某个深度学习框架安装 Kubeflow 的 tf-operator 的 pytorch-operator 等。 Now you can use frameworkcontroller as the training service to run NNI experiment.
 
 ## Prerequisite for on-premises Kubernetes Service
 
