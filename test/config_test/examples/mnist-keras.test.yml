@@ -13,7 +13,6 @@ assessor:
   builtinAssessorName: Medianstop
   classArgs:
     optimize_mode: maximize
-    epoch_num: 3
 trial:
   codeDir: ../../../examples/trials/mnist-keras
   command: python3 mnist-keras.py --num_train 200 --epochs 1
