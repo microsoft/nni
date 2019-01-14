@@ -6,11 +6,11 @@
 
 ## 尝试间的权重共享
 
-Currently we recommend sharing weights through NFS (Network File System), which supports sharing files across machines, and is light-weighted, (relatively) efficient. We also welcome contributions from the community on more efficient techniques.
+目前，推荐通过 NFS （Network File System）来进行权重共享，它是轻量、相对高效的多机共享文件方案。 欢迎社区来共享更多高效的技术。
 
-### Weight Sharing through NFS file
+### 通过 NFS 文件的权重共享
 
-With the NFS setup (see below), trial code can share model weight through loading & saving files. Here we recommend that user feed the tuner with the storage path:
+使用 NFS 配置（见下文），尝试代码可以通过读写文件来共享模型权重。 建议使用调参器的存储路径：
 
 ```yaml
 tuner:
