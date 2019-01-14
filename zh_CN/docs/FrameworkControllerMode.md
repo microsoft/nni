@@ -93,13 +93,13 @@ frameworkcontroller 模式中的尝试配置使用以下主键：
 * taskRoles: 配置文件中可以设置多个任务角色，每个任务角色都是在 Kubernetes 集群中的基本执行单元。 
    * name: 任务角色的名字，例如，"worker", "ps", "master"。
    * taskNum: 任务角色的实例数量。
-   * command: the users' command to be used in the container.
-   * gpuNum: the number of gpu device used in container.
-   * cpuNum: the number of cpu device used in container.
-   * memoryMB: the memory limitaion to be specified in container.
-   * image: the docker image used to create pod and run the program.
-   * frameworkAttemptCompletionPolicy: the policy to run framework, please refer the [user-manual](https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md#frameworkattemptcompletionpolicy) to get the specific information. Users could use the policy to control the pod, for example, if ps does not stop, only worker stops, this completionpolicy could helps stop ps.
+   * command: 在容器中要执行的用户命令。
+   * gpuNum: 容器要使用的 GPU 数量。
+   * cpuNum: 容器中要使用的 CPU 数量。
+   * memoryMB: 容器的内存限制。
+   * image: 用来创建 pod，并运行程序的 Docker 映像。
+   * frameworkAttemptCompletionPolicy: 运行框架的策略，参考[用户手册](https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md#frameworkattemptcompletionpolicy)了解更多信息。 这些策略可以用来控制 pod，例如，如果 worker 任务停止了，但 ps 没有停止，CompletionPolicy 策略可以停止 ps。
 
-## How to run example
+## 如何运行示例
 
-After you prepare a config file, you could run your experiment by nnictl. The way to start an experiment on frameworkcontroller is similar to kubeflow, please refer the [document](./KubeflowMode.md) for more information.
+准备好配置文件后，通过运行 nnictl 来启动实验。 在 Frameworkcontroller 上开始实验的方法与 Kubeflow 类似，可参考[指南](./KubeflowMode.md)了解更多信息。
