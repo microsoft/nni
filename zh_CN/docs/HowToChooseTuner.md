@@ -229,7 +229,7 @@ Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶
 
 *安装*: Metis 调参器需要提前安装 [sklearn](https://scikit-learn.org/)。 可通过 `pip3 install sklearn` 命令来安装。
 
-*建议场景*：与 TPE 和 SMAC 类似，Metris 是黑盒调参器。 如果系统需要很长时间才能完成一次尝试，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的尝试提供了候选。 参考关于如何使用 Metis 的[样例](../examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给调参器。
+*建议场景*：与 TPE 和 SMAC 类似，Metris 是黑盒调参器。 如果系统需要很长时间才能完成一次尝试，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的尝试提供了候选。 参考关于如何使用 Metis 的[样例](../../examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给调参器。
 
 *用法*：
 
