@@ -75,16 +75,14 @@ All types of sampling strategies and their parameter are listed here:
 
 ## Relation With Tuners
 
-
 |                   | choice       | randint      | uniform      | quniform     | loguniform   | qloguniform  | normal       | qnormal      | lognormal    | qlognormal   |
 |-------------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|
 | Batch Tuner       | $\checkmark$ |              |              |              |              |              |              |              |              |              |
 | Evolution Tuner   | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ |
-| TPE Tuner         | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ |
+| TPE Tuner         | &#9745;      | &#9745;      | &#9745;      | &#9745;      | &#9745;      | &#9745;      | &#9745;      | &#9745;      | &#9745;      | &#9745;      |
 | Hyperband Advisor |              |              |              |              |              |              |              |              |              |              |
 | Smac Tuner        |              |              |              |              |              |              |              |              |              |              |
-| Grid Search Tuner | &#9744; | &#9745;     |              | $\checkmark$ |              | $\checkmark$ |              |              |              |              |
-
+| Grid Search Tuner | &#9745;      | &#9744       |              | &#9745;      |              | &#9745;      |              |              |              |              |
 Note that SMAC only supports a subset of the types above, including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`. In the current version, SMAC does not support cascaded search space (i.e., conditional variable in SMAC).
 
 Note that GridSearch Tuner only supports a subset of the types above, including `choic`, `quniform` and `qloguniform`, where q here specifies the number of values that will be sampled. Details about the last two type as follows
