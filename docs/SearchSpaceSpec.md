@@ -83,6 +83,8 @@ All types of sampling strategies and their parameter are listed here:
 | Hyperband Advisor |              |              |              |              |              |              |              |              |              |              |
 | Smac Tuner        |              |              |              |              |              |              |              |              |              |              |
 | Grid Search Tuner | &#9745;      | &#9744       |              | &#9745;      |              | &#9745;      |              |              |              |              |
+
+
 Note that SMAC only supports a subset of the types above, including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`. In the current version, SMAC does not support cascaded search space (i.e., conditional variable in SMAC).
 
 Note that GridSearch Tuner only supports a subset of the types above, including `choic`, `quniform` and `qloguniform`, where q here specifies the number of values that will be sampled. Details about the last two type as follows
