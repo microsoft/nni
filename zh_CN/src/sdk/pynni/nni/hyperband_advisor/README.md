@@ -2,13 +2,13 @@
 
 ## 1. 介绍
 
-[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 是一种流行的自动机器学习算法。 The basic idea of Hyperband is that it creates several buckets, each bucket has `n` randomly generated hyperparameter configurations, each configuration uses `r` resource (e.g., epoch number, batch number). 当 `n` 个配置完成后，会选择最好的 `n/eta` 个配置，并增加 `r*eta` 次使用的资源。 最后，会选择出的最好配置。
+[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 是一种流行的自动机器学习算法。 Hyperband 的基本思想是对配置分组，每组有 `n` 个随机生成的超参配置，每个配置使用 `r` 次资源（如，epoch 数量，批处理数量等）。 当 `n` 个配置完成后，会选择最好的 `n/eta` 个配置，并增加 `r*eta` 次使用的资源。 最后，会选择出的最好配置。
 
 ## 2. 实现并行
 
 首先，此样例是基于 MsgDispatcherBase 来实现的自动机器学习算法，而不是基于调参器和评估器。 使用这种实现方法，是因为 Hyperband 集成了调参器和评估器两者的函数，因而，将它叫做 Advisor。
 
-其次，本实现完全利用了 Hyperband 内部的并行性。 More specifically, the next bucket is not started strictly after the current bucket, instead, it starts when there is available resource.
+其次，本实现完全利用了 Hyperband 内部的并行性。 具体来说，下一个分组不会严格的在当前分组结束后再运行，只要有资源，就可以开始运行新的分组。
 
 ## 3. 用法
 
@@ -43,7 +43,7 @@
 | 3 | 3 27 | 1 81 |      |      |      |
 | 4 | 1 81 |      |      |      |      |
 
-`s` means bucket, `n` means the number of configurations that are generated, the corresponding `r` means how many STEPS these configurations run. `i` means round, for example, bucket 4 has 5 rounds, bucket 3 has 4 rounds.
+`s` 表示分组， `n` 表示生成的配置数量，相应的 `r` 表示配置会运行多少 STEPS。 `i` 表示轮数，如分组 4 有 5 轮，分组 3 有 4 轮。
 
 关于如何实现尝试代码，参考 `examples/trials/mnist-hyperband/` 中的说明。
 
