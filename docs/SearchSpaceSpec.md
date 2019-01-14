@@ -72,6 +72,18 @@ All types of sampling strategies and their parameter are listed here:
    * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 <br/>
 
+
+## Relation With Tuners
+
+|                   | choice       | randint      | uniform      | quniform     | loguniform   | qloguniform  | normal       | qnormal      | lognormal    | qlognormal   |
+|-------------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|
+| Batch Tuner       | $\checkmark$ |              |              |              |              |              |              |              |              |              |
+| Evolution Tuner   | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ |
+| TPE Tuner         | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ |
+| Hyperband Advisor |              |              |              |              |              |              |              |              |              |              |
+| Smac Tuner        |              |              |              |              |              |              |              |              |              |              |
+| Grid Search Tuner | $\checkmark$ | $\xmark$     |              | $\checkmark$ |              | $\checkmark$ |              |              |              |              |
+
 Note that SMAC only supports a subset of the types above, including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`. In the current version, SMAC does not support cascaded search space (i.e., conditional variable in SMAC).
 
 Note that GridSearch Tuner only supports a subset of the types above, including `choic`, `quniform` and `qloguniform`, where q here specifies the number of values that will be sampled. Details about the last two type as follows
