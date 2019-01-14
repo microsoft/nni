@@ -26,31 +26,31 @@ tuner:
 
 ![weight_sharing_design](./img/weight_sharing.png)
 
-For example, in tensorflow:
+例如，在 Tensorflow 中：
 
 ```python
-# save models
+# 保存 models
 saver = tf.train.Saver()
 saver.save(sess, os.path.join(params['save_path'], 'model.ckpt'))
-# load models
+# 读取 models
 tf.init_from_checkpoint(params['restore_path'])
 ```
 
-where `'save_path'` and `'restore_path'` in hyper-parameter can be managed by the tuner.
+超参中的 `'save_path'` 和 `'restore_path'` 可以通过调参器来管理。
 
-### NFS Setup
+### NFS 配置
 
-In NFS, files are physically stored on a server machine, and trials on the client machine can read/write those files in the same way that they access local files.
+在 NFS 中，物理文件存储在一台服务器上，客户端计算机的尝试可以像访问本地文件一样来读写这些文件。
 
-#### Install NFS on server machine
+#### 在服务器上安装 NFS
 
-First, install NFS server:
+首先，安装 NFS 服务器：
 
 ```bash
 sudo apt-get install nfs-kernel-server
 ```
 
-Suppose `/tmp/nni/shared` is used as the physical storage, then run:
+假设 `/tmp/nni/shared` 是物理存储位置，然后运行：
 
 ```bash
 sudo mkdir -p /tmp/nni/shared
@@ -58,33 +58,33 @@ sudo echo "/tmp/nni/shared *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/e
 sudo service nfs-kernel-server restart
 ```
 
-You can check if the above directory is successfully exported by NFS using `sudo showmount -e localhost`
+可以通过命令 `sudo showmount -e localhost` 来检查上述目录是否通过 NFS 成功导出了
 
-#### Install NFS on client machine
+#### 在客户端计算机上安装 NFS
 
-First, install NFS client:
+首先，安装 NFS 客户端：
 
 ```bash
 sudo apt-get install nfs-common
 ```
 
-Then create & mount the mounted directory of shared files:
+然后创建并装载上共享目录：
 
 ```bash
 sudo mkdir -p /mnt/nfs/nni/
 sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 ```
 
-where `10.10.10.10` should be replaced by the real IP of NFS server machine in practice.
+实际使用时，IP `10.10.10.10` 需要替换为 NFS 服务器的真实地址。
 
-## Asynchornous Dispatcher Mode for trial dependency control
+## 尝试依赖控制的异步调度模式
 
-The feature of weight sharing enables trials from different machines, in which most of the time **read after write** consistency must be assured. After all, the child model should not load parent model before parent trial finishes training. To deal with this, users can enable **asynchronous dispatcher mode** with `multiThread: true` in `config.yml` in NNI, where the dispatcher assign a tuner thread each time a `NEW_TRIAL` request comes in, and the tuner thread can decide when to submit a new trial by blocking and unblocking the thread itself. For example:
+多机时启用权重的尝试，大部分情况是通过保证**先写后读**的方式来保持一致性。 子节点在父节点的尝试完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的调参器线程时，调参器线程可以决定是否阻塞当前线程。 例如：
 
 ```python
     def generate_parameters(self, parameter_id):
         self.thread_lock.acquire()
-        indiv = # configuration for a new trial
+        indiv = # 新尝试的配置
         self.events[parameter_id] = threading.Event()
         self.thread_lock.release()
         if indiv.parent_id is not None:
@@ -92,11 +92,11 @@ The feature of weight sharing enables trials from different machines, in which m
 
     def receive_trial_result(self, parameter_id, parameters, reward):
         self.thread_lock.acquire()
-        # code for processing trial results
+        # 处理尝试结果的配置
         self.thread_lock.release()
         self.events[parameter_id].set()
 ```
 
-## Examples
+## 样例
 
-For details, please refer to this [simple weight sharing example](../test/async_sharing_test). We also provided a [practice example](../examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](../examples/trials/ga_squad) example.
+详细用法，请参考 [简单权重共享样例](../test/async_sharing_test)。 We also provided a [practice example](../examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](../examples/trials/ga_squad) example.
