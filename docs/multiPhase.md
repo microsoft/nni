@@ -24,12 +24,12 @@ tuner:
 
 ```python
 for i in range(5):
-    # get parameters form tuner
-    hyper_params = nni.get_next_parameter()
+    # get parameter from tuner
+    tuner_param = nni.get_next_parameter()
     
     # consume the params
     # ...
-    # report final result somewhere for the hyper parameter retrieved above
+    # report final result somewhere for the parameter retrieved above
     nni.report_final_result()
     # ...
 ```
