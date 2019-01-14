@@ -26,7 +26,7 @@ jobs:
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local --config config_test/examples/mnist-keras.test.yml --preinstall
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local --preinstall
     displayName: 'Examples on local machine tests'
   - script: |
       cd test
@@ -59,7 +59,6 @@ jobs:
       python3 -m pip install sklearn --user
       python3 -m pip install torchvision --user
       python3 -m pip install keras --user
-      python3 -m pip install tensorflow==1.9.0 --user
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
