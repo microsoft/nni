@@ -42,7 +42,7 @@ import CustomizedAssessor
 
 def main():
     parser = argparse.ArgumentParser(description='parse command line parameters.')
-    # parse your assessor arg here.
+    # 在这里解析评估器的参数。
     ...
     FLAGS, unparsed = parser.parse_known_args()
 
@@ -52,9 +52,9 @@ def main():
 main()
 ```
 
-Please noted in 2). The object `trial_history` are exact the object that Trial send to Assessor by using SDK `report_intermediate_result` function.
+注意 2) 中， 对象 `trial_history` 和 `report_intermediate_result` 函数返回给评估器的完全一致。
 
-Also, user could override the `run` function in Assessor to control the process logic.
+也可以重载评估器的 `run` 函数来控制过程逻辑。
 
 更多样例，可参考：
 
