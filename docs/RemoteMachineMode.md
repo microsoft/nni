@@ -1,8 +1,10 @@
 **Run an Experiment on Multiple Machines**
-===
-NNI supports running an experiment on multiple machines through SSH channel, called `remote` mode. NNI assumes that you have access to those machines, and already setup the environment for running deep learning training code. 
 
-e.g. Three machines and you login in with account `bob` (Note: the account is not necessarily the same on different machine): 
+===
+
+NNI supports running an experiment on multiple machines through SSH channel, called `remote` mode. NNI assumes that you have access to those machines, and already setup the environment for running deep learning training code.
+
+e.g. Three machines and you login in with account `bob` (Note: the account is not necessarily the same on different machine):
 
 | IP  | Username| Password |
 | -------- |---------|-------|
@@ -11,19 +13,24 @@ e.g. Three machines and you login in with account `bob` (Note: the account is no
 | 10.1.1.3 | bob | bob123    |
 
 ## Setup NNI environment
+
 Install NNI on each of your machines following the install guide [here](GetStarted.md).
 
 For remote machines that are used only to run trials but not the nnictl, you can just install python SDK:
 
 * __Install python SDK through pip__
 
-      python3 -m pip install --user --upgrade nni-sdk
+  ```bash
+  python3 -m pip install --user --upgrade nni-sdk
+  ```
 
 ## Run an experiment
+
 Install NNI on another machine which has network accessibility to those three machines above, or you can just use any machine above to run nnictl command line tool.
 
-We use `examples/trials/mnist-annotation` as an example here. `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` to see the detailed configuration file: 
-```
+We use `examples/trials/mnist-annotation` as an example here. `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` to see the detailed configuration file:
+
+```yaml
 authorName: default
 experimentName: example_mnist
 trialConcurrency: 1
@@ -58,8 +65,11 @@ machineList:
     username: bob
     passwd: bob123
 ```
+
 Simply filling the `machineList` section and then run:
-```
+
+```bash
 nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
 ```
-to start the experiment. 
+
+to start the experiment.

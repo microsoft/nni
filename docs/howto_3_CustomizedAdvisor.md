@@ -1,16 +1,17 @@
 # **How To** - Customize Your Own Advisor
 
-*Advisor targets the scenario that the automl algorithm wants the methods of both tuner and assessor. Advisor is similar to tuner on that it receives trial configuration request, final results, and generate trial configurations. Also, it is similar to assessor on that it receives intermediate results, trial's end state, and could send trial kill command. Note that, if you use Advisor, tuner and assessor are not allowed to be used at the same time.*
+*Advisor targets the scenario that the automl algorithm wants the methods of both tuner and assessor. Advisor is similar to tuner on that it receives trial parameters request, final results, and generate trial parameters. Also, it is similar to assessor on that it receives intermediate results, trial's end state, and could send trial kill command. Note that, if you use Advisor, tuner and assessor are not allowed to be used at the same time.*
 
 So, if user want to implement a customized Advisor, she/he only need to:
 
-1) Define an Advisor inheriting from the MsgDispatcherBase class
-2) Implement the methods with prefix `handle_` except `handle_request`
-3) Configure your customized Advisor in experiment yaml config file
+1. Define an Advisor inheriting from the MsgDispatcherBase class
+1. Implement the methods with prefix `handle_` except `handle_request`
+1. Configure your customized Advisor in experiment yaml config file
 
-Here ia an example:
+Here is an example:
 
 **1) Define an Advisor inheriting from the MsgDispatcherBase class**
+
 ```python
 from nni.msg_dispatcher_base import MsgDispatcherBase
 
