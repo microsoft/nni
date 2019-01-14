@@ -13,12 +13,12 @@
     1.1 声明 NNI API
         在尝试代码中通过 `import nni` 来导入 NNI API。
     
-    1.2 Get predefined parameters
-        Use the following code snippet:
+    1.2 获取预定义的参数
+        参考下列代码片段： 
     
             RECEIVED_PARAMS = nni.get_next_parameter()
     
-        to get hyper-parameters' values assigned by tuner. `RECEIVED_PARAMS` 是一个对象，例如： 
+        来获得调参器分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如： 
     
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
     
