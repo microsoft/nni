@@ -238,7 +238,7 @@ More details can be found in our paper: https://www.microsoft.com/en-us/research
   tuner:
     builtinTunerName: MetisTuner
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
 ```
 
