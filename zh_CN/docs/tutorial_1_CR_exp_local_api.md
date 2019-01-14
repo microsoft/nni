@@ -85,9 +85,9 @@
       python ~/nni/examples/trials/mnist-annotation/mnist.py
     
 
-上面的命令会写在 yaml 文件中。 Please refer to [here](./howto_1_WriteTrial.md) for how to write your own trial.
+上面的命令会写在 yaml 文件中。 参考[这里](./howto_1_WriteTrial.md)来写出自己的实验代码。
 
-**准备调参器**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 Users can write their own tuner (refer to [here](./howto_2_CustomizedTuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
+**准备调参器**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的调参器（参考[这里](./howto_2_CustomizedTuner.md)）。下面使用了 NNI 内置的调参器：
 
       tuner:
         builtinTunerName: TPE
@@ -137,7 +137,7 @@
 
 ## 查看实验结果
 
-实验应该一直在运行。 Other than *nnictl*, NNI also provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features.
+实验应该一直在运行。 除了 *nnictl* 以外，还可以通过 NNI 的网页来查看实验进程，进行控制和其它一些有意思的功能。
 
 ## 使用多个本地 GPU 加快搜索速度
 
