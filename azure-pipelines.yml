@@ -26,7 +26,7 @@ jobs:
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local --config config_test/examples/mnist-keras.test.yml
     displayName: 'Examples on local machine tests'
   - script: |
       cd test
