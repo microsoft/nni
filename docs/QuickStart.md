@@ -34,7 +34,6 @@ def run_trial(params):
         mnist_network.train(sess, mnist)
         # Evaluate MNIST network
         test_acc = mnist_network.evaluate(mnist)
-        print ("Final result is", test_acc)
 
 if __name__ == '__main__':
     params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64, 'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'learning_rate': 1e-4, 'batch_num': 2000, 'batch_size': 32}
@@ -94,7 +93,6 @@ If you want to use NNI to automatically train your model and find the optimal hy
       with tf.Session() as sess:
           mnist_network.train(sess, mnist)
           test_acc = mnist_network.evaluate(mnist)
--         print ("Final result is", test_acc)
 +         nni.report_final_result(acc)
 
   if __name__ == '__main__':
@@ -108,23 +106,23 @@ If you want to use NNI to automatically train your model and find the optimal hy
 
 **Step 3**: Define a `config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
 
-```diff
-+ authorName: default
-+ experimentName: example_mnist
-+ trialConcurrency: 1
-+ maxExecDuration: 1h
-+ maxTrialNum: 10
-+ trainingServicePlatform: local
-  # The path to Search Space
-+ searchSpacePath: search_space.json
-+ useAnnotation: false
-+ tuner:
-+   builtinTunerName: TPE
-  # The path and the running command of trial
-+ trial:  
-+   command: python3 mnist.py
-+   codeDir: .
-+   gpuNum: 0
+```yaml
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+trainingServicePlatform: local
+# The path to Search Space
+searchSpacePath: search_space.json
+useAnnotation: false
+tuner:
+  builtinTunerName: TPE
+# The path and the running command of trial
+trial:  
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 0
 ```
 
 *Implemented code directory: [config.yml][5]*

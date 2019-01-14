@@ -27,7 +27,7 @@ from nni.assessor import Assessor, AssessResult
 class CustomizedAssessor(Assessor):
     def __init__(self, ...):
         ...
-    
+
     def assess_trial(self, trial_history):
         """
         Determines whether a trial should be killed. Must override.
@@ -43,7 +43,7 @@ class CustomizedAssessor(Assessor):
 ```python
 import argparse
 
-import CustomizedAssesor
+import CustomizedAssessor
 
 def main():
     parser = argparse.ArgumentParser(description='parse command line parameters.')
@@ -57,9 +57,9 @@ def main():
 main()
 ```
 
-Please noted in **2**. The object ```trial_history``` are exact the object that Trial send to Assesor by using SDK ```report_intermediate_result``` function.
+Please noted in **2**. The object `trial_history` are exact the object that Trial send to Assesor by using SDK `report_intermediate_result` function.
 
-Also, user could override the ```run``` function in Assessor to control the process logic.
+Also, user could override the `run` function in Assessor to control the process logic.
 
 More detail example you could see:
 > * [medianstop-assessor](../src/sdk/pynni/nni/medianstop_assessor)

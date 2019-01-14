@@ -264,12 +264,12 @@ NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so 
 
 **Suggested scenario**
 
-It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](../examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the cv domain.
+It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](../examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain.
 
 **Requirement of classArg**
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
-* **task** (*('cv'), optional, default = 'cv'*) - The domain of experiment, for now, this tuner only supports cv domain.
+* **task** (*('cv'), optional, default = 'cv'*) - The domain of experiment, for now, this tuner only supports the computer vision(cv) domain.
 * **input_width** (*int, optional, default = 32*) - input image width
 * **input_channel** (*int, optional, default = 3*) - input image channel
 * **n_output_node** (*int, optional, default = 10*) - number of classes
