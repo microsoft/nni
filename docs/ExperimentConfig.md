@@ -123,14 +123,16 @@ machineList:
 * __trialConcurrency__
   * Description
     
-	 __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
+      __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
 	 
-	    Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
+        Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
 	 
 * __maxExecDuration__
   * Description
     
 	__maxExecDuration__ specifies the max duration time of an experiment.The unit of the time is {__s__, __m__, __h__, __d__}, which means {_seconds_, _minutes_, _hours_, _days_}.  
+
+        Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
 	
 * __maxTrialNum__
   *  Description
