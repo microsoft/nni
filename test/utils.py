@@ -96,6 +96,13 @@ def get_succeeded_trial_num(trial_jobs_url):
     print('num_succeed:', num_succeed)
     return num_succeed
 
+def print_stderr(trial_jobs_url):
+    trial_jobs = requests.get(trial_jobs_url).json()
+    for trial_job in trial_jobs:
+        if trial_job['status'] == 'FAILED':
+            stderr_path = trial_job['stderrPath'].split(':')[-1]
+            subprocess.run(['cat', stderr_path])
+
 def parse_max_duration_time(max_exec_duration):
     unit = max_exec_duration[-1]
     time = max_exec_duration[:-1]

@@ -26,7 +26,8 @@ import sys
 import time
 import traceback
 
-from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, parse_max_duration_time, get_succeeded_trial_num
+from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, \
+    parse_max_duration_time, get_succeeded_trial_num, print_stderr
 
 GREEN = '\33[32m'
 RED = '\33[31m'
@@ -74,6 +75,8 @@ def run_test(config_file, training_service, local_gpu=False):
             status = get_experiment_status(STATUS_URL)
             if status == 'DONE':
                 num_succeeded = get_succeeded_trial_num(TRIAL_JOBS_URL)
+                if training_service == 'local':
+                    print_stderr(TRIAL_JOBS_URL)
                 assert num_succeeded == max_trial_num, 'only %d succeeded trial jobs, there should be %d' % (num_succeeded, max_trial_num)
                 break
 
