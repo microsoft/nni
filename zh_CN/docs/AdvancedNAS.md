@@ -1,10 +1,10 @@
 # 高级神经网络架构搜索教程
 
-目前，许多 NAS（Neural Architecture Search，神经网络架构搜索）算法都在尝试上使用了 **权重共享（weight sharing）** 的方法来加速训练过程。 For example, [ENAS](https://arxiv.org/abs/1802.03268) delivers 1000x effiency with '*parameter sharing between child models*', compared with the previous [NASNet](https://arxiv.org/abs/1707.07012) algorithm. Other NAS algorithms such as [DARTS](https://arxiv.org/abs/1806.09055), [Network Morphism](https://arxiv.org/abs/1806.10282), and [Evolution](https://arxiv.org/abs/1703.01041) is also leveraging, or has the potential to leverage weight sharing.
+目前，许多 NAS（Neural Architecture Search，神经网络架构搜索）算法都在尝试上使用了 **权重共享（weight sharing）** 的方法来加速训练过程。 例如，[ENAS](https://arxiv.org/abs/1802.03268) 与以前的 [NASNet](https://arxiv.org/abs/1707.07012) 算法相比，通过'*子模型间的参数共享（parameter sharing between child models）*'提高了 1000 倍的效率。 而例如 [DARTS](https://arxiv.org/abs/1806.09055), [Network Morphism](https://arxiv.org/abs/1806.10282), 和 [Evolution](https://arxiv.org/abs/1703.01041) 等算法也利用或者隐式的利用了权重共享。
 
-This is a tutorial on how to enable weight sharing in NNI.
+这是关于如何在 NNI 中启用权重共享的教程。
 
-## Weight Sharing among trials
+## 尝试间的权重共享
 
 Currently we recommend sharing weights through NFS (Network File System), which supports sharing files across machines, and is light-weighted, (relatively) efficient. We also welcome contributions from the community on more efficient techniques.
 
