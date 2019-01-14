@@ -22,7 +22,7 @@ tuner:
     save_dir_root: /nfs/storage/path/
 ```
 
-And let tuner decide where to save & load weights and feed the paths to trials through `nni.get_next_parameters()`:
+并让调参器来决定在什么路径读写权重文件，通过 `nni.get_next_parameters()` 来获取路径：
 
 ![weight_sharing_design](./img/weight_sharing.png)
 
