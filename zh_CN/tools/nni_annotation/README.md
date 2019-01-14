@@ -20,7 +20,7 @@
     
     '''@nni.function_choice(max_pool(h_conv1, self.pool_size),avg_pool(h_conv1, self.pool_size),name=max_pool)'''
 
-In this way, they can easily implement automatic tuning on NNI.
+通过这种方法，能够轻松的在 NNI 中实现自动调参。
 
 `@nni.variable`, `nni.choice` 为搜索空间的类型，通过以下 10 种方法来定义搜索空间：
 
@@ -52,4 +52,4 @@ In this way, they can easily implement automatic tuning on NNI.
     变量值分布的公式为： exp(normal(mu, sigma))
 
 10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
-    Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
+    变量值分布的公式为： round(exp(normal(mu, sigma)) / q) * q
