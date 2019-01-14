@@ -4,15 +4,15 @@
 
 In order to save our computing resources, NNI supports an early stop policy and creates **Assessor** to finish this job.
 
-Assessor receives intermediate result from Trial and decides whether the Trial should be killed by specific algorithm. Once the Trial experiment meets the early stop conditions(which means assessor is pessimistic about the final results), the assessor will kill the trial and the status of experiement will be `"EARLY_STOPPED"`.
+Assessor receives the intermediate result from Trial and decides whether the Trial should be killed by specific algorithm. Once the Trial experiment meets the early stop conditions(which means assessor is pessimistic about the final results), the assessor will kill the trial and the status of trial will be `"EARLY_STOPPED"`.
 
-Here is an experimental result of MNIST after using 'Curvefitting' Assessor in 'maximize' mode, you can see that assessor successfully **early stopped** many trials with bad hyperparameters in advance. If you use assessor, we may get a better hyperparameters under the same computing resources.
+Here is an experimental result of MNIST after using 'Curvefitting' Assessor in 'maximize' mode, you can see that assessor successfully **early stopped** many trials with bad hyperparameters in advance. If you use assessor, we may get better hyperparameters under the same computing resources.
 
 *Implemented code directory: [config_assessor.yml][5]*
 
 ![](./img/Assessor.png)
 
-NNI provides the-state-of-art tuning algorithm in our builtin-assessors, and makes them easy to use. Below is the brief overview of NNI current builtin Assessors:
+NNI provides the-state-of-art tuning algorithm in our builtin-assessors and makes them easy to use. Below is the brief overview of NNI current builtin Assessors:
 
 |Assessor|Brief Introduction of Algorithm|
 |---|---|
@@ -23,7 +23,7 @@ NNI provides the-state-of-art tuning algorithm in our builtin-assessors, and mak
 
 ## Usage of Builtin Assessors
 
-Use builtin assessors provided by NNI sdk requires to declare the  **builtinAssessorName** and **classArgs** in `config.yml` file. In this part, we will introduce the detailed usage about the suggested scenarios, classArg requirments and example for each assessor.
+Use builtin assessors provided by NNI sdk requires to declare the  **builtinAssessorName** and **classArgs** in `config.yml` file. In this part, we will introduce the detailed usage about the suggested scenarios, classArg requirements, and example for each assessor.
 
 Note: Please follow the format when you write your `config.yml` file.
 

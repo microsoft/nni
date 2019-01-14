@@ -10,7 +10,7 @@ nav:
         - Tuners:
             - Try Builtin Tuners: Tuners.md
             - Customized Tuners: Customize_Tuner.md
-            - Customized Advisor: howto_3_CustomizedAdvisor.md
+            - Customized Advisor: Customize_Advisor.md
         - Assessors:
             - Try Builtin Assessors: Assessors.md
             - Customized Assessors: Customize_Assessor.md
