@@ -16,23 +16,12 @@ The meaning of this example is that NNI will choose one of several values (0.1, 
 
 In this way, users could either run the python code directly or launch NNI to tune hyper-parameter in this code, without changing any codes.
 
-
-
-In the annotation line, notice that:
-
-- `nni.varialbe` is an outer function which means the hyper-parameter is a variable.
-- The first argument in this function is another nni function -- `nni.choice`, which specifies how to choose the hyper-parameter.
-- The second variable means the name of the variable that this hyper-parameter will be assigned to, which should be the same as the left value of the following assignment statement.
-
-
-
-
 ## Types of Annotation:
 
 In NNI, there are mainly four types of annotation:
 
 
-### 1. Annotate variables in code as:
+### 1. Annotate variables
 
    `'''@nni.variable(sampling_algo, name)'''`
 
@@ -40,7 +29,7 @@ In NNI, there are mainly four types of annotation:
 
 **Arguments**
 
-- **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) like `choice` or `uninform`. 
+- **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) such as `choice` or `uninform`. 
 - **name**: The name of the variable that the selected value will be assigned to. Note that this argument should be the same as the left value of the following assignment statement.
 
 An example here is:
@@ -50,7 +39,7 @@ An example here is:
 learning_rate = 0.1
 ```
 
-### 2. Annotate functions in code as:
+### 2. Annotate functions
 
    `'''@nni.function_choice(*functions, name)'''`
 
@@ -59,15 +48,22 @@ learning_rate = 0.1
 **Arguments**
 
 - **\*functions**: Several functions that are waiting to be selected from. Note that it should be a complete function call with aruguments. Such as `max_pool(hidden_layer, pool_size)`.
-- **name**: The name of the variable that the return value of the selected function will be assigned. Note that this argument should be the same as the left value of the following assignment statement.
+- **name**: The name of the function that will be replace in the following assignment statement.
 
-### 3. Annotate intermediate result in code as:
+An example here is:
+
+```python
+"""@nni.function_choice(max_pool(hidden_layer, pool_size), avg_pool(hidden_layer, pool_size), name=max_pool)"""
+h_pooling = max_pool(hidden_layer, pool_size)
+```
+
+### 3. Annotate intermediate result
 
    `'''@nni.report_intermediate_result(metrics)'''`
 
 `@nni.report_intermediate_result` is used to report itermediate result, whose usage is the same as `nni.report_intermediate_result` in [Trials.md](Trials.md)
 
-### 4. Annotate final result in code as:
+### 4. Annotate final result
 
    `'''@nni.report_final_result(metrics)'''`
 

@@ -50,15 +50,18 @@ For more information about search space, please refer to [SearchSpaceSpec.md](Se
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
 
 3. Report NNI results
-    - Use `nni.report_intermediate_result(accuracy)` to send `accuracy` to assessor. (Optional)
-    
-    - Use `nni.report_final_result(accuracy)` to send `accuracy` to tuner. 
+
+    - Trial should report `metrics` so NNI could evaluate the current set of hyper-parameters. `metrics` might be things like accuracy or loss.
+    - Use `nni.report_intermediate_result(metrics)` to send `metrics` to assessor. (Optional)
+    - Use `nni.report_final_result(metrics)` to send `metrics` to tuner. 
 
 
 
 **NOTE**: 
 
-- accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
+- metrics - The `metrics` could be any python object, but NNI built-in tuners/assessors only receive `metrics` that is:
+  - a numerical variable (e.g. float, int).
+  - a dict object that has a key named "default" whose value is a numerical variable, which will be used as the default metric
 - assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
 - tuner    - The tuner will generate next parameters/architecture based on the explore history (final result of all trials).
 
@@ -134,6 +137,21 @@ In the yaml configure file, you need to set *useAnnotation* to true to enable NN
 ```
 useAnnotation: true
 ```
+
+## Others
+
+### Logging
+
+In NNI, you can use `logging` module for logging, which will be shown in WebUI (including reported metrics).
+
+Other outputs will be re-directed to the `stdout` file.
+
+### Advance APIs
+
+#### get_sequence_id
+
+- Every trial has a sequence id, which is their unique identifier (a numeric value increasing from zero).
+- This function will return the sequence id of the current trial, which can be used to perform task like k-fold validation
 
 ## More Trial Example
 * [Automatic Model Architecture Search for Reading Comprehension.](../examples/trials/ga_squad/README.md)
