@@ -46,21 +46,21 @@ NNI 仅支持 kubeflow 的 tf-operator 和 pytorch-operator，其它操作符未
 
 如果要使用 tf-operator，需要在尝试配置中设置 `ps` 和 `worker`。如果要使用 pytorch-operator，需要在尝试配置中设置 `master` 和 `worker`。
 
-## Supported storage type
+## 支持的存储类型
 
-NNI support NFS and Azure Storage to store the code and output files, users could set storage type in config file and set the corresponding config.  
-The setting for NFS storage are as follows:
+NNI 支持使用 NFS 和 Azure 存储来存储代码和输出文件，可在配置文件进行相应的配置。  
+NFS 存储配置如下：
 
     kubeflowConfig:
       storage: nfs
       nfs:
-        # Your NFS server IP, like 10.10.10.10
+        # NFS 服务器 IP， 如 10.10.10.10
         server: {your_nfs_server_ip}
-        # Your NFS server export path, like /var/nfs/nni
+        # NFS 服务器的导出路径，如 /var/nfs/nni
         path: {your_nfs_server_export_path}
     
 
-If you use Azure storage, you should set `kubeflowConfig` in your config yaml file as follows:
+如果使用了 Azure 存储，需要在 yaml 文件中如下设置 `kubeflowConfig`：
 
     kubeflowConfig:
       storage: azureStorage
@@ -72,25 +72,25 @@ If you use Azure storage, you should set `kubeflowConfig` in your config yaml fi
         azureShare: {your_azure_share_name}
     
 
-## Run an experiment
+## 运行实验
 
-Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of kubeflow. The nni config yaml file's content is like:
+以 `examples/trials/mnist` 为例。 这是一个 TensorFlow 作业，使用了 Kubeflow 的 tf-operator。 NNI 的 yaml 配置文件如下：
 
     authorName: default
     experimentName: example_mnist
     trialConcurrency: 2
     maxExecDuration: 1h
     maxTrialNum: 20
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: kubeflow
     searchSpacePath: search_space.json
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: false
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      #可选项: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: maximize
     assessor:
       builtinAssessorName: Medianstop
@@ -118,31 +118,31 @@ Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-
       apiVersion: v1alpha2
       storage: nfs
       nfs:
-        # Your NFS server IP, like 10.10.10.10
+        # NFS 服务器 IP，如 10.10.10.10
         server: {your_nfs_server_ip}
-        # Your NFS server export path, like /var/nfs/nni
+        # NFS 服务器的导出路径，如 /var/nfs/nni
         path: {your_nfs_server_export_path}
     
 
-Note: You should explicitly set `trainingServicePlatform: kubeflow` in nni config yaml file if you want to start experiment in kubeflow mode.
+注意：如果用 kubeflow 模式运行，需要在 yaml 文件中显式设置 `trainingServicePlatform: kubeflow`。
 
-If you want to run Pytorch jobs, you could set your config files as follow:
+如果要运行 Pytorch 作业，需要如下配置：
 
     authorName: default
     experimentName: example_mnist_distributed_pytorch
     trialConcurrency: 1
     maxExecDuration: 1h
     maxTrialNum: 10
-    #choice: local, remote, pai, kubeflow
+    #可选项: local, remote, pai, kubeflow
     trainingServicePlatform: kubeflow
     searchSpacePath: search_space.json
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: false
     tuner:
-      #choice: TPE, Random, Anneal, Evolution
+      #可选项: TPE, Random, Anneal, Evolution
       builtinTunerName: TPE
       classArgs:
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: minimize
     trial:
       codeDir: .
@@ -164,13 +164,13 @@ If you want to run Pytorch jobs, you could set your config files as follow:
       operator: pytorch-operator
       apiVersion: v1alpha2
       nfs:
-        # Your NFS server IP, like 10.10.10.10
+        # NFS 服务器 IP，如 10.10.10.10
         server: {your_nfs_server_ip}
-        # Your NFS server export path, like /var/nfs/nni
+        # NFS 服务器导出路径，如  /var/nfs/nni
         path: {your_nfs_server_export_path}
     
 
-Trial configuration in kubeflow mode have the following configuration keys:
+Kubeflow 模式的配置有下列主键：
 
 * codeDir 
     * 代码目录，存放训练代码和配置文件
@@ -185,21 +185,21 @@ Trial configuration in kubeflow mode have the following configuration keys:
     * gpuNum
     * image 
         * 必填。 在 kubeflow 模式中，Kubernetes 会安排尝试程序在 [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) 中执行。 此键用来指定尝试程序的 pod 使用的 Docker 映像。 
-        * We already build a docker image [msranni/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). 它包含了用来启动 NNI 实验所依赖的所有 Python 包，Node 模块和 JavaScript。 用来生成此映像的文件在[这里](../deployment/Dockerfile.build.base)。 可以直接使用此映像，或参考它来生成自己的映像。
+        * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [msranni/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI 实验所依赖的所有 Python 包，Node 模块和 JavaScript。 用来生成此映像的文件在[这里](../deployment/Dockerfile.build.base)。 可以直接使用此映像，或参考它来生成自己的映像。
     * apiVersion 
-        * Required key. The API version of your kubeflow.
+        * 必填。 Kubeflow 的 API 版本。
 * ps (可选)。 此部分用于配置 TensorFlow 的 parameter 服务器角色。
-* master(optional). This config section is used to configure pytorch parameter server role.
+* master (可选)。 此部分用于配置 PyTorch 的 parameter 服务器角色。
 
-Once complete to fill nni experiment config file and save (for example, save as exp_kubeflow.yaml), then run the following command
+完成并保存 NNI 实验配置文件后（例如可保存为：exp_kubeflow.yaml），运行以下命令：
 
     nnictl create --config exp_kubeflow.yaml
     
 
-to start the experiment in kubeflow mode. NNI will create Kubeflow tfjob or pytorchjob for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. You can see the kubeflow tfjob created by NNI in your Kubernetes dashboard.
+来在 Kubeflow 模式下启动实验。 NNI 会为每个尝试创建 Kubeflow tfjob 或 pytorchjob，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 Kubernetes 面板中看到创建的 Kubeflow tfjob。
 
-Notice: In kubeflow mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic.
+注意：Kubeflow 模式下，NNIManager 会启动 RESTful 服务，监听端口为 NNI 网页服务器的端口加1。 例如，如果网页端口为`8080`，那么 RESTful 服务器会监听在 `8081`端口，来接收运行在 Kubernetes 中的尝试作业的指标。 因此，需要在防火墙中启用端口 `8081` 的 TCP 协议，以允许传入流量。
 
-Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information.
+当一个尝试作业完成后，可以在 NNI 网页的概述页面（如：http://localhost:8080/oview）中查看尝试的信息。
 
-Any problems when using NNI in kubeflow mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni), or send mail to nni@microsoft.com
+如果在使用 Kubeflow 模式时遇到任何问题，请到 [NNI github](https://github.com/Microsoft/nni)中创建问题，或发信给 nni@microsoft.com。
