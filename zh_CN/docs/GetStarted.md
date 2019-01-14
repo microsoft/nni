@@ -10,7 +10,7 @@
     wget
     ```
     
-    python pip should also be correctly installed. You could use "python3 -m pip -v" to check in Linux.
+    需要正确安装 Python 的 pip。 可以用 "python3 -m pip -v" 来检查 pip 版本。
     
     * 注意：当前版本不支持虚拟环境。
 
