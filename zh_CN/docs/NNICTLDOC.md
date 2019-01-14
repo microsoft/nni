@@ -42,10 +42,10 @@ nnictl --version
     选项：  
     
     
-    | 参数及缩写        | 是否必需  | 默认值 | 说明                         |
-    | ------------ | ----- | --- | -------------------------- |
-    | --config, -c | True  |     | 实验的 yaml 配置文件              |
-    | --port, -p   | False |     | the port of restful server |
+    | 参数及缩写        | 是否必需  | 默认值 | 说明            |
+    | ------------ | ----- | --- | ------------- |
+    | --config, -c | True  |     | 实验的 yaml 配置文件 |
+    | --port, -p   | False |     | RESTful 服务的端口 |
 
 * **nnictl resume**
   
