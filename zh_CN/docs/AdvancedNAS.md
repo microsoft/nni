@@ -1,6 +1,6 @@
 # 高级神经网络架构搜索教程
 
-Currently many of the NAS algorithms leverage the technique of **weight sharing** among trials to accelerate its training process. For example, [ENAS](https://arxiv.org/abs/1802.03268) delivers 1000x effiency with '*parameter sharing between child models*', compared with the previous [NASNet](https://arxiv.org/abs/1707.07012) algorithm. Other NAS algorithms such as [DARTS](https://arxiv.org/abs/1806.09055), [Network Morphism](https://arxiv.org/abs/1806.10282), and [Evolution](https://arxiv.org/abs/1703.01041) is also leveraging, or has the potential to leverage weight sharing.
+目前，许多 NAS（Neural Architecture Search，神经网络架构搜索）算法都在尝试上使用了 **权重共享（weight sharing）** 的方法来加速训练过程。 For example, [ENAS](https://arxiv.org/abs/1802.03268) delivers 1000x effiency with '*parameter sharing between child models*', compared with the previous [NASNet](https://arxiv.org/abs/1707.07012) algorithm. Other NAS algorithms such as [DARTS](https://arxiv.org/abs/1806.09055), [Network Morphism](https://arxiv.org/abs/1806.10282), and [Evolution](https://arxiv.org/abs/1703.01041) is also leveraging, or has the potential to leverage weight sharing.
 
 This is a tutorial on how to enable weight sharing in NNI.
 
