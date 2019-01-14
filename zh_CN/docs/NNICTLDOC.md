@@ -42,10 +42,10 @@ nnictl --version
     选项：  
     
     
-    | 参数及缩写        | 是否必需  | 默认值 | 说明                                    |
-    | ------------ | ----- | --- | ------------------------------------- |
-    | --config, -c | True  |     | yaml configure file of the experiment |
-    | --port, -p   | False |     | the port of restful server            |
+    | 参数及缩写        | 是否必需  | 默认值 | 说明                         |
+    | ------------ | ----- | --- | -------------------------- |
+    | --config, -c | True  |     | 实验的 yaml 配置文件              |
+    | --port, -p   | False |     | the port of restful server |
 
 * **nnictl resume**
   
@@ -117,7 +117,7 @@ nnictl --version
     
     * 说明
       
-      You can use this command to update an experiment's concurrency.
+      可以用此命令来更新实验的并发设置。
     
     * 用法
       
@@ -127,10 +127,10 @@ nnictl --version
       
       选项：
       
-      | 参数及缩写       | 是否必需  | 默认值 | 说明                                      |
-      | ----------- | ----- | --- | --------------------------------------- |
-      | id          | False |     | 需要设置的实验的 id                             |
-      | --value, -v | True  |     | the number of allowed concurrent trials |
+      | 参数及缩写       | 是否必需  | 默认值 | 说明           |
+      | ----------- | ----- | --- | ------------ |
+      | id          | False |     | 需要设置的实验的 id  |
+      | --value, -v | True  |     | 允许同时运行的尝试的数量 |
   
   * **nnictl update duration**
     
@@ -146,16 +146,16 @@ nnictl --version
       
       选项：
       
-      | 参数及缩写       | 是否必需  | 默认值 | 说明                                                                                                                                           |
-      | ----------- | ----- | --- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-      | id          | False |     | 需要设置的实验的 id                                                                                                                                  |
-      | --value, -v | True  |     | the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days. |
+      | 参数及缩写       | 是否必需  | 默认值 | 说明                                                             |
+      | ----------- | ----- | --- | -------------------------------------------------------------- |
+      | id          | False |     | 需要设置的实验的 id                                                    |
+      | --value, -v | True  |     | 实验持续时间如没有单位，则为秒。 后缀可以为 's' 即秒 (默认值), 'm' 即分钟, 'h' 即小时或 'd' 即天。 |
   
   * **nnictl update trialnum**
     
     * 说明
       
-      You can use this command to update an experiment's maxtrialnum.
+      可以用此命令来更新实验的最大尝试数量。
     
     * 用法
       
@@ -165,10 +165,10 @@ nnictl --version
       
       选项：
       
-      | 参数及缩写       | 是否必需  | 默认值 | 说明                                            |
-      | ----------- | ----- | --- | --------------------------------------------- |
-      | id          | False |     | 需要设置的实验的 id                                   |
-      | --value, -v | True  |     | the new number of maxtrialnum you want to set |
+      | 参数及缩写       | 是否必需  | 默认值 | 说明                    |
+      | ----------- | ----- | --- | --------------------- |
+      | id          | False |     | 需要设置的实验的 id           |
+      | --value, -v | True  |     | 需要设置的 maxtrialnum 的数量 |
 
 * **nnictl trial**
   
@@ -288,7 +288,7 @@ nnictl --version
   
   * 说明
     
-    Display the current context information.
+    显示当前上下文信息。
   
   * 用法
     
@@ -402,11 +402,11 @@ nnictl --version
   
   * 详细说明
     
-    1. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later. 
-    2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path. 
-    3. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
-    4. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
-    5. If there is only one trial job, you don't need to set trialid. If there are multiple trial jobs running, you should set the trialid, or you could use [nnictl tensorboard start --trialid all] to map --logdir to all trial log paths.
+    1. NNICTL 当前仅支持本机和远程平台的 tensorboard，其它平台暂不支持。 
+    2. 如果要使用 tensorboard，需要将 tensorboard 日志输出到环境变量 [NNI_OUTPUT_DIR] 路径下。 
+    3. 在 local 模式中，nnictl 会直接设置 --logdir=[NNI_OUTPUT_DIR] 并启动 tensorboard 进程。
+    4. 在 remote 模式中，nnictl 会创建一个 ssh 客户端来将日志数据从远程计算机复制到本机临时目录中，然后在本机开始 tensorboard 进程。 需要注意的是，nnictl 只在使用此命令时复制日志数据，如果要查看最新的 tensorboard 结果，需要再次执行 nnictl tensorboard 命令。
+    5. 如果只有一个尝试任务，不需要设置 trialid。 如果有多个运行的尝试作业，需要设置 trialid，或使用 [nnictl tensorboard start --trialid all] 来将 --logdir 映射到所有尝试的路径。
 
 * **nnictl tensorboard stop**
   
