@@ -16,11 +16,11 @@ NNI 提供了简单的方法来设置不同的参数优化算法，以及提前�
 
 ### **了解有关调参器的更多信息**
 
-* For detailed defintion and usage about the required field, please refer to [Config an experiment](ExperimentConfig.md)
+* 有关所需字段的详细定义和用法，参考[配置实验](ExperimentConfig.md)。
 * [NNI 最新版本支持的调参器](HowToChooseTuner.md)
 * [如何自定义调参器](howto_2_CustomizedTuner.md)
 
-**评估器** 指定了用于提前终止尝试的策略。 In NNI, there are two approaches to set the assessor.
+**评估器** 指定了用于提前终止尝试的策略。 在 NNI 中，支持两种方法来设置评估器。
 
 1. 直接使用 NNI 提供的评估器
     
