@@ -19,7 +19,7 @@
 }
 ```
 
-Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search space.
+参考 [SearchSpaceSpec.md](./SearchSpaceSpec.md) 进一步了解搜索空间。
 
 > 第二步：更新模型代码
 
@@ -31,22 +31,22 @@ Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search s
     
             RECEIVED_PARAMS = nni.get_next_parameter()
     
-        来获得调参器分配的超参值。 `RECEIVED_PARAMS` is an object, for example: 
+        来获得调参器分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如： 
     
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
     
-    2.3 Report NNI results
-        Use the API:
+    2.3 向 NNI 返回结果
+        使用 API：
     
-            `nni.report_intermediate_result(accuracy)`
+            `nni.report_intermediate_result(accuracy)` 
     
-        to send `accuracy` to assessor.
+        返回 `accuracy` 的值给评估器。
     
-        Use the API:
+        使用 API:
     
-            `nni.report_final_result(accuracy)`
+            `nni.report_final_result(accuracy)` 
     
-        to send `accuracy` to tuner.
+        返回 `accuracy` 的值给调参器。
     
 
 **注意**：
@@ -64,9 +64,9 @@ Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search s
     searchSpacePath: /path/to/your/search_space.json
     
 
-You can refer to [here](./ExperimentConfig.md) for more information about how to set up experiment configurations.
+参考[这里](./ExperimentConfig.md)进一步了解如何配置实验。
 
-You can refer to [here](../examples/trials/README.md) for more information about how to write trial code using NNI APIs.
+参考[这里](../examples/trials/README.md)了解如何使用 NNI API 来编写尝试代码。
 
 ## NNI 标记
 
