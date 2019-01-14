@@ -33,7 +33,7 @@ Note: Please follow the format when you write your `config.yml` file.
 
 <a name="TPE"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of TPE`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `TPE`
 
 > Builtin Tuner Name: **TPE**
 
@@ -43,7 +43,7 @@ TPE, as a black-box optimization, can be used in various scenarios, and shows go
 
 **Requirement of classArg**
 
-* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 **Usage example:**
 
@@ -59,7 +59,7 @@ tuner:
 
 <a name="Random"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Random Search`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Random Search`
 
 > Builtin Tuner Name: **Random**
 
@@ -69,7 +69,7 @@ Random search is suggested when each trial does not take too long (e.g., each tr
 
 **Requirement of classArg:**
 
-* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 **Usage example**
 
@@ -85,7 +85,7 @@ tuner:
 
 <a name="Anneal"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Anneal`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Anneal`
 
 > Builtin Tuner Name: **Anneal**
 
@@ -95,7 +95,7 @@ Anneal is suggested when each trial does not take too long, and you have enough 
 
 **Requirement of classArg**
 
-* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 **Usage example**
 
@@ -111,7 +111,7 @@ tuner:
 
 <a name="Evolution"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Naive Evolution`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Naive Evolution`
 
 > Builtin Tuner Name: **Evolution**
 
@@ -121,7 +121,7 @@ Its requirement of computation resource is relatively high. Specifically, it req
 
 **Requirement of classArg**
 
-* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 **Usage example**
 
@@ -137,7 +137,7 @@ tuner:
 
 <a name="SMAC"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of SMAC`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `SMAC`
 
 > Builtin Tuner Name: **SMAC**
 
@@ -147,7 +147,7 @@ Similar to TPE, SMAC is also a black-box tuner which can be tried in various sce
 
 **Requirement of classArg**
 
-* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 **Usage example**
 
@@ -163,7 +163,7 @@ tuner:
 
 <a name="Batch"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Batch Tuner`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Batch Tuner`
 
 > Builtin Tuner Name: BatchTuner
 
@@ -202,7 +202,7 @@ The search space file including the high-level key `combine_params`. The type of
 
 <a name="GridSearch"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Grid Search`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Grid Search`
 
 > Builtin Tuner Name: **Grid Search**
 
@@ -224,7 +224,7 @@ tuner:
 
 <a name="Hyperband"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Hyperband`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Hyperband`
 
 > Builtin Advisor Name: **Hyperband**
 
@@ -234,7 +234,7 @@ It is suggested when you have limited computation resource but have relatively l
 
 **Requirement of classArg**
 
-* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 * **R** (*int, optional, default = 60*) - the maximum STEPS (could be the number of mini-batches or epochs) can be allocated to a trial. Each trial should use STEPS to control how long it runs.
 * **eta** (*int, optional, default = 3*) - proportion of discarded trials
 
@@ -254,7 +254,7 @@ advisor:
 
 <a name="NetworkMorphism"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Network Morphism`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Network Morphism`
 
 > Builtin Tuner Name: **NetworkMorphism**
 
@@ -268,8 +268,8 @@ It is suggested that you want to apply deep learning methods to your task (your 
 
 **Requirement of classArg**
 
-* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
-* **task** (*sequence of ('cv'), optional, default = 'cv'*) - The domain of experiment, for now, this tuner only supports cv domain.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **task** (*('cv'), optional, default = 'cv'*) - The domain of experiment, for now, this tuner only supports cv domain.
 * **input_width** (*int, optional, default = 32*) - input image width
 * **input_channel** (*int, optional, default = 3*) - input image channel
 * **n_output_node** (*int, optional, default = 10*) - number of classes
@@ -292,7 +292,7 @@ tuner:
 
 <a name="MetisTuner"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Metis Tuner`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Metis Tuner`
 
 > Builtin Tuner Name: **MetisTuner**
 
@@ -308,7 +308,7 @@ Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long
 
 **Requirement of classArg**
 
-* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 **Usage example**
 

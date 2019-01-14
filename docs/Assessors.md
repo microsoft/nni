@@ -29,7 +29,7 @@ Note: Please follow the format when you write your `config.yml` file.
 
 <a name="MedianStop"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Median Stop Assessor`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Median Stop Assessor`
 
 > Builtin Assessor Name: **Medianstop**
 
@@ -39,7 +39,7 @@ It is applicable in a wide range of performance curves, thus, can be used in var
 
 **Requirement of classArg**
 
-* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', assessor will **stop** the trial with smaller expectation. If 'minimize', assessor will **stop** the trial with larger expectation.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', assessor will **stop** the trial with smaller expectation. If 'minimize', assessor will **stop** the trial with larger expectation.
 * **start_step** (*int, optional, default = 0*) - A trial is determined to be stopped or not, only after receiving start_step number of reported intermediate results.
 
 **Usage example:**
@@ -57,7 +57,7 @@ assessor:
 
 <a name="Curvefitting"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Usage of Curve Fitting Assessor`
+![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Curve Fitting Assessor`
 
 > Builtin Assessor Name: **Curvefitting**
 
@@ -68,7 +68,7 @@ It is applicable in a wide range of performance curves, thus, can be used in var
 **Requirement of classArg**
 
 * **epoch_num** (*int, **required***) - The total number of epoch. We need to know the number of epoch to determine which point we need to predict.
-* **optimize_mode** (*sequence of ('maximize' or 'minimize'), optional, default = 'maximize'*) - If 'maximize', assessor will **stop** the trial with smaller expectation. If 'minimize', assessor will **stop** the trial with larger expectation.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', assessor will **stop** the trial with smaller expectation. If 'minimize', assessor will **stop** the trial with larger expectation.
 * **start_step** (*int, optional, default = 6*) - A trial is determined to be stopped or not, we start to predict only after receiving start_step number of reported intermediate results.
 * **threshold** (*float, optional, default = 0.95*) - The threshold that we decide to early stop the worse performance curve. For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
 
