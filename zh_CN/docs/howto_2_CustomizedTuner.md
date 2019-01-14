@@ -4,13 +4,13 @@
 
 因此，如果要自定义调参器，需要：
 
-1. Inherit a tuner of a base Tuner class
-2. Implement receive_trial_result and generate_parameter function
-3. Configure your customized tuner in experiment yaml config file
+1. 从基类 Tuner 继承，创建新的调参器类
+2. 实现 receive_trial_result 和 generate_parameter 函数
+3. 在实验的 yaml 文件中配置好自定义的调参器
 
-Here is an example:
+样例如下：
 
-**1) Inherit a tuner of a base Tuner class**
+**1) 从基类 Tuner 继承，创建新的调参器类**
 
 ```python
 from nni.tuner import Tuner
@@ -20,7 +20,7 @@ class CustomizedTuner(Tuner):
         ...
 ```
 
-**2) Implement receive_trial_result and generate_parameter function**
+**2) 实现 receive_trial_result 和 generate_parameter 函数**
 
 ```python
 from nni.tuner import Tuner
@@ -49,11 +49,11 @@ class CustomizedTuner(Tuner):
     ...
 ```
 
-`receive_trial_result` will receive the `parameter_id, parameters, value` as parameters input. Also, Tuner will receive the `value` object are exactly same value that Trial send.
+`receive_trial_result` 从输入中会接收 `parameter_id, parameters, value` 参数。 调参器会收到尝试进程发送的完全一样的 `value` 值。
 
-The `your_parameters` return from `generate_parameters` function, will be package as json object by NNI SDK. NNI SDK will unpack json object so the Trial will receive the exact same `your_parameters` from Tuner.
+`generate_parameters` 函数返回的 `your_parameters`，会被 NNI SDK 打包为 json。 然后 NNI SDK 会将 json 对象解包给尝试进程。因此，尝试进程会收到来自调参器的完全相同的 `your_parameters`。
 
-For example: If the you implement the `generate_parameters` like this:
+例如， 如下实现了 `generate_parameters`：
 
 ```python
     def generate_parameters(self, parameter_id):
@@ -65,7 +65,7 @@ For example: If the you implement the `generate_parameters` like this:
         return {"dropout": 0.3, "learning_rate": 0.4}
 ```
 
-It means your Tuner will always generate parameters `{"dropout": 0.3, "learning_rate": 0.4}`. Then Trial will receive `{"dropout": 0.3, "learning_rate": 0.4}` by calling API `nni.get_next_parameter()`. Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API `nni.report_final_result()`, for example `nni.report_final_result(0.93)`. Then your Tuner's `receive_trial_result` function will receied the result like：
+这表示调参器会一直生成参数 `{"dropout": 0.3, "learning_rate": 0.4}`。 而尝试进程也会在调用 API `nni.get_next_parameter()` 时得到 `{"dropout": 0.3, "learning_rate": 0.4}`。 尝试结束后的返回值（通常是某个指标），通过调用 API `nni.report_final_result()` 返回给调参器。如： `nni.report_final_result(0.93)`。 而调参器的 `receive_trial_result` 函数会收到如下结果：
 
 ```python
 parameter_id = 82347
@@ -73,18 +73,18 @@ parameters = {"dropout": 0.3, "learning_rate": 0.4}
 value = 0.93
 ```
 
-**Note that** if you want to access a file (e.g., `data.txt`) in the directory of your own tuner, you cannot use `open('data.txt', 'r')`. Instead, you should use the following:
+**注意** 如果需要存取自定义的调参器目录里的文件 (如, `data.txt`)，不能使用 `open('data.txt', 'r')`。 要使用：
 
 ```python
 _pwd = os.path.dirname(__file__)
 _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
 ```
 
-This is because your tuner is not executed in the directory of your tuner (i.e., `pwd` is not the directory of your own tuner).
+这是因为自定义的调参器不是在自己的目录里执行的。（即，`pwd` 返回的目录不是调参器的目录）。
 
-**3) Configure your customized tuner in experiment yaml config file**
+**3) 在实验的 yaml 文件中配置好自定义的调参器**
 
-NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the \_\_init__ constructor.
+NNI 需要定位到自定义的调参器类，并实例化它，因此需要指定自定义调参器类的文件位置，并将参数值传给 \_\_init__ 构造函数。
 
 ```yaml
 tuner:
@@ -97,7 +97,7 @@ tuner:
     arg1: value1
 ```
 
-More detail example you could see:
+更多样例，可参考：
 
 > - [evolution-tuner](../../src/sdk/pynni/nni/evolution_tuner)
 > - [hyperopt-tuner](../../src/sdk/pynni/nni/hyperopt_tuner)
@@ -105,4 +105,4 @@ More detail example you could see:
 
 ## 实现更高级的自动机器学习算法
 
-The information above are usually enough to write a general tuner. However, users may also want more information, for example, intermediate results, trials' state (e.g., the information in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called `advisor` which directly inherits from `MsgDispatcherBase` in [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../src/sdk/pynni/nni/msg_dispatcher_base.py). Please refer to [here](./howto_3_CustomizedAdvisor.md) for how to write a customized advisor.
+上述内容足够写出通用的调参器。 但有时可能需要更多的信息，例如，中间结果，尝试的状态等等，从而能够实现更强大的自动机器学习算法。 因此，有另一个叫做 `advisor` 的类，直接继承于 `MsgDispatcherBase`，它位于 [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../../src/sdk/pynni/nni/msg_dispatcher_base.py)。 参考[这里](./howto_3_CustomizedAdvisor.md)来了解如何实现自定义的 advisor。
