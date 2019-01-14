@@ -241,10 +241,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const wantResult: Array<string> = [];
         Object.keys(checkedValues).map(m => {
             switch (checkedValues[m]) {
-                case 'Trial No':
-                case 'id':
-                case 'duration':
-                case 'status':
+                case 'Trial No.':
+                case 'Id':
+                case 'Duration':
+                case 'Status':
                 case 'Operation':
                 case 'Default':
                 case 'Intermediate Result':
@@ -327,7 +327,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         Object.keys(columnSelected).map(key => {
             const item = columnSelected[key];
             switch (item) {
-                case 'Trial No':
+                case 'Trial No.':
                     showColumn.push({
                         title: 'Trial No.',
                         dataIndex: 'sequenceId',
@@ -339,7 +339,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 (a.sequenceId as number) - (b.sequenceId as number)
                     });
                     break;
-                case 'id':
+                case 'Id':
                     showColumn.push({
                         title: 'Id',
                         dataIndex: 'id',
@@ -355,7 +355,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         }
                     });
                     break;
-                case 'duration':
+                case 'Duration':
                     showColumn.push({
                         title: 'Duration',
                         dataIndex: 'duration',
@@ -376,7 +376,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         },
                     });
                     break;
-                case 'status':
+                case 'Status':
                     showColumn.push({
                         title: 'Status',
                         dataIndex: 'status',
@@ -559,7 +559,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             </TabPane>
                             <TabPane tab="Log" key="2">
                                 {
-                                    platform === 'pai' || platform === 'kubeflow'
+                                    platform === 'pai' || platform === 'kubeflow' || platform === 'frameworkcontroller'
                                         ?
                                         <PaiTrialLog
                                             logStr={logPathRow}
