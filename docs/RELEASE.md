@@ -1,3 +1,31 @@
+# Release 0.4.1 - 12/20/2018
+
+## Major Features
+### New tuner support
+  * Support [network morphism](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/networkmorphism_tuner)
+
+### Training Service Improvements
+  * Migrate [Kubeflow training service](https://github.com/Microsoft/nni/blob/master/docs/KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
+  * [Pytorch-operator](https://github.com/kubeflow/pytorch-operator) support for Kubeflow training service.
+  * Improvement on local code files uploading to OpenPAI HDFS.
+
+### WebUI improvements
+  * Enable modify concurrency number during experiment.
+  * Add feedback link to NNI github 'create issue' page
+  * Enable customize top 10 trials regarding to metric numbers (largest or smallest)
+  * Enable download logs for dispatcher & nnimanager 
+  * Enable automatic scaling of axes for metric number
+
+## New example
+  * [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner.
+  * [Distributed MNIST example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch. 
+
+## Others
+  * Show version information both in nnictl and WebUI. You can run **nnictl -v** to show your current installed NNI version.
+  * Bug Fix
+     • fix the bug that WebUI doesn't show latest trial job status, which is caused by OpenPAI token expiration.
+     • Update annotation to support displaying real choice in searchspace
+
 # Release 0.4 - 12/6/2018
 
 ## Major Features
