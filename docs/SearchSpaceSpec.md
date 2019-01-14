@@ -75,6 +75,7 @@ All types of sampling strategies and their parameter are listed here:
 
 ## Relation With Tuners
 
+
 |                   | choice       | randint      | uniform      | quniform     | loguniform   | qloguniform  | normal       | qnormal      | lognormal    | qlognormal   |
 |-------------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|--------------|
 | Batch Tuner       | $\checkmark$ |              |              |              |              |              |              |              |              |              |
@@ -82,7 +83,7 @@ All types of sampling strategies and their parameter are listed here:
 | TPE Tuner         | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ | $\checkmark$ |
 | Hyperband Advisor |              |              |              |              |              |              |              |              |              |              |
 | Smac Tuner        |              |              |              |              |              |              |              |              |              |              |
-| Grid Search Tuner | $\checkmark$ | $\xmark$     |              | $\checkmark$ |              | $\checkmark$ |              |              |              |              |
+| Grid Search Tuner | &#9744; | &#9745;     |              | $\checkmark$ |              | $\checkmark$ |              |              |              |              |
 
 Note that SMAC only supports a subset of the types above, including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`. In the current version, SMAC does not support cascaded search space (i.e., conditional variable in SMAC).
 
