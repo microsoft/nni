@@ -26,28 +26,28 @@ NNI CTL 模块用来控制 Neural Network Intelligence，包括开始新实验�
         python3 -m pip install -e .
         ```
 
-3. Change the mode of nnictl file
+3. 修改 nnictl 文件的权限
     
     ```bash
     chmod +x ./nnictl
     ```
 
-4. Add nnictl to your PATH system environment variable.
+4. 将 nnictl 添加到系统的 PATH 环境变量中。
     
-    - You could use `export` command to set PATH variable temporary.
+    - 可以用 `export` 命令来临时设置 PATH 变量。
         
         export PATH={your nnictl path}:$PATH
     
-    - Or you could edit your `/etc/profile` file.
+    - 或者编辑 `/etc/profile` 文件。
         
         ```txt
         1.sudo vim /etc/profile
         
-        2.At the end of the file, add
+        2.在文件末尾加上
         
             export PATH={your nnictl path}:$PATH
         
-        save and exit.
+        保存并退出。
         
         3.source /etc/profile
         ```
