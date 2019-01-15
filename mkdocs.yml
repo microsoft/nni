@@ -4,15 +4,22 @@ nav:
     - Overview: README.md
     - What's New: RELEASE.md
     - Tutorials:
-        - QuickStart: GetStarted.md
+        - QuickStart: QuickStart.md
         - Installation: Installation.md
         - Trials: Trials.md
-        - WebUI: WebUI.md
-        - Tuners: HowToChooseTuner.md
+        - Tuners:
+            - Try Builtin Tuners: Tuners.md
+            - Customized Tuners: Customize_Tuner.md
+            - Customized Advisor: Customize_Advisor.md
+        - Assessors:
+            - Try Builtin Assessors: Assessors.md
+            - Customized Assessors: Customize_Assessor.md
         - Training Platform:
             - Remote: RemoteMachineMode.md
             - PAI: PAIMode.md
             - Kubeflow: KubeflowMode.md
+    - Examples:
+        - MNIST Examples: mnist_examples.md
     - Reference:
         - nnictl: NNICTLDOC.md
         - Configuration: ExperimentConfig.md
