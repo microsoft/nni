@@ -35,7 +35,7 @@ class CustomizedAssessor(Assessor):
 ```python
 import argparse
 
-import CustomizedAssesor
+import CustomizedAssessor
 
 def main():
     parser = argparse.ArgumentParser(description='parse command line parameters.')
@@ -49,9 +49,9 @@ def main():
 main()
 ```
 
-Please noted in 2). The object ```trial_history``` are exact the object that Trial send to Assesor by using SDK ```report_intermediate_result``` function.
+Please noted in 2). The object `trial_history` are exact the object that Trial send to Assessor by using SDK `report_intermediate_result` function.
 
-Also, user could override the ```run``` function in Assessor to control the process logic.
+Also, user could override the `run` function in Assessor to control the process logic.
 
 More detail example you could see:
 > * [Base-Assessor](https://msrasrg.visualstudio.com/NeuralNetworkIntelligenceOpenSource/_git/Default?_a=contents&path=%2Fsrc%2Fsdk%2Fpynni%2Fnni%2Fassessor.py&version=GBadd_readme)

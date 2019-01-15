@@ -1,13 +1,14 @@
 **Run an Experiment on OpenPAI**
 ===
-NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai) (aka pai), called pai mode. Before starting to use NNI pai mode, you should have an account to access an [OpenPAI](https://github.com/Microsoft/pai) cluster. See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker. 
+NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai) (aka pai), called pai mode. Before starting to use NNI pai mode, you should have an account to access an [OpenPAI](https://github.com/Microsoft/pai) cluster. See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.
 
 ## Setup environment
 Install NNI, follow the install guide [here](GetStarted.md).
 
 ## Run an experiment
-Use `examples/trials/mnist-annotation` as an example. The nni config yaml file's content is like: 
-```
+Use `examples/trials/mnist-annotation` as an example. The nni config yaml file's content is like:
+
+```yaml
 authorName: your_name
 experimentName: auto_mnist
 # how many trials could be concurrently running
@@ -39,7 +40,8 @@ paiConfig:
   passWord: your_pai_password
   host: 10.1.1.1
 ```
-Note: You should set `trainingServicePlatform: pai` in nni config yaml file if you want to start experiment in pai mode. 
+
+Note: You should set `trainingServicePlatform: pai` in nni config yaml file if you want to start experiment in pai mode.
 
 Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have five additional keys:
 * cpuNum
@@ -58,7 +60,7 @@ Once complete to fill nni experiment config file and save (for example, save as 
 ```
 nnictl create --config exp_pai.yaml
 ```
-to start the experiment in pai mode. NNI will create OpanPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 
+to start the experiment in pai mode. NNI will create OpenPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 
 You can see the pai jobs created by NNI in your OpenPAI cluster's web portal, like:
 ![](./img/nni_pai_joblist.jpg)
 
@@ -77,4 +79,3 @@ You can see there're three fils in output folder: stderr, stdout, and trial.log
 If you also want to save trial's other output into HDFS, like model files, you can use environment variable `NNI_OUTPUT_DIR` in your trial code to save your own output files, and NNI SDK will copy all the files in `NNI_OUTPUT_DIR` from trial's container to HDFS. 
 
 Any problems when using NNI in pai mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni), or send mail to nni@microsoft.com
-
