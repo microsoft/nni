@@ -417,7 +417,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     {
                         name: 'framework',
                         image: replicaImage,
-                        command: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
+                        args: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
                         volumeMounts: [
                         {
                             name: 'nni-vol',
