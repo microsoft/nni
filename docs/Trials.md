@@ -136,7 +136,7 @@ useAnnotation: true
 
 ### Output
 
-NNI shows each trial's stdout and stderr in the log region of Webui
+NNI is designed to show each trial's stdout and stderr in the log region of Webui. However, currently this feature is supported only on PAI and k8s platforms. On other platforms NNI will show trial log path and users can temporarily check the output manually.
 
 ### Advance APIs
 
