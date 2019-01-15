@@ -28,6 +28,10 @@ from .package_management import *
 from .constants import *
 from .tensorboard_utils import *
 
+if os.environ.get('COVERAGE_PROCESS_START'):
+    import coverage
+    coverage.process_startup()
+
 def nni_info(*args):
     if args[0].version:
         print(pkg_resources.get_distribution('nni').version)

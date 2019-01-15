@@ -25,12 +25,13 @@ import time
 import logging
 import shlex
 import re
+import sys
+import select
 from pyhdfs import HdfsClient
 
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
-from .log_utils import LogType, nni_log
-from .metrics_reader import read_experiment_metrics
+from .log_utils import LogType, nni_log, RemoteLogger, PipeLogReader, StdOutputType
 
 logger = logging.getLogger('trial_keeper')
 
@@ -42,6 +43,11 @@ def main_loop(args):
     
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
+    
+    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout)
+    # redirect trial keeper's stdout and stderr to syslog
+    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout)
+    sys.stdout = sys.stderr = trial_keeper_syslogger
 
     if args.pai_hdfs_host is not None and args.nni_hdfs_exp_dir is not None:
         try:
@@ -52,15 +58,14 @@ def main_loop(args):
         copyHdfsDirectoryToLocal(args.nni_hdfs_exp_dir, os.getcwd(), hdfs_client)
 
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
-    process = Popen(args.trial_command, shell = True, stdout = stdout_file, stderr = stderr_file)
+    log_pipe_stdout = trial_syslogger_stdout.get_pipelog_reader()
+    process = Popen(args.trial_command, shell = True, stdout = log_pipe_stdout, stderr = log_pipe_stdout)
     nni_log(LogType.Info, 'Trial keeper spawns a subprocess (pid {0}) to run command: {1}'.format(process.pid, shlex.split(args.trial_command)))
-    
+
     while True:
         retCode = process.poll()
-        ## Read experiment metrics, to avoid missing metrics
-        read_experiment_metrics(args.nnimanager_ip, args.nnimanager_port)
-        
-        if retCode is not None:
+        # child worker process exits and all stdout data is read
+        if retCode is not None and log_pipe_stdout.set_process_exit() and log_pipe_stdout.is_read_completed == True:
             nni_log(LogType.Info, 'subprocess terminated. Exit code is {}. Quit'.format(retCode))
             if args.pai_hdfs_output_dir is not None:
                 # Copy local directory to hdfs for OpenPAI
@@ -102,8 +107,8 @@ if __name__ == '__main__':
         main_loop(args)
     except SystemExit as se:
         nni_log(LogType.Info, 'NNI trial keeper exit with code {}'.format(se.code))
-        sys.exit(se.code)
+        os._exit(se.code)
     except Exception as e:
         nni_log(LogType.Error, 'Exit trial keeper with code 1 because Exception: {} is catched'.format(str(e)))
-        sys.exit(1)
+        os._exit(1)
 

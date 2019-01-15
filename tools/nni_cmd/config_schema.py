@@ -69,6 +69,16 @@ Optional('tuner'): Or({
         },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
+    'builtinTunerName': 'MetisTuner',
+    'classArgs': {
+        Optional('optimize_mode'): Or('maximize', 'minimize'),
+        Optional('no_resampling'):  bool,
+        Optional('no_candidates'):  bool,
+        Optional('selection_num_starting_points'):  int,
+        Optional('cold_start_num'):  int,
+        },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
     'codeDir': os.path.exists,
     'classFileName': str,
     'className': str,

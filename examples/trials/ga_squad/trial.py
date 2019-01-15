@@ -338,7 +338,7 @@ def train_with_graph(graph, qp_pairs, dev_qp_pairs):
                 answers = generate_predict_json(
                     position1, position2, ids, contexts)
                 if save_path is not None:
-                    with open(save_path + 'epoch%d.prediction' % epoch, 'w') as file:
+                    with open(os.path.join(save_path, 'epoch%d.prediction' % epoch), 'w') as file:
                         json.dump(answers, file)
                 else:
                     answers = json.dumps(answers)
@@ -359,8 +359,8 @@ def train_with_graph(graph, qp_pairs, dev_qp_pairs):
                     bestacc = acc
 
                     if save_path is not None:
-                        saver.save(sess, save_path + 'epoch%d.model' % epoch)
-                        with open(save_path + 'epoch%d.score' % epoch, 'wb') as file:
+                        saver.save(os.path.join(sess, save_path + 'epoch%d.model' % epoch))
+                        with open(os.path.join(save_path, 'epoch%d.score' % epoch), 'wb') as file:
                             pickle.dump(
                                 (position1, position2, ids, contexts), file)
                 logger.debug('epoch %d acc %g bestacc %g' %
