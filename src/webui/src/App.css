@@ -2,6 +2,7 @@
   font-family: 'Segoe';
   color: #212121;
   font-size: 14px;
+  background: #f2f2f2;
 }
 
 .header{
@@ -19,7 +20,6 @@
 }
 .contentBox{
   width: 100%;
-  background: #f2f2f2;
 }
 .content{
   width: 86%;
