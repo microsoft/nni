@@ -39,17 +39,17 @@ NNI provide two approaches for you to define a trial: `NNI API` and `NNI Python 
 
 > Step 2 - Update model codes
 
-1. Declare NNI API
+- Declare NNI API
     Include `import nni` in your trial code to use NNI APIs. 
 
-2. Get predefined parameters
+- Get predefined parameters
     
       - Use `RECEIVED_PARAMS = nni.get_next_parameter()` to get hyper-parameters' values assigned by tuner.
       - Note that `RECEIVED_PARAMS` is an object, for example: 
 
         {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
 
-3. Report NNI results
+- Report NNI results
 
    - Trial should report `metrics` so NNI could evaluate the current set of hyper-parameters. `metrics` might be things like accuracy or loss.
    - `metrics` could be any python object, but NNI built-in tuners/assessors only receive `metrics` that is:
