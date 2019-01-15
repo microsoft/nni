@@ -118,7 +118,7 @@ class MnistNetwork(object):
                 tf.argmax(y_conv, 1), tf.argmax(self.labels, 1))
             self.accuracy = tf.reduce_mean(
                 tf.cast(correct_prediction, tf.float32))
-
+    
     def train(self, sess, mnist):
         sess.run(tf.global_variables_initializer())
         for i in range(params['batch_num']):
@@ -133,11 +133,7 @@ class MnistNetwork(object):
                     feed_dict={self.images: mnist.test.images,
                                self.labels: mnist.test.labels,
                                self.keep_prob: 1.0})
-
-                nni.report_intermediate_result(test_acc)
                 logger.debug('test accuracy %g', test_acc)
-                logger.debug('Pipe send intermediate result done.')
-
     def evaluate(self, mnist):
         test_acc = self.accuracy.eval(
             feed_dict={self.images: mnist.test.images,
@@ -175,7 +171,7 @@ def write_log():
     graph_location = tempfile.mkdtemp()
     logger.debug('Saving graph to: %s', graph_location)
     train_writer = tf.summary.FileWriter(graph_location)
-    train_writer.add_graph(tf.get_default_graph())
+    train_writer.add_graph(tf.get_default_graph())     
 
 def run_trial(params):
     '''
@@ -202,34 +198,21 @@ def run_trial(params):
     with tf.Session() as sess:
         mnist_network.train(sess, mnist)
         test_acc = mnist_network.evaluate(mnist)
-        nni.report_final_result(test_acc)
-
-def generate_default_params():
-    '''
-    Generate default parameters for mnist network.
-    '''
-    params = {
-        'data_dir': '/tmp/tensorflow/mnist/input_data',
-        'dropout_rate': 0.5,
-        'channel_1_num': 32,
-        'channel_2_num': 64,
-        'conv_size': 5,
-        'pool_size': 2,
-        'hidden_size': 1024,
-        'learning_rate': 1e-4,
-        'batch_num': 2000,
-        'batch_size': 32}
-    return params
-
+        print ("Final result is", test_acc)
 
 if __name__ == '__main__':
     try:
-        # get parameters from tuner
-        RCV_PARAMS = nni.get_next_parameter()
-        logger.debug(RCV_PARAMS)
-        # run
-        params = generate_default_params()
-        params.update(RCV_PARAMS)
+        params = {
+            'data_dir': '/tmp/tensorflow/mnist/input_data',
+            'dropout_rate': 0.5,
+            'channel_1_num': 32,
+            'channel_2_num': 64,
+            'conv_size': 5,
+            'pool_size': 2,
+            'hidden_size': 1024,
+            'learning_rate': 1e-4,
+            'batch_num': 2000,
+            'batch_size': 32}
         run_trial(params)
     except Exception as exception:
         logger.exception(exception)
