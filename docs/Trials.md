@@ -136,7 +136,7 @@ useAnnotation: true
 
 ### Output
 
-NNI will re-direct the stdout and stderr of the trial code to two corresponding files and display them in WebUI.
+NNI shows each trial's stdout and stderr in the log region of Webui
 
 ### Advance APIs
 

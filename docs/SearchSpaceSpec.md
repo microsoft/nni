@@ -73,7 +73,7 @@ All types of sampling strategies and their parameter are listed here:
 <br/>
 
 
-## Relation With Tuners
+## Search Space Types Supported by Each Tuner
 
 |                   | choice  | randint | uniform | quniform | loguniform | qloguniform | normal  | qnormal | lognormal | qlognormal |
 |-------------------|---------|---------|---------|----------|------------|-------------|---------|---------|-----------|------------|
