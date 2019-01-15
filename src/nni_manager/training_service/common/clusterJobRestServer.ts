@@ -23,8 +23,12 @@ import * as assert from 'assert';
 import { Request, Response, Router } from 'express';
 import * as bodyParser from 'body-parser';
 import * as component from '../../common/component';
+import * as fs from 'fs'
+import * as path from 'path'
 import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 import { RestServer } from '../../common/restServer'
+import { getLogDir } from '../../common/utils';
+import { Writable } from 'stream';
 
 /**
  * Cluster Job Training service Rest server, provides rest API to support Cluster job metrics update
@@ -33,6 +37,7 @@ import { RestServer } from '../../common/restServer'
 @component.Singleton
 export abstract class ClusterJobRestServer extends RestServer{
     private readonly API_ROOT_URL: string = '/api/v1/nni-pai';
+    private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
 
     private readonly expId: string = getExperimentId();
 
@@ -83,6 +88,38 @@ export abstract class ClusterJobRestServer extends RestServer{
             }
             catch(err) {
                 this.log.error(`json parse metrics error: ${err}`);
+                res.status(500);
+                res.send(err.message);
+            }
+        });
+
+        router.post(`/stdout/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            const trialLogPath: string = path.join(getLogDir(), `trial_${req.params.trialId}.log`);
+            try {
+                let skipLogging: boolean = false;
+                if(req.body.tag === 'trial' && req.body.msg !== undefined) {
+                    const metricsContent = req.body.msg.match(this.NNI_METRICS_PATTERN);
+                    if(metricsContent && metricsContent.groups) {
+                        this.handleTrialMetrics(req.params.trialId, [metricsContent.groups['metrics']]);
+                        skipLogging = true;
+                    }
+                }
+
+                if(!skipLogging){
+                    // Construct write stream to write remote trial's log into local file
+                    const writeStream: Writable = fs.createWriteStream(trialLogPath, {
+                        flags: 'a+',
+                        encoding: 'utf8',
+                        autoClose: true
+                    });
+
+                    writeStream.write(req.body.msg + '\n');
+                    writeStream.end();
+                }
+                res.send();
+            }
+            catch(err) {
+                this.log.error(`json parse stdout data error: ${err}`);
                 res.status(500);
                 res.send(err.message);
             }

@@ -1,1 +1,2 @@
-pip install lightgbm
+lightgbm
+pandas
