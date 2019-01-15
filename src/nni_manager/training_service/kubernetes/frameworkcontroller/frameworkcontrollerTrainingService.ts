@@ -31,7 +31,7 @@ import {
     JobApplicationForm, TrialJobApplicationForm,
     TrialJobDetail, NNIManagerIpConfig
 } from '../../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getIPV4Address } from '../../../common/utils';
 import { NFSConfig, KubernetesClusterConfigNFS, KubernetesClusterConfigAzure, KubernetesClusterConfigFactory } from '../kubernetesConfig'
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { validateCodeDir } from '../../common/util';
@@ -41,6 +41,8 @@ import { FrameworkControllerTrialConfig } from './frameworkcontrollerConfig';
 import { FrameworkControllerJobRestServer } from './frameworkcontrollerJobRestServer';
 import { FrameworkControllerClient } from './frameworkcontrollerApiClient';
 import { FrameworkControllerJobInfoCollector } from './frameworkcontrollerJobInfoCollector';
+import { FrameworkControllerScriptFormat } from './frameworkcontrollerData';
+import { String } from 'typescript-string-operations';
 
 /**
  * Training Service implementation for frameworkcontroller
@@ -91,7 +93,8 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         const frameworkcontrollerJobName = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();
-        
+        //Generate the port used for taskRole
+        this.generateContainerPort();
         await this.prepareRunScript(trialLocalTempFolder, curTrialSequenceId, trialJobId, trialWorkingFolder, form);
         
         //upload code files
@@ -158,6 +161,48 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         return Promise.resolve(trialJobOutputUrl);
     }
     
+    private generatePortScript(): string {
+        let portScript = '';
+        if(!this.frameworkcontrollerTrialConfig) {
+            throw new Error('frameworkcontroller trial config is not initialized');
+        }
+
+        for(let index in this.frameworkcontrollerTrialConfig.taskRoles) {
+            portScript += 
+            `${this.frameworkcontrollerTrialConfig.taskRoles[index].name}_port=${this.frameworkcontrollerContainerPortMap.get(this.frameworkcontrollerTrialConfig.taskRoles[index].name)} `;
+        }
+        return portScript;
+    }
+
+    private generateRunScript(platform: string, trialJobId: string, trialWorkingFolder: string, 
+        command: string, trialSequenceId: string, roleName: string, gpuNum: number): string {
+        let portScript: string = this.generatePortScript();
+        let nvidia_script: string = '';
+        // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
+        // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
+        // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file
+        if(gpuNum === 0) {
+            nvidia_script = `export CUDA_VISIBLE_DEVICES='0'`;
+        }
+        const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
+        const runScript: string = String.Format(
+            FrameworkControllerScriptFormat,
+            platform,
+            trialJobId,
+            path.join(trialWorkingFolder, 'output', `${roleName}_output`),
+            trialJobId,
+            getExperimentId(),
+            trialWorkingFolder,
+            trialSequenceId,
+            nvidia_script,
+            portScript,
+            command,
+            nniManagerIp,
+            this.kubernetesRestServerPort
+        );
+        return runScript;
+    }
+    
     private async prepareRunScript(trialLocalTempFolder: string, curTrialSequenceId: number, trialJobId: string, trialWorkingFolder: string, form: JobApplicationForm): Promise<void> {
         if(!this.frameworkcontrollerTrialConfig) {
             throw new Error('frameworkcontroller trial config is not initialized');
@@ -190,8 +235,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         if(!this.frameworkcontrollerTrialConfig) {
             throw new Error('frameworkcontroller trial config is not initialized');
         }
-        //Generate the port used for taskRole
-        this.generateContainerPort();
+
         const podResources : any = [];
         for(let taskRole of this.frameworkcontrollerTrialConfig.taskRoles) {
             let resource: any = {};

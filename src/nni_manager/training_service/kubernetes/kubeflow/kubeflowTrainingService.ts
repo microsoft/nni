@@ -32,7 +32,7 @@ import {
     JobApplicationForm, TrialJobApplicationForm,
     TrialJobDetail, NNIManagerIpConfig
 } from '../../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getIPV4Address } from '../../../common/utils';
 import { KubeflowClusterConfigNFS, KubeflowClusterConfigAzure,
      KubeflowTrialConfigPytorch, KubeflowTrialConfigTensorflow, KubeflowClusterConfigFactory, KubeflowTrialConfigFactory,
      KubeflowTrialConfig, KubeflowClusterConfig } from './kubeflowConfig';
@@ -44,6 +44,8 @@ import { AzureStorageClientUtility } from '../azureStorageClientUtils';
 import { KubeflowOperatorClient } from './kubeflowApiClient';
 import { KubernetesTrainingService } from '../kubernetesTrainingService'
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
+import { KubeflowScriptFormat } from './kubeflowData';
+import { String } from 'typescript-string-operations';
 
 
 /**
@@ -157,6 +159,40 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         }
 
         return Promise.resolve(trialJobOutputUrl);
+    }
+
+            /**
+     * Genereate run script for different roles(like worker or ps)
+     * @param trialJobId trial job id
+     * @param trialWorkingFolder working folder
+     * @param command 
+     * @param trialSequenceId sequence id
+     */
+    protected generateRunScript(platform: string, trialJobId: string, trialWorkingFolder: string, 
+        command: string, trialSequenceId: string, roleName: string, gpuNum: number): string {
+        let nvidia_script: string = '';
+        // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
+        // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
+        // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file
+        if(gpuNum === 0) {
+            nvidia_script = `export CUDA_VISIBLE_DEVICES='0'`;
+        }
+        const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
+        const runScript: string = String.Format(
+            KubeflowScriptFormat,
+            platform,
+            trialJobId,
+            path.join(trialWorkingFolder, 'output', `${roleName}_output`),
+            trialJobId,
+            getExperimentId(),
+            trialWorkingFolder,
+            trialSequenceId,
+            nvidia_script,
+            command,
+            nniManagerIp,
+            this.kubernetesRestServerPort
+        );
+        return runScript;
     }
     
     private async prepareRunScript(trialLocalTempFolder: string, trialJobId: string, trialWorkingFolder: string, curTrialSequenceId: number, form: JobApplicationForm): Promise<void> {
