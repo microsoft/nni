@@ -49,6 +49,7 @@ import { FrameworkControllerJobInfoCollector } from './frameworkcontrollerJobInf
 class FrameworkControllerTrainingService extends KubernetesTrainingService implements KubernetesTrainingService {
     private frameworkcontrollerTrialConfig?: FrameworkControllerTrialConfig;
     private frameworkcontrollerJobInfoCollector: FrameworkControllerJobInfoCollector;
+    private frameworkcontrollerContainerPortMap = new Map<string, number>();
 
     constructor() {
         super();
@@ -189,7 +190,8 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         if(!this.frameworkcontrollerTrialConfig) {
             throw new Error('frameworkcontroller trial config is not initialized');
         }
-
+        //Generate the port used for taskRole
+        this.generateContainerPort();
         const podResources : any = [];
         for(let taskRole of this.frameworkcontrollerTrialConfig.taskRoles) {
             let resource: any = {};
@@ -253,6 +255,18 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
 
         return Promise.resolve();
     }
+    
+    private generateContainerPort() {
+        if(!this.frameworkcontrollerTrialConfig) {
+            throw new Error('frameworkcontroller trial config is not initialized');
+        }
+
+        let port = 4000; //The default port used in container
+        for(let index in this.frameworkcontrollerTrialConfig.taskRoles) {
+            this.frameworkcontrollerContainerPortMap.set(this.frameworkcontrollerTrialConfig.taskRoles[index].name, port);
+            port += 1;
+        }
+    }
 
     /**
      * Generate frameworkcontroller resource config file
@@ -272,11 +286,16 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         
         let taskRoles = [];
         for(let index in this.frameworkcontrollerTrialConfig.taskRoles) {
+            let containerPort = this.frameworkcontrollerContainerPortMap.get(this.frameworkcontrollerTrialConfig.taskRoles[index].name);
+            if(!containerPort) {
+                throw new Error('Container port is not initialized');
+            }
             let taskRole = this.generateTaskRoleConfig(
                 trialWorkingFolder, 
                 this.frameworkcontrollerTrialConfig.taskRoles[index].image, 
                 `run_${this.frameworkcontrollerTrialConfig.taskRoles[index].name}.sh`,
-                podResources[index]
+                podResources[index],
+                containerPort
             );
             taskRoles.push({
                 name: this.frameworkcontrollerTrialConfig.taskRoles[index].name,
@@ -308,7 +327,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         };
     }
 
-    private generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string, podResources: any): any {
+    
+
+    private generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string, podResources: any, containerPort: number): any {
         if(!this.kubernetesClusterConfig) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }
@@ -327,6 +348,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         shareName: `${this.azureStorageShare}`,
                         readonly: false
                     }
+            }, {
+                name: 'frameworkbarrier-volume',
+                emptyDir: {}
             }])
         }else {
             let frameworkcontrollerClusterConfigNFS: KubernetesClusterConfigNFS = <KubernetesClusterConfigNFS> this.kubernetesClusterConfig;
@@ -337,9 +361,11 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     server: `${frameworkcontrollerClusterConfigNFS.nfs.server}`,
                     path: `${frameworkcontrollerClusterConfigNFS.nfs.path}`
                 }
+            }, {
+                name: 'frameworkbarrier-volume',
+                emptyDir: {}
             }])
         }
-        
         let taskRole = {
             pod: {
                 spec: {
@@ -347,16 +373,31 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     {
                         name: 'framework',
                         image: replicaImage,
-                        args: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
+                        command: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
                         volumeMounts: [
                         {
                             name: 'nni-vol',
                             mountPath: this.CONTAINER_MOUNT_PATH
                         }],
-                        resources: podResources
+                        resources: podResources,
+                        ports: [{
+                            containerPort: 4001
+                        }]
+                    }],
+                    // serviceAccountName: 'frameworkbarrier',
+                    initContainers: [
+                    {
+                        name: 'frameworkbarrier',
+                        image: 'frameworkcontroller/frameworkbarrier',
+                        volumeMounts: [
+                        {   
+                            name: 'frameworkbarrier-volume',
+                            mountPath: '/mnt/frameworkbarrier'
+                        }]
                     }],
                     restartPolicy: 'OnFailure',
-                    volumes: volumeSpecMap.get('nniVolumes')
+                    volumes: volumeSpecMap.get('nniVolumes'),
+                    hostNetwork: false
                 }
             }
         }
