@@ -149,7 +149,8 @@ def main(params):
     Main function, build mnist network, run and send result to NNI.
     '''
     # Import data
-    mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
+    data_dir = params['data_dir'] + str(nni.get_sequence_id())
+    mnist = input_data.read_data_sets(data_dir, one_hot=True)
     print('Mnist download data down.')
     logger.debug('Mnist download data down.')
 
