@@ -1,3 +1,5 @@
+# Welcome to Neural Network Intelligence
+
 <p align="center">
 <img src="img/nni_logo.png" alt="drawing" width="300"/>
 </p>
