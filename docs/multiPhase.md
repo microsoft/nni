@@ -1,5 +1,7 @@
 **Create multi-phase experiment**
 
+Typically each trial job get one single hyper parameter from tuner and do some kind of experiment, let's say train a model with that hyper parameter and reports its result to tuner.  Sometimes you may want to share information between your models. However each trial job is in a seperate process and may cross operating systems, it is not convenient to share information between your models. In such case, you can leverage NNI multi-phase experiment to share information between models easily.
+
 Multi-phase experiments refer to experiments whose trial jobs request multiple hyper parameters from tuner and report multiple final results to NNI.
 To use multi-phase experiment, please follow below steps:
 
