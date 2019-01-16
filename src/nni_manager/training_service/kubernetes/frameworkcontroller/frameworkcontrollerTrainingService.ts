@@ -31,7 +31,7 @@ import {
     JobApplicationForm, TrialJobApplicationForm,
     TrialJobDetail, NNIManagerIpConfig
 } from '../../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getIPV4Address } from '../../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
 import { NFSConfig, KubernetesClusterConfigNFS, KubernetesClusterConfigAzure, KubernetesClusterConfigFactory } from '../kubernetesConfig'
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { validateCodeDir } from '../../common/util';
