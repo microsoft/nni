@@ -29,11 +29,12 @@ import { getExperimentRootDir, uniqueString, getJobCancelStatus, getIPV4Address 
 import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
-import { KubernetesTrialJobDetail } from './kubernetesData';
+import { KubernetesTrialJobDetail, KubernetesScriptFormat } from './kubernetesData';
 import { KubernetesClusterConfig } from './kubernetesConfig';
 import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
+import { String } from 'typescript-string-operations';
 
 import * as azureStorage from 'azure-storage';
 var azure = require('azure-storage');
@@ -171,6 +172,39 @@ abstract class KubernetesTrainingService {
         return Promise.resolve();
     }
     
+            /**	
+     * Genereate run script for different roles(like worker or ps)	
+     * @param trialJobId trial job id	
+     * @param trialWorkingFolder working folder	
+     * @param command 	
+     * @param trialSequenceId sequence id	
+     */	
+    protected generateRunScript(platform: string, trialJobId: string, trialWorkingFolder: string, 	
+        command: string, trialSequenceId: string, roleName: string, gpuNum: number): string {	
+        let nvidia_script: string = '';	
+        // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs	
+        // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61	
+        // So we have to explicitly set CUDA_VISIBLE_DEVICES to empty if user sets gpuNum to 0 in NNI config file	
+        if(gpuNum === 0) {	
+            nvidia_script = `export CUDA_VISIBLE_DEVICES='0'`;	
+        }	
+        const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();	
+        const runScript: string = String.Format(	
+            KubernetesScriptFormat,	
+            platform,	
+            trialJobId,	
+            path.join(trialWorkingFolder, 'output', `${roleName}_output`),	
+            trialJobId,	
+            getExperimentId(),	
+            trialWorkingFolder,	
+            trialSequenceId,	
+            nvidia_script,	
+            command,	
+            nniManagerIp,	
+            this.kubernetesRestServerPort	
+        );	
+        return runScript;	
+    }
     protected async createNFSStorage(nfsServer: string, nfsPath: string): Promise<void> {
         await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
         try {
