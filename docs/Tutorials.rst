@@ -3,9 +3,9 @@ NNI Tutorials
 ######################
 
 ..  toctree::
-    QuickStart<GetStarted>
+    QuickStart
     Installation
     Trial<howto_1_WriteTrial>
-    Tuners<HowToChooseTuner>
+    Tuners
     WebUI
-    Training Platform
+    Training Platform<training_services>

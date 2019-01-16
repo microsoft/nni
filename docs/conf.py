@@ -28,6 +28,7 @@ version = ''
 # The full version, including alpha/beta/rc tags
 release = 'v0.5'
 
+github_doc_root = "https://github.com/Microsoft/nni/tree/dev-doc/docs"
 
 # -- General configuration ---------------------------------------------------
 
@@ -43,6 +44,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'recommonmark',
     'sphinx_markdown_tables',
+    'sphinxarg.ext',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -105,6 +107,7 @@ html_static_path = ['_static']
 #
 # html_sidebars = {}
 
+html_logo = './img/nni_logo.png'
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
