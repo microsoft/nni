@@ -2,6 +2,18 @@
 ===
 Assessor module is for assessing running trials. One common use case is early stopping, which terminates unpromising trial jobs based on their intermediate results.
 
+<center>
+
+
+| Dataset           | Dataset | Class Number | Training set |
+|-------------------|---------|:--------------:|--------------|
+| Multi-Cardinality | SST1    | 5 |     8,544    |
+|                   | SST2    | 2            | 6,920        |
+|                   | SUBJ    | 2            | 9,000        |
+|                   | IMDB    | 2            | 25,000       |
+
+</center>
+
 ## Using NNI built-in Assessor
 Here we use the same example `examples/trials/mnist-annotation`. We use `Medianstop` assessor for this experiment. The yaml configure file is shown below:
 ```
