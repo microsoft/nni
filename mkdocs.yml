@@ -13,6 +13,8 @@ nav:
             - Remote: RemoteMachineMode.md
             - PAI: PAIMode.md
             - Kubeflow: KubeflowMode.md
+        - Advanced Features:
+            - multiPhase.md
     - Examples:
         - MNIST Examples: mnist_examples.md
     - Reference:
