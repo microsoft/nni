@@ -109,6 +109,7 @@ You can use these commands to get more information about the experiment
 * [Use NNIBoard](docs/WebUI.md)
 * [How to define search space](docs/SearchSpaceSpec.md)
 * [How to define a trial](docs/howto_1_WriteTrial.md)
+* [How to choose tuner/search-algorithm](docs/HowToChooseTuner.md)
 * [Config an experiment](docs/ExperimentConfig.md)
 * [How to use annotation](docs/howto_1_WriteTrial.md#nni-python-annotation)
 ## **Tutorials**
