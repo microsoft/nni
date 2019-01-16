@@ -5,8 +5,7 @@ trigger:
 jobs:
 
 - job: 'Ubuntu_16_04'
-  pool:
-    vmImage: 'Ubuntu 16.04'
+  pool: 'NNI CI GPU'
   strategy:
     matrix:
       Python36:
