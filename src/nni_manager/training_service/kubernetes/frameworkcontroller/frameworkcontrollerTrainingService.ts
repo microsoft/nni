@@ -402,7 +402,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         }],
                         resources: podResources,
                         ports: [{
-                            containerPort: 4001
+                            containerPort: containerPort
                         }]
                     }],
                     initContainers: [
@@ -421,7 +421,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 }
             }
         }
-        console.log(taskRole)
         return taskRole;
     }
 }
