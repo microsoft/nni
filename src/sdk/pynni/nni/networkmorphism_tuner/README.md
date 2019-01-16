@@ -76,7 +76,7 @@ The tuner has a lot of different files, functions and classes. Here we will only
 
 ## 4. The Network Representation Json Example
 
-Here is an example of the intermediate representation JSON file we defined, which is passed from the tuner to the trial in the architecture search procedure. The example is as follows.
+Here is an example of the intermediate representation JSON file we defined, which is passed from the tuner to the trial in the architecture search procedure. Users can call "json\_to\_graph()" function in trial code to build a pytorch model or keras model from this JSON file. The example is as follows.
 
 ```json
 {
@@ -169,11 +169,11 @@ Here is an example of the intermediate representation JSON file we defined, whic
  }
 ```
 
-The definition of each model is a JSON object(also you can consider the model as a DAG graph), where:
+The definition of each model is a JSON object(also you can consider the model as a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)), where:
 
 - `input_shape` is a list of integers, which does not include the batch axis.
 - `weighted` means whether the weights and biases in the neural network should be included in the graph.
-- `operation_history` is the number of inputs the layer has.
+- `operation_history` is a list saving all the network morphism operations.
 - `layer_id_to_input_node_ids` is a dictionary instance mapping from layer identifiers to their input nodes identifiers.
 - `layer_id_to_output_node_ids` is a dictionary instance mapping from layer identifiers to their output nodes identifiers
 - `adj_list` is a two dimensional list. The adjacency list of the graph. The first dimension is identified by tensor identifiers. In each edge list, the elements are two-element tuples of (tensor identifier, layer identifier).
