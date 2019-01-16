@@ -6,7 +6,7 @@ nav:
     - Tutorials:
         - QuickStart: QuickStart.md
         - Installation: Installation.md
-        - Trial HowTo: howto_1_WriteTrial.md
+        - Trials: Trials.md
         - Tuners:
             - Try Builtin Tuners: Tuners.md
             - Customized Tuners: Customize_Tuner.md
@@ -25,6 +25,8 @@ nav:
         - Configuration: ExperimentConfig.md
         - Search Space: SearchSpaceSpec.md
         - Annotation: AnnotationSpec.md
+        - Tuners:
+            - GridSearchTuner.md
     - Contribution:
         - Development Setup: SetupNNIDeveloperEnvironment.md
         - Contribution Guide: CONTRIBUTING.md

@@ -1,58 +1,70 @@
 # NNI Annotation 
 
-For good user experience and reduce user effort, we need to design a good annotation grammar.
 
-If users use NNI system, they only need to:
+## Overview
 
- 1. Use nni.get_next_parameter() to retrieve hyper parameters from Tuner, before using other annotation, use following annotation at the begining of trial code:
-    '''@nni.get_next_parameter()'''
+To improve user experience and reduce user effort, we design an annotation grammar. Using NNI annotation, users can adapt their code to NNI just by adding some standalone annotating strings, which does not affect the execution of the original code. 
 
- 2. Annotation variable in code as:
+Below is an example:
 
-    '''@nni.variable(nni.choice(2,3,5,7),name=self.conv_size)'''
+```python
+'''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
+learning_rate = 0.1
+```
+The meaning of this example is that NNI will choose one of several values (0.1, 0.01, 0.001) to assign to the learning_rate variable. Specifically, this first line is an NNI annotation, which is a single string. Following is an assignment statement. What nni does here is to replace the right value of this assignment statement according to the information provided by the annotation line.
 
- 3. Annotation intermediate in code as:
 
-    '''@nni.report_intermediate_result(test_acc)'''
+In this way, users could either run the python code directly or launch NNI to tune hyper-parameter in this code, without changing any codes.
 
- 4. Annotation output in code as:
+## Types of Annotation:
 
-    '''@nni.report_final_result(test_acc)'''
+In NNI, there are mainly four types of annotation:
 
- 5. Annotation `function_choice` in code as:
 
-    '''@nni.function_choice(max_pool(h_conv1, self.pool_size),avg_pool(h_conv1, self.pool_size),name=max_pool)'''
+### 1. Annotate variables
 
-In this way, they can easily implement automatic tuning on NNI. 
+   `'''@nni.variable(sampling_algo, name)'''`
 
-For `@nni.variable`, `nni.choice` is the type of search space and there are 10 types to express your search space as follows:
+`@nni.variable` is used in NNI to annotate a variable.
 
- 1. `@nni.variable(nni.choice(option1,option2,...,optionN),name=variable)`  
-    Which means the variable value is one of the options, which should be a list The elements of options can themselves be stochastic expressions
+**Arguments**
 
- 2. `@nni.variable(nni.randint(upper),name=variable)`  
-    Which means the variable value is a random integer in the range [0, upper).
+- **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) such as `choice` or `uninform`. 
+- **name**: The name of the variable that the selected value will be assigned to. Note that this argument should be the same as the left value of the following assignment statement.
 
- 3. `@nni.variable(nni.uniform(low, high),name=variable)`  
-    Which means the variable value is a value uniformly between low and high.
+An example here is:
 
- 4. `@nni.variable(nni.quniform(low, high, q),name=variable)`  
-    Which means the variable value is a value like round(uniform(low, high) / q) * q
+```python
+'''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
+learning_rate = 0.1
+```
 
- 5. `@nni.variable(nni.loguniform(low, high),name=variable)`  
-    Which means the variable value is a value drawn according to exp(uniform(low, high)) so that the logarithm of the return value is uniformly distributed.
+### 2. Annotate functions
 
- 6. `@nni.variable(nni.qloguniform(low, high, q),name=variable)`  
-    Which means the variable value is a value like round(exp(uniform(low, high)) / q) * q
+   `'''@nni.function_choice(*functions, name)'''`
 
- 7. `@nni.variable(nni.normal(label, mu, sigma),name=variable)`  
-    Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma.
+`@nni.function_choice` is used to choose one from several functions.
 
- 8. `@nni.variable(nni.qnormal(label, mu, sigma, q),name=variable)`  
-    Which means the variable value is a value like round(normal(mu, sigma) / q) * q
+**Arguments**
 
- 9. `@nni.variable(nni.lognormal(label, mu, sigma),name=variable)`  
-    Which means the variable value is a value drawn according to exp(normal(mu, sigma))
+- **\*functions**: Several functions that are waiting to be selected from. Note that it should be a complete function call with aruguments. Such as `max_pool(hidden_layer, pool_size)`.
+- **name**: The name of the function that will be replace in the following assignment statement.
 
-10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
-    Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
+An example here is:
+
+```python
+"""@nni.function_choice(max_pool(hidden_layer, pool_size), avg_pool(hidden_layer, pool_size), name=max_pool)"""
+h_pooling = max_pool(hidden_layer, pool_size)
+```
+
+### 3. Annotate intermediate result
+
+   `'''@nni.report_intermediate_result(metrics)'''`
+
+`@nni.report_intermediate_result` is used to report itermediate result, whose usage is the same as `nni.report_intermediate_result` in [Trials.md](Trials.md)
+
+### 4. Annotate final result
+
+   `'''@nni.report_final_result(metrics)'''`
+
+`@nni.report_final_result` is used to report final result of the current trial, whose usage is the same as `nni.report_final_result` in [Trials.md](Trials.md)
