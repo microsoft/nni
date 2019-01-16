@@ -21,10 +21,12 @@
 
 import json
 import os
+import sys
 import shutil
 import string
-from subprocess import Popen, PIPE, call, check_output
+from subprocess import Popen, PIPE, call, check_output, check_call
 import tempfile
+from nni.constants import ModuleName
 from nni_annotation import *
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
@@ -32,9 +34,9 @@ from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port
 from .constants import *
-import time
 import random
 import site
+import time
 from pathlib import Path
 
 def get_log_path(config_file_name):
@@ -72,16 +74,26 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         exit(1)
 
     print_normal('Starting restful server...')
-    python_dir = str(Path(site.getusersitepackages()).parents[2])
-    entry_file = os.path.join(python_dir, 'nni', 'main.js')
-    entry_dir = os.path.join(python_dir, 'nni')
-    local_entry_dir = entry_dir
-    if not os.path.isfile(entry_file):
-        python_dir = str(Path(site.getsitepackages()[0]).parents[2])
+    # Find nni lib from the following locations in order
+    sys_wide_python = True
+    python_sitepackage = site.getsitepackages()[0]
+    # If system-wide python is used, we will give priority to using user-sitepackage given that nni exists there
+    if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
+        local_python_dir = str(Path(site.getusersitepackages()).parents[2])
+        entry_file = os.path.join(local_python_dir, 'nni', 'main.js')
+        entry_dir = os.path.join(local_python_dir, 'nni')
+    else:
+        # If this python is not system-wide python, we will use its site-package directly
+        sys_wide_python = False
+
+    if not sys_wide_python or not os.path.isfile(entry_file):
+        python_dir = str(Path(python_sitepackage).parents[2])
         entry_file = os.path.join(python_dir, 'nni', 'main.js')
         entry_dir = os.path.join(python_dir, 'nni')
+        # Nothing is found
         if not os.path.isfile(entry_file):
-            raise Exception('Fail to find main.js under both %s and %s!' % (local_entry_dir, entry_dir))
+            raise Exception('Fail to find nni under both "%s" and "%s"' % (local_python_dir, python_dir))
+
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
@@ -272,12 +284,23 @@ def set_experiment(experiment_config, mode, port, config_file_name):
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(config_file_name)
+
+    # check packages for tuner
+    if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
+        tuner_name = experiment_config['tuner']['builtinTunerName']
+        module_name = ModuleName[tuner_name]
+        try:
+            check_call([sys.executable, '-c', 'import %s'%(module_name)])
+        except ModuleNotFoundError as e:
+            print_error('The tuner %s should be installed through nnictl'%(tuner_name))
+            exit(1)
+
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
-        path = os.path.join(tempfile.gettempdir(), 'nni', 'annotation')
+        path = os.path.join(tempfile.gettempdir(), os.environ['USER'], 'nni', 'annotation')
         if not os.path.isdir(path):
             os.makedirs(path)
         path = tempfile.mkdtemp(dir=path)

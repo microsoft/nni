@@ -20,7 +20,7 @@ If users use NNI system, they only need to:
 
     '''@nni.function_choice(max_pool(h_conv1, self.pool_size),avg_pool(h_conv1, self.pool_size),name=max_pool)'''
 
-In this way, they can easily realize automatic tuning on NNI. 
+In this way, they can easily implement automatic tuning on NNI.
 
 For `@nni.variable`, `nni.choice` is the type of search space and there are 10 types to express your search space as follows:
 
@@ -51,5 +51,5 @@ For `@nni.variable`, `nni.choice` is the type of search space and there are 10 t
  9. `@nni.variable(nni.lognormal(label, mu, sigma),name=variable)`  
     Which means the variable value is a value drawn according to exp(normal(mu, sigma))
 
-10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
+ 10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
     Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
