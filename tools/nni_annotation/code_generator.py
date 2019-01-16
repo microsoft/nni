@@ -25,6 +25,7 @@ import astor
 
 # pylint: disable=unidiomatic-typecheck
 
+layer_dict_name = 'nni_layer_info'
 
 def parse_annotation(code):
     """Parse an annotation string.
@@ -159,6 +160,72 @@ def replace_function_node(node, annotation):
     FuncReplacer(funcs, target).visit(node)
     return node
 
+# New code added
+
+def parse_architecture(string, layer_dict_initialized):
+    return_node_list = list()
+    dict_node = ast.parse(string)
+    dict_node = NameReplacer().visit(dict_node)
+    dict_node = dict_node.body[0].value
+    if not layer_dict_initialized:
+        initialization = ast.parse(layer_dict_name+"=dict()").body[0]
+        return_node_list.append(initialization)
+    return_node_list.append(update_dict(dict_node))
+    #layer_names = [layer_name.s for layer_name in dict_node.keys]
+    return_node_list.extend(get_define_layer_nodes(dict_node))
+    
+    return (*return_node_list,)
+
+def make_attr_call(attr_name, attr_attr, args):
+    '''generate an attribute call'''
+    attribute = ast.Attribute(value=ast.Name(id=attr_name), attr=attr_attr)
+    call_node = ast.Call(func=attribute, args=args, keywords=[])
+    
+    return call_node
+    
+def update_dict(node):
+    call_node = make_attr_call(layer_dict_name, 'update', [node])
+
+    return ast.Expr(value=call_node)
+
+def get_layer_output(layer_name):
+    '''generate an dict node like nni_layer_info['layer_name']['outputs']'''
+    inner_value = ast.Name(id=layer_dict_name, ctx=ast.Load())
+    inner_slice = ast.Index(value=ast.Str(s=layer_name))
+    inner_dict = ast.Subscript(value=inner_value, slice=inner_slice, ctx=ast.Load())
+    
+    outer_slice = ast.Index(value=ast.Str(s='outputs'))
+    outer_dict = ast.Subscript(value=inner_dict, slice=outer_slice, ctx=ast.Store())
+
+    return outer_dict
+
+def eval_items(layername, key):
+    '''eval all items in a list and return a ast node'''
+    target = "{}['{}']['{}']".format(layer_dict_name, layername, key)
+    template = "{}=[eval(item) for item in {}]".format(target, target)
+    
+    return ast.parse(template)
+
+def get_define_layer_nodes(dict_node):
+    layer_nodes = list()
+    for layer_name, info in zip(dict_node.keys, dict_node.values):
+        #get keys
+        info_keys = [key.s for key in info.keys]
+        layer_name = layer_name.s
+        # evaluate all inputs and functions
+        layer_nodes.append(eval_items(layer_name, 'layer_choice'))
+        layer_nodes.append(eval_items(layer_name, 'inputs'))
+        # call NNI API to get output
+        ## left value
+        output_node = ast.Name(id=info.values[info_keys.index('outputs')].s)
+        ## right value
+        args = [ast.Name(id=layer_dict_name), ast.Str(layer_name)]
+        value_node = make_attr_call('nni', 'get_layer_output', args)
+        ## assign statement
+        assign_node = ast.Assign(targets=[output_node], value=value_node)
+        layer_nodes.append(assign_node)
+        
+    return layer_nodes
 
 class FuncReplacer(ast.NodeTransformer):
     """To replace target function call expressions in a node annotated by `nni.function_choice`"""
@@ -176,6 +243,11 @@ class FuncReplacer(ast.NodeTransformer):
             return self.target
         return node
 
+class NameReplacer(ast.NodeTransformer):
+    '''To replace all ast.Name to ast.Str using ast.Name.id'''
+    def visit_Name(self, node):
+        self.generic_visit(node)
+        return ast.Str(node.id)
 
 class Transformer(ast.NodeTransformer):
     """Transform original code to annotated code"""
@@ -184,6 +256,7 @@ class Transformer(ast.NodeTransformer):
         self.stack = []
         self.last_line = 0
         self.annotated = False
+        self.layer_dict_initialized = False
 
     def visit(self, node):
         if isinstance(node, (ast.expr, ast.stmt)):
@@ -227,6 +300,11 @@ class Transformer(ast.NodeTransformer):
                 or string.startswith('@nni.function_choice('):
             self.stack[-1] = string[1:]  # mark that the next expression is annotated
             return None
+
+        if string.startswith('@nni.architecture'):
+            nodes = parse_architecture(string[len('@nni.architecture')+1:], self.layer_dict_initialized)
+            self.layer_dict_initialized = True
+            return nodes
 
         raise AssertionError('Unexpected annotation function')
 

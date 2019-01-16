@@ -20,6 +20,7 @@
 
 
 import ast
+import astor
 
 # pylint: disable=unidiomatic-typecheck
 
@@ -102,7 +103,7 @@ class SearchSpaceGenerator(ast.NodeVisitor):
         self.last_line = node.lineno
 
         assert len(node.args) == 1, 'update function has more than one arg'
-        update_dict = eval(node.args[0])
+        update_dict = eval(astor.to_source(node.args[0]))
         self.search_space.update(update_dict)
 
 
