@@ -7,7 +7,7 @@
   * Advanced Support of [Weight Sharing](./AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
 
 
-### Training Service Ehancement
+### Training Service Enhancement
 * [FrameworkController Training service](./FrameworkControllerMode.md): Support run experiments using frameworkcontroller on kubernetes
    * FrameworkController is a Controller on kubernetes that is general enough to run (distributed) jobs with various machine learning frameworks, such as tensorflow, pytorch, MXNet.
    * NNI provides unified and simple specification for job definition.
