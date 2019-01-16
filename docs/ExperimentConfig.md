@@ -3,6 +3,12 @@
 A config file is needed when create an experiment, the path of the config file is provide to nnictl.
 The config file is written in yaml format, and need to be written correctly.
 This document describes the rule to write config file, and will provide some examples and templates. 
+
+ - [Template](#Template) (the templates of an config file)
+ - [Configuration spec](#Configuration) (the configuration specification of every attribute in config file)
+ - [Examples](#Examples) (the examples of config file)
+
+<a name="Template"></a>
 ## Template
 * __light weight(without Annotation and Assessor)__ 
 ```
@@ -107,7 +113,8 @@ machineList:
     username: 
     passwd: 
 ```
-## Configuration
+<a name="Configuration"></a>
+## Configuration spec
 * __authorName__
   * Description  
             
@@ -423,7 +430,7 @@ machineList:
     
     
 
-        
+<a name="Examples"></a>        
 ## Examples
 * __local mode__
 
