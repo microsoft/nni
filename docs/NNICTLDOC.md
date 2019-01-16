@@ -16,6 +16,7 @@ nnictl support commands:
  - [nnictl log](#log)
  - [nnictl webui](#webui)
  - [nnictl tensorboard](#tensorboard)
+ - [nnictl package](#package)
 
 
 
@@ -365,3 +366,29 @@ nnictl support commands:
        | Name, shorthand | Required|Default | Description |
        | ------ | ------ | ------ |------ |
      | id|  False| |ID of the experiment you want to set|
+
+<a name="package"></a>
+### Manage package
+* __nnictl package install__
+   * Description
+     
+	     Install the packages needed in nni experiments. 
+   
+   * Usage
+         
+		    nnictl package install [OPTIONS] 
+        
+    	Options:
+    	
+       | Name, shorthand | Required|Default | Description |
+       | ------ | ------ | ------ |------ |
+     | --name|  True| |The name of package to be installed|
+
+* __nnictl package show__
+   * Description
+     
+	     List the packages supported. 
+   
+   * Usage
+         
+		    nnictl package show 
