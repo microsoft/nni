@@ -417,18 +417,20 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     {
                         name: 'framework',
                         image: replicaImage,
-                        args: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
+                        command: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
                         volumeMounts: [
                         {
                             name: 'nni-vol',
                             mountPath: this.CONTAINER_MOUNT_PATH
+                        },{
+                            name: 'frameworkbarrier-volume',
+                            mountPath: '/mnt/frameworkbarrier'
                         }],
                         resources: podResources,
                         ports: [{
                             containerPort: 4001
                         }]
                     }],
-                    // serviceAccountName: 'frameworkbarrier',
                     initContainers: [
                     {
                         name: 'frameworkbarrier',
@@ -445,6 +447,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 }
             }
         }
+        console.log(taskRole)
         return taskRole;
     }
 }

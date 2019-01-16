@@ -37,6 +37,6 @@ cp -rT $NNI_CODE_DIR $NNI_SYS_DIR
 cd $NNI_SYS_DIR
 sh install_nni.sh
 {8}
-/mnt/frameworkbarrier/injector.sh
-python3 -m nni_trial_tool.trial_keeper --trial_command '{9}' --nnimanager_ip {10} --nnimanager_port {11} `
-+ `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`
+. /mnt/frameworkbarrier/injector.sh
+eval "python3 -m nni_trial_tool.trial_keeper --trial_command '{9}' --nnimanager_ip {10} --nnimanager_port {11} `
++ `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr"`
