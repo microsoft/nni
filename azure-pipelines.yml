@@ -6,10 +6,6 @@ jobs:
 
 - job: 'Ubuntu_16_04'
   pool: 'NNI CI GPU'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools
