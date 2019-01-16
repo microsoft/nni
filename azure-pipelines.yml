@@ -5,7 +5,7 @@ trigger:
 jobs:
 
 - job: 'Ubuntu_16_04'
-  pool: Default
+  pool: 'Hosted Ubuntu 1604'
   strategy:
     matrix:
       Python36:
