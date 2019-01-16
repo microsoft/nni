@@ -1,6 +1,6 @@
 ## Create multi-phase experiment
 
-Typically each trial job get one single hyper parameter from tuner and do some kind of experiment, let's say train a model with that hyper parameter and reports its result to tuner. Sometimes you may want to train multiple models within one trial job to share information between models or saving system resource by creating less trial jobs, for example:
+Typically each trial job gets single set of configuration (e.g. hyper parameters) from tuner and do some kind of experiment, let's say train a model with that hyper parameter and reports its result to tuner. Sometimes you may want to train multiple models within one trial job to share information between models or saving system resource by creating less trial jobs, for example:
 1. Train multiple models sequentially in one trial job, so that later models can leverage the weights or other information of prior models and may use different hyper parameters.
 2. Train large amount of models on limited system resource, combine multiple models together to save system resource to create large amount of trial jobs.
 3. Any other scenario that you would like to train multiple models with different hyper parameters in one trial job, be aware that if you allocate multiple GPUs to a trial job and you train multiple models concurrently within on trial job, you need to allocate GPU resource properly by your trial code.
