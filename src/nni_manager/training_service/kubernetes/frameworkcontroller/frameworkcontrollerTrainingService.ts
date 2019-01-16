@@ -161,7 +161,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
     
     /**
      * generate trial's command for frameworkcontroller
-     * expose port and execute injector.sh before user's command
+     * expose port and execute injector.sh before executing user's command
      * @param command 
      */
     private generateCommandScript(command: string): string {
@@ -169,11 +169,10 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         if(!this.fcTrialConfig) {
             throw new Error('frameworkcontroller trial config is not initialized');
         }
-        for(let index in this.fcTrialConfig.taskRoles) {
-            portScript += `${this.fcTrialConfig.taskRoles[index].name}_port=${this.fcContainerPortMap.get(this.fcTrialConfig.taskRoles[index].name)} `;
+        for(let taskRole of this.fcTrialConfig.taskRoles) {
+            portScript += `${taskRole.name}_port=${this.fcContainerPortMap.get(taskRole.name)} `;
         }
-        let commandScript = `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
-        return commandScript;
+        return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
     }
     
     private async prepareRunScript(trialLocalTempFolder: string, curTrialSequenceId: number, trialJobId: string, trialWorkingFolder: string, form: JobApplicationForm): Promise<void> {
