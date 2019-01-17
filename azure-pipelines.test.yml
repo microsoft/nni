@@ -1,6 +1,4 @@
 trigger:
-- master
-- dev-remote-ci
 - dev-it
 
 jobs:
