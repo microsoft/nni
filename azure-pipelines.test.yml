@@ -32,5 +32,5 @@ jobs:
     displayName: 'Built-in tuners / assessors tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local --config config_test/examples/mnist.test.yml
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local
     displayName: 'Examples on local machine tests'
