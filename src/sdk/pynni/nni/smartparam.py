@@ -47,6 +47,8 @@ __all__ = [
 # pylint: disable=unused-argument
 
 def get_layer_output(layer, layer_name):
+    if trial._params is None:
+            trial.get_next_parameter()
     input_candidate_names = trial.get_current_parameter(layer_name)['input_candidates']
     layer_choice = trial.get_current_parameter(layer_name)['layer_choice']
 

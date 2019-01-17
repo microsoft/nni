@@ -222,6 +222,7 @@ def get_define_layer_nodes(dict_node):
         info_keys = [key.s for key in info.keys]
         layer_name = layer_name.s
         # evaluate all inputs and functions
+        layer_nodes.append(ast.parse('locals()').body[0])
         layer_nodes.append(eval_items(layer_name, 'layer_choice'))
         layer_nodes.append(eval_items(layer_name, 'input_candidates'))
         # call NNI API to get output
