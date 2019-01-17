@@ -22,19 +22,13 @@ import os
 import argparse
 import glob
 import subprocess
-import sys
 import time
 import traceback
 
 from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, \
     parse_max_duration_time, get_succeeded_trial_num, print_stderr
+from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL
 
-GREEN = '\33[32m'
-RED = '\33[31m'
-CLEAR = '\33[0m'
-
-STATUS_URL = 'http://localhost:8080/api/v1/nni/check-status'
-TRIAL_JOBS_URL = 'http://localhost:8080/api/v1/nni/trial-jobs'
 
 def gen_new_config(config_file, training_service='local'):
     ''' 

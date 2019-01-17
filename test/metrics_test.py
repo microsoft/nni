@@ -25,14 +25,7 @@ import requests
 import json
 
 from utils import get_experiment_status, get_yml_content, parse_max_duration_time, get_succeeded_trial_num
-
-GREEN = '\33[32m'
-RED = '\33[31m'
-CLEAR = '\33[0m'
-
-STATUS_URL = 'http://localhost:8080/api/v1/nni/check-status'
-TRIAL_JOBS_URL = 'http://localhost:8080/api/v1/nni/trial-jobs'
-METRICS_URL = 'http://localhost:8080/api/v1/nni/metric-data'
+from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, METRICS_URL
 
 def run_test():
     '''run metrics test'''
