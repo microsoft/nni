@@ -164,6 +164,12 @@ def replace_function_node(node, annotation):
 
 def parse_architecture(string, layer_dict_initialized):
     return_node_list = list()
+    # fix indentation
+    first_char_index = 0
+    for char in string.split('\n')[0]:
+        if char in [' ', '\t']:
+            first_char_index += 1
+    string = '\n'.join([line[first_char_index:] for line in string.split('\n')])
     dict_node = ast.parse(string)
     dict_node = NameReplacer().visit(dict_node)
     dict_node = dict_node.body[0].value
@@ -171,7 +177,10 @@ def parse_architecture(string, layer_dict_initialized):
         initialization = ast.parse(layer_dict_name+"=dict()").body[0]
         return_node_list.append(initialization)
     return_node_list.append(update_dict(dict_node))
-    #layer_names = [layer_name.s for layer_name in dict_node.keys]
+    #store locals and globals
+    return_node_list.append(ast.parse('_nni_locals=locals()').body[0])
+    return_node_list.append(ast.parse('_nni_globals=globals()').body[0])
+    #layer_names = {layer_name.s: eval(layer_name.s) for layer_name in dict_node.keys}
     return_node_list.extend(get_define_layer_nodes(dict_node))
     
     return (*return_node_list,)
@@ -202,7 +211,7 @@ def get_layer_output(layer_name):
 def eval_items(layername, key):
     '''eval all items in a list and return a ast node'''
     target = "{}['{}']['{}']".format(layer_dict_name, layername, key)
-    template = "{}=[eval(item) for item in {}]".format(target, target)
+    template = "%s={item: _nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s}" % (target, target)
     
     return ast.parse(template)
 
@@ -214,7 +223,7 @@ def get_define_layer_nodes(dict_node):
         layer_name = layer_name.s
         # evaluate all inputs and functions
         layer_nodes.append(eval_items(layer_name, 'layer_choice'))
-        layer_nodes.append(eval_items(layer_name, 'inputs'))
+        layer_nodes.append(eval_items(layer_name, 'input_candidates'))
         # call NNI API to get output
         ## left value
         output_node = ast.Name(id=info.values[info_keys.index('outputs')].s)
@@ -302,6 +311,7 @@ class Transformer(ast.NodeTransformer):
             return None
 
         if string.startswith('@nni.architecture'):
+            assert string != '@nni.architecture', 'nni.architecture annotation should not be empty'
             nodes = parse_architecture(string[len('@nni.architecture')+1:], self.layer_dict_initialized)
             self.layer_dict_initialized = True
             return nodes

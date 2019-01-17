@@ -22,6 +22,7 @@
 import inspect
 import math
 import random
+import numpy as np
 
 from .common import env_args
 from . import trial
@@ -38,18 +39,26 @@ __all__ = [
     'qnormal',
     'lognormal',
     'qlognormal',
-    'function_choice'
+    'function_choice',
+    'get_layer_output'
 ]
 
 
 # pylint: disable=unused-argument
 
 def get_layer_output(layer, layer_name):
-    input_candidate = [layer['input_candidates'][x] for x in nni.get_candidate(layer_name)]
+    input_candidate_names = trial.get_current_parameter(layer_name)['input_candidates']
+    layer_choice = trial.get_current_parameter(layer_name)['layer_choice']
+
+    layer = layer[layer_name]
+    input_candidate = [layer['input_candidates'][x] for x in input_candidate_names]
     if layer['input_aggregate'] is not None:
         aggregated_output = layer['input_aggregate'](input_candidate)
+        return layer['layer_choice'][layer_choice](aggregated_output)
+    else:
+        return layer['layer_choice'][layer_choice](*input_candidate)
 
-    return layer['layer_choice'][nni.get_layer_choice('layer_1')](aggregated_output)
+
 
 if env_args.platform is None:
     def choice(*options, name=None):
