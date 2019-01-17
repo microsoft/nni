@@ -21,8 +21,8 @@
 import subprocess
 import time
 import traceback
-import requests
 import json
+import requests
 
 from utils import get_experiment_status, get_yml_content, parse_max_duration_time, get_succeeded_trial_num
 from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL, METRICS_URL
