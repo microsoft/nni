@@ -73,10 +73,38 @@ def fetch_nni_log_path(experiment_url):
 
     return nnimanager_log_path
 
-def check_experiment_status(nnimanager_log_path):
+def is_experiment_done(nnimanager_log_path):
     '''check if the experiment is done successfully'''
     assert os.path.exists(nnimanager_log_path), 'Experiment starts failed'
     cmds = ['cat', nnimanager_log_path, '|', 'grep', EXPERIMENT_DONE_SIGNAL]
     completed_process = subprocess.run(' '.join(cmds), shell=True)
 
     return completed_process.returncode == 0
+
+def get_experiment_status(status_url):
+    nni_status = requests.get(status_url).json()
+    #print(nni_status)
+    return nni_status['status']
+
+def get_succeeded_trial_num(trial_jobs_url):
+    trial_jobs = requests.get(trial_jobs_url).json()
+    print(trial_jobs)
+    num_succeed = 0
+    for trial_job in trial_jobs:
+        if trial_job['status'] in ['SUCCEEDED', 'EARLY_STOPPED']:
+            num_succeed += 1
+    print('num_succeed:', num_succeed)
+    return num_succeed
+
+def print_stderr(trial_jobs_url):
+    trial_jobs = requests.get(trial_jobs_url).json()
+    for trial_job in trial_jobs:
+        if trial_job['status'] == 'FAILED':
+            stderr_path = trial_job['stderrPath'].split(':')[-1]
+            subprocess.run(['cat', stderr_path])
+
+def parse_max_duration_time(max_exec_duration):
+    unit = max_exec_duration[-1]
+    time = max_exec_duration[:-1]
+    units_dict = {'s':1, 'm':60, 'h':3600, 'd':86400}
+    return int(time) * units_dict[unit]
