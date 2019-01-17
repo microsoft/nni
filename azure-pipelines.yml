@@ -33,7 +33,7 @@ jobs:
     displayName: 'Built-in tuners / assessors tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local --local_gpu
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local
     displayName: 'Examples and advanced features tests on local machine'
   - script: |
       cd test
