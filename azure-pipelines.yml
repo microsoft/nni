@@ -1,6 +1,7 @@
 trigger:
 - dev-it
 - master
+- dev-remote-ci
 
 jobs:
 - job: 'Ubuntu_16_04'
