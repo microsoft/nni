@@ -30,6 +30,8 @@ version = ''
 # The full version, including alpha/beta/rc tags
 release = 'v0.5'
 
+github_doc_root = "https://github.com/Microsoft/nni/tree/dev-doc/docs"
+
 # -- General configuration ---------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
