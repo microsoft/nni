@@ -33,7 +33,11 @@ jobs:
   - script: |
       cd test
       PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local
-    displayName: 'Examples on local machine tests'
+    displayName: 'Examples and advanced features tests on local machine'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
+    displayName: 'Trial job metrics test'
 
 - job: 'macOS_10_13'
   pool:

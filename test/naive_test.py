@@ -25,12 +25,7 @@ import time
 import traceback
 
 from utils import is_experiment_done, fetch_nni_log_path, read_last_line, remove_files, setup_experiment
-
-GREEN = '\33[32m'
-RED = '\33[31m'
-CLEAR = '\33[0m'
-
-EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
+from utils import GREEN, RED, CLEAR, EXPERIMENT_URL
 
 def run():
     '''run naive integration test'''
