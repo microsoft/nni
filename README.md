@@ -36,7 +36,7 @@ We encourage researchers and students leverage these projects to accelerate the 
 **Install through pip** 	
 * We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.	
 ```bash	
-    python3 -m pip install --user --upgrade nni
+    python3 -m pip install --upgrade nni
 ```
 * Note:
   * If you are in docker container (as root), please remove `--user` from the installation command.
@@ -46,7 +46,7 @@ We encourage researchers and students leverage these projects to accelerate the 
 * We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) in our current stage. 
 * Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
 ```bash	
-    git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+    git clone -b v0.5 https://github.com/Microsoft/nni.git
     cd nni	
     source install.sh	
 ```
@@ -58,7 +58,7 @@ For the system requirements of NNI, please refer to [Install NNI](docs/Installat
 The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.	
 * Download the examples via clone the source code.	
 ```bash	
-    git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+    git clone -b v0.5 https://github.com/Microsoft/nni.git
 ```
 * Run the mnist example.
 ```bash
@@ -83,11 +83,12 @@ You can use these commands to get more information about the experiment
          commands                       description
 1. nnictl experiment show        show the information of experiments
 2. nnictl trial ls               list all of trial jobs
-3. nnictl log stderr             show stderr log content
-4. nnictl log stdout             show stdout log content
-5. nnictl stop                   stop an experiment
-6. nnictl trial kill             kill a trial job by id
-7. nnictl --help                 get help information about nnictl
+3. nnictl top                    monitor the status of running experiments
+4. nnictl log stderr             show stderr log content
+5. nnictl log stdout             show stdout log content
+6. nnictl stop                   stop an experiment
+7. nnictl trial kill             kill a trial job by id
+8. nnictl --help                 get help information about nnictl
 -----------------------------------------------------------------------
 ```
 
@@ -108,6 +109,7 @@ You can use these commands to get more information about the experiment
 * [Use NNIBoard](docs/WebUI.md)
 * [How to define search space](docs/SearchSpaceSpec.md)
 * [How to define a trial](docs/howto_1_WriteTrial.md)
+* [How to choose tuner/search-algorithm](docs/HowToChooseTuner.md)
 * [Config an experiment](docs/ExperimentConfig.md)
 * [How to use annotation](docs/howto_1_WriteTrial.md#nni-python-annotation)
 ## **Tutorials**
@@ -133,4 +135,3 @@ We are in construction of the instruction for [How to Debug](docs/HowToDebug.md)
 
 ## **License** 
 The entire codebase is under [MIT license](https://github.com/Microsoft/nni/blob/master/LICENSE)
-
