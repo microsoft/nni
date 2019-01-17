@@ -21,19 +21,19 @@ const MONACO = {
 };
 const COLUMN_INDEX = [
     {
-        name: 'Trial No',
+        name: 'Trial No.',
         index: 1
     },
     {
-        name: 'id',
+        name: 'Id',
         index: 2
     },
     {
-        name: 'duration',
+        name: 'Duration',
         index: 3
     },
     {
-        name: 'status',
+        name: 'Status',
         index: 4
     },
     {
@@ -49,7 +49,7 @@ const COLUMN_INDEX = [
         index: 10001
     }
 ];
-const COLUMN = ['Trial No', 'id', 'duration', 'status', 'Default', 'Operation', 'Intermediate Result'];
+const COLUMN = ['Trial No.', 'Id', 'Duration', 'Status', 'Default', 'Operation', 'Intermediate Result'];
 export {
     MANAGER_IP, DOWNLOAD_IP, trialJobStatus,
     CONTROLTYPE, MONACO, COLUMN, COLUMN_INDEX
