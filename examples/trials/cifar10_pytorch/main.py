@@ -1,6 +1,6 @@
 '''Train CIFAR10 with PyTorch.'''
 from __future__ import print_function
-
+import argparse
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -174,6 +174,10 @@ def test(epoch):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epochs", type=int, default=200)
+    args, _ = parser.parse_known_args()
+
     try:
         RCV_CONFIG = nni.get_next_parameter()
         #RCV_CONFIG = {'lr': 0.1, 'optimizer': 'Adam', 'model':'senet18'}
@@ -182,7 +186,7 @@ if __name__ == '__main__':
         prepare(RCV_CONFIG)
         acc = 0.0
         best_acc = 0.0
-        for epoch in range(start_epoch, start_epoch+200):
+        for epoch in range(start_epoch, start_epoch+args.epochs):
             train(epoch)
             acc, best_acc = test(epoch)
             nni.report_intermediate_result(acc)
