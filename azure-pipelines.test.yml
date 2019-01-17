@@ -7,7 +7,7 @@ jobs:
   pool: 'NNI CI GPU'
 
   steps:
-  - script: python3 -m pip install --upgrade pip setuptools
+  - script: python3 -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
   - script: |
       source install.sh
