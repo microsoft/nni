@@ -169,7 +169,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         if(!this.fcTrialConfig) {
             throw new Error('frameworkcontroller trial config is not initialized');
         }
-
         for(let taskRole of this.fcTrialConfig.taskRoles) {
             portScript += `FB_${taskRole.name.toUpperCase()}_PORT=${this.fcContainerPortMap.get(taskRole.name)} `;
         }
