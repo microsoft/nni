@@ -18,11 +18,9 @@ for (dirpath, dirnames, filenames) in walk('./nni'):
 with open('../../README.md', 'r') as fh:
     long_description = fh.read()
 
-version_str = '999.0.0-developing'
-
 setuptools.setup(
     name = 'nni',
-    version = version_str,
+    version = '999.0.0-developing',
     author = 'Microsoft NNI team',
     author_email = 'nni@microsoft.com',
     description = 'Neural Network Intelligence package',
@@ -38,7 +36,7 @@ setuptools.setup(
     },
     python_requires = '>=3.5',
     install_requires = [
-        'nni-sdk=={}'.format(version_str[1:]),
+        'nni-sdk',
         'schema',
         'pyyaml',
         'psutil',
