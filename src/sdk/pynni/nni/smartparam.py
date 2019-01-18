@@ -55,7 +55,7 @@ def get_layer_output(layer, layer_name):
     layer = layer[layer_name]
     input_candidate = [layer['input_candidates'][x] for x in input_candidate_names]
     if layer['input_aggregate'] is not None:
-        aggregated_output = layer['input_aggregate'](input_candidate)
+        aggregated_output = layer['input_aggregate'](*input_candidate)
         return layer['layer_choice'][layer_choice](aggregated_output)
     else:
         return layer['layer_choice'][layer_choice](*input_candidate)

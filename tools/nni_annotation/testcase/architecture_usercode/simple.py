@@ -1,42 +1,70 @@
-import sys
-import numpy
 
-def tanh():
-    pass
 
-def Relu():
-    pass
+def add_one(x):
+    return x+1
 
-images=load_data()
+def add_two(x):
+    return x+2
 
-"""@nni.architecture
-{
-    layer_1: {
-        layer_choice: [tanh, ReLU, identity, sigmoid],
-        input_candidates: [images],
-        input_num: 1,
-        input_aggregate: None,
-        outputs: layer_1_out,
-    },
+def add_three(x):
+    return x+3
 
-    layer_2: {
-        layer_choice: [tanh, ReLU, identity, sigmoid],
-        input_candidates: [layer_1_out],
-        input_num: 1,
-        input_aggregate: None,
-        outputs: layer_2_out,
-    },
+def add_four(x):
+    return x+4
 
-    layer_3: {
-        layer_choice: [tanh, ReLU, identity, sigmoid],
-        input_candidates: [layer_1_out, layer_2_out],
-        input_num: 1,
-        input_aggregate: None,
-        outputs: layer_3_out,
-    }
-}"""
-final_output = layer_3_out
-all = [layer_1_out, layer_2_out, layer_3_out]
+def add_five(x):
+    return x+5
 
-if __name__ == 'main':
-    func()
+
+
+
+
+
+def main():
+
+    images = 5
+
+    """@nni.architecture
+    {
+        layer_1: {
+            layer_choice: [add_one, add_two, add_three, add_four],
+            input_candidates: [images],
+            input_num: 1,
+            input_aggregate: None,
+            outputs: layer_1_out,
+        },
+
+        layer_2: {
+            layer_choice: [add_one, add_two, add_three, add_four],
+            input_candidates: [layer_1_out],
+            input_num: 1,
+            input_aggregate: None,
+            outputs: layer_2_out,
+        },
+
+        layer_3: {
+            layer_choice: [add_one, add_two, add_three, add_four],
+            input_candidates: [layer_1_out, layer_2_out],
+            input_num: 1,
+            input_aggregate: None,
+            outputs: layer_3_out,
+        }
+    }"""
+
+    """@nni.report_intermediate_result(layer_1_out)"""
+    time.sleep(2)
+    """@nni.report_intermediate_result(layer_2_out)"""
+    time.sleep(2)
+    """@nni.report_intermediate_result(layer_3_out)"""
+    time.sleep(2)
+
+    layer_3_out = layer_3_out + 10
+
+    """@nni.report_final_result(layer_3_out)"""
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as exception:
+        print(exception)
+        raise
