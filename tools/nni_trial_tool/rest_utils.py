@@ -31,15 +31,13 @@ def rest_get(url, timeout):
         print('Get exception {0} when sending http get to url {1}'.format(str(e), url))
         return None
 
-def rest_post(url, data, timeout, rethrow_exception=False):
+def rest_post(url, data, timeout):
     '''Call rest post method'''
     try:
         response = requests.post(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
                                  data=data, timeout=timeout)
         return response
     except Exception as e:
-        if rethrow_exception is True:
-            raise
         print('Get exception {0} when sending http post to url {1}'.format(str(e), url))
         return None
 

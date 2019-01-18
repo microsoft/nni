@@ -81,19 +81,19 @@ abstract class KubernetesTrainingService {
         }
     }
 
-    public async listTrialJobs(): Promise<TrialJobDetail[]> {
+    public listTrialJobs(): Promise<TrialJobDetail[]> {
         const jobs: TrialJobDetail[] = [];
         
-        for (const [key, value] of this.trialJobsMap) { 
+        this.trialJobsMap.forEach(async (value: KubernetesTrialJobDetail, key: string) => {
             if (value.form.jobType === 'TRIAL') {
                 jobs.push(await this.getTrialJob(key));
             }
-        };
+        });
 
         return Promise.resolve(jobs);
     }
 
-    public async getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
+    public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
 
         const kubernetesTrialJob: TrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 

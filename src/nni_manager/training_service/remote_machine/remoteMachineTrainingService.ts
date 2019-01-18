@@ -110,15 +110,15 @@ class RemoteMachineTrainingService implements TrainingService {
     /**
      * List submitted trial jobs
      */
-    public async listTrialJobs(): Promise<TrialJobDetail[]> {
+    public listTrialJobs(): Promise<TrialJobDetail[]> {
         const jobs: TrialJobDetail[] = [];
         const deferred: Deferred<TrialJobDetail[]> = new Deferred<TrialJobDetail[]>();
 
-        for (const [key, value] of this.trialJobsMap) { 
+        this.trialJobsMap.forEach(async (value: RemoteMachineTrialJobDetail, key: string) => {
             if (value.form.jobType === 'TRIAL') {
                 jobs.push(await this.getTrialJob(key));
             }
-        };
+        });
         deferred.resolve(jobs);
 
         return deferred.promise;

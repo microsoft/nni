@@ -1,34 +1,16 @@
-// draw accuracy graph data interface
 interface TableObj {
     key: number;
     sequenceId: number;
     id: string;
     duration: number;
     status: string;
-    acc?: number; // draw accuracy graph
+    acc?: number;
     description: Parameters;
     color?: string;
 }
-
-interface TableObjFianl {
-    key: number;
-    sequenceId: number;
-    id: string;
-    duration: number;
-    status: string;
-    acc?: FinalType;
-    description: Parameters;
-    color?: string;
-}
-
-interface FinalType {
-    default: string;
-}
-
 interface ErrorParameter {
     error?: string;
 }
-
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
@@ -111,6 +93,5 @@ export {
     TableObj, Parameters, Experiment, 
     AccurPoint, TrialNumber, TrialJob,
     DetailAccurPoint, TooltipForAccuracy,
-    ParaObj, VisualMapValue, Dimobj, FinalResult,
-    TableObjFianl, FinalType
+    ParaObj, VisualMapValue, Dimobj, FinalResult
 };

@@ -92,7 +92,6 @@ class PAITrainingService implements TrainingService {
     public async run(): Promise<void> {
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         await restServer.start();
-
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
             await this.updatePaiToken();
@@ -104,16 +103,16 @@ class PAITrainingService implements TrainingService {
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
         const jobs: TrialJobDetail[] = [];
         
-        for (const [key, value] of this.trialJobsMap) { 
+        this.trialJobsMap.forEach(async (value: PAITrialJobDetail, key: string) => {
             if (value.form.jobType === 'TRIAL') {
                 jobs.push(await this.getTrialJob(key));
             }
-        };
+        });
 
         return Promise.resolve(jobs);
     }
 
-    public async getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
+    public getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
         if(!this.paiClusterConfig) {
             throw new Error('PAI Cluster config is not initialized');
         }

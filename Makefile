@@ -1,38 +1,32 @@
 # Setting variables
-SHELL := /bin/bash
+
 PIP_INSTALL := python3 -m pip install --no-cache-dir
 PIP_UNINSTALL := python3 -m pip uninstall
 
 ## Colorful output
-_INFO := $(shell echo -e '\033[1;36m')
-_WARNING := $(shell echo -e '\033[1;33m')
-_END := $(shell echo -e '\033[0m')
+_INFO := $(shell echo -e '\e[1;36m')
+_WARNING := $(shell echo -e '\e[1;33m')
+_END := $(shell echo -e '\e[0m')
 
 ## Detect OS
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Linux)
-    OS_SPEC := linux
+	OS_SPEC := linux
 else ifeq ($(UNAME_S), Darwin)
-    OS_SPEC := darwin
+	OS_SPEC := darwin
 else
 	$(error platform $(UNAME_S) not supported)
 endif
 
 ## Install directories
-ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
-IS_SYS_PYTHON ?= $(shell [[ $(ROOT_FOLDER) == /usr* || $(ROOT_FOLDER) == /Library* ]] && echo TRUE || echo FALSE)
-
 ifeq ($(shell id -u), 0)  # is root
     _ROOT := 1
+    ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
     BASH_COMP_PREFIX ?= /usr/share/bash-completion/completions
 else  # is normal user
-    ifeq (TRUE, $(IS_SYS_PYTHON))
-        ROOT_FOLDER := $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getusersitepackages()).parents[2])')
-    endif
+    ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getusersitepackages()).parents[2])')
     ifndef VIRTUAL_ENV
-        ifeq (, $(shell echo $$PATH | grep 'conda'))
-            PIP_MODE ?= --user
-        endif
+        PIP_MODE ?= --user
     endif
     BASH_COMP_PREFIX ?= ${HOME}/.bash_completion.d
 endif
@@ -44,13 +38,11 @@ BIN_FOLDER ?= $(ROOT_FOLDER)/bin
 NNI_PKG_FOLDER ?= $(ROOT_FOLDER)/nni
 
 ## Dependency information
-NNI_DEPENDENCY_FOLDER = /tmp/$(USER)
-$(shell mkdir -p $(NNI_DEPENDENCY_FOLDER))
-NNI_NODE_TARBALL ?= $(NNI_DEPENDENCY_FOLDER)/nni-node-$(OS_SPEC)-x64.tar.xz
-NNI_NODE_FOLDER = $(NNI_DEPENDENCY_FOLDER)/nni-node-$(OS_SPEC)-x64
+NNI_NODE_TARBALL ?= /tmp/nni-node-$(OS_SPEC)-x64.tar.xz
+NNI_NODE_FOLDER = /tmp/nni-node-$(OS_SPEC)-x64
 NNI_NODE ?= $(BIN_FOLDER)/node
-NNI_YARN_TARBALL ?= $(NNI_DEPENDENCY_FOLDER)/nni-yarn.tar.gz
-NNI_YARN_FOLDER ?= $(NNI_DEPENDENCY_FOLDER)/nni-yarn
+NNI_YARN_TARBALL ?= /tmp/nni-yarn.tar.gz
+NNI_YARN_FOLDER ?= /tmp/nni-yarn
 NNI_YARN := PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 
 ## Version number
@@ -65,6 +57,10 @@ build:
 	cd src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
 	#$(_INFO) Building WebUI $(_END)
 	cd src/webui && $(NNI_YARN) && $(NNI_YARN) build
+	#$(_INFO) Building Python SDK $(_END)
+	cd src/sdk/pynni && python3 setup.py build
+	#$(_INFO) Building nnictl $(_END)
+	cd tools && python3 setup.py build
 
 # All-in-one target for non-expert users
 # Installs NNI as well as its dependencies, and update bashrc to set PATH
