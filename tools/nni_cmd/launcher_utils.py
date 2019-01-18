@@ -35,18 +35,18 @@ def parse_relative_path(root_path, experiment_config, key):
         print_normal('expand %s: %s to %s ' % (key, experiment_config[key], absolute_path))
         experiment_config[key] = absolute_path
 
-def parse_time(experiment_config):
-    '''Parse time format'''
-    unit = experiment_config['maxExecDuration'][-1]
+def parse_time(time):
+    '''Change the time to seconds'''
+    unit = time[-1]
     if unit not in ['s', 'm', 'h', 'd']:
         print_error('the unit of time could only from {s, m, h, d}')
         exit(1)
-    time = experiment_config['maxExecDuration'][:-1]
+    time = time[:-1]
     if not time.isdigit():
         print_error('time format error!')
         exit(1)
     parse_dict = {'s':1, 'm':60, 'h':3600, 'd':86400}
-    experiment_config['maxExecDuration'] = int(time) * parse_dict[unit]
+    return int(time) * parse_dict[unit]
 
 def parse_path(experiment_config, config_path):
     '''Parse path in config file'''
@@ -216,7 +216,7 @@ def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''
     parse_path(experiment_config, config_path)
     validate_common_content(experiment_config)
-    parse_time(experiment_config)
+    experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])
     if experiment_config.get('advisor'):
         parse_advisor_content(experiment_config)
         validate_annotation_content(experiment_config, 'advisor', 'builtinAdvisorName')
