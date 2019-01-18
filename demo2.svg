@@ -1,4 +1,8 @@
 <svg  xmlns="http://www.w3.org/2000/svg"
       xmlns:xlink="http://www.w3.org/1999/xlink">
-<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />
+<circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" >
+      <a xlink:href= "http://www.baidu.com" '''xlink:title="The link leads to an example page that is of little interest"'''>
+  <text x="10" y="25" >An example link.</text>
+</a>
+      </circle>
 </svg>
