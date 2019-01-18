@@ -1,12 +1,4 @@
-# Tuners
-
-## Overview
-
-NNI provides an easy way to adopt an approach to set up parameter tuning algorithms, we call them **Tuner**.
-
-Tuner receives the result from `Trial` as a matrix to evaluate the performance of a specific parameters/architecture configures. And tuner sends next hyper-parameter or architecture configure to Trial.
-
-In NNI, we support two approaches to set the tuner: first is directly use builtin tuner provided by nni sdk, second is customize a tuner file by yourself.
+# Builtin Tuners
 
 NNI provides the-state-of-art tuning algorithm in our builtin-tuners and makes them easy to use. Below is the brief overview of NNI current builtin Tuners:
 
