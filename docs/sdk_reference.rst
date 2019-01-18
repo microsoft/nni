@@ -9,3 +9,4 @@ NNI SDK Reference
 ..  autofunction:: nni.get_sequence_id
 
 ..  autoclass:: nni.tuner.Tuner
+    :members:
