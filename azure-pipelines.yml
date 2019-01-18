@@ -14,10 +14,11 @@ jobs:
       source install.sh
     displayName: 'Install nni toolkit via source code'
   - script: |
-      python3 -m pip install sklearn --user
-      python3 -m pip install torchvision --user
-      python3 -m pip install keras --user
-      python3 -m pip install tensorflow==1.9.0 --user
+      python3 -m pip install scikit-learn==0.20.0 --user
+      python3 -m pip install torch==0.4.1 --user
+      python3 -m pip install torchvision==0.2.1 --user
+      python3 -m pip install keras==2.1.6 --user
+      python3 -m pip install tensorflow-gpu==1.10.0 --user
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
