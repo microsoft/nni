@@ -14,6 +14,6 @@ Here is an experimental result of MNIST after using 'Curvefitting' Assessor in '
 
 Like Tuners, users can either use built-in Assessors, or customize an Assessor on their own. Please refer to the following tutorials for detail:
 
-..  toctree:
+..  toctree::
     Builtin Assessors<Builtin_Assessors>
     Customized Assessors<Customize_Assessor>
