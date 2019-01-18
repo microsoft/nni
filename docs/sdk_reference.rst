@@ -8,3 +8,4 @@ NNI SDK Reference
 ..  autofunction:: nni.report_final_result
 ..  autofunction:: nni.get_sequence_id
 
+..  autoclass:: nni.tuner.Tuner
