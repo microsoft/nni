@@ -88,8 +88,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         return_value = _generate_installation_path(sitepackages[which_first])
         if return_value[0] is not None:
             return return_value
-        else:
-            return _generate_installation_path(sitepackages[1-which_first])
+        return _generate_installation_path(sitepackages[1-which_first])
 
     if os.getenv('VIRTUAL_ENV'):
         # if 'virtualenv' package is used, site.getsitepackages is missed 
@@ -97,6 +96,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         entry_file = os.path.join(python_dir, 'nni', 'main.js')
     else:
         # If system-wide python is used, we will give priority to using user-sitepackage given that nni exists there
+        python_sitepackage = site.getsitepackages()[0]
         if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
             python_dir, entry_file = get_installation_path(0)
         else:
@@ -322,8 +322,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         experiment_config['searchSpace'] = json.dumps(search_space)
         assert search_space, ERROR_INFO % 'Generated search space is empty'
     elif experiment_config.get('searchSpacePath'):
-            search_space = get_json_content(experiment_config.get('searchSpacePath'))
-            experiment_config['searchSpace'] = json.dumps(search_space)
+        search_space = get_json_content(experiment_config.get('searchSpacePath'))
+        experiment_config['searchSpace'] = json.dumps(search_space)
     else:
         experiment_config['searchSpace'] = json.dumps('')
 
