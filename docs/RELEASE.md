@@ -28,7 +28,6 @@
   
   
 ## Release 0.4 - 12/6/2018
-# Release 0.4 - 12/6/2018
 
 ### Major Features
   * [Kubeflow Training service](./KubeflowMode.md)
