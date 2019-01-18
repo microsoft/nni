@@ -17,3 +17,4 @@ Contents
     Examples
     Reference
     Contribution
+    FAQ
