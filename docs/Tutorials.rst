@@ -6,7 +6,7 @@ Tutorials
     QuickStart
     Installation
     Trial<howto_1_WriteTrial>
-    Tuners
-    Assessors
+    Tuners<tuners>
+    Assessors<assessors>
     WebUI
     Training Platform<training_services>
