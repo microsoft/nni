@@ -201,7 +201,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                             </TabPane>
                             <TabPane tab="Log" key="2">
                                 {
-                                    trainingPlatform === 'pai' || trainingPlatform === 'kubeflow'
+                                    trainingPlatform === 'frameworkcontroller' || trainingPlatform === 'kubeflow' || 
+                                    trainingPlatform === 'pai'
                                         ?
                                         <PaiTrialLog
                                             logStr={logPathRow}
