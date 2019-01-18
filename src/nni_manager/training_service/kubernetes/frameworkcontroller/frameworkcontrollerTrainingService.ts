@@ -171,7 +171,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         }
 
         for(let taskRole of this.fcTrialConfig.taskRoles) {
-            portScript += `${taskRole.name}_port=${this.fcContainerPortMap.get(taskRole.name)} `;
+            portScript += `FB_${taskRole.name.toUpperCase()}_PORT=${this.fcContainerPortMap.get(taskRole.name)} `;
         }
         return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
     }
