@@ -1,0 +1,3 @@
+<svg id="circle">
+    <circle  cx="125" cy="70" r="60" stroke="darkblue" stroke-width="3" fill="green" />
+</svg>
