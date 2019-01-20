@@ -172,7 +172,8 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         for(let taskRole of this.fcTrialConfig.taskRoles) {
             portScript += `FB_${taskRole.name.toUpperCase()}_PORT=${this.fcContainerPortMap.get(taskRole.name)} `;
         }
-        return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
+        // return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
+        return `${command}`;
     }
     
     private async prepareRunScript(trialLocalTempFolder: string, curTrialSequenceId: number, trialJobId: string, trialWorkingFolder: string, form: JobApplicationForm): Promise<void> {
@@ -415,7 +416,8 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     }],
                     restartPolicy: 'OnFailure',
                     volumes: volumeSpecMap.get('nniVolumes'),
-                    hostNetwork: false
+                    hostNetwork: false,
+                    serviceAccountName: 'frameworkbarrier'
                 }
             }
         }
