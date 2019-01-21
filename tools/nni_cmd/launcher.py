@@ -75,8 +75,10 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
 
     print_normal('Starting restful server...')
     # Find nni lib from the following locations in order
-    def get_installation_path(which_first):
-        # 0 means `local sitepackages`--"usersitepackages()" is checked first while 1 is the opposite 
+    def try_installation_path_sequentially(*sitepackages):
+        '''Try different installation path sequentially util nni is found.
+        Return None if nothing is found
+        '''
         def _generate_installation_path(sitepackages_path):
             python_dir = str(Path(sitepackages_path).parents[2])
             entry_file = os.path.join(python_dir, 'nni', 'main.js')
@@ -84,11 +86,11 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
                 return python_dir
             return None
 
-        sitepackages = [site.getusersitepackages(), site.getsitepackages()[0]]
-        python_dir = _generate_installation_path(sitepackages[which_first])
-        if python_dir is not None:
-            return python_dir
-        return _generate_installation_path(sitepackages[1-which_first])
+        for sitepackage in sitepackages:
+            python_dir = _generate_installation_path(sitepackage)
+            if python_dir is not None:
+                return python_dir
+        return None
 
     if os.getenv('VIRTUAL_ENV'):
         # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
@@ -101,9 +103,9 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         python_sitepackage = site.getsitepackages()[0]
         # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given that nni exists there
         if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
-            python_dir = get_installation_path(0)
+            python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
         else:
-            python_dir = get_installation_path(1)
+            python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
         # Nothing is found
         if python_dir is None:
             raise Exception('Fail to find nni under python packages')
