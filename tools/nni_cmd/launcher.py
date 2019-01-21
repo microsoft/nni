@@ -93,7 +93,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     if os.getenv('VIRTUAL_ENV'):
         # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
         # Note that conda venv will not have VIRTUAL_ENV
-        python_dir = os.path.join(os.getenv('VIRTUAL_ENV'), 'bin')
+        python_dir = os.getenv('VIRTUAL_ENV')
         entry_file = os.path.join(python_dir, 'nni', 'main.js')
         if os.path.isfile(entry_file):
             raise Exception('Fail to find nni under python packages')
