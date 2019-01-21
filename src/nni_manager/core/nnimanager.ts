@@ -424,7 +424,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
-        let allFinishedTrialJobNum: number = this.currSubmittedTrialNum;
+        let allFinishedTrialJobNum: number = 0;
         let waitSubmittedToFinish: number;
         while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();

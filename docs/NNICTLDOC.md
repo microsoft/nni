@@ -1,5 +1,6 @@
-# nnictl
+nnictl
 
+===
 
 ## Introduction
 
