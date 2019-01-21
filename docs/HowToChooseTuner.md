@@ -221,7 +221,8 @@ Metis belongs to the class of sequential model-based optimization (SMBO), and it
 *  It finds the global optimal point in the Gaussian Process space. This point represents the optimal configuration.
 * It identifies the next hyper-parameter candidate. This is achieved by inferring the potential information gain of exploration, exploitation, and re-sampling.
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
+Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`. We only support 
+numerical `choice` now. More features will support later.
 
 More details can be found in our paper: https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
  
@@ -243,7 +244,7 @@ _Usage_:
       optimize_mode: maximize
 ```
 
-
+<a name="assessor"></a>
 # How to use Assessor that NNI supports?
 
 For now, NNI has supported the following assessor algorithms.
