@@ -1,0 +1,22 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 5m
+maxTrialNum: 2
+trialConcurrency: 2
+searchSpacePath: ./search_space.json
+
+tuner:
+  codeDir: ../../../src/sdk/pynni/tests
+  classFileName: test_multi_phase_tuner.py
+  className: NaiveMultiPhaseTuner
+
+trial:
+  codeDir: .
+  command: python3 multi_phase.py
+  gpuNum: 0
+
+useAnnotation: false
+multiPhase: true
+multiThread: false
+
+trainingServicePlatform: local
