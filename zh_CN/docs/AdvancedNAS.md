@@ -81,7 +81,7 @@ where `10.10.10.10` should be replaced by the real IP of NFS server machine in p
 
 ## 尝试依赖控制的异步调度模式
 
-The feature of weight sharing enables trials from different machines, in which most of the time **read after write** consistency must be assured. After all, the child model should not load parent model before parent trial finishes training. To deal with this, users can enable **asynchronous dispatcher mode** with `multiThread: true` in `config.yml` in NNI, where the dispatcher assign a tuner thread each time a `NEW_TRIAL` request comes in, and the tuner thread can decide when to submit a new trial by blocking and unblocking the thread itself. For example:
+多机时启用权重的尝试，大部分情况是通过保证**先写后读**的方式来保持一致性。 子节点在父节点的尝试完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的调参器线程时，调参器线程可以决定是否阻塞当前线程。 For example:
 
 ```python
     def generate_parameters(self, parameter_id):
@@ -101,4 +101,4 @@ The feature of weight sharing enables trials from different machines, in which m
 
 ## 样例
 
-For details, please refer to this [simple weight sharing example](../test/async_sharing_test). We also provided a [practice example](../examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](../examples/trials/ga_squad) example.
+详细用法，请参考 [简单权重共享样例](../test/async_sharing_test)。 还有根据 [ga_squad](../examples/trials/ga_squad) 改动的阅读理解的[实际样例](../examples/trials/weight_sharing/ga_squad)。
