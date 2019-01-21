@@ -10,4 +10,4 @@ Tutorials
     Assessors<assessors>
     WebUI
     Training Platform<training_services>
-    AdvancedNAS
+    MultiPhase<multiPhase>

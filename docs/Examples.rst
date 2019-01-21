@@ -3,4 +3,7 @@ Examples
 ######################
 
 ..  toctree::
-    MNIST_Examples<mnist_examples>
+    :maxdepth: 2
+
+    MNIST<mnist_examples>
+    Cifar10<cifar10_examples>
