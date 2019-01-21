@@ -26,7 +26,9 @@
         optimize_mode: maximize
     
 
-注意，一旦使用了 Advisor，就不能在配置文件中添加调参器和评估器。 使用 Hyperband 时，尝试代码收到的超参（如键值对）中，除了用户定义的超参，会多一个 `STEPS`。 使用 `STEPS`，尝试代码可以控制运行的时间。
+注意，一旦使用了 Advisor，就不能在配置文件中添加调参器和评估器。 使用 Hyperband 时，尝试代码收到的超参（如键值对）中，除了用户定义的超参，会多一个 `STEPS`。 **By using this `STEPS`, the trial can control how long it runs**.
+
+For `report_intermediate_result(metric)` and `report_final_result(metric)` in your trial code, **`metric` should be either a number or a dict which has a key `default` with a number as its value**. This number is the one you want to maximize or minimize, for example, accuracy or loss.
 
 `R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` 表示可以分配给配置的最大步数（STEPS）。 这里，STEPS 可以代表 epoch 或 批处理数量。 `STEPS` 应该被尝试代码用来控制运行的次数。 参考样例 `examples/trials/mnist-hyperband/` ，了解详细信息。
 
@@ -43,7 +45,7 @@
 | 3 | 3 27 | 1 81 |      |      |      |
 | 4 | 1 81 |      |      |      |      |
 
-`s` 表示分组， `n` 表示生成的配置数量，相应的 `r` 表示配置会运行多少 STEPS。 `i` 表示轮数，如分组 4 有 5 轮，分组 3 有 4 轮。
+`s` means bucket, `n` means the number of configurations that are generated, the corresponding `r` means how many STEPS these configurations run. `i` means round, for example, bucket 4 has 5 rounds, bucket 3 has 4 rounds.
 
 关于如何实现尝试代码，参考 `examples/trials/mnist-hyperband/` 中的说明。
 
