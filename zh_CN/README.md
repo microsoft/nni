@@ -8,9 +8,73 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
+### **NNI [v0.5](https://github.com/Microsoft/nni/releases) has been released!**
+
 <p align="center">
-<img src="./docs/img/nni_arch_overview.png" alt="绘图"/>
+  <a href=#><img src="https://rawgit.com/QuanluZhang/nni/update-doc11/overview.svg" /></a>
 </p>
+
+<table>
+  <tbody>
+    <tr align="center">
+      <td>
+        <b>User Code + SDK( import nni )</b>
+        <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
+      </td>
+      <td>
+        <b>Tunning Algorithm Extensions</b>
+        <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
+      </td>
+      <td>
+        <b>Training Service Extensions</b>
+        <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
+      </td>
+    </tr>
+    <tr/>
+    <tr valign="top">
+      <td>
+      <ul>
+        <li>CNTK</li>
+        <li>Tensorflow</li>
+        <li>PyTorch</li>
+        <li>Keras</li>
+        <li>...</li>
+        </ul>
+        (Python based frameworks)
+      </td>
+      <td>
+        <a href="docs/HowToChooseTuner.md">Tuner</a>
+        <ul>
+          <li><a href="docs/HowToChooseTuner.md#TPE">TPE</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Random">Random Search</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Anneal">Anneal</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Evolution">Naive Evolution</a></li>
+          <li><a href="docs/HowToChooseTuner.md#SMAC">SMAC</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Batch">Batch</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Grid">Grid Search</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Hyperband">Hyperband</a></li>
+          <li><a href="docs/HowToChooseTuner.md#NetworkMorphism">Network Morphism</a></li>
+          <li><a href="examples/tuners/enas_nni/README.md">ENAS</a></li>
+          <li><a href="docs/HowToChooseTuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
+        </ul> 
+          <a href="docs/HowToChooseTuner.md#assessor">Assessor</a> 
+        <ul>
+          <li><a href="docs/HowToChooseTuner.md#Medianstop">Median Stop</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Curvefitting">Curve Fitting</a></li>
+        </ul>
+      </td>
+      <td>
+      <ul>
+        <li><a href="docs/tutorial_1_CR_exp_local_api.md">Local Machine</a></li>
+        <li><a href="docs/tutorial_2_RemoteMachineMode.md">Remote Servers</a></li>
+        <li><a href="docs/PAIMode.md">OpenPAI</a></li>
+        <li><a href="docs/KubeflowMode.md">Kubeflow</a></li>
+        <li><a href="docs/KubeflowMode.md">FrameworkController on K8S (AKS etc.)</a></li>
+      </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## **使用场景**
 
@@ -47,7 +111,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
-    git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+    git clone -b v0.5 https://github.com/Microsoft/nni.git
     cd nni  
     source install.sh 
 ```
@@ -61,7 +125,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * 通过克隆源代码下载示例。 
 
 ```bash
-    git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+    git clone -b v0.5 https://github.com/Microsoft/nni.git
 ```
 
 * 运行 mnist 示例。
@@ -102,8 +166,8 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里的](docs/WebUI.md)更多页面示例。
 
 <table style="border: none">
-    <th><img src="./docs/img/webui_overview_page.png" alt="绘图" width="395"/></th>
-    <th><img src="./docs/img/webui_trialdetail_page.png" alt="绘图" width="410"/></th>
+    <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
+    <th><img src="./docs/img/webui_trialdetail_page.png" alt="drawing" width="410"/></th>
 </table>
 
 ## **文档**
@@ -118,6 +182,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * [使用 NNIBoard](docs/WebUI.md)
 * [如何定义搜索空间](docs/SearchSpaceSpec.md)
 * [如何定义一次尝试](docs/howto_1_WriteTrial.md)
+* [How to choose tuner/search-algorithm](docs/HowToChooseTuner.md)
 * [配置实验](docs/ExperimentConfig.md)
 * [如何使用标记](docs/howto_1_WriteTrial.md#nni-python-annotation)
 
