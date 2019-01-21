@@ -35,12 +35,15 @@ We encourage researchers and students leverage these projects to accelerate the 
 
 **Install through pip** 	
 * We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.	
-```bash	
+
+```bash
     python3 -m pip install --upgrade nni
 ```
-* Note:
-  * If you are in docker container (as root), please remove `--user` from the installation command.
-  * If there is any error like `Segmentation fault`, please refer to [FAQ](docs/FAQ.md)
+Note:
+
+* `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
+* If there is any error like `Segmentation fault`, please refer to [FAQ][1]
+* For the `system requirements` of NNI, please refer to [Install NNI][2]
 
 **Install through source code**
 * We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) in our current stage. 
