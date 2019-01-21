@@ -5,20 +5,23 @@ __nnictl__ is a command line tool, which can be used to control experiments, suc
 
 ## Commands
 nnictl support commands:
-```
-nnictl create
-nnictl stop
-nnictl update
-nnictl resume
-nnictl trial
-nnictl experiment
-nnictl config
-nnictl log
-nnictl webui
-nnictl tensorboard
-nnictl top
-```
+ - [nnictl create](#create) 
+ - [nnictl resume](#resume)
+ - [nnictl stop](#stop)
+ - [nnictl update](#update)
+ - [nnictl trial](#trial)
+ - [nnictl top](#top)
+ - [nnictl experiment](#experiment)
+ - [nnictl config](#config)
+ - [nnictl log](#log)
+ - [nnictl webui](#webui)
+ - [nnictl tensorboard](#tensorboard)
+ - [nnictl package](#package)
+
+
+
 ### Manage an experiment
+<a name="create"></a>
 * __nnictl create__ 
    * Description 
 	    
@@ -37,7 +40,7 @@ nnictl top
       | ------ | ------ | ------ |------ |
       | --config, -c|  True| |yaml configure file of the experiment|
       | --port, -p  |  False| |the port of restful server| 
-
+<a name="resume"></a>
 * __nnictl resume__
 
   * Description
@@ -56,7 +59,7 @@ nnictl top
   
      
       
-
+<a name="stop"></a>
 * __nnictl stop__
   * Description
           
@@ -74,7 +77,7 @@ nnictl top
         4.If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
         5.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
         6.Users could use 'nnictl stop all' to stop all experiments  
-     
+<a name="update"></a>
 * __nnictl update__
     
 	 * __nnictl update searchspace__
@@ -142,7 +145,7 @@ nnictl top
            | --value, -v|  True| |the new number of maxtrialnum you want to set|
 
      
-
+<a name="trial"></a>
 * __nnictl trial__
   * __nnictl trial ls__
     * Description
@@ -173,10 +176,10 @@ nnictl top
           | ------ | ------ | ------ |------ |
          | id|  False| |ID of the experiment you want to set|   
          | --trialid, -t|  True| |ID of the trial you want to kill.| 
-  
-  * __nnictl top__
-    
-      * Description
+<a name="top"></a>
+* __nnictl top__
+
+    * Description
         
         Monitor all of running experiments.
       
@@ -192,7 +195,7 @@ nnictl top
          | --time, -t|  False| |The interval to update the experiment status, the unit of time is second, and the default value is 3 second.| 
 
           
-
+<a name="experiment"></a>
 ### Manage experiment information
 
 * __nnictl experiment show__
@@ -240,7 +243,7 @@ nnictl top
      | all|  False| False|Show all of experiments, including stopped experiments.|
 
  
-
+<a name="config"></a>
 * __nnictl config show__
     * Description
              
@@ -250,7 +253,7 @@ nnictl top
     
 	      nnictl config show
         
-  
+<a name="log"></a>
 ### Manage log
 * __nnictl log stdout__
    * Description
@@ -305,7 +308,7 @@ nnictl top
       | ------ | ------ | ------ |------ |
     | id| False| |the id of trial|
 
-
+<a name="webui"></a>
 ### Manage webui
 * __nnictl webui url__
    * Description
@@ -322,7 +325,7 @@ nnictl top
        | ------ | ------ | ------ |------ |
      | id|  False| |ID of the experiment you want to set|
 
-
+<a name="tensorboard"></a>
 ### Manage tensorboard
 * __nnictl tensorboard start__
    * Description
@@ -363,3 +366,29 @@ nnictl top
        | Name, shorthand | Required|Default | Description |
        | ------ | ------ | ------ |------ |
      | id|  False| |ID of the experiment you want to set|
+
+<a name="package"></a>
+### Manage package
+* __nnictl package install__
+   * Description
+     
+	     Install the packages needed in nni experiments. 
+   
+   * Usage
+         
+		    nnictl package install [OPTIONS] 
+        
+    	Options:
+    	
+       | Name, shorthand | Required|Default | Description |
+       | ------ | ------ | ------ |------ |
+     | --name|  True| |The name of package to be installed|
+
+* __nnictl package show__
+   * Description
+     
+	     List the packages supported. 
+   
+   * Usage
+         
+		    nnictl package show 
