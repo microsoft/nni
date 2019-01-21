@@ -76,34 +76,38 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     print_normal('Starting restful server...')
     # Find nni lib from the following locations in order
     def get_installation_path(which_first):
-        # 0 means local first and 1 means local second
+        # 0 means `local sitepackages`--"usersitepackages()" is checked first while 1 is the opposite 
         def _generate_installation_path(sitepackages_path):
             python_dir = str(Path(sitepackages_path).parents[2])
             entry_file = os.path.join(python_dir, 'nni', 'main.js')
             if os.path.isfile(entry_file):
-                return python_dir, entry_file
-            return None, None
+                return python_dir
+            return None
 
         sitepackages = [site.getusersitepackages(), site.getsitepackages()[0]]
-        return_value = _generate_installation_path(sitepackages[which_first])
-        if return_value[0] is not None:
-            return return_value
+        python_dir = _generate_installation_path(sitepackages[which_first])
+        if python_dir is not None:
+            return python_dir
         return _generate_installation_path(sitepackages[1-which_first])
 
     if os.getenv('VIRTUAL_ENV'):
-        # if 'virtualenv' package is used, site.getsitepackages is missed 
-        python_dir = os.getenv('VIRTUAL_ENV')
+        # if 'virtualenv' package is used, site has not attr getsitepackages, so we will instead use VIRTUAL_ENV
+        # Note that conda venv has not VIRTUAL_ENV
+        python_dir = os.path.join(os.getenv('VIRTUAL_ENV'), bin)
         entry_file = os.path.join(python_dir, 'nni', 'main.js')
+        if os.path.isfile(entry_file):
+            raise Exception('Fail to find nni under python packages')
     else:
-        # If system-wide python is used, we will give priority to using user-sitepackage given that nni exists there
         python_sitepackage = site.getsitepackages()[0]
+        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given that nni exists there
         if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
-            python_dir, entry_file = get_installation_path(0)
+            python_dir = get_installation_path(0)
         else:
-            python_dir, entry_file = get_installation_path(1)
+            python_dir = get_installation_path(1)
         # Nothing is found
         if python_dir is None:
             raise Exception('Fail to find nni under python packages')
+    entry_file = os.path.join(python_dir, 'nni', 'main.js')
     entry_dir = os.path.join(python_dir, 'nni')
 
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
