@@ -11,7 +11,7 @@ Contents
     :maxdepth: 2
     :glob:
 
-    Overview<README>
+    Overview
     Changelog<RELEASE>
     Tutorials
     Examples

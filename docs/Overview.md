@@ -1,4 +1,4 @@
-# NNI Overview
+# Overview
 
 NNI (Neural Network Intelligence) is a toolkit to help users design and tune machine learning models (e.g., hyperparameters), neural network architectures, or complex system's parameters, in an efficient and automatic way. NNI has several appealing properties: easy-to-use, scalability, flexibility, and efficiency.
 
