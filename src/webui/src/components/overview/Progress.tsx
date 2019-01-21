@@ -1,6 +1,10 @@
 import * as React from 'react';
 import {
-    Row, Col, Popover, Button, message
+    Row,
+    Col,
+    Popover,
+    Button,
+    message
 } from 'antd';
 import axios from 'axios';
 import { MANAGER_IP, CONTROLTYPE } from '../../static/const';
@@ -88,8 +92,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                             if (error.response.data.error) {
                                                 message.error(error.response.data.error);
                                             } else {
-                                                message.error(
-                                                    `Update ${CONTROLTYPE[1].toLocaleLowerCase()} failed`);
+                                                message.error(`Update ${CONTROLTYPE[1].toLocaleLowerCase()} failed`);
                                             }
                                         }
                                     });
@@ -176,47 +179,29 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         return (
             <Row className="progress" id="barBack">
                 <Row className="basic lineBasic">
-                    <p>Status</p>
-                    <div className="status">
-                        <span className={status}>{status}</span>
-                        {
-                            status === 'ERROR'
-                                ?
-                                <Popover
-                                    placement="rightTop"
-                                    content={errorContent}
-                                    title="Error"
-                                    trigger="hover"
-                                >
-                                    <span className="errorBtn">i</span>
-                                </Popover>
-                                :
-                                <span />
-                        }
-                    </div>
-                </Row>
-                <ProgressBar
-                    who="Duration"
-                    percent={percent}
-                    description={runDuration}
-                    bgclass={status}
-                    maxString={`MaxDuration: ${convertTime(trialProfile.maxDuration)}`}
-                />
-                <ProgressBar
-                    who="TrialNum"
-                    percent={bar2Percent}
-                    description={bar2.toString()}
-                    bgclass={status}
-                    maxString={`MaxTrialNumber: ${trialProfile.MaxTrialNum}`}
-                />
-                <Row className="basic colorOfbasic mess">
-                    <Col span={10}>
-                        <p>best metric</p>
-                        <div>{bestAccuracy.toFixed(6)}</div>
+                    <Col span={12}>
+                        <p>Status</p>
+                        <div className="status">
+                            <span className={status}>{status}</span>
+                            {
+                                status === 'ERROR'
+                                    ?
+                                    <Popover
+                                        placement="rightTop"
+                                        content={errorContent}
+                                        title="Error"
+                                        trigger="hover"
+                                    >
+                                        <span className="errorBtn">i</span>
+                                    </Popover>
+                                    :
+                                    <span />
+                            }
+                        </div>
                     </Col>
-                    <Col span={14}>
+                    <Col span={12}>
                         {/* modify concurrency */}
-                        <p>concurrency</p>
+                        <p>Concurrency</p>
                         <Row className="inputBox">
                             <input
                                 type="number"
@@ -242,42 +227,60 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                         </Row>
                     </Col>
                 </Row>
+                <ProgressBar
+                    who="Duration"
+                    percent={percent}
+                    description={runDuration}
+                    bgclass={status}
+                    maxString={`MaxDuration: ${convertTime(trialProfile.maxDuration)}`}
+                />
+                <ProgressBar
+                    who="TrialNum"
+                    percent={bar2Percent}
+                    description={bar2.toString()}
+                    bgclass={status}
+                    maxString={`MaxTrialNumber: ${trialProfile.MaxTrialNum}`}
+                />
+                <Row className="basic colorOfbasic mess">
+                    <p>Best Default Metric</p>
+                    <div>{bestAccuracy}</div>
+                </Row>
                 <Row className="mess">
                     <Col span={8}>
                         <Row className="basic colorOfbasic">
-                            <p>spent</p>
+                            <p>Time Spent</p>
                             <div>{convertTime(trialProfile.execDuration)}</div>
                         </Row>
                     </Col>
                     <Col span={9}>
                         <Row className="basic colorOfbasic">
-                            <p>remaining</p>
+                            <p>Remaining Time</p>
                             <div>{remaining}</div>
                         </Row>
                     </Col>
                     <Col span={7}>
                         <Row className="basic colorOfbasic">
-                            <p>running</p>
-                            <div>{trialNumber.runTrial}</div>
+                            <p>MaxDuration</p>
+                            <div>{convertTime(trialProfile.maxDuration)}</div>
                         </Row>
                     </Col>
                 </Row>
                 <Row className="mess">
                     <Col span={8}>
                         <Row className="basic colorOfbasic">
-                            <p>succeed</p>
+                            <p>Succeed Trial</p>
                             <div>{trialNumber.succTrial}</div>
                         </Row>
                     </Col>
                     <Col span={9}>
                         <Row className="basic">
-                            <p>stopped</p>
+                            <p>Stopped Trial</p>
                             <div>{trialNumber.stopTrial}</div>
                         </Row>
                     </Col>
                     <Col span={7}>
                         <Row className="basic">
-                            <p>failed</p>
+                            <p>Failed Trial</p>
                             <div>{trialNumber.failTrial}</div>
                         </Row>
                     </Col>

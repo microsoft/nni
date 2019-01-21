@@ -17,7 +17,6 @@ nnictl log
 nnictl webui
 nnictl tensorboard
 nnictl top
-nnictl --version
 ```
 ### Manage an experiment
 * __nnictl create__ 
@@ -364,14 +363,3 @@ nnictl --version
        | Name, shorthand | Required|Default | Description |
        | ------ | ------ | ------ |------ |
      | id|  False| |ID of the experiment you want to set|
-
-### Check nni version
-
-* __nnictl --version__
-  * Description
-    
-    Describe the current version of nni installed.
-  
-  * Usage
-    
-        nnictl --version

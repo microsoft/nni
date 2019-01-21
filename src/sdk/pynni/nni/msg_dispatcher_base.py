@@ -19,14 +19,10 @@
 # ==================================================================================================
 
 #import json_tricks
-import logging
 import os
-from queue import Queue
-import sys
-
-from multiprocessing.dummy import Pool as ThreadPool
-
+import logging
 import json_tricks
+from multiprocessing.dummy import Pool as ThreadPool
 from .common import init_logger, multi_thread_enabled
 from .recoverable import Recoverable
 from .protocol import CommandType, receive
@@ -38,7 +34,6 @@ class MsgDispatcherBase(Recoverable):
     def __init__(self):
         if multi_thread_enabled():
             self.pool = ThreadPool()
-            self.thread_results = []
 
     def run(self):
         """Run the tuner.
@@ -51,14 +46,10 @@ class MsgDispatcherBase(Recoverable):
         while True:
             _logger.debug('waiting receive_message')
             command, data = receive()
-            if command is None or command is CommandType.Terminate:
+            if command is None:
                 break
             if multi_thread_enabled():
-                result = self.pool.map_async(self.handle_request_thread, [(command, data)])
-                self.thread_results.append(result)
-                if any([thread_result.ready() and not thread_result.successful() for thread_result in self.thread_results]):
-                    _logger.debug('Caught thread exception')
-                    break
+                self.pool.map_async(self.handle_request, [(command, data)])
             else:
                 self.handle_request((command, data))
 
@@ -68,20 +59,15 @@ class MsgDispatcherBase(Recoverable):
 
         _logger.info('Terminated by NNI manager')
 
-    def handle_request_thread(self, request):
-        if multi_thread_enabled():
-            try:
-                self.handle_request(request)
-            except Exception as e:
-                _logger.exception(str(e))
-                raise
-        else:
-            pass
-
     def handle_request(self, request):
         command, data = request
 
         _logger.debug('handle request: command: [{}], data: [{}]'.format(command, data))
+
+        if command is CommandType.Terminate:
+            # if receive Terminate command, exit process
+            _logger.info('Receive Terminate command from NNI manager, terminating')
+            exit(0)
 
         data = json_tricks.loads(data)
 

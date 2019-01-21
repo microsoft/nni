@@ -35,8 +35,7 @@ setuptools.setup(
         'hyperopt',
         'json_tricks',
         'numpy',
-        'scipy',
-        'coverage'
+        'scipy'
     ],
     package_data = {'nni': ['**/requirements.txt']},
 
