@@ -77,7 +77,7 @@ nni.report_final_result(best_acc)
 
 ## 4. 网络表示的 JSON 样例
 
-这是样例定义的中间表示 JSON 文件，它会在架构搜索过程中从调参器传入尝试代码。 样例如下。
+这是样例定义的中间表示 JSON 文件，它会在架构搜索过程中从调参器传入尝试代码。 Users can call "json\_to\_graph()" function in trial code to build a pytorch model or keras model from this JSON file. 样例如下。
 
 ```json
 {
@@ -170,11 +170,11 @@ nni.report_final_result(best_acc)
  }
 ```
 
-每个模型都由 JSON 对象来定义（也可以认为模型是个有向无环图）：
+The definition of each model is a JSON object(also you can consider the model as a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)), where:
 
 - `input_shape` 是整数的列表，不包括批量维度。
 - `weighted` 表示是否权重和偏移值应该包含在此神经网络图中。
-- `operation_history` 是层的输入的数量。
+- `operation_history` is a list saving all the network morphism operations.
 - `layer_id_to_input_node_ids` 是字典实例，将层的标识映射到输入节点标识。
 - `layer_id_to_output_node_ids` 是字典实例，将层的标识映射到输出节点标识。
 - `adj_list` 是二维列表。 是图的邻接列表。 第一维是张量标识。 在每条边的列表中，元素是两元组（张量标识，层标识）。
