@@ -23,7 +23,7 @@
 * **通过源代码安装 NNI**
     
     ```bash
-    git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+    git clone -b v0.5 https://github.com/Microsoft/nni.git
     cd nni
     source install.sh
     ```
