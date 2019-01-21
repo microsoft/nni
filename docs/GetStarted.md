@@ -1,5 +1,4 @@
-**Get Started with NNI**
-===
+# Get Started with NNI
 
 ## **Installation**
 * __Dependencies__
