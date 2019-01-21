@@ -172,8 +172,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         for(let taskRole of this.fcTrialConfig.taskRoles) {
             portScript += `FB_${taskRole.name.toUpperCase()}_PORT=${this.fcContainerPortMap.get(taskRole.name)} `;
         }
-        // return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
-        return `${command}`;
+        return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
     }
     
     private async prepareRunScript(trialLocalTempFolder: string, curTrialSequenceId: number, trialJobId: string, trialWorkingFolder: string, form: JobApplicationForm): Promise<void> {
