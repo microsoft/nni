@@ -108,6 +108,7 @@ export namespace ValidationSchemas {
             }),
             frameworkcontroller_config: joi.object({
                 storage: joi.string().min(1),
+                serviceAccountName: joi.string().min(1),
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()

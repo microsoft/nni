@@ -18,8 +18,10 @@
  */
 
 'use strict';
+import * as assert from 'assert';
 
-import { KubernetesTrialConfig, KubernetesTrialConfigTemplate } from '../kubernetesConfig'
+import { KubernetesTrialConfig, KubernetesTrialConfigTemplate, KubernetesClusterConfig, KubernetesClusterConfigAzure,
+     KubernetesClusterConfigNFS, NFSConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage, KubernetesClusterConfig } from '../kubernetesConfig'
 
 export class FrameworkAttemptCompletionPolicy {
     public readonly minFailedTaskCount: number;
@@ -54,6 +56,72 @@ export class FrameworkControllerTrialConfig extends KubernetesTrialConfig{
         super(codeDir);
         this.taskRoles = taskRoles;
         this.codeDir = codeDir;
+    }
+}
+
+export interface ServiceAccount {
+    readonly serviceAccountName: string;
+}
+
+export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfigNFS implements ServiceAccount {
+    public readonly serviceAccountName: string;
+    constructor(
+            serviceAccountName: string, 
+            apiVersion: string, 
+            nfs: NFSConfig,
+            storage?: KubernetesStorageKind
+        ) {
+        super(apiVersion, nfs, storage);
+        this.serviceAccountName = serviceAccountName;
+    }
+
+    public static getInstance(jsonObject: object): FrameworkControllerClusterConfigNFS {
+        let kubeflowClusterConfigObjectNFS = <FrameworkControllerClusterConfigNFS>jsonObject;
+        assert (kubeflowClusterConfigObjectNFS !== undefined)
+        return new FrameworkControllerClusterConfigNFS(
+            kubeflowClusterConfigObjectNFS.serviceAccountName,
+            kubeflowClusterConfigObjectNFS.apiVersion,
+            kubeflowClusterConfigObjectNFS.nfs,
+            kubeflowClusterConfigObjectNFS.storage
+        );
+    }
+}
+
+export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConfigAzure implements ServiceAccount{
+    public readonly serviceAccountName: string;
+    
+    constructor(
+            serviceAccountName: string, 
+            apiVersion: string, 
+            keyVault: keyVaultConfig, 
+            azureStorage: AzureStorage, 
+            storage?: KubernetesStorageKind
+        ) {
+        super(apiVersion, keyVault, azureStorage,storage);
+        this.serviceAccountName = serviceAccountName;
+    }
+
+    public static getInstance(jsonObject: object): FrameworkControllerClusterConfigAzure {
+        let kubeflowClusterConfigObjectAzure = <FrameworkControllerClusterConfigAzure>jsonObject;
+        return new FrameworkControllerClusterConfigAzure(
+            kubeflowClusterConfigObjectAzure.serviceAccountName,
+            kubeflowClusterConfigObjectAzure.apiVersion,
+            kubeflowClusterConfigObjectAzure.keyVault,
+            kubeflowClusterConfigObjectAzure.azureStorage,
+            kubeflowClusterConfigObjectAzure.storage
+        );
+    }
+}
+
+export class ServiceAccountFactory {
+    public static getServiceAccountName(kubernetesClusterConfig: KubernetesClusterConfig): string {
+        let fcclusterconfig: ServiceAccount;
+        if(kubernetesClusterConfig.storageType === 'azureStorage'){
+           fcclusterconfig = <FrameworkControllerClusterConfigAzure> kubernetesClusterConfig;
+        }else {
+            fcclusterconfig = <FrameworkControllerClusterConfigNFS> kubernetesClusterConfig;
+        }
+        return fcclusterconfig.serviceAccountName;
     }
 }
 
