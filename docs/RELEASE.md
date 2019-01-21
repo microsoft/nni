@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Release 0.5.0 - 01/14/2019
 ## Major Features
 ### New tuner and assessor supports
@@ -27,15 +28,32 @@
   * Support [network morphism](./HowToChooseTuner.md#NetworkMorphism) as a new tuner
 
 ### Training Service improvements
+=======
+# ChangeLog
+
+## Release 0.4.1 - 12/14/2018
+### Major Features
+#### New tuner supports
+  * Support [network morphism](./HowToChooseTuner.md#NetworkMorphism) as a new tuner
+
+#### Training Service improvements
+>>>>>>> upstream/dev-doc
   * Migrate [Kubeflow training service](https://github.com/Microsoft/nni/blob/master/docs/KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
   * [Pytorch-operator](https://github.com/kubeflow/pytorch-operator) support for Kubeflow training service
   * Improvement on local code files uploading to OpenPAI HDFS
   * Fixed OpenPAI integration WebUI bug: WebUI doesn't show latest trial job status, which is caused by OpenPAI token expiration
 
+<<<<<<< HEAD
 ### NNICTL improvements
   * Show version information both in nnictl and WebUI. You can run **nnictl -v** to show your current installed NNI version
 
 ### WebUI improvements
+=======
+#### NNICTL improvements
+  * Show version information both in nnictl and WebUI. You can run **nnictl -v** to show your current installed NNI version
+
+#### WebUI improvements
+>>>>>>> upstream/dev-doc
   * Enable modify concurrency number during experiment
   * Add feedback link to NNI github 'create issue' page
   * Enable customize top 10 trials regarding to metric numbers (largest or smallest)
@@ -43,14 +61,24 @@
   * Enable automatic scaling of axes for metric number
   * Update annotation to support displaying real choice in searchspace
 
+<<<<<<< HEAD
 ## New examples
+=======
+### New examples
+>>>>>>> upstream/dev-doc
   * [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
   * [Distributed MNIST example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
   
   
+<<<<<<< HEAD
 # Release 0.4 - 12/6/2018
 
 ## Major Features
+=======
+## Release 0.4 - 12/6/2018
+
+### Major Features
+>>>>>>> upstream/dev-doc
   * [Kubeflow Training service](./KubeflowMode.md)
     * Support tf-operator
     * [Distributed trial example](../examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
@@ -65,7 +93,7 @@
     *  Support search a specific trial by trial number
     *  Show trial's hdfsLogPath
     *  Download experiment parameters
-## Others
+### Others
   * Asynchronous dispatcher
   * Docker file update, add pytorch library 
   * Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API. 
@@ -75,8 +103,8 @@
     *  Don’t print useless ‘metrics is empty’ log int PAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks PAI trial’s output for debugging purpose
     *  Add timestamp at the beginning of each log entry in trial keeper.
 
-# Release 0.3.0 - 11/2/2018
-## NNICTL new features and updates
+## Release 0.3.0 - 11/2/2018
+### NNICTL new features and updates
 * Support running multiple experiments simultaneously. 
 
     Before v0.3, NNI only supports running single experiment once a time. After this realse, users are able to run multiple experiments simultaneously. Each experiment will require a unique port, the 1st experiment will be set to the default port as previous versions. You can specify a unique port for the rest experiments as below:
@@ -85,7 +113,7 @@
 * Support updating max trial number.
     use ```nnictl update --help``` to learn more. Or refer to [NNICTL Spec](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md) for the fully usage of NNICTL.
 
-## API new features and updates
+### API new features and updates
 * <span style="color:red">**breaking change**</span>: nn.get_parameters() is refactored to nni.get_next_parameter. All examples of prior releases can not run on v0.3, please clone nni repo to get new examples. If you had applied NNI to your own codes, please update the API accordingly.
 
 * New API **nni.get_sequence_id()**. 
@@ -98,23 +126,23 @@
     * float
     * A python dict containing 'default' key, the value of 'default' key should be of type int or float. The dict can contain any other key value pairs.
 
-## New tuner support
+### New tuner support
 * **Batch Tuner** which iterates all parameter combination, can be used to submit batch trial jobs.
 
-## New examples
+### New examples
 * A NNI Docker image for public usage:
       ```docker pull msranni/nni:latest```
 * New trial example: [NNI Sklearn Example](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
 * New competition example: [Kaggle Competition TGS Salt Example](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
     
-## Others
+### Others
 * UI refactoring, refer to [WebUI doc](WebUI.md) for how to work with the new UI.
 * Continuous Integration: NNI had switched to Azure pipelines
 * [Known Issues in release 0.3.0](https://github.com/Microsoft/nni/labels/nni030knownissues).
 
 
-# Release 0.2.0 - 9/29/2018
-## Major Features
+## Release 0.2.0 - 9/29/2018
+### Major Features
    * Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
       * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
       * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
@@ -125,14 +153,14 @@
       * Update ga squad example and related documentation
       * WebUI UX small enhancement and bug fix
 
-## Known Issues
+### Known Issues
 [Known Issues in release 0.2.0](https://github.com/Microsoft/nni/labels/nni020knownissues).
 
-# Release 0.1.0 - 9/10/2018 (initial release)
+## Release 0.1.0 - 9/10/2018 (initial release)
 
 Initial release of Neural Network Intelligence (NNI).
 
-## Major Features
+### Major Features
    * Installation and Deployment
       * Support pip install and source codes install
       * Support training services on local mode(including Multi-GPU mode) as well as multi-machines mode
@@ -149,5 +177,5 @@ Initial release of Neural Network Intelligence (NNI).
    * Others
       * Support simple GPU job scheduling 
 
-## Known Issues
+### Known Issues
 [Known Issues in release 0.1.0](https://github.com/Microsoft/nni/labels/nni010knownissues).

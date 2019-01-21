@@ -1,5 +1,4 @@
-**Installation of NNI**
-===
+# Installation of NNI
 
 Currently we only support installation on Linux & Mac.
 
