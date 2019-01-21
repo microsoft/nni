@@ -23,7 +23,7 @@
 * **通过源代码安装 NNI**
     
     ```bash
-    git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+    git clone -b v0.5 https://github.com/Microsoft/nni.git
     cd nni
     source install.sh
     ```
@@ -111,3 +111,4 @@ trial:
 * [如何在本机运行实验 (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
 * [如何在多机上运行实验？](tutorial_2_RemoteMachineMode.md)
 * [如何在 OpenPAI 上运行实验？](PAIMode.md)
+* [How to create a multi-phase experiment](multiPhase.md)
