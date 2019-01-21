@@ -223,7 +223,7 @@ Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶
 * 在高斯过程空间中找到全局最优点。 这一点表示了最佳配置。
 * 它会标识出下一个超参的候选项。 这是通过推断发展、开发和重新采样的潜在信息的优势来实现的。
 
-注意，搜索空间仅支持 `choice`, `quniform`, `uniform` 和 `randint`。
+Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`. We only support numerical `choice` now. More features will support later.
 
 更多详情，参考论文：https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
 
@@ -242,6 +242,8 @@ Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶
       optimize_mode: maximize
 ```
 
+<a name="assessor"></a>
+
 # 如何使用 NNI 支持的评估器？
 
 目前，NNI 已支持下列评估器算法。
@@ -258,7 +260,7 @@ Medianstop 是一种简单的提前停止规则，可参考[论文](https://stat
 
 *建议场景*：它适用于各种性能曲线，因而能被用到各种场景中来加速优化过程。
 
-*用法*：
+*Usage*:
 
 ```yaml
   assessor:
@@ -278,7 +280,7 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 
 *建议场景*：它适用于各种性能曲线，因而能被用到各种场景中来加速优化过程。 更好的是，它能够处理并评估性能类似的曲线。
 
-*用法*：
+*Usage*:
 
 ```yaml
   assessor:
