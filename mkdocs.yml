@@ -22,6 +22,7 @@ nav:
             - multiPhase.md
     - Examples:
         - MNIST Examples: mnist_examples.md
+        - CIFAR-10 Examples: cifar10_examples.md
     - Reference:
         - nnictl: NNICTLDOC.md
         - Configuration: ExperimentConfig.md

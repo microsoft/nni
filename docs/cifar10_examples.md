@@ -1,4 +1,4 @@
-# CIFAR10 examples
+# CIFAR-10 examples
 
 ## Overview
 
