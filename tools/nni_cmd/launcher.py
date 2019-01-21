@@ -91,8 +91,8 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         return _generate_installation_path(sitepackages[1-which_first])
 
     if os.getenv('VIRTUAL_ENV'):
-        # if 'virtualenv' package is used, site has not attr getsitepackages, so we will instead use VIRTUAL_ENV
-        # Note that conda venv has not VIRTUAL_ENV
+        # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
+        # Note that conda venv will not have VIRTUAL_ENV
         python_dir = os.path.join(os.getenv('VIRTUAL_ENV'), bin)
         entry_file = os.path.join(python_dir, 'nni', 'main.js')
         if os.path.isfile(entry_file):
