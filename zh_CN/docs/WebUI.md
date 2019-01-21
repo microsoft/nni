@@ -7,11 +7,11 @@
 * 查看实验的配置和搜索空间内容。
 * 支持下载实验结果。
 
-![](./img/over1.png)
+![](./img/webui-img/over1.png)
 
 * 查看最好结果的尝试。
 
-![](./img/over2.png)
+![](./img/webui-img/over2.png)
 
 ## 查看任务默认指标
 
@@ -39,9 +39,14 @@
 点击 "Trials Detail" 标签查看所有尝试的状态。 特别是：
 
 * 尝试详情：尝试的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
-* 如果在 pai 模式下，还可以看到 hdfsLogPath。
 
-![](./img/table_openrow.png)
+![](./img/webui-img/detail-local.png)
+
+* If you run a pai or kubeflow experiment, you can also see the hdfsLog.
+
+![](./img/webui-img/detail-pai.png)
+
+![](./img/webui-img/trialog.png)
 
 * Kill: 可终止正在运行的任务。
 * 支持搜索某个特定的尝试。
