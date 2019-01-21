@@ -19,6 +19,7 @@
 
 'use strict';
 
+
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import { EventEmitter } from 'events';
@@ -28,15 +29,15 @@ import * as path from 'path';
 import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
-import * as component from 'common/component';
-import { MethodNotImplementedError, NNIError, NNIErrorNames } from 'common/errors';
-import { getExperimentId, getInitTrialSequenceId } from 'common/experimentStartupInfo';
-import { getLogger, Logger } from 'common/log';
-import { ObservableTimer } from 'common/observableTimer';
+import * as component from '../../common/component';
+import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
+import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getLogger, Logger } from '../../common/log';
+import { ObservableTimer } from '../../common/observableTimer';
 import {
-    HostJobApplicationForm, HyperParameters, JobApplicationForm, TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
-} from 'common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus, getRemoteTmpDir  } from 'common/utils';
+    HostJobApplicationForm, HyperParameters, JobApplicationForm, TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
+} from '../../common/trainingService';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus, getRemoteTmpDir,getIPV4Address  } from '../../common/utils';
 import { GPUSummary } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
@@ -44,11 +45,12 @@ import { GPUScheduler } from './gpuScheduler';
 import { MetricsCollector } from './metricsCollector';
 import {
     HOST_JOB_SHELL_FORMAT, RemoteCommandResult, RemoteMachineMeta,
-    REMOTEMACHINE_RUN_SHELL_FORMAT, REMOTEMACHINE_TRIAL_COMMAND_FORMAT, RemoteMachineScheduleInfo, RemoteMachineScheduleResult,
-    RemoteMachineTrialJobDetail, ScheduleResultType
+    REMOTEMACHINE_RUN_SHELL_FORMAT, RemoteMachineScheduleInfo, RemoteMachineScheduleResult,
+    RemoteMachineTrialJobDetail, ScheduleResultType, REMOTEMACHINE_TRIAL_COMMAND_FORMAT
 } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
 import { validateCodeDir} from '../common/util';
+import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 
 /**
  * Training Service implementation for Remote Machine (Linux)
@@ -69,6 +71,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private trialSequenceId: number;
     private remoteRestServerPort?: number;
     private readonly remoteOS: string;
+    private nniManagerIpConfig?: NNIManagerIpConfig;
 
     constructor(@component.Inject timer: ObservableTimer) {
         this.remoteOS = 'linux';
@@ -286,6 +289,9 @@ class RemoteMachineTrainingService implements TrainingService {
      */
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {
+            case TrialConfigMetadataKey.NNI_MANAGER_IP:
+                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
+                break;
             case TrialConfigMetadataKey.MACHINE_LIST:
                 await this.setupConnections(value);
                 break;
@@ -485,30 +491,19 @@ class RemoteMachineTrainingService implements TrainingService {
             this.isMultiPhase,
             trialJobDetail.sequenceId.toString()
             );
-/*        
-        // if(!this.remoteRestServerPort) {
-        //     const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
-        //     this.paiRestServerPort = restServer.clusterRestServerPort;
-        // }
-        // const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
-
-        const remoteMachineTrialCommand : string = String.Format(
-            REMOTEMACHINE_RUN_SHELL_FORMAT,
-            // PAI will copy job's codeDir into /root directory
+        const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
+        const runScriptTrialContent: string = String.Format(
+            REMOTEMACHINE_TRIAL_COMMAND_FORMAT,
             trialWorkingFolder,
             trialWorkingFolder,
             trialJobId,
-            "expid",
-            "seqid",
-            this.trialConfig.command, 
+            getExperimentId(),
+            trialJobDetail.sequenceId.toString(),
+            this.trialConfig.command,
             nniManagerIp,
-            this.paiRestServerPort,
-            hdfsOutputDir,
-            this.hdfsOutputHost,
-            this.paiClusterConfig.userName, 
-            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName)
-            ).replace(/\r\n|\n|\r/gm, '');
-
+            this.remoteRestServerPort
+        )
+        /*
         `#!/bin/bash
 export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_OUTPUT_DIR={0}
 export MULTI_PHASE={7}
@@ -518,17 +513,22 @@ echo $$ >{2}
 eval {3}{4} 2>{5}
 echo $? \`date +%s%3N\` >{6}`;
 
-export const PAI_TRIAL_COMMAND_FORMAT: string =
-`export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4}
-&& cd $NNI_SYS_DIR && sh install_nni.sh 
-&& python3 -m nni_trial_tool.trial_keeper --trial_command '{5}' --nnimanager_ip '{6}' --nnimanager_port '{7}' 
---pai_hdfs_output_dir '{8}' --pai_hdfs_host '{9}' --pai_user_name {10} --nni_hdfs_exp_dir '{11}'`;
+        export const REMOTEMACHINE_TRIAL_COMMAND_FORMAT: string =
+        `export NNI_PLATFORM=pai NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4}
+        && cd $NNI_SYS_DIR && sh install_nni.sh 
+        && python3 -m nni_trial_tool.trial_keeper --trial_command '{5}' --nnimanager_ip '{6}' --nnimanager_port '{7}'`;
 */
+        if(!this.remoteRestServerPort) {
+            const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
+            this.remoteRestServerPort = restServer.clusterRestServerPort;
+        }
+        // const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
+
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
 
         // Write file content ( run.sh and parameter.cfg ) to local tmp files
-        await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run.sh'), runScriptContent, { encoding: 'utf8' });
+        await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run.sh'), runScriptTrialContent, { encoding: 'utf8' });
 
         // Copy local tmp files to remote machine
         await SSHClientUtility.copyFileToRemote(

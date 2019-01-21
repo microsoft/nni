@@ -19,7 +19,7 @@
 
 'use strict';
 
-import * as component from 'common/component';
+import * as component from '../../common/component';
 import { Inject } from 'typescript-ioc';
 import { RemoteMachineTrainingService } from './remoteMachineTrainingService';
 import { ClusterJobRestServer } from '../common/clusterJobRestServer'

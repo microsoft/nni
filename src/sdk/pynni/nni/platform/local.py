@@ -77,7 +77,7 @@ def get_next_parameter():
     return params
 
 def send_metric(string):
-    if _nni_platform in ['pai', 'kubeflow', 'frameworkcontroller']:
+    if _nni_platform in ['remote', 'pai', 'kubeflow', 'frameworkcontroller']:
         data = (string).encode('utf8')
         assert len(data) < 1000000, 'Metric too long'    
         print('NNISDK_ME%s' % (data))
