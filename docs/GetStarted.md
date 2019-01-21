@@ -24,7 +24,7 @@
 * __Install NNI through source code__
 
   ```bash
-  git clone -b v0.4.1 https://github.com/Microsoft/nni.git
+  git clone -b v0.5 https://github.com/Microsoft/nni.git
   cd nni
   source install.sh
   ```
@@ -110,3 +110,4 @@ The experiment has been running now, NNI provides WebUI for you to view experime
 * [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
 * [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
+* [How to create a multi-phase experiment](multiPhase.md)
