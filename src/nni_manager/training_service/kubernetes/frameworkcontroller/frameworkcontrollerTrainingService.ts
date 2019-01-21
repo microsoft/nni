@@ -415,8 +415,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     }],
                     restartPolicy: 'OnFailure',
                     volumes: volumeSpecMap.get('nniVolumes'),
-                    hostNetwork: false,
-                    serviceAccountName: 'frameworkbarrier'
+                    hostNetwork: false
                 }
             }
         }
