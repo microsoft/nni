@@ -40,46 +40,48 @@ tf.init_from_checkpoint(params['restore_path'])
 
 ### NFS 配置
 
-在 NFS 中，物理文件存储在一台服务器上，客户端计算机的尝试可以像访问本地文件一样来读写这些文件。
+NFS follows the Client-Server Architecture, with an NFS server providing physical storage, trials on the remote machine with an NFS client can read/write those files in the same way that they access local files.
 
-#### 在服务器上安装 NFS
+#### NFS Server
 
-首先，安装 NFS 服务器：
+An NFS server can be any machine as long as it can provide enough physical storage, and network connection with **remote machine** for NNI trials. Usually you can choose one of the remote machine as NFS Server.
+
+On Ubuntu, install NFS server through `apt-get`:
 
 ```bash
 sudo apt-get install nfs-kernel-server
 ```
 
-假设 `/tmp/nni/shared` 是物理存储位置，然后运行：
+Suppose `/tmp/nni/shared` is used as the physical storage, then run:
 
 ```bash
-sudo mkdir -p /tmp/nni/shared
+mkdir -p /tmp/nni/shared
 sudo echo "/tmp/nni/shared *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
 sudo service nfs-kernel-server restart
 ```
 
-可以通过命令 `sudo showmount -e localhost` 来检查上述目录是否通过 NFS 成功导出了
+You can check if the above directory is successfully exported by NFS using `sudo showmount -e localhost`
 
-#### 在客户端计算机上安装 NFS
+#### NFS Client
 
-首先，安装 NFS 客户端：
+For a trial on remote machine able to access shared files with NFS, an NFS client needs to be installed. For example, on Ubuntu:
 
 ```bash
 sudo apt-get install nfs-common
 ```
 
-然后创建并装载上共享目录：
+Then create & mount the mounted directory of shared files:
 
 ```bash
-sudo mkdir -p /mnt/nfs/nni/
+mkdir -p /mnt/nfs/nni/
 sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 ```
 
-实际使用时，IP `10.10.10.10` 需要替换为 NFS 服务器的真实地址。
+where `10.10.10.10` should be replaced by the real IP of NFS server machine in practice.
 
 ## 尝试依赖控制的异步调度模式
 
-多机时启用权重的尝试，大部分情况是通过保证**先写后读**的方式来保持一致性。 子节点在父节点的尝试完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的调参器线程时，调参器线程可以决定是否阻塞当前线程。 例如：
+The feature of weight sharing enables trials from different machines, in which most of the time **read after write** consistency must be assured. After all, the child model should not load parent model before parent trial finishes training. To deal with this, users can enable **asynchronous dispatcher mode** with `multiThread: true` in `config.yml` in NNI, where the dispatcher assign a tuner thread each time a `NEW_TRIAL` request comes in, and the tuner thread can decide when to submit a new trial by blocking and unblocking the thread itself. For example:
 
 ```python
     def generate_parameters(self, parameter_id):
@@ -99,4 +101,4 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
 ## 样例
 
-详细用法，请参考 [简单权重共享样例](../test/async_sharing_test)。 还有根据 [ga_squad](../examples/trials/ga_squad) 改动的阅读理解的[实际样例](../examples/trials/weight_sharing/ga_squad)。
+For details, please refer to this [simple weight sharing example](../test/async_sharing_test). We also provided a [practice example](../examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](../examples/trials/ga_squad) example.
