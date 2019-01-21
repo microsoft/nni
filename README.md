@@ -42,8 +42,7 @@ We encourage researchers and students leverage these projects to accelerate the 
 Note:
 
 * `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
-* If there is any error like `Segmentation fault`, please refer to [FAQ][1]
-* For the `system requirements` of NNI, please refer to [Install NNI][2]
+* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/FAQ.md)
 
 **Install through source code**
 * We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) in our current stage. 
