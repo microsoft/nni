@@ -1,6 +1,4 @@
-nnictl
-
-===
+# nnictl
 
 ## 介绍
 
@@ -8,7 +6,7 @@ nnictl
 
 ## 命令
 
-nnictl 支持的命令：
+nnictl support commands:
 
 ```bash
 nnictl create
