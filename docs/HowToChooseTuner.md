@@ -244,7 +244,7 @@ _Usage_:
       optimize_mode: maximize
 ```
 
-
+<a name="assessor"></a>
 # How to use Assessor that NNI supports?
 
 For now, NNI has supported the following assessor algorithms.
