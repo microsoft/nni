@@ -1,14 +1,12 @@
 import * as React from 'react';
 import axios from 'axios';
-import JSONTree from 'react-json-tree';
-import { Row, Modal, Input, Table, Tabs } from 'antd';
-const TabPane = Tabs.TabPane;
+import { Modal, Input, Table } from 'antd';
 const { TextArea } = Input;
+import OpenRow from '../public-child/OpenRow';
+import DefaultMetric from '../public-child/DefaultMetrc';
 import { DOWNLOAD_IP } from '../../static/const';
 import { TableObj } from '../../static/interface';
 import { convertDuration } from '../../static/function';
-import PaiTrialLog from '../logPath/PaiTrialLog';
-import TrialLog from '../logPath/TrialLog';
 import '../../static/style/tableStatus.css';
 import '../../static/style/tableList.scss';
 
@@ -74,6 +72,17 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }
     }
 
+    openRow = (record: TableObj) => {
+        const { trainingPlatform } = this.props;
+        return (
+            <OpenRow
+                showLogModalOverview={this.showLogModalOverview}
+                trainingPlatform={trainingPlatform}
+                record={record}
+            />
+        );
+    }
+
     componentDidMount() {
         this._isMounted = true;
     }
@@ -83,7 +92,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     }
 
     render() {
-        const { tableSource, trainingPlatform } = this.props;
+        const { tableSource } = this.props;
         const { isShowLogModal, logContent } = this.state;
 
         let bgColor = '';
@@ -137,91 +146,24 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             title: 'Default Metric',
             dataIndex: 'acc',
             key: 'acc',
-            sorter: (a: TableObj, b: TableObj) => (a.acc as number) - (b.acc as number),
-            render: (text: string, record: TableObj) => {
-                const accuracy = record.acc;
-                let wei = 0;
-                if (accuracy) {
-                    if (accuracy.toString().indexOf('.') !== -1) {
-                        wei = accuracy.toString().length - accuracy.toString().indexOf('.') - 1;
-                    }
+            sorter: (a: TableObj, b: TableObj) => {
+                if (a.acc !== undefined && b.acc !== undefined) {
+                    return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
+                } else {
+                    return NaN;
                 }
+            },
+            render: (text: string, record: TableObj) => {
                 return (
-                    <div>
-                        {
-                            record.acc
-                                ?
-                                wei > 6
-                                    ?
-                                    record.acc.toFixed(6)
-                                    :
-                                    record.acc
-                                :
-                                '--'
-                        }
-                    </div>
+                    <DefaultMetric record={record} />
                 );
             }
-            // width: 150
         }];
-
-        const openRow = (record: TableObj) => {
-            let isHasParameters = true;
-            if (record.description.parameters.error) {
-                isHasParameters = false;
-            }
-            const openRowDataSource = {
-                parameters: record.description.parameters
-            };
-            const logPathRow = record.description.logPath !== undefined
-                ?
-                record.description.logPath
-                :
-                'This trial\'s logPath are not available.';
-            return (
-                <pre id="description" className="hyperpar">
-                    <Row className="openRowContent">
-                        <Tabs tabPosition="left" className="card">
-                            <TabPane tab="Parameters" key="1">
-                                {
-                                    isHasParameters
-                                        ?
-                                        <JSONTree
-                                            hideRoot={true}
-                                            shouldExpandNode={() => true}  // default expandNode
-                                            getItemString={() => (<span />)}  // remove the {} items
-                                            data={openRowDataSource}
-                                        />
-                                        :
-                                        <div className="logpath">
-                                            <span className="logName">Error: </span>
-                                            <span className="error">'This trial's parameters are not available.'</span>
-                                        </div>
-                                }
-                            </TabPane>
-                            <TabPane tab="Log" key="2">
-                                {
-                                    trainingPlatform === 'pai' || trainingPlatform === 'kubeflow'
-                                        ?
-                                        <PaiTrialLog
-                                            logStr={logPathRow}
-                                            id={record.id}
-                                            showLogModal={this.showLogModalOverview}
-                                        />
-                                        :
-                                        <TrialLog logStr={logPathRow} id={record.id} />
-                                }
-                            </TabPane>
-                        </Tabs>
-                    </Row>
-                </pre>
-            );
-        };
         return (
-            <div className="tabScroll">
+            <div className="tabScroll" >
                 <Table
                     columns={columns}
-                    expandedRowRender={openRow}
+                    expandedRowRender={this.openRow}
                     dataSource={tableSource}
                     className="commonTableStyle"
                     pagination={false}
@@ -243,9 +185,8 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                         />
                     </div>
                 </Modal>
-            </div>
+            </div >
         );
     }
 }
-
 export default SuccessTable;

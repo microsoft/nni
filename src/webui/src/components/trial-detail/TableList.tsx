@@ -1,18 +1,16 @@
 import * as React from 'react';
 import axios from 'axios';
-import JSONTree from 'react-json-tree';
 import ReactEcharts from 'echarts-for-react';
 import {
-    Row, Input, Table, Tabs, Button, Popconfirm, Modal, message, Checkbox
+    Row, Input, Table, Button, Popconfirm, Modal, Checkbox
 } from 'antd';
 const { TextArea } = Input;
-const TabPane = Tabs.TabPane;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
-import { convertDuration } from '../../static/function';
-import { TableObjFianl, TrialJob } from '../../static/interface';
-import PaiTrialLog from '../logPath/PaiTrialLog';
-import TrialLog from '../logPath/TrialLog';
+import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
+import { TableObj, TrialJob } from '../../static/interface';
+import OpenRow from '../public-child/OpenRow';
+import DefaultMetric from '../public-child/DefaultMetrc';
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
@@ -30,8 +28,8 @@ echarts.registerTheme('my_theme', {
 
 interface TableListProps {
     entries: number;
-    tableSource: Array<TableObjFianl>;
-    searchResult: Array<TableObjFianl>;
+    tableSource: Array<TableObj>;
+    searchResult: Array<TableObj>;
     updateList: Function;
     isHasSearch: boolean;
     platform: string;
@@ -83,7 +81,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     Object.keys(res.data).map(item => {
                         intermediateArr.push(parseFloat(res.data[item].data));
                     });
-                    const intermediate = this.intermediateGraphOption(intermediateArr, id);
+                    const intermediate = intermediateGraphOption(intermediateArr, id);
                     if (this._isMounted) {
                         this.setState(() => ({
                             intermediateOption: intermediate
@@ -159,70 +157,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
     }
 
-    intermediateGraphOption = (intermediateArr: number[], id: string) => {
-        const sequence: number[] = [];
-        const lengthInter = intermediateArr.length;
-        for (let i = 1; i <= lengthInter; i++) {
-            sequence.push(i);
-        }
-        return {
-            title: {
-                text: id,
-                left: 'center',
-                textStyle: {
-                    fontSize: 16,
-                    color: '#333',
-                }
-            },
-            tooltip: {
-                trigger: 'item'
-            },
-            xAxis: {
-                name: 'Trial',
-                data: sequence
-            },
-            yAxis: {
-                name: 'Default Metric',
-                type: 'value',
-                data: intermediateArr
-            },
-            series: [{
-                symbolSize: 6,
-                type: 'scatter',
-                data: intermediateArr
-            }]
-        };
-    }
-
-    // kill job
-    killJob = (key: number, id: string, status: string) => {
-        const { updateList } = this.props;
-        axios(`${MANAGER_IP}/trial-jobs/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json;charset=utf-8'
-            }
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    message.success('Cancel the job successfully');
-                    // render the table
-                    updateList();
-                } else {
-                    message.error('fail to cancel the job');
-                }
-            })
-            .catch(error => {
-                if (error.response.status === 500) {
-                    if (error.response.data.error) {
-                        message.error(error.response.data.error);
-                    } else {
-                        message.error('500 error, fail to cancel the job');
-                    }
-                }
-            });
-    }
-
     // click add column btn, just show the modal of addcolumn
     addColumn = () => {
         // show user select check button
@@ -241,10 +175,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const wantResult: Array<string> = [];
         Object.keys(checkedValues).map(m => {
             switch (checkedValues[m]) {
-                case 'Trial No':
-                case 'id':
-                case 'duration':
-                case 'status':
+                case 'Trial No.':
+                case 'Id':
+                case 'Duration':
+                case 'Status':
                 case 'Operation':
                 case 'Default':
                 case 'Intermediate Result':
@@ -284,6 +218,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
     }
 
+    openRow = (record: TableObj) => {
+        const { platform } = this.props;
+        return (
+            <OpenRow
+                showLogModalOverview={this.showLogModal}
+                trainingPlatform={platform}
+                record={record}
+            />
+        );
+    }
+
     componentDidMount() {
         this._isMounted = true;
     }
@@ -294,7 +239,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     render() {
 
-        const { entries, tableSource, searchResult, isHasSearch, platform } = this.props;
+        const { entries, tableSource, searchResult, isHasSearch, updateList } = this.props;
         const { intermediateOption, modalVisible, isShowColumn, columnSelected,
             logMessage, logModal
         } = this.state;
@@ -327,7 +272,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         Object.keys(columnSelected).map(key => {
             const item = columnSelected[key];
             switch (item) {
-                case 'Trial No':
+                case 'Trial No.':
                     showColumn.push({
                         title: 'Trial No.',
                         dataIndex: 'sequenceId',
@@ -335,11 +280,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         width: 120,
                         className: 'tableHead',
                         sorter:
-                            (a: TableObjFianl, b: TableObjFianl) =>
+                            (a: TableObj, b: TableObj) =>
                                 (a.sequenceId as number) - (b.sequenceId as number)
                     });
                     break;
-                case 'id':
+                case 'Id':
                     showColumn.push({
                         title: 'Id',
                         dataIndex: 'id',
@@ -347,23 +292,23 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         width: 60,
                         className: 'tableHead idtitle',
                         // the sort of string
-                        sorter: (a: TableObjFianl, b: TableObjFianl): number => a.id.localeCompare(b.id),
-                        render: (text: string, record: TableObjFianl) => {
+                        sorter: (a: TableObj, b: TableObj): number => a.id.localeCompare(b.id),
+                        render: (text: string, record: TableObj) => {
                             return (
                                 <div>{record.id}</div>
                             );
                         }
                     });
                     break;
-                case 'duration':
+                case 'Duration':
                     showColumn.push({
                         title: 'Duration',
                         dataIndex: 'duration',
                         key: 'duration',
                         width: 140,
                         // the sort of number
-                        sorter: (a: TableObjFianl, b: TableObjFianl) => (a.duration as number) - (b.duration as number),
-                        render: (text: string, record: TableObjFianl) => {
+                        sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
+                        render: (text: string, record: TableObj) => {
                             let duration;
                             if (record.duration !== undefined && record.duration > 0) {
                                 duration = convertDuration(record.duration);
@@ -376,22 +321,22 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         },
                     });
                     break;
-                case 'status':
+                case 'Status':
                     showColumn.push({
                         title: 'Status',
                         dataIndex: 'status',
                         key: 'status',
                         width: 150,
                         className: 'tableStatus',
-                        render: (text: string, record: TableObjFianl) => {
+                        render: (text: string, record: TableObj) => {
                             bgColor = record.status;
                             return (
                                 <span className={`${bgColor} commonStyle`}>{record.status}</span>
                             );
                         },
                         filters: trialJob,
-                        onFilter: (value: string, record: TableObjFianl) => record.status.indexOf(value) === 0,
-                        sorter: (a: TableObjFianl, b: TableObjFianl): number => a.status.localeCompare(b.status)
+                        onFilter: (value: string, record: TableObj) => record.status.indexOf(value) === 0,
+                        sorter: (a: TableObj, b: TableObj): number => a.status.localeCompare(b.status)
                     });
                     break;
                 case 'Default':
@@ -400,38 +345,16 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         dataIndex: 'acc',
                         key: 'acc',
                         width: 200,
-                        sorter: (a: TableObjFianl, b: TableObjFianl) => {
+                        sorter: (a: TableObj, b: TableObj) => {
                             if (a.acc !== undefined && b.acc !== undefined) {
                                 return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
                             } else {
                                 return NaN;
                             }
                         },
-                        render: (text: string, record: TableObjFianl) => {
-                            let accuracy;
-                            if (record.acc !== undefined) {
-                                accuracy = record.acc.default;
-                            }
-                            let wei = 0;
-                            if (accuracy) {
-                                if (accuracy.toString().indexOf('.') !== -1) {
-                                    wei = accuracy.toString().length - accuracy.toString().indexOf('.') - 1;
-                                }
-                            }
+                        render: (text: string, record: TableObj) => {
                             return (
-                                <div>
-                                    {
-                                        record.acc && record.acc.default
-                                            ?
-                                            wei > 6
-                                                ?
-                                                JSON.parse(record.acc.default).toFixed(6)
-                                                :
-                                                record.acc.default
-                                            :
-                                            '--'
-                                    }
-                                </div>
+                                <DefaultMetric record={record}/>
                             );
                         }
                     });
@@ -442,7 +365,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         dataIndex: 'operation',
                         key: 'operation',
                         width: 90,
-                        render: (text: string, record: TableObjFianl) => {
+                        render: (text: string, record: TableObj) => {
                             let trialStatus = record.status;
                             let flagKill = false;
                             if (trialStatus === 'RUNNING') {
@@ -456,7 +379,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                     (
                                         <Popconfirm
                                             title="Are you sure to cancel this trial?"
-                                            onConfirm={this.killJob.bind(this, record.key, record.id, record.status)}
+                                            onConfirm={killJob.
+                                                bind(this, record.key, record.id, record.status, updateList)}
                                         >
                                             <Button type="primary" className="tableButton">Kill</Button>
                                         </Popconfirm>
@@ -482,7 +406,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         dataIndex: 'intermediate',
                         key: 'intermediate',
                         width: '16%',
-                        render: (text: string, record: TableObjFianl) => {
+                        render: (text: string, record: TableObj) => {
                             return (
                                 <Button
                                     type="primary"
@@ -501,7 +425,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         dataIndex: item,
                         key: item,
                         width: 150,
-                        render: (text: string, record: TableObjFianl) => {
+                        render: (text: string, record: TableObj) => {
                             return (
                                 <div>
                                     {
@@ -518,72 +442,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
             }
         });
 
-        const openRow = (record: TableObjFianl) => {
-            let isHasParameters = true;
-            if (record.description.parameters.error) {
-                isHasParameters = false;
-            }
-            const parametersRow = {
-                parameters: record.description.parameters
-            };
-            const logPathRow = record.description.logPath !== undefined
-                ?
-                record.description.logPath
-                :
-                'This trial\'s logPath are not available.';
-            const isdisLogbutton = record.status === 'WAITING'
-                ?
-                true
-                :
-                false;
-            return (
-                <pre id="allList" className="hyperpar">
-                    <Row className="openRowContent">
-                        <Tabs tabPosition="left" className="card">
-                            <TabPane tab="Parameters" key="1">
-                                {
-                                    isHasParameters
-                                        ?
-                                        <JSONTree
-                                            hideRoot={true}
-                                            shouldExpandNode={() => true}  // default expandNode
-                                            getItemString={() => (<span />)}  // remove the {} items
-                                            data={parametersRow}
-                                        />
-                                        :
-                                        <div className="logpath">
-                                            <span className="logName">Error: </span>
-                                            <span className="error">'This trial's parameters are not available.'</span>
-                                        </div>
-                                }
-                            </TabPane>
-                            <TabPane tab="Log" key="2">
-                                {
-                                    platform === 'pai' || platform === 'kubeflow'
-                                        ?
-                                        <PaiTrialLog
-                                            logStr={logPathRow}
-                                            id={record.id}
-                                            showLogModal={this.showLogModal}
-                                            trialStatus={record.status}
-                                            isdisLogbutton={isdisLogbutton}
-                                        />
-                                        :
-                                        <TrialLog logStr={logPathRow} id={record.id} />
-                                }
-                            </TabPane>
-                        </Tabs>
-                    </Row>
-                </pre>
-            );
-        };
-
         return (
             <Row className="tableList">
                 <div id="tableList">
                     <Table
                         columns={showColumn}
-                        expandedRowRender={openRow}
+                        expandedRowRender={this.openRow}
                         dataSource={isHasSearch ? searchResult : tableSource}
                         className="commonTableStyle"
                         pagination={{ pageSize: entries }}

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Row, Button } from 'antd';
+import { Row } from 'antd';
 import { DOWNLOAD_IP } from '../../static/const';
 import PaiTrialChild from './PaiTrialChild';
 
@@ -43,16 +43,6 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                                         trial stdout
                                     </a>
                                     <a target="_blank" href={logStr.split(',')[1]}>hdfsLog</a>
-                                </Row>
-                                <Row>
-                                    <Button
-                                        disabled={isdisLogbutton}
-                                        type="primary"
-                                        className="tableButton"
-                                        onClick={showLogModal.bind(this, id)}
-                                    >
-                                        View
-                                    </Button>
                                 </Row>
                             </Row>
                             :
