@@ -130,6 +130,7 @@ The following example is an experiment built on TensorFlow. Make sure you have *
 ```
 
 * Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
+
 ```
 INFO: Starting restful server...
 INFO: Successfully started Restful server!
