@@ -58,23 +58,10 @@ def print_log_content(config_file_name):
     stderr_content = check_output(stderr_cmds)
     print(stderr_content.decode('utf-8'))
 
-
-def start_rest_server(port, platform, mode, config_file_name, experiment_id=None):
-    '''Run nni manager process'''
-    nni_config = Config(config_file_name)
-    if detect_port(port):
-        print_error('Port %s is used by another process, please reset the port!\n' \
-        'You could use \'nnictl create --help\' to get help information' % port)
-        exit(1)
-    
-    if (platform == 'pai' or platform == 'kubeflow') and detect_port(int(port) + 1):
-        print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
-        'You could set another port to start experiment!\n' \
-        'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
-        exit(1)
-
-    print_normal('Starting restful server...')
-    # Find nni lib from the following locations in order
+def get_nni_installation_path():
+    ''' Find nni lib from the following locations in order
+    Return nni root directory if it exists
+    '''
     def try_installation_path_sequentially(*sitepackages):
         '''Try different installation path sequentially util nni is found.
         Return None if nothing is found
@@ -96,9 +83,6 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
         # Note that conda venv will not have VIRTUAL_ENV
         python_dir = os.getenv('VIRTUAL_ENV')
-        entry_file = os.path.join(python_dir, 'nni', 'main.js')
-        if os.path.isfile(entry_file):
-            raise Exception('Fail to find nni under python packages')
     else:
         python_sitepackage = site.getsitepackages()[0]
         # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given that nni exists there
@@ -106,11 +90,32 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
             python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
         else:
             python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
-        # Nothing is found
-        if python_dir is None:
-            raise Exception('Fail to find nni under python packages')
-    entry_file = os.path.join(python_dir, 'nni', 'main.js')
-    entry_dir = os.path.join(python_dir, 'nni')
+
+    if python_dir is not None:
+        entry_file = os.path.join(python_dir, 'nni', 'main.js')
+        if os.path.isfile(entry_file):
+            return os.path.join(python_dir, 'nni')
+    print_error('Fail to find nni under python library')
+    exit(1)
+
+def start_rest_server(port, platform, mode, config_file_name, experiment_id=None):
+    '''Run nni manager process'''
+    nni_config = Config(config_file_name)
+    if detect_port(port):
+        print_error('Port %s is used by another process, please reset the port!\n' \
+        'You could use \'nnictl create --help\' to get help information' % port)
+        exit(1)
+    
+    if (platform == 'pai' or platform == 'kubeflow') and detect_port(int(port) + 1):
+        print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
+        'You could set another port to start experiment!\n' \
+        'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
+        exit(1)
+
+    print_normal('Starting restful server...')
+    
+    entry_dir = get_nni_installation_path()
+    entry_file = os.path.join(entry_dir, 'main.js')
 
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
