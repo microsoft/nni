@@ -73,7 +73,7 @@ def parse_args():
     parser_updater_concurrency.set_defaults(func=update_concurrency)
     parser_updater_duration = parser_updater_subparsers.add_parser('duration', help='update duration')
     parser_updater_duration.add_argument('id', nargs='?', help='the id of experiment')
-    parser_updater_duration.add_argument('--value', '-v', required=True)
+    parser_updater_duration.add_argument('--value', '-v', required=True, help='the unit of time should in {\'s\', \'m\', \'h\', \'d\'}')
     parser_updater_duration.set_defaults(func=update_duration)
     parser_updater_trialnum = parser_updater_subparsers.add_parser('trialnum', help='update maxtrialnum')
     parser_updater_trialnum.add_argument('--id', '-i', dest='id', help='the id of experiment')
