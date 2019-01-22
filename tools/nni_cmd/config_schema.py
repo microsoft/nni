@@ -216,12 +216,14 @@ frameworkcontroller_trial_schema = {
 frameworkcontroller_config_schema = {
     'frameworkcontrollerConfig':Or({
         Optional('storage'): Or('nfs', 'azureStorage'),
+        Optional('serviceAccountName'): str,
         'nfs': {
             'server': str,
             'path': str
         }
     },{
         Optional('storage'): Or('nfs', 'azureStorage'),
+        Optional('serviceAccountName'): str,
         'keyVault': {
             'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
             'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')

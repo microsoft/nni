@@ -1,5 +1,4 @@
 trigger:
-- dev-it
 - master
 - dev-remote-ci
 
