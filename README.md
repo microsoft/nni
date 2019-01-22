@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://microsoft.github.io/nni/docs/img/nni_logo.png" alt="NNI logo" width="300"/>
+<img src="https://microsoft.github.io/nni/docs/img/nni_logo.png" width="300"/>
 </p>
 
 -----------
