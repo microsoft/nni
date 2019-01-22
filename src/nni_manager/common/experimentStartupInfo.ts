@@ -20,6 +20,8 @@
 'use strict';
 
 import * as assert from 'assert';
+import * as os from 'os';
+import * as path from 'path';
 import * as component from '../common/component';
 
 @component.Singleton
@@ -29,8 +31,9 @@ class ExperimentStartupInfo {
     private basePort: number = -1;
     private initialized: boolean = false;
     private initTrialSequenceID: number = 0;
+    private logDir: string = '';
 
-    public setStartupInfo(newExperiment: boolean, experimentId: string, basePort: number): void {
+    public setStartupInfo(newExperiment: boolean, experimentId: string, basePort: number, logDir?: string): void {
         assert(!this.initialized);
         assert(experimentId.trim().length > 0);
 
@@ -38,6 +41,12 @@ class ExperimentStartupInfo {
         this.experimentId = experimentId;
         this.basePort = basePort;
         this.initialized = true;
+
+        if (logDir !== undefined && logDir.length > 0) {
+            this.logDir = path.join(logDir, getExperimentId());
+        } else {
+            this.logDir = path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
+        }
     }
 
     public getExperimentId(): string {
@@ -56,6 +65,12 @@ class ExperimentStartupInfo {
         assert(this.initialized);
 
         return this.newExperiment;
+    }
+
+    public getLogDir(): string {
+        assert(this.initialized);
+
+        return this.logDir;
     }
 
     public setInitTrialSequenceId(initSequenceId: number): void {
@@ -90,9 +105,13 @@ function getInitTrialSequenceId(): number {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getInitTrialSequenceId();
 }
 
-function setExperimentStartupInfo(newExperiment: boolean, experimentId: string, basePort: number): void {
-    component.get<ExperimentStartupInfo>(ExperimentStartupInfo).setStartupInfo(newExperiment, experimentId, basePort);
+function getExperimentStartupInfo(): ExperimentStartupInfo {
+    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo);
 }
 
-export { ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment,
+function setExperimentStartupInfo(newExperiment: boolean, experimentId: string, basePort: number, logDir?: string): void {
+    component.get<ExperimentStartupInfo>(ExperimentStartupInfo).setStartupInfo(newExperiment, experimentId, basePort, logDir);
+}
+
+export { ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment, getExperimentStartupInfo,
     setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId };

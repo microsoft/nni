@@ -59,7 +59,7 @@ def print_log_content(config_file_name):
     print(stderr_content.decode('utf-8'))
 
 
-def start_rest_server(port, platform, mode, config_file_name, experiment_id=None):
+def start_rest_server(port, platform, mode, config_file_name, experiment_id=None, logDir=None):
     '''Run nni manager process'''
     nni_config = Config(config_file_name)
     if detect_port(port):
@@ -95,6 +95,8 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
             raise Exception('Fail to find nni under both "%s" and "%s"' % (local_python_dir, python_dir))
 
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
+    if logDir is not None:
+        cmds += ['--log_dir', logDir]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
@@ -294,9 +296,9 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         except ModuleNotFoundError as e:
             print_error('The tuner %s should be installed through nnictl'%(tuner_name))
             exit(1)
-
+    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     # start rest server
-    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id)
+    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id, log_dir)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):

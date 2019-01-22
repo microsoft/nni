@@ -22,6 +22,7 @@
 import { Container, Scope } from 'typescript-ioc';
 
 import * as component from './common/component';
+import * as fs from 'fs';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger } from './common/log';
@@ -40,10 +41,10 @@ import { PAITrainingService } from './training_service/pai/paiTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 
-function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number) {
+function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number, logDirectory: string) {
     const createNew: boolean = (startExpMode === 'new');
     const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
-    setExperimentStartupInfo(createNew, expId, basePort);
+    setExperimentStartupInfo(createNew, expId, basePort, logDirectory);
 }
 
 async function initContainer(platformMode: string): Promise<void> {
@@ -102,7 +103,14 @@ if (startMode === 'resume' && experimentId.trim().length < 1) {
     process.exit(1);
 }
 
-initStartupInfo(startMode, experimentId, port);
+const logDir: string = parseArg(['--log_dir', '-l']);
+if (logDir.length > 0) {
+    if (!fs.existsSync(logDir)) {
+        console.log(`FATAL: log_dir ${logDir} does not exist`);
+    }
+}
+
+initStartupInfo(startMode, experimentId, port, logDir);
 
 mkDirP(getLogDir()).then(async () => {
     const log: Logger = getLogger();
