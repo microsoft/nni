@@ -20,8 +20,9 @@
 'use strict';
 import * as assert from 'assert';
 
-import { KubernetesTrialConfig, KubernetesTrialConfigTemplate, KubernetesClusterConfig, KubernetesClusterConfigAzure,
-     KubernetesClusterConfigNFS, NFSConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage, KubernetesClusterConfig } from '../kubernetesConfig'
+import { KubernetesTrialConfig, KubernetesTrialConfigTemplate, KubernetesClusterConfigAzure,
+     KubernetesClusterConfigNFS, NFSConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage, KubernetesClusterConfig,
+    StorageConfig } from '../kubernetesConfig'
 
 export class FrameworkAttemptCompletionPolicy {
     public readonly minFailedTaskCount: number;
@@ -59,11 +60,15 @@ export class FrameworkControllerTrialConfig extends KubernetesTrialConfig{
     }
 }
 
-export interface ServiceAccount {
-    readonly serviceAccountName: string;
+export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
+    public readonly serviceAccountName: string;
+    constructor(apiVersion: string, serviceAccountName: string) {
+        super(apiVersion);
+        this.serviceAccountName = serviceAccountName;
+    }
 }
 
-export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfigNFS implements ServiceAccount {
+export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly serviceAccountName: string;
     constructor(
             serviceAccountName: string, 
@@ -87,7 +92,7 @@ export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfig
     }
 }
 
-export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConfigAzure implements ServiceAccount{
+export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConfigAzure {
     public readonly serviceAccountName: string;
     
     constructor(
@@ -113,15 +118,19 @@ export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConf
     }
 }
 
-export class ServiceAccountFactory {
-    public static getServiceAccountName(kubernetesClusterConfig: KubernetesClusterConfig): string {
-        let fcclusterconfig: ServiceAccount;
-        if(kubernetesClusterConfig.storageType === 'azureStorage'){
-           fcclusterconfig = <FrameworkControllerClusterConfigAzure> kubernetesClusterConfig;
-        }else {
-            fcclusterconfig = <FrameworkControllerClusterConfigNFS> kubernetesClusterConfig;
+export class FrameworkControllerClusterConfigFactory {
+
+    public static generateFrameworkControllerClusterConfig(jsonObject: object): FrameworkControllerClusterConfig {
+         let storageConfig = <StorageConfig>jsonObject;
+         if(!storageConfig) {
+            throw new Error("Invalid json object as a StorageConfig instance");
         }
-        return fcclusterconfig.serviceAccountName;
+         if(storageConfig.storage && storageConfig.storage === 'azureStorage') {
+            return FrameworkControllerClusterConfigAzure.getInstance(jsonObject);
+         } else if (storageConfig.storage === undefined || storageConfig.storage === 'nfs') {
+            return FrameworkControllerClusterConfigNFS.getInstance(jsonObject);
+         }
+         throw new Error(`Invalid json object ${jsonObject}`);
     }
 }
 
