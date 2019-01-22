@@ -57,6 +57,7 @@ export namespace SSHClientUtility {
         // Decompress the remote compressed file in and delete it
         await remoteExeCommand(`tar -oxzf ${remoteTarPath} -C ${remoteDirectory}`, sshClient);
         await remoteExeCommand(`rm ${remoteTarPath}`, sshClient);
+
         deferred.resolve();
 
         return deferred.promise;

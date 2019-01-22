@@ -95,10 +95,12 @@ export abstract class ClusterJobRestServer extends RestServer{
 
         router.post(`/stdout/${this.expId}/:trialId`, (req: Request, res: Response) => {
             const trialLogPath: string = path.join(getLogDir(), `trial_${req.params.trialId}.log`);
+            console.log('------------------------98--------------')
             try {
                 let skipLogging: boolean = false;
                 if(req.body.tag === 'trial' && req.body.msg !== undefined) {
                     const metricsContent = req.body.msg.match(this.NNI_METRICS_PATTERN);
+                    console.log(metricsContent)
                     if(metricsContent && metricsContent.groups) {
                         this.handleTrialMetrics(req.params.trialId, [metricsContent.groups['metrics']]);
                         skipLogging = true;

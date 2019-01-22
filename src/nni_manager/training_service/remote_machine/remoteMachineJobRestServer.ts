@@ -44,7 +44,9 @@ export class RemoteMachineJobRestServer extends ClusterJobRestServer{
     protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
         // Split metrics array into single metric, then emit
         // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
+        console.log('------------------------handle trial metrics--------------')
         for (const singleMetric of metrics) {
+            console.log(singleMetric)
             this.remoteMachineTrainingService.MetricsEmitter.emit('metric', {
                 id : jobId,
                 data : singleMetric

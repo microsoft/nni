@@ -36,7 +36,7 @@ if not os.path.exists(_outputdir):
     os.makedirs(_outputdir)
 
 _nni_platform = os.environ['NNI_PLATFORM']
-if _nni_platform not in ['pai', 'kubeflow', 'frameworkcontroller']:
+if _nni_platform not in ['pai', 'kubeflow', 'frameworkcontroller', 'remote']:
    _log_file_path = os.path.join(_outputdir, 'trial.log')
    init_logger(_log_file_path)
 

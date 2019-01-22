@@ -119,9 +119,10 @@ eval {3}{4} 2>{5}
 echo $? \`date +%s%3N\` >{6}`;
 
 export const REMOTEMACHINE_TRIAL_COMMAND_FORMAT: string =
-`export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4}
-&& cd $NNI_SYS_DIR && sh install_nni.sh 
-&& python3 -m nni_trial_tool.trial_keeper --trial_command '{5}' --nnimanager_ip '{6}' --nnimanager_port '{7}'`;
+`export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4} export MULTI_PHASE={5}` +
+`&& cd $NNI_SYS_DIR && sh install_nni.sh ` +  
+`&& python3 -m nni_trial_tool.trial_keeper --trial_command '{6}' --nnimanager_ip '{7}' --nnimanager_port '{8}'
+echo $? \`date +%s%3N\` >{9}`;
 
 export const HOST_JOB_SHELL_FORMAT: string =
 `#!/bin/bash

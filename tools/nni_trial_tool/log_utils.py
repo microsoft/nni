@@ -105,6 +105,8 @@ class RemoteLogger(object):
         Write buffer data into logger/stdout
         '''
         for line in buf.rstrip().splitlines():
+            with open('./tmplog', 'a') as file:
+                file.write(line.rstrip() + '\n')
             self.orig_stdout.write(line.rstrip() + '\n')
             self.orig_stdout.flush()
             try:

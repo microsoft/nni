@@ -51,6 +51,7 @@ import {
 import { SSHClientUtility } from './sshClientUtility';
 import { validateCodeDir} from '../common/util';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 
 /**
  * Training Service implementation for Remote Machine (Linux)
@@ -91,6 +92,8 @@ class RemoteMachineTrainingService implements TrainingService {
      * Loop to launch trial jobs and collect trial metrics
      */
     public async run(): Promise<void> {
+        const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
+        await restServer.start();
         while (!this.stopping) {
             while (this.jobQueue.length > 0) {
                 const trialJobId: string = this.jobQueue[0];
@@ -104,9 +107,9 @@ class RemoteMachineTrainingService implements TrainingService {
                     break;
                 }
             }
-            const metricsCollector: MetricsCollector = new MetricsCollector(
-                this.machineSSHClientMap, this.trialJobsMap, this.remoteExpRootDir, this.metricsEmitter);
-            await metricsCollector.collectMetrics();
+            // const metricsCollector: MetricsCollector = new MetricsCollector(
+            //     this.machineSSHClientMap, this.trialJobsMap, this.remoteExpRootDir, this.metricsEmitter);
+        //    await metricsCollector.collectMetrics();
             await delay(3000);
         }
     }
@@ -492,6 +495,10 @@ class RemoteMachineTrainingService implements TrainingService {
             trialJobDetail.sequenceId.toString()
             );
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
+        if(!this.remoteRestServerPort) {
+            const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
+            this.remoteRestServerPort = restServer.clusterRestServerPort;
+        }
         const runScriptTrialContent: string = String.Format(
             REMOTEMACHINE_TRIAL_COMMAND_FORMAT,
             trialWorkingFolder,
@@ -499,9 +506,11 @@ class RemoteMachineTrainingService implements TrainingService {
             trialJobId,
             getExperimentId(),
             trialJobDetail.sequenceId.toString(),
+            this.isMultiPhase,
             this.trialConfig.command,
             nniManagerIp,
-            this.remoteRestServerPort
+            this.remoteRestServerPort,
+            path.join(trialWorkingFolder, '.nni', 'code')
         )
         /*
         `#!/bin/bash
@@ -518,25 +527,26 @@ echo $? \`date +%s%3N\` >{6}`;
         && cd $NNI_SYS_DIR && sh install_nni.sh 
         && python3 -m nni_trial_tool.trial_keeper --trial_command '{5}' --nnimanager_ip '{6}' --nnimanager_port '{7}'`;
 */
-        if(!this.remoteRestServerPort) {
-            const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
-            this.remoteRestServerPort = restServer.clusterRestServerPort;
-        }
         // const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
 
         //create tmp trial working folder locally.
         await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
 
+        //create tmp trial working folder locally.
+        await cpp.exec(`cp -r ${this.trialConfig.codeDir}/* ${trialLocalTempFolder}`);
+        const installScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
+        // Write NNI installation file to local tmp files
+        await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
+
         // Write file content ( run.sh and parameter.cfg ) to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run.sh'), runScriptTrialContent, { encoding: 'utf8' });
 
         // Copy local tmp files to remote machine
-        await SSHClientUtility.copyFileToRemote(
-            path.join(trialLocalTempFolder, 'run.sh'), path.join(trialWorkingFolder, 'run.sh'), sshClient);
+        // await SSHClientUtility.copyFileToRemote(
+            // path.join(trialLocalTempFolder, 'run.sh'), path.join(trialWorkingFolder, 'run.sh'), sshClient);
         await this.writeParameterFile(trialJobId, form.hyperParameters, rmScheduleInfo.rmMeta);
-
         // Copy files in codeDir to remote working directory
-        await SSHClientUtility.copyDirectoryToRemote(this.trialConfig.codeDir, trialWorkingFolder, sshClient, this.remoteOS);
+        await SSHClientUtility.copyDirectoryToRemote(trialLocalTempFolder, trialWorkingFolder, sshClient, this.remoteOS);
         // Execute command in remote machine
         SSHClientUtility.remoteExeCommand(`bash ${path.join(trialWorkingFolder, 'run.sh')}`, sshClient);
     }
