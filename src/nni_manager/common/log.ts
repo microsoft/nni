@@ -26,6 +26,7 @@ import { Writable } from 'stream';
 import { WritableStreamBuffer } from 'stream-buffers';
 import { format } from 'util';
 import * as component from '../common/component';
+import { getExperimentStartupInfo } from './experimentStartupInfo';
 import { getLogDir } from './utils';
 
 const CRITICAL: number = 1;
@@ -33,6 +34,9 @@ const ERROR: number = 2;
 const WARNING: number = 3;
 const INFO: number = 4;
 const DEBUG: number = 5;
+
+const logLevelNameMap: Map<string, number> = new Map([['critical', CRITICAL],
+    ['error', ERROR], ['warning', WARNING], ['info', INFO], ['debug', DEBUG]]);
 
 class BufferSerialEmitter {
     private buffer: Buffer;
@@ -83,6 +87,13 @@ class Logger {
             autoClose: true
         });
         this.bufferSerialEmitter = new BufferSerialEmitter(this.writable);
+
+        const logLevelName: string = getExperimentStartupInfo()
+                                    .getLogLevel();
+        const logLevel: number | undefined = logLevelNameMap.get(logLevelName);
+        if (logLevel !== undefined) {
+            this.level = logLevel;
+        }
     }
 
     public close() {
