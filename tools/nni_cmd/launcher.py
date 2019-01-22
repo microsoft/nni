@@ -58,6 +58,45 @@ def print_log_content(config_file_name):
     stderr_content = check_output(stderr_cmds)
     print(stderr_content.decode('utf-8'))
 
+def get_nni_installation_path():
+    ''' Find nni lib from the following locations in order
+    Return nni root directory if it exists
+    '''
+    def try_installation_path_sequentially(*sitepackages):
+        '''Try different installation path sequentially util nni is found.
+        Return None if nothing is found
+        '''
+        def _generate_installation_path(sitepackages_path):
+            python_dir = str(Path(sitepackages_path).parents[2])
+            entry_file = os.path.join(python_dir, 'nni', 'main.js')
+            if os.path.isfile(entry_file):
+                return python_dir
+            return None
+
+        for sitepackage in sitepackages:
+            python_dir = _generate_installation_path(sitepackage)
+            if python_dir is not None:
+                return python_dir
+        return None
+
+    if os.getenv('VIRTUAL_ENV'):
+        # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
+        # Note that conda venv will not have VIRTUAL_ENV
+        python_dir = os.getenv('VIRTUAL_ENV')
+    else:
+        python_sitepackage = site.getsitepackages()[0]
+        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given that nni exists there
+        if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
+            python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
+        else:
+            python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
+
+    if python_dir is not None:
+        entry_file = os.path.join(python_dir, 'nni', 'main.js')
+        if os.path.isfile(entry_file):
+            return os.path.join(python_dir, 'nni')
+    print_error('Fail to find nni under python library')
+    exit(1)
 
 def start_rest_server(port, platform, mode, config_file_name, experiment_id=None):
     '''Run nni manager process'''
@@ -74,25 +113,9 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         exit(1)
 
     print_normal('Starting restful server...')
-    # Find nni lib from the following locations in order
-    sys_wide_python = True
-    python_sitepackage = site.getsitepackages()[0]
-    # If system-wide python is used, we will give priority to using user-sitepackage given that nni exists there
-    if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
-        local_python_dir = str(Path(site.getusersitepackages()).parents[2])
-        entry_file = os.path.join(local_python_dir, 'nni', 'main.js')
-        entry_dir = os.path.join(local_python_dir, 'nni')
-    else:
-        # If this python is not system-wide python, we will use its site-package directly
-        sys_wide_python = False
-
-    if not sys_wide_python or not os.path.isfile(entry_file):
-        python_dir = str(Path(python_sitepackage).parents[2])
-        entry_file = os.path.join(python_dir, 'nni', 'main.js')
-        entry_dir = os.path.join(python_dir, 'nni')
-        # Nothing is found
-        if not os.path.isfile(entry_file):
-            raise Exception('Fail to find nni under both "%s" and "%s"' % (local_python_dir, python_dir))
+    
+    entry_dir = get_nni_installation_path()
+    entry_file = os.path.join(entry_dir, 'main.js')
 
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
@@ -310,8 +333,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         experiment_config['searchSpace'] = json.dumps(search_space)
         assert search_space, ERROR_INFO % 'Generated search space is empty'
     elif experiment_config.get('searchSpacePath'):
-            search_space = get_json_content(experiment_config.get('searchSpacePath'))
-            experiment_config['searchSpace'] = json.dumps(search_space)
+        search_space = get_json_content(experiment_config.get('searchSpacePath'))
+        experiment_config['searchSpace'] = json.dumps(search_space)
     else:
         experiment_config['searchSpace'] = json.dumps('')
 
