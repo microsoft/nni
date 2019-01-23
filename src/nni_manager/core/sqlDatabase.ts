@@ -214,13 +214,15 @@ class SqlDB implements Database {
     }
 
     public storeMetricData(trialJobId: string, data: string): Promise<void> {
+        console.log('----------------------------store metric data-----------217------------')
         const sql: string = 'insert into MetricData values (?,?,?,?,?,?)';
         const json: MetricDataRecord = JSON.parse(data);
+        console.log(json)
         const args: any[] = [Date.now(), json.trialJobId, json.parameterId, json.type, json.sequence, JSON.stringify(json.data)];
 
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });
-
+        console.log('----------------------------store metric data-----------225------------')
         return deferred.promise;
     }
 
