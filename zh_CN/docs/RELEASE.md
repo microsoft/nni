@@ -1,46 +1,46 @@
-# Release 0.5.0 - 01/14/2019
+# 发布 0.5.0 - 01/14/2019
 
 ## 主要功能
 
-### New tuner and assessor supports
+### 支持新的调参器和评估器
 
-* Support [Metis tuner](./HowToChooseTuner.md#MetisTuner) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
-* Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
-* Support [Curve fitting assessor](./HowToChooseTuner.md#Curvefitting) for early stop policy using learning curve extrapolation. 
-* Advanced Support of [Weight Sharing](./AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
+* 支持 [Metis tuner](./HowToChooseTuner.md#MetisTuner) 作为 NNI 的调参器。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
+* 支持 [Curve fitting （曲线拟合）评估器](./HowToChooseTuner.md#Curvefitting)，通过曲线拟合的方式的策略来实现提前终止尝试。 
+* 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS 调参器通过 NFS 来提供权重共享。
 
-### Training Service Enhancement
+### 改进训练服务
 
-* [FrameworkController Training service](./FrameworkControllerMode.md): Support run experiments using frameworkcontroller on kubernetes 
-   * FrameworkController is a Controller on kubernetes that is general enough to run (distributed) jobs with various machine learning frameworks, such as tensorflow, pytorch, MXNet.
-   * NNI provides unified and simple specification for job definition.
-   * MNIST example for how to use FrameworkController.
+* [FrameworkController 训练服务](./FrameworkControllerMode.md): 支持使用在 Kubernetes 上使用 FrameworkController。 
+   * FrameworkController 是 Kubernetes 上非常通用的控制器（Controller），能用来运行基于各种机器学习框架的分布式作业，如 TensorFlow，Pytorch， MXNet 等。
+   * NNI 为作业定义了统一而简单的规范。
+   * 如何使用 FrameworkController 的 MNIST 样例。
 
-### User Experience improvements
+### 改进用户体验
 
-* A better trial logging support for NNI experiments in PAI, Kubeflow and FrameworkController mode: * An improved logging architecture to send stdout/stderr of trials to NNI manager via Http post. NNI manager will store trial's stdout/stderr messages in local log file. * Show the link for trial log file on WebUI. 
-* Support to show final result's all key-value pairs.
+* 在 OpenPAI，Kubeflow 和 FrameworkController 模式中提供了更好的日志支持： * 通过改进的日志架构来将尝试的 stdout/stderr 通过 发送给 NNI 管理器。 NNI 管理器将尝试的 stdout/stderr 消息存储在本地日志文件中。 * 在 WEB 界面上显示尝试日志的链接。 
+* 支持将最终结果显示为键值对。
 
-# Release 0.4.1 - 12/14/2018
+# 发布 0.4.1 - 12/14/2018
 
-## Major Features
+## 主要功能
 
-### New tuner supports
+### 支持新的调参器
 
-* Support [network morphism](./HowToChooseTuner.md#NetworkMorphism) as a new tuner
+* 支持新调参器 [network morphism](./HowToChooseTuner.md#NetworkMorphism)
 
-### Training Service improvements
+### 改进训练服务
 
-* Migrate [Kubeflow training service](https://github.com/Microsoft/nni/blob/master/docs/KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
-* [Pytorch-operator](https://github.com/kubeflow/pytorch-operator) support for Kubeflow training service
+* 将 [Kubeflow 训练服务](https://github.com/Microsoft/nni/blob/master/docs/KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
+* Kubeflow 训练服务支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
 * Improvement on local code files uploading to OpenPAI HDFS
 * Fixed OpenPAI integration WebUI bug: WebUI doesn't show latest trial job status, which is caused by OpenPAI token expiration
 
-### NNICTL improvements
+### 改进 NNICTL
 
 * Show version information both in nnictl and WebUI. You can run **nnictl -v** to show your current installed NNI version
 
-### WebUI improvements
+### 改进 WEB 界面
 
 * Enable modify concurrency number during experiment
 * Add feedback link to NNI github 'create issue' page
@@ -56,7 +56,7 @@
 
 # 发布 0.4 - 12/6/2018
 
-## Major Features
+## 主要功能
 
 * [Kubeflow 训练服务](./KubeflowMode.md) 
    * 支持 tf-operator
@@ -127,17 +127,17 @@
 
 # 发布 0.2.0 - 9/29/2018
 
-## Major Features
+## 主要功能
 
-    * Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
-       * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
-       * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
-    * Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](HowToChooseTuner.md) for instructions about how to use SMAC tuner)
-       * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). 它会利用使用过的突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 The SMAC supported by NNI is a wrapper on [SMAC3](https://github.com/automl/SMAC3)
-    * Support NNI installation on [conda](https://conda.io/docs/index.html) and python virtual environment
-    * Others
-       * Update ga squad example and related documentation
-       * WebUI UX small enhancement and bug fix
+    * 支持 [OpenPAI](https://github.com/Microsoft/pai) (aka pai) 作为训练服务（参考 [!这里](./PAIMode.md)，了解如何在 pai 模式下提交 NNI 作业）。
+       * 训练服务支持 pai 模式。 NNI 尝试可发送至 OpenPAI 集群上运行
+       * NNI 尝试输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
+    * 支持 <a href="https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf">SMAC</a> 调参器 (参考<a href="HowToChooseTuner.md">这里</a>，了解如何使用 SMAC 调参器)
+       * <a href="https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf">SMAC</a> 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的好模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 NNI 的 SMAC 通过包装 <a href="https://github.com/automl/SMAC3">SMAC3</a> 来支持。
+    * 支持将 NNI 安装在 <a href="https://conda.io/docs/index.html">conda</a> 和 Python 虚拟环境中。
+    * 其它
+       * 更新 ga squad 样例与相关文档
+       * 用户体验改善及缺陷修复
     
 
 ## 已知问题
@@ -148,7 +148,7 @@
 
 首次发布 Neural Network Intelligence (NNI)。
 
-## Major Features
+## 主要功能
 
     * Installation and Deployment
        * Support pip install and source codes install
