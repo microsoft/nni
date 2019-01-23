@@ -22,11 +22,11 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
         <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
       </td>
       <td>
-        <b>Tunning Algorithm Extensions</b>
+        <b>调参算法扩展</b>
         <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
       </td>
       <td>
-        <b>Training Service Extensions</b>
+        <b>训练服务扩展</b>
         <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
       </td>
     </tr>
@@ -65,11 +65,11 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
       </td>
       <td>
       <ul>
-        <li><a href="docs/tutorial_1_CR_exp_local_api.md">Local Machine</a></li>
-        <li><a href="docs/tutorial_2_RemoteMachineMode.md">Remote Servers</a></li>
+        <li><a href="docs/tutorial_1_CR_exp_local_api.md">本地计算机</a></li>
+        <li><a href="docs/tutorial_2_RemoteMachineMode.md">远程计算机</a></li>
         <li><a href="docs/PAIMode.md">OpenPAI</a></li>
         <li><a href="docs/KubeflowMode.md">Kubeflow</a></li>
-        <li><a href="docs/KubeflowMode.md">FrameworkController on K8S (AKS etc.)</a></li>
+        <li><a href="docs/KubeflowMode.md">基于 Kubernetes（AKS 等等）的 FrameworkController</a></li>
       </ul>
       </td>
     </tr>
@@ -182,7 +182,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * [使用 NNIBoard](docs/WebUI.md)
 * [如何定义搜索空间](docs/SearchSpaceSpec.md)
 * [如何定义一次尝试](docs/howto_1_WriteTrial.md)
-* [How to choose tuner/search-algorithm](docs/HowToChooseTuner.md)
+* [如何选择调参器/搜索算法](docs/HowToChooseTuner.md)
 * [配置实验](docs/ExperimentConfig.md)
 * [如何使用标记](docs/howto_1_WriteTrial.md#nni-python-annotation)
 
