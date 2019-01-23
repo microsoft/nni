@@ -2,7 +2,7 @@
 [Scikit-learn](https://github.com/scikit-learn/scikit-learn) is a pupular meachine learning tool for data mining and data analysis. It supports many kinds of meachine learning models like LinearRegression, LogisticRegression, DecisionTree, SVM etc. How to make the use of scikit-learn more efficiency is a valuable topic.  
 NNI supports many kinds of tuning algorithms to search the best models and/or hyper-parameters for scikit-learn, and support many kinds of environments like local machine, remote servers and cloud.
  
-## 1. How to run the example.
+## 1. How to run the example
 To start using NNI, you should install the nni package, and use the command line tool `nnictl` to start an experiment. For more information about installation and preparing for the environment,  please [refer](../../../docs/GetStarted.md).
 After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
 ```
