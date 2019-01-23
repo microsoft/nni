@@ -11,8 +11,8 @@ We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with 
 Note:
 
 * `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
-* If there is any error like `Segmentation fault`, please refer to [FAQ][1]
-* For the `system requirements` of NNI, please refer to [Install NNI][2]
+* If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
+* For the `system requirements` of NNI, please refer to [Install NNI](Installation.md)
 
 ## "Hello World" example on MNIST
 
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-Note: If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_before.py][7]
+Note: If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_before.py](https://github.com/Microsoft/nni/blob/5000ae8b746aa5438d48db26cdc1e7104c9afa20/examples/trials/mnist/mnist_before.py)
 
 The above code can only try one set of parameters at a time, if we want to tune learning rate, we need to manually tune the hyperparameters and start the trial again and again.
 
@@ -77,7 +77,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
 + }
 ```
 
-*Implemented code directory: [search_space.json][3]*
+*Implemented code directory: [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/search_space.json)*
 
 **Step 2**: Modified your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
 
@@ -102,7 +102,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
       run_trial(params)
 ```
 
-*Implemented code directory: [mnist.py][4]*
+*Implemented code directory: [mnist.py](https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py)*
 
 **Step 3**: Define a `config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
 
@@ -125,9 +125,9 @@ trial:
   gpuNum: 0
 ```
 
-*Implemented code directory: [config.yml][5]*
+*Implemented code directory: [config.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config.yml)*
 
-All the codes above are already prepared and stored in [examples/trials/mnist/][8].
+All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
 
 When these things are done, **run the config.yml file from your command line to start the experiment**.
 
@@ -135,7 +135,7 @@ When these things are done, **run the config.yml file from your command line to 
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
-Note: **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here][6] for more usage of `nnictl`
+Note: **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](NNICTLDOC.md) for more usage of `nnictl`
 
 Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
 
@@ -183,28 +183,28 @@ Click the tab "Overview".
 
 Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also support `download these information and parameters` through the **Download** button. You can download the experiment result anytime in the middle for the running or at the end of the execution, etc.
 
-![](./img/QuickStart1.png)
+![](https://raw.githubusercontent.com/Microsoft/nni/dev-doc/docs/img/QuickStart1.png)
 
 Top 10 trials will be listed in the Overview page, you can browse all the trials in "Trials Detail" page.
 
-![](./img/QuickStart2.png)
+![](https://raw.githubusercontent.com/Microsoft/nni/dev-doc/docs/img/QuickStart2.png)
 
 ### View trials detail page
 
 Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
 
-![](./img/QuickStart3.png)
+![](https://raw.githubusercontent.com/Microsoft/nni/dev-doc/docs/img/QuickStart3.png)
 
 Click the tab "Hyper Parameter" to see the parallel graph.
 
 * You can select the percentage to see top trials.
 * Choose two axis to swap its positions
 
-![](./img/QuickStart4.png)
+![](https://raw.githubusercontent.com/Microsoft/nni/dev-doc/docs/img/QuickStart4.png)
 
 Click the tab "Trial Duration" to see the bar graph.
 
-![](./img/QuickStart5.png)
+![](https://raw.githubusercontent.com/Microsoft/nni/dev-doc/docs/img/QuickStart5.png)
 
 Below is the status of the all trials. Specifically:
 
@@ -213,36 +213,19 @@ Below is the status of the all trials. Specifically:
 * Kill: you can kill a job that status is running.
 * Support to search for a specific trial.
 
-![](./img/QuickStart6.png)
+![](https://raw.githubusercontent.com/Microsoft/nni/dev-doc/docs/img/QuickStart6.png)
 
 * Intermediate Result Grap
 
-![](./img/QuickStart7.png)
+![](https://raw.githubusercontent.com/Microsoft/nni/dev-doc/docs/img/QuickStart7.png)
 
 ## Related Topic
 
-* [How to use command line tool nnictl][16]
-* [How to write a trial][9]
-* [Try different Tuners][10]
-* [Try different Assessors][11]
-* [How to run an experiment on local (with multiple GPUs)?][12]
-* [How to run an experiment on multiple machines?][13]
-* [How to run an experiment on OpenPAI?][14]
-* [How to run an experiment on Kubeflow?][15]
-
-[1]: https://github.com/Microsoft/nni/blob/master/docs/FAQ.md
-[2]: https://github.com/Microsoft/nni/blob/master/docs/Installation.md
-[3]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/search_space.json
-[4]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py
-[5]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config.yml
-[6]: https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md
-[7]: https://github.com/Microsoft/nni/blob/5000ae8b746aa5438d48db26cdc1e7104c9afa20/examples/trials/mnist/mnist_before.py
-[8]: https://github.com/Microsoft/nni/tree/master/examples/trials/mnist
-[9]: https://github.com/Microsoft/nni/blob/master/docs/howto_1_WriteTrial.md
-[10]: https://github.com/Microsoft/nni/blob/master/docs/tutorial_3_tryTunersAndAssessors.md
-[11]: https://github.com/Microsoft/nni/blob/master/docs/tutorial_3_tryTunersAndAssessors.md
-[12]: https://github.com/Microsoft/nni/blob/master/docs/tutorial_1_CR_exp_local_api.md
-[13]: https://github.com/Microsoft/nni/blob/master/docs/tutorial_2_RemoteMachineMode.md
-[14]: https://github.com/Microsoft/nni/blob/master/docs/PAIMode.md
-[15]: https://github.com/Microsoft/nni/blob/master/docs/KubeflowMode.md
-[16]: https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md
+* [Try different Tuners](Tuners.md)
+* [Try different Assessors](Assessors.md)
+* [How to use command line tool nnictl](NNICTLDOC.md)
+* [How to write a trial](Trial.md)
+* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
+* [How to run an experiment on multiple machines?](RemoteMachineMode.md)
+* [How to run an experiment on OpenPAI?](PAIMode.md)
+* [How to run an experiment on Kubeflow?](KubeflowMode.md)
