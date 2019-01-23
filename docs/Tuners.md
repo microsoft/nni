@@ -19,8 +19,8 @@ NNI provides the-state-of-art tuning algorithm in our builtin-tuners and makes t
 |**SMAC**<br>[(Usage)](#SMAC)|SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on the SMAC3 github repo.|
 |**Batch tuner**<br>[(Usage)](#Batch)|Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.|
 |**Grid Search**<br>[(Usage)](#GridSearch)|Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, qloguniform. The number q in quniform and qloguniform has special meaning (different from the spec in search space spec). It means the number of values that will be sampled evenly from the range low and high.|
-|[Hyperband][1]<br>[(Usage)](#Hyperband)|Hyperband tries to use the limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for the small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.|
-|[Network Morphism][2]<br>[(Usage)](#NetworkMorphism)|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train.|
+|[Hyperband](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperband_advisor)<br>[(Usage)](#Hyperband)|Hyperband tries to use the limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for the small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.|
+|[Network Morphism](https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/networkmorphism_tuner/README.md)<br>[(Usage)](#NetworkMorphism)|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train.|
 |**Metis Tuner**<br>[(Usage)](#MetisTuner)|Metis offers the following benefits when it comes to tuning parameters: While most tools only predicts the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter.|
 
 <br>
@@ -33,7 +33,7 @@ Note: Please follow the format when you write your `config.yml` file.
 
 <a name="TPE"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `TPE`
+![](https://placehold.it/15/1589F0/000000?text=+) `TPE`
 
 > Builtin Tuner Name: **TPE**
 
@@ -59,7 +59,7 @@ tuner:
 
 <a name="Random"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Random Search`
+![](https://placehold.it/15/1589F0/000000?text=+) `Random Search`
 
 > Builtin Tuner Name: **Random**
 
@@ -85,7 +85,7 @@ tuner:
 
 <a name="Anneal"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Anneal`
+![](https://placehold.it/15/1589F0/000000?text=+) `Anneal`
 
 > Builtin Tuner Name: **Anneal**
 
@@ -111,7 +111,7 @@ tuner:
 
 <a name="Evolution"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Naive Evolution`
+![](https://placehold.it/15/1589F0/000000?text=+) `Naive Evolution`
 
 > Builtin Tuner Name: **Evolution**
 
@@ -137,7 +137,7 @@ tuner:
 
 <a name="SMAC"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `SMAC`
+![](https://placehold.it/15/1589F0/000000?text=+) `SMAC`
 
 > Builtin Tuner Name: **SMAC**
 
@@ -163,7 +163,7 @@ tuner:
 
 <a name="Batch"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Batch Tuner`
+![](https://placehold.it/15/1589F0/000000?text=+) `Batch Tuner`
 
 > Builtin Tuner Name: BatchTuner
 
@@ -202,7 +202,7 @@ The search space file including the high-level key `combine_params`. The type of
 
 <a name="GridSearch"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Grid Search`
+![](https://placehold.it/15/1589F0/000000?text=+) `Grid Search`
 
 > Builtin Tuner Name: **Grid Search**
 
@@ -224,7 +224,7 @@ tuner:
 
 <a name="Hyperband"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Hyperband`
+![](https://placehold.it/15/1589F0/000000?text=+) `Hyperband`
 
 > Builtin Advisor Name: **Hyperband**
 
@@ -254,7 +254,7 @@ advisor:
 
 <a name="NetworkMorphism"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Network Morphism`
+![](https://placehold.it/15/1589F0/000000?text=+) `Network Morphism`
 
 > Builtin Tuner Name: **NetworkMorphism**
 
@@ -292,7 +292,7 @@ tuner:
 
 <a name="MetisTuner"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Metis Tuner`
+![](https://placehold.it/15/1589F0/000000?text=+) `Metis Tuner`
 
 > Builtin Tuner Name: **MetisTuner**
 
@@ -319,6 +319,3 @@ tuner:
   classArgs:
     optimize_mode: maximize
 ```
-
-[1]: https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperband_advisor
-[2]: https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/networkmorphism_tuner/README.md
