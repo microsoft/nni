@@ -3,21 +3,22 @@ trigger:
 - dev-remote-ci
 
 jobs:
-
 - job: 'Ubuntu_16_04'
-  pool:
-    vmImage: 'Ubuntu 16.04'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
+  pool: 'NNI CI GPU'
 
   steps:
-  - script: python3 -m pip install --upgrade pip setuptools
+  - script: python3 -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
+  - script: |
+      python3 -m pip install scikit-learn==0.20.0 --user
+      python3 -m pip install torch==0.4.1 --user
+      python3 -m pip install torchvision==0.2.1 --user
+      python3 -m pip install keras==2.1.6 --user
+      python3 -m pip install tensorflow-gpu==1.10.0 --user
+    displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
       source unittest.sh
@@ -25,11 +26,19 @@ jobs:
   - script: |
       cd test
       PATH=$HOME/.local/bin:$PATH python3 naive_test.py
-    displayName: 'Integration tests'
+    displayName: 'Naive test'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
-    displayName: 'Built-in dispatcher tests'
+      PATH=$HOME/.local/bin:$PATH python3 tuner_test.py
+    displayName: 'Built-in tuners / assessors tests'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts local
+    displayName: 'Examples and advanced features tests on local machine'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
+    displayName: 'Trial job metrics test'
 
 - job: 'macOS_10_13'
   pool:
@@ -52,8 +61,8 @@ jobs:
   - script: |
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH python3 naive_test.py
-    displayName: 'Integration tests'
+    displayName: 'Naive test'
   - script: |
       cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 sdk_test.py
-    displayName: 'Built-in dispatcher tests'
+      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 tuner_test.py
+    displayName: 'Built-in tuners / assessors tests'

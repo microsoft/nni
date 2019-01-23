@@ -23,7 +23,7 @@ import sys
 import time
 import traceback
 
-from utils import get_yml_content, dump_yml_content, setup_experiment, fetch_nni_log_path, check_experiment_status
+from utils import get_yml_content, dump_yml_content, setup_experiment, fetch_nni_log_path, is_experiment_done
 
 GREEN = '\33[32m'
 RED = '\33[31m'
@@ -36,7 +36,7 @@ EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
 
 def switch(dispatch_type, dispatch_name):
     '''Change dispatch in config.yml'''
-    config_path = 'sdk_test/local.yml'
+    config_path = 'tuner_test/local.yml'
     experiment_config = get_yml_content(config_path)
     if dispatch_name in ['GridSearch', 'BatchTuner']:
         experiment_config[dispatch_type.lower()] = {
@@ -56,7 +56,7 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name):
     switch(dispatch_type, dispatch_name)
 
     print('Testing %s...' % dispatch_name)
-    proc = subprocess.run(['nnictl', 'create', '--config', 'sdk_test/local.yml'])
+    proc = subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml'])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
@@ -64,7 +64,7 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name):
     for _ in range(20):
         time.sleep(3)
         # check if experiment is done
-        experiment_status = check_experiment_status(nnimanager_log_path)
+        experiment_status = is_experiment_done(nnimanager_log_path)
         if experiment_status:
             break
 
