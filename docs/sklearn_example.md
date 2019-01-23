@@ -1,12 +1,12 @@
 # Scikit-learn in NNI
-[Scikit-learn](https://github.com/scikit-learn/scikit-learn) is a pupular meachine learning tool for data mining and data analysis. It support many kinds of meachine learning models like LinearRegression, LogisticRegression, DecisionTree, SVM etc. How to make the use of scikit-learn more efficiency is a valuable topic.  
+[Scikit-learn](https://github.com/scikit-learn/scikit-learn) is a pupular meachine learning tool for data mining and data analysis. It supports many kinds of meachine learning models like LinearRegression, LogisticRegression, DecisionTree, SVM etc. How to make the use of scikit-learn more efficiency is a valuable topic.  
 NNI supports many kinds of tuning algorithms to search the best models and/or hyper-parameters for scikit-learn, and support many kinds of environments like local machine, remote servers and cloud.
  
 ## 1. How to run the example.
 To start using NNI, you should install the nni package, and use the command line tool `nnictl` to start an experiment. For more information about installation and preparing for the environment,  please [refer](../../../docs/GetStarted.md).
-After you installed NNI, you could start the experiment from following commands:
+After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
 ```
-nnictl create --config config.yml
+nnictl create --config ./config.yml
 ```
 
 ## 2. Description of the example
@@ -25,7 +25,7 @@ In this example, we tune different kinds of regression models including `"Linear
 It is easy to use nni in your sklearn code, there are only a few steps.
 * __step 1__  
   Prepare a search_space.json to storage your choose spaces. 
-  For example, if you want to choose different models, you may try `choice`:
+  For example, if you want to choose different models, you may try:
   ```
   {
     "model_name":{"_type":"choice","_value":["LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"]}
@@ -65,4 +65,5 @@ It is easy to use nni in your sklearn code, there are only a few steps.
   ```
   Then you could use these variables to write your scikit-learn code.
 * __step 3__  
-  After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI need your score to tuner algorithms and generate next group of parameters, please repoet the score back to nni and start next trial job. You just need to use `nni.report_final_result(score)` to communitate with nni after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to nni using `nni.report_intemediate_result(score)`. Note, you may not report intemediate result of your job, but you must report back your final result.
+  After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job.   
+  You just need to use `nni.report_final_result(score)` to communitate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using `nni.report_intemediate_result(score)`. Note, you may not report intemediate result of your job, but you must report back your final result.
