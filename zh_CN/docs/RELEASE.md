@@ -45,14 +45,14 @@
 * 在实验运行中可修改并发数量
 * 增加指向 NNI Github 的反馈链接，可直接创建问题
 * 可根据指标，定制选择（最大或最小）的前 10 个尝试。
-* Enable download logs for dispatcher & nnimanager 
-* Enable automatic scaling of axes for metric number
-* Update annotation to support displaying real choice in searchspace
+* 为 dispatcher 和 nnimanager 提供下载日志的功能 
+* 为指标数值图提供自动缩放的数轴
+* 改进标记，支持在搜索空间中显示实际的选项
 
 ## 新样例
 
-* [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
-* [Distributed MNIST example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
+* [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism)，使用 network morphism 调参器
+* 使用 PyTorch 的[分布式 MNIST 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
 # 发布 0.4 - 12/6/2018
 
