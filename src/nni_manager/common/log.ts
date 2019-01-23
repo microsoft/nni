@@ -68,7 +68,7 @@ class BufferSerialEmitter {
 @component.Singleton
 class Logger {
     private DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
-    private level: number = DEBUG;
+    private level: number = INFO;
     private bufferSerialEmitter: BufferSerialEmitter;
     private writable: Writable;
 

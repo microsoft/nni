@@ -52,10 +52,7 @@ class NNIRestHandler {
 
         // tslint:disable-next-line:typedef
         router.use((req: Request, res: Response, next) => {
-            // Don't log useless empty body content
-            if(req.body &&  Object.keys(req.body).length > 0) {
-                this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
-            }
+            this.log.debug(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
             res.header('Access-Control-Allow-Methods', 'PUT,POST,GET,DELETE,OPTIONS');
@@ -104,12 +101,12 @@ class NNIRestHandler {
         });
 
         // If it's a fatal error, exit process
-        if(isFatal) {
+        if (isFatal) {
             this.log.critical(err);
             process.exit(1);
+        } else {
+            this.log.error(err);
         }
-
-        this.log.error(err);
     }
 
     private version(router: Router): void {
