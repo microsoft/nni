@@ -96,11 +96,11 @@ export abstract class ClusterJobRestServer extends RestServer{
         router.post(`/stdout/${this.expId}/:trialId`, (req: Request, res: Response) => {
             const trialLogPath: string = path.join(getLogDir(), `trial_${req.params.trialId}.log`);
             console.log('------------------------98--------------')
+            console.log(req.body.msg)
             try {
                 let skipLogging: boolean = false;
                 if(req.body.tag === 'trial' && req.body.msg !== undefined) {
                     const metricsContent = req.body.msg.match(this.NNI_METRICS_PATTERN);
-                    console.log(metricsContent)
                     if(metricsContent && metricsContent.groups) {
                         this.handleTrialMetrics(req.params.trialId, [metricsContent.groups['metrics']]);
                         skipLogging = true;
@@ -108,6 +108,7 @@ export abstract class ClusterJobRestServer extends RestServer{
                 }
 
                 if(!skipLogging){
+                    console.log('---------------------111-------------------')
                     // Construct write stream to write remote trial's log into local file
                     const writeStream: Writable = fs.createWriteStream(trialLogPath, {
                         flags: 'a+',

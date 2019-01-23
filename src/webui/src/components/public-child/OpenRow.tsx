@@ -58,7 +58,7 @@ class OpenRow extends React.Component<OpenRowProps, {}> {
                         <TabPane tab="Log" key="2">
                             {
                                 trainingPlatform === 'pai' || trainingPlatform === 'kubeflow' ||
-                                trainingPlatform === 'frameworkcontroller'
+                                trainingPlatform === 'frameworkcontroller' || trainingPlatform === 'remote'
                                     ?
                                     <PaiTrialLog
                                         logStr={logPathRow}
