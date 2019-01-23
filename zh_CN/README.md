@@ -8,7 +8,7 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
-### **NNI [v0.5](https://github.com/Microsoft/nni/releases) has been released!**
+### **NNI [v0.5](https://github.com/Microsoft/nni/releases) 已发布！**
 
 <p align="center">
   <a href=#><img src="https://rawgit.com/QuanluZhang/nni/update-doc11/overview.svg" /></a>
@@ -18,7 +18,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
   <tbody>
     <tr align="center">
       <td>
-        <b>User Code + SDK( import nni )</b>
+        <b>用户代码和 SDK (import nni)</b>
         <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
       </td>
       <td>
@@ -35,29 +35,29 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
       <td>
       <ul>
         <li>CNTK</li>
-        <li>Tensorflow</li>
+        <li>TensorFlow</li>
         <li>PyTorch</li>
         <li>Keras</li>
         <li>...</li>
         </ul>
-        (Python based frameworks)
+        （所有基于 Python 的框架）
       </td>
       <td>
-        <a href="docs/HowToChooseTuner.md">Tuner</a>
+        <a href="docs/HowToChooseTuner.md">Tuner（调参器）</a>
         <ul>
           <li><a href="docs/HowToChooseTuner.md#TPE">TPE</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Random">Random Search</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Anneal">Anneal</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Evolution">Naive Evolution</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Random">Random Search（随机搜索）</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Anneal">Anneal（退火算法）</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Evolution">Naive Evolution（进化算法）</a></li>
           <li><a href="docs/HowToChooseTuner.md#SMAC">SMAC</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Batch">Batch</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Grid">Grid Search</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Batch">Batch（批处理）</a></li>
+          <li><a href="docs/HowToChooseTuner.md#Grid">Grid Search（遍历搜索）</a></li>
           <li><a href="docs/HowToChooseTuner.md#Hyperband">Hyperband</a></li>
           <li><a href="docs/HowToChooseTuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README.md">ENAS</a></li>
           <li><a href="docs/HowToChooseTuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
         </ul> 
-          <a href="docs/HowToChooseTuner.md#assessor">Assessor</a> 
+          <a href="docs/HowToChooseTuner.md#assessor">Assessor（评估器）</a> 
         <ul>
           <li><a href="docs/HowToChooseTuner.md#Medianstop">Median Stop</a></li>
           <li><a href="docs/HowToChooseTuner.md#Curvefitting">Curve Fitting</a></li>
