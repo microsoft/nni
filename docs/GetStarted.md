@@ -1,5 +1,4 @@
-**Get Started with NNI**
-===
+# Get Started with NNI
 
 ## **Installation**
 * __Dependencies__
@@ -97,3 +96,4 @@ The experiment has been running now, NNI provides WebUI for you to view experime
 * [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
 * [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
+* [How to create a multi-phase experiment](multiPhase.md)

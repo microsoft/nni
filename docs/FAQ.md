@@ -1,3 +1,5 @@
+# FAQ
+
 This page is for frequent asked questions and answers.
 
 
