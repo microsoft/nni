@@ -75,7 +75,7 @@ def get_nni_installation_path():
 
         for sitepackage in sitepackages:
             python_dir = _generate_installation_path(sitepackage)
-            if python_dir is not None:
+            if python_dir:
                 return python_dir
         return None
 
@@ -91,7 +91,7 @@ def get_nni_installation_path():
         else:
             python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
 
-    if python_dir is not None:
+    if python_dir:
         entry_file = os.path.join(python_dir, 'nni', 'main.js')
         if os.path.isfile(entry_file):
             return os.path.join(python_dir, 'nni')
