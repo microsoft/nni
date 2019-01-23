@@ -42,7 +42,7 @@
 
 ![](./img/webui-img/detail-local.png)
 
-* If you run a pai or kubeflow experiment, you can also see the hdfsLog.
+* 如果在 pai 或者 kubeflow 模式下运行实验，可以看到 hdfsLog。
 
 ![](./img/webui-img/detail-pai.png)
 
