@@ -150,21 +150,21 @@
 
 ## 主要功能
 
-    * Installation and Deployment
-       * Support pip install and source codes install
-       * Support training services on local mode(including Multi-GPU mode) as well as multi-machines mode
-    * Tuners, Assessors and Trial
-       * Support AutoML algorithms including:  hyperopt_tpe, hyperopt_annealing, hyperopt_random, and evolution_tuner
-       * Support assessor(early stop) algorithms including: medianstop algorithm
-       * Provide Python API for user defined tuners and assessors
-       * Provide Python API for user to wrap trial code as NNI deployable codes
-    * Experiments
-       * Provide a command line toolkit 'nnictl' for experiments management
-       * Provide a WebUI for viewing experiments details and managing experiments
-    * Continuous Integration
-       * Support CI by providing out-of-box integration with [travis-ci](https://github.com/travis-ci) on ubuntu    
-    * Others
-       * Support simple GPU job scheduling 
+    * 安装和部署
+       * 支持 pip 和源代码安装
+       * 支持本机（包括多 GPU 卡）训练和远程多机训练模式
+    * 调参器，评估器和尝试
+       * 支持自动机器学习算法，包括： hyperopt_tpe, hyperopt_annealing, hyperopt_random, 和 evolution_tuner。
+       * 支持评估器（提前终止）算法，包括：medianstop。
+       * 提供 Python API 来自定义调参器和评估器
+       * 提供 Python API 来包装尝试代码，以便能在 NNI 中运行
+    * 实验
+       * 提供命令行工具 'nnictl' 来管理实验
+       * 提供网页界面来查看并管理实验
+    * 持续集成
+       * 使用 Ubuntu 的 <a href="https://github.com/travis-ci">travis-ci</a> 来支持持续集成
+    * 其它
+       * 支持简单的 GPU 任务调度 
     
 
 ## 已知问题
