@@ -40,9 +40,9 @@ tf.init_from_checkpoint(params['restore_path'])
 
 ### NFS 配置
 
-NFS follows the Client-Server Architecture, with an NFS server providing physical storage, trials on the remote machine with an NFS client can read/write those files in the same way that they access local files.
+NFS 使用了客户端/服务器架构。通过一个 NFS 服务器来提供物理存储，远程计算机上的尝试使用 NFS 客户端来读写文件，操作上和本地文件相同。
 
-#### NFS Server
+#### NFS 服务器
 
 An NFS server can be any machine as long as it can provide enough physical storage, and network connection with **remote machine** for NNI trials. Usually you can choose one of the remote machine as NFS Server.
 
