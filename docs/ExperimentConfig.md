@@ -177,8 +177,18 @@ machineList:
     __nniManagerIp__ set the IP address of the machine on which nni manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
 
     Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
-	   
-		
+
+* __logDir__
+  * Description
+
+    __logDir__ configures the directory to store logs and data of the experiment. The default value is `<user home directory>/nni/experiment`
+
+* __logLevel__
+  * Description
+
+    __logLevel__ sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
+
+
 * __tuner__
   * Description
   

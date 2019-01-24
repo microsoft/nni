@@ -51,12 +51,14 @@ def parse_args():
     parser_start = subparsers.add_parser('create', help='create a new experiment')
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
     parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_start.add_argument('--debug', '-d', action='store_true', help=' set log level to debug')
     parser_start.set_defaults(func=create_experiment)
 
     # parse resume command
     parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
     parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to resume')
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_resume.add_argument('--debug', '-d', action='store_true', help=' set log level to debug')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse update command
