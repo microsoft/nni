@@ -19,7 +19,6 @@
 
 'use strict';
 
-
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import { EventEmitter } from 'events';
