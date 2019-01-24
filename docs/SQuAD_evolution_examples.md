@@ -1,8 +1,8 @@
 # Automatic Model Architecture Search for Reading Comprehension
-This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension task.
+This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension.
 
 ## Search Space
-Since attention and recurrent neural network (RNN) module have been proven effective in Reading Comprehension.
+Since attention and recurrent neural network (RNN) have been proven effective in Reading Comprehension.
 We conclude the search space as follow:
 
 1. IDENTITY (Effectively means keep training).
@@ -13,7 +13,7 @@ We conclude the search space as follow:
 6. ADD-SKIP (Identity between random layers).
 7. REMOVE-SKIP (Removes random skip).
 
-![ga-squad-logo](./ga_squad.png)
+![ga-squad-logo](https://github.com/Microsoft/nni/blob/master/examples/trials/ga_squad/ga_squad.png)
 
 ## New version
 Also we have another version which time cost is less and performance is better. We will release soon.
@@ -32,7 +32,7 @@ chmod +x ./download.sh
 ./download.sh
 ```
 
-### Download manually
+### Or Download manually
 
 1. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
 
@@ -74,8 +74,6 @@ trial:
 ```
 
 In the "trial" part, if you want to use GPU to perform the architecture search, change `gpuNum` from `0` to `1`. You need to increase the `maxTrialNum` and `maxExecDuration`, according to how long you want to wait for the search result.
-
-`trialConcurrency` is the number of trials running concurrently, which is the number of GPUs you want to use, if you are setting `gpuNum` to 1.
 
 ### submit this job
 
