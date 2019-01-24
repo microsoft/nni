@@ -38,7 +38,7 @@ def nni_info(*args):
     else:
         print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
-def parser_init():
+def parse_args():
     '''Definite the arguments users need to follow and input'''
     parser = argparse.ArgumentParser(prog='nnictl', description='use nnictl command to control nni experiments')
     parser.add_argument('--version', '-v', action='store_true')
@@ -175,9 +175,9 @@ def parser_init():
     parser_top.add_argument('--time', '-t', dest='time', type=int, default=3, help='the time interval to update the experiment status, ' \
     'the unit is second')
     parser_top.set_defaults(func=monitor_experiment)
-    return parser
 
-if __name__ == '__main__':
-    parser = parser_init()
     args = parser.parse_args()
     args.func(args)
+
+if __name__ == '__main__':
+    parse_args()
