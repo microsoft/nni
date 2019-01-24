@@ -10,7 +10,7 @@ Here is an experimental result of MNIST after using 'Curvefitting' Assessor in '
 
 *Implemented code directory: [config_assessor.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config_assessor.yml)*
 
-![](https://raw.githubusercontent.com/Microsoft/nni/dev-doc/docs/img/Assessor.png)
+![](./img/Assessor.png)
 
 NNI provides the-state-of-art tuning algorithm in our builtin-assessors and makes them easy to use. Below is the brief overview of NNI current builtin Assessors:
 
