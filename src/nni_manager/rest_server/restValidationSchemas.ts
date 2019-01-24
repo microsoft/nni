@@ -108,6 +108,7 @@ export namespace ValidationSchemas {
             }),
             frameworkcontroller_config: joi.object({
                 storage: joi.string().min(1),
+                serviceAccountName: joi.string().min(1),
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()
@@ -148,7 +149,7 @@ export namespace ValidationSchemas {
                 checkpointDir: joi.string().allow('')
             }),
             tuner: joi.object({
-                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism'),
+                builtinTunerName: joi.string().valid('TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'BatchTuner', 'GridSearch', 'NetworkMorphism', 'MetisTuner'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),

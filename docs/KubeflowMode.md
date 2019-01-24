@@ -1,6 +1,6 @@
 **Run an Experiment on Kubeflow**
 ===
-Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/kubeflow), called kubeflow mode. Before starting to use NNI kubeflow mode, you should have a kubernetes cluster, either on-prem or [Azure Kubernetes Service(AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/), a Ubuntu machine on which [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is setup to connect to your kubernetes cluster. If you are not familiar with kubernetes, [here](https://kubernetes.io/docs/tutorials/kubernetes-basics/) is a goot start. In kubeflow mode, your trial program will run as kubeflow job in kubernetes cluster. 
+Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/kubeflow), called kubeflow mode. Before starting to use NNI kubeflow mode, you should have a kubernetes cluster, either on-prem or [Azure Kubernetes Service(AKS)](https://azure.microsoft.com/en-us/services/kubernetes-service/), a Ubuntu machine on which [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) is setup to connect to your kubernetes cluster. If you are not familiar with kubernetes, [here](https://kubernetes.io/docs/tutorials/kubernetes-basics/) is a good start. In kubeflow mode, your trial program will run as kubeflow job in kubernetes cluster. 
 
 ## Prerequisite for on-premises Kubernetes Service
 1. A **Kubernetes** cluster using Kubernetes 1.8 or later. Follow this [guideline](https://kubernetes.io/docs/setup/) to set up Kubernetes
@@ -28,53 +28,36 @@ Kubeflow training service instantiates a kubernetes rest client to interact with
 
 For each trial, we will upload all the files in your local codeDir path (configured in nni_config.yaml) together with NNI generated files like parameter.cfg into a storage volumn. Right now we support two kinds of storage volumns: [nfs](https://en.wikipedia.org/wiki/Network_File_System) and [azure file storage](https://azure.microsoft.com/en-us/services/storage/files/), you should configure the storage volumn in nni config yaml file. After files are prepared, Kubeflow training service will call K8S rest API to create kubeflow jobs ([tf-operator](https://github.com/kubeflow/tf-operator) job or [pytorch-operator](https://github.com/kubeflow/pytorch-operator) job) in K8S, and mount your storage volumn into the job's pod. Output files of kubeflow job, like stdout, stderr, trial.log or model files, will also be copied back to the storage volumn. NNI will show the storage volumn's URL for each trial in WebUI, to allow user browse the log files and job's output files. 
 
-## Run an experiment
-Use `examples/trials/mnist` as an example. The nni config yaml file's content is like: 
+## Supported operator
+NNI only support tf-operator and pytorch-operator of kubeflow, other operators is not tested.
+Users could set operator type in config file.
+The setting of tf-operator:
 ```
-authorName: your_name
-experimentName: example_mnist
-# how many trials could be concurrently running
-trialConcurrency: 4
-# maximum experiment running duration
-maxExecDuration: 3h
-# empty means never stop
-maxTrialNum: 100
-# choice: local, remote, pai, kubeflow
-trainingServicePlatform: kubeflow
-# choice: true, false  
-useAnnotation: false
-tuner:
-  builtinTunerName: TPE
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
-trial:
-  codeDir: ~/nni/examples/trials/mnist
-  ps:
-    replicas: 1 
-    command: python mnist-keras.py    
-    gpuNum: 0
-    cpuNum: 1
-    memoryMB: 8196
-    image: {your_docker_image_for_tensorflow_ps}
-  worker:
-    replicas: 1 
-    command: python mnist-keras.py    
-    gpuNum: 2
-    cpuNum: 1
-    memoryMB: 8196
-    image: {your_docker_image_for_tensorflow_worker}
 kubeflowConfig:
   operator: tf-operator
+```
+The setting of pytorch-operator:
+```
+kubeflowConfig:
+  operator: pytorch-operator
+```
+If users want to use tf-operator, he could set `ps` and `worker` in trial config. If users want to use pytorch-operator, he could set `master` and `worker` in trial config. 
+
+## Supported storage type
+NNI support NFS and Azure Storage to store the code and output files, users could set storage type in config file and set the corresponding config.  
+The setting for NFS storage are as follows:
+```
+kubeflowConfig:
   storage: nfs
   nfs:
-    server: {your_nfs_server}
-    path: {your_nfs_server_exported_path}
+    # Your NFS server IP, like 10.10.10.10
+    server: {your_nfs_server_ip}
+    # Your NFS server export path, like /var/nfs/nni
+    path: {your_nfs_server_export_path}
 ```
-If you use Azure Kubernetes Service, you should  set `kubeflowConfig` in your config yaml file as follows:
+If you use Azure storage, you should  set `kubeflowConfig` in your config yaml file as follows:
 ```
 kubeflowConfig:
-  operator: tf-operator
   storage: azureStorage
   keyVault:
     vaultName: {your_vault_name}
@@ -84,7 +67,103 @@ kubeflowConfig:
     azureShare: {your_azure_share_name}
 ```
 
+
+## Run an experiment
+Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of kubeflow. The nni config yaml file's content is like: 
+```
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 2
+maxExecDuration: 1h
+maxTrialNum: 20
+#choice: local, remote, pai, kubeflow
+trainingServicePlatform: kubeflow
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+  gpuNum: 0
+trial:
+  codeDir: .
+  worker:
+    replicas: 2
+    command: python3 dist_mnist.py
+    gpuNum: 1
+    cpuNum: 1
+    memoryMB: 8196
+    image: msranni/nni:latest
+  ps:
+    replicas: 1
+    command: python3 dist_mnist.py
+    gpuNum: 0
+    cpuNum: 1
+    memoryMB: 8196
+    image: msranni/nni:latest
+kubeflowConfig:
+  operator: tf-operator
+  apiVersion: v1alpha2
+  storage: nfs
+  nfs:
+    # Your NFS server IP, like 10.10.10.10
+    server: {your_nfs_server_ip}
+    # Your NFS server export path, like /var/nfs/nni
+    path: {your_nfs_server_export_path}
+```
+
 Note: You should explicitly set `trainingServicePlatform: kubeflow` in nni config yaml file if you want to start experiment in kubeflow mode. 
+
+If you want to run Pytorch jobs, you could set your config files as follow:
+```
+authorName: default
+experimentName: example_mnist_distributed_pytorch
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+#choice: local, remote, pai, kubeflow
+trainingServicePlatform: kubeflow
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: minimize
+trial:
+  codeDir: .
+  master:
+    replicas: 1
+    command: python3 dist_mnist.py
+    gpuNum: 1
+    cpuNum: 1
+    memoryMB: 2048
+    image: msranni/nni:latest
+  worker:
+    replicas: 1
+    command: python3 dist_mnist.py
+    gpuNum: 0
+    cpuNum: 1
+    memoryMB: 2048
+    image: msranni/nni:latest
+kubeflowConfig:
+  operator: pytorch-operator
+  apiVersion: v1alpha2
+  nfs:
+    # Your NFS server IP, like 10.10.10.10
+    server: {your_nfs_server_ip}
+    # Your NFS server export path, like /var/nfs/nni
+    path: {your_nfs_server_export_path}
+```
 
 Trial configuration in kubeflow mode have the following configuration keys:
 * codeDir
@@ -100,14 +179,17 @@ Trial configuration in kubeflow mode have the following configuration keys:
     * gpuNum
     * image
         * Required key. In kubeflow mode, your trial program will be scheduled by Kubernetes to run in [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/). This key is used to specify the Docker image used to create the pod where your trail program will run. 
-        * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](../deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
+        * We already build a docker image [msranni/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](../deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
+    * apiVersion
+        * Required key. The API version of your kubeflow.
 * ps (optional). This config section is used to configure tensorflow parameter server role.
+* master(optional). This config section is used to configure pytorch parameter server role.
 
 Once complete to fill nni experiment config file and save (for example, save as exp_kubeflow.yaml), then run the following command
 ```
 nnictl create --config exp_kubeflow.yaml
 ```
-to start the experiment in kubeflow mode. NNI will create Kubeflow tfjob for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 
+to start the experiment in kubeflow mode. NNI will create Kubeflow tfjob or pytorchjob for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 
 You can see the kubeflow tfjob created by NNI in your Kubernetes dashboard. 
 
 Notice: In kubeflow mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic. 
@@ -115,4 +197,3 @@ Notice: In kubeflow mode, NNIManager will start a rest server and listen on a po
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information. 
 
 Any problems when using NNI in kubeflow mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni), or send mail to nni@microsoft.com
-

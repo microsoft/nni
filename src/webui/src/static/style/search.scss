@@ -1,6 +1,14 @@
+/* some buttons about trial-detail table */
 .allList{
-    background-color: #b3b3b3;
-    padding-right: 14px;
+    width: 96%;
+    margin: 0 auto;
+    .right{
+        text-align: right;
+    }
+    .entry{
+        width: 120px;
+        margin: 0 6px;
+    }
     .btns{
         height: 32px;
         text-align: right;
@@ -8,11 +16,18 @@
             height: 32px;
         }
     }
-    Button.resetBtn{
-        height: 32px;
-        font-size: 15px;
-        position: relative;
-        top: 1px;
+}
+
+.titleColumn{
+    .ant-checkbox-group-item{
+        display: block;
+    }
+}
+
+.applyfooter{
+    /* apply button style */
+    .apply{
+        text-align: right;
     }
 }
 

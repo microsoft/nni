@@ -1,24 +1,99 @@
 import * as React from 'react';
-import JSONTree from 'react-json-tree';
-import { Table } from 'antd';
+import axios from 'axios';
+import { Modal, Input, Table } from 'antd';
+const { TextArea } = Input;
+import OpenRow from '../public-child/OpenRow';
+import DefaultMetric from '../public-child/DefaultMetrc';
+import { DOWNLOAD_IP } from '../../static/const';
 import { TableObj } from '../../static/interface';
 import { convertDuration } from '../../static/function';
 import '../../static/style/tableStatus.css';
-import LogPath from '../logPath/LogPath';
+import '../../static/style/tableList.scss';
 
 interface SuccessTableProps {
     tableSource: Array<TableObj>;
+    trainingPlatform: string;
 }
 
-class SuccessTable extends React.Component<SuccessTableProps, {}> {
+interface SuccessTableState {
+    isShowLogModal: boolean;
+    logContent: string;
+}
+
+class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState> {
+
+    public _isMounted = false;
 
     constructor(props: SuccessTableProps) {
         super(props);
 
+        this.state = {
+            isShowLogModal: false,
+            logContent: ''
+        };
+
+    }
+
+    showLogModalOverview = (id: string) => {
+        axios(`${DOWNLOAD_IP}/trial_${id}.log`, {
+            method: 'GET'
+        })
+            .then(res => {
+                if (res.status === 200) {
+                    if (this._isMounted) {
+                        this.setState(() => ({
+                            logContent: res.data
+                        }));
+                    }
+                }
+            })
+            .catch(error => {
+                if (error.response.status === 500) {
+                    if (this._isMounted) {
+                        this.setState(() => ({
+                            logContent: 'failed to get log message'
+                        }));
+                    }
+                }
+            });
+        if (this._isMounted) {
+            this.setState({
+                isShowLogModal: true
+            });
+        }
+    }
+
+    hideLogModalOverview = () => {
+        if (this._isMounted) {
+            this.setState({
+                isShowLogModal: false,
+                logContent: '' // close modal, delete data
+            });
+        }
+    }
+
+    openRow = (record: TableObj) => {
+        const { trainingPlatform } = this.props;
+        return (
+            <OpenRow
+                showLogModalOverview={this.showLogModalOverview}
+                trainingPlatform={trainingPlatform}
+                record={record}
+            />
+        );
+    }
+
+    componentDidMount() {
+        this._isMounted = true;
+    }
+
+    componentWillUnmount() {
+        this._isMounted = false;
     }
 
     render() {
         const { tableSource } = this.props;
+        const { isShowLogModal, logContent } = this.state;
 
         let bgColor = '';
         const columns = [{
@@ -71,80 +146,47 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             title: 'Default Metric',
             dataIndex: 'acc',
             key: 'acc',
-            sorter: (a: TableObj, b: TableObj) => (a.acc as number) - (b.acc as number),
-            render: (text: string, record: TableObj) => {
-                const accuracy = record.acc;
-                let wei = 0;
-                if (accuracy) {
-                    if (accuracy.toString().indexOf('.') !== -1) {
-                        wei = accuracy.toString().length - accuracy.toString().indexOf('.') - 1;
-                    }
+            sorter: (a: TableObj, b: TableObj) => {
+                if (a.acc !== undefined && b.acc !== undefined) {
+                    return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
+                } else {
+                    return NaN;
                 }
+            },
+            render: (text: string, record: TableObj) => {
                 return (
-                    <div>
-                        {
-                            record.acc
-                                ?
-                                wei > 6
-                                    ?
-                                    record.acc.toFixed(6)
-                                    :
-                                    record.acc
-                                :
-                                '--'
-                        }
-                    </div>
+                    <DefaultMetric record={record} />
                 );
             }
-            // width: 150
         }];
-
-        const openRow = (record: TableObj) => {
-            let isHasParameters = true;
-            if (record.description.parameters.error) {
-                isHasParameters = false;
-            }
-            const openRowDataSource = {
-                parameters: record.description.parameters
-            };
-            const logPathRow = record.description.logPath !== undefined
-                ?
-                record.description.logPath
-                :
-                'This trial\'s logPath are not available.';
-            return (
-                <pre id="description" className="hyperpar">
-                    {
-                        isHasParameters
-                            ?
-                            <JSONTree
-                                hideRoot={true}
-                                shouldExpandNode={() => true}  // default expandNode
-                                getItemString={() => (<span />)}  // remove the {} items
-                                data={openRowDataSource}
-                            />
-                            :
-                            <div className="logpath">
-                                <span className="logName">Error: </span>
-                                <span className="error">'This trial's parameters are not available.'</span>
-                            </div>
-                    }
-                    <LogPath logStr={logPathRow}/>
-                </pre>
-            );
-        };
         return (
-            <div className="tabScroll">
+            <div className="tabScroll" >
                 <Table
                     columns={columns}
-                    expandedRowRender={openRow}
+                    expandedRowRender={this.openRow}
                     dataSource={tableSource}
                     className="commonTableStyle"
                     pagination={false}
                 />
-            </div>
+                {/* trial log modal */}
+                <Modal
+                    title="trial log"
+                    visible={isShowLogModal}
+                    onCancel={this.hideLogModalOverview}
+                    footer={null}
+                    destroyOnClose={true}
+                    width="80%"
+                >
+                    <div id="trialLogContent" style={{ height: window.innerHeight * 0.6 }}>
+                        <TextArea
+                            value={logContent}
+                            disabled={true}
+                            className="logcontent"
+                        />
+                    </div>
+                </Modal>
+            </div >
         );
     }
 }
-
 export default SuccessTable;
