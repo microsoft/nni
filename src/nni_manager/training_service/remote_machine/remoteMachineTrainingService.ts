@@ -107,8 +107,7 @@ class RemoteMachineTrainingService implements TrainingService {
                     // Break the while loop since no GPU resource is available right now,
                     // Wait to schedule job in next time iteration
                     break;
-                }
-                
+                }     
             }
             await delay(3000);
         }
@@ -157,11 +156,19 @@ class RemoteMachineTrainingService implements TrainingService {
         }
     }
 
-    public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void) {
+    /**
+     * Add job metrics listener
+     * @param listener callback listener
+     */
+    public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.on('metric', listener);
     }
 
-    public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void) {
+    /**
+     * Remove job metrics listener
+     * @param listener callback listener
+     */
+    public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.off('metric', listener);
     }
 
