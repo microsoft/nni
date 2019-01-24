@@ -153,4 +153,4 @@ function getLogger(fileName?: string): Logger {
     return component.get(Logger);
 }
 
-export { Logger, getLogger };
+export { Logger, getLogger, logLevelNameMap };

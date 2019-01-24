@@ -112,6 +112,7 @@ class NNIManager implements Manager {
     }
 
     public async cancelTrialJobByUser(trialJobId: string): Promise<void> {
+        this.log.info(`User cancelTrialJob: ${trialJobId}`);
         await this.trainingService.cancelTrialJob(trialJobId);
         await this.dataStore.storeTrialJobEvent('USER_TO_CANCEL', trialJobId, '');
     }
@@ -201,6 +202,7 @@ class NNIManager implements Manager {
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
+        this.log.info(`NNIManager setClusterMetadata, key: ${key}, value: ${value}`);
         let timeoutId: NodeJS.Timer;
         // TO DO: move timeout value to constants file
         const delay1: Promise<{}> = new Promise((resolve: Function, reject: Function): void => {
@@ -335,6 +337,7 @@ class NNIManager implements Manager {
             if (trialJob.status === 'RUNNING' ||
                 trialJob.status === 'WAITING') {
                 try {
+                    this.log.info(`cancelTrialJob: ${trialJob.id}`);
                     await this.trainingService.cancelTrialJob(trialJob.id);
                 } catch (error) {
                     // pid does not exist, do nothing here
@@ -366,8 +369,8 @@ class NNIManager implements Manager {
             throw new Error('Error: tuner has not been setup');
         }
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
-            await delay(1000 * 5);
             this.dispatcher.sendCommand(PING);
+            await delay(1000 * 5);
         }
     }
 
@@ -517,6 +520,7 @@ class NNIManager implements Manager {
                             index: 0
                         }
                     };
+                    this.log.info(`submitTrialJob: form: ${JSON.stringify(trialJobAppForm)}`);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(trialJobAppForm);
                     await this.storeMaxSequenceId(trialJobDetail.sequenceId);
                     this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
@@ -560,6 +564,7 @@ class NNIManager implements Manager {
     }
 
     private addEventListeners(): void {
+        this.log.info('Add event listeners');
         // TO DO: cannot run this method more than once in one NNIManager instance
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner or job maintainer have not been setup');
@@ -640,6 +645,7 @@ class NNIManager implements Manager {
                         index: tunerCommand.parameter_index
                     }
                 };
+                this.log.info(`updateTrialJob: job id: ${tunerCommand.trial_job_id}, form: ${JSON.stringify(trialJobForm)}`);
                 await this.trainingService.updateTrialJob(tunerCommand.trial_job_id, trialJobForm);
                 await this.dataStore.storeTrialJobEvent(
                     'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
@@ -648,6 +654,7 @@ class NNIManager implements Manager {
                 this.setStatus('TUNER_NO_MORE_TRIAL');
                 break;
             case KILL_TRIAL_JOB:
+                this.log.info(`cancelTrialJob: ${JSON.parse(content)}`);
                 await this.trainingService.cancelTrialJob(JSON.parse(content), true);
                 break;
             default:
@@ -669,8 +676,10 @@ class NNIManager implements Manager {
     }
 
     private setStatus(status: ExperimentStatus): void {
-        this.log.info(`Set NNIManager status to: ${status}`);
-        this.status.status = status;
+        if (status !== this.status.status) {
+            this.log.info(`Change NNIManager status from: ${this.status.status} to: ${status}`);
+            this.status.status = status;
+        }
     }
 
     private createEmptyExperimentProfile(): ExperimentProfile {
