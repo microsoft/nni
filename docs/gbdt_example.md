@@ -169,3 +169,8 @@ trial:
   codeDir: .
   gpuNum: 0
 ```
+
+Run this experiment with command as follow:
+```
+nnictl create --config ./config.yml
+```
