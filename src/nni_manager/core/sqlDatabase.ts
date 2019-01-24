@@ -220,6 +220,7 @@ class SqlDB implements Database {
 
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });
+
         return deferred.promise;
     }
 
