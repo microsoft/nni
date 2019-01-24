@@ -43,6 +43,7 @@ nnictl --version
     | ------ | ------ | ------ |------ |
     | --config, -c|  True| |yaml configure file of the experiment|
     | --port, -p  |  False| |the port of restful server|
+    | --debug, -d |  False| |Set log level to debug|
 
 * __nnictl resume__
 
@@ -62,6 +63,7 @@ nnictl --version
     | ------ | ------ | ------ |------ |
     | id|  False| |The id of the experiment you want to resume|  
     | --port, -p|  False| |Rest port of the experiment you want to resume|
+    | --debug, -d |  False| |Set log level to debug|
 
 * __nnictl stop__
   * Description
