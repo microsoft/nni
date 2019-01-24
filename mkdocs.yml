@@ -20,6 +20,7 @@ nav:
             - Kubeflow: KubeflowMode.md
     - Examples:
         - MNIST Examples: mnist_examples.md
+        - SQuAD-Evolution Examples: SQuAD_evolution_examples.md
     - Reference:
         - nnictl: NNICTLDOC.md
         - Configuration: ExperimentConfig.md
