@@ -43,10 +43,9 @@ def main_loop(args):
     
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
-    
-    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout)
+    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout, args.disable_log)
     # redirect trial keeper's stdout and stderr to syslog
-    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout)
+    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout, args.disable_log)
     sys.stdout = sys.stderr = trial_keeper_syslogger
 
     if args.pai_hdfs_host is not None and args.nni_hdfs_exp_dir is not None:
@@ -99,6 +98,7 @@ if __name__ == '__main__':
     PARSER.add_argument('--pai_hdfs_host', type=str, help='the host of hdfs')
     PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
     PARSER.add_argument('--nni_hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
+    PARSER.add_argument('--disable_log', type=bool, default=False, help='disable trial log')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)

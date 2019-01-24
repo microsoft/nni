@@ -33,6 +33,7 @@ Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
+Optional('disableLog'): bool,
 'useAnnotation': bool,
 Optional('advisor'): Or({
     'builtinAdvisorName': Or('Hyperband'),

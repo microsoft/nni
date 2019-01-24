@@ -75,6 +75,7 @@ class PAITrainingService implements TrainingService {
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
+    private disableLog: boolean = false;
 
     constructor() {
         this.log = getLogger();
@@ -429,6 +430,9 @@ class PAITrainingService implements TrainingService {
                     this.hdfsClient);
 
                 deferred.resolve();
+                break;
+            case TrialConfigMetadataKey.DISABLE_LOG:
+                this.disableLog = (value === 'true');
                 break;
             default:
                 //Reject for unknown keys

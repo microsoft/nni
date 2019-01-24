@@ -62,7 +62,6 @@ export class GPUScheduler {
                 scheduleInfo: undefined
             });
         }
-
         // Step 2: Allocate Host/GPU for specified trial job
         // Currenty the requireGPUNum parameter for all trial jobs are identical.
         if (requiredGPUNum > 0) {
@@ -74,11 +73,9 @@ export class GPUScheduler {
         } else {
             // Trail job does not need GPU
             const allocatedRm: RemoteMachineMeta = this.selectMachine(allRMs);
-
             return this.allocateHost(requiredGPUNum, allocatedRm, [], trialJobId);
         }
         this.log.warning(`Scheduler: trialJob id ${trialJobId}, no machine can be scheduled, return TMP_NO_AVAILABLE_GPU `);
-
         return {
             resultType : ScheduleResultType.TMP_NO_AVAILABLE_GPU,
             scheduleInfo : undefined
@@ -162,5 +159,22 @@ export class GPUScheduler {
                 cuda_visible_device: allocatedGPUs.map((gpuInfo: GPUInfo) => { return gpuInfo.index; }).join(',')
             }
         };
+    }
+    
+    /**
+     * remove the job's gpu reversion
+     * @param trialJobId 
+     * @param rmMeta 
+     */
+    public removeGpuReservation(trialJobId: string, rmMeta?: RemoteMachineMeta): void{
+        // If remote machine has no GPU, gpuReservcation is not initialized, so check if it's undefined
+        console.log('-------------removing gpu reversion---------')
+        if(rmMeta !== undefined && rmMeta.gpuReservation !== undefined) {
+            rmMeta.gpuReservation.forEach((reserveTrialJobId : string, gpuIndex : number) => {
+                if(reserveTrialJobId == trialJobId) {
+                    rmMeta.gpuReservation.delete(gpuIndex);
+                }
+            });
+        }
     }
 }

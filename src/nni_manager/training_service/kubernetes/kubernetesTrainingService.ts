@@ -61,6 +61,7 @@ abstract class KubernetesTrainingService {
     protected kubernetesCRDClient?: KubernetesCRDClient;
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
+    protected disableLog: boolean = false;
     
     constructor() {
         this.log = getLogger();

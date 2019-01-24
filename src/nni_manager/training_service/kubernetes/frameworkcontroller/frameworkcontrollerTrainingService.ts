@@ -267,6 +267,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     return Promise.reject(new Error(error));                    
                 }
                 break;
+            case TrialConfigMetadataKey.DISABLE_LOG:
+                this.disableLog = (value === 'true');
+                break;
             default:
                 break;
         }

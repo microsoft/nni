@@ -25,6 +25,7 @@ import logging
 import logging.handlers
 import time
 import threading
+import re
 
 from datetime import datetime
 from enum import Enum, unique
@@ -80,13 +81,14 @@ class RemoteLogger(object):
     """
     NNI remote logger
     """
-    def __init__(self, syslog_host, syslog_port, tag, std_output_type, log_level=logging.INFO):
+    def __init__(self, syslog_host, syslog_port, tag, std_output_type, disable_log, log_level=logging.INFO):
         '''
         constructor
         '''
         self.logger = logging.getLogger('nni_syslog_{}'.format(tag))
         self.log_level = log_level
         self.logger.setLevel(self.log_level)
+        self.disable_log = disable_log
         handler = NNIRestLogHanlder(syslog_host, syslog_port, tag)
         self.logger.addHandler(handler)
         if std_output_type == StdOutputType.Stdout:
@@ -98,15 +100,13 @@ class RemoteLogger(object):
         '''
         Get pipe for remote logger
         '''
-        return PipeLogReader(self.logger, logging.INFO)
+        return PipeLogReader(self.logger, self.disable_log, logging.INFO)
 
     def write(self, buf):
         '''
         Write buffer data into logger/stdout
         '''
         for line in buf.rstrip().splitlines():
-            with open('./tmplog', 'a') as file:
-                file.write(line.rstrip() + '\n')
             self.orig_stdout.write(line.rstrip() + '\n')
             self.orig_stdout.flush()
             try:
@@ -118,7 +118,7 @@ class PipeLogReader(threading.Thread):
     """
     The reader thread reads log data from pipe
     """
-    def __init__(self, logger, log_level=logging.INFO):
+    def __init__(self, logger, disable_log, log_level=logging.INFO):
         """Setup the object with a logger and a loglevel
         and start the thread
         """
@@ -132,6 +132,8 @@ class PipeLogReader(threading.Thread):
         self.orig_stdout = sys.__stdout__
         self._is_read_completed = False
         self.process_exit = False
+        self.disable_log = disable_log
+        self.metric_pattern = 'NNISDK_MEb'
 
         def _populateQueue(stream, queue):
             '''
@@ -143,6 +145,11 @@ class PipeLogReader(threading.Thread):
                 try:
                     line = self.queue.get(True, 5)
                     try:
+                        if self.disable_log:
+                            match = re.match(self.metric_pattern, line)
+                            #If this line is not metrics, just pass
+                            if not match:
+                                continue
                         self.logger.log(self.log_level, line.rstrip())
                         self.orig_stdout.write(line.rstrip() + '\n')
                         self.orig_stdout.flush()

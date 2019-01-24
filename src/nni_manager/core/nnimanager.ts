@@ -127,6 +127,10 @@ class NNIManager implements Manager {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
 
+        // Disable trial log
+        if (expParams.disableLog) {
+            this.trainingService.setClusterMetadata('disable_log', expParams.disableLog.toString());
+        }
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
             expParams.multiPhase, expParams.multiThread);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
