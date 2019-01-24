@@ -35,7 +35,7 @@ import {
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
-import { delay, getCheckpointDir, getLogDir, getMsgDispatcherCommand, mkDirP } from '../common/utils';
+import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP } from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
@@ -674,7 +674,7 @@ class NNIManager implements Manager {
             id: getExperimentId(),
             revision: 0,
             execDuration: 0,
-            logDir: getLogDir(),
+            logDir: getExperimentRootDir(),
             maxSequenceId: 0,
             params: {
                 authorName: '',

@@ -34,6 +34,8 @@ Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
 Optional('disableLog'): bool,
+Optional('logDir'): os.path.isdir,
+Optional('logLevel'): Or('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
 'useAnnotation': bool,
 Optional('advisor'): Or({
     'builtinAdvisorName': Or('Hyperband'),
