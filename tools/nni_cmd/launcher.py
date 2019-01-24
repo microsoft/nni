@@ -21,10 +21,12 @@
 
 import json
 import os
+import sys
 import shutil
 import string
-from subprocess import Popen, PIPE, call, check_output
+from subprocess import Popen, PIPE, call, check_output, check_call
 import tempfile
+from nni.constants import ModuleName
 from nni_annotation import *
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
@@ -32,9 +34,9 @@ from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port
 from .constants import *
-import time
 import random
 import site
+import time
 from pathlib import Path
 
 def get_log_path(config_file_name):
@@ -56,6 +58,45 @@ def print_log_content(config_file_name):
     stderr_content = check_output(stderr_cmds)
     print(stderr_content.decode('utf-8'))
 
+def get_nni_installation_path():
+    ''' Find nni lib from the following locations in order
+    Return nni root directory if it exists
+    '''
+    def try_installation_path_sequentially(*sitepackages):
+        '''Try different installation path sequentially util nni is found.
+        Return None if nothing is found
+        '''
+        def _generate_installation_path(sitepackages_path):
+            python_dir = str(Path(sitepackages_path).parents[2])
+            entry_file = os.path.join(python_dir, 'nni', 'main.js')
+            if os.path.isfile(entry_file):
+                return python_dir
+            return None
+
+        for sitepackage in sitepackages:
+            python_dir = _generate_installation_path(sitepackage)
+            if python_dir:
+                return python_dir
+        return None
+
+    if os.getenv('VIRTUAL_ENV'):
+        # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
+        # Note that conda venv will not have VIRTUAL_ENV
+        python_dir = os.getenv('VIRTUAL_ENV')
+    else:
+        python_sitepackage = site.getsitepackages()[0]
+        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given that nni exists there
+        if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
+            python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
+        else:
+            python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
+
+    if python_dir:
+        entry_file = os.path.join(python_dir, 'nni', 'main.js')
+        if os.path.isfile(entry_file):
+            return os.path.join(python_dir, 'nni')
+    print_error('Fail to find nni under python library')
+    exit(1)
 
 def start_rest_server(port, platform, mode, config_file_name, experiment_id=None):
     '''Run nni manager process'''
@@ -72,16 +113,10 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         exit(1)
 
     print_normal('Starting restful server...')
-    python_dir = str(Path(site.getusersitepackages()).parents[2])
-    entry_file = os.path.join(python_dir, 'nni', 'main.js')
-    entry_dir = os.path.join(python_dir, 'nni')
-    local_entry_dir = entry_dir
-    if not os.path.isfile(entry_file):
-        python_dir = str(Path(site.getsitepackages()[0]).parents[2])
-        entry_file = os.path.join(python_dir, 'nni', 'main.js')
-        entry_dir = os.path.join(python_dir, 'nni')
-        if not os.path.isfile(entry_file):
-            raise Exception('Fail to find main.js under both %s and %s!' % (local_entry_dir, entry_dir))
+    
+    entry_dir = get_nni_installation_path()
+    entry_file = os.path.join(entry_dir, 'main.js')
+
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
@@ -272,12 +307,23 @@ def set_experiment(experiment_config, mode, port, config_file_name):
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(config_file_name)
+
+    # check packages for tuner
+    if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
+        tuner_name = experiment_config['tuner']['builtinTunerName']
+        module_name = ModuleName[tuner_name]
+        try:
+            check_call([sys.executable, '-c', 'import %s'%(module_name)])
+        except ModuleNotFoundError as e:
+            print_error('The tuner %s should be installed through nnictl'%(tuner_name))
+            exit(1)
+
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
-        path = os.path.join(tempfile.gettempdir(), 'nni', 'annotation')
+        path = os.path.join(tempfile.gettempdir(), os.environ['USER'], 'nni', 'annotation')
         if not os.path.isdir(path):
             os.makedirs(path)
         path = tempfile.mkdtemp(dir=path)
@@ -287,8 +333,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         experiment_config['searchSpace'] = json.dumps(search_space)
         assert search_space, ERROR_INFO % 'Generated search space is empty'
     elif experiment_config.get('searchSpacePath'):
-            search_space = get_json_content(experiment_config.get('searchSpacePath'))
-            experiment_config['searchSpace'] = json.dumps(search_space)
+        search_space = get_json_content(experiment_config.get('searchSpacePath'))
+        experiment_config['searchSpace'] = json.dumps(search_space)
     else:
         experiment_config['searchSpace'] = json.dumps('')
 

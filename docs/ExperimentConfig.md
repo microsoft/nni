@@ -3,8 +3,15 @@
 A config file is needed when create an experiment, the path of the config file is provide to nnictl.
 The config file is written in yaml format, and need to be written correctly.
 This document describes the rule to write config file, and will provide some examples and templates. 
+
+ - [Template](#Template) (the templates of an config file)
+ - [Configuration spec](#Configuration) (the configuration specification of every attribute in config file)
+ - [Examples](#Examples) (the examples of config file)
+
+<a name="Template"></a>
 ## Template
 * __light weight(without Annotation and Assessor)__ 
+
 ```
 authorName: 
 experimentName: 
@@ -34,7 +41,9 @@ machineList:
     username: 
     passwd: 
 ```
+
 * __Use Assessor__
+
 ```
 authorName: 
 experimentName: 
@@ -71,7 +80,9 @@ machineList:
     username: 
     passwd: 
 ```
+
 * __Use Annotation__
+
 ```
 authorName: 
 experimentName: 
@@ -107,7 +118,8 @@ machineList:
     username: 
     passwd: 
 ```
-## Configuration
+<a name="Configuration"></a>
+## Configuration spec
 * __authorName__
   * Description  
             
@@ -123,14 +135,16 @@ machineList:
 * __trialConcurrency__
   * Description
     
-	 __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
+      __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
 	 
-	    Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
+        Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
 	 
 * __maxExecDuration__
   * Description
     
 	__maxExecDuration__ specifies the max duration time of an experiment.The unit of the time is {__s__, __m__, __h__, __d__}, which means {_seconds_, _minutes_, _hours_, _days_}.  
+
+        Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
 	
 * __maxTrialNum__
   *  Description
@@ -155,22 +169,22 @@ machineList:
 * __searchSpacePath__
   * Description
     
-	 __searchSpacePath__ specifies the path of search space file, which should be a valid path in the local linux machine.
+      __searchSpacePath__ specifies the path of search space file, which should be a valid path in the local linux machine.
 	        
-	    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+      Note: if set useAnnotation=True, the searchSpacePath field should be removed.
 * __useAnnotation__
   * Description
    
     __useAnnotation__ use annotation to analysis trial code and generate search space. 
 	   
-	    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
 
 * __nniManagerIp__
   * Description
    
     __nniManagerIp__ set the IP address of the machine on which nni manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
 
-        Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
+    Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
 	   
 		
 * __tuner__
@@ -181,68 +195,68 @@ machineList:
     * __builtinTunerName__
     
 	  __builtinTunerName__ specifies the name of system tuner, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__, __BatchTuner__, __GridSearch__}
-	 * __classArgs__
+    * __classArgs__
 	
 	   __classArgs__ specifies the arguments of tuner algorithm. If the __builtinTunerName__ is in {__TPE__, __Random__, __Anneal__, __Evolution__}, user should set __optimize_mode__.
   * __codeDir__, __classFileName__, __className__ and __classArgs__
-      * __codeDir__
+     * __codeDir__
         
-		__codeDir__ specifies the directory of tuner code.
-	    * __classFileName__
+          __codeDir__ specifies the directory of tuner code.
+     * __classFileName__
 	   
-	  __classFileName__ specifies the name of tuner file.
+          __classFileName__ specifies the name of tuner file.
      * __className__
 	   
-	  __className__ specifies the name of tuner class.
+          __className__ specifies the name of tuner class.
      * __classArgs__
 	   
-	  __classArgs__ specifies the arguments of tuner algorithm.
+          __classArgs__ specifies the arguments of tuner algorithm.
   * __gpuNum__
     
-	  __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
+      __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
 	  
-	    Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both. 
+      Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both. 
 
 * __assessor__
  
   * Description
   
-    __assessor__ specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own tuner file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+    __assessor__ specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
   * __builtinAssessorName__ and __classArgs__
     * __builtinAssessorName__
     
-	  __builtinAssessorName__ specifies the name of system assessor, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__}
-	 * __classArgs__
-	
-	   __classArgs__ specifies the arguments of tuner algorithm
+        __builtinAssessorName__ specifies the name of system assessor, nni sdk provides one kind of assessor {__Medianstop__}
+    * __classArgs__
+
+        __classArgs__ specifies the arguments of assessor algorithm
   * __codeDir__, __classFileName__, __className__ and __classArgs__
-      * __codeDir__
+    * __codeDir__
         
-		__codeDir__ specifies the directory of tuner code.
-	    * __classFileName__
+         __codeDir__ specifies the directory of assessor code.
+    * __classFileName__
 	   
-	  __classFileName__ specifies the name of tuner file.
-     * __className__
+         __classFileName__ specifies the name of assessor file.
+    * __className__
 	   
-	  __className__ specifies the name of tuner class.
-     * __classArgs__
+         __className__ specifies the name of assessor class.
+    * __classArgs__
 	   
-	  __classArgs__ specifies the arguments of tuner algorithm.
+         __classArgs__ specifies the arguments of assessor algorithm.
   * __gpuNum__
     
-	__gpuNum__ specifies the gpu number to run the assessor process. The value of this field should be a positive number.
+      __gpuNum__ specifies the gpu number to run the assessor process. The value of this field should be a positive number.
 
-        Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty. 
+      Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty. 
 * __trial(local, remote)__
   * __command__
 
       __command__  specifies the command to run trial process.
   * __codeDir__
     
-	  __codeDir__ specifies the directory of your own trial file.
+      __codeDir__ specifies the directory of your own trial file.
   * __gpuNum__
     
-	  __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0. 
+      __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0. 
 
 * __trial(pai)__
   * __command__
@@ -250,7 +264,7 @@ machineList:
       __command__  specifies the command to run trial process.
   * __codeDir__
     
-	  __codeDir__ specifies the directory of the own trial file.
+      __codeDir__ specifies the directory of the own trial file.
   * __gpuNum__
     
 	  __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0.
@@ -306,7 +320,7 @@ machineList:
     
     * __image__
       
-      __iamge__ set the image to be used in __ps__.
+      __image__ set the image to be used in __ps__.
 
   * __worker__
     
@@ -333,7 +347,7 @@ machineList:
     
     * __image__
       
-      __iamge__ set the image to be used in __worker__.
+      __image__ set the image to be used in __worker__.
 
 
 
@@ -347,7 +361,7 @@ machineList:
     
 	__port__ is the ssh port to be used to connect machine.
 	
-	    Note: if users set port empty, the default value will be 22.
+	Note: if users set port empty, the default value will be 22.
   * __username__
     
 	__username__ is the account of remote machine.
@@ -359,7 +373,7 @@ machineList:
 
     If users use ssh key to login remote machine, could set __sshKeyPath__ in config file. __sshKeyPath__ is the path of ssh key file, which should be valid.
 	
-	    Note: if users set passwd and sshKeyPath simultaneously, nni will try passwd.
+	Note: if users set passwd and sshKeyPath simultaneously, nni will try passwd.
 		
   * __passphrase__
 
@@ -421,11 +435,12 @@ machineList:
     
     
 
-        
+<a name="Examples"></a>        
 ## Examples
 * __local mode__
 
   If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
+
 ```
 authorName: test
 experimentName: test_experiment
@@ -450,6 +465,7 @@ trial:
 ```
 
   Could add assessor configuration in config file if set assessor.
+
 ```
 authorName: test
 experimentName: test_experiment
@@ -482,6 +498,7 @@ trial:
 ```
 
   Or you could specify your own tuner and assessor file as following:
+
 ```
 authorName: test
 experimentName: test_experiment
@@ -518,6 +535,7 @@ trial:
 * __remote mode__
 
 If run trial jobs in remote machine, users could specify the remote mahcine information as fllowing format:
+
 ```
 authorName: test
 experimentName: test_experiment
@@ -596,7 +614,6 @@ paiConfig:
   passWord: test
   #The host of restful server of pai
   host: 10.10.10.10
-
 ```
 
 * __kubeflow mode__
@@ -635,7 +652,9 @@ kubeflowConfig:
     server: 10.10.10.10
     path: /var/nfs/general
 ```
+
 kubeflow use azure storage
+
 ```
 authorName: default
 experimentName: example_mni
