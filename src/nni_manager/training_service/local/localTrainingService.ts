@@ -183,7 +183,7 @@ class LocalTrainingService implements TrainingService {
                 } catch (error) {
                     //ignore
                 }
-                this.log.info(`trailJob status update: ${trialJobId}, ${trialJob.status}`);
+                this.log.debug(`trailJob status update: ${trialJobId}, ${trialJob.status}`);
             }
         }
 

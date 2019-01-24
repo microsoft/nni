@@ -564,7 +564,7 @@ class RemoteMachineTrainingService implements TrainingService {
                     }
                     trialJob.endTime = parseInt(timestamp, 10);
                 }
-                this.log.info(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
+                this.log.debug(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
             }
             deferred.resolve(trialJob);
         } catch (error) {
