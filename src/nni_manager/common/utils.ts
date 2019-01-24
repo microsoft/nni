@@ -30,13 +30,14 @@ import { Container } from 'typescript-ioc';
 import * as util from 'util';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
+import { ExperimentStartupInfo, getExperimentId, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { getLogger } from './log';
 
 function getExperimentRootDir(): string {
-    return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
+    return getExperimentStartupInfo()
+            .getLogDir();
 }
 
 function getLogDir(): string{
