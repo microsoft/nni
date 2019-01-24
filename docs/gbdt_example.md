@@ -93,7 +93,7 @@ you could write a [search_space.json](https://github.com/Microsoft/nni/blob/mast
 More support variable type you could reference [here](https://github.com/Microsoft/nni/blob/master/docs/SearchSpaceSpec.md).
 
 ### 3.3 Add SDK of nni into your code.
-``` diff
+```diff
 +import nni
 ...
 
