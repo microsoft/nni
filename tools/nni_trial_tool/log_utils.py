@@ -38,11 +38,12 @@ from .url_utils import gen_send_stdout_url
 
 @unique
 class LogType(Enum):
+    Trace = 'TRACE'
     Debug = 'DEBUG'
     Info = 'INFO'
     Warning = 'WARNING'
     Error = 'ERROR'
-    Critical = 'CRITICAL'
+    Fatal = 'FATAL'
 
 @unique
 class StdOutputType(Enum):

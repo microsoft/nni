@@ -98,7 +98,7 @@ def get_nni_installation_path():
     print_error('Fail to find nni under python library')
     exit(1)
 
-def start_rest_server(port, platform, mode, config_file_name, experiment_id=None):
+def start_rest_server(port, platform, mode, config_file_name, experiment_id=None, log_dir=None, log_level=None):
     '''Run nni manager process'''
     nni_config = Config(config_file_name)
     if detect_port(port):
@@ -118,6 +118,10 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     entry_file = os.path.join(entry_dir, 'main.js')
 
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
+    if log_dir is not None:
+        cmds += ['--log_dir', log_dir]
+    if log_level is not None:
+        cmds += ['--log_level', log_level]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
@@ -317,9 +321,12 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         except ModuleNotFoundError as e:
             print_error('The tuner %s should be installed through nnictl'%(tuner_name))
             exit(1)
-
+    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
+    log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
+    if log_level not in ['trace', 'debug'] and args.debug:
+        log_level = 'debug'
     # start rest server
-    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id)
+    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id, log_dir, log_level)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
