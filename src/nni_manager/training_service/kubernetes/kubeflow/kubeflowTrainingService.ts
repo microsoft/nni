@@ -315,7 +315,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 }
                 break;
             case TrialConfigMetadataKey.DISABLE_LOG:
-                this.disableLog = (value === 'true');
+                this.disableLog = (value === 'true' || value === 'True');
                 break;
             default:
                 break;
