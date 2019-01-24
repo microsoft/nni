@@ -540,7 +540,7 @@ class RemoteMachineTrainingService implements TrainingService {
             command,
             nniManagerIp,
             this.remoteRestServerPort,
-            this.disableLog? 'True' : 'False',
+            this.disableLog? '--disable_log' : '',
             path.join(trialWorkingFolder, '.nni', 'code')
         )
 

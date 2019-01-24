@@ -224,7 +224,7 @@ class PAITrainingService implements TrainingService {
             this.hdfsOutputHost,
             this.paiClusterConfig.userName, 
             HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
-            this.disableLog? 'True' : 'False'
+            this.disableLog? '--disable_log' : '',
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);

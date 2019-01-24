@@ -203,7 +203,7 @@ abstract class KubernetesTrainingService {
             command,
             nniManagerIp,
             this.kubernetesRestServerPort,
-            this.disableLog? 'True' : 'False'
+            this.disableLog? '--disable_log' : '',
         );
         return runScript;
     }

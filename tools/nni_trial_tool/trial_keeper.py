@@ -98,7 +98,7 @@ if __name__ == '__main__':
     PARSER.add_argument('--pai_hdfs_host', type=str, help='the host of hdfs')
     PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
     PARSER.add_argument('--nni_hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
-    PARSER.add_argument('--disable_log', type=bool, default=False, help='disable trial log')
+    PARSER.add_argument('--disable_log', action='store_true', help='disable trial log')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)
