@@ -1,7 +1,7 @@
 # Automatic Model Architecture Search for Reading Comprehension
 This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension.
 
-## Search Space
+## 1. Search Space
 Since attention and recurrent neural network (RNN) have been proven effective in Reading Comprehension.
 We conclude the search space as follow:
 
@@ -15,14 +15,12 @@ We conclude the search space as follow:
 
 ![ga-squad-logo](https://github.com/Microsoft/nni/blob/master/examples/trials/ga_squad/ga_squad.png)
 
-## New version
+### New version
 Also we have another version which time cost is less and performance is better. We will release soon.
 
-# How to run this example?
+## 2. How to run this example in local?
 
-## Run this example on local or remote
-
-### Use downloading script to download data
+### 2.1 Use downloading script to download data
 
 Execute the following command to download needed files
 using the downloading script:
@@ -32,7 +30,7 @@ chmod +x ./download.sh
 ./download.sh
 ```
 
-### Or Download manually
+Or Download manually
 
 1. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
 
@@ -48,7 +46,7 @@ wget http://nlp.stanford.edu/data/glove.840B.300d.zip
 unzip glove.840B.300d.zip
 ```
 
-### Update configuration
+### 2.2 Update configuration
 Modify `nni/examples/trials/ga_squad/config.yml`, here is the default configuration:
 
 ```
@@ -75,17 +73,17 @@ trial:
 
 In the "trial" part, if you want to use GPU to perform the architecture search, change `gpuNum` from `0` to `1`. You need to increase the `maxTrialNum` and `maxExecDuration`, according to how long you want to wait for the search result.
 
-### submit this job
+### 2.3 submit this job
 
 ```
 nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
 ```
 
-## Run this example on OpenPAI
+## 3 Run this example on OpenPAI
 
 Due to the memory limitation of upload, we only upload the source code and complete the data download and training on OpenPAI. This experiment requires sufficient memory that `memoryMB >= 32G`, and the training may last for several hours.
 
-### Update configuration
+### 3.1 Update configuration
 Modify `nni/examples/trials/ga_squad/config_pai.yaml`, here is the default configuration:
 
 ```
@@ -133,18 +131,18 @@ In the "trial" part, if you want to use GPU to perform the architecture search, 
 
 `trialConcurrency` is the number of trials running concurrently, which is the number of GPUs you want to use, if you are setting `gpuNum` to 1.
 
-### submit this job
+### 3.2 submit this job
 
 ```
 nnictl create --config ~/nni/examples/trials/ga_squad/config_pai.yml
 ```
 
-# Techinal details about the trial
+## 4. Techinal details about the trial
 
-## How does it works
+### 4.1 How does it works
 The evolution-algorithm based architecture for question answering has two different parts just like any other examples: the trial and the tuner.
 
-### The trial
+### 4.2 The trial
 
 The trial has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
 
@@ -204,7 +202,7 @@ for _, topo_i in enumerate(topology):
 
 performs actually conversion that maps each layer to a part in Tensorflow computation graph.
 
-### The tuner
+### 4.3 The tuner
 
 The tuner is much more simple than the trial. They actually share the same `graph.py`. Besides, the tuner has a `customer_tuner.py`, the most important class in which is `CustomerTuner`:
 
@@ -251,7 +249,7 @@ As we can see, the overloaded method `generate_parameters` implements a pretty n
 
 controls the mutation process. It will always take two random individuals in the population, only keeping and mutating the one with better result.
 
-## Model configuration format
+### 4.4 Model configuration format
 
 Here is an example of the model configuration, which is passed from the tuner to the trial in the architecture search procedure.
 
