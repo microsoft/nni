@@ -268,7 +268,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 }
                 break;
             case TrialConfigMetadataKey.DISABLE_LOG:
-                this.disableLog = (value === 'true');
+                this.disableLog = (value === 'true' || value === 'True');
                 break;
             default:
                 break;

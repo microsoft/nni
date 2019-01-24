@@ -202,7 +202,8 @@ abstract class KubernetesTrainingService {
             nvidia_script,
             command,
             nniManagerIp,
-            this.kubernetesRestServerPort
+            this.kubernetesRestServerPort,
+            this.disableLog? 'True' : 'False'
         );
         return runScript;
     }
