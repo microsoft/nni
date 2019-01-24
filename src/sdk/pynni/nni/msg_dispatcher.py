@@ -97,6 +97,7 @@ class MsgDispatcher(MsgDispatcherBase):
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
         ids = [_create_parameter_id() for _ in range(data)]
+        _logger.debug("requesting for generating params of {}".format(ids))
         params_list = self.tuner.generate_multiple_parameters(ids)
 
         for i, _ in enumerate(params_list):

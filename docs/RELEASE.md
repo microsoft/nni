@@ -1,5 +1,26 @@
 # ChangeLog
 
+## Release 0.5.0 - 01/14/2019
+### Major Features
+#### New tuner and assessor supports
+  * Support [Metis tuner](./HowToChooseTuner.md#MetisTuner) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
+  * Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
+  * Support [Curve fitting assessor](./HowToChooseTuner.md#Curvefitting) for early stop policy using learning curve extrapolation. 
+  * Advanced Support of [Weight Sharing](./AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
+
+
+#### Training Service Enhancement
+* [FrameworkController Training service](./FrameworkControllerMode.md): Support run experiments using frameworkcontroller on kubernetes
+   * FrameworkController is a Controller on kubernetes that is general enough to run (distributed) jobs with various machine learning frameworks, such as tensorflow, pytorch, MXNet.
+   * NNI provides unified and simple specification for job definition.
+   * MNIST example for how to use FrameworkController.
+
+#### User Experience improvements
+  * A better trial logging support for NNI experiments in PAI, Kubeflow and FrameworkController mode:
+      * An improved logging architecture to send stdout/stderr of trials to NNI manager via Http post. NNI manager will store trial's stdout/stderr messages in local log file.
+      * Show the link for trial log file on WebUI. 
+  * Support to show final result's all key-value pairs.
+
 ## Release 0.4.1 - 12/14/2018
 ### Major Features
 #### New tuner supports
@@ -130,5 +151,3 @@ Initial release of Neural Network Intelligence (NNI).
 
 ### Known Issues
 [Known Issues in release 0.1.0](https://github.com/Microsoft/nni/labels/nni010knownissues).
-      
-   

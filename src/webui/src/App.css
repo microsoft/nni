@@ -2,6 +2,7 @@
   font-family: 'Segoe';
   color: #212121;
   font-size: 14px;
+  background: #f2f2f2;
 }
 
 .header{
@@ -17,12 +18,16 @@
 .headerCon{
   min-width: 1024px;
 }
+.contentBox{
+  width: 100%;
+}
 .content{
   width: 86%;
   min-width: 1024px;
   margin: 0 auto;
   margin-top: 74px;
   margin-bottom: 30px;
+  background: #fff;
 }
 
 

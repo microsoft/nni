@@ -5,3 +5,6 @@ json_tricks
 numpy
 scipy
 hyperopt
+
+# metis tuner
+sklearn

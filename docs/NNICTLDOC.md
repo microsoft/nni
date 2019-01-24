@@ -1,9 +1,12 @@
-nnictl
-===
+# nnictl
+
+
 ## Introduction
+
 __nnictl__ is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc.
 
 ## Commands
+
 nnictl support commands:
  - [nnictl create](#create) 
  - [nnictl resume](#resume)
@@ -44,16 +47,19 @@ nnictl support commands:
 * __nnictl resume__
 
   * Description
-          
-		  You can use this command to resume a stopped experiment.
-       
+
+    You can use this command to resume a stopped experiment.
+
   * Usage
-	    
-		nnictl resume [OPTIONS] 		
-      Options:
-     
-      | Name, shorthand | Required|Default | Description |
-      | ------ | ------ | ------ |------ |
+
+    ```bash
+    nnictl resume [OPTIONS]
+    ```
+
+    Options:
+
+    | Name, shorthand | Required|Default | Description |
+    | ------ | ------ | ------ |------ |
     | id|  False| |The id of the experiment you want to resume|  
     | --port, -p|  False| |Rest port of the experiment you want to resume|
   
@@ -62,12 +68,14 @@ nnictl support commands:
 <a name="stop"></a>
 * __nnictl stop__
   * Description
-          
-		You can use this command to stop a running experiment or multiple experiments.
-       
+
+    You can use this command to stop a running experiment or multiple experiments.
+
   * Usage
-	    	
-        nnictl stop [id]
+
+    ```bash
+    nnictl stop [id]
+    ```
   
   * Detail
         
@@ -147,20 +155,24 @@ nnictl support commands:
      
 <a name="trial"></a>
 * __nnictl trial__
+
   * __nnictl trial ls__
+
     * Description
-          
-		    You can use this command to show trial's information.
-   
-     * Usage
+
+      You can use this command to show trial's information.
+
+    * Usage
   
-           nnictl trial ls
+      ```bash
+      nnictl trial ls
+      ```
 
       Options:
-     
+
       | Name, shorthand | Required|Default | Description |
       | ------ | ------ | ------ |------ |
-    | id|  False| |ID of the experiment you want to set|
+      | id|  False| |ID of the experiment you want to set|
 
   * __nnictl trial kill__
       * Description
@@ -199,48 +211,51 @@ nnictl support commands:
 ### Manage experiment information
 
 * __nnictl experiment show__
-  * Description
-      
-	     Show the information of experiment.
-   * Usage
-     
-	     nnictl experiment show
-    
-      Options:
-      
-        | Name, shorthand | Required|Default | Description |
-        | ------ | ------ | ------ |------ |
-      | id|  False| |ID of the experiment you want to set|
 
+  * Description
+
+    Show the information of experiment.
+
+  * Usage
+
+    ```bash
+    nnictl experiment show
+    ```
+
+    Options:
+
+    | Name, shorthand | Required|Default | Description |
+    | ------ | ------ | ------ |------ |
+    | id|  False| |ID of the experiment you want to set|
 
 * __nnictl experiment status__
-  * Description
-      
-	     Show the status of experiment.
-   * Usage
-     
-	     nnictl experiment status
-      
-      Options:
-     
-      | Name, shorthand | Required|Default | Description |
-      | ------ | ------ | ------ |------ |
-     | id|  False| |ID of the experiment you want to set|
 
+  * Description
+
+    Show the status of experiment.
+
+  * Usage
+
+    ```bash
+    nnictl experiment status
+    ```
+
+    Options:
+
+    | Name, shorthand | Required|Default | Description |
+    | ------ | ------ | ------ |------ |
+    | id|  False| |ID of the experiment you want to set|
 
 * __nnictl experiment list__
   * Description
-      
-	     Show the information of all the (running) experiments.
-   * Usage
-     
-	     nnictl experiment list
 
-      Options:
-     
-      | Name, shorthand | Required|Default | Description |
-      | ------ | ------ | ------ |------ |
-     | all|  False| False|Show all of experiments, including stopped experiments.|
+    Show the information of all the (running) experiments.
+
+  * Usage
+
+    ```bash
+    nnictl experiment list
+    ```
 
  
 <a name="config"></a>
@@ -255,102 +270,90 @@ nnictl support commands:
         
 <a name="log"></a>
 ### Manage log
+
 * __nnictl log stdout__
-   * Description
-     
-	     Show the stdout log content. 
-   
-   * Usage
-         
-		    nnictl log stdout [options]
-        
-    	Options:
-    	
-       | Name, shorthand | Required|Default | Description |
-       | ------ | ------ | ------ |------ |
-     | id|  False| |ID of the experiment you want to set|
-     | --head, -h| False| |show head lines of stdout|
-     | --tail, -t|  False| |show tail lines of stdout|
-	   | --path, -p|  False| |show the path of stdout file|
-     
-	 
+
+  * Description
+
+    Show the stdout log content.
+
+  * Usage
+
+    ```bash
+    nnictl log stdout [options]
+    ```
+
+    Options:
+
+    | Name, shorthand | Required|Default | Description |
+    | ------ | ------ | ------ |------ |
+    | id|  False| |ID of the experiment you want to set|
+    | --head, -h| False| |show head lines of stdout|
+    | --tail, -t|  False| |show tail lines of stdout|
+    | --path, -p|  False| |show the path of stdout file|
+
 * __nnictl log stderr__
   * Description
-  
-        Show the stderr log content. 
+
+    Show the stderr log content.
   
   * Usage
-  
-        nnictl log stderr [options]
-        
-	   Options:
-	   
-      | Name, shorthand | Required|Default | Description |
-      | ------ | ------ | ------ |------ |
+
+    ```bash
+    nnictl log stderr [options]
+    ```
+
+    Options:
+
+    | Name, shorthand | Required|Default | Description |
+    | ------ | ------ | ------ |------ |
     | id|  False| |ID of the experiment you want to set|
     | --head, -h| False| |show head lines of stderr|
     | --tail, -t|  False| |show tail lines of stderr|
-	  | --path, -p|  False| |show the path of stderr file|
-    
+    | --path, -p|  False| |show the path of stderr file|
 
 * __nnictl log trial__
   * Description
   
-        Show trial log path. 
+    Show trial log path.
   
   * Usage
-  
-        nnictl log trial [options]
-        
-	   Options:
-	   
-      | Name, shorthand | Required|Default | Description |
-      | ------ | ------ | ------ |------ |
-    | id| False| |the id of trial|
 
 <a name="webui"></a>
 ### Manage webui
+
 * __nnictl webui url__
-   * Description
-     
-	     Show the urls of the experiment. 
-   
-   * Usage
-         
-		    nnictl webui url
-        
-    	Options:
-    	
-       | Name, shorthand | Required|Default | Description |
-       | ------ | ------ | ------ |------ |
-     | id|  False| |ID of the experiment you want to set|
 
 <a name="tensorboard"></a>
 ### Manage tensorboard
-* __nnictl tensorboard start__
-   * Description
-     
-	     Start the tensorboard process. 
-   
-   * Usage
-         
-		    nnictl tensorboard start
-        
-    	Options:
-    	
-       | Name, shorthand | Required|Default | Description |
-       | ------ | ------ | ------ |------ |
-     | id|  False| |ID of the experiment you want to set|
-     | --trialid|  False| |ID of the trial|
-     | --port|  False| 6006|The port of the tensorboard process|
 
-   * Detail
-     
-	     1. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later.   
-         2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path.  
-         3. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
-         4. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
-         5. If there is only one trial job, you don't need to set trialid. If there are multiple trial jobs running, you should set the trialid, or you could use [nnictl tensorboard start --trialid all] to map --logdir to all trial log paths.
+* __nnictl tensorboard start__
+
+  * Description
+
+    Start the tensorboard process.
+  
+  * Usage
+
+    ```bash
+    nnictl tensorboard start
+    ```
+
+    Options:
+
+    | Name, shorthand | Required|Default | Description |
+    | ------ | ------ | ------ |------ |
+    | id|  False| |ID of the experiment you want to set|
+    | --trialid|  False| |ID of the trial|
+    | --port|  False| 6006|The port of the tensorboard process|
+
+  * Detail
+
+    1. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later.   
+    2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path.  
+    3. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
+    4. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
+    5. If there is only one trial job, you don't need to set trialid. If there are multiple trial jobs running, you should set the trialid, or you could use [nnictl tensorboard start --trialid all] to map --logdir to all trial log paths.
 
 * __nnictl tensorboard stop__
    * Description
