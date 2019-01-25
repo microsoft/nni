@@ -120,7 +120,7 @@ with tf.Session() as sess:
 > > 
 > > 参考 [标记](../tools/nni_annotation/README.md) 了解更多关于标记的语法和用法。
 > 
-> 第二步：启用 NNI 标记 在 yaml 配置文件中，将 *useAnnotation* 设置为 true 来启用 NNI 标记。
+> 第二步：启用 NNI 标记 在 yml 配置文件中，将 *useAnnotation* 设置为 true 来启用 NNI 标记。
 
 ```yaml
 useAnnotation: true
