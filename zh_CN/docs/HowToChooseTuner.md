@@ -26,7 +26,7 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 *用法*：
 
 ```yaml
-  # config.yaml
+  # config.yml
   tuner:
     builtinTunerName: TPE
     classArgs:
@@ -44,7 +44,7 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 *用法*：
 
 ```yaml
-  # config.yaml
+  # config.yml
   tuner:
     builtinTunerName: Random
 ```
@@ -59,7 +59,7 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 *用法*：
 
 ```yaml
-  # config.yaml
+  # config.yml
   tuner:
     builtinTunerName: Anneal
     classArgs:
@@ -102,7 +102,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 *用法*：
 
 ```yaml
-  # config.yaml
+  # config.yml
   tuner:
     builtinTunerName: SMAC
     classArgs:
@@ -154,7 +154,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 *用法*：
 
 ```yaml
-  # config.yaml
+  # config.yml
   tuner:
     builtinTunerName: GridSearch
 ```
@@ -169,7 +169,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 *用法*：
 
 ```yaml
-  # config.yaml
+  # config.yml
   advisor:
     builtinAdvisorName: Hyperband
     classArgs:
