@@ -1,4 +1,4 @@
-## Create multi-phase experiment
+## 创建多阶段的实验
 
 Typically each trial job gets single set of configuration (e.g. hyper parameters) from tuner and do some kind of experiment, let's say train a model with that hyper parameter and reports its result to tuner. Sometimes you may want to train multiple models within one trial job to share information between models or saving system resource by creating less trial jobs, for example:
 
