@@ -11,3 +11,4 @@ Tutorials
     WebUI
     Training Platform<training_services>
     MultiPhase<multiPhase>
+    AdVancedNAS

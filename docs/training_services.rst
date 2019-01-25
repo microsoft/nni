@@ -6,3 +6,4 @@ Introduction to NNI Training Services
     Remote<RemoteMachineMode>
     PAI<PAIMode>
     Kubeflow<KubeflowMode>
+    Framework Controller Mode<FrameworkControllerMode>
