@@ -14,30 +14,30 @@
 
 1. 实现 nni.multi_phase.MultiPhaseTuner。 例如，[ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py) 就是一个实现了 nni.multi_phase.MultiPhaseTuner 的调参器。 在实现多阶段调参器时，可能要用 generate_parameters 中的 trial_job_id 参数来为每个尝试作业生成超参。
 
-2. 设置 `multiPhase` 的值为 `true`，并将第一步中实现的调参器作为自定义调参器进行配置，例如：
-    
-    ```yml
-    ...
-    multiPhase: true
-    tuner:
-      codeDir: tuners/enas
-      classFileName: nni_controller_ptb.py
-      className: ENASTuner
-      classArgs:
-        say_hello: "hello"
-    ...
-    ```
+2. Set ```multiPhase``` field to ```true```, and configure your tuner implemented in step 1 as customized tuner in configuration file, for example:
 
-3. 根据需要，在尝试代码中可多次调用 nni.get_next_parameter() API，例如：
-    
-    ```python
-    for i in range(5):
-        # 从调参器中获得参数
-        tuner_param = nni.get_next_parameter()
-    
-        # 使用参数
-        # ...
-        # 为上面获取的参数返回最终结果
-        nni.report_final_result()
-        # ...
-    ```
+```yml
+...
+multiPhase: true
+tuner:
+  codeDir: tuners/enas
+  classFileName: nni_controller_ptb.py
+  className: ENASTuner
+  classArgs:
+    say_hello: "hello"
+...
+```
+
+3. Invoke nni.get_next_parameter() API for multiple times as needed in a trial, for example:
+
+```python
+for i in range(5):
+    # get parameter from tuner
+    tuner_param = nni.get_next_parameter()
+
+    # consume the params
+    # ...
+    # report final result somewhere for the parameter retrieved above
+    nni.report_final_result()
+    # ...
+```
