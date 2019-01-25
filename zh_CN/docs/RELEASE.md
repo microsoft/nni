@@ -130,14 +130,14 @@
 ## 主要功能
 
     * 支持 [OpenPAI](https://github.com/Microsoft/pai) (aka pai) 作为训练服务（参考 [!这里](./PAIMode.md)，了解如何在 pai 模式下提交 NNI 作业）。
-       * 训练服务支持 pai 模式。 NNI trials will be scheduled to run on OpenPAI cluster
-       * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
-    * Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](HowToChooseTuner.md) for instructions about how to use SMAC tuner)
-       * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO to handle categorical parameters. The SMAC supported by NNI is a wrapper on [SMAC3](https://github.com/automl/SMAC3)
-    * Support NNI installation on [conda](https://conda.io/docs/index.html) and python virtual environment
-    * Others
-       * Update ga squad example and related documentation
-       * WebUI UX small enhancement and bug fix
+       * 训练服务支持 pai 模式。 NNI 尝试可发送至 OpenPAI 集群上运行
+       * NNI 尝试输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
+    * 支持 <a href="https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf">SMAC</a> 调参器 (参考[这里](HowToChooseTuner.md)，了解如何使用 SMAC 调参器)
+       * <a href="https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf">SMAC</a> 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的好模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 NNI 的 SMAC 通过包装 <a href="https://github.com/automl/SMAC3">SMAC3</a> 来支持。
+    * 支持将 NNI 安装在 <a href="https://conda.io/docs/index.html">conda</a> 和 Python 虚拟环境中。
+    * 其它
+       * 更新 ga squad 样例与相关文档
+       * 用户体验改善及缺陷修复
     
 
 ## 已知问题
@@ -150,21 +150,21 @@
 
 ## 主要功能
 
-    * Installation and Deployment
-       * Support pip install and source codes install
-       * Support training services on local mode(including Multi-GPU mode) as well as multi-machines mode
-    * Tuners, Assessors and Trial
-       * Support AutoML algorithms including:  hyperopt_tpe, hyperopt_annealing, hyperopt_random, and evolution_tuner
-       * Support assessor(early stop) algorithms including: medianstop algorithm
-       * Provide Python API for user defined tuners and assessors
-       * Provide Python API for user to wrap trial code as NNI deployable codes
-    * Experiments
-       * Provide a command line toolkit 'nnictl' for experiments management
-       * Provide a WebUI for viewing experiments details and managing experiments
-    * Continuous Integration
-       * Support CI by providing out-of-box integration with [travis-ci](https://github.com/travis-ci) on ubuntu    
-    * Others
-       * Support simple GPU job scheduling 
+    * 安装和部署
+       * 支持 pip 和源代码安装
+       * 支持本机（包括多 GPU 卡）训练和远程多机训练模式
+    * 调参器，评估器和尝试
+       * 支持自动机器学习算法，包括： hyperopt_tpe, hyperopt_annealing, hyperopt_random, 和 evolution_tuner。
+       * 支持评估器（提前终止）算法，包括：medianstop。
+       * 提供 Python API 来自定义调参器和评估器
+       * 提供 Python API 来包装尝试代码，以便能在 NNI 中运行
+    * 实验
+       * 提供命令行工具 'nnictl' 来管理实验
+       * 提供网页界面来查看并管理实验
+    * 持续集成
+       * 使用 Ubuntu 的 [travis-ci](https://github.com/travis-ci) 来支持持续集成
+    * 其它
+       * 支持简单的 GPU 任务调度 
     
 
 ## 已知问题
