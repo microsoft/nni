@@ -81,12 +81,14 @@ class RemoteMachineTrainingService implements TrainingService {
         this.timer = timer;
         this.log = getLogger();
         this.trialSequenceId = -1;
+        this.log.info('Construct remote machine training service.');
     }
 
     /**
      * Loop to launch trial jobs and collect trial metrics
      */
     public async run(): Promise<void> {
+        this.log.info('Run remote machine training service.');
         while (!this.stopping) {
             while (this.jobQueue.length > 0) {
                 const trialJobId: string = this.jobQueue[0];
@@ -105,6 +107,7 @@ class RemoteMachineTrainingService implements TrainingService {
             await metricsCollector.collectMetrics();
             await delay(3000);
         }
+        this.log.info('Remote machine training service exit.');
     }
 
     /**
@@ -171,8 +174,6 @@ class RemoteMachineTrainingService implements TrainingService {
      * @param form trial job description form
      */
     public submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
-
         if (!this.trialConfig) {
             throw new Error('trial config is not initialized');
         }
@@ -207,7 +208,6 @@ class RemoteMachineTrainingService implements TrainingService {
      * @param form job application form
      */
     public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<TrialJobDetail> {
-        this.log.info(`updateTrialJob: form: ${JSON.stringify(form)}`);
         const trialJobDetail: undefined | TrialJobDetail = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             throw new Error(`updateTrialJob failed: ${trialJobId} not found`);
@@ -238,7 +238,6 @@ class RemoteMachineTrainingService implements TrainingService {
      * @param trialJobId ID of trial job
      */
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
-        this.log.info(`cancelTrialJob: jobId: ${trialJobId}`);
         const deferred: Deferred<void> = new Deferred<void>();
         const trialJob: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (!trialJob) {
@@ -329,12 +328,14 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     public cleanUp(): Promise<void> {
+        this.log.info('Stopping remote machine training service...');
         this.stopping = true;
 
         return Promise.resolve();
     }
 
     private async setupConnections(machineList: string): Promise<void> {
+        this.log.debug(`Connecting to remote machines: ${machineList}`);
         const deferred: Deferred<void> = new Deferred<void>();
         //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
         const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
@@ -563,7 +564,7 @@ class RemoteMachineTrainingService implements TrainingService {
                     }
                     trialJob.endTime = parseInt(timestamp, 10);
                 }
-                this.log.info(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
+                this.log.debug(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
             }
             deferred.resolve(trialJob);
         } catch (error) {
