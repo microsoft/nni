@@ -44,15 +44,15 @@ NFS 使用了客户端/服务器架构。通过一个 NFS 服务器来提供物�
 
 #### NFS 服务器
 
-An NFS server can be any machine as long as it can provide enough physical storage, and network connection with **remote machine** for NNI trials. Usually you can choose one of the remote machine as NFS Server.
+如果有足够的存储空间，并能够让 NNI 的尝试通过**远程机器**来连接，NFS 服务可以安装在任何计算机上。 通常，可以选择一台远程服务器作为 NFS 服务。
 
-On Ubuntu, install NFS server through `apt-get`:
+在 Ubuntu 上，可通过 `apt-get` 安装 NFS 服务：
 
 ```bash
 sudo apt-get install nfs-kernel-server
 ```
 
-Suppose `/tmp/nni/shared` is used as the physical storage, then run:
+假设 `/tmp/nni/shared` 是物理存储位置，然后运行：
 
 ```bash
 mkdir -p /tmp/nni/shared
@@ -60,28 +60,28 @@ sudo echo "/tmp/nni/shared *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/e
 sudo service nfs-kernel-server restart
 ```
 
-You can check if the above directory is successfully exported by NFS using `sudo showmount -e localhost`
+可以通过命令 `sudo showmount -e localhost` 来检查上述目录是否通过 NFS 成功导出了
 
-#### NFS Client
+#### NFS 客户端
 
-For a trial on remote machine able to access shared files with NFS, an NFS client needs to be installed. For example, on Ubuntu:
+为了通过 NFS 访问远程共享文件，需要安装 NFS 客户端。 例如，在 Ubuntu 上运行：
 
 ```bash
 sudo apt-get install nfs-common
 ```
 
-Then create & mount the mounted directory of shared files:
+然后创建并装载上共享目录：
 
 ```bash
 mkdir -p /mnt/nfs/nni/
 sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 ```
 
-where `10.10.10.10` should be replaced by the real IP of NFS server machine in practice.
+实际使用时，IP `10.10.10.10` 需要替换为 NFS 服务器的真实地址。
 
 ## 尝试依赖控制的异步调度模式
 
-多机时启用权重的尝试，大部分情况是通过保证**先写后读**的方式来保持一致性。 子节点在父节点的尝试完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的调参器线程时，调参器线程可以决定是否阻塞当前线程。 For example:
+多机时启用权重的尝试，大部分情况是通过保证**先写后读**的方式来保持一致性。 子节点在父节点的尝试完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的调参器线程时，调参器线程可以决定是否阻塞当前线程。 例如：
 
 ```python
     def generate_parameters(self, parameter_id):
