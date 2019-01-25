@@ -6,8 +6,8 @@ NNI 使用 GNU 来生成和安装。
 
 * `dev-easy-install`: 针对非专家用户，自动处理所有内容；
 * `dev-easy-install`: 针对专家用户，自动处理所有内容；
-* `install`: target for NNI normal users, which installs NNI by copying files;
-* `dev-install`: target for NNI contributors, which installs NNI as symlinks instead of copying files;
+* `install`: 针对 NNI 普通用户，通过复制文件来安装 NNI;
+* `dev-install`: 针对 NNI 贡献者，通过创建 symlinks 而不是复制文件来安装 NNI;
 * `pip-install`: target in favor of `setup.py`;
 
 The targets will be detailed later.
