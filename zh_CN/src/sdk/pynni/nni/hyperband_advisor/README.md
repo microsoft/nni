@@ -12,7 +12,7 @@
 
 ## 3. 用法
 
-要使用 Hyperband，需要在实验的 yaml 配置文件进行如下改动。
+要使用 Hyperband，需要在实验的 yml 配置文件进行如下改动。
 
     advisor:
       #可选项: Hyperband
