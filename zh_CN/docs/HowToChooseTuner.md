@@ -193,7 +193,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 *用法*：
 
 ```yaml
-  # config.yaml
+  # config.yml
   tuner:
     builtinTunerName: NetworkMorphism
     classArgs:
@@ -234,7 +234,7 @@ Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶
 *用法*：
 
 ```yaml
-  # config.yaml
+  # config.yml
   tuner:
     builtinTunerName: MetisTuner
     classArgs:
