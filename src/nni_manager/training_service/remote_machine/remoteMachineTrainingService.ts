@@ -374,6 +374,21 @@ class RemoteMachineTrainingService implements TrainingService {
         //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
         const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
         let connectedRMNum: number = 0;
+        const remoteScriptsDir: string = this.getRemoteScriptsPath();
+        const gpuCollectorContent: string = String.Format(
+            GPU_COLLECTOR_FORMAT, 
+            remoteScriptsDir, 
+            path.join(remoteScriptsDir, 'pid'), 
+        );
+        //generate gpu_metrics_collector.sh
+        let experimentTmpFolder = `/tmp/nni/scripts/${uniqueString(5)}`;
+        let gpuMetricFilePath = path.join(experimentTmpFolder, 'gpu_metrics_collector.sh');
+        await cpp.exec(`mkdir -p ${experimentTmpFolder}`);
+        console.log('-------------------387-----------')
+        console.log(gpuMetricFilePath)
+        console.log(gpuCollectorContent)
+        await fs.promises.writeFile(gpuMetricFilePath, gpuCollectorContent, { encoding: 'utf8' });
+        console.log('--------------------389--------------')
         rmMetaList.forEach((rmMeta: RemoteMachineMeta) => {
             const conn: Client = new Client();
             let connectConfig: ConnectConfig = {
@@ -397,7 +412,7 @@ class RemoteMachineTrainingService implements TrainingService {
             this.machineSSHClientMap.set(rmMeta, conn);
             conn.on('ready', async () => {
                 this.machineSSHClientMap.set(rmMeta, conn);
-                await this.initRemoteMachineOnConnected(rmMeta, conn);
+                await this.initRemoteMachineOnConnected(gpuMetricFilePath, rmMeta, conn);
                 if (++connectedRMNum === rmMetaList.length) {
                     deferred.resolve();
                 }
@@ -406,11 +421,12 @@ class RemoteMachineTrainingService implements TrainingService {
                 deferred.reject(new Error(err.message));
             }).connect(connectConfig);
         });
-
+        //remove local temp files
+        await cpp.exec(`rm -rf ${experimentTmpFolder}`);
         return deferred.promise;
     }
 
-    private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, conn: Client): Promise<void> {
+    private async initRemoteMachineOnConnected(gpuMetricFilePath: string, rmMeta: RemoteMachineMeta, conn: Client): Promise<void> {
         // Create root working directory after ssh connection is ready
         //TO DO: Should we mk experiments rootDir here?
         const nniRootDir: string = '/tmp/nni';
@@ -420,19 +436,9 @@ class RemoteMachineTrainingService implements TrainingService {
         const remoteScriptsDir: string = this.getRemoteScriptsPath();
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${remoteScriptsDir}`, conn);
         await SSHClientUtility.remoteExeCommand(`chmod 777 ${nniRootDir} ${nniRootDir}/* ${nniRootDir}/scripts/*`, conn);
-        
-        const gpuCollectorContent: string = String.Format(
-            GPU_COLLECTOR_FORMAT, 
-            remoteScriptsDir, 
-            path.join(remoteScriptsDir, 'pid'), 
-        );
         //copy gpu_metrics_collector.sh to remote
-        let experimentTmpFolder = `/tmp/nni/scripts/${uniqueString(5)}`;
-        await cpp.exec(`mkdir -p ${experimentTmpFolder}`);
-        await fs.promises.writeFile(path.join(experimentTmpFolder, 'gpu_metrics_collector.sh'), gpuCollectorContent, { encoding: 'utf8' });
-        await SSHClientUtility.copyFileToRemote(
-            path.join(path.join(experimentTmpFolder, 'gpu_metrics_collector.sh')), path.join(remoteScriptsDir, 'gpu_metrics_collector.sh'), conn);
-        await cpp.exec(`mkdir -p ${experimentTmpFolder}`);
+        await SSHClientUtility.copyFileToRemote(gpuMetricFilePath, path.join(remoteScriptsDir, 'gpu_metrics_collector.sh'), conn);
+        
         //Begin to execute gpu_metrics_collection scripts
         SSHClientUtility.remoteExeCommand(`bash ${path.join(remoteScriptsDir, 'gpu_metrics_collector.sh')}`, conn);
 
@@ -637,7 +643,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private getRemoteScriptsPath(): string {
-        return path.join(path.dirname(path.dirname(this.remoteExpRootDir)), 'scripts');
+        return path.join(getRemoteTmpDir(this.remoteOS), 'nni', 'scripts');
     }
 
     private getHostJobRemoteDir(jobId: string): string {

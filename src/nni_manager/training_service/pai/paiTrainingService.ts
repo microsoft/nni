@@ -355,7 +355,7 @@ class PAITrainingService implements TrainingService {
                     user: this.paiClusterConfig.userName,
                     // Refer PAI document for Pylon mapping https://github.com/Microsoft/pai/tree/master/docs/pylon
                     port: 80,
-                    path: '/webhdfs/webhdfs/v1',
+                    path: '/webhdfs/api/v1',
                     host: this.paiClusterConfig.host
                 });
 

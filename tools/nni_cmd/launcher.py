@@ -106,7 +106,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         'You could use \'nnictl create --help\' to get help information' % port)
         exit(1)
     
-    if (platform == 'pai' or platform == 'kubeflow' or platform == 'frameworkcontroller' or platform == 'remote') and detect_port(int(port) + 1):
+    if (platform in ['pai', 'kubeflow', 'frameworkcontroller', 'remote']) and detect_port(int(port) + 1):
         print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
         'You could set another port to start experiment!\n' \
         'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
@@ -132,7 +132,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     log_header = LOG_HEADER % str(time_now)
     stdout_file.write(log_header)
     stderr_file.write(log_header)
-    process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
+    process = Popen(cmds, cwd=entry_dir)
     return process, str(time_now)
 
 def set_trial_config(experiment_config, port, config_file_name):

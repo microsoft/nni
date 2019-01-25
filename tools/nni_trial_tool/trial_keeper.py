@@ -50,7 +50,7 @@ def main_loop(args):
 
     if args.pai_hdfs_host is not None and args.nni_hdfs_exp_dir is not None:
         try:
-            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
+            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '5070'), user_name=args.pai_user_name, timeout=5)
         except Exception as e:
             nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
             raise e
