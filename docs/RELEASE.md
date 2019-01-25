@@ -95,9 +95,12 @@
 
     Before v0.3, NNI only supports running single experiment once a time. After this realse, users are able to run multiple experiments simultaneously. Each experiment will require a unique port, the 1st experiment will be set to the default port as previous versions. You can specify a unique port for the rest experiments as below:
 
-    ```nnictl create --port 8081 --config <config file path>```
+    ```bash
+    nnictl create --port 8081 --config <config file path>
+    ```
+
 * Support updating max trial number.
-    use ```nnictl update --help``` to learn more. Or refer to [NNICTL Spec](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md) for the fully usage of NNICTL.
+    use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md) for the fully usage of NNICTL.
 
 ## API new features and updates
 
