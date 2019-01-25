@@ -28,7 +28,7 @@ NNI 支持在 [Kubeflow](https://github.com/kubeflow/kubeflow)上运行，称为
 
 ![](./img/kubeflow_training_design.png) Kubeflow 训练服务会实例化一个 kubernetes 客户端来与 Kubernetes 集群的 API 服务器交互。
 
-对于每个尝试，会上传本机 codeDir 路径（在 nni_config.yaml 中配置）中的所有文件，包括 parameter.cfg 这样的生成的文件到存储卷中。 当前支持两种存储卷：[nfs](https://en.wikipedia.org/wiki/Network_File_System) 和 [Azure 文件存储](https://azure.microsoft.com/en-us/services/storage/files/)，需要在 NNI 的 yaml 文件中进行配置。 当文件准备好后，Kubeflow 训练服务会调用 Kubernetes 的 API 来创建 Kubeflow 作业 ([tf-operator](https://github.com/kubeflow/tf-operator) 作业或 [pytorch-operator](https://github.com/kubeflow/pytorch-operator) 作业) ，并将存储卷挂载到作业的 pod 中。 Kubeflow 作业的输出文件，例如 stdout, stderr, trial.log 以及模型文件，也会被复制回存储卷。 NNI 会在网页中显示每个尝试的存储卷的 URL，以便浏览日志和输出文件。
+对于每个尝试，会上传本机 codeDir 路径（在 nni_config.yml 中配置）中的所有文件，包括 parameter.cfg 这样的生成的文件到存储卷中。 当前支持两种存储卷：[nfs](https://en.wikipedia.org/wiki/Network_File_System) 和 [Azure 文件存储](https://azure.microsoft.com/en-us/services/storage/files/)，需要在 NNI 的 yml 文件中进行配置。 当文件准备好后，Kubeflow 训练服务会调用 Kubernetes 的 API 来创建 Kubeflow 作业 ([tf-operator](https://github.com/kubeflow/tf-operator) 作业或 [pytorch-operator](https://github.com/kubeflow/pytorch-operator) 作业) ，并将存储卷挂载到作业的 pod 中。 Kubeflow 作业的输出文件，例如 stdout, stderr, trial.log 以及模型文件，也会被复制回存储卷。 NNI 会在网页中显示每个尝试的存储卷的 URL，以便浏览日志和输出文件。
 
 ## 支持的操作符（operator）
 
@@ -60,7 +60,7 @@ NFS 存储配置如下：
         path: {your_nfs_server_export_path}
     
 
-如果使用了 Azure 存储，需要在 yaml 文件中如下设置 `kubeflowConfig`：
+如果使用了 Azure 存储，需要在 yml 文件中如下设置 `kubeflowConfig`：
 
     kubeflowConfig:
       storage: azureStorage
@@ -74,7 +74,7 @@ NFS 存储配置如下：
 
 ## 运行实验
 
-以 `examples/trials/mnist` 为例。 这是一个 TensorFlow 作业，使用了 Kubeflow 的 tf-operator。 NNI 的 yaml 配置文件如下：
+以 `examples/trials/mnist` 为例。 这是一个 TensorFlow 作业，使用了 Kubeflow 的 tf-operator。 NNI 的 yml 配置文件如下：
 
     authorName: default
     experimentName: example_mnist
@@ -124,7 +124,7 @@ NFS 存储配置如下：
         path: {your_nfs_server_export_path}
     
 
-注意：如果用 kubeflow 模式运行，需要在 yaml 文件中显式设置 `trainingServicePlatform: kubeflow`。
+注意：如果用 kubeflow 模式运行，需要在 yml 文件中显式设置 `trainingServicePlatform: kubeflow`。
 
 如果要运行 Pytorch 作业，需要如下配置：
 
@@ -191,9 +191,9 @@ Kubeflow 模式的配置有下列主键：
 * ps (可选)。 此部分用于配置 TensorFlow 的 parameter 服务器角色。
 * master (可选)。 此部分用于配置 PyTorch 的 parameter 服务器角色。
 
-完成并保存 NNI 实验配置文件后（例如可保存为：exp_kubeflow.yaml），运行以下命令：
+完成并保存 NNI 实验配置文件后（例如可保存为：exp_kubeflow.yml），运行以下命令：
 
-    nnictl create --config exp_kubeflow.yaml
+    nnictl create --config exp_kubeflow.yml
     
 
 来在 Kubeflow 模式下启动实验。 NNI 会为每个尝试创建 Kubeflow tfjob 或 pytorchjob，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 Kubernetes 面板中看到创建的 Kubeflow tfjob。
