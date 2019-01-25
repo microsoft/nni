@@ -73,7 +73,7 @@ Frameworkcontroller 配置文件的格式如下：
         path: {your_nfs_server_exported_path}
     
 
-如果使用了 Azure Kubernetes Service，需要在 yaml 文件中如下设置 `frameworkcontrollerConfig`：
+如果使用了 Azure Kubernetes Service，需要在 yml 文件中如下设置 `frameworkcontrollerConfig`：
 
     frameworkcontrollerConfig:
       storage: azureStorage
@@ -85,7 +85,7 @@ Frameworkcontroller 配置文件的格式如下：
         azureShare: {your_azure_share_name}
     
 
-注意：如果用 frameworkcontroller 模式运行，需要在 yaml 文件中显式设置 `trainingServicePlatform: frameworkcontroller`。
+注意：如果用 FrameworkController 模式运行，需要在 yml文件中显式设置 `trainingServicePlatform: frameworkcontroller`。
 
 frameworkcontroller 模式的尝试配置格式，是 frameworkcontroller's 官方配置的简化版。参考 [frameworkcontroller 的 tensorflow 样例](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) 了解详情。  
 frameworkcontroller 模式中的尝试配置使用以下主键：
