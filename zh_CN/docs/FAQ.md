@@ -10,14 +10,14 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 在 OpenPAI 的训练模式下，nniManager 会在端口 51189 启动一个 RESTful 服务，来接收 OpenPAI 集群中尝试任务的指标数据。 如果在 OpenPAI 模式下的网页中不能看到任何指标，需要检查 51189 端口是否在防火墙规则中已打开。
 
-### Segmentation Fault (core dumped) when installing
+### 安装时出现 Segmentation Fault (core dumped)
 
 > make: *** [install-XXX] Segmentation fault (core dumped)
 
-Please try the following solutions in turn:
+可依次试试以下方法：
 
 * 更新或重新安装 Python 中的 pip： `python3 -m pip install -U pip`
-* Install nni with `--no-cache-dir` flag like `python3 -m pip install nni --no-cache-dir`
+* 在安装 NNI 时，添加 `--no-cache-dir` 参数：`python3 -m pip install nni --no-cache-dir`
 
 ### 作业管理错误：getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.
 
