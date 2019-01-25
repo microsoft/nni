@@ -88,7 +88,7 @@
 
 ### 更新配置
 
-修改 `nni/examples/trials/ga_squad/config_pai.yaml`，以下是默认配置：
+修改 `nni/examples/trials/ga_squad/config_pai.yml`，以下是默认配置：
 
     authorName: default
     experimentName: example_ga_squad
