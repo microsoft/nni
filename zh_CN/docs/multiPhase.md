@@ -1,8 +1,8 @@
 ## 创建多阶段的实验
 
-Typically each trial job gets single set of configuration (e.g. hyper parameters) from tuner and do some kind of experiment, let's say train a model with that hyper parameter and reports its result to tuner. Sometimes you may want to train multiple models within one trial job to share information between models or saving system resource by creating less trial jobs, for example:
+通常情况下，每个尝试作业只从调参器获得一组配置（如超参），然后运行实验。也就是说，通过这组超参来训练模型，并返回结果给调参器。 有时候，可能需要在一个尝试作业中训练多个模型，并在它们之间共享信息，或者通过创建更少的尝试任务来节省资源。例如：
 
-1. Train multiple models sequentially in one trial job, so that later models can leverage the weights or other information of prior models and may use different hyper parameters.
+1. 在一个尝试作业中依次训练多个模型。这样，后面的模型可以利用先前模型的权重和其它信息，并可以使用不同的超参组合。
 2. Train large amount of models on limited system resource, combine multiple models together to save system resource to create large amount of trial jobs.
 3. Any other scenario that you would like to train multiple models with different hyper parameters in one trial job, be aware that if you allocate multiple GPUs to a trial job and you train multiple models concurrently within on trial job, you need to allocate GPU resource properly by your trial code.
 
