@@ -42,7 +42,7 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 
 ## 2. 用法
 
-要使用 Curve Fitting 评估器，需要在实验的 yaml 配置文件进行如下改动。
+要使用 Curve Fitting 评估器，需要在实验的 yml 配置文件进行如下改动。
 
     assessor:
         builtinAssessorName: Curvefitting
