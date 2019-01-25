@@ -8,27 +8,27 @@ NNI 使用 GNU 来生成和安装。
 * `dev-easy-install`: 针对专家用户，自动处理所有内容；
 * `install`: 针对 NNI 普通用户，通过复制文件来安装 NNI;
 * `dev-install`: 针对 NNI 贡献者，通过创建 symlinks 而不是复制文件来安装 NNI;
-* `pip-install`: target in favor of `setup.py`;
+* `pip-install`: 针对使用 `setup.py` 安装的情况;
 
-The targets will be detailed later.
+下文会有更详细的介绍。
 
-## Dependencies
+## 依赖项
 
-NNI requires at least Node.js, Yarn, and pip to build, while TypeScript is also recommended.
+NNI 依赖于 Node.js, Yarn, 和 pip 来生成，推荐安装 TypeScript。
 
-NNI requires Node.js, and all dependency libraries to run. Required Node.js libraries (including TypeScript) can be installed by Yarn, and required Python libraries can be installed by setuptools or PIP.
+NNI 需要 Node.js 以及运行所需要的所有库。 需要的 Node.js 库 (包括 TypeScript) 可以通过 Yarn 来安装， 需要的 Python 库可以通过 setuptools 或者 PIP 来安装。
 
-For NNI *users*, `make install-dependencies` can be used to install Node.js and Yarn. This will install Node.js to NNI's installation directory, and install Yarn to `/tmp/nni-yarn`. This target requires wget to work.
+NNI *用户*可以用 `make install-dependencies` 来安装 Node.js 和 Yarn。 Node.js 会被安装到 NNI 的安装目录，Yarn 会被安装到 `/tmp/nni-yarn`。 安装过程需要 wget。
 
-For NNI *developers*, it is recommended to install Node.js and Yarn manually. See their official sites for installation guide.
+NNI *开发人员*推荐手工安装 Node.js 和 Yarn。 可浏览相应的官方文档了解安装过程。
 
-## Building NNI
+## 生成 NNI
 
-Simply run `make` when dependencies are ready.
+当依赖项安装好后，运行 `make` 即可。
 
-## Installation
+## 安装
 
-### Directory Hierarchy
+### 目录结构
 
 The main parts of NNI project consist of two Node.js modules (`nni_manager`, `webui`) and two Python packages (`nni`, `nnictl`).
 
