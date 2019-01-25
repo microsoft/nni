@@ -195,17 +195,17 @@
   
   * 说明
     
-    **logDir** configures the directory to store logs and data of the experiment. The default value is `<user home directory>/nni/experiment`
+    **logDir** 配置存储日志和数据的目录。 默认值是 `<user home directory>/nni/experiment`
 
 * **logLevel**
   
   * 说明
     
-    **logLevel** sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
+    **logLevel** 为实验设置日志级别，支持的日志级别有：`trace, debug, info, warning, error, fatal`。 默认值是 `info`。
 
 * **tuner**
   
-  * Description
+  * 说明
     
     **tuner** 指定了实验的调参器算法。有两种方法可设置调参器。 一种方法是使用 NNI SDK 提供的调参器，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的调参器，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
@@ -219,78 +219,78 @@
       
       **classArgs** 指定了调参器算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
   
-  * **codeDir**, **classFileName**, **className** and **classArgs**
+  * **codeDir**, **classFileName**, **className** 和**classArgs**
     
     * **codeDir**
       
-            __codeDir__ specifies the directory of tuner code.
+            __codeDir__ 指定了调参器代码目录。
           
     
     * **classFileName**
       
-            __classFileName__ specifies the name of tuner file.
+            __classFileName__ 指定了调参器文件名。
           
     
     * **className**
       
-            __className__ specifies the name of tuner class.
+            __className__ 指定了调参器类名。
           
     
     * **classArgs**
       
-            __classArgs__ specifies the arguments of tuner algorithm.
+            __classArgs__ 指定了调参器算法的参数。
           
   
   * **gpuNum**
     
-        __gpuNum__ specifies the gpu number to run the tuner process. 此字段的值必须是正整数。
+        __gpuNum__ 指定了运行调参器进程的 GPU 数量。 此字段的值必须是正整数。
         
         注意: 只能使用一种方法来指定调参器，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。 
         
 
 * **assessor**
   
-  * Description
+  * 说明
     
-    **assessor** 指定了实验的评估器算法。有两种方法可设置评估器。 一种方法是使用 NNI SDK 提供的评估器，需要设置 **builtinAssessorName** 和 **classArgs**。 Another way is to use users' own assessor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **assessor** 指定了实验的评估器算法。有两种方法可设置评估器。 一种方法是使用 NNI SDK 提供的评估器，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的评估器，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
   * **builtinAssessorName** 和 **classArgs**
     
     * **builtinAssessorName**
       
-          __builtinAssessorName__ specifies the name of system assessor, nni sdk provides one kind of assessor {__Medianstop__}
+          __builtinAssessorName__ 指定了系统评估器的名称， NNI 内置评估器 {__Medianstop__}
           
     
     * **classArgs**
       
-          __classArgs__ specifies the arguments of assessor algorithm
+          __classArgs__ 指定了评估器算法的参数。
           
   
-  * **codeDir**, **classFileName**, **className** and **classArgs**
+  * **codeDir**, **classFileName**, **className** 和**classArgs**
     
     * **codeDir**
       
-           __codeDir__ specifies the directory of assessor code.
+           __codeDir__ 指定了评估器代码目录。
           
     
     * **classFileName**
       
-           __classFileName__ specifies the name of assessor file.
+           __classFileName__ 指定了调参器文件名。
           
     
     * **className**
       
-           __className__ specifies the name of assessor class.
+           __className__ 指定了评估器类名。
           
     
     * **classArgs**
       
-           __classArgs__ specifies the arguments of assessor algorithm.
+           __classArgs__ 指定了评估器算法的参数。
           
   
   * **gpuNum**
     
-        __gpuNum__ specifies the gpu number to run the assessor process. 此字段的值必须是正整数。
+        __gpuNum__ 指定了运行评估器进程的 GPU 数量。 此字段的值必须是正整数。
         
         注意: 只能使用一种方法来指定评估器，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用评估器，可将其置为空。 
         
@@ -304,12 +304,12 @@
   
   * **codeDir**
     
-        __codeDir__ specifies the directory of your own trial file.
+        __codeDir__ 指定了尝试代码文件的目录。
         
   
   * **gpuNum**
     
-        __gpuNum__ specifies the num of gpu to run the trial process. 默认值为 0。 
+        __gpuNum__ 指定了运行尝试进程的 GPU 数量。 默认值为 0。 
         
 
 * **trial (pai)**
@@ -321,7 +321,7 @@
   
   * **codeDir**
     
-        __codeDir__ specifies the directory of the own trial file.
+        __codeDir__ 指定了尝试代码文件的目录。
         
   
   * **gpuNum**
@@ -380,7 +380,7 @@
     
     * **image**
       
-      **image** set the image to be used in **ps**.
+      **iamge** 设置了 **ps** 使用的 docker 映像。
   
   * **worker**
     
@@ -408,7 +408,7 @@
     
     * **image**
       
-      **image** set the image to be used in **worker**.
+      **iamge** 设置了 **worker** 使用的 docker 映像。
 
 * **machineList**
   
