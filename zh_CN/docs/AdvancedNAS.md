@@ -2,13 +2,13 @@
 
 目前，许多 NAS（Neural Architecture Search，神经网络架构搜索）算法都在尝试上使用了 **权重共享（weight sharing）** 的方法来加速训练过程。 例如，[ENAS](https://arxiv.org/abs/1802.03268) 与以前的 [NASNet](https://arxiv.org/abs/1707.07012) 算法相比，通过'*子模型间的参数共享（parameter sharing between child models）*'提高了 1000 倍的效率。 而例如 [DARTS](https://arxiv.org/abs/1806.09055), [Network Morphism](https://arxiv.org/abs/1806.10282), 和 [Evolution](https://arxiv.org/abs/1703.01041) 等算法也利用或者隐式的利用了权重共享。
 
-这是关于如何在 NNI 中启用权重共享的教程。
+本教程介绍了如何使用权重共享。
 
-## 不同尝试之间的权重共享
+## 权重共享
 
-目前，推荐通过 NFS （Network File System）来进行权重共享，它是轻量、相对高效的多机共享文件方案。 欢迎社区来共享更多高效的技术。
+推荐通过 NFS （Network File System）进行权重共享，它是轻量、相对高效的多机共享文件方案。 欢迎社区来共享更多高效的技术。
 
-### 通过 NFS 文件的权重共享
+### 通过 NFS 文件使用权重共享
 
 使用 NFS 配置（见下文），尝试代码可以通过读写文件来共享模型权重。 建议使用调参器的存储路径：
 
@@ -81,7 +81,7 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
 ## 尝试依赖控制的异步调度模式
 
-多机时启用权重的尝试，大部分情况是通过保证**先写后读**的方式来保持一致性。 子节点在父节点的尝试完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的调参器线程时，调参器线程可以决定是否阻塞当前线程。 例如：
+多机间启用权重的尝试，一般是通过**先写后读**的方式来保持一致性。 子节点在父节点的尝试完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的调参器线程时，调参器线程可以决定是否阻塞当前线程。 例如：
 
 ```python
     def generate_parameters(self, parameter_id):
@@ -101,4 +101,4 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
 ## 样例
 
-详细用法，请参考 [简单权重共享样例](../test/async_sharing_test)。 还有根据 [ga_squad](../examples/trials/ga_squad) 改动的阅读理解的[实际样例](../examples/trials/weight_sharing/ga_squad)。
+详细用法，请参考[简单权重共享样例](../test/async_sharing_test)。 还有根据 [ga_squad](../examples/trials/ga_squad) 改动的阅读理解的[样例](../examples/trials/weight_sharing/ga_squad)。
