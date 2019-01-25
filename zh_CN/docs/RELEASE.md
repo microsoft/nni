@@ -162,7 +162,7 @@
        * 提供命令行工具 'nnictl' 来管理实验
        * 提供网页界面来查看并管理实验
     * 持续集成
-       * 使用 Ubuntu 的 <a href="https://github.com/travis-ci">travis-ci</a> 来支持持续集成
+       * 使用 Ubuntu 的 [travis-ci](https://github.com/travis-ci) 来支持持续集成
     * 其它
        * 支持简单的 GPU 任务调度 
     
