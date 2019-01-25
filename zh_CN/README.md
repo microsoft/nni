@@ -1,46 +1,48 @@
 <p align="center">
-<img src="./docs/img/nni_logo.png" alt="logo" width="300"/>
+<img src="https://microsoft.github.io/nni/docs/img/nni_logo.png" width="300"/>
 </p>
 
 * * *
 
-[![MIT 许可证](https://img.shields.io/badge/license-MIT-yellow.svg)](https://github.com/Microsoft/nni/blob/master/LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![缺陷](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/Microsoft/nni/blob/master/LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![缺陷](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
 ### **NNI [v0.5](https://github.com/Microsoft/nni/releases) 已发布！**
 
 <p align="center">
-  <a href=#><img src="https://rawgit.com/QuanluZhang/nni/update-doc11/overview.svg" /></a>
+  <a href="#nni-v05-has-been-released"><img src="https://microsoft.github.io/nni/docs/img/overview.svg" /></a>
 </p>
 
 <table>
   <tbody>
-    <tr align="center">
+    <tr align="center" valign="bottom">
       <td>
-        <b>用户代码和 SDK (import nni)</b>
+        <b>Supported Frameworks</b>
         <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
       </td>
       <td>
-        <b>调参算法扩展</b>
+        <b>Tuning Algorithms</b>
         <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
       </td>
       <td>
-        <b>训练服务扩展</b>
+        <b>Training Services</b>
         <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
       </td>
     </tr>
     <tr/>
     <tr valign="top">
       <td>
-      <ul>
-        <li>CNTK</li>
-        <li>TensorFlow</li>
-        <li>PyTorch</li>
-        <li>Keras</li>
-        <li>...</li>
+        <ul>
+          <li>PyTorch</li>
+          <li>TensorFlow</li>
+          <li>Keras</li>
+          <li>MXNet</li>
+          <li>Caffe2</li>
+          <li>CNTK (Python language)</li>
+          <li>Chainer</li>
+          <li>Theano</li>
         </ul>
-        （所有基于 Python 的框架）
       </td>
       <td>
         <a href="docs/HowToChooseTuner.md">Tuner（调参器）</a>
@@ -101,9 +103,10 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
     python3 -m pip install --upgrade nni
 ```
 
-* 注意： 
-  * 如果在 docker 容器中以 root 运行，需要从上述安装命令中删除 `--user`。
-  * 如果遇到如`Segmentation fault` 这样的任何错误请参考 [常见问题](docs/FAQ.md)。
+注意：
+
+* `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
+* 如果遇到如`Segmentation fault` 这样的任何错误请参考 [常见问题](docs/FAQ.md)。
 
 **通过源代码安装**
 
@@ -113,7 +116,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 ```bash
     git clone -b v0.5 https://github.com/Microsoft/nni.git
     cd nni  
-    source install.sh 
+    source install.sh   
 ```
 
 参考[安装 NNI](docs/Installation.md) 了解系统需求。
