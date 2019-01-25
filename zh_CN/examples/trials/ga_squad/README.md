@@ -34,14 +34,14 @@
 
 ### 手动下载
 
-1. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
+1. 在 https://rajpurkar.github.io/SQuAD-explorer/ 下载 "dev-v1.1.json" 和 "train-v1.1.json"。
     
     ```bash
     wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
     wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
     ```
 
-2. download "glove.840B.300d.txt" in https://nlp.stanford.edu/projects/glove/
+2. 在 https://nlp.stanford.edu/projects/glove/ 下载 "glove.840B.300d.txt"。
     
     ```bash
     wget http://nlp.stanford.edu/data/glove.840B.300d.zip
@@ -57,9 +57,9 @@
     trialConcurrency: 1
     maxExecDuration: 1h
     maxTrialNum: 1
-    #choice: local, remote
+    #可选项: local, remote
     trainingServicePlatform: local
-    #choice: true, false
+    #可选项: true, false
     useAnnotation: false
     tuner:
       codeDir: ~/nni/examples/tuners/ga_customer_tuner
