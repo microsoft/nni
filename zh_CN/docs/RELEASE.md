@@ -93,14 +93,13 @@
 
 * 支持同时运行多个实验。
   
-      在 v0.3 以前，NNI 仅支持一次运行一个实验。 此版本开始，用户可以同时运行多个实验。 每个实验都需要一个唯一的端口，第一个实验会像以前版本一样使用默认端口。 You can specify a unique port for the rest experiments as below:
-      
-      ```bash
-      nnictl create --port 8081 --config <config file path>
-      ```
-      
+  在 v0.3 以前，NNI 仅支持一次运行一个实验。 此版本开始，用户可以同时运行多个实验。 每个实验都需要一个唯一的端口，第一个实验会像以前版本一样使用默认端口。 需要为其它实验指定唯一端口：
+  
+  ```bash
+  nnictl create --port 8081 --config <config file path>
+  ```
 
-* 支持更新最大尝试的数量。 use `nnictl update --help` to learn more. 或参考 [NNICTL 说明](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md)来查看完整帮助。
+* 支持更新最大尝试的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL 说明](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md)来查看完整帮助。
 
 ## API 的新功能和更新
 
