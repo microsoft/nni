@@ -71,7 +71,7 @@ frameworkcontrollerConfig:
     server: {your_nfs_server}
     path: {your_nfs_server_exported_path}
 ```
-If you use Azure Kubernetes Service, you should  set `frameworkcontrollerConfig` in your config yaml file as follows:
+If you use Azure Kubernetes Service, you should  set `frameworkcontrollerConfig` in your config yml file as follows:
 ```
 frameworkcontrollerConfig:
   storage: azureStorage
@@ -82,7 +82,7 @@ frameworkcontrollerConfig:
     accountName: {your_storage_account_name}
     azureShare: {your_azure_share_name}
 ```
-Note: You should explicitly set `trainingServicePlatform: frameworkcontroller` in nni config yaml file if you want to start experiment in frameworkcontrollerConfig mode. 
+Note: You should explicitly set `trainingServicePlatform: frameworkcontroller` in nni config yml file if you want to start experiment in frameworkcontrollerConfig mode. 
 
 The trial's config format for nni frameworkcontroller mode is a simple version of frameworkcontroller's offical config, you could refer the [tensorflow example of frameworkcontroller](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) for deep understanding.  
 Trial configuration in frameworkcontroller mode have the following configuration keys:

@@ -30,7 +30,7 @@ Install NNI on another machine which has network accessibility to those three ma
 
 We use `examples/trials/mnist-annotation` as an example here. `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` to see the detailed configuration file:
 
-```yaml
+```yml
 authorName: default
 experimentName: example_mnist
 trialConcurrency: 1

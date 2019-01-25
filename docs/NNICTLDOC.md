@@ -41,7 +41,7 @@ nnictl --version
     Options:  
     | Name, shorthand | Required|Default | Description |
     | ------ | ------ | ------ |------ |
-    | --config, -c|  True| |yaml configure file of the experiment|
+    | --config, -c|  True| |yml configure file of the experiment|
     | --port, -p  |  False| |the port of restful server|
     | --debug, -d |  False| |Set log level to debug|
 

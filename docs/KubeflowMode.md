@@ -26,7 +26,7 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
 ![](./img/kubeflow_training_design.png)
 Kubeflow training service instantiates a kubernetes rest client to interact with your K8s cluster's API server. 
 
-For each trial, we will upload all the files in your local codeDir path (configured in nni_config.yaml) together with NNI generated files like parameter.cfg into a storage volumn. Right now we support two kinds of storage volumns: [nfs](https://en.wikipedia.org/wiki/Network_File_System) and [azure file storage](https://azure.microsoft.com/en-us/services/storage/files/), you should configure the storage volumn in nni config yaml file. After files are prepared, Kubeflow training service will call K8S rest API to create kubeflow jobs ([tf-operator](https://github.com/kubeflow/tf-operator) job or [pytorch-operator](https://github.com/kubeflow/pytorch-operator) job) in K8S, and mount your storage volumn into the job's pod. Output files of kubeflow job, like stdout, stderr, trial.log or model files, will also be copied back to the storage volumn. NNI will show the storage volumn's URL for each trial in WebUI, to allow user browse the log files and job's output files. 
+For each trial, we will upload all the files in your local codeDir path (configured in nni_config.yml) together with NNI generated files like parameter.cfg into a storage volumn. Right now we support two kinds of storage volumns: [nfs](https://en.wikipedia.org/wiki/Network_File_System) and [azure file storage](https://azure.microsoft.com/en-us/services/storage/files/), you should configure the storage volumn in nni config yml file. After files are prepared, Kubeflow training service will call K8S rest API to create kubeflow jobs ([tf-operator](https://github.com/kubeflow/tf-operator) job or [pytorch-operator](https://github.com/kubeflow/pytorch-operator) job) in K8S, and mount your storage volumn into the job's pod. Output files of kubeflow job, like stdout, stderr, trial.log or model files, will also be copied back to the storage volumn. NNI will show the storage volumn's URL for each trial in WebUI, to allow user browse the log files and job's output files. 
 
 ## Supported operator
 NNI only support tf-operator and pytorch-operator of kubeflow, other operators is not tested.
@@ -55,7 +55,7 @@ kubeflowConfig:
     # Your NFS server export path, like /var/nfs/nni
     path: {your_nfs_server_export_path}
 ```
-If you use Azure storage, you should  set `kubeflowConfig` in your config yaml file as follows:
+If you use Azure storage, you should  set `kubeflowConfig` in your config yml file as follows:
 ```
 kubeflowConfig:
   storage: azureStorage
@@ -69,7 +69,7 @@ kubeflowConfig:
 
 
 ## Run an experiment
-Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of kubeflow. The nni config yaml file's content is like: 
+Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of kubeflow. The nni config yml file's content is like: 
 ```
 authorName: default
 experimentName: example_mnist
@@ -119,7 +119,7 @@ kubeflowConfig:
     path: {your_nfs_server_export_path}
 ```
 
-Note: You should explicitly set `trainingServicePlatform: kubeflow` in nni config yaml file if you want to start experiment in kubeflow mode. 
+Note: You should explicitly set `trainingServicePlatform: kubeflow` in nni config yml file if you want to start experiment in kubeflow mode. 
 
 If you want to run Pytorch jobs, you could set your config files as follow:
 ```
@@ -185,9 +185,9 @@ Trial configuration in kubeflow mode have the following configuration keys:
 * ps (optional). This config section is used to configure tensorflow parameter server role.
 * master(optional). This config section is used to configure pytorch parameter server role.
 
-Once complete to fill nni experiment config file and save (for example, save as exp_kubeflow.yaml), then run the following command
+Once complete to fill nni experiment config file and save (for example, save as exp_kubeflow.yml), then run the following command
 ```
-nnictl create --config exp_kubeflow.yaml
+nnictl create --config exp_kubeflow.yml
 ```
 to start the experiment in kubeflow mode. NNI will create Kubeflow tfjob or pytorchjob for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 
 You can see the kubeflow tfjob created by NNI in your Kubernetes dashboard. 
