@@ -18,15 +18,15 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
   <tbody>
     <tr align="center" valign="bottom">
       <td>
-        <b>Supported Frameworks</b>
+        <b>支持的框架</b>
         <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
       </td>
       <td>
-        <b>Tuning Algorithms</b>
+        <b>调优算法</b>
         <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
       </td>
       <td>
-        <b>Training Services</b>
+        <b>训练服务</b>
         <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
       </td>
     </tr>
@@ -39,7 +39,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
           <li>Keras</li>
           <li>MXNet</li>
           <li>Caffe2</li>
-          <li>CNTK (Python language)</li>
+          <li>CNTK (Python 语言)</li>
           <li>Chainer</li>
           <li>Theano</li>
         </ul>
@@ -105,7 +105,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 
 注意：
 
-* `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
+* 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考 [常见问题](docs/FAQ.md)。
 
 **通过源代码安装**
