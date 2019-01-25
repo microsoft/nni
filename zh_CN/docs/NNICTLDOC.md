@@ -6,7 +6,7 @@
 
 ## 命令
 
-nnictl support commands:
+nnictl 支持的命令：
 
 ```bash
 nnictl create
@@ -40,11 +40,11 @@ nnictl --version
     选项：  
     
     
-    | 参数及缩写        | 是否必需  | 默认值 | 说明                     |
-    | ------------ | ----- | --- | ---------------------- |
-    | --config, -c | True  |     | 实验的 yaml 配置文件          |
-    | --port, -p   | False |     | RESTful 服务的端口          |
-    | --debug, -d  | False |     | Set log level to debug |
+    | 参数及缩写        | 是否必需  | 默认值 | 说明            |
+    | ------------ | ----- | --- | ------------- |
+    | --config, -c | True  |     | 实验的 yaml 配置文件 |
+    | --port, -p   | False |     | RESTful 服务的端口 |
+    | --debug, -d  | False |     | 设置日志级别为 Debug |
 
 * **nnictl resume**
   
@@ -64,7 +64,7 @@ nnictl --version
     | ----------- | ----- | --- | ---------------------- |
     | id          | False |     | 要恢复的实验标识               |
     | --port, -p  | False |     | 要恢复的实验使用的 RESTful 服务端口 |
-    | --debug, -d | False |     | Set log level to debug |
+    | --debug, -d | False |     | 设置日志级别为 Debug          |
 
 * **nnictl stop**
   
