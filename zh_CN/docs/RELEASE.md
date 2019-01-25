@@ -11,14 +11,14 @@
 
 ### 改进训练服务
 
-* [FrameworkController Training service](./FrameworkControllerMode.md): Support run experiments using frameworkcontroller on kubernetes 
+* [FrameworkController 训练服务](./FrameworkControllerMode.md): 支持使用在 Kubernetes 上使用 FrameworkController。 
    * FrameworkController 是 Kubernetes 上非常通用的控制器（Controller），能用来运行基于各种机器学习框架的分布式作业，如 TensorFlow，Pytorch， MXNet 等。
    * NNI 为作业定义了统一而简单的规范。
    * 如何使用 FrameworkController 的 MNIST 样例。
 
 ### 改进用户体验
 
-* A better trial logging support for NNI experiments in PAI, Kubeflow and FrameworkController mode: * An improved logging architecture to send stdout/stderr of trials to NNI manager via Http post. NNI manager will store trial's stdout/stderr messages in local log file. * Show the link for trial log file on WebUI. 
+* 在 OpenPAI，Kubeflow 和 FrameworkController 模式中提供了更好的日志支持： * 通过改进的日志架构来将尝试的 stdout/stderr 通过 发送给 NNI 管理器。 NNI 管理器将尝试的 stdout/stderr 消息存储在本地日志文件中。 * 在 WEB 界面上显示尝试日志的链接。 
 * 支持将最终结果显示为键值对。
 
 # 发布 0.4.1 - 12/14/2018
@@ -94,7 +94,7 @@
    
        nnictl create --port 8081 --config <config file path>
 
-* Support updating max trial number. use ```nnictl update --help``` to learn more. Or refer to [NNICTL Spec](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md) for the fully usage of NNICTL.
+* 支持更新最大尝试的数量。 使用 ```nnictl update --help``` 了解更多信息。 或参考 [NNICTL 说明](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md)来查看完整帮助。
 
 ## API 的新功能和更新
 
@@ -104,7 +104,7 @@
    
        git clone -b v0.3 https://github.com/Microsoft/nni.git
 
-* **nni.report_final_result(result)** API supports more data types for result parameter. It can be of following types: 
+* **nni.report_final_result(result)** API 支持了更多结果参数的类型。 可用类型： 
    * int
    * float
    * 包含有 'default' 键值的 dict，'default' 的值必须为 int 或 float。 dict 可以包含任何其它键值对。
@@ -115,8 +115,8 @@
 
 ## 新样例
 
-* A NNI Docker image for public usage: ```docker pull msranni/nni:latest```
-* New trial example: [NNI Sklearn Example](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
+* 公开的 NNI Docker 映像： ```docker pull msranni/nni:latest```
+* 新的尝试样例： [NNI Sklearn 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
 * 新的竞赛样例：[Kaggle Competition TGS Salt](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
 ## 其它
@@ -129,8 +129,8 @@
 
 ## 主要功能
 
-    * Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
-       * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
+    * 支持 [OpenPAI](https://github.com/Microsoft/pai) (aka pai) 作为训练服务（参考 [!这里](./PAIMode.md)，了解如何在 pai 模式下提交 NNI 作业）。
+       * 训练服务支持 pai 模式。 NNI trials will be scheduled to run on OpenPAI cluster
        * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
     * Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](HowToChooseTuner.md) for instructions about how to use SMAC tuner)
        * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO to handle categorical parameters. The SMAC supported by NNI is a wrapper on [SMAC3](https://github.com/automl/SMAC3)
