@@ -382,11 +382,12 @@ class RemoteMachineTrainingService implements TrainingService {
             path.join(remoteScriptsDir, 'pid'), 
         );
         //generate gpu_metrics_collector.sh
-        let experimentTmpFolder = `/tmp/nni/scripts/${uniqueString(5)}/abc`;
+        let experimentTmpFolder = `/tmp/nni/scripts/${uniqueString(5)}`;
         let gpuMetricFilePath = path.join(experimentTmpFolder, 'gpu_metrics_collector.sh');
         console.log('--------------386---------')
         // mkDirP(experimentTmpFolder);
         console.log(experimentTmpFolder)
+        await cpp.exec(`mkdir -p /tmp/nni/scripts`);
         await cpp.exec(`mkdir -p ${experimentTmpFolder}`);
         console.log('-------------------387-----------')
         console.log(gpuMetricFilePath)
