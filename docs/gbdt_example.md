@@ -10,25 +10,34 @@ NNI is a great platform for tuning hyper-parameters, you could try various built
 There are many hyper-parameters in GBDT, but what kind of parameters will effect the performance or speed? Based on some pratical experience, some suggestion here(Take lightgbm as example):
 
 > * For better accuracy
-    * `learning_rate`. The range of `learning rate` could be [0.001, 0.9].
-    * `num_leaves`. `num_leaves` is realted to `max_depth`, you don't have to tune both of them.
-    * `bagging_freq`. `bagging_freq` could be [1, 2, 4, 8, 10]
-    * `num_iterations`. May larger if underfitting.
+* `learning_rate`. The range of `learning rate` could be [0.001, 0.9].
+
+* `num_leaves`. `num_leaves` is realted to `max_depth`, you don't have to tune both of them.
+    
+* `bagging_freq`. `bagging_freq` could be [1, 2, 4, 8, 10]
+
+* `num_iterations`. May larger if underfitting.
 
 > * For speed up
-    * `bagging_fraction`. The range of `bagging_fraction` could be [0.7, 1.0].
-    * `feature_fraction`. The range of `feature_fraction` could be [0.6, 1.0].
-    * `max_bin`.
+* `bagging_fraction`. The range of `bagging_fraction` could be [0.7, 1.0].
+
+* `feature_fraction`. The range of `feature_fraction` could be [0.6, 1.0].
+    
+* `max_bin`.
 
 > * For avoid overfitting
-    * `min_data_in_leaf`. This depend on your dataset.
-    * `min_sum_hessian_in_leaf`. This depend on your dataset.
-    * `lambda_l1` and `lambda_l2`.
-    * `min_gain_to_split`.
-    * `num_leaves`.
+* `min_data_in_leaf`. This depend on your dataset.
+
+* `min_sum_hessian_in_leaf`. This depend on your dataset.
+
+* `lambda_l1` and `lambda_l2`.
+
+* `min_gain_to_split`.
+
+* `num_leaves`.
 
 Reference link:
-[lightgbm](https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html)
+[lightgbm](https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html) and 
 [autoxgoboost](https://github.com/ja-thomas/autoxgboost/blob/master/poster_2018.pdf)
 
 ## 2. Task description
