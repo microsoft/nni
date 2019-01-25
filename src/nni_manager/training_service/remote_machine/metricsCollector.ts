@@ -64,7 +64,7 @@ export class MetricsCollector {
                         if (trialJobDetail.status !== 'EARLY_STOPPED') {
                             trialJobDetail.status = jobMetrics.jobStatus;
                         }
-                        this.log.info(`Set trialjob ${trialJobDetail.id} status to ${trialJobDetail.status}`);
+                        this.log.debug(`Set trialjob ${trialJobDetail.id} status to ${trialJobDetail.status}`);
                         runningJobsMap.forEach((jobIds: string[], rmMeta: RemoteMachineMeta) => {
                             // If remote machine has no GPU, gpuReservcation is not initialized, so check if it's undefined
                             if(rmMeta.gpuReservation !== undefined) {

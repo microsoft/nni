@@ -3,7 +3,7 @@ import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
 import { Row, Col, Tabs, Input, Select, Button } from 'antd';
 const Option = Select.Option;
-import { TableObjFianl, Parameters, DetailAccurPoint, TooltipForAccuracy } from '../static/interface';
+import { TableObj, Parameters, DetailAccurPoint, TooltipForAccuracy } from '../static/interface';
 import { getFinalResult, getFinal } from '../static/function';
 import Accuracy from './overview/Accuracy';
 import Duration from './trial-detail/Duration';
@@ -16,8 +16,8 @@ import '../static/style/trialsDetail.scss';
 interface TrialDetailState {
     accSource: object;
     accNodata: string;
-    tableListSource: Array<TableObjFianl>;
-    searchResultSource: Array<TableObjFianl>;
+    tableListSource: Array<TableObj>;
+    searchResultSource: Array<TableObj>;
     isHasSearch: boolean;
     experimentStatus: string;
     entriesTable: number;
@@ -136,7 +136,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             .then(res => {
                 if (res.status === 200) {
                     const trialJobs = res.data;
-                    const trialTable: Array<TableObjFianl> = [];
+                    const trialTable: Array<TableObj> = [];
                     Object.keys(trialJobs).map(item => {
                         // only succeeded trials have finalMetricData
                         let desc: Parameters = {
@@ -189,7 +189,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         Object.keys(searchResultSource).map(index => {
                             temp.push(searchResultSource[index].id);
                         });
-                        const searchResultList: Array<TableObjFianl> = [];
+                        const searchResultList: Array<TableObj> = [];
                         for (let i = 0; i < temp.length; i++) {
                             Object.keys(trialTable).map(key => {
                                 const item = trialTable[key];
@@ -221,7 +221,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             .then(res => {
                 if (res.status === 200) {
                     const trialJobs = res.data;
-                    const trialTable: Array<TableObjFianl> = [];
+                    const trialTable: Array<TableObj> = [];
                     Object.keys(trialJobs).map(item => {
                         // only succeeded trials have finalMetricData
                         let desc: Parameters = {
@@ -312,7 +312,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         } else {
             window.clearInterval(this.interAllTableList);
             const { tableListSource } = this.state;
-            const searchResultList: Array<TableObjFianl> = [];
+            const searchResultList: Array<TableObj> = [];
             Object.keys(tableListSource).map(key => {
                 const item = tableListSource[key];
                 if (item.sequenceId.toString() === targetValue || item.id.includes(targetValue)) {

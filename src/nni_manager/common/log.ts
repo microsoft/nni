@@ -26,13 +26,18 @@ import { Writable } from 'stream';
 import { WritableStreamBuffer } from 'stream-buffers';
 import { format } from 'util';
 import * as component from '../common/component';
+import { getExperimentStartupInfo } from './experimentStartupInfo';
 import { getLogDir } from './utils';
 
-const CRITICAL: number = 1;
+const FATAL: number = 1;
 const ERROR: number = 2;
 const WARNING: number = 3;
 const INFO: number = 4;
 const DEBUG: number = 5;
+const TRACE: number = 6;
+
+const logLevelNameMap: Map<string, number> = new Map([['fatal', FATAL],
+    ['error', ERROR], ['warning', WARNING], ['info', INFO], ['debug', DEBUG], ['trace', TRACE]]);
 
 class BufferSerialEmitter {
     private buffer: Buffer;
@@ -68,7 +73,7 @@ class BufferSerialEmitter {
 @component.Singleton
 class Logger {
     private DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
-    private level: number = DEBUG;
+    private level: number = INFO;
     private bufferSerialEmitter: BufferSerialEmitter;
     private writable: Writable;
 
@@ -83,10 +88,23 @@ class Logger {
             autoClose: true
         });
         this.bufferSerialEmitter = new BufferSerialEmitter(this.writable);
+
+        const logLevelName: string = getExperimentStartupInfo()
+                                    .getLogLevel();
+        const logLevel: number | undefined = logLevelNameMap.get(logLevelName);
+        if (logLevel !== undefined) {
+            this.level = logLevel;
+        }
     }
 
     public close() {
         this.writable.destroy();
+    }
+
+    public trace(...param: any[]): void {
+        if (this.level >= TRACE) {
+            this.log('TRACE', param);
+        }
     }
 
     public debug(...param: any[]): void {
@@ -113,8 +131,8 @@ class Logger {
         }
     }
 
-    public critical(...param: any[]): void {
-        this.log('CRITICAL', param);
+    public fatal(...param: any[]): void {
+        this.log('FATAL', param);
     }
 
     private log(level: string, param: any[]): void {
@@ -135,4 +153,4 @@ function getLogger(fileName?: string): Logger {
     return component.get(Logger);
 }
 
-export { Logger, getLogger };
+export { Logger, getLogger, logLevelNameMap };
