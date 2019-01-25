@@ -87,7 +87,7 @@ Frameworkcontroller 配置文件的格式如下：
 
 注意：如果用 FrameworkController 模式运行，需要在 yml文件中显式设置 `trainingServicePlatform: frameworkcontroller`。
 
-frameworkcontroller 模式的尝试配置格式，是 frameworkcontroller's 官方配置的简化版。参考 [frameworkcontroller 的 tensorflow 样例](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) 了解详情。  
+FrameworkController 模式的尝试配置格式，是 FrameworkController 官方配置的简化版。参考 [frameworkcontroller 的 tensorflow 样例](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) 了解详情。  
 frameworkcontroller 模式中的尝试配置使用以下主键：
 
 * taskRoles: 配置文件中可以设置多个任务角色，每个任务角色都是在 Kubernetes 集群中的基本执行单元。 
