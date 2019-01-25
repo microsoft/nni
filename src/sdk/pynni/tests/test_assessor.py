@@ -22,6 +22,7 @@
 import nni.protocol
 from nni.protocol import CommandType, send, receive
 from nni.assessor import Assessor, AssessResult
+from nni.msg_dispatcher import MsgDispatcher
 
 from io import BytesIO
 import json
@@ -66,14 +67,14 @@ class AssessorTestCase(TestCase):
         send(CommandType.ReportMetricData, '{"trial_job_id":"B","type":"PERIODICAL","sequence":0,"value":2}')
         send(CommandType.ReportMetricData, '{"trial_job_id":"A","type":"PERIODICAL","sequence":1,"value":3}')
         send(CommandType.TrialEnd, '{"trial_job_id":"A","event":"SYS_CANCELED"}')
-        send(CommandType.ReportMetricData, '{"trial_job_id":"B","type":"FINAL","sequence":0,"value":1}')
         send(CommandType.TrialEnd, '{"trial_job_id":"B","event":"SUCCEEDED"}')
         send(CommandType.NewTrialJob, 'null')
         _restore_io()
 
         assessor = NaiveAssessor()
+        dispatcher = MsgDispatcher(None, assessor)
         try:
-            assessor.run()
+            dispatcher.run()
         except Exception as e:
             self.assertIs(type(e), AssertionError)
             self.assertEqual(e.args[0], 'Unsupported command: CommandType.NewTrialJob')

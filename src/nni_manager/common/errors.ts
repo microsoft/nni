@@ -26,9 +26,14 @@ export namespace NNIErrorNames {
 }
 
 export class NNIError extends Error {
-    constructor (name: string, message: string) {
+    public cause!: Error | undefined;
+    constructor (name: string, message: string, err?: Error) {
         super(message);
         this.name = name;
+        if (err !== undefined) {
+            this.stack = err.stack;
+        }
+        this.cause = err;
     }
 }
 

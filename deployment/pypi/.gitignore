@@ -1,0 +1,6 @@
+nni/
+dist/
+build/
+*.egg-info/
+node-*.tar.xz
+node-*/

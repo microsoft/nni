@@ -1,18 +1,21 @@
 # Usage:
-#       pylint --rcfile=PATH_TO_THIS_FILE PACKAGE_NAME
+#       python3 -m pylint --rcfile=PATH_TO_THIS_FILE PACKAGE_NAME
 # or
-#       pylint --rcfile=PATH_TO_THIS_FILE SOURCE_FILE.py
+#       python3 -m pylint --rcfile=PATH_TO_THIS_FILE SOURCE_FILE.py
 
 [SETTINGS]
 
 max-line-length=140
 
-max-args=5
+max-args=8
 max-locals=15
 max-statements=50
-max-attributes=7
+max-attributes=15
 
 const-naming-style=any
 
 disable=duplicate-code,
         super-init-not-called
+
+# List of members which are set dynamically and missed by pylint inference
+generated-members=numpy.*,torch.*

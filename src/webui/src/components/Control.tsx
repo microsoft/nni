@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Input, Button, message } from 'antd';
 import axios from 'axios';
-import { MANAGER_IP, CONTROLTYPE } from '../const';
+import { MANAGER_IP, CONTROLTYPE } from '../static/const';
 const { TextArea } = Input;
-import '../style/control.css';
+import '../static/style/control.scss';
 
 interface ExperimentParams {
     authorName: string;

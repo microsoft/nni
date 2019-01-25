@@ -1,0 +1,5 @@
+{
+    "hidden_units":{"_type":"choice","_value":[100, 120, 140, 160, 180, 200]},
+    "batch_size": {"_type":"choice", "_value": [16, 32, 64, 128]},
+    "learning_rate":{"_type":"choice","_value":[0.0001, 0.001, 0.01, 0.1]}
+}

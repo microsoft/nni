@@ -41,18 +41,21 @@ class Tuner(Recoverable):
         """Returns multiple sets of trial (hyper-)parameters, as iterable of serializable objects.
         Call 'generate_parameters()' by 'count' times by default.
         User code must override either this function or 'generate_parameters()'.
+        If there's no more trial, user should raise nni.NoMoreTrialError exception in generate_parameters().
+        If so, this function will only return sets of trial (hyper-)parameters that have already been collected.
         parameter_id_list: list of int
         """
         result = []
         for parameter_id in parameter_id_list:
             try:
+                _logger.debug("generating param for {}".format(parameter_id))
                 res = self.generate_parameters(parameter_id)
             except nni.NoMoreTrialError:
                 return result
             result.append(res)
         return result
 
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, value):
         """Invoked when a trial reports its final result. Must override.
         parameter_id: int
         parameters: object created by 'generate_parameters()'
@@ -60,11 +63,11 @@ class Tuner(Recoverable):
         """
         raise NotImplementedError('Tuner: receive_trial_result not implemented')
 
-    def receive_customized_trial_result(self, parameter_id, parameters, reward):
+    def receive_customized_trial_result(self, parameter_id, parameters, value):
         """Invoked when a trial added by WebUI reports its final result. Do nothing by default.
         parameter_id: int
         parameters: object created by user
-        reward: object reported by trial
+        value: object reported by trial
         """
         _logger.info('Customized trial job %s ignored by tuner', parameter_id)
 
@@ -93,3 +96,12 @@ class Tuner(Recoverable):
 
     def _on_error(self):
         pass
+
+    def extract_scalar_reward(self, value, scalar_key='default'):
+        if isinstance(value, float) or isinstance(value, int):
+            reward = value
+        elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
+            reward = value[scalar_key]
+        else:
+            raise RuntimeError('Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__)) 
+        return reward 

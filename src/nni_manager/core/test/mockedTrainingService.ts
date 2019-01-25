@@ -42,7 +42,8 @@ class MockedTrainingService extends TrainingService {
         workingDirectory: '/tmp/mocked',
         form: {
             jobType: 'TRIAL'
-        }
+        },
+        sequenceId: 0
     };
     public jobDetail2: TrialJobDetail = {
         id: '3456',
@@ -55,7 +56,8 @@ class MockedTrainingService extends TrainingService {
         workingDirectory: '/tmp/mocked',
         form: {
             jobType: 'TRIAL'
-        }
+        },
+        sequenceId: 0
     };
     
     public listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -100,7 +102,7 @@ class MockedTrainingService extends TrainingService {
         return false;
     }
 
-    public cancelTrialJob(trialJobId: string): Promise<void> {
+    public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const deferred = new Deferred<void>();
         if(trialJobId === '1234' || trialJobId === '3456'){
             deferred.resolve();

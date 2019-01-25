@@ -1,0 +1,24 @@
+local:
+  trainingServicePlatform: local
+
+remote:
+  trainingServicePlatform: remote
+  machineList:
+    - ip:
+      port:
+      username:
+      passwd:
+
+pai:
+  trainingServicePlatform: pai
+  paiConfig:
+    userName: 
+    passWord: 
+    host: 
+  trial:
+    gpuNum:
+    cpuNum:
+    memoryMB: 
+    image: msranni/latest
+    dataDir: 
+    outputDir: 
