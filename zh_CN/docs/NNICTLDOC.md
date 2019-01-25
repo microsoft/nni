@@ -40,10 +40,11 @@ nnictl --version
     选项：  
     
     
-    | 参数及缩写        | 是否必需  | 默认值 | 说明            |
-    | ------------ | ----- | --- | ------------- |
-    | --config, -c | True  |     | 实验的 yaml 配置文件 |
-    | --port, -p   | False |     | RESTful 服务的端口 |
+    | 参数及缩写        | 是否必需  | 默认值 | 说明                     |
+    | ------------ | ----- | --- | ---------------------- |
+    | --config, -c | True  |     | 实验的 yaml 配置文件          |
+    | --port, -p   | False |     | RESTful 服务的端口          |
+    | --debug, -d  | False |     | Set log level to debug |
 
 * **nnictl resume**
   
@@ -59,10 +60,11 @@ nnictl --version
     
     选项：
     
-    | 参数及缩写      | 是否必需  | 默认值 | 说明                     |
-    | ---------- | ----- | --- | ---------------------- |
-    | id         | False |     | 要恢复的实验标识               |
-    | --port, -p | False |     | 要恢复的实验使用的 RESTful 服务端口 |
+    | 参数及缩写       | 是否必需  | 默认值 | 说明                     |
+    | ----------- | ----- | --- | ---------------------- |
+    | id          | False |     | 要恢复的实验标识               |
+    | --port, -p  | False |     | 要恢复的实验使用的 RESTful 服务端口 |
+    | --debug, -d | False |     | Set log level to debug |
 
 * **nnictl stop**
   
