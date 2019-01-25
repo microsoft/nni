@@ -1,6 +1,6 @@
 # Makefile 文件和安装配置
 
-NNI uses GNU make for building and installing.
+NNI 使用 GNU 来生成和安装。
 
 `Makefile` 提供标准的目标 `生成`、`安装` 和 `卸载`, 以及不同设置的安装对象：
 
