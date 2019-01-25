@@ -8,7 +8,7 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 ## 运行实验
 
-以 `examples/trials/mnist-annotation` 为例。 NNI 的 yaml 配置文件如下：
+以 `examples/trials/mnist-annotation` 为例。 NNI 的 yml 配置文件如下：
 
 ```yaml
 authorName: your_name
@@ -43,7 +43,7 @@ paiConfig:
   host: 10.1.1.1
 ```
 
-注意：如果用 pai 模式运行，需要在 yaml 文件中设置 `trainingServicePlatform: pai`。
+注意：如果用 pai 模式运行，需要在 yml 文件中设置 `trainingServicePlatform: pai`。
 
 与本机模式，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的尝试有额外的配置：
 
@@ -59,9 +59,9 @@ paiConfig:
 * outputDir 
     * 可选。 指定了尝试的 HDFS 输出目录。 尝试在完成（成功或失败）后，尝试的 stdout， stderr 会被 NNI 自动复制到此目录中。 格式应为 hdfs://{your HDFS host}:9000/{输出目录}
 
-完成并保存 NNI 实验配置文件后（例如可保存为：exp_pai.yaml），运行以下命令：
+完成并保存 NNI 实验配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
-    nnictl create --config exp_pai.yaml
+    nnictl create --config exp_pai.yml
     
 
 来在 pai 模式下启动实验。 NNI 会为每个尝试创建 OpenPAI 作业，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 OpenPAI 集群的网站中看到 NNI 创建的作业，例如： ![](./img/nni_pai_joblist.jpg)
