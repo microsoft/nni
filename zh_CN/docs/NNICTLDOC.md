@@ -42,7 +42,7 @@ nnictl --version
     
     | 参数及缩写        | 是否必需  | 默认值 | 说明            |
     | ------------ | ----- | --- | ------------- |
-    | --config, -c | True  |     | 实验的 yaml 配置文件 |
+    | --config, -c | True  |     | 实验的 yml 配置文件  |
     | --port, -p   | False |     | RESTful 服务的端口 |
     | --debug, -d  | False |     | 设置日志级别为 Debug |
 
