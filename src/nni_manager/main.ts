@@ -25,7 +25,7 @@ import * as component from './common/component';
 import * as fs from 'fs';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
-import { getLogger, Logger } from './common/log';
+import { getLogger, Logger, logLevelNameMap } from './common/log';
 import { Manager } from './common/manager';
 import { TrainingService } from './common/trainingService';
 import { parseArg, uniqueString, mkDirP, getLogDir } from './common/utils';
@@ -111,7 +111,7 @@ if (logDir.length > 0) {
 }
 
 const logLevel: string = parseArg(['--log_level', '-ll']);
-if (logLevel.length > 0 && !['debug', 'info', 'error', 'warning', 'critical'].includes(logLevel)) {
+if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
     console.log(`FATAL: invalid log_level: ${logLevel}`);
 }
 
