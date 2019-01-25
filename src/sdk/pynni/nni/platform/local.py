@@ -34,8 +34,11 @@ _metric_file = open(os.path.join(_sysdir, '.nni', 'metrics'), 'wb')
 _outputdir = os.environ['NNI_OUTPUT_DIR']
 if not os.path.exists(_outputdir):
     os.makedirs(_outputdir)
-_log_file_path = os.path.join(_outputdir, 'trial.log')
-init_logger(_log_file_path)
+
+_nni_platform = os.environ['NNI_PLATFORM']
+if _nni_platform not in ['pai', 'kubeflow', 'frameworkcontroller']:
+   _log_file_path = os.path.join(_outputdir, 'trial.log')
+   init_logger(_log_file_path)
 
 _multiphase = os.environ.get('MULTI_PHASE')
 
@@ -74,11 +77,16 @@ def get_next_parameter():
     return params
 
 def send_metric(string):
-    data = (string + '\n').encode('utf8')
-    assert len(data) < 1000000, 'Metric too long'
-    _metric_file.write(b'ME%06d%b' % (len(data), data))
-    _metric_file.flush()
-    subprocess.run(['touch', _metric_file.name], check = True)
+    if _nni_platform in ['pai', 'kubeflow', 'frameworkcontroller']:
+        data = (string).encode('utf8')
+        assert len(data) < 1000000, 'Metric too long'    
+        print('NNISDK_ME%s' % (data))
+    else:
+        data = (string + '\n').encode('utf8')
+        assert len(data) < 1000000, 'Metric too long'    
+        _metric_file.write(b'ME%06d%b' % (len(data), data))
+        _metric_file.flush()
+        subprocess.run(['touch', _metric_file.name], check = True)
 
 def get_sequence_id():
     return os.environ['NNI_TRIAL_SEQ_ID']

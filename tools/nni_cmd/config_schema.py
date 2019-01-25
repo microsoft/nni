@@ -33,6 +33,8 @@ Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
+Optional('logDir'): os.path.isdir,
+Optional('logLevel'): Or('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
 'useAnnotation': bool,
 Optional('advisor'): Or({
     'builtinAdvisorName': Or('Hyperband'),
@@ -66,6 +68,16 @@ Optional('tuner'): Or({
         Optional('input_width'):  int,
         Optional('input_channel'):  int,
         Optional('n_output_node'):  int,
+        },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'builtinTunerName': 'MetisTuner',
+    'classArgs': {
+        Optional('optimize_mode'): Or('maximize', 'minimize'),
+        Optional('no_resampling'):  bool,
+        Optional('no_candidates'):  bool,
+        Optional('selection_num_starting_points'):  int,
+        Optional('cold_start_num'):  int,
         },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
@@ -206,12 +218,14 @@ frameworkcontroller_trial_schema = {
 frameworkcontroller_config_schema = {
     'frameworkcontrollerConfig':Or({
         Optional('storage'): Or('nfs', 'azureStorage'),
+        Optional('serviceAccountName'): str,
         'nfs': {
             'server': str,
             'path': str
         }
     },{
         Optional('storage'): Or('nfs', 'azureStorage'),
+        Optional('serviceAccountName'): str,
         'keyVault': {
             'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
             'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')
