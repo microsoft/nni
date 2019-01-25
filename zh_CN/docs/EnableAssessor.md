@@ -4,7 +4,7 @@
 
 ## 使用 NNI 内置的评估器
 
-以下样例代码在 `examples/trials/mnist-annotation` 目录中。 此实验使用了 `Medianstop` 评估器。 yaml 配置文件如下：
+以下样例代码在 `examples/trials/mnist-annotation` 目录中。 此实验使用了 `Medianstop` 评估器。 yml 配置文件如下：
 
     authorName: your_name
     experimentName: auto_mnist
@@ -36,7 +36,7 @@
 
 ## 使用自定义的评估器
 
-可参考[这里]()，来自定义评估器。 例如，为样例代码 `examples/trials/mnist-annotation` 写一个定制的评估器。 需要准备如下的 yaml 配置文件：
+可参考[这里]()，来自定义评估器。 例如，为样例代码 `examples/trials/mnist-annotation` 写一个定制的评估器。 需要准备如下的 yml 配置文件：
 
     authorName: your_name
     experimentName: auto_mnist
