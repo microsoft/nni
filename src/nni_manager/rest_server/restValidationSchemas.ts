@@ -188,14 +188,4 @@ export namespace ValidationSchemas {
             maxSequenceId: joi.number()
         }
     };
-    export const STARTTENSORBOARD = {
-        query: {
-            job_ids: joi.string().min(5).max(5).required()
-        }
-    };
-    export const STOPTENSORBOARD = {
-        query: {
-            endpoint: joi.string().uri().required()
-        }
-    };
 }
