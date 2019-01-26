@@ -22,7 +22,7 @@ User should define the name of variable, type and candidate value of variable.
 The candidate type and value for variable is here:
 
 * {"_type":"choice","_value":options}
-   * Which means the variable value is one of the options, which should be a list The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
+   * Which means the variable value is one of the options, which should be a list. The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
 <br/>
 
 * {"_type":"randint","_value":[upper]}
