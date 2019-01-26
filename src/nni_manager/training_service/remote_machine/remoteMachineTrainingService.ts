@@ -309,7 +309,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 let localGpuMetricFolder: string = await this.generateGpuScript();
                 await this.setupConnections(value, localGpuMetricFolder);
                 //remove local temp files
-                // await cpp.exec(`rm -rf ${localGpuMetricFolder}`);
+                await cpp.exec(`rm -rf ${localGpuMetricFolder}`);
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
