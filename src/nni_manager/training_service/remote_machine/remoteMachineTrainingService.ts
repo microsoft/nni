@@ -95,12 +95,9 @@ class RemoteMachineTrainingService implements TrainingService {
      * Loop to launch trial jobs and collect trial metrics
      */
     public async run(): Promise<void> {
-<<<<<<< HEAD
         const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
         await restServer.start();
-=======
         this.log.info('Run remote machine training service.');
->>>>>>> b633c2653780e007ad42a1babae1212d006ff496
         while (!this.stopping) {
             while (this.jobQueue.length > 0) {
                 this.updateGpuReversion();
