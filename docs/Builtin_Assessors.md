@@ -4,8 +4,8 @@ NNI provides the-state-of-art tuning algorithm in our builtin-assessors and make
 
 |Assessor|Brief Introduction of Algorithm|
 |---|---|
-|**Medianstop**<br>[(Usage)](#MedianStop)|Medianstop is a simple early stopping rule mentioned in the [paper][1]. It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.|It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.|
-|[Curvefitting][2]<br>[(Usage)](#Curvefitting)|Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve|It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.|
+|**Medianstop**<br>[(Usage)](#MedianStop)|Medianstop is a simple early stopping rule mentioned in the [paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf). It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.|It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.|
+|[Curvefitting](https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/curvefitting_assessor/README.md)<br>[(Usage)](#Curvefitting)|Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve|It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.|
 
 <br>
 
@@ -17,7 +17,7 @@ Note: Please follow the format when you write your `config.yml` file.
 
 <a name="MedianStop"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Median Stop Assessor`
+![](https://placehold.it/15/1589F0/000000?text=+) `Median Stop Assessor`
 
 > Builtin Assessor Name: **Medianstop**
 
@@ -45,7 +45,7 @@ assessor:
 
 <a name="Curvefitting"></a>
 
-![#1589F0](https://placehold.it/15/1589F0/000000?text=+) `Curve Fitting Assessor`
+![](https://placehold.it/15/1589F0/000000?text=+) `Curve Fitting Assessor`
 
 > Builtin Assessor Name: **Curvefitting**
 
@@ -72,7 +72,3 @@ assessor:
       start_step: 6
       threshold: 0.95
 ```
-
-[1]: https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf
-[2]: https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/curvefitting_assessor/README.md
-[5]: https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config_assessor.yml
