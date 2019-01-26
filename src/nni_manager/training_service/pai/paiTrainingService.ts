@@ -75,6 +75,7 @@ class PAITrainingService implements TrainingService {
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
+    private webhdfsPath: string = '/webhdfs/api/v1';
 
     constructor() {
         this.log = getLogger();
@@ -225,7 +226,8 @@ class PAITrainingService implements TrainingService {
             hdfsOutputDir,
             this.hdfsOutputHost,
             this.paiClusterConfig.userName, 
-            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName)
+            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
+            this.webhdfsPath
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);

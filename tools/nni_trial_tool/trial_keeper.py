@@ -27,6 +27,7 @@ import shlex
 import re
 import sys
 import select
+import pyhdfs
 from pyhdfs import HdfsClient
 
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
@@ -51,7 +52,11 @@ def main_loop(args):
 
     if args.pai_hdfs_host is not None and args.nni_hdfs_exp_dir is not None:
         try:
-            hdfs_client = HdfsClient(hosts='{0}:{1}'.format(args.pai_hdfs_host, '50070'), user_name=args.pai_user_name, timeout=5)
+            if not args.nni_webhdfs_path:
+                nni_log(LogType.Error, 'Please set nni_webhdfs_path argument!')
+                raise Exception('nni_webhdfs_path is needed!')
+            pyhdfs.WEBHDFS_PATH = args.nni_webhdfs_path
+            hdfs_client = HdfsClient(hosts='{0}'.format(args.pai_hdfs_host), user_name=args.pai_user_name, timeout=5)
         except Exception as e:
             nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
             raise e
@@ -99,6 +104,7 @@ if __name__ == '__main__':
     PARSER.add_argument('--pai_hdfs_host', type=str, help='the host of hdfs')
     PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
     PARSER.add_argument('--nni_hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
+    PARSER.add_argument('--nni_webhdfs_path', type=str, help='the webhdfs path used in webhdfs URL')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)
