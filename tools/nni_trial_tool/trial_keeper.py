@@ -56,7 +56,7 @@ def main_loop(args):
                 nni_log(LogType.Error, 'Please set nni_webhdfs_path argument!')
                 raise Exception('nni_webhdfs_path is needed!')
             pyhdfs.WEBHDFS_PATH = args.nni_webhdfs_path
-            hdfs_client = HdfsClient(hosts='{0}'.format(args.pai_hdfs_host), user_name=args.pai_user_name, timeout=5)
+            hdfs_client = HdfsClient(hosts='{0}:80'.format(args.pai_hdfs_host), user_name=args.pai_user_name, timeout=5)
         except Exception as e:
             nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
             raise e
