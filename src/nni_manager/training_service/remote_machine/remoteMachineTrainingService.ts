@@ -307,7 +307,10 @@ class RemoteMachineTrainingService implements TrainingService {
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
-                await this.setupConnections(value);
+                let localGpuMetricFolder: string = await this.generateGpuScript();
+                await this.setupConnections(value, localGpuMetricFolder);
+                //remove local temp files
+                // await cpp.exec(`rm -rf ${localGpuMetricFolder}`);
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
@@ -369,30 +372,29 @@ class RemoteMachineTrainingService implements TrainingService {
         }
         return Promise.resolve();
     } 
+    
+    private async generateGpuScript(): Promise<string> {
+        let localGpuMetricFolder: string = `/tmp/nni/scripts/${uniqueString(5)}`;
+        await cpp.exec(`mkdir -p ${localGpuMetricFolder}`);
+        //generate gpu_metrics_collector.sh
+        let gpuMetricFilePath: string = path.join(localGpuMetricFolder, 'gpu_metrics_collector.sh');
 
-    private async setupConnections(machineList: string): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-        //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
-        const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
-        let connectedRMNum: number = 0;
         const remoteScriptsDir: string = this.getRemoteScriptsPath();
         const gpuCollectorContent: string = String.Format(
             GPU_COLLECTOR_FORMAT, 
             remoteScriptsDir, 
             path.join(remoteScriptsDir, 'pid'), 
         );
-        //generate gpu_metrics_collector.sh
-        let experimentTmpFolder = `/tmp/nni/scripts/${uniqueString(5)}`;
-        let gpuMetricFilePath = path.join(experimentTmpFolder, 'gpu_metrics_collector.sh');
-        console.log('--------------386---------')
-        // mkDirP(experimentTmpFolder);
-        console.log(experimentTmpFolder)
-        await cpp.exec(`mkdir -p /tmp/nni/scripts`);
-        await cpp.exec(`mkdir -p ${experimentTmpFolder}`);
-        console.log('-------------------387-----------')
-        console.log(gpuMetricFilePath)
         await fs.promises.writeFile(gpuMetricFilePath, gpuCollectorContent, { encoding: 'utf8' });
-        console.log('--------------------389--------------')
+        return Promise.resolve(localGpuMetricFolder);
+    }
+
+    private async setupConnections(machineList: string, localGpuMetricFolder: string): Promise<void> {
+        const deferred: Deferred<void> = new Deferred<void>();
+        //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
+        const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
+        let connectedRMNum: number = 0;
+
         rmMetaList.forEach((rmMeta: RemoteMachineMeta) => {
             const conn: Client = new Client();
             let connectConfig: ConnectConfig = {
@@ -416,6 +418,7 @@ class RemoteMachineTrainingService implements TrainingService {
             this.machineSSHClientMap.set(rmMeta, conn);
             conn.on('ready', async () => {
                 this.machineSSHClientMap.set(rmMeta, conn);
+                let gpuMetricFilePath: string = path.join(localGpuMetricFolder, 'gpu_metrics_collector.sh');
                 await this.initRemoteMachineOnConnected(gpuMetricFilePath, rmMeta, conn);
                 if (++connectedRMNum === rmMetaList.length) {
                     deferred.resolve();
@@ -425,8 +428,6 @@ class RemoteMachineTrainingService implements TrainingService {
                 deferred.reject(new Error(err.message));
             }).connect(connectConfig);
         });
-        //remove local temp files
-        await cpp.exec(`rm -rf ${experimentTmpFolder}`);
         return deferred.promise;
     }
 
