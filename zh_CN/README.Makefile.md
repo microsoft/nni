@@ -28,36 +28,36 @@ NNI *开发人员*推荐手工安装 Node.js 和 Yarn。 可浏览相应的官�
 
 ## 安装
 
-### 目录结构
+### 目录层次
 
 NNI 项目主要由两个 Node.js 模块 (`nni_manager`, `webui`) 以及两个 Python 包 (`nni`, `nnictl`) 所组成。
 
-By default the Node.js modules are installed to `/usr/share/nni` for all users or installed to `~/.local/nni` for current user.
+默认情况下，Node.js 模块可以为所有用户安装在 `/usr/share/nni` 目录下，也可为只安装在当前用户的 `~/.local/nni` 目录下。
 
-The Python packages are installed with setuptools and therefore the location depends on Python configuration. When install as non-priviledged user and virtualenv is not detected, `--user` flag will be used.
+Python 包使用 setuptools 安装，所以安装路径依赖于 Python 配置。 如果为没有权限的用户安装，并且没有虚拟环境的时候，要加上 `--user` 参数。
 
-In addition, `nnictl` offers a bash completion scripts, which will be installed to `/usr/share/bash-completion/completions` or `~/.bash_completion.d`.
+此外，`nnictl` 是一个 bash 脚本，会被安装在 `/usr/share/bash-completion/completions` 或 `~/.bash_completion.d` 目录下。
 
-In some configuration, NNI will also install Node.js to `/usr/share/nni`.
+在某些配置情况下，NNI 也会将 Node.js 安装到 `/usr/share/nni` 目录下。
 
-All directories mentioned above are configurable. See next section for details.
+以上所有目录都可以配置。 可参考下一章节。
 
-### Configuration
+### 配置
 
-The `Makefile` uses environment variables to override default settings.
+`Makefile` 中可以用环境变量来替换默认设置。
 
-Available variables are listed below:
+支持的变量如下：
 
-| Name               | Description                                             | Default for normal user           | Default for root                                |
-| ------------------ | ------------------------------------------------------- | --------------------------------- | ----------------------------------------------- |
-| `BIN_PATH`         | Path for executables                                    | `~/.local/bin`                    | `/usr/bin`                                      |
-| `INSTALL_PREFIX`   | Path for Node.js modules (a suffix `nni` will be added) | `~/.local`                        | `/usr/share`                                    |
-| `BASH_COMP_SCRIPT` | Path of bash completion script                          | `~/.bash_completion.d/nnictl`     | `/usr/share/bash-completion/completions/nnictl` |
-| `PIP_MODE`         | Arguments for `python3 setup.py install`                | `--user` if `VIRTUAL_ENV` not set | (empty)                                         |
-| `NODE_PATH`        | Path to install Node.js runtime                         | `$INSTALL_PREFIX/nni/node`        | `$INSTALL_PREFIX/nni/node`                      |
-| `YARN_PATH`        | Path to install Yarn                                    | `/tmp/nni-yarn`                   | `/tmp/nni-yarn`                                 |
-| `NODE`             | Node.js command                                         | see source file                   | see source file                                 |
-| `YARN`             | Yarn command                                            | see source file                   | see source file                                 |
+| 名称                 | 说明                             | 普通用户下的默认值                          | root 下的默认值                                      |
+| ------------------ | ------------------------------ | ---------------------------------- | ----------------------------------------------- |
+| `BIN_PATH`         | 执行文件路径                         | `~/.local/bin`                     | `/usr/bin`                                      |
+| `INSTALL_PREFIX`   | Node.js 模块的路径 (最后会加上 `nni`)    | `~/.local`                         | `/usr/share`                                    |
+| `BASH_COMP_SCRIPT` | Bash 自动完成脚本的路径                 | `~/.bash_completion.d/nnictl`      | `/usr/share/bash-completion/completions/nnictl` |
+| `PIP_MODE`         | `python3 setup.py install` 的参数 | 如果 `VIRTUAL_ENV` 没有设置，会加上 `--user` | (无)                                             |
+| `NODE_PATH`        | Node.js 运行时的路径                 | `$INSTALL_PREFIX/nni/node`         | `$INSTALL_PREFIX/nni/node`                      |
+| `YARN_PATH`        | Yarn 的安装路径                     | `/tmp/nni-yarn`                    | `/tmp/nni-yarn`                                 |
+| `NODE`             | Node.js 命令                     | 参考源代码                              | 参考源代码                                           |
+| `YARN`             | Yarn 命令                        | 参考源代码                              | 参考源代码                                           |
 
 Note that these variables will influence installation destination as well as generated `nnictl` and `nnimanager` scripts. If the path to copy files is different from where they will run (e.g. when creating a distro package), please generate `nnictl` and `nnimanager` manually.
 
@@ -75,8 +75,8 @@ The workflow of each installation targets is listed below:
 
 ## TODO
 
-* `clean` target
-* `test` target
-* `lint` target
-* Test cases for each target
-* Review variables
+* `clean` 目标
+* `test` 目标
+* `lint` 目标
+* 每个目标的测试用例
+* 评审变量
