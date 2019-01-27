@@ -59,19 +59,19 @@ Python 包使用 setuptools 安装，所以安装路径依赖于 Python 配置�
 | `NODE`             | Node.js 命令                     | 参考源代码                              | 参考源代码                                           |
 | `YARN`             | Yarn 命令                        | 参考源代码                              | 参考源代码                                           |
 
-Note that these variables will influence installation destination as well as generated `nnictl` and `nnimanager` scripts. If the path to copy files is different from where they will run (e.g. when creating a distro package), please generate `nnictl` and `nnimanager` manually.
+注意，这些变量不仅会影响安装路径，也会影响申城的 `nnictl` 和 `nnimanager` 脚本。 如果复制文件的路径和运行时的不一样（例如，创建发行版本包时），需要手工编辑 `nnictl` 和 `nnimanager`。
 
-### Targets
+### 目标
 
-The workflow of each installation targets is listed below:
+安装目标的流程如下：
 
-| Target             | Workflow                                                                   |
-| ------------------ | -------------------------------------------------------------------------- |
-| `easy-install`     | Install dependencies, build, install NNI, and edit `~/.bashrc`             |
-| `dev-easy-install` | Install dependencies, build, install NNI as symlinks, and edit `~/.bashrc` |
-| `install`          | Install Python packages, Node.js modules, NNI scripts, and examples        |
-| `dev-install`      | Install Python and Node.js modules as symlinks, then install scripts       |
-| `pip-install`      | Install dependencies, build, install NNI excluding Python packages         |
+| 目标                 | 流程                                               |
+| ------------------ | ------------------------------------------------ |
+| `easy-install`     | 安装依赖项，生成，安装 NNI，并编辑 `~/.bashrc`                  |
+| `dev-easy-install` | 安装依赖项，生成，将 NNI 作为 symlinks 来安装，并编辑 `~/.bashrc`   |
+| `install`          | 安装 Python 包，Node.js 模块，NNI 脚本和样例                 |
+| `dev-install`      | 将 Python 和 Node.js 模块作为 symlinks 安装，然后安装 scripts |
+| `pip-install`      | 安装依赖项，生成，安装 NNI，但不安装 Python 包                    |
 
 ## TODO
 
