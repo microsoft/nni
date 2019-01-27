@@ -30,7 +30,7 @@ NNI *开发人员*推荐手工安装 Node.js 和 Yarn。 可浏览相应的官�
 
 ### 目录结构
 
-The main parts of NNI project consist of two Node.js modules (`nni_manager`, `webui`) and two Python packages (`nni`, `nnictl`).
+NNI 项目主要由两个 Node.js 模块 (`nni_manager`, `webui`) 以及两个 Python 包 (`nni`, `nnictl`) 所组成。
 
 By default the Node.js modules are installed to `/usr/share/nni` for all users or installed to `~/.local/nni` for current user.
 
