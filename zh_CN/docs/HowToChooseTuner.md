@@ -1,6 +1,6 @@
-# 如何使用 NNI 支持的调参器？
+# 如何使用 NNI 支持的 Tuner？
 
-目前，NNI 已支持下列调参器算法。 注意，NNI 只安装了部分下列算法，其它算法在使用前需要通过 `nnictl package install` 命令安装。 例如，安装 SMAC 算法的命令为 `nnictl package install --name=SMAC`。
+目前，NNI 已支持下列 Tuner 算法。 注意，NNI 只安装了部分下列算法，其它算法在使用前需要通过 `nnictl package install` 命令安装。 例如，安装 SMAC 算法的命令为 `nnictl package install --name=SMAC`。
 
 * [TPE](#TPE)
 * [Random Search（随机搜索）](#Random)
@@ -11,11 +11,11 @@
 * [Grid Search（网格搜索）](#Grid)
 * [Hyperband](#Hyperband)
 * [Network Morphism](#NetworkMorphism) (需要安装 pyTorch)
-* [Metis 调参器](#MetisTuner) (需要安装 sklearn)
+* [Metis Tuner](#MetisTuner) (需要安装 sklearn)
     
-    ## 支持的调参器算法
+    ## 支持的 Tuner 算法
 
-这里将介绍这些调参器算法的基本知识，各个调参器建议使用的场景，以及使用样例（完整的使用样例参考 [这里]()）。
+这里将介绍这些 Tuner 算法的基本知识，各个 Tuner 建议使用的场景，以及使用样例（完整的使用样例参考 [这里]()）。
 
 <a name="TPE"></a>
 **TPE**
@@ -72,7 +72,7 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 
 进化算法来自于 [Large-Scale Evolution of Image Classifiers](https://arxiv.org/pdf/1703.01041.pdf)。 它会基于搜索空间随机生成一个种群。 在每一代中，会选择较好的结果，并对其下一代进行一些变异（例如，改动一个超参，增加或减少一层）。 进化算法需要很多次尝试才能有效，但它也非常简单，也很容易扩展新功能。
 
-*建议场景*：它需要相对较多的计算资源。 需要非常大的初始种群，以免落入局部最优中。 如果尝试时间很短，或者利用了评估器，这个调参器就非常合适。 如果尝试代码支持权重迁移，即每次尝试会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。
+*建议场景*：它需要相对较多的计算资源。 需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者利用了 Assessor，这个 Tuner 就非常合适。 如果尝试代码支持权重迁移，即每次尝试会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。
 
 *用法*：
 
@@ -97,7 +97,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 * 安装 swig。 (Ubuntu 下使用 `sudo apt-get install swig`)
 * 运行 `nnictl package install --name=SMAC`
 
-*建议场景*：与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒调参器。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。
+*建议场景*：与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒 Tuner。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。
 
 *用法*：
 
@@ -113,7 +113,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 <a name="Batch"></a>
 **Batch tuner（批量调参器）**
 
-批量调参器能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都完成后，实验即结束。 批量调参器 的[搜索空间](./SearchSpaceSpec.md)只支持 `choice`。
+Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都完成后，实验即结束。 Batch Tuner 的[搜索空间](./SearchSpaceSpec.md)只支持 `choice`。
 
 *建议场景*：如果需要实验的配置已经决定好了，可通过批量调参器将它们列到搜索空间中运行即可。
 
