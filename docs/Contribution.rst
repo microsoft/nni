@@ -1,5 +1,5 @@
 ###############################
-Contribution to NNI
+Contribute to NNI
 ###############################
 
 ..  toctree::

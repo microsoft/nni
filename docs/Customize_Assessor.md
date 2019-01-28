@@ -1,7 +1,5 @@
 # Customize Assessor
 
-## Customize Assessor
-
 NNI also support building an assessor by yourself to adjust your tuning demand.
 
 If you want to implement a customized Assessor, there are three things for you to do:
