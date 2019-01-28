@@ -50,17 +50,17 @@ def main_loop(args):
     trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout)
     sys.stdout = sys.stderr = trial_keeper_syslogger
 
-    if args.pai_hdfs_host is not None and args.nni_hdfs_exp_dir is not None:
+    if args.hdfs_host is not None and args.hdfs_exp_dir is not None:
         try:
-            if not args.nni_webhdfs_path:
-                nni_log(LogType.Error, 'Please set nni_webhdfs_path argument!')
-                raise Exception('nni_webhdfs_path is needed!')
-            pyhdfs.WEBHDFS_PATH = args.nni_webhdfs_path
-            hdfs_client = HdfsClient(hosts='{0}:80'.format(args.pai_hdfs_host), user_name=args.pai_user_name, timeout=5)
+            if not args.webhdfs_path:
+                nni_log(LogType.Error, 'Please set webhdfs_path argument!')
+                raise Exception('webhdfs_path is needed!')
+            pyhdfs.WEBHDFS_PATH = args.webhdfs_path
+            hdfs_client = HdfsClient(hosts='{0}:80'.format(args.hdfs_host), user_name=args.pai_user_name, timeout=5)
         except Exception as e:
             nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
             raise e
-        copyHdfsDirectoryToLocal(args.nni_hdfs_exp_dir, os.getcwd(), hdfs_client)
+        copyHdfsDirectoryToLocal(args.hdfs_exp_dir, os.getcwd(), hdfs_client)
 
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     log_pipe_stdout = trial_syslogger_stdout.get_pipelog_reader()
@@ -72,14 +72,14 @@ def main_loop(args):
         # child worker process exits and all stdout data is read
         if retCode is not None and log_pipe_stdout.set_process_exit() and log_pipe_stdout.is_read_completed == True:
             nni_log(LogType.Info, 'subprocess terminated. Exit code is {}. Quit'.format(retCode))
-            if args.pai_hdfs_output_dir is not None:
+            if args.hdfs_output_dir is not None:
                 # Copy local directory to hdfs for OpenPAI
                 nni_local_output_dir = os.environ['NNI_OUTPUT_DIR']
                 try:
-                    if copyDirectoryToHdfs(nni_local_output_dir, args.pai_hdfs_output_dir, hdfs_client):
-                        nni_log(LogType.Info, 'copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
+                    if copyDirectoryToHdfs(nni_local_output_dir, args.hdfs_output_dir, hdfs_client):
+                        nni_log(LogType.Info, 'copy directory from {0} to {1} success!'.format(nni_local_output_dir, args.hdfs_output_dir))
                     else:
-                        nni_log(LogType.Info, 'copy directory from {0} to {1} failed!'.format(nni_local_output_dir, args.pai_hdfs_output_dir))
+                        nni_log(LogType.Info, 'copy directory from {0} to {1} failed!'.format(nni_local_output_dir, args.hdfs_output_dir))
                 except Exception as e:
                     nni_log(LogType.Error, 'HDFS copy directory got exception: ' + str(e))
                     raise e
@@ -100,11 +100,11 @@ if __name__ == '__main__':
     PARSER.add_argument('--trial_command', type=str, help='Command to launch trial process')
     PARSER.add_argument('--nnimanager_ip', type=str, default='localhost', help='NNI manager rest server IP')
     PARSER.add_argument('--nnimanager_port', type=str, default='8081', help='NNI manager rest server port')
-    PARSER.add_argument('--pai_hdfs_output_dir', type=str, help='the output dir of hdfs')
-    PARSER.add_argument('--pai_hdfs_host', type=str, help='the host of hdfs')
+    PARSER.add_argument('--hdfs_output_dir', type=str, help='the output dir of hdfs')
+    PARSER.add_argument('--hdfs_host', type=str, help='the host of hdfs')
     PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
-    PARSER.add_argument('--nni_hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
-    PARSER.add_argument('--nni_webhdfs_path', type=str, help='the webhdfs path used in webhdfs URL')
+    PARSER.add_argument('--hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
+    PARSER.add_argument('--webhdfs_path', type=str, help='the webhdfs path used in webhdfs URL')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)
