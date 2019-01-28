@@ -207,45 +207,45 @@
   
   * 说明
     
-    **tuner** 指定了实验的调参器算法。有两种方法可设置调参器。 一种方法是使用 NNI SDK 提供的调参器，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的调参器，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
+    **tuner** 指定了实验的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 SDK 提供的 Tuner，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
   * **builtinTunerName** 和 **classArgs**
     
     * **builtinTunerName**
     
-    **builtinTunerName** 指定了系统调参器的名字，NNI SDK 提供了多种调参器，如：{**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}。
+    **builtinTunerName** 指定了系统 Tuner 的名字，NNI SDK 提供了多种 Tuner，如：{**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}。
     
     * **classArgs**
       
-      **classArgs** 指定了调参器算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
+      **classArgs** 指定了 Tuner 算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
   
   * **codeDir**, **classFileName**, **className** 和**classArgs**
     
     * **codeDir**
       
-            __codeDir__ 指定了调参器代码目录。
+            __codeDir__ 指定了 Tuner 代码目录。
           
     
     * **classFileName**
       
-            __classFileName__ 指定了调参器文件名。
+            __classFileName__ 指定了 Tuner 文件名。
           
     
     * **className**
       
-            __className__ 指定了调参器类名。
+            __className__ 指定了 Tuner 类名。
           
     
     * **classArgs**
       
-            __classArgs__ 指定了调参器算法的参数。
+            __classArgs__ 指定了 Tuner 算法的参数。
           
   
   * **gpuNum**
     
-        __gpuNum__ 指定了运行调参器进程的 GPU 数量。 此字段的值必须是正整数。
+        __gpuNum__ 指定了运行 Tuner 进程的 GPU 数量。 此字段的值必须是正整数。
         
-        注意: 只能使用一种方法来指定调参器，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。 
+        注意: 只能使用一种方法来指定 Tuner，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。 
         
 
 * **assessor**
@@ -275,7 +275,7 @@
     
     * **classFileName**
       
-           __classFileName__ 指定了调参器文件名。
+           __classFileName__ 指定了 Assessor 文件名。
           
     
     * **className**
