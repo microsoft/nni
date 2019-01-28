@@ -52,30 +52,30 @@ paiConfig:
 * memoryMB 
     * 必填。 Trial 程序的内存需求，必须为正数。
 * image 
-    * 必填。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定尝试程序的容器使用的 Docker 映像。 
+    * 必填。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定 Trial 程序的容器使用的 Docker 映像。 
     * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI 实验所依赖的所有 Python 包，Node 模块和 JavaScript。 用来生成此映像的文件在[这里](../deployment/Dockerfile.build.base)。 可以直接使用此映像，或参考它来生成自己的映像。
 * dataDir 
-    * 可选。 指定了尝试用于下载数据的 HDFS 数据目录。 格式应为 hdfs://{your HDFS host}:9000/{数据目录}
+    * 可选。 指定了 Trial 用于下载数据的 HDFS 数据目录。 格式应为 hdfs://{your HDFS host}:9000/{数据目录}
 * outputDir 
-    * 可选。 指定了尝试的 HDFS 输出目录。 尝试在完成（成功或失败）后，尝试的 stdout， stderr 会被 NNI 自动复制到此目录中。 格式应为 hdfs://{your HDFS host}:9000/{输出目录}
+    * 可选。 指定了 Trial 的 HDFS 输出目录。 Trial 在完成（成功或失败）后，Trial 的 stdout， stderr 会被 NNI 自动复制到此目录中。 格式应为 hdfs://{your HDFS host}:9000/{输出目录}
 
 完成并保存 NNI 实验配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
     nnictl create --config exp_pai.yml
     
 
-来在 pai 模式下启动实验。 NNI 会为每个尝试创建 OpenPAI 作业，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 OpenPAI 集群的网站中看到 NNI 创建的作业，例如： ![](./img/nni_pai_joblist.jpg)
+来在 pai 模式下启动实验。 NNI 会为每个 Trial 创建 OpenPAI 作业，作业名称的格式为 `nni_exp_{experiment_id}_trial_{trial_id}`。 可以在 OpenPAI 集群的网站中看到 NNI 创建的作业，例如： ![](./img/nni_pai_joblist.jpg)
 
-注意：pai 模式下，NNIManager 会启动 RESTful 服务，监听端口为 NNI 网页服务器的端口加1。 例如，如果网页端口为`8080`，那么 RESTful 服务器会监听在 `8081`端口，来接收运行在 Kubernetes 中的尝试作业的指标。 因此，需要在防火墙中启用端口 `8081` 的 TCP 协议，以允许传入流量。
+注意：pai 模式下，NNIManager 会启动 RESTful 服务，监听端口为 NNI 网页服务器的端口加1。 例如，如果网页端口为`8080`，那么 RESTful 服务器会监听在 `8081`端口，来接收运行在 Kubernetes 中的 Trial 作业的指标。 因此，需要在防火墙中启用端口 `8081` 的 TCP 协议，以允许传入流量。
 
-当一个尝试作业完成后，可以在 NNI 网页的概述页面（如：http://localhost:8080/oview）中查看尝试的信息。
+当一个 Trial 作业完成后，可以在 NNI 网页的概述页面（如：http://localhost:8080/oview）中查看 Trial 的信息。
 
-在尝试列表页面中展开尝试信息，点击如下的 logPath： ![](./img/nni_webui_joblist.jpg)
+在 Trial 列表页面中展开 Trial 信息，点击如下的 logPath： ![](./img/nni_webui_joblist.jpg)
 
-接着将会打开 HDFS 的 WEB 界面，并浏览到尝试的输出文件： ![](./img/nni_trial_hdfs_output.jpg)
+接着将会打开 HDFS 的 WEB 界面，并浏览到 Trial 的输出文件： ![](./img/nni_trial_hdfs_output.jpg)
 
 在输出目录中可以看到三个文件：stderr, stdout, 以及 trial.log
 
-如果希望将尝试的模型数据等其它输出保存到HDFS中，可在尝试代码中使用 `NNI_OUTPUT_DIR` 来自己保存输出文件，NNI SDK会从尝试的容器中将 `NNI_OUTPUT_DIR` 中的文件复制到 HDFS 中。
+如果希望将 Trial 的模型数据等其它输出保存到HDFS中，可在 Trial 代码中使用 `NNI_OUTPUT_DIR` 来自己保存输出文件，NNI SDK会从 Trial 的容器中将 `NNI_OUTPUT_DIR` 中的文件复制到 HDFS 中。
 
 如果在使用 pai 模式时遇到任何问题，请到 [NNI github](https://github.com/Microsoft/nni)中创建问题，或发信给 nni@microsoft.com。
