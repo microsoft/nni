@@ -1,10 +1,8 @@
-**在多机上运行 Experiment**
+# Run an Experiment on Multiple Machines
 
-===
+NNI supports running an experiment on multiple machines through SSH channel, called `remote` mode. NNI assumes that you have access to those machines, and already setup the environment for running deep learning training code.
 
-NNI 支持通过 SSH 通道在多台计算机上运行 Experiment，称为 `remote` 模式。 NNI 需要这些计算机的访问权限，并提前配置好深度学习训练环境。
-
-例如：有三台服务器，登录账户为 `bob`（注意：账户不必在各台计算机上一致）：
+e.g. Three machines and you login in with account `bob` (Note: the account is not necessarily the same on different machine):
 
 | IP       | 用户名 | 密码     |
 | -------- | --- | ------ |
@@ -14,21 +12,13 @@ NNI 支持通过 SSH 通道在多台计算机上运行 Experiment，称为 `remo
 
 ## 设置 NNI 环境
 
-按照[指南](GetStarted.md)在每台计算机上安装 NNI。
-
-对于只需要运行 Trial，不需要使用 nnictl 命令的计算机，可只安装 SDK：
-
-* **通过 pip 安装 SDK**
-    
-    ```bash
-    python3 -m pip install --user --upgrade nni-sdk
-    ```
+Install NNI on each of your machines following the install guide [here](GetStarted.md).
 
 ## 运行 Experiment
 
-在另一台计算机，或在其中任何一台上安装 NNI，并运行 nnictl 工具。
+Install NNI on another machine which has network accessibility to those three machines above, or you can just use any machine above to run nnictl command line tool.
 
-以 `examples/trials/mnist-annotation` 为例。 `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` 来查看详细配置：
+We use `examples/trials/mnist-annotation` as an example here. `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` to see the detailed configuration file:
 
 ```yaml
 authorName: default
@@ -66,10 +56,10 @@ machineList:
     passwd: bob123
 ```
 
-简单填写 `machineList` 部分，然后运行：
+Simply filling the `machineList` section and then run:
 
 ```bash
 nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
 ```
 
-来启动 Experiment。
+to start the experiment.
