@@ -1,8 +1,8 @@
-**在多机上运行实验**
+**在多机上运行 Experiment**
 
 ===
 
-NNI 支持通过 SSH 通道在多台计算机上运行实验，称为 `remote` 模式。 NNI 需要这些计算机的访问权限，并提前配置好深度学习训练环境。
+NNI 支持通过 SSH 通道在多台计算机上运行 Experiment，称为 `remote` 模式。 NNI 需要这些计算机的访问权限，并提前配置好深度学习训练环境。
 
 例如：有三台服务器，登录账户为 `bob`（注意：账户不必在各台计算机上一致）：
 
@@ -16,7 +16,7 @@ NNI 支持通过 SSH 通道在多台计算机上运行实验，称为 `remote` �
 
 按照[指南](GetStarted.md)在每台计算机上安装 NNI。
 
-对于只需要运行尝试，不需要使用 nnictl 命令的计算机，可只安装 SDK：
+对于只需要运行 Trial，不需要使用 nnictl 命令的计算机，可只安装 SDK：
 
 * **通过 pip 安装 SDK**
     
@@ -24,7 +24,7 @@ NNI 支持通过 SSH 通道在多台计算机上运行实验，称为 `remote` �
     python3 -m pip install --user --upgrade nni-sdk
     ```
 
-## 运行实验
+## 运行 Experiment
 
 在另一台计算机，或在其中任何一台上安装 NNI，并运行 nnictl 工具。
 
@@ -72,4 +72,4 @@ machineList:
 nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
 ```
 
-来启动实验。
+来启动 Experiment。
