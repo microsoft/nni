@@ -1,6 +1,6 @@
-# Builtin Assessors
+# Built-in Assessors
 
-NNI provides the-state-of-art tuning algorithm in our builtin-assessors and makes them easy to use. Below is the brief overview of NNI current builtin Assessors:
+NNI provides state-of-the-art tuning algorithm in our builtin-assessors and makes them easy to use. Below is the brief overview of NNI current builtin Assessors:
 
 |Assessor|Brief Introduction of Algorithm|
 |---|---|
@@ -11,7 +11,7 @@ NNI provides the-state-of-art tuning algorithm in our builtin-assessors and make
 
 ## Usage of Builtin Assessors
 
-Use builtin assessors provided by NNI sdk requires to declare the  **builtinAssessorName** and **classArgs** in `config.yml` file. In this part, we will introduce the detailed usage about the suggested scenarios, classArg requirements, and example for each assessor.
+Use builtin assessors provided by NNI SDK requires to declare the  **builtinAssessorName** and **classArgs** in `config.yml` file. In this part, we will introduce the detailed usage about the suggested scenarios, classArg requirements, and example for each assessor.
 
 Note: Please follow the format when you write your `config.yml` file.
 
