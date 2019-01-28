@@ -662,7 +662,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private getRemoteScriptsPath(): string {
-        return path.join(getRemoteTmpDir(this.remoteOS), 'nni', 'scripts');
+        return path.join(getRemoteTmpDir(this.remoteOS), '$USER', 'nni', 'scripts');
     }
 
     private getHostJobRemoteDir(jobId: string): string {
@@ -670,7 +670,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private getRemoteExperimentRootDir(): string{
-        return path.join(getRemoteTmpDir(this.remoteOS), 'nni', 'experiments', getExperimentId());
+        return path.join(getRemoteTmpDir(this.remoteOS), '$USER', 'nni', 'experiments', getExperimentId());
     }
 
     public get MetricsEmitter() : EventEmitter {
