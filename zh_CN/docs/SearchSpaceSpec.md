@@ -15,7 +15,7 @@
 
 ```
 
-此样例定义了 `dropout_rate` 变量，它的先验分布为均匀分布，值在 `0.1` 与 `0.5` 之间。 调参器会首先了解搜索空间，然后从中采样。
+此样例定义了 `dropout_rate` 变量，它的先验分布为均匀分布，值在 `0.1` 与 `0.5` 之间。 Tuner 会首先了解搜索空间，然后从中采样。
 
 用户需要定义变量名、类型和取值范围。 变量类型和取值范围包括：
 
@@ -77,7 +77,7 @@
 
 注意：SMAC 仅支持部分类型，包括 `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`。 当前版本中，SMAC 不支持级联搜索空间（即，SMAC中的条件变量）。
 
-注意，网格搜索调参器仅支持部分类型，包括 `choice`, `quniform` and `qloguniform`, 这里的 q 指定了采样的数量。 最后两种类型的细节如下：
+注意，网格搜索 Tuner 仅支持部分类型，包括 `choice`, `quniform` and `qloguniform`, 这里的 q 指定了采样的数量。 最后两种类型的细节如下：
 
 * 类型 'quniform' 接收三个值 [low, high, q]， 其中 [low, high] 指定了范围，而 'q' 指定了会被均匀采样的值的数量。 注意 q 至少为 2。 它的第一个采样值为 'low'，每个采样值都会比前一个大 (high-low)/q 。
 * 类型 'qloguniform' 的行为与 'quniform' 类似，不同处在于首先将范围改为 [log(low), log(high)] 采样后，再将数值还原。
