@@ -1,7 +1,5 @@
 files:
   - source: '/**/*.[mM][dD]'
-    ignore:
-      - README.Makefile.md
     translation: /%locale_with_underscore%/%original_path%/%original_file_name%
   - source: '/**/*.[pP][nN][gG]'
     translation: /%locale_with_underscore%/%original_path%/%original_file_name%
