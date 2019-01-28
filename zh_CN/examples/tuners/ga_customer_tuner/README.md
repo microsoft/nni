@@ -4,7 +4,7 @@
 
 # 配置
 
-如果要在实验中使用 ga_customer_tuner 可按照下列格式来配置：
+如果要在 Experiment 中使用 ga_customer_tuner 可按照下列格式来配置：
 
     tuner:
       codeDir: ~/nni/examples/tuners/ga_customer_tuner
