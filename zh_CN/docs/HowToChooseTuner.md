@@ -115,7 +115,7 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 
 Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都完成后，实验即结束。 Batch Tuner 的[搜索空间](./SearchSpaceSpec.md)只支持 `choice`。
 
-*建议场景*：如果需要实验的配置已经决定好了，可通过批量调参器将它们列到搜索空间中运行即可。
+*建议场景*：如果实验配置已确定，可通过 Batch Tuner 将它们罗列到搜索空间中运行即可。
 
 *用法*：
 
@@ -188,7 +188,7 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
 
 *安装*： NetworkMorphism 需要 [pyTorch](https://pytorch.org/get-started/locally)，必须提前安装它。
 
-*建议场景*：需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 可修改[样例](../examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此调参器仅支持视觉领域。
+*建议场景*：需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 可修改[样例](../examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此 Tuner 仅支持视觉领域。
 
 *用法*：
 
@@ -210,7 +210,7 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
 ```
 
 <a name="MetisTuner"></a>
-**Metis 调参器**
+**Metis Tuner**
 
 大多数调参工具仅仅预测最优配置，而 [Metis](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/) 的优势在于有两个输出：(a) 最优配置的当前预测结果， 以及 (b) 下一次尝试的建议。 没有随机猜测！
 
@@ -227,9 +227,9 @@ Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶
 
 更多详情，参考论文：https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
 
-*安装*: Metis 调参器需要提前安装 [sklearn](https://scikit-learn.org/)。 可通过 `pip3 install sklearn` 命令来安装。
+*安装*: Metis Tuner 需要提前安装 [sklearn](https://scikit-learn.org/)。 可通过 `pip3 install sklearn` 命令来安装。
 
-*建议场景*：与 TPE 和 SMAC 类似，Metris 是黑盒调参器。 如果系统需要很长时间才能完成一次尝试，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的尝试提供了候选。 参考关于如何使用 Metis 的[样例](../../examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给调参器。
+*建议场景*：与 TPE 和 SMAC 类似，Metris 是黑盒 Tuner。 如果系统需要很长时间才能完成一次尝试，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的尝试提供了候选。 参考关于如何使用 Metis 的[样例](../../examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给 Tuner。
 
 *用法*：
 
