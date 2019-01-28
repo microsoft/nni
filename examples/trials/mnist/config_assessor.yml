@@ -2,7 +2,7 @@ authorName: default
 experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 1h
-maxTrialNum: 20
+maxTrialNum: 50
 #choice: local, remote
 trainingServicePlatform: local
 searchSpacePath: search_space.json
@@ -17,10 +17,12 @@ tuner:
     optimize_mode: maximize
 assessor:
   #choice: Medianstop, Curvefitting
-  builtinAssessorName: Medianstop
+  builtinAssessorName: Curvefitting
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
+    epoch_num: 20
+    threshold: 0.9
 trial:
   command: python3 mnist.py
   codeDir: .

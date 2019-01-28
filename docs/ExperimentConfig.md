@@ -3,6 +3,12 @@
 A config file is needed when create an experiment, the path of the config file is provide to nnictl.
 The config file is written in yml format, and need to be written correctly.
 This document describes the rule to write config file, and will provide some examples and templates. 
+
+ - [Template](#Template) (the templates of an config file)
+ - [Configuration spec](#Configuration) (the configuration specification of every attribute in config file)
+ - [Examples](#Examples) (the examples of config file)
+
+<a name="Template"></a>
 ## Template
 * __light weight(without Annotation and Assessor)__ 
 
@@ -112,8 +118,8 @@ machineList:
     username: 
     passwd: 
 ```
-
-## Configuration
+<a name="Configuration"></a>
+## Configuration spec
 * __authorName__
   * Description  
             
@@ -131,12 +137,14 @@ machineList:
     
       __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
 	 
-      Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
+        Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
 	 
 * __maxExecDuration__
   * Description
     
 	__maxExecDuration__ specifies the max duration time of an experiment.The unit of the time is {__s__, __m__, __h__, __d__}, which means {_seconds_, _minutes_, _hours_, _days_}.  
+
+        Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
 	
 * __maxTrialNum__
   *  Description
@@ -437,7 +445,7 @@ machineList:
     
     
 
-        
+<a name="Examples"></a>        
 ## Examples
 * __local mode__
 
