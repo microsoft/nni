@@ -80,7 +80,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 
 ## **使用场景**
 
-* 在本地尝试不同的自动机器学习算法来训练模型。
+* 在本地 Trial 不同的自动机器学习算法来训练模型。
 * 在分布式环境中加速自动机器学习（如：远程 GPU 工作站和云服务器）。
 * 定制自动机器学习算法，或比较不同的自动机器学习算法。
 * 在自己的机器学习平台中支持自动机器学习。
@@ -166,7 +166,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
     -----------------------------------------------------------------------
     
 
-* 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的尝试任务。 查看[这里的](docs/WebUI.md)更多页面示例。
+* 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的 Trial 任务。 查看[这里的](docs/WebUI.md)更多页面示例。
 
 <table style="border: none">
     <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
@@ -184,7 +184,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * [使用命令行工具 nnictl](docs/NNICTLDOC.md)
 * [使用 NNIBoard](docs/WebUI.md)
 * [如何定义搜索空间](docs/SearchSpaceSpec.md)
-* [如何定义一次尝试](docs/howto_1_WriteTrial.md)
+* [如何定义一次 Trial](docs/howto_1_WriteTrial.md)
 * [如何选择 Tuner、搜索算法](docs/HowToChooseTuner.md)
 * [配置实验](docs/ExperimentConfig.md)
 * [如何使用标记](docs/howto_1_WriteTrial.md#nni-python-annotation)
@@ -197,7 +197,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * [在 Kubeflow 上运行实验。](docs/KubeflowMode.md)
 * [使用不同的 Tuner 和 Assessor](docs/tutorial_3_tryTunersAndAssessors.md)
 * [实现自定义 Tuner](docs/howto_2_CustomizedTuner.md)
-* [实现自定义评估器](examples/assessors/README.md)
+* [实现自定义 Assessor](examples/assessors/README.md)
 * [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
 
 ## **贡献**
