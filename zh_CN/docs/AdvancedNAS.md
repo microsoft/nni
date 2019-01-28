@@ -1,6 +1,6 @@
 # 高级神经网络架构搜索教程
 
-目前，许多 NAS（Neural Architecture Search，神经网络架构搜索）算法都在尝试上使用了 **权重共享（weight sharing）** 的方法来加速训练过程。 例如，[ENAS](https://arxiv.org/abs/1802.03268) 与以前的 [NASNet](https://arxiv.org/abs/1707.07012) 算法相比，通过'*子模型间的参数共享（parameter sharing between child models）*'提高了 1000 倍的效率。 而例如 [DARTS](https://arxiv.org/abs/1806.09055), [Network Morphism](https://arxiv.org/abs/1806.10282), 和 [Evolution](https://arxiv.org/abs/1703.01041) 等算法也利用或者隐式的利用了权重共享。
+目前，许多 NAS（Neural Architecture Search，神经网络架构搜索）算法都在 Trial 上使用了 **权重共享（weight sharing）** 的方法来加速训练过程。 例如，[ENAS](https://arxiv.org/abs/1802.03268) 与以前的 [NASNet](https://arxiv.org/abs/1707.07012) 算法相比，通过'*子模型间的参数共享（parameter sharing between child models）*'提高了 1000 倍的效率。 而例如 [DARTS](https://arxiv.org/abs/1806.09055), [Network Morphism](https://arxiv.org/abs/1806.10282), 和 [Evolution](https://arxiv.org/abs/1703.01041) 等算法也利用或者隐式的利用了权重共享。
 
 本教程介绍了如何使用权重共享。
 
@@ -10,7 +10,7 @@
 
 ### 通过 NFS 文件使用权重共享
 
-使用 NFS 配置（见下文），尝试代码可以通过读写文件来共享模型权重。 建议使用调参器的存储路径：
+使用 NFS 配置（见下文），Trial 代码可以通过读写文件来共享模型权重。 建议使用 Tuner 的存储路径：
 
 ```yaml
 tuner:
@@ -40,11 +40,11 @@ tf.init_from_checkpoint(params['restore_path'])
 
 ### NFS 配置
 
-NFS 使用了客户端/服务器架构。通过一个 NFS 服务器来提供物理存储，远程计算机上的尝试使用 NFS 客户端来读写文件，操作上和本地文件相同。
+NFS 使用了客户端/服务器架构。通过一个 NFS 服务器来提供物理存储，远程计算机上的 Trial 使用 NFS 客户端来读写文件，操作上和本地文件相同。
 
 #### NFS 服务器
 
-如果有足够的存储空间，并能够让 NNI 的尝试通过**远程机器**来连接，NFS 服务可以安装在任何计算机上。 通常，可以选择一台远程服务器作为 NFS 服务。
+如果有足够的存储空间，并能够让 NNI 的 Trial 通过**远程机器**来连接，NFS 服务可以安装在任何计算机上。 通常，可以选择一台远程服务器作为 NFS 服务。
 
 在 Ubuntu 上，可通过 `apt-get` 安装 NFS 服务：
 
@@ -79,14 +79,14 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
 实际使用时，IP `10.10.10.10` 需要替换为 NFS 服务器的真实地址。
 
-## 尝试依赖控制的异步调度模式
+## Trial 依赖控制的异步调度模式
 
-多机间启用权重的尝试，一般是通过**先写后读**的方式来保持一致性。 子节点在父节点的尝试完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的 Trial 时，Tuner 线程可以决定是否阻塞当前线程。 例如：
+多机间启用权重的 Trial，一般是通过**先写后读**的方式来保持一致性。 子节点在父节点的 Trial 完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的 Trial 时，Tuner 线程可以决定是否阻塞当前线程。 例如：
 
 ```python
     def generate_parameters(self, parameter_id):
         self.thread_lock.acquire()
-        indiv = # 新尝试的配置
+        indiv = # 新 Trial 的配置
         self.events[parameter_id] = threading.Event()
         self.thread_lock.release()
         if indiv.parent_id is not None:
@@ -94,7 +94,7 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
     def receive_trial_result(self, parameter_id, parameters, reward):
         self.thread_lock.acquire()
-        # 处理尝试结果的配置
+        # 处理 Trial 结果的配置
         self.thread_lock.release()
         self.events[parameter_id].set()
 ```
