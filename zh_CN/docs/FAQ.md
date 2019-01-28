@@ -6,9 +6,9 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 > OSError: [Errno 28] No space left on device
 
-### OpenPAI 模式下无法获得尝试的数据
+### OpenPAI 模式下无法获得 Trial 的数据
 
-在 OpenPAI 的训练模式下，nniManager 会在端口 51189 启动一个 RESTful 服务，来接收 OpenPAI 集群中尝试任务的指标数据。 如果在 OpenPAI 模式下的网页中不能看到任何指标，需要检查 51189 端口是否在防火墙规则中已打开。
+在 OpenPAI 的训练模式下，nniManager 会在端口 51189 启动一个 RESTful 服务，来接收 OpenPAI 集群中 Trial 任务的指标数据。 如果在 OpenPAI 模式下的网页中不能看到任何指标，需要检查 51189 端口是否在防火墙规则中已打开。
 
 ### 安装时出现 Segmentation Fault (core dumped)
 
@@ -25,11 +25,11 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 ### 运行时间超过了 MaxDuration ，但没有停止
 
-当实验到达最长运行时间时，nniManager 不会创建新的尝试，但除非手动停止实验，运行中的尝试会继续。
+当 Experiment 到达最长运行时间时，nniManager 不会创建新的 Trial ，但除非手动停止 Experiment，运行中的 Trial 会继续运行直到结束。
 
-### 使用 `nnictl stop` 无法停止实验
+### 使用 `nnictl stop` 无法停止 Experiment
 
-如果在实验运行时，升级了 nni 或删除了一些配置文件，会因为丢失配置文件而出现这类错误。 可以使用 `ps -ef | grep node` 命令来找到实验的 pid，并用 `kill -9 {pid}` 命令来停止实验进程。
+如果在 Experiment 运行时，升级了 nni 或删除了一些配置文件，会因为丢失配置文件而出现这类错误。 可以使用 `ps -ef | grep node` 命令来找到 Experiment 的 pid，并用 `kill -9 {pid}` 命令来停止 Experiment 进程。
 
 ### 无法在虚拟机的 NNI 网页中看到 `指标数据`
 
