@@ -21,7 +21,7 @@
 **TPE**
 
 Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimization（SMBO，即基于序列模型优化）的方法。 SMBO 方法根据历史指标数据来按顺序构造模型，来估算超参的性能，随后基于此模型来选择新的超参。 TPE 方法对 P(x|y) 和 P(y) 建模，其中 x 表示超参，y 表示相关的评估指标。 P(x|y) 通过变换超参的生成过程来建模，用非参数密度（non-parametric densities）代替配置的先验分布。 细节可参考 [Algorithms for Hyper-Parameter Optimization](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)。 ​  
-*建议场景*： TPE 作为黑盒的优化方法，能在广泛的场景中使用，通常都能得到较好的结果。 特别是在计算资源有限，只能进行少量 Trial 时。 从大量的实验中，我们发现 TPE 的性能远远优于随机搜索。
+*建议场景*： TPE 作为黑盒的优化方法，能在广泛的场景中使用，通常都能得到较好的结果。 特别是在计算资源有限，只能进行少量 Trial 时。 从大量的 Experiment 中，我们发现 TPE 的性能远远优于随机搜索。
 
 *用法*：
 
@@ -113,9 +113,9 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 <a name="Batch"></a>
 **Batch tuner（批量调参器）**
 
-Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都完成后，实验即结束。 Batch Tuner 的[搜索空间](./SearchSpaceSpec.md)只支持 `choice`。
+Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都完成后，Experiment 即结束。 Batch Tuner 的[搜索空间](./SearchSpaceSpec.md)只支持 `choice`。
 
-*建议场景*：如果实验配置已确定，可通过 Batch Tuner 将它们罗列到搜索空间中运行即可。
+*建议场景*：如果 Experiment 配置已确定，可通过 Batch Tuner 将它们罗列到搜索空间中运行即可。
 
 *用法*：
 
@@ -142,7 +142,7 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
 }
 ```
 
-搜索空间文件使用了键 `combine_params`。 参数类型必须是 `choice` ，并且 `values` 要包含所有需要实验的参数组合。
+搜索空间文件使用了键 `combine_params`。 参数类型必须是 `choice` ，并且 `values` 要包含所有需要 Experiment 的参数组合。
 
 <a name="Grid"></a>
 **Grid Search（网格搜索）**
