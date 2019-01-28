@@ -6,7 +6,7 @@
 
 ## 2. 实现并行
 
-首先，此样例是基于 MsgDispatcherBase 来实现的自动机器学习算法，而不是基于调参器和评估器。 使用这种实现方法，是因为 Hyperband 集成了调参器和评估器两者的函数，因而，将它叫做 Advisor。
+首先，此样例是基于 MsgDispatcherBase 来实现的自动机器学习算法，而不是基于 Tuner 和Assessor。 这种实现方法下，Hyperband 集成了 Tuner 和 Assessor 两者的功能，因而将它叫做 Advisor。
 
 其次，本实现完全利用了 Hyperband 内部的并行性。 具体来说，下一个分组不会严格的在当前分组结束后再运行，只要有资源，就可以开始运行新的分组。
 
@@ -26,7 +26,7 @@
         optimize_mode: maximize
     
 
-注意，一旦使用了 Advisor，就不能在配置文件中添加调参器和评估器。 使用 Hyperband 时，尝试代码收到的超参（如键值对）中，除了用户定义的超参，会多一个 `STEPS`。 **使用 `STEPS`，尝试能够控制其运行的时间。</p> 
+注意，一旦使用了 Advisor，就不能在配置文件中添加 Tuner 和 Assessor。 使用 Hyperband 时，尝试代码收到的超参（如键值对）中，除了用户定义的超参，会多一个 `STEPS`。 **使用 `STEPS`，尝试能够控制其运行的时间。</p> 
 
 对于尝试代码中 `report_intermediate_result(metric)` 和 `report_final_result(metric)` 的**`指标` 应该是数值，或者用一个 dict，并保证其中有键值为 default 的项目，其值也为数值型**。 这是需要进行最大化或者最小化优化的数值，如精度或者损失度。
 
