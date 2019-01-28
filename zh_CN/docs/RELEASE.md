@@ -2,11 +2,11 @@
 
 ## 主要功能
 
-### 支持新的调参器和评估器
+### 支持新的 Tuner 和 Assessor
 
 * 支持 [Metis tuner](./HowToChooseTuner.md#MetisTuner) 作为 NNI 的调参器。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
-* 支持 [Curve fitting （曲线拟合）评估器](./HowToChooseTuner.md#Curvefitting)，通过曲线拟合的方式的策略来实现提前终止尝试。 
+* 支持 [Curve fitting （曲线拟合）Assessor](./HowToChooseTuner.md#Curvefitting)，通过曲线拟合的策略来实现提前终止 Trial。 
 * 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS 调参器通过 NFS 来提供权重共享。
 
 ### 改进训练服务
@@ -153,10 +153,10 @@
     * 安装和部署
        * 支持 pip 和源代码安装
        * 支持本机（包括多 GPU 卡）训练和远程多机训练模式
-    * 调参器，评估器和尝试
+    * Tuner，Assessor 和 Trial
        * 支持自动机器学习算法，包括： hyperopt_tpe, hyperopt_annealing, hyperopt_random, 和 evolution_tuner。
-       * 支持评估器（提前终止）算法，包括：medianstop。
-       * 提供 Python API 来自定义调参器和评估器
+       * 支持 Assessor（提前终止）算法，包括：medianstop。
+       * 提供 Python API 来自定义 Tuner 和 Assessor
        * 提供 Python API 来包装尝试代码，以便能在 NNI 中运行
     * 实验
        * 提供命令行工具 'nnictl' 来管理实验
