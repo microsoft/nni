@@ -1,8 +1,12 @@
-## 如何定义搜索空间？
+# Search Space
 
-### 超参搜索空间
+## Overview
 
-* 超参搜索空间配置样例：
+In NNI, tuner will sample parameters/architecture according to the search space, which is defined as a json file.
+
+To define a search space, users should define the name of variable, the type of sampling strategy and its parameters.
+
+* A example of search space definition as follow:
 
 ```python
 {
@@ -15,9 +19,11 @@
 
 ```
 
-此样例定义了 `dropout_rate` 变量，它的先验分布为均匀分布，值在 `0.1` 与 `0.5` 之间。 Tuner 会首先了解搜索空间，然后从中采样。
+Take the first line as an example. ```dropout_rate``` is defined as a variable whose priori distribution is a uniform distribution of a range from ```0.1``` and ```0.5```.
 
-用户需要定义变量名、类型和取值范围。 变量类型和取值范围包括：
+## Types
+
+All types of sampling strategies and their parameter are listed here:
 
 * {"_type":"choice","_value":options}
    
@@ -75,9 +81,23 @@
    * 适用于值是“平滑”的离散变量，但某一边有界。   
       
 
-注意：SMAC 仅支持部分类型，包括 `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`。 当前版本中，SMAC 不支持级联搜索空间（即，SMAC中的条件变量）。
+## Search Space Types Supported by Each Tuner
 
-注意，网格搜索 Tuner 仅支持部分类型，包括 `choice`, `quniform` and `qloguniform`, 这里的 q 指定了采样的数量。 最后两种类型的细节如下：
+|                     |  choice  | randint  | uniform  | quniform | loguniform | qloguniform |  normal  | qnormal  | lognormal | qlognormal |
+|:-------------------:|:--------:|:--------:|:--------:|:--------:|:----------:|:-----------:|:--------:|:--------:|:---------:|:----------:|
+|      TPE Tuner      | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
+| Random Search Tuner | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
+|    Anneal Tuner     | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
+|   Evolution Tuner   | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
+|     SMAC Tuner      | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |             |          |          |           |            |
+|     Batch Tuner     | &#10003; |          |          |          |            |             |          |          |           |            |
+|  Grid Search Tuner  | &#10003; |          |          | &#10003; |            |  &#10003;   |          |          |           |            |
+|  Hyperband Advisor  | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
+|     Metis Tuner     | &#10003; | &#10003; | &#10003; | &#10003; |            |             |          |          |           |            |
+
+Note that In GridSearch Tuner, for users' convenience, the definition of `quniform` and `qloguniform` change, where q here specifies the number of values that will be sampled. Details about them are listed as follows
 
 * 类型 'quniform' 接收三个值 [low, high, q]， 其中 [low, high] 指定了范围，而 'q' 指定了会被均匀采样的值的数量。 注意 q 至少为 2。 它的第一个采样值为 'low'，每个采样值都会比前一个大 (high-low)/q 。
 * 类型 'qloguniform' 的行为与 'quniform' 类似，不同处在于首先将范围改为 [log(low), log(high)] 采样后，再将数值还原。
+
+Note that Metis Tuner only support numerical `choice` now
