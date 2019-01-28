@@ -1,4 +1,4 @@
-# NNI 中的 Curve Fitting 评估器
+# NNI 中的 Curve Fitting Assessor
 
 ## 1. 介绍
 
