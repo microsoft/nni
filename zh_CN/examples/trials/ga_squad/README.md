@@ -204,7 +204,7 @@
 
 ### Tuner
 
-调参器比尝试代码简单很多。 它们共用了同样的 `graph.py`。 此外，调参器有 `customer_tuner.py`，其中最重要的类是 `CustomerTuner`：
+Tuner 比 Trial 代码简单很多。 它们共用了同样的 `graph.py`。 此外，Tuner 有 `customer_tuner.py`，其中最重要的类是 `CustomerTuner`：
 
     class CustomerTuner(Tuner):
         # ......
@@ -249,7 +249,7 @@
 
 ## 模型配置格式
 
-这是模型配置的样例，在架构搜索过程中，从调参器传入尝试代码。
+这是模型配置的样例，在架构搜索过程中，从 Tuner 传入 Trial 的代码。
 
     {
         "max_layer_num": 50,
