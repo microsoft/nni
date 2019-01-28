@@ -3,7 +3,6 @@ Tutorials
 ######################
 
 ..  toctree::
-    QuickStart
     Installation
     Trial<howto_1_WriteTrial>
     Tuners<tuners>
