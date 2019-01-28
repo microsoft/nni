@@ -1,6 +1,6 @@
 # **在 OpenPAI 上运行实验**
 
-NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运行实验，即 pai 模式。 在使用 NNI 的 pai 模式前, 需要有 [OpenPAI](https://github.com/Microsoft/pai) 群集的账户。 如果没有 OpenPAI 账户，参考[这里](https://github.com/Microsoft/pai#how-to-deploy)来进行部署。 在 pai 模式中，会在 Docker 创建的容器中运行尝试程序。
+NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运行实验，即 pai 模式。 在使用 NNI 的 pai 模式前, 需要有 [OpenPAI](https://github.com/Microsoft/pai) 群集的账户。 如果没有 OpenPAI 账户，参考[这里](https://github.com/Microsoft/pai#how-to-deploy)来进行部署。 在 pai 模式中，会在 Docker 创建的容器中运行 Trial 程序。
 
 ## 设置环境
 
@@ -15,7 +15,7 @@ authorName: your_name
 experimentName: auto_mnist
 # 并发运行的尝试数量
 trialConcurrency: 2
-# 实验的最长持续运行时间
+# Experiment 的最长持续运行时间
 maxExecDuration: 3h
 # 空表示一直运行
 maxTrialNum: 100
@@ -45,14 +45,14 @@ paiConfig:
 
 注意：如果用 pai 模式运行，需要在 yml 文件中设置 `trainingServicePlatform: pai`。
 
-与本机模式，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的尝试有额外的配置：
+与本机模式，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的 Trial 有额外的配置：
 
 * cpuNum 
-    * 必填。 尝试程序的 CPU 需求，必须为正数。
+    * 必填。 Trial 程序的 CPU 需求，必须为正数。
 * memoryMB 
-    * 必填。 尝试程序的内存需求，必须为正数。
+    * 必填。 Trial 程序的内存需求，必须为正数。
 * image 
-    * 必填。 在 pai 模式中，尝试程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定尝试程序的容器使用的 Docker 映像。 
+    * 必填。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定尝试程序的容器使用的 Docker 映像。 
     * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI 实验所依赖的所有 Python 包，Node 模块和 JavaScript。 用来生成此映像的文件在[这里](../deployment/Dockerfile.build.base)。 可以直接使用此映像，或参考它来生成自己的映像。
 * dataDir 
     * 可选。 指定了尝试用于下载数据的 HDFS 数据目录。 格式应为 hdfs://{your HDFS host}:9000/{数据目录}
