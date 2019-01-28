@@ -228,7 +228,7 @@ It is suggested when you have limited computation resource but have relatively l
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 * **R** (*int, optional, default = 60*) - the maximum STEPS (could be the number of mini-batches or epochs) can be allocated to a trial. Each trial should use STEPS to control how long it runs.
-* **eta** (*int, optional, default = 3*) - proportion of discarded trials
+* **eta** (*int, optional, default = 3*) - `(eta-1)/eta` is the proportion of discarded trials
 
 **Usage example**
 
