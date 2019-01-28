@@ -356,15 +356,7 @@ class RemoteMachineTrainingService implements TrainingService {
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping remote machine training service...');
         this.stopping = true;
-        let timeoutId: NodeJS.Timer;
-        const delay: Promise<{}> = new Promise((resolve: Function, reject: Function): void => {
-            timeoutId = setTimeout(
-                () => { reject(new Error('TrainingService cleanup timeout.')); },
-                10000);
-        });
-        await Promise.race([delay, this.cleanupConnections()]).finally(() => {
-            clearTimeout(timeoutId);
-        });
+        await Promise.race([delay(10000), this.cleanupConnections()]);
     }
     
     /**
