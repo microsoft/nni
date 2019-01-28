@@ -46,8 +46,6 @@
 
 ![](./img/webui-img/detail-pai.png)
 
-![](./img/webui-img/trialog.png)
-
 * Kill: 可终止正在运行的任务。
 * 支持搜索某个特定的 Trial。
 * 中间结果图。
