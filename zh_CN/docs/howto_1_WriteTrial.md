@@ -51,8 +51,8 @@
 
 **注意**：
 
-    accuracy - 如果使用 NNI 内置的调参器/评估器，那么 `accuracy` 必须是数值（如 float, int）。在定制调参器/评估器时 `accuracy` 可以是任何类型的 Python 对象。
-    评估器 - 会根据尝试的历史值（即其中间结果），来决定这次尝试是否应该提前终止。
+    accuracy - 如果使用 NNI 内置的 Tuner/Assessor，那么 `accuracy` 必须是数值（如 float, int）。在定制 Tuner/Assessor 时 `accuracy` 可以是任何类型的 Python 对象。
+    Assessor（评估器）- 会根据 Trial 的历史值（即其中间结果），来决定这次 Trial 是否应该提前终止。
     调参器 - 会根据探索的历史（所有尝试的最终结果）来生成下一组参数、架构。
     
 
@@ -74,7 +74,7 @@
 
 * 标记需要调整的参数变量 
 * 指定变量的搜索空间范围
-* 标记哪个变量需要作为中间结果范围给`评估器`
+* 标记哪个变量需要作为中间结果范围给`Assessor`
 * 标记哪个变量需要作为最终结果（例如：模型精度）返回给`调参器`。
 
 同样以 MNIST 为例，只需要两步就能用 NNI 标记来实现尝试代码。
@@ -116,7 +116,7 @@ with tf.Session() as sess:
 > 
 > > `@nni.variable` 会影响下面紧接的一行。
 > > 
-> > `@nni.report_intermediate_result`/`@nni.report_final_result` 会在那行将数据发送给评估器、调参器。
+> > `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。
 > > 
 > > 参考 [标记](../tools/nni_annotation/README.md) 了解更多关于标记的语法和用法。
 > 
