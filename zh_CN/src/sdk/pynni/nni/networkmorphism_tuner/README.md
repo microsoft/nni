@@ -1,4 +1,4 @@
-# NNI 中的 Network Morphism 调参器
+# NNI 中的 Network Morphism Tuner
 
 ## 1. 介绍
 
@@ -40,7 +40,7 @@ def build_graph_from_json(ir_model_json):
     model = graph.produce_torch_model()
     return model
 
-# 从网络形态调参器中获得下一组参数
+# 从网络形态 Tuner 中获得下一组参数
 RCV_CONFIG = nni.get_next_parameter()
 # 调用函数来生成 Pytorch 或 Keras 模型
 net = build_graph_from_json(RCV_CONFIG)
@@ -54,9 +54,9 @@ nni.report_final_result(best_acc)
 
 ## 3. 文件结构
 
-调参器有大量的文件、函数和类。 这里只简单介绍最重要的文件：
+Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
 
-- `networkmorphism_tuner.py` 是使用 network morphism 算法的调参器。
+- `networkmorphism_tuner.py` 是使用 network morphism 算法的 Tuner。
 
 - `bayesian.py` 是用来基于已经搜索道德模型来预测未知模型指标的贝叶斯算法。
 
@@ -77,7 +77,7 @@ nni.report_final_result(best_acc)
 
 ## 4. 网络表示的 JSON 样例
 
-这是样例定义的中间表示 JSON 文件，它会在架构搜索过程中从调参器传入尝试代码。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。 样例如下。
+这是样例定义的中间表示 JSON 文件，它会在架构搜索过程中从 Tuner 传到 Trial。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。 样例如下。
 
 ```json
 {
