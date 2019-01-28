@@ -1,6 +1,6 @@
 # **使用 Assessor**
 
-Assessor 模块用于评估正在运行的 Trial。 最常用的情况是提前中止尝试。如果尝试的中间结果不够好，则可提前终止。
+Assessor 模块用于评估正在运行的 Trial。 最常用的情况是提前中止 Trial。如果 Trial 的中间结果不够好，则可提前终止。
 
 ## 使用内置的 Assessor 
 
