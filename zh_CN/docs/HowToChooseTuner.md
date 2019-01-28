@@ -125,7 +125,7 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
     builtinTunerName: BatchTuner
 ```
 
-注意批量调参器支持的搜索空间文件如下例：
+注意 Batch Tuner 支持的搜索空间文件如下例：
 
 ```json
 {
