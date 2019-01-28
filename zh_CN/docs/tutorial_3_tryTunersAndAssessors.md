@@ -20,7 +20,7 @@ NNI 提供了简单的方法来设置不同的参数优化算法，以及提前�
 * [NNI 最新版本支持的调参器](HowToChooseTuner.md)
 * [如何自定义调参器](howto_2_CustomizedTuner.md)
 
-**Assessor（评估器）** 指定了用于提前终止尝试的策略。 在 NNI 中，支持两种方法来设置 Assessor。
+**Assessor（评估器）** 指定了用于提前终止 Trial 的策略。 在 NNI 中，支持两种方法来设置 Assessor。
 
 1. 直接使用 NNI 提供的 Assessor
     
