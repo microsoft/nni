@@ -11,7 +11,7 @@
 * Tuner 会简单的生成自然数序列，并将收到的指标输出到 `tuner_result.txt`。
 * 当 `sum(metrics) % 11 == 1` 时，Assessor 会终止 Trial，并将终止的 Trial 输出到 `assessor_result.txt`。
 * 当 Tuner 和 Assessor 发生异常时，会在相应的文件中输出 `ERROR`。
-* 当实验结束时，也表示用例成功执行，可以在 nni_manager.log 文件中找到 `Experiment done`。
+* 当 Experiment 结束时，也表示用例成功执行，可以在 nni_manager.log 文件中找到 `Experiment done`。
 
 ## 问题
 
