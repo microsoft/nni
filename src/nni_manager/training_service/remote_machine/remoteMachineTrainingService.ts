@@ -448,24 +448,24 @@ class RemoteMachineTrainingService implements TrainingService {
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, conn: Client): Promise<void> {
         // Create root working directory after ssh connection is ready
         //TO DO: Should we mk experiments rootDir here?
-        const nniRootDir: string = '/tmp/nni';
+        const nniRootDir: string = `${os.tmpdir()}/nni`;
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${this.remoteExpRootDir}`, conn);
 
         // Copy NNI scripts to remote expeirment working directory
         const localGpuScriptCollectorDir: string = this.getLocalGpuMetricCollectorDir();
-        const remoteScriptsDir: string = this.getRemoteScriptsPath();
-        await SSHClientUtility.remoteExeCommand(`mkdir -p ${remoteScriptsDir}`, conn);
+        const remoteGpuScriptCollectorDir: string = this.getRemoteScriptsPath(); //the directory to store temp scripts in remote machine
+        await SSHClientUtility.remoteExeCommand(`mkdir -p ${remoteGpuScriptCollectorDir}`, conn);
         await SSHClientUtility.remoteExeCommand(`chmod 777 ${nniRootDir} ${nniRootDir}/* ${nniRootDir}/scripts/*`, conn);
         //copy gpu_metrics_collector.sh to remote
-        await SSHClientUtility.copyFileToRemote(path.join(localGpuScriptCollectorDir, 'gpu_metrics_collector.sh'), path.join(remoteScriptsDir, 'gpu_metrics_collector.sh'), conn);
-        
+        await SSHClientUtility.copyFileToRemote(path.join(localGpuScriptCollectorDir, 'gpu_metrics_collector.sh'), path.join(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh'), conn);
+
         //Begin to execute gpu_metrics_collection scripts
-        SSHClientUtility.remoteExeCommand(`bash ${path.join(remoteScriptsDir, 'gpu_metrics_collector.sh')}`, conn);
+        SSHClientUtility.remoteExeCommand(`bash ${path.join(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh')}`, conn);
 
         this.timer.subscribe(
             async (tick: number) => {
                 const cmdresult: RemoteCommandResult = await SSHClientUtility.remoteExeCommand(
-                    `tail -n 1 ${path.join(remoteScriptsDir, 'gpu_metrics')}`, conn);
+                    `tail -n 1 ${path.join(remoteGpuScriptCollectorDir, 'gpu_metrics')}`, conn);
                 if (cmdresult && cmdresult.stdout) {
                     rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
                 }
@@ -536,7 +536,6 @@ class RemoteMachineTrainingService implements TrainingService {
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${trialWorkingFolder}`, sshClient);
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${path.join(trialWorkingFolder, '.nni')}`, sshClient);
 
-        await SSHClientUtility.remoteExeCommand(`touch ${path.join(trialWorkingFolder, '.nni', 'metrics')}`, sshClient);
         // RemoteMachineRunShellFormat is the run shell format string,
         // See definition in remoteMachineData.ts
 
@@ -662,7 +661,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private getRemoteScriptsPath(): string {
-        return path.join(getRemoteTmpDir(this.remoteOS), '$USER', 'nni', 'scripts');
+        return path.join(getRemoteTmpDir(this.remoteOS), 'nni', 'scripts');
     }
 
     private getHostJobRemoteDir(jobId: string): string {
@@ -670,7 +669,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private getRemoteExperimentRootDir(): string{
-        return path.join(getRemoteTmpDir(this.remoteOS), '$USER', 'nni', 'experiments', getExperimentId());
+        return path.join(getRemoteTmpDir(this.remoteOS), 'nni', 'experiments', getExperimentId());
     }
 
     public get MetricsEmitter() : EventEmitter {

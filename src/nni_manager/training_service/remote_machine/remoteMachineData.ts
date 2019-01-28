@@ -115,7 +115,7 @@ cd $NNI_SYS_DIR
 sh install_nni.sh
 echo $$ >{6}
 python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}'
-echo $? \`date +%s%3N\` >{11}`;
+echo $? \`date +%s%3N\` >{10}`;
 
 export const HOST_JOB_SHELL_FORMAT: string =
 `#!/bin/bash
