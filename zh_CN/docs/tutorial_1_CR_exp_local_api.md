@@ -18,7 +18,7 @@
     
             RECEIVED_PARAMS = nni.get_next_parameter()
     
-        来获得调参器分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如： 
+        来获得 Tuner 分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如： 
     
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
     
@@ -33,7 +33,7 @@
     
             `nni.report_final_result(accuracy)` 
     
-        返回 `accuracy` 的值给调参器。 
+        返回 `accuracy` 的值给 Tuner。 
     
 
 将改动保存到 `mnist.py` 文件中。
@@ -42,7 +42,7 @@
 
     accuracy - 如果使用 NNI 内置的 Tuner/Assessor，那么 `accuracy` 必须是数值（如 float, int）。在定制 Tuner/Assessor 时 `accuracy` 可以是任何类型的 Python 对象。
     Assessor（评估器）- 会根据 Trial 的历史值（即其中间结果），来决定这次 Trial 是否应该提前终止。
-    调参器 - 会根据探索的历史（所有尝试的最终结果）来生成下一组参数、架构。
+    tuner（调参器） - 会根据探索的历史（所有 Trial 的最终结果）来生成下一组参数、架构。
     
 
 > 第二步：定义搜索空间
@@ -72,7 +72,7 @@
 在 NNI 中运行实验，只需要：
 
 * 可运行的尝试的代码
-* 实现或选择调参器
+* 实现或选择 Tuner
 * 准备 yml 的实验配置文件
 * (可选) 实现或选择 Assessor
 
