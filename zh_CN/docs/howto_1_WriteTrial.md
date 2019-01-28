@@ -2,7 +2,7 @@
 
 **Trial（尝试）**是将一组参数在模型上独立的一次尝试。
 
-定义 NNI 的尝试，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来定义尝试：`NNI API` 和 `NNI 标记`.
+定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来定义 Trial：`NNI API` 和 `NNI 标记`.
 
 ## NNI API
 
@@ -24,7 +24,7 @@
 > 第二步：更新模型代码
 
     2.1 声明 NNI API
-        在尝试代码中通过 `import nni` 来导入 NNI API。 
+        在 Trial 代码中通过 `import nni` 来导入 NNI API。 
     
     2.2 获取预定义的参数
         参考下列代码片段： 
@@ -40,7 +40,7 @@
     
             `nni.report_intermediate_result(accuracy)` 
     
-        返回 `accuracy` 的值给评估器。
+        返回 `accuracy` 的值给 Assessor。
     
         使用 API:
     
@@ -66,18 +66,18 @@
 
 参考[这里](./ExperimentConfig.md)进一步了解如何配置实验。
 
-参考[这里](../examples/trials/README.md)了解如何使用 NNI API 来编写尝试代码。
+参考[这里](../examples/trials/README.md)了解如何使用 NNI API 来编写 Trial 代码。
 
 ## NNI 标记
 
-另一种实现尝试的方法是使用 Python 注释来标记 NNI。 就像其它标记，NNI 的标记和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI 标记，就能够：
+另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 就像其它标记，NNI 的标记和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI 标记，就能够：
 
 * 标记需要调整的参数变量 
 * 指定变量的搜索空间范围
 * 标记哪个变量需要作为中间结果范围给`Assessor`
 * 标记哪个变量需要作为最终结果（例如：模型精度）返回给`Tuner`。
 
-同样以 MNIST 为例，只需要两步就能用 NNI 标记来实现尝试代码。
+同样以 MNIST 为例，只需要两步就能用 NNI 标记来实现 Trial 代码。
 
 > 第一步：在代码中加入标记
 
@@ -126,6 +126,6 @@ with tf.Session() as sess:
 useAnnotation: true
 ```
 
-## 更多尝试的样例
+## 更多 Trial 的样例
 
 * [在阅读理解上使用自动模型架构搜索。](../examples/trials/ga_squad/README.md)
