@@ -19,15 +19,15 @@ learning_rate = 0.1
 
 NNI 中，有 4 种类型的 Annotation；
 
-### 1. Annotate variables
+### 1. 变量
 
 `'''@nni.variable(sampling_algo, name)'''`
 
-`@nni.variable` is used in NNI to annotate a variable.
+`@nni.variable` 用来标记变量。
 
-**Arguments**
+**参数**
 
-- **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) such as `choice` or `uniform`. 
+- **sampling_algo**: 指定搜索空间的采样算法。 User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) such as `choice` or `uniform`. 
 - **name**: The name of the variable that the selected value will be assigned to. Note that this argument should be the same as the left value of the following assignment statement.
 
 An example here is:
