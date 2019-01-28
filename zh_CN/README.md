@@ -185,7 +185,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * [使用 NNIBoard](docs/WebUI.md)
 * [如何定义搜索空间](docs/SearchSpaceSpec.md)
 * [如何定义一次尝试](docs/howto_1_WriteTrial.md)
-* [如何选择调参器/搜索算法](docs/HowToChooseTuner.md)
+* [如何选择 Tuner、搜索算法](docs/HowToChooseTuner.md)
 * [配置实验](docs/ExperimentConfig.md)
 * [如何使用标记](docs/howto_1_WriteTrial.md#nni-python-annotation)
 
@@ -195,8 +195,8 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * [在多机上运行实验](docs/tutorial_2_RemoteMachineMode.md)
 * [在 OpenPAI 上运行实验](docs/PAIMode.md)
 * [在 Kubeflow 上运行实验。](docs/KubeflowMode.md)
-* [使用不同的调参器和评估器](docs/tutorial_3_tryTunersAndAssessors.md)
-* [实现自定义调参器](docs/howto_2_CustomizedTuner.md)
+* [使用不同的 Tuner 和 Assessor](docs/tutorial_3_tryTunersAndAssessors.md)
+* [实现自定义 Tuner](docs/howto_2_CustomizedTuner.md)
 * [实现自定义评估器](examples/assessors/README.md)
 * [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
 
