@@ -1,6 +1,6 @@
 # 如何在 NNI 中实现尝试的代码？
 
-*尝试从调参器中接收超参和架构配置，并将中间结果发送给评估器，最终结果发送给调参器。*
+*Trial 从 Tuner 中接收超参和架构配置，并将中间结果发送给 Assessor，最终结果发送给Tuner 。*
 
 当用户需要在 NNI 上运行尝试时，需要：
 
@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
 **3) 发送中间结果**
 
-用 `nni.report_intermediate_result` 将中间结果发送给评估器。 注意第 **5** 行。
+用 `nni.report_intermediate_result` 将中间结果发送给 Assessor。 注意第 **5** 行。
 
 ```python
 ...
