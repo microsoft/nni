@@ -135,9 +135,9 @@
   
   * 说明
     
-        <strong>trialConcurrency</strong> 定义了并发尝试任务的最大数量。  
+        <strong>trialConcurrency</strong> 定义了并发 Trial 任务的最大数量。  
         
-        注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的尝试任务数量还没达到 trialConcurrency，尝试任务会被放入队列，等待分配 GPU 资源。
+        注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的 Trial 任务数量还没达到 trialConcurrency，Trial 任务会被放入队列，等待分配 GPU 资源。
         
 
 * **maxExecDuration**
@@ -150,7 +150,7 @@
   
   * 说明
     
-    **maxTrialNum** 定义了尝试任务的最大数量，成功和失败的都计算在内。
+    **maxTrialNum** 定义了 Trial 任务的最大数量，成功和失败的都计算在内。
 
 * **trainingServicePlatform**
   
@@ -299,34 +299,34 @@
   
   * **command**
     
-        __command__  指定了尝试进程的命令行。
+        __command__  指定了 Trial 进程的命令行。
         
   
   * **codeDir**
     
-        __codeDir__ 指定了尝试代码文件的目录。
+        __codeDir__ 指定了 Trial 代码文件的目录。
         
   
   * **gpuNum**
     
-        __gpuNum__ 指定了运行尝试进程的 GPU 数量。 默认值为 0。 
+        __gpuNum__ 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。 
         
 
 * **trial (pai)**
   
   * **command**
     
-        __command__  指定了尝试进程的命令行。
+        __command__  指定了 Trial 进程的命令行。
         
   
   * **codeDir**
     
-        __codeDir__ 指定了尝试代码文件的目录。
+        __codeDir__ 指定了 Trial 代码文件的目录。
         
   
   * **gpuNum**
     
-    **gpuNum** 指定了运行尝试进程的 GPU 数量。 默认值为 0。
+    **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
   
   * **cpuNum**
     
@@ -501,7 +501,7 @@
 
 * **本机模式**
   
-  如果要在本机运行尝试任务，并使用标记来生成搜索空间，可参考下列配置：
+  如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
 
     ```
     authorName: test
@@ -602,7 +602,7 @@
 
 * **远程模式**
 
-如果在远程服务器上运行尝试任务，需要增加服务器信息：
+如果在远程服务器上运行 Trial 任务，需要增加服务器信息：
 
     
     authorName: test
