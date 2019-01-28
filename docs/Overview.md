@@ -35,7 +35,7 @@ For each experiment, user only needs to define a search space and update a few l
 
 >Step 1: [Define search space](SearchSpaceSpec.md)
 
->Step 2: [Update model codes](howto_1_WriteTrial.md)
+>Step 2: [Update model codes](Trials.md)
 
 >Step 3: [Define Experiment](ExperimentConfig.md)
 
@@ -44,18 +44,18 @@ For each experiment, user only needs to define a search space and update a few l
 <img src="./img/3_steps.jpg" alt="drawing"/>
 </p> 
 
-More details about how to run an experiment, please refer to [Get Started]().
+More details about how to run an experiment, please refer to [Get Started](QuickStart.md).
 
 ## Learn More
-* [Get started](GetStarted.md)
-* [How to adapt your trial code on NNI?]()
-* [What are tuners supported by NNI?]()
-* [How to customize your own tuner?]()
-* [What are assessors supported by NNI?]()
-* [How to customize your own assessor?]()
+* [Get started](QuickStart.md)
+* [How to adapt your trial code on NNI?](Trials.md)
+* [What are tuners supported by NNI?](Builtin_Tuner.md)
+* [How to customize your own tuner?](Customize_Tuner.md)
+* [What are assessors supported by NNI?](Builtin_Assessors.md)
+* [How to customize your own assessor?](Customize_Assessor.md)
 * [How to run an experiment on local?](tutorial_1_CR_exp_local_api.md)
 * [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
-* [How to do trouble shooting when using NNI?]()
-* [Examples]()
-* [Reference]()
+* [Examples](mnist_examples.md)
+
+[How to do trouble shooting when using NNI?]: <> ()
