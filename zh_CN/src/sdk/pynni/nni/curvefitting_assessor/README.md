@@ -2,7 +2,7 @@
 
 ## 1. 介绍
 
-Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的尝试 X 在 step S 比性能最好的尝试要差，就会提前终止它。
+Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的Trial X 在 step S 比性能最好的 Trial 要差，就会提前终止它。
 
 此算法中，使用了 12 条曲线来拟合学习曲线，从[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)中选择了大量的参数曲线模型。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
 
@@ -24,11 +24,11 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 
 假设增加一个高斯噪声，且噪声参数初始化为最大似然估计。
 
-通过学习历史数据来确定新的组合参数向量的最大概率值。 用这样的方法来预测后面的尝试性能，并停止不好的尝试来节省计算资源。
+通过学习历史数据来确定新的组合参数向量的最大概率值。 用这样的方法来预测后面的 Trial 性能，并停止不好的 Trial 来节省计算资源。
 
 具体来说，该算法有学习、预测和评估三个阶段。
 
-* 步骤 1：学习。 从当前尝试的历史中学习，并从贝叶斯角度决定 \xi 。 首先，使用最小二乘法 (由 `fit_theta` 实现) 来节省时间。 获得参数后，过滤曲线并移除异常点（由 `filter_curve` 实现）。 最后，使用 MCMC 采样方法 (由 `mcmc_sampling` 实现) 来调整每个曲线的权重。 至此，确定了 \xi 中的所有参数。
+* 步骤 1：学习。 从当前 Trial 的历史中学习，并从贝叶斯角度决定 \xi 。 首先，使用最小二乘法 (由 `fit_theta` 实现) 来节省时间。 获得参数后，过滤曲线并移除异常点（由 `filter_curve` 实现）。 最后，使用 MCMC 采样方法 (由 `mcmc_sampling` 实现) 来调整每个曲线的权重。 至此，确定了 \xi 中的所有参数。
 
 * 步骤 2：预测。 用 \xi 和混合模型公式，在目标位置（例如 epoch 的总数）来计算期望的最终结果精度（由 `f_comb` 实现）。
 
@@ -54,13 +54,13 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
           # 如果选择了 minimize 模式，需要调整阈值为 >= 1.0 (例如：threshold=1.1)
           * optimize_mode 的默认值是 maximize
           optimize_mode: maximize
-          # (可选项) 决定尝试是否应被停止的次数
+          # (可选项) 决定 Trial 是否应被停止的次数
           # 为了节省资源，只有在大于 start_step(default=6) 的精度点才开始预测。
           # 只有在收到 start_step 个中间结果之后。
           # start_step 的默认值是 6。
           start_step: 6
           # (可选) 决定是否提前终止的阈值。
-          # 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在尝试的预测值低于 0.95 * 0.9 = 0.855 时停止。
+          # 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
           * 阈值的默认值是 0.95。
           threshold: 0.95
     
