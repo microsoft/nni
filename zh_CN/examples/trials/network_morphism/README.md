@@ -54,7 +54,7 @@ trial:
 
 在 "trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
 
-`trialConcurrency` 是并发运行的尝试的数量。如果将 `gpuNum` 设置为 1，则需要与 GPU 数量一致。
+`trialConcurrency` 是并发运行的 Trial 的数量。如果将 `gpuNum` 设置为 1，则需要与 GPU 数量一致。
 
 ### 4. 在代码中调用 "json\_to\_graph()" 函数
 
@@ -91,7 +91,7 @@ nni.report_final_result(best_acc)
 nnictl create --config config.yml
 ```
 
-## 尝试样例
+## Trial 样例
 
 下面的代码可在 `examples/trials/network_morphism/` 中找到。 可参考此代码来更新自己的任务。 希望它对你有用。
 
