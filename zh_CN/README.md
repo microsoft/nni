@@ -187,7 +187,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment �
 * [如何定义一次 Trial](docs/howto_1_WriteTrial.md)
 * [如何选择 Tuner、搜索算法](docs/HowToChooseTuner.md)
 * [配置 Experiment](docs/ExperimentConfig.md)
-* [如何使用标记](docs/howto_1_WriteTrial.md#nni-python-annotation)
+* [如何使用 Annotation](docs/howto_1_WriteTrial.md#nni-python-annotation)
 
 ## **教程**
 
