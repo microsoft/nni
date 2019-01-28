@@ -1,4 +1,4 @@
-# Customize-Assessor
+# Customize Assessor
 
 ## Customize Assessor
 
@@ -8,7 +8,7 @@ If you want to implement a customized Assessor, there are three things for you t
 
 1) Inherit an assessor of a base Assessor class
 2) Implement assess_trial function
-3) Write a script to run Assessor
+3) Configure your customized Assessor in experiment yaml config file
 
 **1. Inherit an assessor of a base Assessor class**
 
@@ -38,28 +38,24 @@ class CustomizedAssessor(Assessor):
         ...
 ```
 
-**3. Write a script to run Assessor**
+**3. Configure your customized Assessor in experiment yaml config file**
 
-```python
-import argparse
+NNI needs to locate your customized Assessor class and instantiate the class, so you need to specify the location of the customized Assessor class and pass literal values as parameters to the \_\_init__ constructor.
 
-import CustomizedAssessor
+```yaml
 
-def main():
-    parser = argparse.ArgumentParser(description='parse command line parameters.')
-    # parse your assessor arg here.
-    ...
-    FLAGS, unparsed = parser.parse_known_args()
+assessor:
+  codeDir: /home/abc/myassessor
+  classFileName: my_customized_assessor.py
+  className: CustomizedAssessor
+  # Any parameter need to pass to your Assessor class __init__ constructor
+  # can be specified in this optional classArgs field, for example 
+  classArgs:
+    arg1: value1
 
-    assessor = CustomizedAssessor(...)
-    assessor.run()
-
-main()
 ```
 
 Please noted in **2**. The object `trial_history` are exact the object that Trial send to Assessor by using SDK `report_intermediate_result` function.
-
-Also, user could override the `run` function in Assessor to control the processing logic.
 
 More detail example you could see:
 > * [medianstop-assessor](../src/sdk/pynni/nni/medianstop_assessor)
