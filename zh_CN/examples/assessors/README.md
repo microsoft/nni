@@ -1,6 +1,6 @@
 # 自定义 Assessor
 
-*Assessor 从 Trial 中接收中间结果，并决定此 Trial 是否应该终止。 一旦 Trial 满足提前终止条件，Assessor 将终止此尝试。*
+*Assessor 从 Trial 中接收中间结果，并决定此 Trial 是否应该终止。 一旦 Trial 满足提前终止条件，Assessor 将终止此 Trial。*
 
 因此，如果要自定义 Assessor，需要：
 
@@ -14,7 +14,7 @@ class CustomizedAssessor(Assessor):
         ...
 ```
 
-**2) 实现评估尝试的函数**
+**2) 实现评估 Trial 的函数**
 
 ```python
 from nni.assessor import Assessor, AssessResult
@@ -25,7 +25,7 @@ class CustomizedAssessor(Assessor):
 
     def assess_trial(self, trial_history):
         """
-        决定是否应该终止尝试。 必须重载。
+        决定是否应该终止 Trial。 必须重载。
         trial_history: 中间结果列表对象。
         返回 AssessResult.Good 或 AssessResult.Bad。
         """
