@@ -7,7 +7,7 @@
 对于阅读理解项目，注意力和循环神经网络（RNN）模块已经被证明非常有效。 使用的搜索空间如下：
 
 1. IDENTITY (Effectively 表示继续训练)。
-2. INSERT-RNN-LAYER (插入 LSTM。 在实验中比较了 GRU 和 LSTM 的性能后，我们决定在这里采用 LSTM。)
+2. INSERT-RNN-LAYER (插入 LSTM。 在 Experiment 中比较了 GRU 和 LSTM 的性能后，我们决定在这里采用 LSTM。)
 3. REMOVE-RNN-LAYER
 4. INSERT-ATTENTION-LAYER (插入注意力层。)
 5. REMOVE-ATTENTION-LAYER
@@ -84,7 +84,7 @@
 
 ## 在 OpenPAI 上运行此样例
 
-根据上传大小的限制，仅上传源代码，并在训练过程中下载数据。 本实验需要的内存 `memoryMB >= 32G`，训练过程可能需要数小时。
+根据上传大小的限制，仅上传源代码，并在训练过程中下载数据。 本 Experiment 需要的内存 `memoryMB >= 32G`，训练过程可能需要数小时。
 
 ### 更新配置
 
