@@ -45,7 +45,6 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
 ![](./img/webui-img/detail-pai.png)
 
-![](./img/webui-img/trialog.png)
 
 * Kill: you can kill a job that status is running.
 * Support to search for a specific trial.

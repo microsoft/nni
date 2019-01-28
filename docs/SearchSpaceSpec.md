@@ -1,8 +1,12 @@
-## How to define search space?
+# Search Space
 
-### Hyper-parameter Search Space
+## Overview
 
-* A search space configure example as follow:
+In NNI, tuner will sample parameters/architecture according to the search space, which is defined as a json file.
+
+To define a search space, users should define the name of variable, the type of sampling strategy and its parameters.
+
+* A example of search space definition as follow:
 
 ```python
 {
@@ -15,11 +19,12 @@
 
 ```
 
-The example define `dropout_rate` as variable which priori distribution is uniform distribution, and its value from `0.1` and `0.5`.
-The tuner will sample parameters/architecture by understanding the search space first.
 
-User should define the name of variable, type and candidate value of variable.
-The candidate type and value for variable is here:
+Take the first line as an example. ```dropout_rate``` is defined as a variable whose priori distribution is a uniform distribution of a range from ```0.1``` and ```0.5```.
+
+## Types
+
+All types of sampling strategies and their parameter are listed here:
 
 * {"_type":"choice","_value":options}
    * Which means the variable value is one of the options, which should be a list. The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
@@ -67,8 +72,24 @@ The candidate type and value for variable is here:
    * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 <br/>
 
-Note that SMAC only supports a subset of the types above, including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`. In the current version, SMAC does not support cascaded search space (i.e., conditional variable in SMAC).
 
-Note that GridSearch Tuner only supports a subset of the types above, including `choice`, `quniform` and `qloguniform`, where q here specifies the number of values that will be sampled. Details about the last two type as follows
+## Search Space Types Supported by Each Tuner
+
+|                   | choice  | randint | uniform | quniform | loguniform | qloguniform | normal  | qnormal | lognormal | qlognormal |
+|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|
+| TPE Tuner         | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
+| Random Search Tuner| &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
+| Anneal Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
+| Evolution Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
+| SMAC Tuner        | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    |      |  |  |    |     |
+| Batch Tuner       | &#10003; |  |  |   |     |      |  |  |    |     |
+| Grid Search Tuner | &#10003; |  |  | &#10003;  |     | &#10003;     |  |  |    |     |
+| Hyperband Advisor | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
+| Metis Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  |     |      |  |  |    |     |
+
+Note that In GridSearch Tuner, for users' convenience, the definition of `quniform` and `qloguniform` change, where q here specifies the number of values that will be sampled. Details about them are listed as follows
+
 * Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
 * Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
+
+Note that Metis Tuner only support numerical `choice` now

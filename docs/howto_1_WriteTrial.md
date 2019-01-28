@@ -1,5 +1,4 @@
-**Write a Trial Run on NNI**
-===
+# Write a Trial Run on NNI
 
 A **Trial** in NNI is an individual attempt at applying a set of parameters on a model. 
 
