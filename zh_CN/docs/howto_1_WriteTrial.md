@@ -2,7 +2,7 @@
 
 **Trial（尝试）**是将一组参数在模型上独立的一次尝试。
 
-定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来定义 Trial：`NNI API` 和 `NNI 标记`.
+定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来定义 Trial：`NNI API` 和 `NNI Annotation（标记）`.
 
 ## NNI API
 
@@ -68,20 +68,20 @@
 
 参考[这里](../examples/trials/README.md)了解如何使用 NNI API 来编写 Trial 代码。
 
-## NNI 标记
+## NNI Annotation
 
-另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 就像其它标记，NNI 的标记和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI 标记，就能够：
+另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 就像其它 Python Annotation，NNI 的 Annotation 和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI Annotation，就能够：
 
 * 标记需要调整的参数变量 
 * 指定变量的搜索空间范围
 * 标记哪个变量需要作为中间结果范围给`Assessor`
 * 标记哪个变量需要作为最终结果（例如：模型精度）返回给`Tuner`。
 
-同样以 MNIST 为例，只需要两步就能用 NNI 标记来实现 Trial 代码。
+同样以 MNIST 为例，只需要两步就能用 NNI Annotation 来实现 Trial 代码。
 
-> 第一步：在代码中加入标记
+> 第一步：在代码中加入 Annotation
 
-参考下列 tensorflow 的 NNI 标记的代码片段，高亮的 4 行标记实现了： (1) 调整 batch\_size 和 (2) dropout\_rate, (3) 每 100 步返回一次 test\_acc ，并且 (4) 在最后返回 test\_acc 作为最终结果。
+参考下列 tensorflow 的 NNI Annotation 的代码片段，高亮的 4 行 Annotation 实现了： (1) 调整 batch\_size 和 (2) dropout\_rate, (3) 每 100 步返回一次 test\_acc ，并且 (4) 在最后返回 test\_acc 作为最终结果。
 
 > 值得注意的是，新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
 
