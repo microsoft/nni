@@ -412,7 +412,7 @@ nnictl --version
     | ------ | ------ | ------ |------ |
     | id|  False| |ID of the experiment you want to set|
 
-### Check nni version
+### Check NNI version
 
 * __nnictl --version__
 

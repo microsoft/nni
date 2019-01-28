@@ -6,7 +6,7 @@ NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai
 Install NNI, follow the install guide [here](GetStarted.md).
 
 ## Run an experiment
-Use `examples/trials/mnist-annotation` as an example. The nni config yml file's content is like:
+Use `examples/trials/mnist-annotation` as an example. The NNI config yml file's content is like:
 
 ```yml
 authorName: your_name
