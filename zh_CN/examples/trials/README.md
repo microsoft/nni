@@ -142,7 +142,7 @@ def train(args, params):
 
 **4) 发送最终结果**
 
-用 `nni.report_final_result` 将最终结果发送给调参器。 注意第 **15** 行。
+用 `nni.report_final_result` 将最终结果发送给 Tuner。 注意第 **15** 行。
 
 ```python
 ...
@@ -267,7 +267,7 @@ if __name__ == '__main__':
     ARGS, UNKNOWN = PARSER.parse_known_args()
 
     try:
-        # 从调参器中获取参数
+        # 从 Tuner 中获取参数
         RECEIVED_PARAMS = nni.get_next_parameter()
         LOG.debug(RECEIVED_PARAMS)
         PARAMS = generate_default_params()
