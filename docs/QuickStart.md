@@ -2,7 +2,7 @@
 
 ## Installation
 
-We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+We support Linux and MacOS in current stage, Ubuntu 16.04 or higher and MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
 
 ```bash
     python3 -m pip install --upgrade nni
@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
 Note: If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_before.py](../examples/trials/mnist/mnist_before.py)
 
-The above code can only try one set of parameters at a time, if we want to tune learning rate, we need to manually tune the hyperparameters and start the trial again and again.
+The above code can only try one set of parameters at a time, if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
 
 NNI is born for helping user do the tuning jobs, the NNI working process is presented below:
 
@@ -221,11 +221,12 @@ Below is the status of the all trials. Specifically:
 
 ## Related Topic
 
-* [Try different Tuners](Tuners.md)
-* [Try different Assessors](Assessors.md)
+* [Try different Tuners](Builtin_Tuner.md)
+* [Try different Assessors](Builtin_Assessors.md)
 * [How to use command line tool nnictl](NNICTLDOC.md)
-* [How to write a trial](Trial.md)
+* [How to write a trial](Trials.md)
 * [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
-* [How to run an experiment on Kubeflow?](KubeflowMode.md)
+* [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)
+* [How to run an experiment on Kubernetes through FrameworkController?](FrameworkControllerMode.md)

@@ -1,6 +1,6 @@
 # Builtin Tuners
 
-NNI provides the-state-of-art tuning algorithm in our builtin-tuners and makes them easy to use. Below is the brief overview of NNI current builtin Tuners:
+NNI provides the-state-of-art tuning algorithm as our builtin-tuners and makes them easy to use. Below is the brief summary of NNI currently built-in Tuners:
 
 |Tuner|Brief Introduction of Algorithm|
 |---|---|

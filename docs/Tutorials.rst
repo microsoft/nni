@@ -5,7 +5,7 @@ Tutorials
 ..  toctree::
     QuickStart
     Installation
-    Trial<howto_1_WriteTrial>
+    Write Trial<Trials>
     Tuners<tuners>
     Assessors<assessors>
     WebUI
