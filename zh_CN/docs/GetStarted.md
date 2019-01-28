@@ -86,7 +86,7 @@ trial:
   gpuNum: 0
 ```
 
-因为此 Trial 代码使用了 NNI 标记的方法（参考[这里](../tools/annotation/README.md) ），所以 *useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
+因为此 Trial 代码使用了 NNI Annotation 的方法（参考[这里](../tools/annotation/README.md) ），所以 *useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
 
 完成上述步骤后，可通过下列命令来启动 Experiment：
 
