@@ -1,6 +1,6 @@
 # 在 NNI 中用网络形态算法来进行自动模型结构搜索
 
-Network Morphism （网络形态）是内置的调参器，它使用了网络形态技术来搜索和评估新的网络结构。 该样例展示了如何使用它来为深度学习找到好的模型架构。
+Network Morphism （网络形态）是内置的 Tuner，它使用了网络形态技术来搜索和评估新的网络结构。 该样例展示了如何使用它来为深度学习找到好的模型架构。
 
 ## 如何运行此样例？
 
@@ -71,7 +71,7 @@ def build_graph_from_json(ir_model_json):
     model = graph.produce_torch_model()
     return model
 
-# 从网络形态调参器中获得下一组参数
+# 从网络形态 Tuner 中获得下一组参数
 RCV_CONFIG = nni.get_next_parameter()
 # 调用函数来生成 Pytorch 或 Keras 模型
 net = build_graph_from_json(RCV_CONFIG)
