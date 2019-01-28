@@ -69,7 +69,7 @@ def get_next_parameter():
     params_filepath = os.path.join(_sysdir, params_file_name)
     if not os.path.isfile(params_filepath):
         request_next_parameter()
-    while not os.path.isfile(params_filepath):
+    while not (os.path.isfile(params_filepath) and os.path.getsize(params_filepath) > 0):
         time.sleep(3)
     params_file = open(params_filepath, 'r')
     params = json.load(params_file)
