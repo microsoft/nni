@@ -50,7 +50,6 @@ class _LoggerFileWrapper(TextIOBase):
         if s != '\n':
             time = datetime.now().strftime(_time_format)
             self.orig_stdout.write(s + '\n')
-            self.orig_stdout.flush()
             self.file.write('[{}] PRINT '.format(time) + s + '\n')
             self.file.flush()
         return len(s)
