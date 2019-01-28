@@ -4,7 +4,7 @@
 
 ### 支持新的 Tuner 和 Assessor
 
-* 支持 [Metis tuner](./HowToChooseTuner.md#MetisTuner) 作为 NNI 的调参器。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* 支持 [Metis tuner](./HowToChooseTuner.md#MetisTuner) 作为 NNI 的 Tuner。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
 * 支持 [Curve fitting （曲线拟合）Assessor](./HowToChooseTuner.md#Curvefitting)，通过曲线拟合的策略来实现提前终止 Trial。 
 * 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS 调参器通过 NFS 来提供权重共享。
