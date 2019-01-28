@@ -84,7 +84,7 @@ if __name__ == '__main__':
     train(ARGS, PARAMS)
 ```
 
-**2) 从调参器获取配置**
+**2) 从 Tuner 获取配置**
 
 导入 `NNI` 并用 `nni.get_next_parameter()` 来接收参数。 注意代码中的 **10**, **24** 和 **25** 行。
 
