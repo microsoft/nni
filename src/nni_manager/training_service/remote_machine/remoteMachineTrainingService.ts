@@ -377,11 +377,8 @@ class RemoteMachineTrainingService implements TrainingService {
     } 
     
     private async generateLocalTmpDir(): Promise<string> {
-        //only support Linux, other kind of OS is not support for remoteTrainingSerevice
-        let tmpRootDir: string = '/tmp';
-        const result = await cpp.exec(`whoami`)
-        let currentUser =JSON.parse(result.stdout).value;
-        return Promise.resolve(`${tmpRootDir}/${currentUser}/nni/scripts/${uniqueString(5)}`);
+        let tmpRootDir: string = os.tmpdir();
+        return Promise.resolve(`${tmpRootDir}/${uniqueString(5)}/nni/scripts/`);
     }
 
     /**
