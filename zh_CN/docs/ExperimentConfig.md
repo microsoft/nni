@@ -4,7 +4,7 @@
 
 ## 模板
 
-* **简化版（不包含标记 (annotation) 和评估器）** 
+* **简化版（不包含 Annotation（标记）和 Assessor）** 
 
     ```
     authorName: 
@@ -37,7 +37,7 @@
     ``` 
     
 
-* **使用评估器**
+* **使用 Assessor**
 
     ```
     authorName: 
@@ -252,25 +252,25 @@
   
   * 说明
     
-    **assessor** 指定了实验的评估器算法。有两种方法可设置评估器。 一种方法是使用 NNI SDK 提供的评估器，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的评估器，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
+    **assessor** 指定了实验的 Assessor 算法。有两种方法可设置 Assessor。 一种方法是使用 SDK 提供的 Assessor，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Assessor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
   * **builtinAssessorName** 和 **classArgs**
     
     * **builtinAssessorName**
       
-          __builtinAssessorName__ 指定了系统评估器的名称， NNI 内置评估器 {__Medianstop__}
+          __builtinAssessorName__ 指定了系统 Assessor 的名称， NNI 内置 Assessor {__Medianstop__}
           
     
     * **classArgs**
       
-          __classArgs__ 指定了评估器算法的参数。
+          __classArgs__ 指定了 Assessor 算法的参数。
           
   
   * **codeDir**, **classFileName**, **className** 和**classArgs**
     
     * **codeDir**
       
-           __codeDir__ 指定了评估器代码目录。
+           __codeDir__ 指定了 Assessor 代码目录。
           
     
     * **classFileName**
@@ -280,19 +280,19 @@
     
     * **className**
       
-           __className__ 指定了评估器类名。
+           __className__ 指定了 Assessor 类名。
           
     
     * **classArgs**
       
-           __classArgs__ 指定了评估器算法的参数。
+           __classArgs__ 指定了 Assessor 算法的参数。
           
   
   * **gpuNum**
     
-        __gpuNum__ 指定了运行评估器进程的 GPU 数量。 此字段的值必须是正整数。
+        __gpuNum__ 指定了运行 Assessor 进程的 GPU 数量。 此字段的值必须是正整数。
         
-        注意: 只能使用一种方法来指定评估器，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用评估器，可将其置为空。 
+        注意: 只能使用一种方法来指定 Assessor，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用 Assessor，可将其置为空。 
         
 
 * **trial (local, remote)**
@@ -528,7 +528,7 @@
     
     
 
-    如果要设置评估器，可以增加评估器配置：
+    如果要设置 Assessor，可以增加 Assessor 配置：
     
 
     ```
@@ -563,7 +563,7 @@
     ```
     
 
-    或者可以指定自定义的调参器和评估器：
+    或者可以指定自定义的 Tuner 和 Assessor：
     
 
     ```
