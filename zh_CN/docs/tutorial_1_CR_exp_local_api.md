@@ -1,6 +1,6 @@
-# **教程：使用 NNI API 在本地创建和运行实验**
+# **教程：使用 NNI API 在本地创建和运行 Experiment**
 
-本教程会使用 [~/examples/trials/mnist] 样例来解释如何在本地使用 NNI API 来创建并运行实验。
+本教程会使用 [~/examples/trials/mnist] 样例来解释如何在本地使用 NNI API 来创建并运行 Experiment。
 
 > 在开始前
 
@@ -59,7 +59,7 @@
 
 参考 [SearchSpaceSpec.md](./SearchSpaceSpec.md) 进一步了解搜索空间。
 
-> 第三步：定义实验
+> 第三步：定义 Experiment
 > 
 > > 3.1 启用 NNI API 模式
 
@@ -69,23 +69,23 @@
     searchSpacePath: /path/to/your/search_space.json
     
 
-在 NNI 中运行实验，只需要：
+在 NNI 中运行 Experiment，只需要：
 
 * 可运行的 Trial 的代码
 * 实现或选择 Tuner
-* 准备 yml 的实验配置文件
+* 准备 yml 的 Experiment 配置文件
 * (可选) 实现或选择 Assessor
 
 **准备 Trial**：
 
 > 在克隆代码后，可以在 ~/nni/examples 中找到一些样例，运行 `ls examples/trials` 查看所有 Trial 样例。
 
-先从 NNI 提供的简单 Trial 样例，如 MNIST 开始。 NNI 样例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有实验的样例。 执行下面的命令可轻松运行 NNI 的 mnist 样例：
+先从 NNI 提供的简单 Trial 样例，如 MNIST 开始。 NNI 样例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有 Experiment 的样例。 执行下面的命令可轻松运行 NNI 的 mnist 样例：
 
       python ~/nni/examples/trials/mnist-annotation/mnist.py
     
 
-上面的命令会写在 yml 文件中。 参考[这里](./howto_1_WriteTrial.md)来写出自己的实验代码。
+上面的命令会写在 yml 文件中。 参考[这里](./howto_1_WriteTrial.md)来写出自己的 Experiment 代码。
 
 **准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的 Tuner（参考[这里](./howto_2_CustomizedTuner.md)）。下面使用了 NNI 内置的 Tuner：
 
@@ -105,7 +105,7 @@
     # 并发运行数量
     trialConcurrency: 2
     
-    # 实验运行时间
+    # Experiment 运行时间
     maxExecDuration: 3h
     
     # 可为空，即数量不限
@@ -128,16 +128,16 @@
 
 因为这个 Trial 代码使用了 NNI 标记的方法（参考[这里](../tools/annotation/README.md) ），所以*useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
 
-完成上述步骤后，可通过下列命令来启动实验：
+完成上述步骤后，可通过下列命令来启动 Experiment：
 
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yml
     
 
 参考[这里](NNICTLDOC.md)来了解 *nnictl* 命令行工具的更多用法。
 
-## 查看实验结果
+## 查看 Experiment 结果
 
-实验应该一直在运行。 除了 *nnictl* 以外，还可以通过 NNI 的网页来查看实验进程，进行控制和其它一些有意思的功能。
+Experiment 应该一直在运行。 除了 *nnictl* 以外，还可以通过 NNI 的网页来查看 Experiment 进程，进行控制和其它一些有意思的功能。
 
 ## 使用多个本地 GPU 加快搜索速度
 
@@ -158,7 +158,7 @@
       gpuNum: 1
     
 
-用下列命令运行实验：
+用下列命令运行 Experiment：
 
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config_gpu.yml
     
