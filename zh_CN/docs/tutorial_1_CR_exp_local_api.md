@@ -22,12 +22,12 @@
     
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
     
-    1.3 向 NNI 返回结果
+    1.3 返回结果
         使用 API：
     
             `nni.report_intermediate_result(accuracy)` 
     
-        返回 `accuracy` 的值给评估器。
+        返回 `accuracy` 的值给 Assessor。
     
         使用 API:
     
@@ -40,8 +40,8 @@
 
 **注意**：
 
-    accuracy - 如果使用 NNI 内置的调参器/评估器，那么 `accuracy` 必须是数值（如 float, int）。在定制调参器/评估器时 `accuracy` 可以是任何类型的 Python 对象。
-    评估器 - 会根据尝试的历史值（即其中间结果），来决定这次尝试是否应该提前终止。
+    accuracy - 如果使用 NNI 内置的 Tuner/Assessor，那么 `accuracy` 必须是数值（如 float, int）。在定制 Tuner/Assessor 时 `accuracy` 可以是任何类型的 Python 对象。
+    Assessor（评估器）- 会根据 Trial 的历史值（即其中间结果），来决定这次 Trial 是否应该提前终止。
     调参器 - 会根据探索的历史（所有尝试的最终结果）来生成下一组参数、架构。
     
 
@@ -74,7 +74,7 @@
 * 可运行的尝试的代码
 * 实现或选择调参器
 * 准备 yml 的实验配置文件
-* (可选) 实现或选择评估器
+* (可选) 实现或选择 Assessor
 
 **准备尝试**：
 
