@@ -24,7 +24,7 @@ tuner:
 
 并让 Tuner 来决定在什么路径读写权重文件，通过 `nni.get_next_parameters()` 来获取路径：
 
-![weight_sharing_design](./img/weight_sharing.png)
+<img src="https://user-images.githubusercontent.com/23273522/51817667-93ebf080-2306-11e9-8395-b18b322062bc.png" alt="drawing" width="700" />
 
 例如，在 Tensorflow 中：
 
