@@ -418,7 +418,7 @@ nnictl --version
 
   * Description
 
-    Describe the current version of nni installed.
+    Describe the current version of NNI installed.
   
   * Usage
 

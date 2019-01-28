@@ -1,7 +1,7 @@
 How to start an experiment
 ===
 ## 1.Introduce
-There are few steps to start an new experiment of nni, here are the process.
+There are few steps to start an new experiment of NNI, here are the process.
 
 <img src="./img/experiment_process.jpg" width="50%" height="50%" />
 
@@ -13,7 +13,7 @@ There are few steps to start an new experiment of nni, here are the process.
 4. Prepare a config file to to record the information of this experiment. 
 
 ### 2.2 Start restful server
-Start an restful server process to manage nni experiment, the default port is 8080.
+Start an restful server process to manage NNI experiment, the default port is 8080.
 
 ### 2.3 Check restful server
 Check whether restful server process is successfully started and could get a response when send message to restful server.

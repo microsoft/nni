@@ -80,7 +80,7 @@
 
 * Asynchronous dispatcher
 * Docker file update, add pytorch library 
-* Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API. 
+* Refactor 'nnictl stop' process, send SIGTERM to NNI manager process, rather than calling stop Rest API. 
 * OpenPAI training service bug fix
   * Support NNI Manager IP configuration(nniManagerIp) in PAI cluster config file, to fix the issue that user’s machine has no eth0 device 
   * File number in codeDir is capped to 1000 now, to avoid user mistakenly fill root dir for codeDir
@@ -104,7 +104,7 @@
 
 ## API new features and updates
 
-* <span style="color:red">**breaking change**</span>: nn.get_parameters() is refactored to nni.get_next_parameter. All examples of prior releases can not run on v0.3, please clone nni repo to get new examples. If you had applied NNI to your own codes, please update the API accordingly.
+* <span style="color:red">**breaking change**</span>: nn.get_parameters() is refactored to nni.get_next_parameter. All examples of prior releases can not run on v0.3, please clone NNI repo to get new examples. If you had applied NNI to your own codes, please update the API accordingly.
 
 * New API **nni.get_sequence_id()**.
   Each trial job is allocated a unique sequence number, which can be retrieved by nni.get_sequence_id() API.

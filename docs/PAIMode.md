@@ -41,7 +41,7 @@ paiConfig:
   host: 10.1.1.1
 ```
 
-Note: You should set `trainingServicePlatform: pai` in nni config yml file if you want to start experiment in pai mode.
+Note: You should set `trainingServicePlatform: pai` in NNI config yml file if you want to start experiment in pai mode.
 
 Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have five additional keys:
 * cpuNum
@@ -56,7 +56,7 @@ Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial con
 * outputDir 
     * Optional key. It specifies the HDFS output direcotry for trial. Once the trial is completed (either succeed or fail), trial's stdout, stderr will be copied to this directory by NNI sdk automatically. The format should be something like hdfs://{your HDFS host}:9000/{your output directory}
 
-Once complete to fill nni experiment config file and save (for example, save as exp_pai.yml), then run the following command
+Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 ```
 nnictl create --config exp_pai.yml
 ```
@@ -78,4 +78,4 @@ You can see there're three fils in output folder: stderr, stdout, and trial.log
 
 If you also want to save trial's other output into HDFS, like model files, you can use environment variable `NNI_OUTPUT_DIR` in your trial code to save your own output files, and NNI SDK will copy all the files in `NNI_OUTPUT_DIR` from trial's container to HDFS. 
 
-Any problems when using NNI in pai mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni), or send mail to nni@microsoft.com
+Any problems when using NNI in pai mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni).

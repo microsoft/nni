@@ -79,15 +79,15 @@ net = build_graph_from_json(RCV_CONFIG)
 # training procedure
 # ....
 
-# report the final accuracy to nni
+# report the final accuracy to NNI
 nni.report_final_result(best_acc)
 ```
 
 ### 5. Submit this job 
 
 ```bash
-# You can use nni command tool "nnictl" to create the a job which submit to the nni
-# finally you successfully commit a Network Morphism Job to nni
+# You can use NNI command tool "nnictl" to create the a job which submit to the NNI
+# finally you successfully commit a Network Morphism Job to NNI
 nnictl create --config config.yml
 ```
 

@@ -7,7 +7,7 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
 2. Download, set up, and deploy **Kubelow** to your Kubernetes cluster. Follow this [guideline](https://www.kubeflow.org/docs/started/getting-started/) to set up Kubeflow
 3. Prepare a **kubeconfig** file, which will be used by NNI to interact with your kubernetes API server. By default, NNI manager will use $(HOME)/.kube/config as kubeconfig file's path. You can also specify other kubeconfig files by setting the **KUBECONFIG** environment variable. Refer this [guideline]( https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig) to learn more about kubeconfig. 
 4. If your NNI trial job needs GPU resource, you should follow this [guideline](https://github.com/NVIDIA/k8s-device-plugin) to configure **Nvidia device plugin for Kubernetes**.
-5. Prepare a **NFS server** and export a general purpose mount (we recommend to map your NFS server path in `root_squash option`, otherwise permission issue may raise when nni copy files to NFS. Refer this [page](https://linux.die.net/man/5/exports) to learn what root_squash option is), or **Azure File Storage**. 
+5. Prepare a **NFS server** and export a general purpose mount (we recommend to map your NFS server path in `root_squash option`, otherwise permission issue may raise when NNI copy files to NFS. Refer this [page](https://linux.die.net/man/5/exports) to learn what root_squash option is), or **Azure File Storage**. 
 6. Install **NFS client** on the machine where you install NNI and run nnictl to create experiment. Run this command to install NFSv4 client:
     ```
     apt-get install nfs-common 
@@ -19,14 +19,14 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
 1. NNI support kubeflow based on Azure Kubernetes Service, follow the [guideline](https://azure.microsoft.com/en-us/services/kubernetes-service/) to set up Azure Kubernetes Service.
 2. Install [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) and __kubectl__.  Use `az login` to set azure account, and connect kubectl client to AKS, refer this [guideline](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster).
 3. Deploy kubeflow on Azure Kubernetes Service, follow the [guideline](https://www.kubeflow.org/docs/started/getting-started/).
-4. Follow the [guideline](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=portal) to create azure file storage account. If you use Azure Kubernetes Service, nni need Azure Storage Service to store code files and the output files.
-5. To access Azure storage service, nni need the access key of the storage account, and nni use [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) Service to protect your private key. Set up Azure Key Vault Service, add a secret to Key Vault to store the access key of Azure storage account. Follow this [guideline](https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli) to store the access key.
+4. Follow the [guideline](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=portal) to create azure file storage account. If you use Azure Kubernetes Service, NNI need Azure Storage Service to store code files and the output files.
+5. To access Azure storage service, NNI need the access key of the storage account, and NNI use [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) Service to protect your private key. Set up Azure Key Vault Service, add a secret to Key Vault to store the access key of Azure storage account. Follow this [guideline](https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli) to store the access key.
 
 ## Design 
 ![](./img/kubeflow_training_design.png)
 Kubeflow training service instantiates a kubernetes rest client to interact with your K8s cluster's API server. 
 
-For each trial, we will upload all the files in your local codeDir path (configured in nni_config.yml) together with NNI generated files like parameter.cfg into a storage volumn. Right now we support two kinds of storage volumns: [nfs](https://en.wikipedia.org/wiki/Network_File_System) and [azure file storage](https://azure.microsoft.com/en-us/services/storage/files/), you should configure the storage volumn in nni config yml file. After files are prepared, Kubeflow training service will call K8S rest API to create kubeflow jobs ([tf-operator](https://github.com/kubeflow/tf-operator) job or [pytorch-operator](https://github.com/kubeflow/pytorch-operator) job) in K8S, and mount your storage volumn into the job's pod. Output files of kubeflow job, like stdout, stderr, trial.log or model files, will also be copied back to the storage volumn. NNI will show the storage volumn's URL for each trial in WebUI, to allow user browse the log files and job's output files. 
+For each trial, we will upload all the files in your local codeDir path (configured in nni_config.yml) together with NNI generated files like parameter.cfg into a storage volumn. Right now we support two kinds of storage volumns: [nfs](https://en.wikipedia.org/wiki/Network_File_System) and [azure file storage](https://azure.microsoft.com/en-us/services/storage/files/), you should configure the storage volumn in NNI config yml file. After files are prepared, Kubeflow training service will call K8S rest API to create kubeflow jobs ([tf-operator](https://github.com/kubeflow/tf-operator) job or [pytorch-operator](https://github.com/kubeflow/pytorch-operator) job) in K8S, and mount your storage volumn into the job's pod. Output files of kubeflow job, like stdout, stderr, trial.log or model files, will also be copied back to the storage volumn. NNI will show the storage volumn's URL for each trial in WebUI, to allow user browse the log files and job's output files. 
 
 ## Supported operator
 NNI only support tf-operator and pytorch-operator of kubeflow, other operators is not tested.
@@ -69,7 +69,7 @@ kubeflowConfig:
 
 
 ## Run an experiment
-Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of kubeflow. The nni config yml file's content is like: 
+Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of kubeflow. The NNI config yml file's content is like: 
 ```
 authorName: default
 experimentName: example_mnist
@@ -119,7 +119,7 @@ kubeflowConfig:
     path: {your_nfs_server_export_path}
 ```
 
-Note: You should explicitly set `trainingServicePlatform: kubeflow` in nni config yml file if you want to start experiment in kubeflow mode. 
+Note: You should explicitly set `trainingServicePlatform: kubeflow` in NNI config yml file if you want to start experiment in kubeflow mode. 
 
 If you want to run Pytorch jobs, you could set your config files as follow:
 ```
@@ -185,7 +185,7 @@ Trial configuration in kubeflow mode have the following configuration keys:
 * ps (optional). This config section is used to configure tensorflow parameter server role.
 * master(optional). This config section is used to configure pytorch parameter server role.
 
-Once complete to fill nni experiment config file and save (for example, save as exp_kubeflow.yml), then run the following command
+Once complete to fill NNI experiment config file and save (for example, save as exp_kubeflow.yml), then run the following command
 ```
 nnictl create --config exp_kubeflow.yml
 ```

@@ -1,4 +1,4 @@
-Hyperband on nni
+Hyperband on NNI
 ===
 
 ## 1. Introduction
