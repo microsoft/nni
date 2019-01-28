@@ -6,7 +6,7 @@
 
 [![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/Microsoft/nni/blob/master/LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![缺陷](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
+NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment 的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
 ### **NNI [v0.5](https://github.com/Microsoft/nni/releases) 已发布！**
 
@@ -123,7 +123,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 
 **验证安装**
 
-以下示例实验依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow**。
+以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow**。
 
 * 通过克隆源代码下载示例。 
 
@@ -137,7 +137,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
-* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明实验已成功启动。 通过命令行输出的 `Web UI url` 来访问实验的界面。
+* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
     ```
     INFO: Starting restful server...
@@ -166,7 +166,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
     -----------------------------------------------------------------------
     
 
-* 在浏览器中打开 `Web UI url`，可看到下图的实验详细信息，以及所有的 Trial 任务。 查看[这里的](docs/WebUI.md)更多页面示例。
+* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里的](docs/WebUI.md)更多页面示例。
 
 <table style="border: none">
     <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
@@ -186,15 +186,15 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）实验的工�
 * [如何定义搜索空间](docs/SearchSpaceSpec.md)
 * [如何定义一次 Trial](docs/howto_1_WriteTrial.md)
 * [如何选择 Tuner、搜索算法](docs/HowToChooseTuner.md)
-* [配置实验](docs/ExperimentConfig.md)
+* [配置 Experiment](docs/ExperimentConfig.md)
 * [如何使用标记](docs/howto_1_WriteTrial.md#nni-python-annotation)
 
 ## **教程**
 
-* [在本机运行实验 (支持多 GPU 卡)](docs/tutorial_1_CR_exp_local_api.md)
-* [在多机上运行实验](docs/tutorial_2_RemoteMachineMode.md)
-* [在 OpenPAI 上运行实验](docs/PAIMode.md)
-* [在 Kubeflow 上运行实验。](docs/KubeflowMode.md)
+* [在本机运行 Experiment (支持多 GPU 卡)](docs/tutorial_1_CR_exp_local_api.md)
+* [在多机上运行 Experiment](docs/tutorial_2_RemoteMachineMode.md)
+* [在 OpenPAI 上运行 Experiment](docs/PAIMode.md)
+* [在 Kubeflow 上运行 Experiment。](docs/KubeflowMode.md)
 * [使用不同的 Tuner 和 Assessor](docs/tutorial_3_tryTunersAndAssessors.md)
 * [实现自定义 Tuner](docs/howto_2_CustomizedTuner.md)
 * [实现自定义 Assessor](examples/assessors/README.md)
