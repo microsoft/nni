@@ -1,6 +1,6 @@
 # **指南** - 自定义 advisor
 
-*Advisor 用于同时需要 Tuner 和 Assessor 方法的自动机器学习算法。 Advisor 与 Tuner 类似，它接收 Trial 的参数请求、最终结果，并生成 Trial 的参数。 另外，它也能像评估器一样接收中间结果，尝试的最终状态，并可以发送终止尝试的命令。 注意，在使用 Advisor 时，不能同时使用 Tuner 和 Assessor。*
+*Advisor 用于同时需要 Tuner 和 Assessor 方法的自动机器学习算法。 Advisor 与 Tuner 类似，它接收 Trial 的参数请求、最终结果，并生成 Trial 的参数。 另外，它也能像 Assessor 一样接收中间结果、Trial 的最终状态，并可以发送终止 Trial 的命令。 注意，在使用 Advisor 时，不能同时使用 Tuner 和 Assessor。*
 
 如果要自定义 Advisor，需要：
 
