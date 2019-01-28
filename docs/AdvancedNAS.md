@@ -19,7 +19,7 @@ tuner:
 ```
 And let tuner decide where to save & load weights and feed the paths to trials through `nni.get_next_parameters()`:
 
-![weight_sharing_design](./img/weight_sharing.png)
+![weight_sharing_design](./img/weight_sharing.png ,"weight_sharing_design")
 
  For example, in tensorflow:
 ```python
