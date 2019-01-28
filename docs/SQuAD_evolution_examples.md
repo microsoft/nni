@@ -8,7 +8,7 @@ We conclude the search space as follow:
 1. IDENTITY (Effectively means keep training).
 2. INSERT-RNN-LAYER (Inserts a LSTM. Comparing the performance of GRU and LSTM in our experiment, we decided to use LSTM here.)
 3. REMOVE-RNN-LAYER
-4. INSERT-ATTENTION-LAYER(Inserts a attention layer.)
+4. INSERT-ATTENTION-LAYER(Inserts an attention layer.)
 5. REMOVE-ATTENTION-LAYER
 6. ADD-SKIP (Identity between random layers).
 7. REMOVE-SKIP (Removes random skip).
@@ -137,7 +137,7 @@ In the "trial" part, if you want to use GPU to perform the architecture search, 
 nnictl create --config ~/nni/examples/trials/ga_squad/config_pai.yml
 ```
 
-## 4. Techinal details about the trial
+## 4. Technical details about the trial
 
 ### 4.1 How does it works
 The evolution-algorithm based architecture for question answering has two different parts just like any other examples: the trial and the tuner.
@@ -153,7 +153,7 @@ The trial has a lot of different files, functions and classes. Here we will only
 * `rnn.py` contains an implementation for GRU in Tensorflow.
 * `train_model.py` is a wrapper for the whole question answering model.
 
-Among those files, `trial.py` and `graph_to_tf.py` is special.
+Among those files, `trial.py` and `graph_to_tf.py` are special.
 
 `graph_to_tf.py` has a function named as `graph_to_network`, here is its skeleton code:
 
@@ -298,9 +298,9 @@ Here is an example of the model configuration, which is passed from the tuner to
 }
 ```
 
-Every model configuration will has a "layers" section, which is a JSON list of layer definitions. The definition of each layer is also a JSON object, where:
+Every model configuration will have a "layers" section, which is a JSON list of layer definitions. The definition of each layer is also a JSON object, where:
 
- * `type` is the type of the layer. 0, 1, 2, 3, 4 correspond to attention, self-attention, RNN, input and output layer respectively.
+ * `type` is the type of the layer. 0, 1, 2, 3, 4 corresponds to attention, self-attention, RNN, input and output layer respectively.
  * `size` is the length of the output. "x", "y" correspond to document length / question length, respectively.
  * `input_size` is the number of inputs the layer has.
  * `input` is the indices of layers taken as input of this layer.

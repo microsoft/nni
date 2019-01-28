@@ -2,13 +2,13 @@
 
 ## Overview
 
-In NNI, hyper-parameter searching space will be firstly defined using a json file (often called searchspace.json). According to the search space defined by this file, different hyper-parameter combinations will be generated to try and get feedback information like final accurary.
+In NNI, hyper-parameter searching space will be first defined using a json file (often called searchspace.json). According to the search space defined by this file, different hyper-parameter combinations will be generated to try and get feedback information like final accuracy.
 
 A **Trial** in NNI is such an individual attempt at applying a set of hyper-parameters on a model. 
 
 
 
-NNI provide two approaches for you to define a trial: `NNI API` and `NNI Python annotation`.
+NNI provides two approaches for you to define a trial: `NNI API` and `NNI Python annotation`.
 
 ## NNI API
 > Step 1 - Prepare a SearchSpace parameters file. 
@@ -74,7 +74,7 @@ NNI provide two approaches for you to define a trial: `NNI API` and `NNI Python 
 
 ## NNI Python Annotation
 
-An alternative to write a trial is to use NNI's syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
+An alternative to writing a trial is to use NNI's syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
 
 * annotate the variables you want to tune 
 * specify in which range you want to tune the variables
@@ -90,7 +90,7 @@ The following is a tensorflow code snippet for NNI Annotation, where the highlig
   2. report test\_acc every 100 steps
   3. at last report test\_acc as final result.
 
-What noteworthy is: as these new added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
+What noteworthy is: as these newly added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
 
 ```diff
 with tf.Session() as sess:
@@ -136,7 +136,7 @@ useAnnotation: true
 
 ### Output
 
-NNI is designed to show each trial's stdout and stderr in the log region of Webui. However, currently this feature is supported only on PAI and k8s platforms. On other platforms NNI will show trial log path and users can temporarily check the output manually.
+NNI is designed to show each trial's stdout and stderr in the log region of WebUI. However, currently this feature is supported only on PAI and k8s platforms. On other platforms NNI will show trial log path and users can temporarily check the output manually.
 
 ### Advance APIs
 
