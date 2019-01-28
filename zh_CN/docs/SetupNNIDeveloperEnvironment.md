@@ -44,7 +44,7 @@
 
 **5. 检查环境是否正确**
 
-尝试启动实验来检查环境。 例如，运行命令
+Trial 启动 Experiment 来检查环境。 例如，运行命令
 
     nnictl create --config ~/nni/examples/trials/mnist/config.yml
     
