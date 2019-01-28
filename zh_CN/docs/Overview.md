@@ -34,7 +34,7 @@ NNI 提供了一组样例来帮助熟悉以上过程。
 
 ### **Tuner（调参器）**
 
-**Tuner（调参器）**，在 NNI 中是实现了调参器 API 的某个超参调优算法。 [了解 NNI 中最新内置的调参器](HowToChooseTuner.md)
+**Tuner（调参器）**，在 NNI 中是实现了 Tuner API 的某个超参调优算法。 [了解 NNI 中最新内置的 Tuner](HowToChooseTuner.md)
 
 ### **Assessor（评估器）**
 
