@@ -353,19 +353,31 @@ class RemoteMachineTrainingService implements TrainingService {
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping remote machine training service...');
         this.stopping = true;
-        await this.cleanupConnections();
-        return Promise.resolve();
+        let timeoutId: NodeJS.Timer;
+        const delay1: Promise<{}> = new Promise((resolve: Function, reject: Function): void => {
+            timeoutId = setTimeout(
+                () => { reject(new Error('TrainingService cleanup timeout.')); },
+                10000);
+        });
+        await Promise.race([delay1, this.cleanupConnections()]).finally(() => {
+            clearTimeout(timeoutId);
+        });
     }
     
     /**
      * stop gpu_metric_collector process in remote machine and remove unused scripts
      */
     private async cleanupConnections(): Promise<void> {
-        for (const [rmMeta, client] of this.machineSSHClientMap.entries()) {
-            let jobpidPath: string = path.join(this.getRemoteScriptsPath(), 'pid');
-            await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, client);
-            await SSHClientUtility.remoteExeCommand(`rm -rf ${this.getRemoteScriptsPath()}`, client);
+        try{
+            for (const [rmMeta, client] of this.machineSSHClientMap.entries()) {
+                let jobpidPath: string = path.join(this.getRemoteScriptsPath(), 'pid');
+                await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, client);
+                await SSHClientUtility.remoteExeCommand(`rm -rf ${this.getRemoteScriptsPath()}`, client);
+            }
+        }catch (error) {
+            this.log.error(`Cleanup connection exception, error is ${error.message}`);
         }
+
         return Promise.resolve();
     } 
     

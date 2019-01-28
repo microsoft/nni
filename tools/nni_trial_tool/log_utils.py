@@ -25,7 +25,6 @@ import logging
 import logging.handlers
 import time
 import threading
-import re
 
 from datetime import datetime
 from enum import Enum, unique
