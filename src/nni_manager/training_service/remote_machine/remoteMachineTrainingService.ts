@@ -305,10 +305,10 @@ class RemoteMachineTrainingService implements TrainingService {
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
-                let gpuMetricCollectorScriptFolder : string = await this.generateGpuMetricsCollectorScript();
-                await this.setupConnections(value, gpuMetricCollectorScriptFolder );
+                await this.generateGpuMetricsCollectorScript();
+                await this.setupConnections(value);
                 //remove local temp files
-                await cpp.exec(`rm -rf ${gpuMetricCollectorScriptFolder }`);
+                await cpp.exec(`rm -rf ${this.generateGpuMetricCollectorDir()}`);
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
@@ -370,22 +370,27 @@ class RemoteMachineTrainingService implements TrainingService {
                 await SSHClientUtility.remoteExeCommand(`rm -rf ${this.getRemoteScriptsPath()}`, client);
             }
         }catch (error) {
+            //ignore error, this function is called to cleanup remote connections when experiment is stopping
             this.log.error(`Cleanup connection exception, error is ${error.message}`);
         }
 
         return Promise.resolve();
     } 
     
-    private generateLocalTmpDir(): string {
-        return `${os.tmpdir()}/${uniqueString(5)}/nni/scripts/`;
+    /**
+     * Generate gpu metric collector directory to store temp gpu metric collector script files
+     */
+    private generateGpuMetricCollectorDir(): string {
+        let userName: string = path.basename(os.homedir()); //get current user name of os
+        return `${os.tmpdir()}/${userName}/nni/scripts/`;
     }
 
     /**
      * Generate gpu metric collector shell script in local machine, 
      * used to run in remote machine, and will be deleted after uploaded from local. 
      */
-    private async generateGpuMetricsCollectorScript(): Promise<string> {
-        let gpuMetricCollectorScriptFolder : string = this.generateLocalTmpDir();
+    private async generateGpuMetricsCollectorScript(): Promise<void> {
+        let gpuMetricCollectorScriptFolder : string = this.generateGpuMetricCollectorDir();
         await cpp.exec(`mkdir -p ${gpuMetricCollectorScriptFolder }`);
         //generate gpu_metrics_collector.sh
         let gpuMetricsCollectorScriptPath: string = path.join(gpuMetricCollectorScriptFolder , 'gpu_metrics_collector.sh');
@@ -396,10 +401,9 @@ class RemoteMachineTrainingService implements TrainingService {
             path.join(remoteGPUScriptsDir, 'pid'), 
         );
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
-        return Promise.resolve(gpuMetricCollectorScriptFolder );
     }
 
-    private async setupConnections(machineList: string, localGpuMetricCollectorFolder: string): Promise<void> {
+    private async setupConnections(machineList: string): Promise<void> {
         this.log.debug(`Connecting to remote machines: ${machineList}`);
         const deferred: Deferred<void> = new Deferred<void>();
         //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
@@ -429,7 +433,7 @@ class RemoteMachineTrainingService implements TrainingService {
             this.machineSSHClientMap.set(rmMeta, conn);
             conn.on('ready', async () => {
                 this.machineSSHClientMap.set(rmMeta, conn);
-                let gpuMetricCollectorFilePath: string = path.join(localGpuMetricCollectorFolder, 'gpu_metrics_collector.sh');
+                let gpuMetricCollectorFilePath: string = path.join(this.generateGpuMetricCollectorDir(), 'gpu_metrics_collector.sh');
                 await this.initRemoteMachineOnConnected(gpuMetricCollectorFilePath, rmMeta, conn);
                 if (++connectedRMNum === rmMetaList.length) {
                     deferred.resolve();
