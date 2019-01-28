@@ -21,7 +21,7 @@
 
 * {"_type":"choice","_value":options}
    
-   * Which means the variable value is one of the options, which should be a list. The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.   
+   * 这表示变量值应该是列表中的选项之一。 选项的元素也可以是 [nested]（嵌套的）随机表达式。 在这种情况下，随机选项仅会在条件满足时出现。   
       
 
 * {"_type":"randint","_value":[upper]}
