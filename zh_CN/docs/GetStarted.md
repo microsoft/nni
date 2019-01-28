@@ -28,22 +28,22 @@
     source install.sh
     ```
 
-## **快速入门：运行自定义的实验**
+## **快速入门：运行自定义的 Experiment**
 
-实验会运行多个 Trial 任务，每个 Trial 任务会使用特定的神经网络（或模型）结构以及超参的值。 运行 NNI 实验，需要如下准备：
+Experiment 会运行多个 Trial 任务，每个 Trial 任务会使用特定的神经网络（或模型）结构以及超参的值。 运行 NNI Experiment，需要如下准备：
 
 * 可运行的 Trial 的代码
 * 实现或选择 Tuner
-* 准备 yaml 的实验配置文件
+* 准备 yaml 的 Experiment 配置文件
 * (可选) 实现或选择 Assessor
 
-**准备 Trial**: 先从简单样例开始，如：NNI 样例中的 mnist。 NNI 样例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有实验的样例。 执行下面的命令可轻松运行 NNI 的 mnist 样例：
+**准备 Trial**: 先从简单样例开始，如：NNI 样例中的 mnist。 NNI 样例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有 Experiment 的样例。 执行下面的命令可轻松运行 NNI 的 mnist 样例：
 
 ```bash
 python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 ```
 
-上面的命令会写在 yml 文件中。 参考[这里](howto_1_WriteTrial.md)来写出自己的实验代码。
+上面的命令会写在 yml 文件中。 参考[这里](howto_1_WriteTrial.md)来写出自己的 Experiment 代码。
 
 **准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的 Tuner（参考[这里](howto_2_CustomizedTuner.md)）。下面使用的是 NNI 内置 Tuner：
 
@@ -65,7 +65,7 @@ experimentName: auto_mnist
 # 并发运行数量
 trialConcurrency: 2
 
-# 实验运行时间
+# Experiment 运行时间
 maxExecDuration: 3h
 
 # 可为空，即数量不限
@@ -88,16 +88,16 @@ trial:
 
 因为此 Trial 代码使用了 NNI 标记的方法（参考[这里](../tools/annotation/README.md) ），所以 *useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
 
-完成上述步骤后，可通过下列命令来启动实验：
+完成上述步骤后，可通过下列命令来启动 Experiment：
 
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yml
     
 
 参考[这里](NNICTLDOC.md)来了解 *nnictl* 命令行工具的更多用法。
 
-## 查看实验结果
+## 查看 Experiment 结果
 
-实验开始运行后，可以通过 NNI 的网页来查看实验进程，并进行控制等。 网页界面默认会通过 `nnictl create` 命令打开。
+Experiment 开始运行后，可以通过 NNI 的网页来查看Experiment 进程，并进行控制等。 网页界面默认会通过 `nnictl create` 命令打开。
 
 ## 更多内容
 
@@ -107,8 +107,8 @@ trial:
 * [使用命令行工具 nnictl](NNICTLDOC.md)
 * [使用 NNIBoard](WebUI.md)
 * [定制搜索空间](SearchSpaceSpec.md)
-* [配置实验](ExperimentConfig.md)
-* [如何在本机运行实验 (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
-* [如何在多机上运行实验？](tutorial_2_RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行实验？](PAIMode.md)
-* [如何创建多阶段的实验](multiPhase.md)
+* [配置 Experiment](ExperimentConfig.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
+* [如何在多机上运行 Experiment？](tutorial_2_RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
+* [如何创建多阶段的 Experiment](multiPhase.md)
