@@ -11,7 +11,7 @@
 对代码进行以下改动来启用 NNI API：
 
     1.1 声明 NNI API
-        在尝试代码中通过 `import nni` 来导入 NNI API。
+        在 Trial 代码中通过 `import nni` 来导入 NNI API。
     
     1.2 获取预定义的参数
         参考下列代码片段： 
@@ -71,16 +71,16 @@
 
 在 NNI 中运行实验，只需要：
 
-* 可运行的尝试的代码
+* 可运行的 Trial 的代码
 * 实现或选择 Tuner
 * 准备 yml 的实验配置文件
 * (可选) 实现或选择 Assessor
 
-**准备尝试**：
+**准备 Trial**：
 
-> 在克隆代码后，可以在 ~/nni/examples 中找到一些样例，运行 `ls examples/trials` 查看所有尝试样例。
+> 在克隆代码后，可以在 ~/nni/examples 中找到一些样例，运行 `ls examples/trials` 查看所有 Trial 样例。
 
-先从 NNI 提供的简单尝试样例，如 MNIST 开始。 NNI 样例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有实验的样例。 执行下面的命令可轻松运行 NNI 的 mnist 样例：
+先从 NNI 提供的简单 Trial 样例，如 MNIST 开始。 NNI 样例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有实验的样例。 执行下面的命令可轻松运行 NNI 的 mnist 样例：
 
       python ~/nni/examples/trials/mnist-annotation/mnist.py
     
@@ -97,7 +97,7 @@
 
 *builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner的参数（内置 Tuner 在[这里]()），*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
 
-**准备配置文件**：实现 Trial 的代码，并选择或实现自定义的 Tuner 后，就要准备 yml 配置文件了。 NNI 为每个尝试样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
+**准备配置文件**：实现 Trial 的代码，并选择或实现自定义的 Tuner 后，就要准备 yml 配置文件了。 NNI 为每个 Trial 样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
 
     authorName: your_name
     experimentName: auto_mnist
@@ -126,7 +126,7 @@
       gpuNum: 0
     
 
-因为这个尝试代码使用了 NNI 标记的方法（参考[这里](../tools/annotation/README.md) ），所以*useAnnotation* 为 true。 *command* 是运行尝试代码所需要的命令，*codeDir* 是尝试代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个尝试进程所需的 GPU 数量。
+因为这个 Trial 代码使用了 NNI 标记的方法（参考[这里](../tools/annotation/README.md) ），所以*useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
 
 完成上述步骤后，可通过下列命令来启动实验：
 
@@ -141,13 +141,13 @@
 
 ## 使用多个本地 GPU 加快搜索速度
 
-下列步骤假设本机有 4 块 NVIDIA GPUs，参考 [tensorflow with GPU support](https://www.tensorflow.org/install/gpu)。 演示启用了 4 个并发的尝试任务，每个尝试任务使用了 1 块 GPU。
+下列步骤假设本机有 4 块 NVIDIA GPUs，参考 [tensorflow with GPU support](https://www.tensorflow.org/install/gpu)。 演示启用了 4 个并发的 Trial 任务，每个 Trial 任务使用了 1 块 GPU。
 
 **准备配置文件**：NNI 提供了演示用的配置文件，使用 `cat examples/trials/mnist-annotation/config_gpu.yml` 来查看。 trailConcurrency 和 gpuNum 与基本配置文件不同：
 
     ...
     
-    # 可同时运行的尝试数量
+    # 可同时运行的 Trial 数量
     trialConcurrency: 4
     
     ...
