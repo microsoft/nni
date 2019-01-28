@@ -1,6 +1,6 @@
 ## NNI CTL
 
-NNI CTL 模块用来控制 Neural Network Intelligence，包括开始新实验，停止实验，更新实验等。
+NNI CTL 模块用来控制 Neural Network Intelligence，包括开始新 Experiment，停止 Experiment，更新 Experiment等。
 
 ## 环境
 
