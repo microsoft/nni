@@ -1,55 +1,59 @@
-# NNI 概述
+# Overview
 
-NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment 的工具包。 每次 Experiment，用户只需要定义搜索空间，改动几行代码，就能利用 NNI 内置的算法和训练服务来搜索最好的超参组合以及神经网络结构。
+NNI (Neural Network Intelligence) is a toolkit to help users design and tune machine learning models (e.g., hyperparameters), neural network architectures, or complex system's parameters, in an efficient and automatic way. NNI has several appealing properties: easy-to-use, scalability, flexibility, and efficiency.
+
+* **Easy-to-use**: NNI can be easily installed through python pip. Only several lines need to be added to your code in order to use NNI's power. You can use both commandline tool and WebUI to work with your experiments.
+* **Scalability**: Tuning hyperparameters or neural architecture often demands large amount of computation resource, while NNI is designed to fully leverage different computation resources, such as remote machines, training platforms (e.g., PAI, Kubernetes). Thousands of trials could run in parallel by depending on the capacity of your configured training platforms.
+* **Flexibility**: Besides rich built-in algorithms, NNI allows users to customize various hyperparameter tuning algorithms, neural architecture search algorithms, early stopping algorithms, etc. Users could also extend NNI with more training platforms, such as virtual machines, kubernetes service on the cloud. Moreover, NNI can connect to external environments to tune special applications/models on them.
+* **Efficiency**: We are intensively working on more efficient model tuning from both system level and algorithm level. For example, leveraging early feedback to speedup tuning procedure.
+
+The figure below shows high-level architecture of NNI.
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/23273522/51816536-ed055580-2301-11e9-8ad8-605a79ee1b9a.png" alt="drawing" width="700"/>
+</p>
+
+## Key Concepts
+
+* *Experiment*: An experiment is one task of, for example, finding out the best hyperparameters of a model, finding out the best neural network architecture. It consists of trials and AutoML algorithms.
+
+* *Search Space*: It means the feasible region for tuning the model. For example, the value range of each hyperparameters.
+
+* *Configuration*: A configuration is an instance from the search space, that is, each hyperparameter has a specific value.
+
+* *Trial*: Trial is an individual attempt at applying a new configuration (e.g., a set of hyperparameter values, a specific nerual architecture). Trial code should be able to run with the provided configuration.
+
+* *Tuner*: Tuner is an AutoML algorithm, which generates a new configuration for the next try. A new trial will run with this configuration.
+
+* *Assessor*: Assessor analyzes trial's intermediate results (e.g., periodically evaluated accuracy on test dataset) to tell whether this trial can be early stopped or not.
+
+* *Training Platform*: It means where trials are executed. Depending on your experiment's configuration, it could be your local machine, or remote servers, or large-scale training platform (e.g., PAI, Kubernetes).
+
+Basically, an experiment runs as follows: Tuner receives search space and generates configurations. These configurations will be submitted to training platforms, such as local machine, remote machines, or training clusters. Their performances are reported back to Tuner. Then, new configurations are generated and submitted.
+
+For each experiment, user only needs to define a search space and update a few lines of code, and then leverage NNI built-in Tuner/Assessor and training platforms to search the best hyperparameters and/or neural architecture. There are basically 3 steps:
 
 > 第一步：[定义搜索空间](SearchSpaceSpec.md)
 > 
-> 第二步：[改动模型代码](howto_1_WriteTrial.md)
+> Step 2: [Update model codes](Trials.md)
 > 
 > 第三步：[定义 Experiment 配置](ExperimentConfig.md)
 
 <p align="center">
-<img src="./img/3_steps.jpg" alt="drawing"/>
+<img src="https://user-images.githubusercontent.com/23273522/51816627-5d13db80-2302-11e9-8f3e-627e260203d5.jpg" alt="drawing"/>
 </p>
 
-用户通过命令行工具 [nnictl](../tools/README.md) 创建 Experiment 后，守护进程（NNI 管理器）会开始搜索过程。 NNI 管理器不断地通过搜索配置的优化算法来生成参数配置，并通过训练服务组件，在目标训练环境中（例如：本机、远程服务器、云服务等），来调度并运行 Trial 的任务。 Trial 任务的模型精度等结果会返回给优化算法，以便生成更好的参数配置。 NNI 管理器会在找到最佳模型后停止搜索过程。
+More details about how to run an experiment, please refer to [Get Started](QuickStart.md).
 
-## 体系结构概述
+## Learn More
 
-<p align="center">
-<img src="./img/nni_arch_overview.png" alt="drawing"/>
-</p>
-
-用户可以用 nnictl 或可视化的 WEB 界面 NNIBoard 来查看并调试指定的 Experiment。
-
-NNI 提供了一组样例来帮助熟悉以上过程。
-
-## 主要概念
-
-**Experiment（实验）**，在 NNI 中是通过 Trial（尝试）在给定的条件来测试不同的假设情况。 在 Experiment 过程中，会有条理的修改一个或多个条件，以便测试它们对相关条件的影响。
-
-### **Trial（尝试）**
-
-**Trial（尝试）**是将一组参数在模型上独立的一次尝试。
-
-### **Tuner（调参器）**
-
-**Tuner（调参器）**，在 NNI 中是实现了 Tuner API 的某个超参调优算法。 [了解 NNI 中最新内置的 Tuner](HowToChooseTuner.md)
-
-### **Assessor（评估器）**
-
-**Assessor（评估器）**，实现了 Assessor API，用来加速 Experiment 执行过程。
-
-## 了解更多信息
-
-* [开始使用](GetStarted.md)
-* [安装 NNI](Installation.md)
-* [使用命令行工具 nnictl](NNICTLDOC.md)
-* [使用 NNIBoard](WebUI.md)
-* [使用标记](howto_1_WriteTrial.md#nni-python-annotation)
-
-### **教程**
-
-* [如何在本机运行 Experiment (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
-* [如何在多机上运行 Experiment？](tutorial_2_RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
+* [Get started](QuickStart.md)
+* [How to adapt your trial code on NNI?](Trials.md)
+* [What are tuners supported by NNI?](Builtin_Tuner.md)
+* [How to customize your own tuner?](Customize_Tuner.md)
+* [What are assessors supported by NNI?](Builtin_Assessors.md)
+* [How to customize your own assessor?](Customize_Assessor.md)
+* [How to run an experiment on local?](tutorial_1_CR_exp_local_api.md)
+* [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
+* [How to run an experiment on OpenPAI?](PAIMode.md)
+* [Examples](mnist_examples.md)
