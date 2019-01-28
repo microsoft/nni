@@ -16,7 +16,7 @@ NNI 提供了简单的方法来设置不同的参数优化算法，以及提前�
 
 ### **了解有关 Tuner 的更多信息**
 
-* 有关所需字段的详细定义和用法，参考[配置实验](ExperimentConfig.md)。
+* 有关所需字段的详细定义和用法，参考[配置 Experiment](ExperimentConfig.md)。
 * [NNI 最新版本支持的 Tuner](HowToChooseTuner.md)
 * [如何自定义 Tuner](howto_2_CustomizedTuner.md)
 
@@ -34,12 +34,12 @@ NNI 提供了简单的方法来设置不同的参数优化算法，以及提前�
 
 ### **了解 Assessor 的更多信息**
 
-* 有关所需字段的详细定义和用法，参考[配置实验](ExperimentConfig.md)。
+* 有关所需字段的详细定义和用法，参考[配置 Experiment](ExperimentConfig.md)。
 * 查看[启用 Assessor](EnableAssessor.md)，了解更多信息。
 * [如何自定义 Assessor](../examples/assessors/README.md)
 
 ## **了解更多信息**
 
-* [如何在本机运行实验 (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
-* [如何在多机上运行实验？](tutorial_2_RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行实验？](PAIMode.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
+* [如何在多机上运行 Experiment？](tutorial_2_RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
