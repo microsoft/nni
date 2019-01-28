@@ -75,7 +75,7 @@
 
 在 "trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
 
-`trialConcurrency` 是并发运行的尝试的数量。如果将 `gpuNum` 设置为 1，则需要与 GPU 数量一致。
+`trialConcurrency` 是并发运行的 Trial 的数量。如果将 `gpuNum` 设置为 1，则需要与 GPU 数量一致。
 
 ### 提交任务
 
@@ -132,22 +132,22 @@
 
 在 "trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
 
-`trialConcurrency` 是并发运行的尝试的数量。如果将 `gpuNum` 设置为 1，则需要与 GPU 数量一致。
+`trialConcurrency` 是并发运行的 Trial 的数量。如果将 `gpuNum` 设置为 1，则需要与 GPU 数量一致。
 
 ### 提交任务
 
     nnictl create --config ~/nni/examples/trials/ga_squad/config_pai.yml
     
 
-# 关于此尝试的技术细节
+# 关于此 Trial 的技术细节
 
 ## 实现方法
 
 基于进化算法架构的问答和其它样例一样，有两个部分：Trial 和 Tuner。
 
-### 尝试
+### Trial
 
-尝试有大量的文件、函数和类。 这里只简单介绍最重要的文件：
+Trial 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
 
 * `attention.py` 包含了 Tensorflow 注意力算法的实现。
 * `data.py` 包含了数据处理函数。
@@ -210,7 +210,7 @@ Tuner 比 Trial 代码简单很多。 它们共用了同样的 `graph.py`。 此
         # ......
     
         def generate_parameters(self, parameter_id):
-            """将一组尝试图配置作为序列化对象返回。
+            """将一组 Trial 图配置作为序列化对象返回。
             parameter_id : int
             """
             if len(self.population) <= 0:
