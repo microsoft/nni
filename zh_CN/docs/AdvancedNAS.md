@@ -81,7 +81,7 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
 ## 尝试依赖控制的异步调度模式
 
-多机间启用权重的尝试，一般是通过**先写后读**的方式来保持一致性。 子节点在父节点的尝试完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的调参器线程时，调参器线程可以决定是否阻塞当前线程。 例如：
+多机间启用权重的尝试，一般是通过**先写后读**的方式来保持一致性。 子节点在父节点的尝试完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的 Trial 时，Tuner 线程可以决定是否阻塞当前线程。 例如：
 
 ```python
     def generate_parameters(self, parameter_id):
