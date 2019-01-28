@@ -1,18 +1,18 @@
 # GBDT in nni
 Gradient boosting is a machine learning technique for regression and classification problems, which produces a prediction model in the form of an ensemble of weak prediction models, typically decision trees. It builds the model in a stage-wise fashion as other boosting methods do, and it generalizes them by allowing optimization of an arbitrary differentiable loss function. 
 
-Gradient boosting decision tree has many popular implementation, such as [lightgbm](https://github.com/Microsoft/LightGBM), [xgboost](https://github.com/dmlc/xgboost), and [catboost](https://github.com/catboost/catboost), etc. GBDT is a great tool for solving the problem of traditional machine learning problem. Since GBDT is a robust algorithm, it could use in many domains. The better hyper-parameters for GBDT, the better performance you could achieve.
+Gradient boosting decision tree has many popular implementations, such as [lightgbm](https://github.com/Microsoft/LightGBM), [xgboost](https://github.com/dmlc/xgboost), and [catboost](https://github.com/catboost/catboost), etc. GBDT is a great tool for solving the problem of traditional machine learning problem. Since GBDT is a robust algorithm, it could use in many domains. The better hyper-parameters for GBDT, the better performance you could achieve.
 
 NNI is a great platform for tuning hyper-parameters, you could try various builtin search algorithm in nni and run multiple trials concurrently. 
 
 
 ## 1. Search Space in GBDT
-There are many hyper-parameters in GBDT, but what kind of parameters will effect the performance or speed? Based on some pratical experience, some suggestion here(Take lightgbm as example):
+There are many hyper-parameters in GBDT, but what kind of parameters will affect the performance or speed? Based on some practical experience, some suggestion here(Take lightgbm as example):
 
 > * For better accuracy
 * `learning_rate`. The range of `learning rate` could be [0.001, 0.9].
 
-* `num_leaves`. `num_leaves` is realted to `max_depth`, you don't have to tune both of them.
+* `num_leaves`. `num_leaves` is related to `max_depth`, you don't have to tune both of them.
     
 * `bagging_freq`. `bagging_freq` could be [1, 2, 4, 8, 10]
 
@@ -25,8 +25,8 @@ There are many hyper-parameters in GBDT, but what kind of parameters will effect
     
 * `max_bin`.
 
-> * For avoid overfitting
-* `min_data_in_leaf`. This depend on your dataset.
+> * To avoid overfitting
+* `min_data_in_leaf`. This depends on your dataset.
 
 * `min_sum_hessian_in_leaf`. This depend on your dataset.
 
@@ -42,7 +42,7 @@ Reference link:
 
 ## 2. Task description
 Now we come back to our example "auto-gbdt" which run in lightgbm and nni. The data including [train data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train). 
-Given the features and label in train data, we train a GBDT regession model and use it to predict.
+Given the features and label in train data, we train a GBDT regression model and use it to predict.
 
 ## 3. How to run in nni
 

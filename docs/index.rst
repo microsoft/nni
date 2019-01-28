@@ -12,9 +12,10 @@ Contents
     :glob:
 
     Overview
-    Changelog<RELEASE>
+    GetStarted<QuickStart>
     Tutorials
     Examples
     Reference
-    Contribution
     FAQ
+    Contribution
+    Changelog<RELEASE>

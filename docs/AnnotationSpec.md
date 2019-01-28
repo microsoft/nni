@@ -29,7 +29,7 @@ In NNI, there are mainly four types of annotation:
 
 **Arguments**
 
-- **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) such as `choice` or `uninform`. 
+- **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) such as `choice` or `uniform`. 
 - **name**: The name of the variable that the selected value will be assigned to. Note that this argument should be the same as the left value of the following assignment statement.
 
 An example here is:
@@ -47,8 +47,8 @@ learning_rate = 0.1
 
 **Arguments**
 
-- **\*functions**: Several functions that are waiting to be selected from. Note that it should be a complete function call with aruguments. Such as `max_pool(hidden_layer, pool_size)`.
-- **name**: The name of the function that will be replace in the following assignment statement.
+- **\*functions**: Several functions that are waiting to be selected from. Note that it should be a complete function call with arguments. Such as `max_pool(hidden_layer, pool_size)`.
+- **name**: The name of the function that will be replaced in the following assignment statement.
 
 An example here is:
 
@@ -61,10 +61,10 @@ h_pooling = max_pool(hidden_layer, pool_size)
 
    `'''@nni.report_intermediate_result(metrics)'''`
 
-`@nni.report_intermediate_result` is used to report itermediate result, whose usage is the same as `nni.report_intermediate_result` in [Trials.md](Trials.md)
+`@nni.report_intermediate_result` is used to report intermediate result, whose usage is the same as `nni.report_intermediate_result` in [Trials.md](Trials.md)
 
 ### 4. Annotate final result
 
    `'''@nni.report_final_result(metrics)'''`
 
-`@nni.report_final_result` is used to report final result of the current trial, whose usage is the same as `nni.report_final_result` in [Trials.md](Trials.md)
+`@nni.report_final_result` is used to report the final result of the current trial, whose usage is the same as `nni.report_final_result` in [Trials.md](Trials.md)

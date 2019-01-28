@@ -1,6 +1,4 @@
-**Run an Experiment on Multiple Machines**
-
-===
+# Run an Experiment on Multiple Machines
 
 NNI supports running an experiment on multiple machines through SSH channel, called `remote` mode. NNI assumes that you have access to those machines, and already setup the environment for running deep learning training code.
 

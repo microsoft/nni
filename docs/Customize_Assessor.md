@@ -2,11 +2,11 @@
 
 ## Customize Assessor
 
-NNI also support building a assessor by yourself to adjust your tuning demand.
+NNI also support building an assessor by yourself to adjust your tuning demand.
 
 If you want to implement a customized Assessor, there are three things for you to do:
 
-1) Inherit a assessor of a base Assessor class
+1) Inherit an assessor of a base Assessor class
 2) Implement assess_trial function
 3) Configure your customized Assessor in experiment yaml config file
 
@@ -55,7 +55,7 @@ assessor:
 
 ```
 
-Please noted in **2**. The object `trial_history` are exact the object that Trial send to Assesor by using SDK `report_intermediate_result` function.
+Please noted in **2**. The object `trial_history` are exact the object that Trial send to Assessor by using SDK `report_intermediate_result` function.
 
 More detail example you could see:
 > * [medianstop-assessor](../src/sdk/pynni/nni/medianstop_assessor)
