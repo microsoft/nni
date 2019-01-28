@@ -1,4 +1,4 @@
-# **实现 NNI 的 Trial（尝试）代码**
+# Write a Trial Run on NNI
 
 **Trial（尝试）**是将一组参数在模型上独立的一次尝试。
 
