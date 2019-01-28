@@ -1,36 +1,30 @@
-# **安装 NNI**
+# Installation of NNI
 
 当前仅支持 Linux 和 Mac。
 
 ## **安装**
 
-* **依赖项**
+* **Install NNI through pip**
+    
+    Prerequisite: `python >= 3.5`
     
     ```bash
-    python >= 3.5
-    git
-    wget
-    ```
-    
-    需要正确安装 Python 的 pip。 可以用 "python3 -m pip -v" 来检查 pip 的版本。
-
-* **通过 pip 命令安装 NNI**
-    
-    ```bash
-    python3 -m pip install --user --upgrade nni
+    python3 -m pip install --upgrade nni
     ```
 
-* **通过源代码安装 NNI**
+* **Install NNI through source code**
+    
+    Prerequisite: `python >=3.5, git, wget`
     
     ```bash
-    git clone -b v0.5 https://github.com/Microsoft/nni.git
+    git clone -b v0.5.1 https://github.com/Microsoft/nni.git
     cd nni
-    source install.sh
+    ./install.sh
     ```
 
-* **在 docker 映像中安装 NNI**
+* **Install NNI in docker image**
     
-    也可将 NNI 安装到 docker 映像中。 参考[这里](../deployment/docker/README.md)来生成 NNI 的 docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 `docker pull msranni/nni:latest`。
+    You can also install NNI in a docker image. Please follow the instructions [here](../deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
 ## **系统需求**
 
@@ -66,5 +60,7 @@
 * [定制搜索空间](SearchSpaceSpec.md)
 * [配置 Experiment](ExperimentConfig.md)
 * [如何在本机运行 Experiment (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
-* [如何在多机上运行 Experiment？](tutorial_2_RemoteMachineMode.md)
+* [如何在多机上运行 Experiment？](RemoteMachineMode.md)
 * [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
+* [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)
+* [How to run an experiment on Kubernetes through FrameworkController?](FrameworkControllerMode.md)
