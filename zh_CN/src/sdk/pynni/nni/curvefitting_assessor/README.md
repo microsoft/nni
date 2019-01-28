@@ -2,7 +2,7 @@
 
 ## 1. 介绍
 
-Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的尝试 X 在 step S 比性能最好的尝试要差，就会提前终止它。
+Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的尝试 X 在 step S 比性能最好的尝试要差，就会提前终止它。
 
 此算法中，使用了 12 条曲线来拟合学习曲线，从[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)中选择了大量的参数曲线模型。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
 
@@ -34,7 +34,7 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 
 * 步骤 3：如果拟合结果没有收敛，预测结果会是 `None`，并返回 `AssessResult.Good`，待下次有了更多精确信息后再次预测。 此外，会通过 `predict()` 函数获得正数。如果该值大于 __历史最好结果__ * `THRESHOLD`(默认为 0.95)，则返回 `AssessResult.Good`，否则返回 `AssessResult.Bad`。
 
-下图显示了此算法在 MNIST 尝试历史数据上结果。其中旅店表示评估器获得的数据，蓝点表示将来，但未知的数据，红色线条是 Curve fitting 评估器的预测曲线。
+下图显示了此算法在 MNIST Trial 历史数据上结果。其中绿点表示 Assessor 获得的数据，蓝点表示将来，但未知的数据，红色线条是 Curve fitting Assessor 的预测曲线。
 
 <p align="center">
 <img src="./example_of_curve_fitting.PNG" alt="drawing"/>
@@ -42,7 +42,7 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 
 ## 2. 用法
 
-要使用 Curve Fitting 评估器，需要在实验的 yml 配置文件进行如下改动。
+要使用 Curve Fitting Assessor，需要在 Experiment 的 yml 配置文件进行如下改动。
 
     assessor:
         builtinAssessorName: Curvefitting
@@ -67,11 +67,11 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 
 ## 3. 文件结构
 
-评估器有大量的文件、函数和类。 这里只简单介绍最重要的文件：
+Assessor 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
 
 * `curvefunctions.py` 包含了所有函数表达式和默认参数。
 * `modelfactory.py` 包括学习和预测部分，并实现了相应的计算部分。
-* `curvefitting_assessor.py` 是接收尝试历史数据并评估是否需要提前终止的评估器。
+* `curvefitting_assessor.py` 是接收 Trial 历史数据并评估是否需要提前终止的 Assessor。
 
 ## 4. TODO
 
