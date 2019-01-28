@@ -118,9 +118,9 @@ with tf.Session() as sess:
 > > 
 > > `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。
 > > 
-> > 参考 [标记](../tools/nni_annotation/README.md) 了解更多关于标记的语法和用法。
+> > 参考 [Annotation](../tools/nni_annotation/README.md) 了解更多关于标记的语法和用法。
 > 
-> 第二步：启用 NNI 标记 在 yml 配置文件中，将 *useAnnotation* 设置为 true 来启用 NNI 标记。
+> 第二步：启用 NNI Annotation 在 yml 配置文件中，将 *useAnnotation* 设置为 true 来启用 NNI Annotation。
 
 ```yaml
 useAnnotation: true
