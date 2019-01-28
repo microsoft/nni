@@ -109,7 +109,7 @@ class RemoteMachineTrainingService implements TrainingService {
                     // Break the while loop since no GPU resource is available right now,
                     // Wait to schedule job in next time iteration
                     break;
-                }     
+                }
             }
             await delay(3000);
         }
@@ -354,12 +354,12 @@ class RemoteMachineTrainingService implements TrainingService {
         this.log.info('Stopping remote machine training service...');
         this.stopping = true;
         let timeoutId: NodeJS.Timer;
-        const delay1: Promise<{}> = new Promise((resolve: Function, reject: Function): void => {
+        const delay: Promise<{}> = new Promise((resolve: Function, reject: Function): void => {
             timeoutId = setTimeout(
                 () => { reject(new Error('TrainingService cleanup timeout.')); },
                 10000);
         });
-        await Promise.race([delay1, this.cleanupConnections()]).finally(() => {
+        await Promise.race([delay, this.cleanupConnections()]).finally(() => {
             clearTimeout(timeoutId);
         });
     }
