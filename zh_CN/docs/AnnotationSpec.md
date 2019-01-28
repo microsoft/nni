@@ -4,7 +4,7 @@
 
 使用 NNI 时，只需要:
 
-1. 在使用另一个 Annotation 前，用 nni.get_next_parameter() 从调参器 Tuner 获得超参： '''@nni.get_next_parameter()'''
+1. 在使用另一个 Annotation 前，用 nni.get_next_parameter() 从 Tuner 获得超参： '''@nni.get_next_parameter()'''
 
 2. 在超参变量前加上如下标记：
     
