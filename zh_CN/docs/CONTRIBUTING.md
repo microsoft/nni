@@ -31,7 +31,7 @@
 
 参考[如何配置 NNI 的开发环境](./SetupNNIDeveloperEnvironment.md)，来安装开发环境。
 
-同样，还需参考 [创建尝试](./WriteYourTrial.md) 或 [开始实验](StartExperiment.md)。 更多内容，可直接浏览[这里](https://github.com/Microsoft/nni/tree/master/docs)。
+同样，还需参考 [创建 Trial](./WriteYourTrial.md) 或 [开始 Experiment](StartExperiment.md)。 更多内容，可直接浏览[这里](https://github.com/Microsoft/nni/tree/master/docs)。
 
 ## 处理现有问题
 
