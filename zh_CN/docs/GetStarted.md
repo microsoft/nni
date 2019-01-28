@@ -33,7 +33,7 @@
 实验会运行多个尝试任务，每个尝试任务会使用特定的神经网络（或模型）结构以及超参的值。 运行 NNI 实验，需要如下准备：
 
 * 可运行的尝试的代码
-* 实现或选择调参器
+* 实现或选择 Tuner
 * 准备 yaml 的实验配置文件
 * (可选) 实现或选择评估器
 
@@ -45,7 +45,7 @@ python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 
 上面的命令会写在 yml 文件中。 参考[这里](howto_1_WriteTrial.md)来写出自己的实验代码。
 
-**准备调参器**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的调参器（参考[这里](howto_2_CustomizedTuner.md)）。下面使用了 NNI 内置的调参器：
+**准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的 Tuner（参考[这里](howto_2_CustomizedTuner.md)）。下面使用的是 NNI 内置 Tuner：
 
 ```yaml
 tuner:
@@ -54,9 +54,9 @@ tuner:
       optimize_mode: maximize
 ```
 
-*builtinTunerName* 用来指定 NNI 中的调参器，*classArgs* 是传入到调参器的参数，*optimization_mode* 表明需要最大化还是最小化尝试的结果。
+*builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner 的参数，*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
 
-**准备配置文件**：实现尝试的代码，并选择或实现自定义的调参器后，就要准备 yml 配置文件了。 NNI 为每个尝试样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
+**准备配置文件**：实现 Trial 的代码，并选择或实现自定义的 Tuner 后，就要准备 yml 配置文件了。 NNI 为每个尝试样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
 
 ```yaml
 authorName: your_name
@@ -101,7 +101,7 @@ trial:
 
 ## 更多内容
 
-* [NNI 最新版本支持的调参器](./HowToChooseTuner.md)
+* [NNI 最新版本支持的 Tuner](./HowToChooseTuner.md)
 * [概述](Overview.md)
 * [安装](Installation.md)
 * [使用命令行工具 nnictl](NNICTLDOC.md)
