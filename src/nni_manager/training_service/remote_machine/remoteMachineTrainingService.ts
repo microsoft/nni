@@ -70,7 +70,6 @@ class RemoteMachineTrainingService implements TrainingService {
     private metricsEmitter: EventEmitter;
     private log: Logger;
     private isMultiPhase: boolean = false;
-    private disableLog: boolean = false;
     private trialSequenceId: number;
     private remoteRestServerPort?: number;
     private readonly remoteOS: string;
@@ -335,9 +334,6 @@ class RemoteMachineTrainingService implements TrainingService {
             case TrialConfigMetadataKey.MULTI_PHASE:
                 this.isMultiPhase = (value === 'true' || value === 'True');
                 break;
-            case TrialConfigMetadataKey.DISABLE_LOG:
-                this.disableLog = (value === 'true' || value === 'True');
-                break;
             default:
                 //Reject for unknown keys
                 throw new Error(`Uknown key: ${key}`);
@@ -551,7 +547,6 @@ class RemoteMachineTrainingService implements TrainingService {
             command,
             nniManagerIp,
             this.remoteRestServerPort,
-            this.disableLog? '--disable_log' : '',
             path.join(trialWorkingFolder, '.nni', 'code')
         )
 

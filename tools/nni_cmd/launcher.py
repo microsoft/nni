@@ -263,8 +263,6 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['multiPhase'] = experiment_config.get('multiPhase')
     if experiment_config.get('multiThread'):
         request_data['multiThread'] = experiment_config.get('multiThread')
-    if experiment_config.get('disableLog'):
-        request_data['disableLog'] = experiment_config.get('disableLog')
     if experiment_config.get('advisor'):
         request_data['advisor'] = experiment_config['advisor']
     else:

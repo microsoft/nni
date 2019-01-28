@@ -61,7 +61,6 @@ abstract class KubernetesTrainingService {
     protected kubernetesCRDClient?: KubernetesCRDClient;
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
-    protected disableLog: boolean = false;
     
     constructor() {
         this.log = getLogger();
@@ -202,8 +201,7 @@ abstract class KubernetesTrainingService {
             nvidia_script,
             command,
             nniManagerIp,
-            this.kubernetesRestServerPort,
-            this.disableLog? '--disable_log' : '',
+            this.kubernetesRestServerPort
         );
         return runScript;
     }

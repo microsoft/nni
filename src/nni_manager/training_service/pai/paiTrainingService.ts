@@ -75,7 +75,6 @@ class PAITrainingService implements TrainingService {
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
-    private disableLog: boolean = false;
 
     constructor() {
         this.log = getLogger();
@@ -226,8 +225,7 @@ class PAITrainingService implements TrainingService {
             hdfsOutputDir,
             this.hdfsOutputHost,
             this.paiClusterConfig.userName, 
-            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
-            this.disableLog? '--disable_log' : '',
+            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName)
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
@@ -434,9 +432,6 @@ class PAITrainingService implements TrainingService {
                     this.hdfsClient);
 
                 deferred.resolve();
-                break;
-            case TrialConfigMetadataKey.DISABLE_LOG:
-                this.disableLog = (value === 'true' || value === 'True');
                 break;
             default:
                 //Reject for unknown keys
