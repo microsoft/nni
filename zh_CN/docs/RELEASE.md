@@ -7,7 +7,7 @@
 * 支持 [Metis tuner](./HowToChooseTuner.md#MetisTuner) 作为 NNI 的 Tuner。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
 * 支持 [Curve fitting （曲线拟合）Assessor](./HowToChooseTuner.md#Curvefitting)，通过曲线拟合的策略来实现提前终止 Trial。 
-* 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS 调参器通过 NFS 来提供权重共享。
+* 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
 
 ### 改进训练服务
 
@@ -25,9 +25,9 @@
 
 ## 主要功能
 
-### 支持新的调参器
+### 支持新的 Tuner
 
-* 支持新调参器 [network morphism](./HowToChooseTuner.md#NetworkMorphism)
+* 支持新 Tuner [network morphism](./HowToChooseTuner.md#NetworkMorphism)
 
 ### 改进训练服务
 
@@ -51,7 +51,7 @@
 
 ## 新样例
 
-* [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism)，使用 network morphism 调参器
+* [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism)，使用 network morphism Tuner
 * 使用 PyTorch 的[分布式 MNIST 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
 # 发布 0.4 - 12/6/2018
@@ -61,11 +61,11 @@
 * [Kubeflow 训练服务](./KubeflowMode.md) 
    * 支持 tf-operator
    * Kubeflow 上的[分布式尝试样例](../examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索调参器](../src/sdk/pynni/nni/README.md#Grid) 
-* [Hyperband 调参器](../src/sdk/pynni/nni/README.md#Hyperband)
+* [网格搜索 Tuner](../src/sdk/pynni/nni/README.md#Grid) 
+* [Hyperband Tuner](../src/sdk/pynni/nni/README.md#Hyperband)
 * 支持在 MAC 上运行 NNI 实验
 * WebUI 
-   * 支持 hyperband 调参器
+   * 支持 hyperband Tuner
    * 移除 tensorboard 按钮 
    * 显示实验的错误消息 
    * 显示搜索空间和尝试配置的行号
@@ -109,9 +109,9 @@
    * float
    * 包含有 'default' 键值的 dict，'default' 的值必须为 int 或 float。 dict 可以包含任何其它键值对。
 
-## 新的内置调参器
+## 新的内置 Tuner
 
-* **Batch Tuner（批处理调参器）** 会执行所有曹参组合，可被用来批量提交尝试任务。
+* **Batch Tuner（批处理调参器）** 会执行所有超参组合，可被用来批量提交 Trial 任务。
 
 ## 新样例
 
@@ -130,9 +130,9 @@
 ## 主要功能
 
     * 支持 [OpenPAI](https://github.com/Microsoft/pai) (aka pai) 作为训练服务（参考 [!这里](./PAIMode.md)，了解如何在 pai 模式下提交 NNI 作业）。
-       * 训练服务支持 pai 模式。 NNI 尝试可发送至 OpenPAI 集群上运行
-       * NNI 尝试输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
-    * 支持 <a href="https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf">SMAC</a> 调参器 (参考[这里](HowToChooseTuner.md)，了解如何使用 SMAC 调参器)
+       * 训练服务支持 pai 模式。 Trial 可发送至 OpenPAI 集群上运行
+       * Trial 的输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
+    * 支持 <a href="https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf">SMAC</a> Tuner (参考[这里](HowToChooseTuner.md)，了解如何使用 SMAC Tuner)
        * <a href="https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf">SMAC</a> 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的好模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 NNI 的 SMAC 通过包装 <a href="https://github.com/automl/SMAC3">SMAC3</a> 来支持。
     * 支持将 NNI 安装在 <a href="https://conda.io/docs/index.html">conda</a> 和 Python 虚拟环境中。
     * 其它
@@ -157,10 +157,10 @@
        * 支持自动机器学习算法，包括： hyperopt_tpe, hyperopt_annealing, hyperopt_random, 和 evolution_tuner。
        * 支持 Assessor（提前终止）算法，包括：medianstop。
        * 提供 Python API 来自定义 Tuner 和 Assessor
-       * 提供 Python API 来包装尝试代码，以便能在 NNI 中运行
+       * 提供 Python API 来包装 Trial 代码，以便能在 NNI 中运行
     * 实验
-       * 提供命令行工具 'nnictl' 来管理实验
-       * 提供网页界面来查看并管理实验
+       * 提供命令行工具 'nnictl' 来管理 Experiment
+       * 提供网页界面来查看并管理 Experiment
     * 持续集成
        * 使用 Ubuntu 的 [travis-ci](https://github.com/travis-ci) 来支持持续集成
     * 其它
