@@ -31,6 +31,5 @@ export enum TrialConfigMetadataKey {
     PAI_CLUSTER_CONFIG = 'pai_config',
     KUBEFLOW_CLUSTER_CONFIG = 'kubeflow_config',
     NNI_MANAGER_IP = 'nni_manager_ip',
-    FRAMEWORKCONTROLLER_CLUSTER_CONFIG = 'frameworkcontroller_config',
-    DISABLE_LOG = 'disable_log'
+    FRAMEWORKCONTROLLER_CLUSTER_CONFIG = 'frameworkcontroller_config'
 }
