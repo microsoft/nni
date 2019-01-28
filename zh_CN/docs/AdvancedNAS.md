@@ -22,7 +22,7 @@ tuner:
     save_dir_root: /nfs/storage/path/
 ```
 
-并让调参器来决定在什么路径读写权重文件，通过 `nni.get_next_parameters()` 来获取路径：
+并让 Tuner 来决定在什么路径读写权重文件，通过 `nni.get_next_parameters()` 来获取路径：
 
 ![weight_sharing_design](./img/weight_sharing.png)
 
@@ -36,7 +36,7 @@ saver.save(sess, os.path.join(params['save_path'], 'model.ckpt'))
 tf.init_from_checkpoint(params['restore_path'])
 ```
 
-超参中的 `'save_path'` 和 `'restore_path'` 可以通过调参器来管理。
+超参中的 `'save_path'` 和 `'restore_path'` 可以通过 Tuner 来管理。
 
 ### NFS 配置
 
