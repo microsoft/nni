@@ -99,7 +99,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.log.info('Run remote machine training service.');
         while (!this.stopping) {
             while (this.jobQueue.length > 0) {
-                this.updateGpuReversion();
+                this.updateGpuReservation();
                 const trialJobId: string = this.jobQueue[0];
                 const prepareResult : boolean = await this.prepareTrialJob(trialJobId);
                 if (prepareResult) {
@@ -233,9 +233,9 @@ class RemoteMachineTrainingService implements TrainingService {
     }
     
     /**
-     * remove gpu reversion when job is not runningj
+     * remove gpu reversion when job is not running
      */
-    private updateGpuReversion() {
+    private updateGpuReservation() {
         for (const [key, value] of this.trialJobsMap) { 
             if(!['WAITING', 'RUNNING'].includes(value.status)) {
                 this.gpuScheduler.removeGpuReservation(value.id, value.rmMeta);
@@ -305,10 +305,10 @@ class RemoteMachineTrainingService implements TrainingService {
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
             case TrialConfigMetadataKey.MACHINE_LIST:
-                let localGpuMetricFolder: string = await this.generateGpuScript();
-                await this.setupConnections(value, localGpuMetricFolder);
+                let gpuMetricCollectorScriptFolder : string = await this.generateGpuMetricsCollectorScript();
+                await this.setupConnections(value, gpuMetricCollectorScriptFolder );
                 //remove local temp files
-                await cpp.exec(`rm -rf ${localGpuMetricFolder}`);
+                await cpp.exec(`rm -rf ${gpuMetricCollectorScriptFolder }`);
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
@@ -349,7 +349,10 @@ class RemoteMachineTrainingService implements TrainingService {
 
         return deferred.promise;
     }
-
+    
+    /**
+     * cleanup() has a time out of 10s to clean remote connections 
+     */
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping remote machine training service...');
         this.stopping = true;
@@ -381,22 +384,34 @@ class RemoteMachineTrainingService implements TrainingService {
         return Promise.resolve();
     } 
     
-    private async generateGpuScript(): Promise<string> {
-        let localGpuMetricFolder: string = `/tmp/nni/scripts/${uniqueString(5)}`;
-        await cpp.exec(`mkdir -p ${localGpuMetricFolder}`);
+    private async generateLocalTmpDir(): Promise<string> {
+        //only support Linux, other kind of OS is not support for remoteTrainingSerevice
+        let tmpRootDir: string = '/tmp';
+        const result = await cpp.exec(`whoami`)
+        let currentUser =JSON.parse(result.stdout).value;
+        return Promise.resolve(`${tmpRootDir}/${currentUser}/nni/scripts/${uniqueString(5)}`);
+    }
+
+    /**
+     * Generate gpu metric collector shell script in local machine, 
+     * used to run in remote machine, and will be deleted after uploaded from local. 
+     */
+    private async generateGpuMetricsCollectorScript(): Promise<string> {
+        let gpuMetricCollectorScriptFolder : string = await this.generateLocalTmpDir();
+        await cpp.exec(`mkdir -p ${gpuMetricCollectorScriptFolder }`);
         //generate gpu_metrics_collector.sh
-        let gpuMetricFilePath: string = path.join(localGpuMetricFolder, 'gpu_metrics_collector.sh');
+        let gpuMetricsCollectorScriptPath: string = path.join(gpuMetricCollectorScriptFolder , 'gpu_metrics_collector.sh');
         const remoteScriptsDir: string = this.getRemoteScriptsPath();
-        const gpuCollectorContent: string = String.Format(
+        const gpuMetricsCollectorScriptContent: string = String.Format(
             GPU_COLLECTOR_FORMAT, 
             remoteScriptsDir, 
             path.join(remoteScriptsDir, 'pid'), 
         );
-        await fs.promises.writeFile(gpuMetricFilePath, gpuCollectorContent, { encoding: 'utf8' });
-        return Promise.resolve(localGpuMetricFolder);
+        await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
+        return Promise.resolve(gpuMetricCollectorScriptFolder );
     }
 
-    private async setupConnections(machineList: string, localGpuMetricFolder: string): Promise<void> {
+    private async setupConnections(machineList: string, localGpuMetricCollectorFolder: string): Promise<void> {
         this.log.debug(`Connecting to remote machines: ${machineList}`);
         const deferred: Deferred<void> = new Deferred<void>();
         //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
@@ -426,8 +441,8 @@ class RemoteMachineTrainingService implements TrainingService {
             this.machineSSHClientMap.set(rmMeta, conn);
             conn.on('ready', async () => {
                 this.machineSSHClientMap.set(rmMeta, conn);
-                let gpuMetricFilePath: string = path.join(localGpuMetricFolder, 'gpu_metrics_collector.sh');
-                await this.initRemoteMachineOnConnected(gpuMetricFilePath, rmMeta, conn);
+                let gpuMetricCollectorFilePath: string = path.join(localGpuMetricCollectorFolder, 'gpu_metrics_collector.sh');
+                await this.initRemoteMachineOnConnected(gpuMetricCollectorFilePath, rmMeta, conn);
                 if (++connectedRMNum === rmMetaList.length) {
                     deferred.resolve();
                 }
