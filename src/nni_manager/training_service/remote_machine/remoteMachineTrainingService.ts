@@ -376,9 +376,8 @@ class RemoteMachineTrainingService implements TrainingService {
         return Promise.resolve();
     } 
     
-    private async generateLocalTmpDir(): Promise<string> {
-        let tmpRootDir: string = os.tmpdir();
-        return Promise.resolve(`${tmpRootDir}/${uniqueString(5)}/nni/scripts/`);
+    private generateLocalTmpDir(): string {
+        return `${os.tmpdir()}/${uniqueString(5)}/nni/scripts/`;
     }
 
     /**
@@ -386,7 +385,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * used to run in remote machine, and will be deleted after uploaded from local. 
      */
     private async generateGpuMetricsCollectorScript(): Promise<string> {
-        let gpuMetricCollectorScriptFolder : string = await this.generateLocalTmpDir();
+        let gpuMetricCollectorScriptFolder : string = this.generateLocalTmpDir();
         await cpp.exec(`mkdir -p ${gpuMetricCollectorScriptFolder }`);
         //generate gpu_metrics_collector.sh
         let gpuMetricsCollectorScriptPath: string = path.join(gpuMetricCollectorScriptFolder , 'gpu_metrics_collector.sh');
