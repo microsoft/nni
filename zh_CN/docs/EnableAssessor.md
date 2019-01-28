@@ -10,7 +10,7 @@ Assessor 模块用于评估正在运行的 Trial。 最常用的情况是提前�
     experimentName: auto_mnist
     # 并发运行数量
     trialConcurrency: 2
-    # 实验运行时间
+    # Experiment 运行时间
     maxExecDuration: 3h
     # 可为空，即数量不限
     maxTrialNum: 100
