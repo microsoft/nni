@@ -21,7 +21,7 @@
 **TPE**
 
 Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimization（SMBO，即基于序列模型优化）的方法。 SMBO 方法根据历史指标数据来按顺序构造模型，来估算超参的性能，随后基于此模型来选择新的超参。 TPE 方法对 P(x|y) 和 P(y) 建模，其中 x 表示超参，y 表示相关的评估指标。 P(x|y) 通过变换超参的生成过程来建模，用非参数密度（non-parametric densities）代替配置的先验分布。 细节可参考 [Algorithms for Hyper-Parameter Optimization](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)。 ​  
-*建议场景*： TPE 作为黑盒的优化方法，能在广泛的场景中使用，通常都能得到较好的结果。 特别是在计算资源有限，只能进行少量尝试时。 从大量的实验中，我们发现 TPE 的性能远远优于随机搜索。
+*建议场景*： TPE 作为黑盒的优化方法，能在广泛的场景中使用，通常都能得到较好的结果。 特别是在计算资源有限，只能进行少量 Trial 时。 从大量的实验中，我们发现 TPE 的性能远远优于随机搜索。
 
 *用法*：
 
@@ -39,7 +39,7 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 
 [Random Search for Hyper-Parameter Optimization](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf) 中介绍了随机搜索惊人的简单和效果。 建议当不清楚超参的先验分布时，采用随机搜索作为基准。
 
-*建议场景*：在每个尝试运行时间不长（例如，能够非常快的完成，或者很快的被评估器终止），并有充足计算资源的情况下。 或者需要均匀的探索搜索空间。 随机搜索可作为搜索算法的基准线。
+*建议场景*：在每个 Trial 运行时间不长（例如，能够非常快的完成，或者很快的被 Assessor 终止），并有充足计算资源的情况下。 或者需要均匀的探索搜索空间。 随机搜索可作为搜索算法的基准线。
 
 *用法*：
 
@@ -54,7 +54,7 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 
 这种简单的退火算法从先前的采样开始，会越来越靠近发现的最佳点取样。 此算法是随机搜索的简单变体，利用了反应曲面的平滑性。 退火率不是自适应的。
 
-*建议场景*：当每个尝试的时间不长，并且有足够的计算资源时使用（与随机搜索基本相同）。 或者搜索空间的变量能从一些先验分布中采样。
+*建议场景*：当每个 Trial 的时间不长，并且有足够的计算资源时使用（与随机搜索基本相同）。 或者搜索空间的变量能从一些先验分布中采样。
 
 *用法*：
 
@@ -70,9 +70,9 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 <a name="Evolution"></a>
 **Naive Evolution（进化算法）**
 
-进化算法来自于 [Large-Scale Evolution of Image Classifiers](https://arxiv.org/pdf/1703.01041.pdf)。 它会基于搜索空间随机生成一个种群。 在每一代中，会选择较好的结果，并对其下一代进行一些变异（例如，改动一个超参，增加或减少一层）。 进化算法需要很多次尝试才能有效，但它也非常简单，也很容易扩展新功能。
+进化算法来自于 [Large-Scale Evolution of Image Classifiers](https://arxiv.org/pdf/1703.01041.pdf)。 它会基于搜索空间随机生成一个种群。 在每一代中，会选择较好的结果，并对其下一代进行一些变异（例如，改动一个超参，增加或减少一层）。 进化算法需要很多次 Trial 才能有效，但它也非常简单，也很容易扩展新功能。
 
-*建议场景*：它需要相对较多的计算资源。 需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者利用了 Assessor，这个 Tuner 就非常合适。 如果尝试代码支持权重迁移，即每次尝试会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。
+*建议场景*：它需要相对较多的计算资源。 需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者利用了 Assessor，这个 Tuner 就非常合适。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。
 
 *用法*：
 
@@ -162,7 +162,7 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
 <a name="Hyperband"></a>
 **Hyperband**
 
-[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 尝试用有限的资源来探索尽量多的组合，从最有可能的组合中找到最好结果。 它的基本思路是生成大量的配置，并运行少量的步骤来找到有可能好的配置，然后继续训练找到其中更好的配置。 参考[这里](../src/sdk/pynni/nni/hyperband_advisor/README.md)，了解更多信息。
+[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) Trial 用有限的资源来探索尽量多的组合，从最有可能的组合中找到最好结果。 它的基本思路是生成大量的配置，并运行少量的步骤来找到有可能好的配置，然后继续训练找到其中更好的配置。 参考[这里](../src/sdk/pynni/nni/hyperband_advisor/README.md)，了解更多信息。
 
 *建议场景*：当搜索空间很大，但计算资源有限时建议使用。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。
 
@@ -175,9 +175,9 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
     classArgs:
       # 可选项: maximize, minimize
       optimize_mode: maximize
-      # R: 可分配给尝试的最大的 STEPS（可以是小批量或 epoch 的数量）。 每个尝试都需要用 STEPS 来控制运行的时间。
+      # R: 可分配给 Trial 的最大的 STEPS（可以是小批量或 epoch 的数量）。 每个 Trial 都需要用 STEPS 来控制运行的时间。
       R: 60
-      # eta: 丢弃的尝试的比例
+      # eta: 丢弃的 Trial 的比例
       eta: 3
 ```
 
@@ -212,13 +212,13 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
 <a name="MetisTuner"></a>
 **Metis Tuner**
 
-大多数调参工具仅仅预测最优配置，而 [Metis](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/) 的优势在于有两个输出：(a) 最优配置的当前预测结果， 以及 (b) 下一次尝试的建议。 没有随机猜测！
+大多数调参工具仅仅预测最优配置，而 [Metis](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/) 的优势在于有两个输出：(a) 最优配置的当前预测结果， 以及 (b) 下一次 Trial 的建议。 没有随机猜测！
 
 大多数工具假设训练集没有噪声数据，但 Metis 会知道是否需要对某个超参重新采样。
 
 大多数工具都有着重于在已有结果上继续发展的问题，而 Metis 的搜索策略可以在探索，发展和重新采样（可选）中进行平衡。
 
-Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶斯优化框架。 为了对超参-性能空间建模，Metis 同时使用了高斯过程（Gaussian Process）和高斯混合模型（GMM）。 由于每次尝试都可能有很高的时间成本，Metis 大量使用了已有模型来进行推理计算。 在每次迭代中，Metis 执行两个任务：
+Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶斯优化框架。 为了对超参-性能空间建模，Metis 同时使用了高斯过程（Gaussian Process）和高斯混合模型（GMM）。 由于每次 Trial 都可能有很高的时间成本，Metis 大量使用了已有模型来进行推理计算。 在每次迭代中，Metis 执行两个任务：
 
 * 在高斯过程空间中找到全局最优点。 这一点表示了最佳配置。
 * 它会标识出下一个超参的候选项。 这是通过推断发展、开发和重新采样的潜在信息的优势来实现的。
@@ -229,7 +229,7 @@ Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶
 
 *安装*: Metis Tuner 需要提前安装 [sklearn](https://scikit-learn.org/)。 可通过 `pip3 install sklearn` 命令来安装。
 
-*建议场景*：与 TPE 和 SMAC 类似，Metris 是黑盒 Tuner。 如果系统需要很长时间才能完成一次尝试，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的尝试提供了候选。 参考关于如何使用 Metis 的[样例](../../examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给 Tuner。
+*建议场景*：与 TPE 和 SMAC 类似，Metris 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 参考关于如何使用 Metis 的[样例](../../examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给 Tuner。
 
 *用法*：
 
@@ -244,19 +244,19 @@ Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶
 
 <a name="assessor"></a>
 
-# 如何使用 NNI 支持的评估器？
+# 如何使用 NNI 支持的 Assessor？
 
-目前，NNI 已支持下列评估器算法。
+目前，NNI 已支持下列 Assessor 算法。
 
 * [Medianstop（中位数终止）](#Medianstop)
 * [Curvefitting（曲线拟合）](#Curvefitting)
 
-## 支持的评估器算法
+## 支持的 Assessor 算法
 
 <a name="Medianstop"></a>
 **Medianstop（中位数终止）**
 
-Medianstop 是一种简单的提前停止规则，可参考[论文](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf)。 如果尝试 X 的在步骤 S 的最好目标值比所有已完成尝试的步骤 S 的中位数值明显低，就会停止运行尝试 X。
+Medianstop 是一种简单的提前停止规则，可参考[论文](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf)。 如果 Trial X 的在步骤 S 的最好目标值比所有已完成 Trial的步骤 S 的中位数值明显低，就会停止运行 Trial X。
 
 *建议场景*：它适用于各种性能曲线，因而能被用到各种场景中来加速优化过程。
 
@@ -268,7 +268,7 @@ Medianstop 是一种简单的提前停止规则，可参考[论文](https://stat
     classArgs:
       #可选项: maximize, minimize
       optimize_mode: maximize
-      # (可选) 尽在接收到 start_step 数量个中间结果后，才判断尝试是否需要停止。
+      # (可选) 尽在接收到 start_step 数量个中间结果后，才判断 Trial 是否需要停止。
       # start_step 的默认值是 0。
       start_step: 5
 ```
@@ -276,7 +276,7 @@ Medianstop 是一种简单的提前停止规则，可参考[论文](https://stat
 <a name="Curvefitting"></a>
 **Curvefitting（曲线拟合）**
 
-Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的尝试 X 在 step S 比性能最好的尝试要差，就会提前终止它。 此算法中，使用了 12 条曲线来拟合精度曲线，从[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)中选择了大量的参数曲线模型。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
+Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的 Trial X 在 step S 比性能最好的 Trial要差，就会提前终止它。 此算法中，使用了 12 条曲线来拟合精度曲线，从[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)中选择了大量的参数曲线模型。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
 
 *建议场景*：它适用于各种性能曲线，因而能被用到各种场景中来加速优化过程。 更好的是，它能够处理并评估性能类似的曲线。
 
@@ -294,13 +294,13 @@ Curve Fitting 评估器是一个 LPA (learning, predicting, assessing，即学�
 
       * optimize_mode 的默认值是 maximize
       optimize_mode: maximize
-      # (可选项) 决定尝试是否应被停止的次数
+      # (可选项) 决定 Trial 是否应被停止的次数
       # 为了节省资源，只有在大于 start_step(default=6) 的精度点才开始预测。
       # 只有在收到 start_step 个中间结果之后。
       # start_step 的默认值是 6。
       start_step: 6
       # (可选) 决定是否提前终止的阈值。
-      # 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在尝试的预测值低于 0.95 * 0.9 = 0.855 时停止。
+      # 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
       * 阈值的默认值是 0.95。
       threshold: 0.95
 ```
