@@ -1,57 +1,68 @@
 # NNI 标记
 
-为了获得良好的用户体验并减少用户负担，NNI 设计了通过注释来使用的语法。
+## Overview
 
-使用 NNI 时，只需要:
+To improve user experience and reduce user effort, we design an annotation grammar. Using NNI annotation, users can adapt their code to NNI just by adding some standalone annotating strings, which does not affect the execution of the original code.
 
-1. 在使用另一个 Annotation 前，用 nni.get_next_parameter() 从 Tuner 获得超参： '''@nni.get_next_parameter()'''
+Below is an example:
 
-2. 在超参变量前加上如下标记：
-    
-    '''@nni.variable(nni.choice(2,3,5,7),name=self.conv_size)'''
+```python
+'''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
+learning_rate = 0.1
+```
 
-3. 在中间结果前加上：
-    
-    '''@nni.report_intermediate_result(test_acc)'''
+The meaning of this example is that NNI will choose one of several values (0.1, 0.01, 0.001) to assign to the learning_rate variable. Specifically, this first line is an NNI annotation, which is a single string. Following is an assignment statement. What nni does here is to replace the right value of this assignment statement according to the information provided by the annotation line.
 
-4. 在输出结果前加上：
-    
-    '''@nni.report_final_result(test_acc)'''
+In this way, users could either run the python code directly or launch NNI to tune hyper-parameter in this code, without changing any codes.
 
-5. 在代码中使用函数 `function_choice`：
-    
-    '''@nni.function_choice(max_pool(h_conv1, self.pool_size),avg_pool(h_conv1, self.pool_size),name=max_pool)'''
+## Types of Annotation:
 
-通过这种方法，能够轻松的在 NNI 中实现自动调参。
+In NNI, there are mainly four types of annotation:
 
-`@nni.variable`, `nni.choice` 为搜索空间的类型，通过以下 10 种方法来定义搜索空间：
+### 1. Annotate variables
 
-1. `@nni.variable(nni.choice(option1,option2,...,optionN),name=variable)`  
-    变量值是选项中的一种，这些变量可以是任意的表达式。
+`'''@nni.variable(sampling_algo, name)'''`
 
-2. `@nni.variable(nni.randint(upper),name=variable)`  
-    变量可以是范围 [0, upper) 中的任意整数。
+`@nni.variable` is used in NNI to annotate a variable.
 
-3. `@nni.variable(nni.uniform(low, high),name=variable)`  
-    变量值会是 low 和 high 之间均匀分布的某个值。
+**Arguments**
 
-4. `@nni.variable(nni.quniform(low, high, q),name=variable)`  
-    变量值会是 low 和 high 之间均匀分布的某个值，公式为：round(uniform(low, high) / q) * q
+- **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) such as `choice` or `uniform`. 
+- **name**: The name of the variable that the selected value will be assigned to. Note that this argument should be the same as the left value of the following assignment statement.
 
-5. `@nni.variable(nni.loguniform(low, high),name=variable)`  
-    变量值是 exp(uniform(low, high)) 的点，数值以对数均匀分布。
+An example here is:
 
-6. `@nni.variable(nni.qloguniform(low, high, q),name=variable)`  
-    变量值会是 low 和 high 之间均匀分布的某个值，公式为：round(exp(uniform(low, high)) / q) * q
+```python
+'''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
+learning_rate = 0.1
+```
 
-7. `@nni.variable(nni.normal(label, mu, sigma),name=variable)`  
-    变量值为正态分布的实数值，平均值为 mu，标准方差为 sigma。
+### 2. Annotate functions
 
-8. `@nni.variable(nni.qnormal(label, mu, sigma, q),name=variable)`  
-    变量值分布的公式为： round(normal(mu, sigma) / q) * q
+`'''@nni.function_choice(*functions, name)'''`
 
-9. `@nni.variable(nni.lognormal(label, mu, sigma),name=variable)`  
-    变量值分布的公式为： exp(normal(mu, sigma))
-    
-    10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
-        变量值分布的公式为： round(exp(normal(mu, sigma)) / q) * q
+`@nni.function_choice` is used to choose one from several functions.
+
+**Arguments**
+
+- **\*functions**: Several functions that are waiting to be selected from. Note that it should be a complete function call with arguments. Such as `max_pool(hidden_layer, pool_size)`.
+- **name**: The name of the function that will be replaced in the following assignment statement.
+
+An example here is:
+
+```python
+"""@nni.function_choice(max_pool(hidden_layer, pool_size), avg_pool(hidden_layer, pool_size), name=max_pool)"""
+h_pooling = max_pool(hidden_layer, pool_size)
+```
+
+### 3. Annotate intermediate result
+
+`'''@nni.report_intermediate_result(metrics)'''`
+
+`@nni.report_intermediate_result` is used to report intermediate result, whose usage is the same as `nni.report_intermediate_result` in <Trials.md>
+
+### 4. Annotate final result
+
+`'''@nni.report_final_result(metrics)'''`
+
+`@nni.report_final_result` is used to report the final result of the current trial, whose usage is the same as `nni.report_final_result` in <Trials.md>
