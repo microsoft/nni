@@ -2,9 +2,9 @@
 
 *Assessor 从 Trial 中接收中间结果，并决定此 Trial 是否应该终止。 一旦 Trial 满足提前终止条件，Assessor 将终止此尝试。*
 
-因此，如果要自定义评估器，需要：
+因此，如果要自定义 Assessor，需要：
 
-**1) 继承于 Assessor 基类，创建评估器类**
+**1) 继承于 Assessor 基类，创建 Assessor 类**
 
 ```python
 from nni.assessor import Assessor
@@ -33,7 +33,7 @@ class CustomizedAssessor(Assessor):
         ...
 ```
 
-**3) 实现脚本来运行评估器**
+**3) 实现脚本来运行 Assessor**
 
 ```python
 import argparse
@@ -42,7 +42,7 @@ import CustomizedAssessor
 
 def main():
     parser = argparse.ArgumentParser(description='parse command line parameters.')
-    # 在这里解析评估器的参数。
+    # 在这里解析 Assessor 的参数。
     ...
     FLAGS, unparsed = parser.parse_known_args()
 
@@ -52,9 +52,9 @@ def main():
 main()
 ```
 
-注意 2) 中， 对象 `trial_history` 和 `report_intermediate_result` 函数返回给评估器的完全一致。
+注意 2) 中， 对象 `trial_history` 和 `report_intermediate_result` 函数返回给 Assessor 的完全一致。
 
-也可以重载评估器的 `run` 函数来控制过程逻辑。
+也可以重载 Assessor 的 `run` 函数来控制过程逻辑。
 
 更多样例，可参考：
 
