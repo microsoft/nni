@@ -1,12 +1,12 @@
-# 如何在 NNI 中实现尝试的代码？
+# 如何在 NNI 中实现 Trial 的代码？
 
 *Trial 从 Tuner 中接收超参和架构配置，并将中间结果发送给 Assessor，最终结果发送给Tuner 。*
 
-当用户需要在 NNI 上运行尝试时，需要：
+当用户需要在 NNI 上运行 Trial 时，需要：
 
 **1) 写好原始的训练代码**。
 
-尝试的代码可以是任何能在本机运行的机器学习代码。 这里使用 `mnist-keras. py` 作为样例：
+Trial 的代码可以是任何能在本机运行的机器学习代码。 这里使用 `mnist-keras. py` 作为样例：
 
 ```python
 import argparse
