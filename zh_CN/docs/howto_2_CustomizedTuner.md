@@ -58,14 +58,14 @@ class CustomizedTuner(Tuner):
 ```python
     def generate_parameters(self, parameter_id):
         '''
-        返回尝试的超参组合的序列化对象
+        返回 Trial 的超参组合的序列化对象
         parameter_id: int
         '''
         # 代码实现位置
         return {"dropout": 0.3, "learning_rate": 0.4}
 ```
 
-这表示 Tuner 会一直生成参数 `{"dropout": 0.3, "learning_rate": 0.4}`。 而尝试进程也会在调用 API `nni.get_next_parameter()` 时得到 `{"dropout": 0.3, "learning_rate": 0.4}`。 Trial 结束后的返回值（通常是某个指标），通过调用 API `nni.report_final_result()` 返回给 Tuner。如： `nni.report_final_result(0.93)`。 而 Tuner 的 `receive_trial_result` 函数会收到如下结果：
+这表示 Tuner 会一直生成参数 `{"dropout": 0.3, "learning_rate": 0.4}`。 而 Trial 进程也会在调用 API `nni.get_next_parameter()` 时得到 `{"dropout": 0.3, "learning_rate": 0.4}`。 Trial 结束后的返回值（通常是某个指标），通过调用 API `nni.report_final_result()` 返回给 Tuner。如： `nni.report_final_result(0.93)`。 而 Tuner 的 `receive_trial_result` 函数会收到如下结果：
 
 ```python
 parameter_id = 82347
@@ -105,4 +105,4 @@ tuner:
 
 ## 实现更高级的自动机器学习算法
 
-上述内容足够写出通用的 Tuner。 但有时可能需要更多的信息，例如，中间结果，尝试的状态等等，从而能够实现更强大的自动机器学习算法。 因此，有另一个叫做 `advisor` 的类，直接继承于 `MsgDispatcherBase`，它位于 [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../../src/sdk/pynni/nni/msg_dispatcher_base.py)。 参考[这里](./howto_3_CustomizedAdvisor.md)来了解如何实现自定义的 advisor。
+上述内容足够写出通用的 Tuner。 但有时可能需要更多的信息，例如，中间结果， Trial 的状态等等，从而能够实现更强大的自动机器学习算法。 因此，有另一个叫做 `advisor` 的类，直接继承于 `MsgDispatcherBase`，它位于 [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../../src/sdk/pynni/nni/msg_dispatcher_base.py)。 参考[这里](./howto_3_CustomizedAdvisor.md)来了解如何实现自定义的 advisor。
