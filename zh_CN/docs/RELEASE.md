@@ -18,7 +18,7 @@
 
 ### 改进用户体验
 
-* 在 OpenPAI，Kubeflow 和 FrameworkController 模式中提供了更好的日志支持： * 通过改进的日志架构来将尝试的 stdout/stderr 通过 发送给 NNI 管理器。 NNI 管理器将尝试的 stdout/stderr 消息存储在本地日志文件中。 * 在 WEB 界面上显示尝试日志的链接。 
+* 在 OpenPAI，Kubeflow 和 FrameworkController 模式中提供了更好的日志支持： * 通过改进的日志架构来将 Trial 的 stdout/stderr 通过 发送给 NNI 管理器。 NNI 管理器将 Trial 的 stdout/stderr 消息存储在本地日志文件中。 * 在 WEB 界面上显示 Trial 日志的链接。 
 * 支持将最终结果显示为键值对。
 
 # 发布 0.4.1 - 12/14/2018
@@ -34,7 +34,7 @@
 * 将 [Kubeflow 训练服务](https://github.com/Microsoft/nni/blob/master/docs/KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
 * Kubeflow 训练服务支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
 * 改进将本地代码文件上传到 OpenPAI HDFS 的性能。
-* 修复 OpenPAI 在 WEB 界面的缺陷：当 OpenPAI 认证过期后，Web 界面无法更新尝试作业的状态。
+* 修复 OpenPAI 在 WEB 界面的缺陷：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
 
 ### 改进 NNICTL
 
@@ -44,7 +44,7 @@
 
 * 在实验运行中可修改并发数量
 * 增加指向 NNI Github 的反馈链接，可直接创建问题
-* 可根据指标，定制选择（最大或最小）的前 10 个尝试。
+* 可根据指标，定制选择（最大或最小）的前 10 个 Trial。
 * 为 dispatcher 和 nnimanager 提供下载日志的功能 
 * 为指标数值图提供自动缩放的数轴
 * 改进标记，支持在搜索空间中显示实际的选项
@@ -60,7 +60,7 @@
 
 * [Kubeflow 训练服务](./KubeflowMode.md) 
    * 支持 tf-operator
-   * Kubeflow 上的[分布式尝试样例](../examples/trials/mnist-distributed/dist_mnist.py)
+   * Kubeflow 上的[分布式 Trial 样例](../examples/trials/mnist-distributed/dist_mnist.py)
 * [网格搜索 Tuner](../src/sdk/pynni/nni/README.md#Grid) 
 * [Hyperband Tuner](../src/sdk/pynni/nni/README.md#Hyperband)
 * 支持在 MAC 上运行 NNI 实验
@@ -68,7 +68,7 @@
    * 支持 hyperband Tuner
    * 移除 tensorboard 按钮 
    * 显示实验的错误消息 
-   * 显示搜索空间和尝试配置的行号
+   * 显示搜索空间和 Trial 配置的行号
    * 支持通过指定的尝试 id 来搜索
    * 显示尝试的 hdfsLogPath
    * 下载实验参数
