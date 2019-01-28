@@ -1,6 +1,6 @@
-# 实验（Experiment）配置参考
+# Experiment（实验）配置参考
 
-创建实验时，需要给 nnictl 命令提供配置文件的路径。 配置文件是 yml 格式，需要保证其格式正确。 本文介绍了配置文件的内容，并提供了一些示例和模板。
+创建 Experiment 时，需要给 nnictl 命令提供配置文件的路径。 配置文件是 yml 格式，需要保证其格式正确。 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
 ## 模板
 
@@ -122,13 +122,13 @@
   
   * 说明
     
-    **authorName**是创建实验的作者。 待定: 增加默认值
+    **authorName**是创建 Experiment 的作者。 待定: 增加默认值
 
 * **experimentName**
   
   * 说明
     
-    **experimentName** 是实验的名称。  
+    **experimentName** 是 Experiment 的名称。  
     待实现：增加默认值
 
 * **trialConcurrency**
@@ -144,7 +144,7 @@
   
   * 说明
   
-  **maxExecDuration** 定义实验执行的最长时间。时间单位：{**s**, **m**, **h**, **d**}，分别代表：{*seconds*, *minutes*, *hours*, *days*}。
+  **maxExecDuration** 定义 Experiment 执行的最长时间。时间单位：{**s**, **m**, **h**, **d**}，分别代表：{*seconds*, *minutes*, *hours*, *days*}。
 
 * **maxTrialNum**
   
@@ -156,9 +156,9 @@
   
   * 说明
     
-    **trainingServicePlatform** 定义运行实验的平台，包括：{**local**, **remote**, **pai**, **kubeflow**}.
+    **trainingServicePlatform** 定义运行 Experiment 的平台，包括：{**local**, **remote**, **pai**, **kubeflow**}.
     
-    * **local** 在本机的 ubuntu 上运行实验。
+    * **local** 在本机的 ubuntu 上运行 Experiment。
     
     * **remote** 将任务提交到远程的 ubuntu 上，必须用 **machineList** 来指定远程的 SSH 连接信息。
     
@@ -201,13 +201,13 @@
   
   * 说明
     
-    **logLevel** 为实验设置日志级别，支持的日志级别有：`trace, debug, info, warning, error, fatal`。 默认值是 `info`。
+    **logLevel** 为 Experiment 设置日志级别，支持的日志级别有：`trace, debug, info, warning, error, fatal`。 默认值是 `info`。
 
 * **tuner**
   
   * 说明
     
-    **tuner** 指定了实验的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 SDK 提供的 Tuner，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
+    **tuner** 指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 SDK 提供的 Tuner，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
   * **builtinTunerName** 和 **classArgs**
     
@@ -252,7 +252,7 @@
   
   * 说明
     
-    **assessor** 指定了实验的 Assessor 算法。有两种方法可设置 Assessor。 一种方法是使用 SDK 提供的 Assessor，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Assessor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
+    **assessor** 指定了 Experiment 的 Assessor 算法。有两种方法可设置 Assessor。 一种方法是使用 SDK 提供的 Assessor，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Assessor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
   * **builtinAssessorName** 和 **classArgs**
     
@@ -604,7 +604,6 @@
 
 如果在远程服务器上运行 Trial 任务，需要增加服务器信息：
 
-    
     authorName: test
     experimentName: test_experiment
     trialConcurrency: 3
@@ -626,7 +625,7 @@
       command: python3 mnist.py
       codeDir: /nni/mnist
       gpuNum: 0
-    # 如果是本地实验，machineList 可为空。
+    # 如果是本地 Experiment，machineList 可为空。
     machineList:
     
       - ip: 10.10.10.10
