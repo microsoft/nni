@@ -401,11 +401,11 @@ class RemoteMachineTrainingService implements TrainingService {
         await cpp.exec(`mkdir -p ${gpuMetricCollectorScriptFolder }`);
         //generate gpu_metrics_collector.sh
         let gpuMetricsCollectorScriptPath: string = path.join(gpuMetricCollectorScriptFolder , 'gpu_metrics_collector.sh');
-        const remoteScriptsDir: string = this.getRemoteScriptsPath();
+        const remoteGPUScriptsDir: string = this.getRemoteScriptsPath(); // This directory is used to store gpu_metrics and pid created by script
         const gpuMetricsCollectorScriptContent: string = String.Format(
             GPU_COLLECTOR_FORMAT, 
-            remoteScriptsDir, 
-            path.join(remoteScriptsDir, 'pid'), 
+            remoteGPUScriptsDir, 
+            path.join(remoteGPUScriptsDir, 'pid'), 
         );
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
         return Promise.resolve(gpuMetricCollectorScriptFolder );
