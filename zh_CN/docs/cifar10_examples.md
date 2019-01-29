@@ -69,5 +69,6 @@ python3 -m pip install torchvision
 
 以上即为 Experiment 的代码介绍，**从命令行运行 config.yml 文件来开始 Experiment**。
 
-    bash
-        nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
+```bash
+nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
+```
