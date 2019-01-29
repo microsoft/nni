@@ -202,14 +202,14 @@ Please cite NNI in your publications if it helps your research:
                Lifei Zhu    and
                Lijiao Guo   and 
                Mao Yang     and
-	             Meng Xu      and
-	             Quanlu Zhang and
-	             Scarlett Li  and
-	             Shinai Yang  and
-	             Shufan Huang and
-	             Yan Ni       and
-	             Yang Ou      and 
-	             Zejun Lin     },
+	       Meng Xu      and
+	       Quanlu Zhang and
+	       Scarlett Li  and
+	       Shinai Yang  and
+	       Shufan Huang and
+	       Yan Ni       and
+	       Yang Ou      and 
+	       Zejun Lin     },
   title     = {NNI: An open source AutoML toolkit for neural architecture search and hyper-parameter tuning},
   url       = {https://github.com/Microsoft/NNI},
   year      = {2018}
