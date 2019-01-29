@@ -81,12 +81,12 @@ nnictl support commands:
   
   * Detail
 
-    1.If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
-    2.If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
-    3.If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
-    4.If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
-    5.If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
-    6.Users could use 'nnictl stop all' to stop all experiments.
+    1. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
+    2. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
+    3. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
+    4. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
+    5. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
+    6. Users could use 'nnictl stop all' to stop all experiments.
 
 <a name="update"></a>
 * __nnictl update__
