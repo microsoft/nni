@@ -6,7 +6,7 @@ NNI provides state-of-the-art tuning algorithm in our builtin-tuners. We also su
 
 If you want to implement and use your own tuning algorithm, you can implement a customized Tuner, there are three things for you to do:
 
-1) Inherit a tuner of a base Tuner class 2) Implement receive_trial_result and generate_parameter function 3) Configure your customized tuner in experiment yaml config file
+1) Inherit a tuner of a base Tuner class 2) Implement receive_trial_result and generate_parameter function 3) Configure your customized tuner in experiment YAML config file
 
 Here is an example:
 
@@ -83,11 +83,11 @@ It means your Tuner will always generate parameters `{"dropout": 0.3, "learning_
 
 This is because your tuner is not executed in the directory of your tuner (i.e., `pwd` is not the directory of your own tuner).
 
-**3. Configure your customized tuner in experiment yaml config file**
+**3. Configure your customized tuner in experiment YAML config file**
 
 NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the \_\_init__ constructor.
 
-```yaml
+```yml
 <br />tuner:
   codeDir: /home/abc/mytuner
   classFileName: my_customized_tuner.py
