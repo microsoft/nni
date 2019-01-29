@@ -6,7 +6,7 @@
 
 1. 从 MsgDispatcherBase 类继承并创建新的 Advisor 类
 2. 实现所有除了 `handle_request` 外的，以 `handle_` 前缀开始的方法
-3. 在 Experiment 的 yml 文件中配置好自定义的 Advisor
+3. Configure your customized Advisor in experiment YAML config file
 
 样例如下：
 
@@ -24,11 +24,11 @@ class CustomizedAdvisor(MsgDispatcherBase):
 
 参考 Hyperband 的实现 ([src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py](../../src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py)) 来学习如何实现这些方法。
 
-**3) 在 Experiment 的 yml 文件中配置好自定义的 Advisor**
+**3) Configure your customized Advisor in experiment YAML config file**
 
 与 Tuner 和 Assessor 类似。 NNI 需要定位到自定义的 Advisor 类，并实例化它，因此需要指定自定义 Advisor 类的文件位置，并将参数值传给 \_\_init__ 构造函数。
 
-```yaml
+```yml
 advisor:
   codeDir: /home/abc/myadvisor
   classFileName: my_customized_advisor.py
