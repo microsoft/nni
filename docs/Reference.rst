@@ -4,7 +4,7 @@ References
 ..  toctree::
     :maxdepth: 3
     
-    Command Line <NNICTL>
+    Command Line <NNICTLDOC>
     Python API <sdk_reference>
     Annotation <AnnotationSpec>
     Configuration<ExperimentConfig>
