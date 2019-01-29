@@ -25,12 +25,12 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 
 *用法*：
 
-```yaml
+```yml
   # config.yml
   tuner:
     builtinTunerName: TPE
     classArgs:
-      # 可选项: maximize, minimize
+      # choice: maximize, minimize
       optimize_mode: maximize
 ```
 
@@ -43,7 +43,7 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 
 *用法*：
 
-```yaml
+```yml
   # config.yml
   tuner:
     builtinTunerName: Random
@@ -58,12 +58,12 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 
 *用法*：
 
-```yaml
+```yml
   # config.yml
   tuner:
     builtinTunerName: Anneal
     classArgs:
-      # 可选项: maximize, minimize
+      # choice: maximize, minimize
       optimize_mode: maximize
 ```
 
@@ -76,21 +76,21 @@ Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimiza
 
 *用法*：
 
-```yaml
-  # config.yaml
+```yml
+  # config.yml
   tuner:
     builtinTunerName: Evolution
     classArgs:
-      # 可选项: maximize, minimize
+      # choice: maximize, minimize
       optimize_mode: maximize
 ```
 
 <a name="SMAC"></a>
 **SMAC**
 
-[SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
+[SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 The SMAC supported by NNI is a wrapper on [the SMAC3 github repo](https://github.com/automl/SMAC3).
 
-NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，包括`choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`。
+Note that SMAC on NNI only supports a subset of the types in [search space spec](./SearchSpaceSpec.md), including `choice`, `randint`, `uniform`, `loguniform`, `quniform(q=1)`.
 
 *安装*：
 
@@ -101,12 +101,12 @@ NNI 中的 SMAC 只支持部分类型的[搜索空间](./SearchSpaceSpec.md)，�
 
 *用法*：
 
-```yaml
+```yml
   # config.yml
   tuner:
     builtinTunerName: SMAC
     classArgs:
-      # 可选项: maximize, minimize
+      # choice: maximize, minimize
       optimize_mode: maximize
 ```
 
@@ -119,8 +119,8 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
 
 *用法*：
 
-```yaml
-  # config.yaml
+```yml
+  # config.yml
   tuner:
     builtinTunerName: BatchTuner
 ```
@@ -153,7 +153,7 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
 
 *用法*：
 
-```yaml
+```yml
   # config.yml
   tuner:
     builtinTunerName: GridSearch
@@ -168,14 +168,15 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
 
 *用法*：
 
-```yaml
+```yml
   # config.yml
   advisor:
     builtinAdvisorName: Hyperband
     classArgs:
-      # 可选项: maximize, minimize
+      # choice: maximize, minimize
       optimize_mode: maximize
-      # R: 可分配给 Trial 的最大的 STEPS（可以是小批量或 epoch 的数量）。 每个 Trial 都需要用 STEPS 来控制运行的时间。
+      # R: the maximum STEPS (could be the number of mini-batches or epochs) can be
+      #    allocated to a trial. 每个 Trial 都需要用 STEPS 来控制运行的时间。
       R: 60
       # eta: 丢弃的 Trial 的比例
       eta: 3
@@ -192,20 +193,20 @@ Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组�
 
 *用法*：
 
-```yaml
+```yml
   # config.yml
   tuner:
     builtinTunerName: NetworkMorphism
     classArgs:
-      #可选项: maximize, minimize
+      #choice: maximize, minimize
       optimize_mode: maximize
-      #当前，仅支持 cv（视觉）领域
+      #for now, this tuner only supports cv domain
       task: cv
-      #输入图像宽度
+      #input image width
       input_width: 32
-      #输入图像通道数量
+      #input image channel
       input_channel: 3
-      #分类的数量
+      #number of classes
       n_output_node: 10
 ```
 
@@ -229,16 +230,16 @@ Metis 属于基于序列的贝叶斯优化 (SMBO) 的类别，它也基于贝叶
 
 *安装*: Metis Tuner 需要提前安装 [sklearn](https://scikit-learn.org/)。 可通过 `pip3 install sklearn` 命令来安装。
 
-*建议场景*：与 TPE 和 SMAC 类似，Metris 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 参考关于如何使用 Metis 的[样例](../../examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给 Tuner。
+*建议场景*：与 TPE 和 SMAC 类似，Metris 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 参考关于如何使用 Metis 的[样例](../../examples/trials/auto-gbdt/search_space_metis.json)。 User only need to send the final result like `accuracy` to tuner, by calling the NNI SDK.
 
 *用法*：
 
-```yaml
+```yml
   # config.yml
   tuner:
     builtinTunerName: MetisTuner
     classArgs:
-      #可选项: maximize, minimize
+      #choice: maximize, minimize
       optimize_mode: maximize
 ```
 
@@ -262,7 +263,7 @@ Medianstop 是一种简单的提前停止规则，可参考[论文](https://stat
 
 *用法*：
 
-```yaml
+```yml
   assessor:
     builtinAssessorName: Medianstop
     classArgs:
@@ -282,7 +283,7 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 
 *用法*：
 
-```yaml
+```yml
   assessor:
     builtinAssessorName: Curvefitting
     classArgs:
