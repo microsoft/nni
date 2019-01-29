@@ -30,7 +30,7 @@ Provide PRs with appropriate tags for bug fixes or enhancements to the source co
 
 If you are looking for How to develop and debug the NNI source code, you can refer to [How to set up NNI developer environment doc](./SetupNNIDeveloperEnvironment.md) file in the `docs` folder.
 
-Similarly for [writing trials](./Trials.md) or [starting experiments](StartExperiment.md). For everything else, refer [here](https://github.com/Microsoft/nni/tree/master/docs).
+Similarly for [Quick Start](QuickStart.md). For everything else, refer to [NNI Home page](http://nni.readthedocs.io).
 
 ## Solve Existing Issues
 Head over to [issues](https://github.com/Microsoft/nni/issues) to find issues where help is needed from contributors. You can find issues tagged with 'good-first-issue' or 'help-wanted' to contribute in. 
