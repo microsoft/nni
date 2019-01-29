@@ -46,28 +46,28 @@ python3 -m pip install torchvision
 这是超参集合的训练代码，关注以下几点：
 
 * 使用 `nni.get_next_parameter()` 来获取下一组训练的超参组合。
-* Use `nni.report_intermediate_result(acc)` to report the intermedian result after finish each epoch.
-* Use `nni.report_intermediate_result(acc)` to report the final result before the trial end.
+* 使用 `nni.report_intermediate_result(acc)` 在每个 epoch 结束时返回中间结果。
+* 使用 `nni.report_intermediate_result(acc)` 在每个 Trial 结束时返回最终结果。
 
-*Implemented code directory: [main.py](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py)*
+*实现代码：[main.py](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py)*
 
-You can also use your previous code directly, refer to [How to define a trial](https://github.com/Microsoft/nni/blob/master/docs/howto_1_WriteTrial.md) for modify.
+也可以直接使用以前的代码来修改，参考：[如何编写 Trial](https://github.com/Microsoft/nni/blob/master/docs/howto_1_WriteTrial.md)。
 
-**Config**
+**配置**
 
-Here is the example of running this experiment on local(with multiple GPUs):
+这是在本机运行 Experiment 的样例（多GPU）：
 
-code directory: [examples/trials/cifar10_pytorch/config.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml)
+代码：[examples/trials/cifar10_pytorch/config.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml)
 
-Here is the example of running this experiment on OpenPAI:
+这是在 OpenPAI 上运行 Experiment 的样例：
 
-code directory: [examples/trials/cifar10_pytorch/config_pai.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml)
+代码：[examples/trials/cifar10_pytorch/config_pai.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml)
 
-*The complete examples we have implemented: [examples/trials/cifar10_pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch)*
+*完整样例：[examples/trials/cifar10_pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch)*
 
-#### Lauch the experiment
+#### 运行 Experiment
 
-We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
+以上即为 Experiment 的代码介绍，**从命令行运行 config.yml 文件来开始 Experiment**。
 
     bash
         nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
