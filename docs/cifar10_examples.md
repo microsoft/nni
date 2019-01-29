@@ -69,8 +69,8 @@ code directory: [examples/trials/cifar10_pytorch/config_pai.yml][7]
 
 We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
 
- ```bash
-    nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
+```bash
+nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
 ```
 
 [1]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
