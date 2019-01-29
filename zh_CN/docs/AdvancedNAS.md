@@ -12,7 +12,7 @@
 
 使用 NFS 配置（见下文），Trial 代码可以通过读写文件来共享模型权重。 建议使用 Tuner 的存储路径：
 
-```yaml
+```yml
 tuner:
   codeDir: path/to/customer_tuner
   classFileName: customer_tuner.py 
