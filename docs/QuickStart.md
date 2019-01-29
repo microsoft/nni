@@ -177,7 +177,7 @@ The Web UI urls are: [Your IP]:8080
 
 Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
 
-### View summary page
+#### View summary page
 
 Click the tab "Overview".
 
@@ -189,7 +189,7 @@ Top 10 trials will be listed in the Overview page, you can browse all the trials
 
 ![](./img/QuickStart2.png)
 
-### View trials detail page
+#### View trials detail page
 
 Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
 

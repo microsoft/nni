@@ -57,5 +57,3 @@ More details about how to run an experiment, please refer to [Get Started](Quick
 * [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
 * [Examples](mnist_examples.md)
-
-[How to do trouble shooting when using NNI?]: <> ()

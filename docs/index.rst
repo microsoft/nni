@@ -9,7 +9,7 @@ Contents
 ..  toctree::
     :caption: Table of Contents
     :maxdepth: 2
-    :glob:
+    :titlesonly:
 
     Overview
     GetStarted<QuickStart>
