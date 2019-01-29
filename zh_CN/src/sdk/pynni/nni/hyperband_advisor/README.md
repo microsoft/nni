@@ -1,4 +1,4 @@
-# NNI 中使用 Hyperband
+# Hyperband on NNI
 
 ## 1. 介绍
 
@@ -12,7 +12,7 @@
 
 ## 3. 用法
 
-要使用 Hyperband，需要在 Experiment 的 yml 配置文件进行如下改动。
+To use Hyperband, you should add the following spec in your experiment's yml config file:
 
     advisor:
       #可选项: Hyperband
