@@ -28,25 +28,25 @@ NNI 中，有 4 种类型的 Annotation；
 **参数**
 
 - **sampling_algo**: 指定搜索空间的采样算法。 可将其换成 NNI 支持的其它采样函数，函数要以 `nni.` 开头。例如，`choice` 或 `uniform`，详见 [SearchSpaceSpec](SearchSpaceSpec.md)。 
-- **name**: The name of the variable that the selected value will be assigned to. Note that this argument should be the same as the left value of the following assignment statement.
+- **name**: 将被赋值的变量名称。 注意，此参数应该与下面一行等号左边的值相同。
 
-An example here is:
+例如：
 
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
 learning_rate = 0.1
 ```
 
-### 2. Annotate functions
+### 2. 函数
 
 `'''@nni.function_choice(*functions, name)'''`
 
-`@nni.function_choice` is used to choose one from several functions.
+`@nni.function_choice` 可以从几个函数中选择一个来执行。
 
-**Arguments**
+**参数**
 
-- **\*functions**: Several functions that are waiting to be selected from. Note that it should be a complete function call with arguments. Such as `max_pool(hidden_layer, pool_size)`.
-- **name**: The name of the function that will be replaced in the following assignment statement.
+- **\*functions**: 可选择的函数。 注意，必须是包括参数的完整函数调用。 例如 `max_pool(hidden_layer, pool_size)`。
+- **name**: 将被替换的函数名称。
 
 An example here is:
 
