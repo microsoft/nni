@@ -82,7 +82,7 @@ Due to the memory limitation of upload, we only upload the source code and compl
 
 ### 3.1 Update configuration
 
-Modify `nni/examples/trials/ga_squad/config_pai.yaml`, here is the default configuration:
+Modify `nni/examples/trials/ga_squad/config_pai.yml`, here is the default configuration:
 
     authorName: default
     experimentName: example_ga_squad
