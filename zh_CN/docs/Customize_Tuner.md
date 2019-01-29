@@ -33,20 +33,20 @@ class CustomizedTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value):
     '''
-    Receive trial's final result.
+    接收 Trial 的最终结果。
     parameter_id: int
-    parameters: object created by 'generate_parameters()'
-    value: final metrics of the trial, including default metric
+    parameters: 'generate_parameters()' 所创建的对象
+    value: Trial 的最终指标结果
     '''
-    # your code implements here.
+    # 实现代码
     ...
 
     def generate_parameters(self, parameter_id):
     '''
-    Returns a set of trial (hyper-)parameters, as a serializable object
+    返回 Trial 的超参组合的序列化对象
     parameter_id: int
     '''
-    # your code implements here.
+    # 代码实现位置
     return your_parameters
     ...
 ```
