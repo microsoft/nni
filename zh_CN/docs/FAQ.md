@@ -10,7 +10,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 ### OpenPAI 模式下无法获得 Trial 的数据
 
-在 OpenPAI 的训练模式下，nniManager 会在端口 51189 启动一个 RESTful 服务，来接收 OpenPAI 集群中 Trial 任务的指标数据。 如果在 OpenPAI 模式下的网页中不能看到任何指标，需要检查 51189 端口是否在防火墙规则中已打开。
+In OpenPAI training mode, we start a rest server which listens on 51189 port in NNI Manager to receive metrcis reported from trials running in OpenPAI cluster. If you didn't see any metrics from WebUI in OpenPAI mode, check your machine where NNI manager runs on to make sure 51189 port is turned on in the firewall rule.
 
 ### 安装时出现 Segmentation Fault (core dumped)
 
@@ -19,7 +19,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 可依次试试以下方法：
 
 * 更新或重新安装 Python 中的 pip： `python3 -m pip install -U pip`
-* 在安装 NNI 时，添加 `--no-cache-dir` 参数：`python3 -m pip install nni --no-cache-dir`
+* Install NNI with `--no-cache-dir` flag like `python3 -m pip install nni --no-cache-dir`
 
 ### 作业管理错误：getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.
 
@@ -31,7 +31,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 ### 使用 `nnictl stop` 无法停止 Experiment
 
-如果在 Experiment 运行时，升级了 nni 或删除了一些配置文件，会因为丢失配置文件而出现这类错误。 可以使用 `ps -ef | grep node` 命令来找到 Experiment 的 pid，并用 `kill -9 {pid}` 命令来停止 Experiment 进程。
+If you upgrade your NNI or you delete some config files of NNI when there is an experiment running, this kind of issue may happen because the loss of config file. 可以使用 `ps -ef | grep node` 命令来找到 Experiment 的 pid，并用 `kill -9 {pid}` 命令来停止 Experiment 进程。
 
 ### 无法在虚拟机的 NNI 网页中看到 `指标数据`
 
