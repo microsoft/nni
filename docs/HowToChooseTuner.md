@@ -23,7 +23,7 @@ We will introduce some basic knowledge about the tuner algorithms, suggested sce
 **TPE**
 
 The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model.
-The TPE approach models P(x|y) and P(y) where x represents hyperparameters and y the associated evaluate matric. P(x|y) is modeled by transforming the generative process of hyperparameters, replacing the distributions of the configuration prior with non-parametric densities. 
+The TPE approach models P(x|y) and P(y) where x represents hyperparameters and y the associated evaluate metric. P(x|y) is modeled by transforming the generative process of hyperparameters, replacing the distributions of the configuration prior with non-parametric densities. 
 This optimization approach is described in detail in [Algorithms for Hyper-Parameter Optimization][1].
 ​    
 _Suggested scenario_: TPE, as a black-box optimization, can be used in various scenarios, and shows good performance in general. Especially when you have limited computation resource and can only try a small number of trials. From a large amount of experiments, we could found that TPE is far better than Random Search.
