@@ -2,17 +2,15 @@
 
 ## 自定义 Tuner
 
-NNI 在内置的 Tuner 中提供了最新的调优算法。 NNI 同时也支持自定义 Tuner。
+NNI provides state-of-the-art tuning algorithm in our builtin-tuners. We also support building a tuner by yourself to adjust your tuning demand.
 
-通过自定义 Tuner，可实现自己的调优算法。主要有三步：
+If you want to implement and use your own tuning algorithm, you can implement a customized Tuner, there are three things for you to do:
 
-1. 继承 Tuner 基类
-2. 实现 receive_trial_result 和 generate_parameter 函数
-3. 在 Experiment 的 YAML 文件中配置好自定义的 Tuner
+1) Inherit a tuner of a base Tuner class 2) Implement receive_trial_result and generate_parameter function 3) Configure your customized tuner in experiment YAML config file
 
-样例如下：
+Here is an example:
 
-**1. 继承 Tuner 基类**
+**1. Inherit a tuner of a base Tuner class**
 
 ```python
 from nni.tuner import Tuner
@@ -22,7 +20,7 @@ class CustomizedTuner(Tuner):
         ...
 ```
 
-**2. 实现 receive_trial_result 和 generate_parameter 函数**
+**2. Implement receive_trial_result and generate_parameter function**
 
 ```python
 from nni.tuner import Tuner
@@ -33,32 +31,32 @@ class CustomizedTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value):
     '''
-    接收 Trial 的最终结果。
+    Record an observation of the objective function and Train
     parameter_id: int
-    parameters: 'generate_parameters()' 所创建的对象
-    value: Trial 的最终指标结果
+    parameters: object created by 'generate_parameters()'
+    value: final metrics of the trial, including default matrix
     '''
-    # 实现代码
+    # your code implements here.
     ...
 
     def generate_parameters(self, parameter_id):
     '''
-    返回 Trial 的超参组合的序列化对象
+    Returns a set of trial (hyper-)parameters, as a serializable object
     parameter_id: int
     '''
-    # 代码实现位置
+    # your code implements here.
     return your_parameters
     ...
 ```
 
-`receive_trial_result` 从输入中会接收 `parameter_id, parameters, value` 参数。 Tuner 会收到 Trial 进程发送的完全一样的 `value` 值。
+`receive_trial_result` will receive the `parameter_id, parameters, value` as parameters input. Also, Tuner will receive the `value` object are exactly same value that Trial send.
 
-`generate_parameters` 函数返回的 `your_parameters`，会被 NNI SDK 打包为 json。 然后 SDK 会将 json 对象解包给 Trial 进程。因此，Trial 进程会收到来自 Tuner 的完全相同的 `your_parameters`。
+The `your_parameters` return from `generate_parameters` function, will be package as json object by NNI SDK. NNI SDK will unpack json object so the Trial will receive the exact same `your_parameters` from Tuner.
 
-例如： 如下实现了 `generate_parameters`：
+For example: If the you implement the `generate_parameters` like this:
 
 ```python
-def generate_parameters(self, parameter_id):
+<br />def generate_parameters(self, parameter_id):
     '''
     返回 Trial 的超参组合的序列化对象
     parameter_id: int
@@ -68,29 +66,29 @@ def generate_parameters(self, parameter_id):
 
 ```
 
-这表示 Tuner 会一直生成超参组合 `{"dropout": 0.3, "learning_rate": 0.4}`。 而 Trial 进程也会在调用 API `nni.get_next_parameter()` 时得到 `{"dropout": 0.3, "learning_rate": 0.4}`。 Trial 结束后的返回值（通常是某个指标），通过调用 API `nni.report_final_result()` 返回给 Tuner。如： `nni.report_final_result(0.93)`。 而 Tuner 的 `receive_trial_result` 函数会收到如下结果：
+It means your Tuner will always generate parameters `{"dropout": 0.3, "learning_rate": 0.4}`. Then Trial will receive `{"dropout": 0.3, "learning_rate": 0.4}` by calling API `nni.get_next_parameter()`. Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API `nni.report_final_result()`, for example `nni.report_final_result(0.93)`. Then your Tuner's `receive_trial_result` function will receied the result like：
 
-```python
-parameter_id = 82347
-parameters = {"dropout": 0.3, "learning_rate": 0.4}
-value = 0.93
-```
+    <br />parameter_id = 82347
+    parameters = {"dropout": 0.3, "learning_rate": 0.4}
+    value = 0.93
+    
+    
 
-**注意** 如果需要存取自定义的 Tuner 目录里的文件 (如, `data.txt`)，不能使用 `open('data.txt', 'r')`。 要使用：
+**Note that** if you want to access a file (e.g., `data.txt`) in the directory of your own tuner, you cannot use `open('data.txt', 'r')`. Instead, you should use the following:
 
-```python
-_pwd = os.path.dirname(__file__)
-_fd = open(os.path.join(_pwd, 'data.txt'), 'r')
-```
+    <br />_pwd = os.path.dirname(__file__)
+    _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
+    
+    
 
-这是因为自定义的 Tuner 不是在自己的目录里执行的。（即，`pwd` 返回的目录不是 Tuner 的目录）。
+This is because your tuner is not executed in the directory of your tuner (i.e., `pwd` is not the directory of your own tuner).
 
-**3. 在 Experiment 的 YAML 文件中配置好自定义的 Tuner**
+**3. Configure your customized tuner in experiment YAML config file**
 
-NNI 需要定位到自定义的 Tuner 类，并实例化它，因此需要指定自定义 Tuner 类的文件位置，并将参数值传给 \_\_init__ 构造函数。
+NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the \_\_init__ constructor.
 
 ```yml
-tuner:
+<br />tuner:
   codeDir: /home/abc/mytuner
   classFileName: my_customized_tuner.py
   className: CustomizedTuner
@@ -101,7 +99,7 @@ tuner:
 
 ```
 
-更多样例，可参考：
+More detail example you could see:
 
 > - [evolution-tuner](../src/sdk/pynni/nni/evolution_tuner)
 > - [hyperopt-tuner](../src/sdk/pynni/nni/hyperopt_tuner)
@@ -109,4 +107,4 @@ tuner:
 
 ### 实现更高级的自动机器学习算法
 
-上述内容足够写出通用的调参器。 但有时可能需要更多的信息，例如，中间结果，尝试的状态等等，从而能够实现更强大的自动机器学习算法。 因此，有另一个叫做 `advisor` 的类，直接继承于 `MsgDispatcherBase`，它位于 [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../../src/sdk/pynni/nni/msg_dispatcher_base.py)。 参考[这里](./howto_3_CustomizedAdvisor.md)来了解如何实现自定义的 advisor。
+The methods above are usually enough to write a general tuner. However, users may also want more methods, for example, intermediate results, trials' state (e.g., the methods in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called `advisor` which directly inherits from `MsgDispatcherBase` in [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../src/sdk/pynni/nni/msg_dispatcher_base.py). Please refer to [here](./howto_3_CustomizedAdvisor.md) for how to write a customized advisor.
