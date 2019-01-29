@@ -10,7 +10,7 @@ If you want to know about network morphism trial usage, please check [Readme.md]
 
 To use Network Morphism, you should modify the following spec in your `config.yml` file:
 
-```yaml
+```yml
 tuner:
   #choice: NetworkMorphism
   builtinTunerName: NetworkMorphism
@@ -50,7 +50,7 @@ net = build_graph_from_json(RCV_CONFIG)
 # training procedure
 # ....
 
-# report the final accuracy to nni
+# report the final accuracy to NNI
 nni.report_final_result(best_acc)
 ```
 

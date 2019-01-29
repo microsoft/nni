@@ -14,7 +14,7 @@ Moreover, in GridSearch Tuner, for users' convenience, the definition of `qunifo
 
 ## 2. Usage
 
-Since Grid Search Tuner will exhaust all possible hyper-parameter combination according to the search space file without any hyper-parameter for tuner itself, all you need to do is to specify tuner name in your experiment's yaml config file:
+Since Grid Search Tuner will exhaust all possible hyper-parameter combination according to the search space file without any hyper-parameter for tuner itself, all you need to do is to specify tuner name in your experiment's YAML config file:
 
 ```
 tuner:

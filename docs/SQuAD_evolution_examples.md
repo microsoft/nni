@@ -84,7 +84,7 @@ nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
 Due to the memory limitation of upload, we only upload the source code and complete the data download and training on OpenPAI. This experiment requires sufficient memory that `memoryMB >= 32G`, and the training may last for several hours.
 
 ### 3.1 Update configuration
-Modify `nni/examples/trials/ga_squad/config_pai.yaml`, here is the default configuration:
+Modify `nni/examples/trials/ga_squad/config_pai.yml`, here is the default configuration:
 
 ```
 authorName: default

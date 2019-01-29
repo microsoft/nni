@@ -1,1 +1,1 @@
-# Integration doc: SMAC on nni
+# Integration doc: SMAC on NNI
