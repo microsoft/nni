@@ -25,7 +25,7 @@ import time
 from xml.dom import minidom
 
 def check_ready_to_run():
-    pgrep_output =subprocess.check_output('pgrep -fx \'python3 gpu_metrics_collector.py\'', shell=True)
+    pgrep_output =subprocess.check_output('pgrep -fx \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
     pidList = []
     for pid in pgrep_output.splitlines():
         pidList.append(int(pid))
@@ -33,17 +33,18 @@ def check_ready_to_run():
     return len(pidList) == 0
 
 def main(argv):
+    metrics_output_dir = os.environ['METRIC_OUTPUT_DIR']
     if check_ready_to_run() == False:
         # GPU metrics collector is already running. Exit
         exit(2)
-    with open("./gpu_metrics", "w") as outputFile:
+    with open(os.path.join(metrics_output_dir, "gpu_metrics"), "w") as outputFile:
         pass
-    os.chmod("./gpu_metrics", 0o777)
+    os.chmod(os.path.join(metrics_output_dir, "gpu_metrics"), 0o777)
     cmd = 'nvidia-smi -q -x'
     while(True):
         try:
             smi_output = subprocess.check_output(cmd, shell=True)
-            parse_nvidia_smi_result(smi_output, '.')
+            parse_nvidia_smi_result(smi_output, metrics_output_dir)
         except:
             exception = sys.exc_info()
             for e in exception:
