@@ -2,15 +2,17 @@
 
 ## Customize Tuner
 
-NNI provides state-of-the-art tuning algorithm in our builtin-tuners. We also support building a tuner by yourself to adjust your tuning demand.
+NNI provides state-of-the-art tuning algorithm in builtin-tuners. NNI supports to build a tuner by yourself for tuning demand.
 
-If you want to implement and use your own tuning algorithm, you can implement a customized Tuner, there are three things for you to do:
+If you want to implement your own tuning algorithm, you can implement a customized Tuner, there are three things to do:
 
-1) Inherit a tuner of a base Tuner class 2) Implement receive_trial_result and generate_parameter function 3) Configure your customized tuner in experiment YAML config file
+1. Inherit the base Tuner class
+2. Implement receive_trial_result and generate_parameter function
+3. Configure your customized tuner in experiment YAML config file
 
 Here is an example:
 
-**1. Inherit a tuner of a base Tuner class**
+**1. Inherit the base Tuner class**
 
 ```python
 from nni.tuner import Tuner
