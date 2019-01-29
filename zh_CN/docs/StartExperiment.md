@@ -2,7 +2,7 @@
 
 ## 1. 简介
 
-NNI Experiment 的启动分为几步，流程如下。
+There are few steps to start an new experiment of NNI, here are the process.
 
 <img src="./img/experiment_process.jpg" width="50%" height="50%" />
 
@@ -12,12 +12,12 @@ NNI Experiment 的启动分为几步，流程如下。
 
 1. 检查是否有旧的 Experiment 正在运行。 
 2. 检查 RESTful 服务端口是否可用。 
-3. 验证 yml 配置文件的内容。 
+3. Validate the content of config YAML file. 
 4. 准备配置文件来记录 Experiment 信息。 
 
 ### 2.2 启动 RESTful 服务
 
-启动 RESTful 服务进程来管理 NNI Experiment，默认端口为 8080。
+Start an restful server process to manage NNI experiment, the default port is 8080.
 
 ### 2.3 检查 RESTful 服务
 
@@ -25,7 +25,7 @@ NNI Experiment 的启动分为几步，流程如下。
 
 ### 2.4 设置 Experiment 配置
 
-在启动 Experiment 前调用 RESTful 服务来设置 Experiment 配置，包括 yml 配置文件中的值。
+Call restful server to set experiment config before starting an experiment, experiment config includes the config values in config YAML file.
 
 ### 2.5 检查 Experiment 配置
 
