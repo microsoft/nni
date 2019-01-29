@@ -10,7 +10,7 @@
 
 要使用 Network Morphism，需要如下配置 `config.yml` 文件：
 
-```yaml
+```yml
 tuner:
   #选择: NetworkMorphism
   builtinTunerName: NetworkMorphism
@@ -48,7 +48,7 @@ net = build_graph_from_json(RCV_CONFIG)
 # 训练过程
 # ....
 
-# 将最终精度返回给 NNI
+# report the final accuracy to NNI
 nni.report_final_result(best_acc)
 ```
 
