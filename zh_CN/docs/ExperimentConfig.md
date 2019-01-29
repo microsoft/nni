@@ -1,6 +1,6 @@
 # Experiment（实验）配置参考
 
-创建 Experiment 时，需要给 nnictl 命令提供配置文件的路径。 配置文件是 yml 格式，需要保证其格式正确。 本文介绍了配置文件的内容，并提供了一些示例和模板。
+创建 Experiment 时，需要给 nnictl 命令提供配置文件的路径。 The config file is written in YAML format, and need to be written correctly. 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
 * [Template](#Template) (the templates of an config file)
 * [Configuration spec](#Configuration) (the configuration specification of every attribute in config file)
@@ -161,7 +161,7 @@
   
   * Description
     
-    **maxTrialNum** specifies the max number of trial jobs created by nni, including succeeded and failed jobs.
+    **maxTrialNum** specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
 
 * **trainingServicePlatform**
   
@@ -175,7 +175,7 @@
     
     * **pai** submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
     
-    * **kubeflow** submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), nni support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
+    * **kubeflow** submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
 
 * **searchSpacePath**
   
@@ -198,7 +198,7 @@
   
   * Description
     
-    **nniManagerIp** set the IP address of the machine on which nni manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+    **nniManagerIp** set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
     
     Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
 
@@ -218,13 +218,13 @@
   
   * Description
     
-    **tuner** specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by nni sdk, need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **tuner** specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk, need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
   
   * **builtinTunerName** and **classArgs**
     
     * **builtinTunerName**
     
-    **builtinTunerName** specifies the name of system tuner, nni sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}
+    **builtinTunerName** specifies the name of system tuner, NNI sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}
     
     * **classArgs**
       
@@ -263,13 +263,13 @@
   
   * Description
     
-    **assessor** specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **assessor** specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk, users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
   
   * **builtinAssessorName** and **classArgs**
     
     * **builtinAssessorName**
       
-          __builtinAssessorName__ specifies the name of system assessor, nni sdk provides one kind of assessor {__Medianstop__}
+          __builtinAssessorName__ specifies the name of system assessor, NNI sdk provides one kind of assessor {__Medianstop__}
           
     
     * **classArgs**
@@ -448,7 +448,7 @@
     
     If users use ssh key to login remote machine, could set **sshKeyPath** in config file. **sshKeyPath** is the path of ssh key file, which should be valid.
   
-  Note: if users set passwd and sshKeyPath simultaneously, nni will try passwd.
+  Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
   
   * **passphrase**
     
@@ -458,7 +458,7 @@
   
   * **operator**
     
-    **operator** specify the kubeflow's operator to be used, nni support **tf-operator** in current version.
+    **operator** specify the kubeflow's operator to be used, NNI support **tf-operator** in current version.
   
   * **storage**
     
@@ -683,20 +683,19 @@ If run trial jobs in remote machine, users could specify the remote mahcine info
       gpuNum: 4
       cpuNum: 2
       memoryMB: 10000
-      # 在 OpenPAI 上用来运行 Nni 作业的 docker 映像
+      #The docker image to run NNI job on pai
       image: msranni/nni:latest
-      # 在 OpenPAI 的 hdfs 上存储数据的目录，如：'hdfs://host:port/directory'
+      #The hdfs directory to store data on pai, format 'hdfs://host:port/directory'
       dataDir: hdfs://10.11.12.13:9000/test
-      # 在 OpenPAI 的 hdfs 上存储输出的目录，如：'hdfs://host:port/directory'
+      #The hdfs directory to store output data generated by NNI, format 'hdfs://host:port/directory'
       outputDir: hdfs://10.11.12.13:9000/test
     paiConfig:
-      # OpenPAI 用户名
+      #The username to login pai
       userName: test
-      # OpenPAI 密码
+      #The password to login pai
       passWord: test
-      # OpenPAI 服务器 Ip
+      #The host of restful server of pai
       host: 10.10.10.10
-    ```
     
 
 * **kubeflow mode**
