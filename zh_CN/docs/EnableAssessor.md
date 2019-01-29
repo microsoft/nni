@@ -4,7 +4,7 @@ Assessor 模块用于评估正在运行的 Trial。 最常用的情况是提前�
 
 ## 使用内置的 Assessor 
 
-以下样例代码在 `examples/trials/mnist-annotation` 目录中。 此 Experiment 使用了 `Medianstop` Assessor。 yml 配置文件如下：
+以下样例代码在 `examples/trials/mnist-annotation` 目录中。 此 Experiment 使用了 `Medianstop` Assessor。 The yml configure file is shown below:
 
     authorName: your_name
     experimentName: auto_mnist
@@ -36,7 +36,7 @@ Assessor 模块用于评估正在运行的 Trial。 最常用的情况是提前�
 
 ## 使用自定义的 Assessor
 
-可参考[这里]()，来自定义 Assessor。 例如，为样例代码 `examples/trials/mnist-annotation` 写一个定制的 Assessor。 需要准备如下的 yml 配置文件：
+可参考[这里]()，来自定义 Assessor。 例如，为样例代码 `examples/trials/mnist-annotation` 写一个定制的 Assessor。 You should prepare the yml configure below:
 
     authorName: your_name
     experimentName: auto_mnist
