@@ -39,7 +39,7 @@ TPE, as a black-box optimization, can be used in various scenarios and shows goo
 
 **Usage example:**
 
-```yaml
+```yml
 # config.yml
 tuner:
   builtinTunerName: TPE
@@ -65,7 +65,7 @@ Random search is suggested when each trial does not take too long (e.g., each tr
 
 **Usage example**
 
-```yaml
+```yml
 # config.yml
 tuner:
   builtinTunerName: Random
@@ -91,7 +91,7 @@ Anneal is suggested when each trial does not take too long, and you have enough 
 
 **Usage example**
 
-```yaml
+```yml
 # config.yml
 tuner:
   builtinTunerName: Anneal
@@ -117,7 +117,7 @@ Its requirement of computation resource is relatively high. Specifically, it req
 
 **Usage example**
 
-```yaml
+```yml
 # config.yml
 tuner:
   builtinTunerName: Evolution
@@ -143,7 +143,7 @@ Similar to TPE, SMAC is also a black-box tuner which can be tried in various sce
 
 **Usage example**
 
-```yaml
+```yml
 # config.yml
 tuner:
   builtinTunerName: SMAC
@@ -165,7 +165,7 @@ If the configurations you want to try have been decided, you can list them in se
 
 **Usage example**
 
-```yaml
+```yml
 # config.yml
 tuner:
   builtinTunerName: BatchTuner
@@ -206,7 +206,7 @@ It is suggested when search space is small, it is feasible to exhaustively sweep
 
 **Usage example**
 
-```yaml
+```yml
 # config.yml
 tuner:
   builtinTunerName: GridSearch
@@ -232,7 +232,7 @@ It is suggested when you have limited computation resource but have relatively l
 
 **Usage example**
 
-```yaml
+```yml
 # config.yml
 advisor:
   builtinAdvisorName: Hyperband
@@ -268,7 +268,7 @@ It is suggested that you want to apply deep learning methods to your task (your 
 
 **Usage example**
 
-```yaml
+```yml
 # config.yml
 tuner:
   builtinTunerName: NetworkMorphism
@@ -304,7 +304,7 @@ Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long
 
 **Usage example**
 
-```yaml
+```yml
 # config.yml
 tuner:
   builtinTunerName: MetisTuner

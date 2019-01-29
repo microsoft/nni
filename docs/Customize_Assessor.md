@@ -1,14 +1,12 @@
 # Customize Assessor
 
-## Customize Assessor
-
 NNI also support building an assessor by yourself to adjust your tuning demand.
 
 If you want to implement a customized Assessor, there are three things for you to do:
 
 1) Inherit an assessor of a base Assessor class
 2) Implement assess_trial function
-3) Configure your customized Assessor in experiment yaml config file
+3) Configure your customized Assessor in experiment YAML config file
 
 **1. Inherit an assessor of a base Assessor class**
 
@@ -38,11 +36,11 @@ class CustomizedAssessor(Assessor):
         ...
 ```
 
-**3. Configure your customized Assessor in experiment yaml config file**
+**3. Configure your customized Assessor in experiment YAML config file**
 
 NNI needs to locate your customized Assessor class and instantiate the class, so you need to specify the location of the customized Assessor class and pass literal values as parameters to the \_\_init__ constructor.
 
-```yaml
+```yml
 
 assessor:
   codeDir: /home/abc/myassessor

@@ -120,7 +120,7 @@ For more information about annotation syntax and its usage, please refer to [Ann
 
 ### Step 2 - Enable NNI Annotation
 
-In the yaml configure file, you need to set *useAnnotation* to true to enable NNI annotation:
+In the YAML configure file, you need to set *useAnnotation* to true to enable NNI annotation:
 ```
 useAnnotation: true
 ```
