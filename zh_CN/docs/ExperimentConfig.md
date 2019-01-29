@@ -1,16 +1,16 @@
 # Experiment（实验）配置参考
 
-创建 Experiment 时，需要给 nnictl 命令提供配置文件的路径。 The config file is written in YAML format, and need to be written correctly. 本文介绍了配置文件的内容，并提供了一些示例和模板。
+创建 Experiment 时，需要给 nnictl 命令提供配置文件的路径。 配置文件是 YAML 格式，需要保证其格式正确。 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
-* [Template](#Template) (the templates of an config file)
-* [Configuration spec](#Configuration) (the configuration specification of every attribute in config file)
-* [Examples](#Examples) (the examples of config file)
+* [模板](#Template) (配置文件的模板)
+* [配置说明](#Configuration) (配置文件每个项目的说明)
+* [样例](#Examples) (配置文件样例)
 
 <a name="Template"></a>
 
 ## 模板
 
-* **light weight(without Annotation and Assessor)** 
+* **简化版（不包含 Annotation（标记）和 Assessor）** 
 
     ```
     authorName: 
@@ -43,7 +43,7 @@
     ``` 
     
 
-* **Use Assessor**
+* **使用 Assessor**
 
     ```
     authorName: 
