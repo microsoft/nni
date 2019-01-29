@@ -28,7 +28,7 @@ Please refer to the implementation of Hyperband ([src/sdk/pynni/nni/hyperband_ad
 
 Similar to tuner and assessor. NNI needs to locate your customized Advisor class and instantiate the class, so you need to specify the location of the customized Advisor class and pass literal values as parameters to the \_\_init__ constructor.
 
-```yml
+```yaml
 advisor:
   codeDir: /home/abc/myadvisor
   classFileName: my_customized_advisor.py

@@ -8,7 +8,7 @@ Install NNI, follow the install guide [here](GetStarted.md).
 ## Run an experiment
 Use `examples/trials/mnist-annotation` as an example. The NNI config YAML file's content is like:
 
-```yml
+```yaml
 authorName: your_name
 experimentName: auto_mnist
 # how many trials could be concurrently running

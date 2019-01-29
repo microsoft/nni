@@ -106,7 +106,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
 
 **Step 3**: Define a `config` file in YAML, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
 
-```yml
+```yaml
 authorName: default
 experimentName: example_mnist
 trialConcurrency: 1

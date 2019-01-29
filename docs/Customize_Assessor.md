@@ -40,7 +40,7 @@ class CustomizedAssessor(Assessor):
 
 NNI needs to locate your customized Assessor class and instantiate the class, so you need to specify the location of the customized Assessor class and pass literal values as parameters to the \_\_init__ constructor.
 
-```yml
+```yaml
 
 assessor:
   codeDir: /home/abc/myassessor

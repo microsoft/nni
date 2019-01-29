@@ -123,7 +123,7 @@ with tf.Session() as sess:
 >Step 2 - Enable NNI Annotation
 In the YAML configure file, you need to set *useAnnotation* to true to enable NNI annotation:
 
-```yml
+```yaml
 useAnnotation: true
 ```
 

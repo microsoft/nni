@@ -87,7 +87,7 @@ This is because your tuner is not executed in the directory of your tuner (i.e.,
 
 NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the \_\_init__ constructor.
 
-```yml
+```yaml
 tuner:
   codeDir: /home/abc/mytuner
   classFileName: my_customized_tuner.py

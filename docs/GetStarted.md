@@ -47,7 +47,7 @@ This command will be filled in the YAML configure file below. Please refer to [h
 
 **Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](howto_2_CustomizedTuner.md), but for simplicity, here we choose a tuner provided by NNI as below:
 
-```yml
+```yaml
 tuner:
   builtinTunerName: TPE
     classArgs:
@@ -58,7 +58,7 @@ tuner:
 
 **Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
 
-```yml
+```yaml
 authorName: your_name
 experimentName: auto_mnist
 

@@ -9,7 +9,7 @@ Currently we recommend sharing weights through NFS (Network File System), which 
 ### Weight Sharing through NFS file
 With the NFS setup (see below), trial code can share model weight through loading & saving files. Here we recommend that user feed the tuner with the storage path:
 
-```yml
+```yaml
 tuner:
   codeDir: path/to/customer_tuner
   classFileName: customer_tuner.py 

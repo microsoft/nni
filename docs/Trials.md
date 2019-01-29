@@ -30,7 +30,7 @@ Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search s
 
 - Get configuration from Tuner
     
-```json 
+```python
 RECEIVED_PARAMS = nni.get_next_parameter()
 ```
 `RECEIVED_PARAMS` is an object, for example: 
@@ -38,14 +38,14 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 
 - Report metric data periodically (optional)
 
-```json
+```python
 nni.report_intermediate_result(metrics)
 ```
 `metrics` could be any python object. If users use NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, 2) a dict object that has a key named `default` whose value is a number. This `metrics` is reported to [assessor](Builtin_Assessors.md). Usually, `metrics` could be periodically evaluated loss or accuracy.
 
 - Report performance of the configuration
 
-```json
+```python
 nni.report_final_result(metrics)
 ```
 `metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](Builtin-Tuner.md).
@@ -54,7 +54,7 @@ nni.report_final_result(metrics)
 
 To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of SearchSpace file (you just defined in step 1):
 
-```json
+```yaml
 useAnnotation: false
 searchSpacePath: /path/to/your/search_space.json
 ```
