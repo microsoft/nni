@@ -8,9 +8,9 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 ## 运行 Experiment
 
-以 `examples/trials/mnist-annotation` 为例。 NNI 的 yml 配置文件如下：
+以 `examples/trials/mnist-annotation` 为例。 The NNI config YAML file's content is like:
 
-```yaml
+```yml
 authorName: your_name
 experimentName: auto_mnist
 # 并发运行的 Trial 数量
@@ -43,7 +43,7 @@ paiConfig:
   host: 10.1.1.1
 ```
 
-注意：如果用 pai 模式运行，需要在 yml 文件中设置 `trainingServicePlatform: pai`。
+Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode.
 
 与本机模式，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的 Trial 有额外的配置：
 
@@ -52,14 +52,14 @@ paiConfig:
 * memoryMB 
     * 必填。 Trial 程序的内存需求，必须为正数。
 * image 
-    * 必填。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 此键用来指定 Trial 程序的容器使用的 Docker 映像。 
+    * 必填。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 This key is used to specify the Docker image used to create the container in which your trial will run.
     * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 用来生成此映像的文件在[这里](../deployment/Dockerfile.build.base)。 可以直接使用此映像，或参考它来生成自己的映像。
 * dataDir 
     * 可选。 指定了 Trial 用于下载数据的 HDFS 数据目录。 格式应为 hdfs://{your HDFS host}:9000/{数据目录}
 * outputDir 
     * 可选。 指定了 Trial 的 HDFS 输出目录。 Trial 在完成（成功或失败）后，Trial 的 stdout， stderr 会被 NNI 自动复制到此目录中。 格式应为 hdfs://{your HDFS host}:9000/{输出目录}
 
-完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
+Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 
     nnictl create --config exp_pai.yml
     
@@ -78,4 +78,4 @@ paiConfig:
 
 如果希望将 Trial 的模型数据等其它输出保存到HDFS中，可在 Trial 代码中使用 `NNI_OUTPUT_DIR` 来自己保存输出文件，NNI SDK会从 Trial 的容器中将 `NNI_OUTPUT_DIR` 中的文件复制到 HDFS 中。
 
-如果在使用 pai 模式时遇到任何问题，请到 [NNI github](https://github.com/Microsoft/nni)中创建问题，或发信给 nni@microsoft.com。
+Any problems when using NNI in pai mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni).
