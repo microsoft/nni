@@ -6,7 +6,7 @@ So, if user want to implement a customized Advisor, she/he only need to:
 
 1. Define an Advisor inheriting from the MsgDispatcherBase class
 1. Implement the methods with prefix `handle_` except `handle_request`
-1. Configure your customized Advisor in experiment yml config file
+1. Configure your customized Advisor in experiment YAML config file
 
 Here is an example:
 
@@ -24,7 +24,7 @@ class CustomizedAdvisor(MsgDispatcherBase):
 
 Please refer to the implementation of Hyperband ([src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py](../src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py)) for how to implement the methods.
 
-**3) Configure your customized Advisor in experiment yml config file**
+**3) Configure your customized Advisor in experiment YAML config file**
 
 Similar to tuner and assessor. NNI needs to locate your customized Advisor class and instantiate the class, so you need to specify the location of the customized Advisor class and pass literal values as parameters to the \_\_init__ constructor.
 

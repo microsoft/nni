@@ -9,7 +9,7 @@ There are few steps to start an new experiment of NNI, here are the process.
 ### 2.1 Check environment
 1. Check if there is an old experiment running 
 2. Check if the port of restfurl server is free. 
-3. Validate the content of config yml file. 
+3. Validate the content of config YAML file. 
 4. Prepare a config file to to record the information of this experiment. 
 
 ### 2.2 Start restful server
@@ -19,7 +19,7 @@ Start an restful server process to manage NNI experiment, the default port is 80
 Check whether restful server process is successfully started and could get a response when send message to restful server.
 
 ### 2.4 Set experiment config
-Call restful server to set experiment config before starting an experiment, experiment config includes the config values in config yml file.
+Call restful server to set experiment config before starting an experiment, experiment config includes the config values in config YAML file.
 
 ### 2.5 Check experiment cofig
 Check the response content of restful server,  if the status code of response is 200, the config is successfully set.

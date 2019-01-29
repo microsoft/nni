@@ -37,7 +37,7 @@ The figure below is the result of our algorithm on MNIST trial history data, whe
 </p>
 
 ## 2. Usage
-To use Curve Fitting Assessor, you should add the following spec in your experiment's yml config file:
+To use Curve Fitting Assessor, you should add the following spec in your experiment's YAML config file:
 
 ```
 assessor:

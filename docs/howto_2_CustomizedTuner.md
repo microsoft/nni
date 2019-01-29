@@ -6,7 +6,7 @@ So, if user want to implement a customized Tuner, she/he only need to:
 
 1. Inherit a tuner of a base Tuner class
 1. Implement receive_trial_result and generate_parameter function
-1. Configure your customized tuner in experiment yml config file
+1. Configure your customized tuner in experiment YAML config file
 
 Here is an example:
 
@@ -83,7 +83,7 @@ _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
 
 This is because your tuner is not executed in the directory of your tuner (i.e., `pwd` is not the directory of your own tuner).
 
-**3) Configure your customized tuner in experiment yml config file**
+**3) Configure your customized tuner in experiment YAML config file**
 
 NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the \_\_init__ constructor.
 

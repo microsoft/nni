@@ -6,7 +6,7 @@ NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai
 Install NNI, follow the install guide [here](GetStarted.md).
 
 ## Run an experiment
-Use `examples/trials/mnist-annotation` as an example. The NNI config yml file's content is like:
+Use `examples/trials/mnist-annotation` as an example. The NNI config YAML file's content is like:
 
 ```yml
 authorName: your_name
@@ -41,7 +41,7 @@ paiConfig:
   host: 10.1.1.1
 ```
 
-Note: You should set `trainingServicePlatform: pai` in NNI config yml file if you want to start experiment in pai mode.
+Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode.
 
 Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have five additional keys:
 * cpuNum

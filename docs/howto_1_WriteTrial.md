@@ -121,7 +121,7 @@ with tf.Session() as sess:
 >>Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage.
 
 >Step 2 - Enable NNI Annotation
-In the yml configure file, you need to set *useAnnotation* to true to enable NNI annotation:
+In the YAML configure file, you need to set *useAnnotation* to true to enable NNI annotation:
 
 ```yml
 useAnnotation: true
