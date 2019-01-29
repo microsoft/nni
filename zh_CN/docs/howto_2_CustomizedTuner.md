@@ -6,7 +6,7 @@
 
 1. 从基类 Tuner 继承，创建新的 Tuner 子类
 2. 实现 receive_trial_result 和 generate_parameter 函数
-3. 在 Experiment 的 yml 文件中配置好自定义的 Tuner
+3. Configure your customized tuner in experiment YAML config file
 
 样例如下：
 
@@ -82,11 +82,11 @@ _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
 
 这是因为自定义的 Tuner 不是在自己的目录里执行的。（即，`pwd` 返回的目录不是 Tuner 的目录）。
 
-**3) 在 Experiment 的 yml 文件中配置好自定义的 Tuner**
+**3) Configure your customized tuner in experiment YAML config file**
 
 NNI 需要定位到自定义的 Tuner 类，并实例化它，因此需要指定自定义 Tuner 类的文件位置，并将参数值传给 \_\_init__ 构造函数。
 
-```yaml
+```yml
 tuner:
   codeDir: /home/abc/mytuner
   classFileName: my_customized_tuner.py
