@@ -1,8 +1,8 @@
-# CIFAR-10 examples
+# CIFAR-10 样例
 
-## Overview
+## 概述
 
-[CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) classification is a common benchmark problem in machine learning. The CIFAR-10 dataset is the collection of images. It is one of the most widely used datasets for machine learning research which contains 60,000 32x32 color images in 10 different classes. Thus, we use CIFAR-10 classification as an example to introduce NNI usage.
+[CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) 分类是机器学习中常用的基准问题。 The CIFAR-10 dataset is the collection of images. It is one of the most widely used datasets for machine learning research which contains 60,000 32x32 color images in 10 different classes. Thus, we use CIFAR-10 classification as an example to introduce NNI usage.
 
 ### **Goals**
 
