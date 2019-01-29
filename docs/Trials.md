@@ -48,7 +48,7 @@ nni.report_intermediate_result(metrics)
 ```python
 nni.report_final_result(metrics)
 ```
-`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](Builtin-Tuner.md).
+`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](tuners.md).
 
 ### Step 3 - Enable NNI API
 
@@ -61,7 +61,7 @@ searchSpacePath: /path/to/your/search_space.json
 
 You can refer to [here](ExperimentConfig.md) for more information about how to set up experiment configurations.
 
-*Please refer to [here]() for more APIs (e.g., `nni.get_sequence_id()`) provided by NNI.
+*Please refer to [here](sdk_reference.md) for more APIs (e.g., `nni.get_sequence_id()`) provided by NNI.
 
 
 <a name="nni-annotation"></a>
@@ -115,7 +115,7 @@ with tf.Session() as sess:
 - `@nni.variable` will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword `name` in `@nni.variable`.
 - `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
 
-For more information about annotation syntax and its usage, please refer to [Annotation README](../tools/nni_annotation/README.md) . 
+For more information about annotation syntax and its usage, please refer to [Annotation](AnnotationSpec.md). 
 
 
 ### Step 2 - Enable NNI Annotation

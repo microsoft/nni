@@ -82,7 +82,7 @@ The feature of weight sharing enables trials from different machines, in which m
 ```
 
 ## Examples
-For details, please refer to this [simple weight sharing example](../test/async_sharing_test). We also provided a [practice example](../examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](../examples/trials/ga_squad) example.
+For details, please refer to this [simple weight sharing example](https://github.com/Microsoft/nni/tree/master/test/async_sharing_test). We also provided a [practice example](https://github.com/Microsoft/nni/tree/master/examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad) example.
 
 [1]: https://arxiv.org/abs/1802.03268
 [2]: https://arxiv.org/abs/1707.07012

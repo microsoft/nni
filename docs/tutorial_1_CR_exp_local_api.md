@@ -92,7 +92,7 @@ This command will be filled in the YAML configure file below. Please refer to [h
         classArgs:
           optimize_mode: maximize
 
-*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found [here]()), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
+*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found [here](Builtin_Tuner.md)), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
 
 **Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
 
@@ -124,7 +124,7 @@ trial:
   gpuNum: 0
 ``` 
 
-Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here](../tools/annotation/README.md) for details). For trial, we should provide *trialCommand* which is the command to run the trial, provide *trialCodeDir* where the trial code is. The command will be executed in this directory. We should also provide how many GPUs a trial requires.
+Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here](AnnotationSpec.md) for details). For trial, we should provide *trialCommand* which is the command to run the trial, provide *trialCodeDir* where the trial code is. The command will be executed in this directory. We should also provide how many GPUs a trial requires.
 
 With all these steps done, we can run the experiment with the following command:
 

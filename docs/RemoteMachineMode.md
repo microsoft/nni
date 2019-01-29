@@ -12,7 +12,7 @@ e.g. Three machines and you login in with account `bob` (Note: the account is no
 
 ## Setup NNI environment
 
-Install NNI on each of your machines following the install guide [here](GetStarted.md).
+Install NNI on each of your machines following the install guide [here](QuickStart.md).
 
 ## Run an experiment
 

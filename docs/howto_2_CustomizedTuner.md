@@ -100,10 +100,10 @@ tuner:
 
 More detail example you could see:
 
-> * [evolution-tuner](../src/sdk/pynni/nni/evolution_tuner)
-> * [hyperopt-tuner](../src/sdk/pynni/nni/hyperopt_tuner)
-> * [evolution-based-customized-tuner](../examples/tuners/ga_customer_tuner)
+> * [evolution-tuner](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/evolution_tuner)
+> * [hyperopt-tuner](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperopt_tuner)
+> * [evolution-based-customized-tuner](https://github.com/Microsoft/nni/tree/master/examples/tuners/ga_customer_tuner)
 
 ## Write a more advanced automl algorithm
 
-The information above are usually enough to write a general tuner. However, users may also want more information, for example, intermediate results, trials' state (e.g., the information in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called `advisor` which directly inherits from `MsgDispatcherBase` in [`src/sdk/pynni/nni/msg_dispatcher_base.py`](../src/sdk/pynni/nni/msg_dispatcher_base.py). Please refer to [here](./howto_3_CustomizedAdvisor.md) for how to write a customized advisor.
+The information above are usually enough to write a general tuner. However, users may also want more information, for example, intermediate results, trials' state (e.g., the information in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called `advisor` which directly inherits from `MsgDispatcherBase` in [`src/sdk/pynni/nni/msg_dispatcher_base.py`](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/msg_dispatcher_base.py). Please refer to [here](./howto_3_CustomizedAdvisor.md) for how to write a customized advisor.

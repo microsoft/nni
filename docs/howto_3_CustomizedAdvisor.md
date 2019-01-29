@@ -22,7 +22,7 @@ class CustomizedAdvisor(MsgDispatcherBase):
 
 **2) Implement the methods with prefix `handle_` except `handle_request`**
 
-Please refer to the implementation of Hyperband ([src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py](../src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py)) for how to implement the methods.
+Please refer to the implementation of Hyperband ([src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperband_advisor/hyperband_advisor.py)) for how to implement the methods.
 
 **3) Configure your customized Advisor in experiment YAML config file**
 

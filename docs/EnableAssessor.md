@@ -30,10 +30,10 @@ trial:
   codeDir: /usr/share/nni/examples/trials/mnist-annotation
   gpuNum: 0
 ```
-For our built-in assessors, you need to fill two fields: `builtinAssessorName` which chooses NNI provided assessors (refer to [here]() for built-in assessors), `optimize_mode` which includes maximize and minimize (you want to maximize or minimize your trial result).
+For our built-in assessors, you need to fill two fields: `builtinAssessorName` which chooses NNI provided assessors (refer to [here](Builtin_Assessors.md) for built-in assessors), `optimize_mode` which includes maximize and minimize (you want to maximize or minimize your trial result).
 
 ## Using user customized Assessor
-You can also write your own assessor following the guidance [here](). For example, you wrote an assessor for `examples/trials/mnist-annotation`. You should prepare the yml configure below:
+You can also write your own assessor following the guidance [here](Customize_Assessor.md). For example, you wrote an assessor for `examples/trials/mnist-annotation`. You should prepare the yml configure below:
 ```
 authorName: your_name
 experimentName: auto_mnist

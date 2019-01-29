@@ -11,7 +11,7 @@ e.g. Three machines and you login in with account `bob` (Note: the account is no
 | 10.1.1.3 | bob | bob123    |
 
 ## Setup NNI environment
-Install NNI on each of your machines following the install guide [here](GetStarted.md).
+Install NNI on each of your machines following the install guide [here](QuickStart.md).
 
 For remote machines that are used only to run trials but not the nnictl, you can just install python SDK:
 

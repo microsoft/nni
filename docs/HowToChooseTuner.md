@@ -17,7 +17,7 @@ For now, NNI has supported the following tuner algorithms. Note that NNI install
  ## Supported tuner algorithms
 
 
-We will introduce some basic knowledge about the tuner algorithms, suggested scenarios for each tuner, and their example usage (for complete usage spec, please refer to [here]()).
+We will introduce some basic knowledge about the tuner algorithms, suggested scenarios for each tuner, and their example usage (for complete usage spec, please refer to [here](Builtin_Tuner.md)).
 
 <a name="TPE"></a>
 **TPE**
@@ -158,7 +158,7 @@ _Usage_:
 <a name="Hyperband"></a>
 **Hyperband**
 
-[Hyperband][6] tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be referred to [here](../src/sdk/pynni/nni/hyperband_advisor/README.md).
+[Hyperband][6] tries to use limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for small number of STEPs to find out promising one, then further training those promising ones to select several more promising one. More detail can be referred to [here](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperband_advisor/README.md).
 
 _Suggested scenario_: It is suggested when you have limited computation resource but have relatively large search space. It performs good in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.
 
@@ -180,13 +180,13 @@ _Usage_:
 <a name="NetworkMorphism"></a>
 **Network Morphism**
 
-[Network Morphism][7] provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Next, it estimates the value of child network using the history architecture and metric pairs. Then it selects the most promising one to train. More detail can be referred to [here](../src/sdk/pynni/nni/networkmorphism_tuner/README.md). 
+[Network Morphism][7] provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width and skip-connection. Next, it estimates the value of child network using the history architecture and metric pairs. Then it selects the most promising one to train. More detail can be referred to [here](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/networkmorphism_tuner/README.md). 
 
 _Installation_: 
 NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so users should install it first.
 
 
-_Suggested scenario_: It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](../examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the cv domain.
+_Suggested scenario_: It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the cv domain.
 
 _Usage_:
 ```yaml
@@ -232,7 +232,7 @@ Metis Tuner requires [sklearn](https://scikit-learn.org/), so users should insta
 
 
 _Suggested scenario_:
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](../examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the NNI SDK.
+Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the NNI SDK.
 
 _Usage_:
 ```yaml

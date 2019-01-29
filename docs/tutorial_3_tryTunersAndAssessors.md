@@ -29,7 +29,7 @@ NNI provides an easy to adopt approach to set up parameter tuning algorithms as 
 ### **Learn More about assessor**
 * For detailed defintion and usage aobut the required field, please refer to [Config an experiment](ExperimentConfig.md)
 * Find more about the detailed instruction about [enable assessor](EnableAssessor.md)
-* [How to implement your own assessor](../examples/assessors/README.md)
+* [How to implement your own assessor](Customize_Assessor.md)
 
 ## **Learn More**
 * [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)

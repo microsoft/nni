@@ -69,7 +69,7 @@ searchSpacePath: /path/to/your/search_space.json
 
 You can refer to [here](./ExperimentConfig.md) for more information about how to set up experiment configurations.
 
-You can refer to [here](../examples/trials/README.md) for more information about how to write trial code using NNI APIs.
+You can refer to [here](https://github.com/Microsoft/nni/tree/master/examples/trials/README.md) for more information about how to write trial code using NNI APIs.
 
 ## NNI Python Annotation
 
@@ -118,7 +118,7 @@ with tf.Session() as sess:
 >>
 >>`@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
 >>
->>Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage.
+>>Please refer to [Annotation README](https://github.com/Microsoft/nni/tree/master/tools/nni_annotation/README.md) for more information about annotation syntax and its usage.
 
 >Step 2 - Enable NNI Annotation
 In the YAML configure file, you need to set *useAnnotation* to true to enable NNI annotation:
@@ -129,4 +129,4 @@ useAnnotation: true
 
 ## More Trial Example
 
-* [Automatic Model Architecture Search for Reading Comprehension.](../examples/trials/ga_squad/README.md)
+* [Automatic Model Architecture Search for Reading Comprehension.](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad/README.md)
