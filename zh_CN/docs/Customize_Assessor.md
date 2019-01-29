@@ -1,4 +1,4 @@
-# Customize Assessor
+# 自定义 Assessor
 
 NNI also support building an assessor by yourself to adjust your tuning demand.
 
