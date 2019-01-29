@@ -104,9 +104,9 @@ If you want to use NNI to automatically train your model and find the optimal hy
 
 *Implemented code directory: [mnist.py](../examples/trials/mnist/mnist.py)*
 
-**Step 3**: Define a `config` file in yaml, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
+**Step 3**: Define a `config` file in YAML, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
 
-```yaml
+```yml
 authorName: default
 experimentName: example_mnist
 trialConcurrency: 1

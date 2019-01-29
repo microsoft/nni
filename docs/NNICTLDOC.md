@@ -43,7 +43,7 @@ nnictl support commands:
 
     |Name, shorthand|Required|Default|Description|
     |------|------|------ |------|
-    |--config, -c|  True| |yaml configure file of the experiment|
+    |--config, -c|  True| |YAML configure file of the experiment|
     |--port, -p|False| |the port of restful server|
 
 <a name="resume"></a>
