@@ -189,6 +189,33 @@ You can use these commands to get more information about the experiment
 * [Implement a customized assessor](examples/assessors/README.md)
 * [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](examples/trials/ga_squad/README.md)
 
+## **References**
+Please cite NNI in your publications if it helps your research:
+```
+@manual{NNI,
+  author    = {Chenmin Chi  and
+               Chuanjie Liu and
+               Chi Song     and
+               Deshui Yu    and
+               Gems Guo     and
+               Hui Xue      and
+               Lifei Zhu    and
+               Lijiao Guo   and 
+               Mao Yang     and
+	             Meng Xu      and
+	             Quanlu Zhang and
+	             Scarlett Li  and
+	             Shinai Yang  and
+	             Shufan Huang and
+	             Yan Ni       and
+	             Yang Ou      and 
+	             Zejun Lin     },
+  title     = {NNI: An open source AutoML toolkit for neural architecture search and hyper-parameter tuning},
+  url       = {https://github.com/Microsoft/NNI},
+  year      = {2018}
+}
+
+```
 ## **Contribute**
 This project welcomes contributions and suggestions, we use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
 
