@@ -1,4 +1,4 @@
-# Built-in Tuners
+# 内置 Tuner
 
 NNI provides state-of-the-art tuning algorithm as our builtin-tuners and makes them easy to use. Below is the brief summary of NNI currently built-in Tuners:
 
