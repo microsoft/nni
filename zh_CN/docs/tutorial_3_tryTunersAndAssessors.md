@@ -4,7 +4,7 @@ NNI 提供了简单的方法来设置不同的参数优化算法，以及提前�
 
 **Tuner（调参器）** 指定了为每个 Trial 生成参数的算法。 在 NNI 中，有两种方法来设置 Tuner。
 
-1. 直接使用 NNI 提供的 Tuner
+1. Directly use tuner provided by NNI sdk
     
         必填字段：builtinTunerName 和 classArgs。 
         
@@ -22,7 +22,7 @@ NNI 提供了简单的方法来设置不同的参数优化算法，以及提前�
 
 **Assessor（评估器）** 指定了用于提前终止 Trial 的策略。 在 NNI 中，支持两种方法来设置 Assessor。
 
-1. 直接使用 NNI 提供的 Assessor
+1. Directly use assessor provided by NNI sdk
     
         必填字段：builtinAssessorName 和 classArgs。 
         
