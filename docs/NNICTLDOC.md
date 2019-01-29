@@ -41,10 +41,10 @@ nnictl support commands:
 
   * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |--config, -c|  True| |YAML configure file of the experiment|
-    |--port, -p|False| |the port of restful server|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------|------|
+  |--config, -c|  True| |YAML configure file of the experiment|
+  |--port, -p|False| |the port of restful server|
 
 <a name="resume"></a>
 * __nnictl resume__
@@ -61,10 +61,10 @@ nnictl support commands:
 
   * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |The id of the experiment you want to resume|  
-    |--port, -p|  False| |Rest port of the experiment you want to resume|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |The id of the experiment you want to resume|  
+  |--port, -p|  False| |Rest port of the experiment you want to resume|
 
 <a name="stop"></a>
 * __nnictl stop__
@@ -104,10 +104,10 @@ nnictl support commands:
 
     * Options
 
-      |Name, shorthand|Required|Default|Description|
-      |------|------|------ |------|
-      |id|  False| |ID of the experiment you want to set|
-      |--filename, -f|  True| |the file storing your new search space|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--filename, -f|  True| |the file storing your new search space|
 
   * __nnictl update concurrency__  
     * Description
@@ -122,10 +122,10 @@ nnictl support commands:
 
     * Options
 
-      |Name, shorthand|Required|Default|Description|
-      |------|------|------ |------|
-      |id|  False| |ID of the experiment you want to set|
-      |--value, -v|  True| |the number of allowed concurrent trials|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--value, -v|  True| |the number of allowed concurrent trials|
 
   * __nnictl update duration__  
 
@@ -140,10 +140,10 @@ nnictl support commands:
       ```
     * Options
 
-      |Name, shorthand|Required|Default|Description|
-      |------|------|------ |------|
-      |id|  False| |ID of the experiment you want to set|
-      |--value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|
 
   * __nnictl update trialnum__  
     * Description
@@ -158,10 +158,10 @@ nnictl support commands:
 
     * Options
 
-      |Name, shorthand|Required|Default|Description|
-      |------|------|------ |------|
-      |id|  False| |ID of the experiment you want to set|
-      |--value, -v|  True| |the new number of maxtrialnum you want to set|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--value, -v|  True| |the new number of maxtrialnum you want to set|
 
 <a name="trial"></a>
 * __nnictl trial__
@@ -180,9 +180,9 @@ nnictl support commands:
 
     * Options
 
-      |Name, shorthand|Required|Default|Description|
-      |------|------|------ |------|
-      |id|  False| |ID of the experiment you want to set|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
 
   * __nnictl trial kill__
 
@@ -198,10 +198,10 @@ nnictl support commands:
 
     * Options  
 
-      |Name, shorthand|Required|Default|Description|
-      |------|------|------ |------|
-      |id|  False| |ID of the experiment you want to set|
-      |--trialid, -t|  True| |ID of the trial you want to kill.|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--trialid, -t|  True| |ID of the trial you want to kill.|
 
 <a name="top"></a>
 * __nnictl top__
@@ -218,10 +218,10 @@ nnictl support commands:
 
   * Options  
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
-    |--time, -t|  False| |The interval to update the experiment status, the unit of time is second, and the default value is 3 second.|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--time, -t|  False| |The interval to update the experiment status, the unit of time is second, and the default value is 3 second.|
 
 <a name="experiment"></a>
 ### Manage experiment information
@@ -240,9 +240,9 @@ nnictl support commands:
 
   * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
 
 * __nnictl experiment status__
 
@@ -258,9 +258,9 @@ nnictl support commands:
 
   * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
 
 * __nnictl experiment list__
 
@@ -304,12 +304,12 @@ nnictl support commands:
 
   * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
-    |--head, -h| False| |show head lines of stdout|
-    |--tail, -t|  False| |show tail lines of stdout|
-    |--path, -p|  False| |show the path of stdout file|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--head, -h| False| |show head lines of stdout|
+  |--tail, -t|  False| |show tail lines of stdout|
+  |--path, -p|  False| |show the path of stdout file|
 
 * __nnictl log stderr__
   * Description
@@ -324,12 +324,12 @@ nnictl support commands:
 
   * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
-    |--head, -h| False| |show head lines of stderr|
-    |--tail, -t|  False| |show tail lines of stderr|
-    |--path, -p|  False| |show the path of stderr file|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--head, -h| False| |show head lines of stderr|
+  |--tail, -t|  False| |show tail lines of stderr|
+  |--path, -p|  False| |show the path of stderr file|
 
 * __nnictl log trial__
 
@@ -345,9 +345,9 @@ nnictl support commands:
 
   * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id| False| |the id of trial|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id| False| |the id of trial|
 
 <a name="webui"></a>
 ### Manage webui
@@ -371,11 +371,11 @@ nnictl support commands:
 
   * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
-    |--trialid|  False| |ID of the trial|
-    |--port|  False| 6006|The port of the tensorboard process|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--trialid|  False| |ID of the trial|
+  |--port|  False| 6006|The port of the tensorboard process|
 
   * Detail
 
@@ -398,9 +398,9 @@ nnictl support commands:
 
   * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
 
 <a name="package"></a>
 ### Manage package
@@ -418,9 +418,9 @@ nnictl support commands:
 
   * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |--name|  True| |The name of package to be installed|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--name|  True| |The name of package to be installed|
 
 * __nnictl package show__
 
