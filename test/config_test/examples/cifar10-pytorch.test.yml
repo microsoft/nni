@@ -1,7 +1,7 @@
 authorName: nni
 experimentName: default_test
 maxExecDuration: 15m
-maxTrialNum: 4
+maxTrialNum: 2
 trialConcurrency: 2
 searchSpacePath: ./cifar10_search_space.json
 
