@@ -31,9 +31,9 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tu
 
 **建议场景**
 
-TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resource and can only try a small number of trials. From a large amount of experiments, we could found that TPE is far better than Random Search.
+TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况下都能得到较好的结果。 特别是在计算资源有限，只能运行少量 Trial 的情况。 大量的实验表明，TPE 的性能远远优于随机搜索。
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
@@ -59,11 +59,11 @@ tuner:
 
 在每个 Trial 运行时间不长（例如，能够非常快的完成，或者很快的被 Assessor 终止），并有充足计算资源的情况下。 Or you want to uniformly explore the search space. Random Search could be considered as baseline of search algorithm.
 
-**Requirement of classArg:**
+**参数**
 
 * **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
-**Usage example**
+**使用样例：**
 
 ```yml
 # config.yml
@@ -79,7 +79,7 @@ tuner:
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `Anneal`
 
-> Builtin Tuner Name: **Anneal**
+> 名称：**Anneal**
 
 **Suggested scenario**
 
@@ -105,7 +105,7 @@ tuner:
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `Naive Evolution`
 
-> Builtin Tuner Name: **Evolution**
+> 名称：**Evolution**
 
 **Suggested scenario**
 
@@ -131,7 +131,7 @@ tuner:
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `SMAC`
 
-> Builtin Tuner Name: **SMAC**
+> 名称：**SMAC**
 
 **Suggested scenario**
 
@@ -157,7 +157,7 @@ tuner:
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `Batch Tuner`
 
-> Builtin Tuner Name: BatchTuner
+> 名称：BatchTuner
 
 **Suggested scenario**
 
@@ -196,7 +196,7 @@ The search space file including the high-level key `combine_params`. The type of
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `Grid Search`
 
-> Builtin Tuner Name: **Grid Search**
+> 名称：**Grid Search**
 
 **Suggested scenario**
 
@@ -218,7 +218,7 @@ tuner:
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `Hyperband`
 
-> Builtin Advisor Name: **Hyperband**
+> 名称：**Hyperband**
 
 **Suggested scenario**
 
@@ -248,7 +248,7 @@ advisor:
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `Network Morphism`
 
-> Builtin Tuner Name: **NetworkMorphism**
+> 名称：**NetworkMorphism**
 
 **Installation**
 
@@ -286,7 +286,7 @@ tuner:
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `Metis Tuner`
 
-> Builtin Tuner Name: **MetisTuner**
+> 名称：**MetisTuner**
 
 Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
 
@@ -302,7 +302,7 @@ Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long
 
 * **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
-**Usage example**
+**使用样例：**
 
 ```yml
 # config.yml
