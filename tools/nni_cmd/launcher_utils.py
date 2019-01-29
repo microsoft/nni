@@ -20,8 +20,8 @@
 
 import os
 import json
-from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA
-from .common_utils import get_json_content, print_error, print_warning
+from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA
+from .common_utils import get_json_content, print_error, print_warning, print_normal
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -32,21 +32,21 @@ def parse_relative_path(root_path, experiment_config, key):
     '''Change relative path to absolute path'''
     if experiment_config.get(key) and not os.path.isabs(experiment_config.get(key)):
         absolute_path = os.path.join(root_path, experiment_config.get(key))
-        print_warning('expand %s: %s to %s ' % (key, experiment_config[key], absolute_path))
+        print_normal('expand %s: %s to %s ' % (key, experiment_config[key], absolute_path))
         experiment_config[key] = absolute_path
 
-def parse_time(experiment_config):
-    '''Parse time format'''
-    unit = experiment_config['maxExecDuration'][-1]
+def parse_time(time):
+    '''Change the time to seconds'''
+    unit = time[-1]
     if unit not in ['s', 'm', 'h', 'd']:
         print_error('the unit of time could only from {s, m, h, d}')
         exit(1)
-    time = experiment_config['maxExecDuration'][:-1]
+    time = time[:-1]
     if not time.isdigit():
         print_error('time format error!')
         exit(1)
     parse_dict = {'s':1, 'm':60, 'h':3600, 'd':86400}
-    experiment_config['maxExecDuration'] = int(time) * parse_dict[unit]
+    return int(time) * parse_dict[unit]
 
 def parse_path(experiment_config, config_path):
     '''Parse path in config file'''
@@ -94,9 +94,15 @@ def validate_kubeflow_operators(experiment_config):
             if experiment_config.get('trial').get('master') is not None:
                 print_error('kubeflow with tf-operator can not set master')
                 exit(1)
+            if experiment_config.get('trial').get('worker') is None:
+                print_error('kubeflow with tf-operator must set worker')
+                exit(1)
         elif experiment_config.get('kubeflowConfig').get('operator') == 'pytorch-operator':
             if experiment_config.get('trial').get('ps') is not None:
                 print_error('kubeflow with pytorch-operator can not set ps')
+                exit(1)
+            if experiment_config.get('trial').get('master') is None:
+                print_error('kubeflow with pytorch-operator must set master')
                 exit(1)
         
         if experiment_config.get('kubeflowConfig').get('storage') == 'nfs':
@@ -115,14 +121,15 @@ def validate_kubeflow_operators(experiment_config):
 def validate_common_content(experiment_config):
     '''Validate whether the common values in experiment_config is valid'''
     if not experiment_config.get('trainingServicePlatform') or \
-        experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai', 'kubeflow']:
+        experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller']:
         print_error('Please set correct trainingServicePlatform!')
         exit(1)
     schema_dict = {
             'local': LOCAL_CONFIG_SCHEMA,
             'remote': REMOTE_CONFIG_SCHEMA,
             'pai': PAI_CONFIG_SCHEMA,
-            'kubeflow': KUBEFLOW_CONFIG_SCHEMA
+            'kubeflow': KUBEFLOW_CONFIG_SCHEMA,
+            'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA
         }
     try:
         schema_dict.get(experiment_config['trainingServicePlatform']).validate(experiment_config)
@@ -191,6 +198,8 @@ def validate_annotation_content(experiment_config, spec_key, builtin_name):
             exit(1)
     else:
         # validate searchSpaceFile
+        if experiment_config[spec_key].get(builtin_name) == 'NetworkMorphism':
+            return
         if experiment_config[spec_key].get(builtin_name):
             if experiment_config.get('searchSpacePath') is None:
                 print_error('Please set searchSpacePath!')
@@ -207,7 +216,7 @@ def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''
     parse_path(experiment_config, config_path)
     validate_common_content(experiment_config)
-    parse_time(experiment_config)
+    experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])
     if experiment_config.get('advisor'):
         parse_advisor_content(experiment_config)
         validate_annotation_content(experiment_config, 'advisor', 'builtinAdvisorName')

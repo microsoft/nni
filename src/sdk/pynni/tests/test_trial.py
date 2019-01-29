@@ -18,7 +18,6 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-
 import nni
 import nni.platform.test as test_platform
 import nni.trial
@@ -30,11 +29,18 @@ from unittest import TestCase, main
 class TrialTestCase(TestCase):
     def setUp(self):
         self._trial_params = { 'msg': 'hi', 'x': 123, 'dict': { 'key': 'value', 'y': None } }
-        nni.trial._params = { 'parameter_id': 'test_param', 'parameters': self._trial_params }
+        test_platform._params = { 'parameter_id': 'test_param', 'parameters': self._trial_params }
 
     def test_get_next_parameter(self):
         self.assertEqual(nni.get_next_parameter(), self._trial_params)
 
+    def test_get_current_parameter(self):
+        nni.get_next_parameter()
+        self.assertEqual(nni.get_current_parameter('x'), 123)
+
+    def test_get_sequence_id(self):
+        self.assertEqual(nni.get_sequence_id(), 0)
+        
     def test_report_intermediate_result(self):
         nni.report_intermediate_result(123)
         self.assertEqual(test_platform.get_last_metric(), {

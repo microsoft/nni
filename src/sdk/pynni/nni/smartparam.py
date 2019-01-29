@@ -82,7 +82,7 @@ if env_args.platform is None:
 
 else:
 
-    def choice(*options, name=None):
+    def choice(options, name=None):
         return options[_get_param('choice', name)]
 
     def randint(upper, name=None):
@@ -112,7 +112,7 @@ else:
     def qlognormal(mu, sigma, q, name=None):
         return _get_param('qlognormal', name)
 
-    def function_choice(*funcs, name=None):
+    def function_choice(funcs, name=None):
         return funcs[_get_param('function_choice', name)]()
 
     def _get_param(func, name):
@@ -128,4 +128,6 @@ else:
         if name is None:
             name = '__line{:d}'.format(lineno)
         key = '{}/{}/{}'.format(module, name, func)
+        if trial._params is None:
+            trial.get_next_parameter()
         return trial.get_current_parameter(key)

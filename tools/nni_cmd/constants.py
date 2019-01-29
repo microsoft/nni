@@ -40,11 +40,12 @@ EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0
                           '         commands                       description\n' \
                           '1. nnictl experiment show        show the information of experiments\n' \
                           '2. nnictl trial ls               list all of trial jobs\n' \
-                          '3. nnictl log stderr             show stderr log content\n' \
-                          '4. nnictl log stdout             show stdout log content\n' \
-                          '5. nnictl stop                   stop an experiment\n' \
-                          '6. nnictl trial kill             kill a trial job by id\n' \
-                          '7. nnictl --help                 get help information about nnictl\n' \
+                          '3. nnictl top                    monitor the status of running experiments\n' \
+                          '4. nnictl log stderr             show stderr log content\n' \
+                          '5. nnictl log stdout             show stdout log content\n' \
+                          '6. nnictl stop                   stop an experiment\n' \
+                          '7. nnictl trial kill             kill a trial job by id\n' \
+                          '8. nnictl --help                 get help information about nnictl\n' \
                           '-----------------------------------------------------------------------\n' \
 
 LOG_HEADER = '-----------------------------------------------------------------------\n' \
@@ -54,12 +55,23 @@ LOG_HEADER = '------------------------------------------------------------------
 EXPERIMENT_START_FAILED_INFO = 'There is an experiment running in the port %d, please stop it first or set another port!\n' \
                                'You could use \'nnictl stop --port [PORT]\' command to stop an experiment!\nOr you could use \'nnictl create --config [CONFIG_PATH] --port [PORT]\' to set port!\n'
 
-EXPERIMENT_INFORMATION_FORMAT = '-----------------------------------------------------------------------\n' \
+EXPERIMENT_INFORMATION_FORMAT = '----------------------------------------------------------------------------------------\n' \
                      '                Experiment information\n' \
                      '%s\n' \
-                     '-----------------------------------------------------------------------\n'
+                     '----------------------------------------------------------------------------------------\n'
 
-EXPERIMENT_DETAIL_FORMAT = 'Id: %s    Status: %s    Port: %s    StartTime: %s    EndTime: %s    \n'
+EXPERIMENT_DETAIL_FORMAT = 'Id: %s    Status: %s    Port: %s    Platform: %s    StartTime: %s    EndTime: %s    \n'
+
+EXPERIMENT_MONITOR_INFO = 'Id: %s    Status: %s    Port: %s    Platform: %s    \n' \
+                          'StartTime: %s    Duration: %s'
+
+TRIAL_MONITOR_HEAD = '-------------------------------------------------------------------------------------\n' + \
+                    '%-15s %-25s %-25s %-15s \n' % ('trialId', 'startTime', 'endTime', 'status') + \
+                     '-------------------------------------------------------------------------------------'
+
+TRIAL_MONITOR_CONTENT = '%-15s %-25s %-25s %-15s'
+
+TRIAL_MONITOR_TAIL = '-------------------------------------------------------------------------------------\n\n\n'
 
 PACKAGE_REQUIREMENTS = {
     'SMAC': 'smac_tuner'

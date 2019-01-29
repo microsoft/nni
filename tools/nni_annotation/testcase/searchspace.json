@@ -1,54 +1,147 @@
 {
+    "handwrite/__line6/choice": {
+        "_type": "choice",
+        "_value": [
+            "foo",
+            "bar"
+        ]
+    },
     "handwrite/conv_size/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2, 3 ]
+        "_value": [
+            2,
+            3,
+            5,
+            7
+        ]
     },
-    "handwrite/__line5/function_choice": {
+    "handwrite/abc/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2 ]
+        "_value": [
+            "2",
+            3,
+            "(5 * 6)",
+            7
+        ]
     },
-    "handwrite/__line8/qlognormal": {
+    "handwrite/__line9/function_choice": {
+        "_type": "choice",
+        "_value": [
+            "max_pool",
+            "h_conv1",
+            "avg_pool"
+        ]
+    },
+    "handwrite/max_pool/function_choice": {
+        "_type": "choice",
+        "_value": [
+            "max_pool(h_conv1)",
+            "avg_pool(h_conv2, h_conv3)"
+        ]
+    },
+    "handwrite/max_poo/function_choice": {
+        "_type": "choice",
+        "_value": [
+            "max_poo(h_conv1)",
+            "(2 * 3 + 4)",
+            "(lambda x: 1 + x)"
+        ]
+    },
+    "handwrite/__line19/qlognormal": {
         "_type": "qlognormal",
-        "_value": [ 1.2, 3, 4.5 ]
-    },
-    "handwrite/__line13/choice": {
-        "_type": "choice",
-        "_value": [ 0, 1 ]
+        "_value": [
+            1.2,
+            3,
+            4.5
+        ]
     },
     "mnist/self.conv_size/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2, 3 ]
+        "_value": [
+            2,
+            3,
+            5,
+            7
+        ]
     },
     "mnist/self.hidden_size/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2 ]
+        "_value": [
+            124,
+            512,
+            1024
+        ]
     },
     "mnist/self.learning_rate/randint": {
         "_type": "randint",
-        "_value": [ 2, 3, 5 ]
+        "_value": [
+            2,
+            3,
+            5
+        ]
     },
     "mnist/tf.nn.relu/function_choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2 ]
+        "_value": [
+            "tf.nn.relu(conv2d(x_image, W_conv1) + b_conv1)",
+            "tf.nn.sigmoid(conv2d(x_image, W_conv1) + b_conv1)",
+            "tf.nn.tanh(conv2d(x_image, W_conv1) + b_conv1)"
+        ]
     },
     "mnist/max_pool/function_choice": {
         "_type": "choice",
-        "_value": [ 0, 1 ]
+        "_value": [
+            "max_pool(h_conv1, self.pool_size)",
+            "avg_pool(h_conv1, self.pool_size)"
+        ]
     },
     "mnist/batch_size/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2 ]
+        "_value": [
+            50,
+            250,
+            500
+        ]
     },
     "mnist/dropout_rate/choice": {
         "_type": "choice",
-        "_value": [ 0, 1 ]
+        "_value": [
+            1,
+            5
+        ]
     },
     "dir.simple/conv_size/choice": {
         "_type": "choice",
-        "_value": [ 0, 1, 2, 3 ]
+        "_value": [
+            2,
+            3,
+            5,
+            7
+        ]
+    },
+    "dir.simple/abc/choice": {
+        "_type": "choice",
+        "_value": [
+            "2",
+            3,
+            "(5 * 6)",
+            "{(1): 2, '3': 4}",
+            "[1, 2, 3]"
+        ]
     },
     "dir.simple/max_pool/function_choice": {
         "_type": "choice",
-        "_value": [ 0, 1 ]
+        "_value": [
+            "max_pool(h_conv1)",
+            "avg_pool(h_conv2, h_conv3)"
+        ]
+    },
+    "dir.simple/max_poo/function_choice": {
+        "_type": "choice",
+        "_value": [
+            "max_poo(h_conv1)",
+            "(2 * 3 + 4)",
+            "(lambda x: 1 + x)"
+        ]
     }
 }

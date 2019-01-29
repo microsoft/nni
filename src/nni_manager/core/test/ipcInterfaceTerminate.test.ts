@@ -20,7 +20,7 @@
 'use strict';
 
 import * as assert from 'assert';
-import { ChildProcess, spawn } from 'child_process';
+import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
 import { cleanupUnitTest, prepareUnitTest, getMsgDispatcherCommand } from '../../common/utils';
 import * as CommandType from '../commands';
@@ -32,15 +32,15 @@ let procError: boolean = false;
 
 function startProcess(): void {
     // create fake assessor process
-    const stdio: {}[] = ['ignore', 'pipe', process.stderr, 'pipe', 'pipe'];
+    const stdio: StdioOptions = ['ignore', 'pipe', process.stderr, 'pipe', 'pipe'];
 
-    const dispatcherCmd : string = getMsgDispatcherCommand(
+    const dispatcherCmd: string = getMsgDispatcherCommand(
         // Mock tuner config
         {
             className: 'DummyTuner',
             codeDir: './',
             classFileName: 'dummy_tuner.py'
-        }, 
+        },
         // Mock assessor config
         {
             className: 'DummyAssessor',
@@ -61,7 +61,7 @@ function startProcess(): void {
         procExit = true;
         procError = (code !== 0);
     });
-    
+
     // create IPC interface
     dispatcher = createDispatcherInterface(proc);
     (<IpcInterface>dispatcher).onCommand((commandType: string, content: string): void => {
@@ -86,7 +86,7 @@ describe('core/ipcInterface.terminate', (): void => {
 
         const deferred: Deferred<void> = new Deferred<void>();
         setTimeout(
-            () => {                
+            () => {
                 assert.ok(!procExit);
                 assert.ok(!procError);
                 deferred.resolve();

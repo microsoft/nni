@@ -20,8 +20,8 @@
 
 
 import ast
-
 import astor
+from nni_cmd.common_utils import print_warning
 
 # pylint: disable=unidiomatic-typecheck
 
@@ -76,6 +76,8 @@ def parse_nni_variable(code):
     name_str = astor.to_source(name).strip()
     keyword_arg = ast.keyword(arg='name', value=ast.Str(s=name_str))
     arg.keywords.append(keyword_arg)
+    if arg.func.attr == 'choice':
+        convert_args_to_dict(arg)
 
     return name, arg
 
@@ -87,7 +89,7 @@ def parse_nni_function(code):
     """
     name, call = parse_annotation_function(code, 'function_choice')
     funcs = [ast.dump(func, False) for func in call.args]
-    call.args = [make_lambda(arg) for arg in call.args]
+    convert_args_to_dict(call, with_lambda=True)
 
     name_str = astor.to_source(name).strip()
     call.keywords[0].value = ast.Str(s=name_str)
@@ -95,11 +97,31 @@ def parse_nni_function(code):
     return call, funcs
 
 
+def convert_args_to_dict(call, with_lambda=False):
+    """Convert all args to a dict such that every key and value in the dict is the same as the value of the arg.
+    Return the AST Call node with only one arg that is the dictionary
+    """
+    keys, values = list(), list()
+    for arg in call.args:
+        if type(arg) in [ast.Str, ast.Num]:
+            arg_value = arg
+        else:
+        # if arg is not a string or a number, we use its source code as the key
+            arg_value = astor.to_source(arg).strip('\n"')
+            arg_value = ast.Str(str(arg_value))
+        arg = make_lambda(arg) if with_lambda else arg
+        keys.append(arg_value)
+        values.append(arg)
+    del call.args[:]
+    call.args.append(ast.Dict(keys=keys, values=values))
+
+    return call
+
+
 def make_lambda(call):
     """Wrap an AST Call node to lambda expression node.
     call: ast.Call node
     """
-    assert type(call) is ast.Call, 'Argument of nni.function_choice is not function call'
     empty_args = ast.arguments(args=[], vararg=None, kwarg=None, defaults=[])
     return ast.Lambda(args=empty_args, body=call)
 
@@ -195,6 +217,10 @@ class Transformer(ast.NodeTransformer):
             self.annotated = True
         else:
             return node  # not an annotation, ignore it
+
+        if string.startswith('@nni.get_next_parameter('):
+            deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. Please remove this line in the trial code."
+            print_warning(deprecated_message)
 
         if string.startswith('@nni.report_intermediate_result(')  \
                 or string.startswith('@nni.report_final_result(') \

@@ -20,6 +20,7 @@
 
 
 import argparse
+import pkg_resources
 from .launcher import create_experiment, resume_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum
 from .nnictl_utils import *
@@ -27,13 +28,21 @@ from .package_management import *
 from .constants import *
 from .tensorboard_utils import *
 
-def nni_help_info(*args):
-    print('please run "nnictl {positional argument} --help" to see nnictl guidance')
+if os.environ.get('COVERAGE_PROCESS_START'):
+    import coverage
+    coverage.process_startup()
+
+def nni_info(*args):
+    if args[0].version:
+        print(pkg_resources.get_distribution('nni').version)
+    else:
+        print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
 def parse_args():
     '''Definite the arguments users need to follow and input'''
     parser = argparse.ArgumentParser(prog='nnictl', description='use nnictl command to control nni experiments')
-    parser.set_defaults(func=nni_help_info)
+    parser.add_argument('--version', '-v', action='store_true')
+    parser.set_defaults(func=nni_info)
 
     # create subparsers for args with sub values
     subparsers = parser.add_subparsers()
@@ -42,12 +51,14 @@ def parse_args():
     parser_start = subparsers.add_parser('create', help='create a new experiment')
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
     parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_start.add_argument('--debug', '-d', action='store_true', help=' set log level to debug')
     parser_start.set_defaults(func=create_experiment)
 
     # parse resume command
     parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
     parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to resume')
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_resume.add_argument('--debug', '-d', action='store_true', help=' set log level to debug')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse update command
@@ -64,7 +75,7 @@ def parse_args():
     parser_updater_concurrency.set_defaults(func=update_concurrency)
     parser_updater_duration = parser_updater_subparsers.add_parser('duration', help='update duration')
     parser_updater_duration.add_argument('id', nargs='?', help='the id of experiment')
-    parser_updater_duration.add_argument('--value', '-v', required=True)
+    parser_updater_duration.add_argument('--value', '-v', required=True, help='the unit of time should in {\'s\', \'m\', \'h\', \'d\'}')
     parser_updater_duration.set_defaults(func=update_duration)
     parser_updater_trialnum = parser_updater_subparsers.add_parser('trialnum', help='update maxtrialnum')
     parser_updater_trialnum.add_argument('--id', '-i', dest='id', help='the id of experiment')
@@ -160,6 +171,12 @@ def parse_args():
     parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
     parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
     parser_tensorboard_start.set_defaults(func=stop_tensorboard)
+
+    #parse top command
+    parser_top = subparsers.add_parser('top', help='monitor the experiment')
+    parser_top.add_argument('--time', '-t', dest='time', type=int, default=3, help='the time interval to update the experiment status, ' \
+    'the unit is second')
+    parser_top.set_defaults(func=monitor_experiment)
 
     args = parser.parse_args()
     args.func(args)

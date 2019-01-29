@@ -22,6 +22,7 @@ hyperband_tuner.py
 '''
 
 from enum import Enum, unique
+import sys
 import math
 import copy
 import logging
@@ -140,13 +141,6 @@ class Bracket():
         value: latest result with sequence number seq
         '''
         if parameter_id in self.configs_perf[i]:
-            # this should always be true if there is no retry in training service
-            _logger.debug('assertion: %d %d, %s %s\n',
-                          self.configs_perf[i][parameter_id][0],
-                          seq,
-                          str(type(self.configs_perf[i][parameter_id][0])),
-                          str(type(seq)))
-            # assert self.configs_perf[i][parameter_id][0] < seq
             if self.configs_perf[i][parameter_id][0] < seq:
                 self.configs_perf[i][parameter_id] = [seq, value]
         else:
@@ -214,6 +208,14 @@ class Bracket():
         self.num_configs_to_run.append(len(hyper_configs))
         self.increase_i()
 
+def extract_scalar_reward(value, scalar_key='default'):
+    if isinstance(value, float) or isinstance(value, int):
+        reward = value
+    elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
+        reward = value[scalar_key]
+    else:
+        raise RuntimeError('Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__)) 
+    return reward
 
 class Hyperband(MsgDispatcherBase):
     '''
@@ -345,12 +347,16 @@ class Hyperband(MsgDispatcherBase):
         '''
         data: it is an object which has keys 'parameter_id', 'value', 'trial_job_id', 'type', 'sequence'.
         '''
+        value = extract_scalar_reward(data['value'])
+        bracket_id, i, _ = data['parameter_id'].split('_')
+        bracket_id = int(bracket_id)
         if data['type'] == 'FINAL':
+            # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
+            # and PERIODICAL metric are independent, thus, not comparable.
+            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
             self.completed_hyper_configs.append(data)
         elif data['type'] == 'PERIODICAL':
-            bracket_id, i, _ = data['parameter_id'].split('_')
-            bracket_id = int(bracket_id)
-            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], data['value'])
+            self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
 

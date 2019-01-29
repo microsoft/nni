@@ -39,7 +39,7 @@ export const testManagerProvider: Provider = {
 export class MockedNNIManager extends Manager {
     public getStatus(): NNIManagerStatus {
         return {
-            status: 'EXPERIMENT_RUNNING',
+            status: 'RUNNING',
             errors: []
         }
     }
@@ -101,13 +101,7 @@ export class MockedNNIManager extends Manager {
     }
 
     public setClusterMetadata(key: string, value: string): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-        if (key === 'exception_test_key') {
-            deferred.reject(new Error('Test Error'));
-        }
-        deferred.resolve();
-
-        return deferred.promise;
+        return Promise.resolve();
     }
 
     public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
