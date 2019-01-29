@@ -42,7 +42,7 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 
 ## 2. 用法
 
-要使用 Curve Fitting Assessor，需要在 Experiment 的 yml 配置文件进行如下改动。
+To use Curve Fitting Assessor, you should add the following spec in your experiment's YAML config file:
 
     assessor:
         builtinAssessorName: Curvefitting
