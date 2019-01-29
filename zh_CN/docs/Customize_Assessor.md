@@ -1,14 +1,12 @@
 # 自定义 Assessor
 
-NNI 支持自定义 Assessor。
+NNI also support building an assessor by yourself to adjust your tuning demand.
 
-实现自定义的 Assessor，需要如下几步：
+If you want to implement a customized Assessor, there are three things for you to do:
 
-1. 继承 Assessor 基类
-2. 实现 assess_trial 函数
-3. 在 Experiment 的 YAML 文件中配置好自定义的 Assessor
+1) Inherit an assessor of a base Assessor class 2) Implement assess_trial function 3) Configure your customized Assessor in experiment YAML config file
 
-**1. 继承 Assessor 基类**
+**1. Inherit an assessor of a base Assessor class**
 
 ```python
 from nni.assessor import Assessor
@@ -18,7 +16,7 @@ class CustomizedAssessor(Assessor):
         ...
 ```
 
-**2. 实现 assess_trial 函数**
+**2. Implement assess trial function**
 
 ```python
 from nni.assessor import Assessor, AssessResult
@@ -37,9 +35,9 @@ class CustomizedAssessor(Assessor):
         ...
 ```
 
-**3. 在 Experiment 的 YAML 文件中配置好自定义的 Assessor**
+**3. Configure your customized Assessor in experiment YAML config file**
 
-NNI 需要定位到自定义的 Assessor 类，并实例化它，因此需要指定自定义 Assessor 类的文件位置，并将参数值传给 \_\_init__ 构造函数。
+NNI needs to locate your customized Assessor class and instantiate the class, so you need to specify the location of the customized Assessor class and pass literal values as parameters to the \_\_init__ constructor.
 
 ```yml
 <br />assessor:
@@ -53,9 +51,9 @@ NNI 需要定位到自定义的 Assessor 类，并实例化它，因此需要指
 
 ```
 
-注意在 **2** 中， `trial_history` 对象与 Trial 通过 `report_intermediate_result` 函数返回给 Assessor 的对象完全一致。
+Please noted in **2**. The object `trial_history` are exact the object that Trial send to Assessor by using SDK `report_intermediate_result` function.
 
-更多样例，可参考：
+More detail example you could see:
 
 > - [medianstop-assessor](../../src/sdk/pynni/nni/medianstop_assessor)
 > - [curvefitting-assessor](../../src/sdk/pynni/nni/curvefitting_assessor)
