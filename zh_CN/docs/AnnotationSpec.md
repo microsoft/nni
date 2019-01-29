@@ -48,21 +48,21 @@ learning_rate = 0.1
 - **\*functions**: 可选择的函数。 注意，必须是包括参数的完整函数调用。 例如 `max_pool(hidden_layer, pool_size)`。
 - **name**: 将被替换的函数名称。
 
-An example here is:
+例如：
 
 ```python
 """@nni.function_choice(max_pool(hidden_layer, pool_size), avg_pool(hidden_layer, pool_size), name=max_pool)"""
 h_pooling = max_pool(hidden_layer, pool_size)
 ```
 
-### 3. Annotate intermediate result
+### 3. 中间结果
 
 `'''@nni.report_intermediate_result(metrics)'''`
 
-`@nni.report_intermediate_result` is used to report intermediate result, whose usage is the same as `nni.report_intermediate_result` in <Trials.md>
+`@nni.report_intermediate_result` 用来返回中间结果，这和 <Trials.md> 中的 `nni.report_intermediate_result` 用法一样。
 
-### 4. Annotate final result
+### 4. 最终结果
 
 `'''@nni.report_final_result(metrics)'''`
 
-`@nni.report_final_result` is used to report the final result of the current trial, whose usage is the same as `nni.report_final_result` in <Trials.md>
+`@nni.report_final_result` 用来返回当前 Trial 的最终结果，这和 <Trials.md> 中的 `nni.report_final_result` 用法一样。
