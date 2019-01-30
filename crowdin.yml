@@ -7,3 +7,7 @@ files:
     translation: /%locale_with_underscore%/%original_path%/%original_file_name%
   - source: '/**/*.[jJ][pP][gG]'
     translation: /%locale_with_underscore%/%original_path%/%original_file_name%
+  - source: '/**/*.[r/R][sS][tT]'
+    translation: /%locale_with_underscore%/%original_path%/%original_file_name%
+  - source: /docs/*
+    translation: /%locale_with_underscore%/%original_path%/%original_file_name%
