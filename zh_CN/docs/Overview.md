@@ -43,17 +43,17 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 <img src="https://user-images.githubusercontent.com/23273522/51816627-5d13db80-2302-11e9-8f3e-627e260203d5.jpg" alt="drawing"/>
 </p>
 
-More details about how to run an experiment, please refer to [Get Started](QuickStart.md).
+更多 Experiment 运行的详情，参考[快速入门](QuickStart.md)。
 
-## Learn More
+## 了解更多信息
 
 * [开始使用](QuickStart.md)
-* [How to adapt your trial code on NNI?](Trials.md)
-* [What are tuners supported by NNI?](Builtin_Tuner.md)
-* [How to customize your own tuner?](Customize_Tuner.md)
-* [What are assessors supported by NNI?](Builtin_Assessors.md)
-* [How to customize your own assessor?](Customize_Assessor.md)
-* [How to run an experiment on local?](tutorial_1_CR_exp_local_api.md)
-* [How to run an experiment on multiple machines?](RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PAIMode.md)
-* [Examples](mnist_examples.md)
+* [如何为 NNI 调整代码？](Trials.md)
+* [NNI 支持哪些 Tuner？](Builtin_Tuner.md)
+* [如何自定义 Tuner？](Customize_Tuner.md)
+* [NNI 支持哪些 Assessor？](Builtin_Assessors.md)
+* [如何自定义 Assessor？](Customize_Assessor.md)
+* [如何在本机上运行 Experiment？](tutorial_1_CR_exp_local_api.md)
+* [如何在多机上运行 Experiment？](RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
+* [样例](mnist_examples.md)
