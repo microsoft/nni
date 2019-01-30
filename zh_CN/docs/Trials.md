@@ -118,7 +118,7 @@ with tf.Session() as sess:
 
 **注意**：
 
-* `@nni.variable` will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword `name` in `@nni.variable`.
+* `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须在 `@nni.variable` 的 `name` 参数中指定。
 * `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
 
 For more information about annotation syntax and its usage, please refer to [Annotation](AnnotationSpec.md).
