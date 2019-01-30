@@ -53,7 +53,7 @@ nnictl 支持的命令：
   
   * 说明
     
-    You can use this command to resume a stopped experiment.
+    使用此命令恢复已停止的 Experiment。
   
   * 用法
     
@@ -61,28 +61,28 @@ nnictl 支持的命令：
     nnictl resume [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                    |
-  | --------------- | -------- | ------- | ---------------------------------------------- |
-  | id              | False    |         | The id of the experiment you want to resume    |
-  | --port, -p      | False    |         | Rest port of the experiment you want to resume |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                               |
+  | ---------- | ----- | --- | -------------------------------- |
+  | id         | False |     | 要恢复的 Experiment 标识               |
+  | --port, -p | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
 
 <a name="stop"></a>
 
 * **nnictl stop**
   
-  * Description
+  * 说明
     
-    You can use this command to stop a running experiment or multiple experiments.
+    使用此命令来停止正在运行的单个或多个 Experiment。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl stop [id]
     ```
   
-  * Detail
+  * 详细说明
     
     1. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
     2. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
