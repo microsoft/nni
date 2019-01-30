@@ -6,9 +6,9 @@
 
 #### New tuner and assessor supports
 
-* Support [Metis tuner](./HowToChooseTuner.md#MetisTuner) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
+* Support [Metis tuner](./Builtin_Tuner.md#MetisTuner) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
 * Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
-* Support [Curve fitting assessor](./HowToChooseTuner.md#Curvefitting) for early stop policy using learning curve extrapolation.
+* Support [Curve fitting assessor](./Builtin_Tuner.md#Curvefitting) for early stop policy using learning curve extrapolation.
 * Advanced Support of [Weight Sharing](./AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
 
 #### Training Service Enhancement
@@ -31,7 +31,7 @@
 
 #### New tuner supports
 
-* Support [network morphism](./HowToChooseTuner.md#NetworkMorphism) as a new tuner
+* Support [network morphism](./Builtin_Tuner.md#NetworkMorphism) as a new tuner
 
 #### Training Service improvements
 
