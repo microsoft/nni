@@ -32,7 +32,7 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 As
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 assessor:
     builtinAssessorName: Medianstop
@@ -62,7 +62,7 @@ assessor:
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 assessor:
     builtinAssessorName: Curvefitting
