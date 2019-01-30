@@ -1,8 +1,8 @@
-# Write a Trial Run on NNI
+# 实现 NNI 的 Trial（尝试）代码
 
-A **Trial** in NNI is an individual attempt at applying a configuration (e.g., a set of hyper-parameters) on a model.
+**Trial（尝试）**是将一组参数组合（例如，超参）在模型上独立的一次尝试。
 
-To define an NNI trial, you need to firstly define the set of parameters (i.e., search space) and then update the model. NNI provide two approaches for you to define a trial: [NNI API](#nni-api) and [NNI Python annotation](#nni-annotation). You could also refer to [here](#more-examples) for more trial examples.
+定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI provide two approaches for you to define a trial: [NNI API](#nni-api) and [NNI Python annotation](#nni-annotation). You could also refer to [here](#more-examples) for more trial examples.
 
 <a name="nni-api"></a>
 
