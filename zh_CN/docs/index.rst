@@ -12,7 +12,7 @@ Neural Network Intelligence（NNI）文档
     :titlesonly:
 
     概述<Overview>
-    入门<QuickStart>
+    QuickStart<QuickStart>
     教程<Tutorials>
     样例<Examples>
     参考<Reference>
