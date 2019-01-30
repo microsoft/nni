@@ -83,7 +83,7 @@
     ``` 
     
 
-* **Use Annotation**
+* **使用 Annotation**
 
     ```
     authorName: 
@@ -124,13 +124,13 @@
 
 <a name="Configuration"></a>
 
-## Configuration spec
+## 说明
 
 * **authorName**
   
-  * Description
+  * 说明
     
-    **authorName** is the name of the author who create the experiment. TBD: add default value
+    **authorName** 是创建 Experiment 的作者。 待定: 增加默认值
 
 * **experimentName**
   
