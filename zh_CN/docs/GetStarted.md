@@ -1,4 +1,4 @@
-# Get Started with NNI
+# 开始使用 NNI
 
 ## **安装**
 
@@ -34,7 +34,7 @@ Experiment 会运行多个 Trial 任务，每个 Trial 任务会使用特定的�
 
 * 可运行的 Trial 的代码
 * 实现或选择 Tuner
-* Provide a YAML experiment configure file
+* 准备 YAML 的 Experiment 配置文件
 * (可选) 实现或选择 Assessor
 
 **准备 Trial**: 先从简单样例开始，如：NNI 样例中的 mnist。 NNI 样例在代码目录的 examples 中，运行 `ls ~/nni/examples/trials` 可以看到所有 Experiment 的样例。 执行下面的命令可轻松运行 NNI 的 mnist 样例：
@@ -43,7 +43,7 @@ Experiment 会运行多个 Trial 任务，每个 Trial 任务会使用特定的�
 python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 ```
 
-This command will be filled in the YAML configure file below. 参考[这里](howto_1_WriteTrial.md)来写出自己的 Experiment 代码。
+上面的命令会写在 YAML 文件中。 参考[这里](howto_1_WriteTrial.md)来写出自己的 Experiment 代码。
 
 **准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的 Tuner（参考[这里](howto_2_CustomizedTuner.md)）。下面使用的是 NNI 内置 Tuner：
 
@@ -56,7 +56,7 @@ tuner:
 
 *builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner 的参数，*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
 
-**Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI 为每个 Trial 样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
+**准备配置文件**：实现 Trial 的代码，并选择或实现自定义的 Tuner 后，就要准备 YAML 配置文件了。 NNI 为每个 Trial 样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
 
 ```yml
 authorName: your_name
