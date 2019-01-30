@@ -2,15 +2,17 @@
 
 ## 自定义 Tuner
 
-NNI provides state-of-the-art tuning algorithm in our builtin-tuners. We also support building a tuner by yourself to adjust your tuning demand.
+NNI provides state-of-the-art tuning algorithm in builtin-tuners. NNI supports to build a tuner by yourself for tuning demand.
 
-If you want to implement and use your own tuning algorithm, you can implement a customized Tuner, there are three things for you to do:
+If you want to implement your own tuning algorithm, you can implement a customized Tuner, there are three things to do:
 
-1) Inherit a tuner of a base Tuner class 2) Implement receive_trial_result and generate_parameter function 3) Configure your customized tuner in experiment YAML config file
+1. Inherit the base Tuner class
+2. Implement receive_trial_result and generate_parameter function
+3. Configure your customized tuner in experiment YAML config file
 
 Here is an example:
 
-**1. Inherit a tuner of a base Tuner class**
+**1. Inherit the base Tuner class**
 
 ```python
 from nni.tuner import Tuner
@@ -31,10 +33,10 @@ class CustomizedTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value):
     '''
-    Record an observation of the objective function and Train
+    Receive trial's final result.
     parameter_id: int
     parameters: object created by 'generate_parameters()'
-    value: final metrics of the trial, including default matrix
+    value: final metrics of the trial, including default metric
     '''
     # your code implements here.
     ...
@@ -56,7 +58,7 @@ The `your_parameters` return from `generate_parameters` function, will be packag
 For example: If the you implement the `generate_parameters` like this:
 
 ```python
-<br />def generate_parameters(self, parameter_id):
+def generate_parameters(self, parameter_id):
     '''
     返回 Trial 的超参组合的序列化对象
     parameter_id: int
@@ -68,18 +70,18 @@ For example: If the you implement the `generate_parameters` like this:
 
 It means your Tuner will always generate parameters `{"dropout": 0.3, "learning_rate": 0.4}`. Then Trial will receive `{"dropout": 0.3, "learning_rate": 0.4}` by calling API `nni.get_next_parameter()`. Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API `nni.report_final_result()`, for example `nni.report_final_result(0.93)`. Then your Tuner's `receive_trial_result` function will receied the result like：
 
-    <br />parameter_id = 82347
-    parameters = {"dropout": 0.3, "learning_rate": 0.4}
-    value = 0.93
-    
-    
+```python
+parameter_id = 82347
+parameters = {"dropout": 0.3, "learning_rate": 0.4}
+value = 0.93
+```
 
 **Note that** if you want to access a file (e.g., `data.txt`) in the directory of your own tuner, you cannot use `open('data.txt', 'r')`. Instead, you should use the following:
 
-    <br />_pwd = os.path.dirname(__file__)
-    _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
-    
-    
+```python
+_pwd = os.path.dirname(__file__)
+_fd = open(os.path.join(_pwd, 'data.txt'), 'r')
+```
 
 This is because your tuner is not executed in the directory of your tuner (i.e., `pwd` is not the directory of your own tuner).
 
@@ -88,7 +90,7 @@ This is because your tuner is not executed in the directory of your tuner (i.e.,
 NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the \_\_init__ constructor.
 
 ```yaml
-<br />tuner:
+tuner:
   codeDir: /home/abc/mytuner
   classFileName: my_customized_tuner.py
   className: CustomizedTuner
