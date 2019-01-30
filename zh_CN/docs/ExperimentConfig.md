@@ -157,109 +157,109 @@ machineList:
     
     **maxExecDuration** 定义 Experiment 执行的最长时间。时间单位：{**s**, **m**, **h**, **d**}，分别代表：{*seconds*, *minutes*, *hours*, *days*}。
     
-    注意：maxExecDuration 设置的是 Experiment 执行的时间，不是 Trial 的。 If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
+    注意：maxExecDuration 设置的是 Experiment 执行的时间，不是 Trial 的。 如果 Experiment 达到了设置的最大时间，Experiment 不会停止，但不会再启动新的 Trial 作业。
 
 * **maxTrialNum**
   
-  * Description
+  * 说明
     
-    **maxTrialNum** specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
+    **maxTrialNum** 定义了 Trial 任务的最大数量，成功和失败的都计算在内。
 
 * **trainingServicePlatform**
   
-  * Description
+  * 说明
     
-    **trainingServicePlatform** specifies the platform to run the experiment, including {**local**, **remote**, **pai**, **kubeflow**}.
+    **trainingServicePlatform** 定义运行 Experiment 的平台，包括：{**local**, **remote**, **pai**, **kubeflow**}.
     
-    * **local** run an experiment on local ubuntu machine.
+    * **local** 在本机的 ubuntu 上运行 Experiment。
     
-    * **remote** submit trial jobs to remote ubuntu machines, and **machineList** field should be filed in order to set up SSH connection to remote machine.
+    * **remote** 将任务提交到远程的 Ubuntu 上，必须用 **machineList** 来指定远程的 SSH 连接信息。
     
-    * **pai** submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
+    * **pai** 提交任务到微软开源的 [OpenPAI](https://github.com/Microsoft/pai) 上。 更多 OpenPAI 配置，参考 [pai 模式](./PAIMode.md)。
     
-    * **kubeflow** submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
+    * **kubeflow** 提交任务至 [Kubeflow](https://www.kubeflow.org/docs/about/kubeflow/)。 NNI 支持基于 Kubeflow 的 Kubenetes，以及[Azure Kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/)。
 
 * **searchSpacePath**
   
-  * Description
+  * 说明
     
-    **searchSpacePath** specifies the path of search space file, which should be a valid path in the local linux machine.
+    **searchSpacePath** 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
     
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+    注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
 * **useAnnotation**
   
-  * Description
+  * 说明
     
-    **useAnnotation** use annotation to analysis trial code and generate search space.
+    **useAnnotation** 定义使用标记来分析代码并生成搜索空间。
     
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+    注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
 * **nniManagerIp**
   
-  * Description
+  * 说明
     
-    **nniManagerIp** set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+    **nniManagerIp** 设置 NNI 管理器运行的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
     
-    Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
+    注意: 可在 NNI 管理器机器上运行 ifconfig 来检查 eth0 是否存在。 如果不存在，推荐显式设置 nnimanagerIp。
 
 * **logDir**
   
-  * Description
+  * 说明
     
-    **logDir** configures the directory to store logs and data of the experiment. The default value is `<user home directory>/nni/experiment`
+    **logDir** 配置存储日志和数据的目录。 默认值是 `<user home directory>/nni/experiment`
 
 * **logLevel**
   
-  * Description
+  * 说明
     
-    **logLevel** sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
+    **logLevel** 为 Experiment 设置日志级别，支持的日志级别有：`trace, debug, info, warning, error, fatal`。 默认值是 `info`。
 
-* **tuner**
+* **Tuner**
   
-  * Description
+  * 说明
     
-    **tuner** specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk, need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **tuner** 指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 SDK 提供的 Tuner，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
-  * **builtinTunerName** and **classArgs**
+  * **builtinTunerName** 和 **classArgs**
     
     * **builtinTunerName**
       
-      **builtinTunerName** specifies the name of system tuner, NNI sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}
+      **builtinTunerName** 指定了系统 Tuner 的名字，NNI SDK 提供了多种 Tuner，如：{**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm. If the **builtinTunerName** is in {**TPE**, **Random**, **Anneal**, **Evolution**}, user should set **optimize_mode**.
+      **classArgs** 指定了 Tuner 算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
   
-  * **codeDir**, **classFileName**, **className** and **classArgs**
+  * **codeDir**, **classFileName**, **className** 和 **classArgs**
     
     * **codeDir**
       
-      **codeDir** specifies the directory of tuner code.
+      **codeDir** 指定 Tuner 代码的目录。
     
     * **classFileName**
       
-      **classFileName** specifies the name of tuner file.
+      **classFileName** 指定 Tuner 文件名。
     
     * **className**
       
-      **className** specifies the name of tuner class.
+      **className** 指定 Tuner 类名。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm.
+      **classArgs** 指定了 Tuner 算法的参数。
     
     * **gpuNum**
       
-      **gpuNum** specifies the gpu number to run the tuner process. The value of this field should be a positive number.
+      **gpuNum** 指定了运行 Tuner 进程的 GPU 数量。 此字段的值必须是正整数。
       
-      Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
+      注意: 只能使用一种方法来指定 Tuner，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。
 
-* **assessor**
+* **Assessor**
   
-  * Description
+  * 说明
     
-    **assessor** specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk, users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **assessor** 指定了 Experiment 的 Assessor 算法。有两种方法可设置 Assessor。 One way is to use assessor provided by NNI sdk, users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
   
   * **builtinAssessorName** and **classArgs**
     
