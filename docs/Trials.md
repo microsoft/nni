@@ -48,7 +48,7 @@ nni.report_intermediate_result(metrics)
 ```python
 nni.report_final_result(metrics)
 ```
-`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](tuners.md).
+`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](Builtin_Tuner.md).
 
 ### Step 3 - Enable NNI API
 
