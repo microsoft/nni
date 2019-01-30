@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 ### 3. 更新配置
 
-Modify `examples/trials/network_morphism/cifar10/config.yml` to fit your own task, note that searchSpacePath is not required in our configuration. 默认配置：
+修改 `examples/trials/network_morphism/cifar10/config.yml` 来适配自己的任务。注意，searchSpacePath 在配置中不需要。 默认配置：
 
 ```yaml
 authorName: default
@@ -79,15 +79,15 @@ net = build_graph_from_json(RCV_CONFIG)
 # 训练过程
 # ....
 
-# report the final accuracy to NNI
+# 将最终精度返回给 NNI
 nni.report_final_result(best_acc)
 ```
 
 ### 5. 提交任务
 
 ```bash
-# You can use NNI command tool "nnictl" to create the a job which submit to the NNI
-# finally you successfully commit a Network Morphism Job to NNI
+# 可以使用命令行工具 "nnictl" 来创建任务
+# 最终会成功提交一个网络形态任务到 NNI
 nnictl create --config config.yml
 ```
 
@@ -99,7 +99,7 @@ nnictl create --config config.yml
 
 `Fashion-MNIST` 是来自 [Zalando](https://jobs.zalando.com/tech/) 文章的图片 — 有 60,000 个样例的训练集和 10,000 个样例的测试集。 每个样例是 28x28 的灰度图，分为 10 个类别。 由于 MNIST 数据集过于简单，该数据集现在开始被广泛使用，用来替换 MNIST 作为基准数据集。
 
-这里有两个样例，[FashionMNIST-keras.py](./FashionMNIST/FashionMNIST_keras.py) 和 [FashionMNIST-pytorch.py](./FashionMNIST/FashionMNIST_pytorch.py)。 Attention, you should change the `input_width` to 28 and `input_channel` to 1 in `config.yml` for this dataset.
+这里有两个样例，[FashionMNIST-keras.py](./FashionMNIST/FashionMNIST_keras.py) 和 [FashionMNIST-pytorch.py](./FashionMNIST/FashionMNIST_pytorch.py)。 注意，在 `config.yml` 中，需要为此数据集修改 `input_width` 为 28，以及 `input_channel` 为 1。
 
 ### Cifar10
 
