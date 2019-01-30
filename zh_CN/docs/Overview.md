@@ -2,8 +2,8 @@
 
 NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户设计并调优机器学习模型的神经网络架构，复杂系统的参数（如超参）等。 NNI 的特性包括：易于使用，可扩展性，灵活性以及效率。
 
-* **易于使用**：NNI 能通过 Python 的 pip 来安装。 Only several lines need to be added to your code in order to use NNI's power. You can use both commandline tool and WebUI to work with your experiments.
-* **Scalability**: Tuning hyperparameters or neural architecture often demands large amount of computation resource, while NNI is designed to fully leverage different computation resources, such as remote machines, training platforms (e.g., PAI, Kubernetes). Thousands of trials could run in parallel by depending on the capacity of your configured training platforms.
+* **易于使用**：NNI 可通过 pip 安装。 只需要在代码中添加几行，就可以利用 NNI 来调优参数。 可使用命令行工具或 Web 界面来查看实验过程。
+* **可扩展性**：调优超参或网络结构通常需要大量的计算资源。NNI 在设计时就支持了多种不同的计算资源，如远程服务器组，训练平台（如，OpenPAI，Kubernetes），等等。 通过训练平台，可拥有同时运行上百个 Trial 的能力。
 * **Flexibility**: Besides rich built-in algorithms, NNI allows users to customize various hyperparameter tuning algorithms, neural architecture search algorithms, early stopping algorithms, etc. Users could also extend NNI with more training platforms, such as virtual machines, kubernetes service on the cloud. Moreover, NNI can connect to external environments to tune special applications/models on them.
 * **Efficiency**: We are intensively working on more efficient model tuning from both system level and algorithm level. For example, leveraging early feedback to speedup tuning procedure.
 
