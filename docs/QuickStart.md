@@ -209,7 +209,7 @@ Click the tab "Trial Duration" to see the bar graph.
 Below is the status of the all trials. Specifically:
 
 * Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
-* If you run a pai experiment, you can also see the hdfsLogPath.
+* If you run on the OpenPAI platform, you can also see the hdfsLogPath.
 * Kill: you can kill a job that status is running.
 * Support to search for a specific trial.
 
