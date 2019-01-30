@@ -6,9 +6,9 @@
 
 #### New tuner and assessor supports
 
-* 支持 [Metis tuner](./HowToChooseTuner.md#MetisTuner) 作为 NNI 的 Tuner。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* Support [Metis tuner](./Builtin_Tuner.md#MetisTuner) as a new NNI tuner. **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
-* 支持 [Curve fitting （曲线拟合）Assessor](./HowToChooseTuner.md#Curvefitting)，通过曲线拟合的策略来实现提前终止 Trial。
+* Support [Curve fitting assessor](./Builtin_Tuner.md#Curvefitting) for early stop policy using learning curve extrapolation.
 * 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
 
 #### Training Service Enhancement
@@ -31,7 +31,7 @@
 
 #### New tuner supports
 
-* 支持新 Tuner [network morphism](./HowToChooseTuner.md#NetworkMorphism)
+* Support [network morphism](./Builtin_Tuner.md#NetworkMorphism) as a new tuner
 
 #### Training Service improvements
 
@@ -64,9 +64,9 @@
 
 * [Kubeflow 训练服务](./KubeflowMode.md) 
   * 支持 tf-operator
-  * Kubeflow 上的[分布式 Trial 样例](../examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索 Tuner](../src/sdk/pynni/nni/README.md#Grid) 
-* [Hyperband Tuner](../src/sdk/pynni/nni/README.md#Hyperband)
+  * [Distributed trial example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
+* [网格搜索 Tuner](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/README.md#Grid) 
+* [Hyperband Tuner](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/README.md#Hyperband)
 * 支持在 MAC 上运行 NNI Experiment
 * WebUI 
   * 支持 hyperband Tuner
@@ -149,7 +149,7 @@
 * Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode) 
   * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
   * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
-* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](HowToChooseTuner.md) for instructions about how to use SMAC tuner) 
+* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](Builtin_Tuner.md) for instructions about how to use SMAC tuner) 
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO to handle categorical parameters. The SMAC supported by NNI is a wrapper on [SMAC3](https://github.com/automl/SMAC3)
 * Support NNI installation on [conda](https://conda.io/docs/index.html) and python virtual environment
 * Others 
