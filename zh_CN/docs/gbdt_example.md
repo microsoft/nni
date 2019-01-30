@@ -163,7 +163,7 @@ In the config file, you could set some settings including:
 
 An config.yml as follow:
 
-```yml
+```yaml
 authorName: default
 experimentName: example_auto-gbdt
 trialConcurrency: 1
