@@ -14,7 +14,7 @@ nnictl 支持的命令：
 * [nnictl update](#update)
 * [nnictl trial](#trial)
 * [nnictl top](#top)
-* [nnictl experiment](#experiment)
+* [nnictl experiment show](#experiment)
 * [nnictl config](#config)
 * [nnictl log](#log)
 * [nnictl webui](#webui)
@@ -30,9 +30,9 @@ nnictl 支持的命令：
   
   * 说明
     
-    You can use this command to create a new experiment, using the configuration specified in config file.
+    此命令使用参数中的配置文件，来创建新的 Experiment。
     
-    After this command is successfully done, the context will be set as this experiment, which means the following command you issued is associated with this experiment, unless you explicitly changes the context(not supported yet).
+    此命令成功完成后，上下文会被设置为此 Experiment。这意味着如果不显式改变上下文（暂不支持），输入的以下命令，都作用于此 Experiment。
   
   * 用法
     
@@ -40,12 +40,12 @@ nnictl 支持的命令：
     nnictl create [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                           |
-  | --------------- | -------- | ------- | ------------------------------------- |
-  | --config, -c    | True     |         | YAML configure file of the experiment |
-  | --port, -p      | False    |         | the port of restful server            |
+  | 参数及缩写        | 是否必需  | 默认值 | 说明                     |
+  | ------------ | ----- | --- | ---------------------- |
+  | --config, -c | True  |     | Experiment 的 YAML 配置文件 |
+  | --port, -p   | False |     | RESTful 服务的端口          |
 
 <a name="resume"></a>
 
