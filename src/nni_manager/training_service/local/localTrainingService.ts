@@ -90,7 +90,7 @@ class LocalTrialJobDetail implements TrialJobDetail {
 }
 
 /**
- * Local training service
+ * Local machine training service
  */
 class LocalTrainingService implements TrainingService {
     private eventEmitter: EventEmitter;
@@ -114,9 +114,11 @@ class LocalTrainingService implements TrainingService {
         this.log = getLogger();
         this.trialSequenceId = -1;
         this.streams = new Array<ts.Stream>();
+        this.log.info('Construct local machine training service.');
     }
 
     public async run(): Promise<void> {
+        this.log.info('Run local machine training service.');
         while (!this.stopping) {
             while (this.jobQueue.length !== 0) {
                 const trialJobId: string = this.jobQueue[0];
@@ -133,6 +135,7 @@ class LocalTrainingService implements TrainingService {
             }
             await delay(5000);
         }
+        this.log.info('Local machine training service exit.');
     }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -180,7 +183,7 @@ class LocalTrainingService implements TrainingService {
                 } catch (error) {
                     //ignore
                 }
-                this.log.info(`trailJob status update: ${trialJobId}, ${trialJob.status}`);
+                this.log.debug(`trailJob status update: ${trialJobId}, ${trialJob.status}`);
             }
         }
 
@@ -196,7 +199,6 @@ class LocalTrainingService implements TrainingService {
     }
 
     public submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
         if (form.jobType === 'HOST') {
             return this.runHostJob(<HostJobApplicationForm>form);
         } else if (form.jobType === 'TRIAL') {
@@ -247,7 +249,6 @@ class LocalTrainingService implements TrainingService {
     }
 
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
-        this.log.info(`cancelTrialJob: ${trialJobId}`);
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
         if (trialJob === undefined) {
             throw new NNIError(NNIErrorNames.NOT_FOUND, 'Trial job not found');
@@ -303,6 +304,7 @@ class LocalTrainingService implements TrainingService {
     }
 
     public cleanUp(): Promise<void> {
+        this.log.info('Stopping local machine training service...');
         this.stopping = true;
         for (const stream of this.streams) {
             stream.destroy();

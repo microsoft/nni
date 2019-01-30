@@ -1,6 +1,4 @@
-**Run an Experiment on Multiple Machines**
-
-===
+# Run an Experiment on Multiple Machines
 
 NNI supports running an experiment on multiple machines through SSH channel, called `remote` mode. NNI assumes that you have access to those machines, and already setup the environment for running deep learning training code.
 
@@ -16,21 +14,13 @@ e.g. Three machines and you login in with account `bob` (Note: the account is no
 
 Install NNI on each of your machines following the install guide [here](GetStarted.md).
 
-For remote machines that are used only to run trials but not the nnictl, you can just install python SDK:
-
-* __Install python SDK through pip__
-
-  ```bash
-  python3 -m pip install --user --upgrade nni-sdk
-  ```
-
 ## Run an experiment
 
 Install NNI on another machine which has network accessibility to those three machines above, or you can just use any machine above to run nnictl command line tool.
 
 We use `examples/trials/mnist-annotation` as an example here. `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` to see the detailed configuration file:
 
-```yaml
+```yml
 authorName: default
 experimentName: example_mnist
 trialConcurrency: 1

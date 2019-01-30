@@ -1,5 +1,4 @@
-**Get Started with NNI**
-===
+# Get Started with NNI
 
 ## **Installation**
 
@@ -35,7 +34,7 @@ An experiment is to run multiple trial jobs, each trial job tries a configuratio
 
 * Provide a runnable trial
 * Provide or choose a tuner
-* Provide a yaml experiment configure file
+* Provide a YAML experiment configure file
 * (optional) Provide or choose an assessor
 
 **Prepare trial**: Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example: 
@@ -44,11 +43,11 @@ An experiment is to run multiple trial jobs, each trial job tries a configuratio
 python3 ~/nni/examples/trials/mnist-annotation/mnist.py
 ```
 
-This command will be filled in the yaml configure file below. Please refer to [here](howto_1_WriteTrial.md) for how to write your own trial.
+This command will be filled in the YAML configure file below. Please refer to [here](howto_1_WriteTrial.md) for how to write your own trial.
 
 **Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](howto_2_CustomizedTuner.md), but for simplicity, here we choose a tuner provided by NNI as below:
 
-```yaml
+```yml
 tuner:
   builtinTunerName: TPE
     classArgs:
@@ -57,9 +56,9 @@ tuner:
 
 *builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner, *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
 
-**Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the yaml configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
+**Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
 
-```yaml
+```yml
 authorName: your_name
 experimentName: auto_mnist
 
@@ -110,3 +109,4 @@ The experiment has been running now, NNI provides WebUI for you to view experime
 * [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
 * [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
+* [How to create a multi-phase experiment](multiPhase.md)

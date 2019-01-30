@@ -73,7 +73,7 @@ To run an experiment in NNI, you only needed:
 
 * Provide a runnable trial
 * Provide or choose a tuner
-* Provide a yaml experiment configure file
+* Provide a YAML experiment configure file
 * (optional) Provide or choose an assessor
 
 **Prepare trial**: 
@@ -83,7 +83,7 @@ Let's use a simple trial example, e.g. mnist, provided by NNI. After you install
 
       python ~/nni/examples/trials/mnist-annotation/mnist.py
 
-This command will be filled in the yaml configure file below. Please refer to [here](./howto_1_WriteTrial.md) for how to write your own trial.
+This command will be filled in the YAML configure file below. Please refer to [here](./howto_1_WriteTrial.md) for how to write your own trial.
 
 **Prepare tuner**: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to [here](./howto_2_CustomizedTuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
 
@@ -94,7 +94,7 @@ This command will be filled in the yaml configure file below. Please refer to [h
 
 *builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found [here]()), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
 
-**Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the yaml configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
+**Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI provides a demo configure file for each trial example, `cat ~/nni/examples/trials/mnist-annotation/config.yml` to see it. Its content is basically shown below:
 
 ```
 authorName: your_name

@@ -1,5 +1,4 @@
-**Write a Trial Run on NNI**
-===
+# Write a Trial Run on NNI
 
 A **Trial** in NNI is an individual attempt at applying a set of parameters on a model. 
 
@@ -121,11 +120,10 @@ with tf.Session() as sess:
 >>
 >>Please refer to [Annotation README](../tools/nni_annotation/README.md) for more information about annotation syntax and its usage.
 
-
 >Step 2 - Enable NNI Annotation
-In the yaml configure file, you need to set *useAnnotation* to true to enable NNI annotation:
+In the YAML configure file, you need to set *useAnnotation* to true to enable NNI annotation:
 
-```yaml
+```yml
 useAnnotation: true
 ```
 
