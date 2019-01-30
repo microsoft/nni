@@ -24,15 +24,15 @@ Here is an example script to train a CNN on MNIST dataset **without NNI**:
 def run_trial(params):
     # Input data
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    # Build MNIST network
+    # Build network
     mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
     mnist_network.build_network()
 
     test_acc = 0.0
     with tf.Session() as sess:
-        # Train MNIST network
+        # Train network
         mnist_network.train(sess, mnist)
-        # Evaluate MNIST network
+        # Evaluate network
         test_acc = mnist_network.evaluate(mnist)
 
 if __name__ == '__main__':
@@ -104,7 +104,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
 
 *Implemented code directory: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist.py)*
 
-**Step 3**: Define a `config` file in YAML, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
+**Step 3**: Define a `config` file in YAML, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max duration arguments.
 
 ```yaml
 authorName: default
