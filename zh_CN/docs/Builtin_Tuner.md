@@ -39,7 +39,7 @@ TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况�
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: TPE
@@ -65,7 +65,7 @@ tuner:
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: Random
@@ -91,7 +91,7 @@ tuner:
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: Anneal
@@ -117,7 +117,7 @@ tuner:
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: Evolution
@@ -143,7 +143,7 @@ tuner:
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: SMAC
@@ -165,7 +165,7 @@ tuner:
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: BatchTuner
@@ -206,7 +206,7 @@ tuner:
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: GridSearch
@@ -232,7 +232,7 @@ tuner:
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 advisor:
   builtinAdvisorName: Hyperband
@@ -256,7 +256,7 @@ advisor:
 
 **建议场景**
 
-需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 可修改[样例](../examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此 Tuner 仅支持视觉领域。
+需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 You modify the [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此 Tuner 仅支持视觉领域。
 
 **参数**
 
@@ -268,7 +268,7 @@ advisor:
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: NetworkMorphism
@@ -296,7 +296,7 @@ Metis Tuner 需要先安装 [sklearn](https://scikit-learn.org/)。 可通过 `p
 
 **建议场景**
 
-与 TPE 和 SMAC 类似，Metis 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 参考关于如何使用 Metis 的[样例](../../examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给 Tuner。
+与 TPE 和 SMAC 类似，Metis 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给 Tuner。
 
 **参数**
 
@@ -304,7 +304,7 @@ Metis Tuner 需要先安装 [sklearn](https://scikit-learn.org/)。 可通过 `p
 
 **使用样例：**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: MetisTuner
