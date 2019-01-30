@@ -6,7 +6,7 @@
 
 不管怎样，如果想要更有效的贡献代码，可以阅读以下内容。 本文档包括了所有在贡献中需要注意的要点，会加快合并代码、解决问题的速度。
 
-Looking for a quickstart, get acquainted with our [Get Started](./QuickStart.md) guide.
+查看[快速入门](./QuickStart.md)来初步了解。
 
 下面是一些简单的贡献指南。
 
@@ -31,7 +31,7 @@ Looking for a quickstart, get acquainted with our [Get Started](./QuickStart.md)
 
 参考[如何配置 NNI 的开发环境](./SetupNNIDeveloperEnvironment.md)，来安装开发环境。
 
-Similarly for [Quick Start](QuickStart.md). For everything else, refer to [NNI Home page](http://nni.readthedocs.io).
+与[快速入门](QuickStart.md)类似。 其它内容，参考[NNI 文档](http://nni.readthedocs.io)。
 
 ## 处理现有问题
 
