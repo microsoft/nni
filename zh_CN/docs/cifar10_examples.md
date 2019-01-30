@@ -6,7 +6,7 @@
 
 ### **目标**
 
-As we all know, the choice of model optimizer is directly affects the performance of the final metrics. 本教程的目标是**调优出性能更好的优化器**，从而为图像识别训练出一个相对较小的卷积网络（CNN）。
+总所周知，模型 optimizer (优化器）的选择直接影响了最终指标的性能。 本教程的目标是**调优出性能更好的优化器**，从而为图像识别训练出一个相对较小的卷积网络（CNN）。
 
 本例中，选择了以下常见的深度学习优化器：
 
@@ -51,7 +51,7 @@ python3 -m pip install torchvision
 
 *实现代码：[main.py](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py)*
 
-You can also use your previous code directly, refer to [How to define a trial](https://github.com/Microsoft/nni/blob/master/docs/Trials.md) for modify.
+也可以直接使用以前的代码来修改，参考：[如何编写 Trial](https://github.com/Microsoft/nni/blob/master/docs/Trials.md)。
 
 **配置**
 
