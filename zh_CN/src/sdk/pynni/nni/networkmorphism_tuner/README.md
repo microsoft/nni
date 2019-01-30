@@ -10,7 +10,7 @@
 
 要使用 Network Morphism，需要如下配置 `config.yml` 文件：
 
-```yml
+```yaml
 tuner:
   #选择: NetworkMorphism
   builtinTunerName: NetworkMorphism
