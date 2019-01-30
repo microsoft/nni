@@ -2,7 +2,7 @@
 Python API 参考
 ###########################
 
-Trial 代码 API
+Trial
 ------------------------
 ..  autofunction:: nni.get_next_parameter
 ..  autofunction:: nni.get_current_parameter
@@ -11,7 +11,7 @@ Trial 代码 API
 ..  autofunction:: nni.get_sequence_id
 
 
-Tuner API
+Tuner
 ------------------------
 ..  autoclass:: nni.tuner.Tuner
     :members:
@@ -34,7 +34,7 @@ Tuner API
 ..  autoclass:: nni.smac_tuner.smac_tuner.SMACTuner
     :members:
 
-API for assessors
+Assessor
 ------------------------
 ..  autoclass:: nni.assessor.Assessor
     :members:
@@ -46,6 +46,6 @@ API for assessors
     :members:
 
 
-API for Advisors
+ Advisor
 ------------------------
 ..  autoclass:: nni.hyperband_advisor.hyperband_advisor.Hyperband
