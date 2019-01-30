@@ -40,7 +40,7 @@ logging.basicConfig(
     datefmt="%m/%d %I:%M:%S %p",
 )
 # set the logger format
-logger = logging.getLogger("fashion_mnist-network-morphism-keras")
+logger = logging.getLogger("FashionMNIST-network-morphism-keras")
 
 
 # restrict gpu usage background
@@ -152,7 +152,7 @@ class SendMetrics(keras.callbacks.Callback):
         if logs is None:
             logs = dict()
         logger.debug(logs)
-        nni.report_intermediate_result(logs["acc"])
+        nni.report_intermediate_result(logs["val_acc"])
 
 
 # Training
@@ -184,7 +184,7 @@ def train_eval():
 
     # trial report final acc to tuner
     _, acc = net.evaluate(x_test, y_test)
-    logger.debug("Final result is: %d", acc)
+    logger.debug("Final result is: %.3f", acc)
     nni.report_final_result(acc)
 
 

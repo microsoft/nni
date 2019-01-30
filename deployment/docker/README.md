@@ -1,16 +1,18 @@
 Dockerfile
 ===
 ## 1.Description
-This is the Dockerfile of nni project. It includes serveral popular deep learning frameworks and NNI. It is tested on `Ubuntu 16.04 LTS`:
+This is the Dockerfile of NNI project. It includes serveral popular deep learning frameworks and NNI. It is tested on `Ubuntu 16.04 LTS`:
 
 ```
 CUDA 9.0, CuDNN 7.0
 numpy 1.14.3,scipy 1.1.0
-TensorFlow 1.5.0
+TensorFlow 1.10.0
 Keras 2.1.6
 PyTorch 0.4.1
 scikit-learn 0.20.0
-NNI v0.3
+pandas 0.23.4
+lightgbm 2.2.2
+NNI v0.5
 ```
 You can take this Dockerfile as a reference for your own customized Dockerfile. 
 

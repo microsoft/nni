@@ -221,12 +221,12 @@ class SlideBar extends React.Component<{}, SliderState> {
               Download <Icon type="down" />
             </a>
           </Dropdown>
-          <a href="https://github.com/Microsoft/nni/issues/new" target="_blank">
+          <a href="https://github.com/Microsoft/nni/issues/new?labels=v0.5" target="_blank">
             <img
               src={require('../static/img/icon/issue.png')}
               alt="NNI github issue"
             />
-            FeedBack
+            Feedback
           </a>
           <span className="version">Version: {version}</span>
         </Col>

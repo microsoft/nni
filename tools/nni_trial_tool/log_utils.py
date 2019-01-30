@@ -38,11 +38,12 @@ from .url_utils import gen_send_stdout_url
 
 @unique
 class LogType(Enum):
+    Trace = 'TRACE'
     Debug = 'DEBUG'
     Info = 'INFO'
     Warning = 'WARNING'
     Error = 'ERROR'
-    Critical = 'CRITICAL'
+    Fatal = 'FATAL'
 
 @unique
 class StdOutputType(Enum):
@@ -129,13 +130,15 @@ class PipeLogReader(threading.Thread):
         self.pipeReader = os.fdopen(self.fdRead)
         self.orig_stdout = sys.__stdout__
         self._is_read_completed = False
+        self.process_exit = False
 
         def _populateQueue(stream, queue):
             '''
             Collect lines from 'stream' and put them in 'quque'.
             '''
             time.sleep(5)
-            while True:                
+            while True:
+                cur_process_exit = self.process_exit       
                 try:
                     line = self.queue.get(True, 5)
                     try:
@@ -144,9 +147,10 @@ class PipeLogReader(threading.Thread):
                         self.orig_stdout.flush()
                     except Exception as e:
                         pass
-                except Exception as e:                    
-                    self._is_read_completed = True
-                    break
+                except Exception as e:
+                    if cur_process_exit == True:     
+                        self._is_read_completed = True
+                        break
 
         self.pip_log_reader_thread = threading.Thread(target = _populateQueue,
                 args = (self.pipeReader, self.queue))
@@ -176,3 +180,7 @@ class PipeLogReader(threading.Thread):
         """Return if read is completed
         """
         return self._is_read_completed
+    
+    def set_process_exit(self):
+        self.process_exit = True
+        return self.process_exit

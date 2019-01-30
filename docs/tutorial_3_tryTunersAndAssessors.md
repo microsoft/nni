@@ -3,7 +3,7 @@
 NNI provides an easy to adopt approach to set up parameter tuning algorithms as well as early stop policies, we call them **Tuners** and **Assessors**.
   
 **Tuner** specifies the algorithm you use to generate hyperparameter sets for each trial. In NNI, we support two approaches to set the tuner. 
-1. Directly use tuner provided by nni sdk
+1. Directly use tuner provided by NNI sdk
 
         required fields: builtinTunerName and classArgs. 
 
@@ -12,13 +12,13 @@ NNI provides an easy to adopt approach to set up parameter tuning algorithms as 
         required fields: codeDirectory, classFileName, className and classArgs.
 
 ### **Learn More about tuners**
-* For detailed defintion and usage aobut the required field, please refer to [Config an experiment](ExperimentConfig.md)
+* For detailed defintion and usage about the required field, please refer to [Config an experiment](ExperimentConfig.md)
 * [Tuners in the latest NNI release](HowToChooseTuner.md)
 * [How to implement your own tuner](howto_2_CustomizedTuner.md)
 
 
-**Assessor** specifies the algorithm you use to apply early stop policy. In NNI, there are two approaches to set theassessor. 
-1. Directly use assessor provided by nni sdk
+**Assessor** specifies the algorithm you use to apply early stop policy. In NNI, there are two approaches to set the assessor.
+1. Directly use assessor provided by NNI sdk
 
         required fields: builtinAssessorName and classArgs. 
 

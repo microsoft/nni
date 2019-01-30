@@ -42,7 +42,7 @@ logging.basicConfig(
 )
 # pylint: disable=W0603
 # set the logger format
-logger = logging.getLogger("FashionMNIST-network-morphism")
+logger = logging.getLogger("FashionMNIST-network-morphism-pytorch")
 
 
 def get_args():

@@ -1,8 +1,14 @@
 # Experiment config reference
 
 A config file is needed when create an experiment, the path of the config file is provide to nnictl.
-The config file is written in yaml format, and need to be written correctly.
+The config file is written in YAML format, and need to be written correctly.
 This document describes the rule to write config file, and will provide some examples and templates. 
+
+ - [Template](#Template) (the templates of an config file)
+ - [Configuration spec](#Configuration) (the configuration specification of every attribute in config file)
+ - [Examples](#Examples) (the examples of config file)
+
+<a name="Template"></a>
 ## Template
 * __light weight(without Annotation and Assessor)__ 
 
@@ -112,8 +118,8 @@ machineList:
     username: 
     passwd: 
 ```
-
-## Configuration
+<a name="Configuration"></a>
+## Configuration spec
 * __authorName__
   * Description  
             
@@ -131,17 +137,19 @@ machineList:
     
       __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
 	 
-      Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
+        Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
 	 
 * __maxExecDuration__
   * Description
     
 	__maxExecDuration__ specifies the max duration time of an experiment.The unit of the time is {__s__, __m__, __h__, __d__}, which means {_seconds_, _minutes_, _hours_, _days_}.  
+
+        Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
 	
 * __maxTrialNum__
   *  Description
     
-	 __maxTrialNum__ specifies the max number of trial jobs created by nni, including succeeded and failed jobs.  
+	 __maxTrialNum__ specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.  
 	 
 * __trainingServicePlatform__
   * Description
@@ -156,7 +164,7 @@ machineList:
 	
     * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
    
-    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), nni support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
+    * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
 	
 * __searchSpacePath__
   * Description
@@ -174,19 +182,29 @@ machineList:
 * __nniManagerIp__
   * Description
    
-    __nniManagerIp__ set the IP address of the machine on which nni manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+    __nniManagerIp__ set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
 
     Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
-	   
-		
+
+* __logDir__
+  * Description
+
+    __logDir__ configures the directory to store logs and data of the experiment. The default value is `<user home directory>/nni/experiment`
+
+* __logLevel__
+  * Description
+
+    __logLevel__ sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
+
+
 * __tuner__
   * Description
   
-    __tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by nni sdk, need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+    __tuner__ specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk, need to set __builtinTunerName__ and __classArgs__. Another way is to use users' own tuner file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
   * __builtinTunerName__ and __classArgs__
     * __builtinTunerName__
     
-	  __builtinTunerName__ specifies the name of system tuner, nni sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__, __BatchTuner__, __GridSearch__}
+	  __builtinTunerName__ specifies the name of system tuner, NNI sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__, __BatchTuner__, __GridSearch__}
     * __classArgs__
 	
 	   __classArgs__ specifies the arguments of tuner algorithm. If the __builtinTunerName__ is in {__TPE__, __Random__, __Anneal__, __Evolution__}, user should set __optimize_mode__.
@@ -213,11 +231,11 @@ machineList:
  
   * Description
   
-    __assessor__ specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by nni sdk, users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
+    __assessor__ specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk, users need to set __builtinAssessorName__ and __classArgs__. Another way is to use users' own assessor file, and need to set __codeDirectory__, __classFileName__, __className__ and __classArgs__.
   * __builtinAssessorName__ and __classArgs__
     * __builtinAssessorName__
     
-        __builtinAssessorName__ specifies the name of system assessor, nni sdk provides one kind of assessor {__Medianstop__}
+        __builtinAssessorName__ specifies the name of system assessor, NNI sdk provides one kind of assessor {__Medianstop__}
     * __classArgs__
 
         __classArgs__ specifies the arguments of assessor algorithm
@@ -365,7 +383,7 @@ machineList:
 
     If users use ssh key to login remote machine, could set __sshKeyPath__ in config file. __sshKeyPath__ is the path of ssh key file, which should be valid.
 	
-	Note: if users set passwd and sshKeyPath simultaneously, nni will try passwd.
+	Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
 		
   * __passphrase__
 
@@ -375,7 +393,7 @@ machineList:
   
   * __operator__
     
-    __operator__ specify the kubeflow's operator to be used, nni support __tf-operator__ in current version.
+    __operator__ specify the kubeflow's operator to be used, NNI support __tf-operator__ in current version.
   
   * __storage__
    
@@ -427,7 +445,7 @@ machineList:
     
     
 
-        
+<a name="Examples"></a>        
 ## Examples
 * __local mode__
 
@@ -593,11 +611,11 @@ trial:
   gpuNum: 4
   cpuNum: 2
   memoryMB: 10000
-  #The docker image to run nni job on pai
+  #The docker image to run NNI job on pai
   image: msranni/nni:latest
   #The hdfs directory to store data on pai, format 'hdfs://host:port/directory'
   dataDir: hdfs://10.11.12.13:9000/test
-  #The hdfs directory to store output data generated by nni, format 'hdfs://host:port/directory'
+  #The hdfs directory to store output data generated by NNI, format 'hdfs://host:port/directory'
   outputDir: hdfs://10.11.12.13:9000/test
 paiConfig:
   #The username to login pai
