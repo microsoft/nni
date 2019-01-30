@@ -72,19 +72,19 @@ searchSpacePath: /path/to/your/search_space.json
 
 另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 就像其它 Python Annotation，NNI 的 Annotation 和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI Annotation，就能够：
 
-* annotate the variables you want to tune 
-* specify in which range you want to tune the variables
-* annotate which variable you want to report as intermediate result to `assessor`
-* annotate which variable you want to report as the final result (e.g. model accuracy) to `tuner`. 
+* 标记需要调整的参数变量 
+* 指定变量的搜索空间范围
+* 标记哪个变量需要作为中间结果范围给 `Assessor`
+* 标记哪个变量需要作为最终结果（例如：模型精度）返回给 `Tuner`。 
 
-Again, take MNIST as an example, it only requires 2 steps to write a trial with NNI Annotation.
+同样以 MNIST 为例，只需要两步就能用 NNI Annotation 来实现 Trial 代码。
 
-### Step 1 - Update codes with annotations
+### 第一步：在代码中加入 Annotation
 
-The following is a tensorflow code snippet for NNI Annotation, where the highlighted four lines are annotations that help you to:
+下面是加入了 Annotation 的 TensorFlow 代码片段，高亮的 4 行 Annotation 用于：
 
-1. tune batch\_size and dropout\_rate
-2. report test\_acc every 100 steps
+1. 调优 batch\_size 和 dropout\_rate
+2. 每执行 100 步返回 test\_acc
 3. at last report test\_acc as final result.
 
 What noteworthy is: as these newly added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
