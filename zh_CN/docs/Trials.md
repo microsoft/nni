@@ -85,9 +85,9 @@ searchSpacePath: /path/to/your/search_space.json
 
 1. 调优 batch\_size 和 dropout\_rate
 2. 每执行 100 步返回 test\_acc
-3. at last report test\_acc as final result.
+3. 最后返回 test\_acc 作为最终结果。
 
-What noteworthy is: as these newly added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
+新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
 
 ```diff
 with tf.Session() as sess:
@@ -116,7 +116,7 @@ with tf.Session() as sess:
 +   """@nni.report_final_result(test_acc)"""
 ```
 
-**NOTE**:
+**注意**：
 
 * `@nni.variable` will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword `name` in `@nni.variable`.
 * `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
