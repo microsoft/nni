@@ -73,7 +73,7 @@
 
 * 可运行的 Trial 的代码
 * 实现或选择 Tuner
-* Provide a YAML experiment configure file
+* 准备 YAML 的 Experiment 配置文件
 * (可选) 实现或选择 Assessor
 
 **准备 Trial**：
@@ -85,9 +85,9 @@
       python ~/nni/examples/trials/mnist-annotation/mnist.py
     
 
-This command will be filled in the YAML configure file below. Please refer to [here](Trials.md) for how to write your own trial.
+上面的命令会写在 YAML 文件中。 参考[这里](Trials.md)来写出自己的 Experiment 代码。
 
-**准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 Users can write their own tuner (refer to [here](Customize_Tuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
+**准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的 Tuner（参考[这里](Customize_Tuner.md)）。下面使用了 NNI 内置的 Tuner：
 
       tuner:
         builtinTunerName: TPE
@@ -95,9 +95,9 @@ This command will be filled in the YAML configure file below. Please refer to [h
           optimize_mode: maximize
     
 
-*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found [here](Builtin_Tuner.md)), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
+*builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner的参数（内置 Tuner 在[这里](Builtin_Tuner.md)），*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
 
-**Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI 为每个 Trial 样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
+**准备配置文件**：实现 Trial 的代码，并选择或实现自定义的 Tuner 后，就要准备 YAML 配置文件了。 NNI 为每个 Trial 样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
 
     authorName: your_name
     experimentName: auto_mnist
@@ -126,7 +126,7 @@ This command will be filled in the YAML configure file below. Please refer to [h
       gpuNum: 0
     
 
-Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here](AnnotationSpec.md) for details). *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
+因为这个 Trial 代码使用了 NNI Annotation 的方法（参考[这里](AnnotationSpec.md) ），所以*useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
 
 完成上述步骤后，可通过下列命令来启动 Experiment：
 
