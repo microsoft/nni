@@ -27,7 +27,7 @@ NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户�
 
 * *Assessor*：Assessor 分析 Trial 的中间结果（例如，测试数据集上定期的精度），来确定 Trial 是否应该被提前终止。
 
-* *训练平台*：是 Trial 执行的环境。 Depending on your experiment's configuration, it could be your local machine, or remote servers, or large-scale training platform (e.g., PAI, Kubernetes).
+* *训练平台*：是 Trial 的执行环境。 根据 Experiment 的配置，可以是本机，远程服务器组，或其它大规模训练平台（如，OpenPAI，Kubernetes）。
 
 Basically, an experiment runs as follows: Tuner receives search space and generates configurations. These configurations will be submitted to training platforms, such as local machine, remote machines, or training clusters. Their performances are reported back to Tuner. Then, new configurations are generated and submitted.
 
