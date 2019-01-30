@@ -4,13 +4,13 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 
 ## 设置环境
 
-参考[指南](GetStarted.md)安装 NNI。
+Install NNI, follow the install guide [here](QuickStart.md).
 
 ## 运行 Experiment
 
 以 `examples/trials/mnist-annotation` 为例。 The NNI config YAML file's content is like:
 
-```yml
+```yaml
 authorName: your_name
 experimentName: auto_mnist
 # 并发运行的 Trial 数量
@@ -53,7 +53,7 @@ Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if y
     * 必填。 Trial 程序的内存需求，必须为正数。
 * image 
     * 必填。 在 pai 模式中，Trial 程序由 OpenPAI 在 [Docker 容器](https://www.docker.com/)中安排运行。 This key is used to specify the Docker image used to create the container in which your trial will run.
-    * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 用来生成此映像的文件在[这里](../deployment/Dockerfile.build.base)。 可以直接使用此映像，或参考它来生成自己的映像。
+    * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [nnimsra/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/Dockerfile.build.base). 可以直接使用此映像，或参考它来生成自己的映像。
 * dataDir 
     * 可选。 指定了 Trial 用于下载数据的 HDFS 数据目录。 格式应为 hdfs://{your HDFS host}:9000/{数据目录}
 * outputDir 
