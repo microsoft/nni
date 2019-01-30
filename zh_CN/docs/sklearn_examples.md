@@ -1,4 +1,4 @@
-# Scikit-learn in NNI
+# NNI 中使用 Scikit-learn
 
 [Scikit-learn](https://github.com/scikit-learn/scikit-learn) is a pupular meachine learning tool for data mining and data analysis. It supports many kinds of meachine learning models like LinearRegression, LogisticRegression, DecisionTree, SVM etc. How to make the use of scikit-learn more efficiency is a valuable topic.  
 NNI supports many kinds of tuning algorithms to search the best models and/or hyper-parameters for scikit-learn, and support many kinds of environments like local machine, remote servers and cloud.
