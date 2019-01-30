@@ -14,7 +14,7 @@ NNI 支持在 [Kubeflow](https://github.com/kubeflow/kubeflow)上运行，称为
         apt-get install nfs-common 
         
 
-7. 参考[指南](GetStarted.md)安装 **NNI**。
+7. Install **NNI**, follow the install guide [here](QuickStart.md).
 
 ## Azure 部署的 Kubernetes 的准备工作
 
@@ -185,7 +185,7 @@ Kubeflow 模式的配置有下列主键：
     * gpuNum
     * image 
         * 必填。 在 kubeflow 模式中，Kubernetes 会安排 Trial 程序在 [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/) 中执行。 此键用来指定 Trial 程序的 pod 使用的 Docker 映像。 
-        * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [msranni/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 用来生成此映像的文件在[这里](../deployment/Dockerfile.build.base)。 可以直接使用此映像，或参考它来生成自己的映像。
+        * [Docker Hub](https://hub.docker.com/) 上有预制的 NNI Docker 映像 [msranni/nni](https://hub.docker.com/r/msranni/nni/)。 它包含了用来启动 NNI Experiment 所依赖的所有 Python 包，Node 模块和 JavaScript。 The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/Dockerfile.build.base). 可以直接使用此映像，或参考它来生成自己的映像。
     * apiVersion 
         * 必填。 Kubeflow 的 API 版本。
 * ps (可选)。 此部分用于配置 TensorFlow 的 parameter 服务器角色。
@@ -202,4 +202,4 @@ Once complete to fill NNI experiment config file and save (for example, save as 
 
 当一个 Trial 作业完成后，可以在 NNI 网页的概述页面（如：http://localhost:8080/oview）中查看 Trial 的信息。
 
-如果在使用 Kubeflow 模式时遇到任何问题，请到 [NNI github](https://github.com/Microsoft/nni)中创建问题，或发信给 nni@microsoft.com。
+Any problems when using NNI in kubeflow mode, plesae create issues on [NNI Github repo](https://github.com/Microsoft/nni).
