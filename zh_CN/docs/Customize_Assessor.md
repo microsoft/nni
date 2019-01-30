@@ -1,12 +1,14 @@
 # 自定义 Assessor
 
-NNI also support building an assessor by yourself to adjust your tuning demand.
+NNI supports to build an assessor by yourself for tuning demand.
 
-If you want to implement a customized Assessor, there are three things for you to do:
+If you want to implement a customized Assessor, there are three things to do:
 
-1) Inherit an assessor of a base Assessor class 2) Implement assess_trial function 3) Configure your customized Assessor in experiment YAML config file
+1. Inherit the base Assessor class
+2. Implement assess_trial function
+3. Configure your customized Assessor in experiment YAML config file
 
-**1. Inherit an assessor of a base Assessor class**
+**1. Inherit the base Assessor class**
 
 ```python
 from nni.assessor import Assessor
@@ -40,7 +42,7 @@ class CustomizedAssessor(Assessor):
 NNI needs to locate your customized Assessor class and instantiate the class, so you need to specify the location of the customized Assessor class and pass literal values as parameters to the \_\_init__ constructor.
 
 ```yaml
-<br />assessor:
+assessor:
   codeDir: /home/abc/myassessor
   classFileName: my_customized_assessor.py
   className: CustomizedAssessor
@@ -48,7 +50,6 @@ NNI needs to locate your customized Assessor class and instantiate the class, so
   # 都需要在 classArgs 字段中指定，如
   classArgs:
     arg1: value1
-
 ```
 
 Please noted in **2**. The object `trial_history` are exact the object that Trial send to Assessor by using SDK `report_intermediate_result` function.
