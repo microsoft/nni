@@ -12,7 +12,7 @@ e.g. Three machines and you login in with account `bob` (Note: the account is no
 
 ## Setup NNI environment
 
-Install NNI on each of your machines following the install guide [here](GetStarted.md).
+Install NNI on each of your machines following the install guide [here](QuickStart.md).
 
 ## Run an experiment
 
@@ -20,7 +20,7 @@ Install NNI on another machine which has network accessibility to those three ma
 
 We use `examples/trials/mnist-annotation` as an example here. `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` to see the detailed configuration file:
 
-```yml
+```yaml
 authorName: default
 experimentName: example_mnist
 trialConcurrency: 1

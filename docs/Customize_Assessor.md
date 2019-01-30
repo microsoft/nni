@@ -40,7 +40,7 @@ class CustomizedAssessor(Assessor):
 
 NNI needs to locate your customized Assessor class and instantiate the class, so you need to specify the location of the customized Assessor class and pass literal values as parameters to the \_\_init__ constructor.
 
-```yml
+```yaml
 
 assessor:
   codeDir: /home/abc/myassessor
@@ -56,5 +56,5 @@ assessor:
 Please noted in **2**. The object `trial_history` are exact the object that Trial send to Assessor by using SDK `report_intermediate_result` function.
 
 More detail example you could see:
-> * [medianstop-assessor](../src/sdk/pynni/nni/medianstop_assessor)
-> * [curvefitting-assessor](../src/sdk/pynni/nni/curvefitting_assessor)
+> * [medianstop-assessor](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/medianstop_assessor)
+> * [curvefitting-assessor](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/curvefitting_assessor)
