@@ -138,7 +138,7 @@ trial:
 
 注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](NNICTLDOC.md)，了解 `nnictl` 更多用法。
 
-Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
+在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
 
     INFO: Starting restful server...
     INFO: Successfully started Restful server!
