@@ -1,8 +1,8 @@
-# Overview
+# 概述
 
-NNI (Neural Network Intelligence) is a toolkit to help users design and tune machine learning models (e.g., hyperparameters), neural network architectures, or complex system's parameters, in an efficient and automatic way. NNI has several appealing properties: easy-to-use, scalability, flexibility, and efficiency.
+NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户设计并调优机器学习模型的神经网络架构，复杂系统的参数（如超参）等。 NNI 的特性包括：易于使用，可扩展性，灵活性以及效率。
 
-* **Easy-to-use**: NNI can be easily installed through python pip. Only several lines need to be added to your code in order to use NNI's power. You can use both commandline tool and WebUI to work with your experiments.
+* **易于使用**：NNI 能通过 Python 的 pip 来安装。 Only several lines need to be added to your code in order to use NNI's power. You can use both commandline tool and WebUI to work with your experiments.
 * **Scalability**: Tuning hyperparameters or neural architecture often demands large amount of computation resource, while NNI is designed to fully leverage different computation resources, such as remote machines, training platforms (e.g., PAI, Kubernetes). Thousands of trials could run in parallel by depending on the capacity of your configured training platforms.
 * **Flexibility**: Besides rich built-in algorithms, NNI allows users to customize various hyperparameter tuning algorithms, neural architecture search algorithms, early stopping algorithms, etc. Users could also extend NNI with more training platforms, such as virtual machines, kubernetes service on the cloud. Moreover, NNI can connect to external environments to tune special applications/models on them.
 * **Efficiency**: We are intensively working on more efficient model tuning from both system level and algorithm level. For example, leveraging early feedback to speedup tuning procedure.
@@ -47,7 +47,7 @@ More details about how to run an experiment, please refer to [Get Started](Quick
 
 ## Learn More
 
-* [Get started](QuickStart.md)
+* [开始使用](QuickStart.md)
 * [How to adapt your trial code on NNI?](Trials.md)
 * [What are tuners supported by NNI?](Builtin_Tuner.md)
 * [How to customize your own tuner?](Customize_Tuner.md)
