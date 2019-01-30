@@ -29,13 +29,13 @@ NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户�
 
 * *训练平台*：是 Trial 的执行环境。 根据 Experiment 的配置，可以是本机，远程服务器组，或其它大规模训练平台（如，OpenPAI，Kubernetes）。
 
-Basically, an experiment runs as follows: Tuner receives search space and generates configurations. These configurations will be submitted to training platforms, such as local machine, remote machines, or training clusters. Their performances are reported back to Tuner. Then, new configurations are generated and submitted.
+Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这些配置将被提交到训练平台，如本机，远程服务器组或训练集群。 执行的性能结果会被返回给 Tuner。 然后，再生成并提交新的配置。
 
-For each experiment, user only needs to define a search space and update a few lines of code, and then leverage NNI built-in Tuner/Assessor and training platforms to search the best hyperparameters and/or neural architecture. There are basically 3 steps:
+每次 Experiment 执行时，用户只需要定义搜索空间，改动几行代码，就能利用 NNI 内置的 Tuner/Assessor 和训练服务来搜索最好的超参组合以及神经网络结构。 基本上分为三步：
 
 > 第一步：[定义搜索空间](SearchSpaceSpec.md)
 > 
-> Step 2: [Update model codes](Trials.md)
+> 第二步：[改动模型代码](Trials.md)
 > 
 > 第三步：[定义 Experiment 配置](ExperimentConfig.md)
 
