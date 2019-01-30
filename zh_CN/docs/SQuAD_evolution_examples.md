@@ -14,7 +14,7 @@ Since attention and recurrent neural network (RNN) have been proven effective in
 6. ADD-SKIP (Identity between random layers).
 7. REMOVE-SKIP (Removes random skip).
 
-![](../examples/trials/ga_squad/ga_squad.png)
+![](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad/ga_squad.png)
 
 ### New version
 
@@ -96,7 +96,7 @@ Modify `nni/examples/trials/ga_squad/config_pai.yml`, here is the default config
     #Your nni_manager ip
     nniManagerIp: 10.10.10.10
     tuner:
-      codeDir: ../../tuners/ga_customer_tuner
+      codeDir: https://github.com/Microsoft/nni/tree/master/examples/tuners/ga_customer_tuner
       classFileName: customer_tuner.py
       className: CustomerTuner
       classArgs:
