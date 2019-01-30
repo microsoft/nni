@@ -166,64 +166,64 @@ trial:
     -----------------------------------------------------------------------
     
 
-If you prepare `trial`, `search space` and `config` according to the above steps and successfully create a NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameters sets for each trial according to the requirements you set. You can clearly sees its progress by NNI WebUI.
+如果根据上述步骤准备好了相应 `Trial`, `搜索空间` 和 `配置`，并成功创建的 NNI 任务。NNI 会自动开始通过配置的搜索空间来运行不同的超参集合，搜索最好的超参。 通过 Web 界面可看到 NNI 的进度。
 
-## WebUI
+## Web 界面
 
-After you start your experiment in NNI successfully, you can find a message in the command-line interface to tell you `Web UI url` like this:
+启动 Experiment 后，可以在命令行界面找到如下的 `Web 界面地址`：
 
-    The Web UI urls are: [Your IP]:8080
+    The Web UI urls are: [IP 地址]:8080
     
 
-Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
+在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。
 
-#### View summary page
+#### 查看概要页面
 
-Click the tab "Overview".
+点击标签 "Overview"。
 
-Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also support `download these information and parameters` through the **Download** button. You can download the experiment result anytime in the middle for the running or at the end of the execution, etc.
+Experiment 相关信息会显示在界面上，配置和搜索空间等。 可通过 **Download** 按钮来`下载信息和参数`。 可以在运行中或结束后，随时下载 Experiment 的结果。
 
 ![](./img/QuickStart1.png)
 
-Top 10 trials will be listed in the Overview page, you can browse all the trials in "Trials Detail" page.
+前 10 个 Trial 结果也会列在 Overview 页面中，可以在 "Trials Detail" 部分浏览所有的 Trial。
 
 ![](./img/QuickStart2.png)
 
-#### View trials detail page
+#### 查看 Trial 详情页面
 
-Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
+点击 "Default Metric" 来查看所有 Trial 的点图。 悬停鼠标来查看默认指标和搜索空间信息。
 
 ![](./img/QuickStart3.png)
 
-Click the tab "Hyper Parameter" to see the parallel graph.
+点击 "Hyper Parameter" 标签查看图像。
 
-* You can select the percentage to see top trials.
-* Choose two axis to swap its positions
+* 可选择百分比查看最好的 Trial。
+* 选择两个轴来交换位置。
 
 ![](./img/QuickStart4.png)
 
-Click the tab "Trial Duration" to see the bar graph.
+点击 "Trial Duration" 标签来查看柱状图。
 
 ![](./img/QuickStart5.png)
 
-Below is the status of the all trials. Specifically:
+下面是所有 Trial 的状态。 包括：
 
-* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
-* If you run a pai experiment, you can also see the hdfsLogPath.
-* Kill: you can kill a job that status is running.
-* Support to search for a specific trial.
+* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
+* 如果是 OpenPAI 的 Experiment，还可以看到 hdfsLogPath。
+* Kill: 可终止正在运行的任务。
+* 支持搜索某个特定的 Trial。
 
 ![](./img/QuickStart6.png)
 
-* Intermediate Result Grap
+* 中间结果图
 
 ![](./img/QuickStart7.png)
 
-## Related Topic
+## 相关主题
 
-* [Try different Tuners](Builtin_Tuner.md)
-* [Try different Assessors](Builtin_Assessors.md)
-* [How to use command line tool nnictl](NNICTLDOC.md)
+* [尝试不同的 Tuner](Builtin_Tuner.md)
+* [尝试不同的 Assessor](Builtin_Assessors.md)
+* [使用命令行工具 nnictl](NNICTLDOC.md)
 * [How to write a trial](Trials.md)
 * [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
