@@ -6,7 +6,7 @@
 
 ### **目标**
 
-As we all know, the choice of model optimizer is directly affects the performance of the final matrix. 本教程的目标是**调优出性能更好的优化器**，从而为图像识别训练出一个相对较小的卷积网络（CNN）。
+As we all know, the choice of model optimizer is directly affects the performance of the final metrics. 本教程的目标是**调优出性能更好的优化器**，从而为图像识别训练出一个相对较小的卷积网络（CNN）。
 
 本例中，选择了以下常见的深度学习优化器：
 
@@ -65,9 +65,10 @@ You can also use your previous code directly, refer to [How to define a trial](h
 
 *完整样例：[examples/trials/cifar10_pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch)*
 
-#### Lauch the experiment
+#### Launch the experiment
 
 以上即为 Experiment 的代码介绍，**从命令行运行 config.yml 文件来开始 Experiment**。
 
-    bash
-        nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
+```bash
+nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
+```
