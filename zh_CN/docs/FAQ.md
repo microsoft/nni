@@ -23,7 +23,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 ### 作业管理错误：getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.
 
-Your machine don't have eth0 device, please set [nniManagerIp](ExperimentConfig.md) in your config file manually.
+计算机没有 eth0 设备，需要在配置中设置 [nniManagerIp](ExperimentConfig.md)。
 
 ### 运行时间超过了 MaxDuration ，但没有停止
 
