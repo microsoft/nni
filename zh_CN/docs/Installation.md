@@ -1,4 +1,4 @@
-# Installation of NNI
+# 安装 NNI
 
 当前仅支持 Linux 和 Mac。
 
@@ -63,4 +63,4 @@
 * [如何在多机上运行 Experiment？](RemoteMachineMode.md)
 * [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
 * [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](KubeflowMode.md)
-* [How to run an experiment on Kubernetes through FrameworkController?](FrameworkControllerMode.md)
+* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](FrameworkControllerMode.md)
