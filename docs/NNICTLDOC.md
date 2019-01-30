@@ -131,7 +131,7 @@ nnictl support commands:
 
     * Description
 
-      You can use this command to update an experiment's concurrency.  
+      You can use this command to update an experiment's duration.  
 
     * Usage
 
