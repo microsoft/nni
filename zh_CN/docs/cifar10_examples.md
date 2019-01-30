@@ -65,7 +65,7 @@ python3 -m pip install torchvision
 
 *完整样例：[examples/trials/cifar10_pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch)*
 
-#### Lauch the experiment
+#### 运行 Experiment
 
 以上即为 Experiment 的代码介绍，**从命令行运行 config.yml 文件来开始 Experiment**。
 
