@@ -13,7 +13,7 @@ We conclude the search space as follow:
 6. ADD-SKIP (Identity between random layers).
 7. REMOVE-SKIP (Removes random skip).
 
-![](../examples/trials/ga_squad/ga_squad.png)
+![](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad/ga_squad.png)
 
 ### New version
 Also we have another version which time cost is less and performance is better. We will release soon.
@@ -99,7 +99,7 @@ useAnnotation: false
 #Your nni_manager ip
 nniManagerIp: 10.10.10.10
 tuner:
-  codeDir: ../../tuners/ga_customer_tuner
+  codeDir: https://github.com/Microsoft/nni/tree/master/examples/tuners/ga_customer_tuner
   classFileName: customer_tuner.py
   className: CustomerTuner
   classArgs:

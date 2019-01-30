@@ -3,12 +3,12 @@
 NNI supports running an experiment on [OpenPAI](https://github.com/Microsoft/pai) (aka pai), called pai mode. Before starting to use NNI pai mode, you should have an account to access an [OpenPAI](https://github.com/Microsoft/pai) cluster. See [here](https://github.com/Microsoft/pai#how-to-deploy) if you don't have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai's container created by Docker.
 
 ## Setup environment
-Install NNI, follow the install guide [here](GetStarted.md).
+Install NNI, follow the install guide [here](QuickStart.md).
 
 ## Run an experiment
 Use `examples/trials/mnist-annotation` as an example. The NNI config YAML file's content is like:
 
-```yml
+```yaml
 authorName: your_name
 experimentName: auto_mnist
 # how many trials could be concurrently running
@@ -50,7 +50,7 @@ Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial con
     * Required key. Should be positive number based on your trial program's memory requirement
 * image
     * Required key. In pai mode, your trial program will be scheduled by OpenPAI to run in [Docker container](https://www.docker.com/). This key is used to specify the Docker image used to create the container in which your trial will run.
-    * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](../deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
+    * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
 * dataDir
     * Optional key. It specifies the HDFS data direcotry for trial to download data. The format should be something like hdfs://{your HDFS host}:9000/{your data directory}
 * outputDir 

@@ -12,7 +12,7 @@ Contents
     :titlesonly:
 
     Overview
-    GetStarted<QuickStart>
+    QuickStart<QuickStart>
     Tutorials
     Examples
     Reference

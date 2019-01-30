@@ -30,7 +30,7 @@ It is applicable in a wide range of performance curves, thus, can be used in var
 
 **Usage example:**
 
-```yml
+```yaml
 # config.yml
 assessor:
     builtinAssessorName: Medianstop
@@ -60,7 +60,7 @@ It is applicable in a wide range of performance curves, thus, can be used in var
 
 **Usage example:**
 
-```yml
+```yaml
 # config.yml
 assessor:
     builtinAssessorName: Curvefitting
