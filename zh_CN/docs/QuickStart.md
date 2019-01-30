@@ -1,18 +1,18 @@
-# QuickStart
+# 快速入门
 
-## Installation
+## 安装
 
-We support Linux and MacOS in current stage, Ubuntu 16.04 or higher and MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+当前支持 Linux 和 MacOS。测试并支持的版本包括：Ubuntu 16.04 及更高版本，MacOS 10.14.1。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
 ```bash
     python3 -m pip install --upgrade nni
 ```
 
-Note:
+注意：
 
-* `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
-* If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
-* For the `system requirements` of NNI, please refer to [Install NNI](Installation.md)
+* 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
+* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](FAQ.md)。
+* 参考[安装 NNI](Installation.md) 了解`系统需求`。
 
 ## "Hello World" example on MNIST
 
