@@ -85,9 +85,9 @@
       python ~/nni/examples/trials/mnist-annotation/mnist.py
     
 
-This command will be filled in the YAML configure file below. 参考[这里](./howto_1_WriteTrial.md)来写出自己的 Experiment 代码。
+This command will be filled in the YAML configure file below. Please refer to [here](Trials.md) for how to write your own trial.
 
-**准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的 Tuner（参考[这里](./howto_2_CustomizedTuner.md)）。下面使用了 NNI 内置的 Tuner：
+**准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 Users can write their own tuner (refer to [here](Customize_Tuner.md)), but for simplicity, here we choose a tuner provided by NNI as below:
 
       tuner:
         builtinTunerName: TPE
@@ -95,7 +95,7 @@ This command will be filled in the YAML configure file below. 参考[这里](./h
           optimize_mode: maximize
     
 
-*builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner的参数（内置 Tuner 在[这里]()），*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
+*builtinTunerName* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found [here](Builtin_Tuner.md)), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
 
 **Prepare configure file**: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI 为每个 Trial 样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
 
@@ -126,7 +126,7 @@ This command will be filled in the YAML configure file below. 参考[这里](./h
       gpuNum: 0
     
 
-因为这个 Trial 代码使用了 NNI Annotation 的方法（参考[这里](../tools/annotation/README.md) ），所以*useAnnotation* 为 true。 *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
+Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here](AnnotationSpec.md) for details). *command* 是运行 Trial 代码所需要的命令，*codeDir* 是 Trial 代码的相对位置。 命令会在此目录中执行。 同时，也需要提供每个 Trial 进程所需的 GPU 数量。
 
 完成上述步骤后，可通过下列命令来启动 Experiment：
 
