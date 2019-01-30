@@ -38,7 +38,7 @@
 * 将 [Kubeflow 训练服务](https://github.com/Microsoft/nni/blob/master/docs/KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
 * Kubeflow 训练服务支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
 * 改进将本地代码文件上传到 OpenPAI HDFS 的性能。
-* 修复 OpenPAI 在 WEB 界面的缺陷：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
+* 修复 OpenPAI 在 WEB 界面的 Bug：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
 
 #### NNICTL improvements
 
@@ -82,7 +82,7 @@
 * 异步调度
 * 更新 Docker 文件，增加 pytorch 库 
 * 重构 'nnictl stop' 过程，发送 SIGTERM 给 NNI 管理器进程，而不是调用停止 Restful API. 
-* OpenPAI 训练服务修复缺陷 
+* 修复 OpenPAI 训练服务的 Bug 
   * 在 NNI 管理器中为 PAI 集群配置文件支持 IP 配置(nniManagerIp)，来修复用户计算机没有 eth0 设备的问题。 
   * codeDir 中的文件数量上限改为1000，避免用户无意中填写了 root 目录。
   * 移除 PAI 作业的 stdout 日志中无用的 ‘metrics is empty’。 在新指标被记录时，仅输出有用的消息，来减少用户检查 PAI Trial 输出时的困惑。
