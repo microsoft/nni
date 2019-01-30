@@ -12,27 +12,27 @@
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](FAQ.md)。
-* 参考[安装 NNI](Installation.md) 了解`系统需求`。
+* 参考[安装 NNI](Installation.md)，来了解`系统需求`。
 
-## "Hello World" example on MNIST
+## MNIST 上的 "Hello World"
 
-NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, tuning hyperparameters. Now, we show how to use NNI to help you find the optimal hyperparameters.
+NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 下面会展示如何使用 NNI 来找到最佳超参组合。
 
-Here is an example script to train a CNN on MNIST dataset **without NNI**:
+这是还**没有 NNI** 的样例代码，用 CNN 在 MNIST 数据集上训练：
 
 ```python
 def run_trial(params):
-    # Input data
+    # 输入数据
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    # Build MNIST network
+    # 构建网络
     mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
     mnist_network.build_network()
 
     test_acc = 0.0
     with tf.Session() as sess:
-        # Train MNIST network
+        # 训练网络
         mnist_network.train(sess, mnist)
-        # Evaluate MNIST network
+        # 评估网络
         test_acc = mnist_network.evaluate(mnist)
 
 if __name__ == '__main__':
@@ -40,25 +40,25 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-Note: If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist_before.py)
+注意：完整实现请参考 [examples/trials/mnist/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist_before.py)
 
-The above code can only try one set of parameters at a time, if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
+上面的代码一次只能尝试一组参数，如果想要调优学习率，需要手工改动超参，并一次次尝试。
 
-NNI is born for helping user do the tuning jobs, the NNI working process is presented below:
+NNI 就是用来帮助调优工作的。它的工作流程如下：
 
-    input: search space, trial code, config file
-    output: one optimal hyperparameter configuration
+    输入: 搜索空间, Trial 代码, 配置文件
+    输出: 一组最佳的超参配置
     
     1: For t = 0, 1, 2, ..., maxTrialNum,
-    2:      hyperparameter = chose a set of parameter from search space
+    2:      hyperparameter = 从搜索空间选择一组参数
     3:      final result = run_trial_and_evaluate(hyperparameter)
-    4:      report final result to NNI
-    5:      If reach the upper limit time,
-    6:          Stop the experiment
-    7: return hyperparameter value with best final result
+    4:      返回最终结果给 NNI
+    5:      If 时间达到上限,
+    6:          停止实验
+    7: return 最好的实验结果
     
 
-If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes base on your code:
+如果需要使用 NNI 来自动训练模型，找到最佳超参，需要如下三步：
 
 **Three things required to do when using NNI**
 
