@@ -21,13 +21,13 @@ NNI (Neural Network Intelligence) 是一个工具包，可有效的帮助用户�
 
 * *Configuration（配置）*：配置是来自搜索空间的一个参数实例，每个超参都会有一个特定的值。
 
-* *Trial*: Trial is an individual attempt at applying a new configuration (e.g., a set of hyperparameter values, a specific nerual architecture). Trial code should be able to run with the provided configuration.
+* *Trial*: Trial 是一次尝试，它会使用某组配置（例如，一组超参值，或者特定的神经网络架构）。 Trial 会基于提供的配置来运行。
 
-* *Tuner*: Tuner is an AutoML algorithm, which generates a new configuration for the next try. A new trial will run with this configuration.
+* *Tuner*: Tuner 是一个自动机器学习算法，会为下一个 Trial 生成新的配置。 新的 Trial 会使用这组配置来运行。
 
-* *Assessor*: Assessor analyzes trial's intermediate results (e.g., periodically evaluated accuracy on test dataset) to tell whether this trial can be early stopped or not.
+* *Assessor*：Assessor 分析 Trial 的中间结果（例如，测试数据集上定期的精度），来确定 Trial 是否应该被提前终止。
 
-* *Training Platform*: It means where trials are executed. Depending on your experiment's configuration, it could be your local machine, or remote servers, or large-scale training platform (e.g., PAI, Kubernetes).
+* *训练平台*：是 Trial 执行的环境。 Depending on your experiment's configuration, it could be your local machine, or remote servers, or large-scale training platform (e.g., PAI, Kubernetes).
 
 Basically, an experiment runs as follows: Tuner receives search space and generates configurations. These configurations will be submitted to training platforms, such as local machine, remote machines, or training clusters. Their performances are reported back to Tuner. Then, new configurations are generated and submitted.
 
