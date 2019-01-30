@@ -178,7 +178,7 @@ machineList:
     
     **searchSpacePath** 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
     
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+    注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
 * **useAnnotation**
   
@@ -218,35 +218,35 @@ machineList:
     
     * **builtinTunerName**
       
-      **builtinTunerName** specifies the name of system tuner, NNI sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}
+      **builtinTunerName** 指定了系统 Tuner 的名字，NNI SDK 提供了多种 Tuner，如：{**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm. If the **builtinTunerName** is in {**TPE**, **Random**, **Anneal**, **Evolution**}, user should set **optimize_mode**.
+      **classArgs** 指定了 Tuner 算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
   
   * **codeDir**, **classFileName**, **className** 和 **classArgs**
     
     * **codeDir**
       
-      **codeDir** specifies the directory of tuner code.
+      **codeDir** 指定 Tuner 代码的目录。
     
     * **classFileName**
       
-      **classFileName** specifies the name of tuner file.
+      **classFileName** 指定 Tuner 文件名。
     
     * **className**
       
-      **className** specifies the name of tuner class.
+      **className** 指定 Tuner 类名。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm.
+      **classArgs** 指定了 Tuner 算法的参数。
     
     * **gpuNum**
       
-      **gpuNum** specifies the gpu number to run the tuner process. The value of this field should be a positive number.
+      **gpuNum** 指定了运行 Tuner 进程的 GPU 数量。 此字段的值必须是正整数。
       
-      Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
+      注意: 只能使用一种方法来指定 Tuner，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。
 
 * **Assessor**
   
@@ -258,59 +258,59 @@ machineList:
     
     * **builtinAssessorName**
       
-      **builtinAssessorName** specifies the name of system assessor, NNI sdk provides one kind of assessor {**Medianstop**}
+      **builtinAssessorName** 指定了系统 Assessor 的名称， NNI 内置的 Assessor 有 {**Medianstop**，等等}。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of assessor algorithm
+      **classArgs** 指定了 Assessor 算法的参数。
   
   * **codeDir**, **classFileName**, **className** 和 **classArgs**
     
     * **codeDir**
       
-      **codeDir** specifies the directory of assessor code.
+      **codeDir** 指定 Assessor 代码的目录。
     
     * **classFileName**
       
-      **classFileName** specifies the name of assessor file.
+      **classFileName** 指定 Assessor 文件名。
     
     * **className**
       
-      **className** specifies the name of assessor class.
+      **className** 指定 Assessor 类名。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of assessor algorithm.
+      **classArgs** 指定了 Assessor 算法的参数。
   
   * **gpuNum**
     
-    **gpuNum** specifies the gpu number to run the assessor process. The value of this field should be a positive number.
+    **gpuNum** 指定了运行 Assessor 进程的 GPU 数量。 此字段的值必须是正整数。
     
-    Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty.
+    注意: 只能使用一种方法来指定评估器，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用评估器，可将其置为空。
 
 * **trial (local, remote)**
   
   * **command**
     
-    **command** specifies the command to run trial process.
+    **command** 指定了运行 Trial 进程的命令行。
   
   * **codeDir**
     
-    **codeDir** specifies the directory of your own trial file.
+    **codeDir** 指定了 Trial 代码文件的目录。
   
   * **gpuNum**
     
-    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
+    **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
 
 * **trial (pai)**
   
   * **command**
     
-    **command** specifies the command to run trial process.
+    **command** 指定了运行 Trial 进程的命令行。
   
   * **codeDir**
     
-    **codeDir** specifies the directory of the own trial file.
+    **codeDir** 指定了 Trial 代码文件的目录。
   
   * **gpuNum**
     
@@ -400,35 +400,35 @@ machineList:
 
 * **machineList**
   
-  **machineList** should be set if **trainingServicePlatform** is set to remote, or it should be empty.
+  如果 **trainingServicePlatform** 为 remote，则需要设置 **machineList**。否则应将其置为空。
   
   * **ip**
     
-    **ip** is the ip address of remote machine.
+    **ip** 是远程计算机的 ip 地址。
   
   * **port**
     
-    **port** is the ssh port to be used to connect machine.
+    **端口** 是用于连接远程计算机的 ssh 端口。
     
-    Note: if users set port empty, the default value will be 22.
+    注意：如果 port 设为空，则为默认值 22。
   
   * **username**
     
-    **username** is the account of remote machine.
+    **username** 是远程计算机的用户名。
   
   * **passwd**
     
-    **passwd** specifies the password of the account.
+    **passwd** 指定了账户的密码。
   
   * **sshKeyPath**
     
-    If users use ssh key to login remote machine, could set **sshKeyPath** in config file. **sshKeyPath** is the path of ssh key file, which should be valid.
+    如果要使用 ssh 密钥登录远程计算机，则需要设置 **sshKeyPath**。 **sshKeyPath** 为有效的 ssh 密钥文件路径。
     
-    Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
+    注意：如果同时设置了 passwd 和 sshKeyPath，NNI 会使用 passwd。
   
   * **passphrase**
     
-    **passphrase** is used to protect ssh key, which could be empty if users don't have passphrase.
+    **passphrase** 用于保护 ssh 密钥，如果没有使用，可为空。
 
 * **kubeflowConfig**:
   
@@ -452,11 +452,11 @@ machineList:
     
     * **vaultName**
       
-      **vaultName** is the value of `--vault-name` used in az command.
+      **vaultName** 是 az 命令中 `--vault-name` 的值。
     
     * **name**
       
-      **name** is the value of `--name` used in az command.
+      **name** 是 az 命令中 `--name` 的值。
   
   * **azureStorage**
     
@@ -498,15 +498,15 @@ machineList:
   trialConcurrency: 3
   maxExecDuration: 1h
   maxTrialNum: 10
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: local
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: true
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
     gpuNum: 0
   trial:
@@ -515,7 +515,7 @@ machineList:
     gpuNum: 0
   ```
   
-  You can add assessor configuration.
+  增加 Assessor 配置
   
   ```yaml
   authorName: test
@@ -523,23 +523,23 @@ machineList:
   trialConcurrency: 3
   maxExecDuration: 1h
   maxTrialNum: 10
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: local
   searchSpacePath: /nni/search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
     gpuNum: 0
   assessor:
-    #choice: Medianstop
+    #可选项: Medianstop
     builtinAssessorName: Medianstop
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
     gpuNum: 0
   trial:
