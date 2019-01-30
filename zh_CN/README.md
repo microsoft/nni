@@ -195,11 +195,11 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment �
 * [在多机上运行 Experiment](docs/RemoteMachineMode.md)
 * [在 OpenPAI 上运行 Experiment](docs/PAIMode.md)
 * [在 Kubeflow 上运行 Experiment。](docs/KubeflowMode.md)
-* [Try different tuners](docs/tuners.rst)
-* [Try different assessors](docs/assessors.rst)
-* [Implement a customized tuner](docs/Customize_Tuner.md)
-* [Implement a customized assessor](examples/assessors/README.md)
-* [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](examples/trials/ga_squad/README.md)
+* [尝试不同的 Tuner](docs/tuners.rst)
+* [尝试不同的 Assessor](docs/assessors.rst)
+* [实现自定义 Tuner](docs/Customize_Tuner.md)
+* [实现自定义 Assessor](examples/assessors/README.md)
+* [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
 
 ## **贡献**
 
