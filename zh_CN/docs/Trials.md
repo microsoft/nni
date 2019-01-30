@@ -119,23 +119,23 @@ with tf.Session() as sess:
 **注意**：
 
 * `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须在 `@nni.variable` 的 `name` 参数中指定。
-* `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
+* `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。 
 
-For more information about annotation syntax and its usage, please refer to [Annotation](AnnotationSpec.md).
+Annotation 的语法和用法等，参考 [Annotation](AnnotationSpec.md)。
 
-### Step 2 - Enable NNI Annotation
+### 第二步：启用 Annotation
 
-In the YAML configure file, you need to set *useAnnotation* to true to enable NNI annotation:
+在 YAML 配置文件中设置 *useAnnotation* 为 true 来启用 Annotation：
 
     useAnnotation: true
     
 
 <a name="more-examples"></a>
 
-## More Trial Examples
+## 更多 Trial 的样例
 
-* [MNIST examples](mnist_examples.md)
-* [Finding out best optimizer for Cifar10 classification](cifar10_examples.md)
-* [How to tune Scikit-learn on NNI](sklearn_examples.md)
-* [Automatic Model Architecture Search for Reading Comprehension.](SQuAD_evolution_examples.md)
-* [Tuning GBDT on NNI](gbdt_example.md)
+* [MNIST 样例](mnist_examples.md)
+* [为 CIFAR 10 分类找到最佳的 optimizer](cifar10_examples.md)
+* [如何在 NNI 调优 SciKit-learn 的参数](sklearn_examples.md)
+* [在阅读理解上使用自动模型架构搜索。](SQuAD_evolution_examples.md)
+* [如何在 NNI 上调优 GBDT](gbdt_example.md)
