@@ -1,8 +1,8 @@
 #################
-Tuners
+Tuner（调参器）
 #################
 
-NNI provides an easy way to adopt an approach to set up parameter tuning algorithms, we call them **Tuner**.
+NNI 能用简单快速的方法来配置超参调优算法，称之为 **Tuner**。
 
 Tuner receives the result from `Trial` as a matrix to evaluate the performance of a specific parameters/architecture configures. And tuner sends next hyper-parameter or architecture configure to Trial.
 
