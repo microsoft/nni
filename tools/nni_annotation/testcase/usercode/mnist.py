@@ -198,6 +198,7 @@ if __name__ == '__main__':
     #original_params = parse_init_json(FLAGS.init_file_path, {})
     
     #pipe_interface.set_params_to_env()
+    '''@nni.get_next_parameter()'''
     try:
         params = generate_default_params()
         logger.debug('params')

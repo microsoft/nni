@@ -36,6 +36,7 @@ const expParams1: ExperimentParams = {
     trialConcurrency: 3,
     maxExecDuration: 100,
     maxTrialNum: 5,
+    trainingServicePlatform: 'local',
     searchSpace: 'SS',
     tuner: {
         className: 'testTuner',
@@ -50,6 +51,7 @@ const expParams2: ExperimentParams = {
     trialConcurrency: 5,
     maxExecDuration: 1000,
     maxTrialNum: 5,
+    trainingServicePlatform: 'local',
     searchSpace: '',
     tuner: {
         className: 'testTuner',
@@ -62,10 +64,10 @@ const expParams2: ExperimentParams = {
 };
 
 const profiles: ExperimentProfile[] = [
-    { params: expParams1, id: '#1', execDuration: 0, startTime: Date.now(), endTime: undefined, revision: 1 },
-    { params: expParams1, id: '#1', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 2 },
-    { params: expParams2, id: '#2', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 2 },
-    { params: expParams2, id: '#2', execDuration: 0, startTime: Date.now(), endTime: Date.now(), revision: 3 }
+    { params: expParams1, id: '#1', execDuration: 0, logDir: '/log', startTime: Date.now(), endTime: undefined, maxSequenceId: 0, revision: 1,},
+    { params: expParams1, id: '#1', execDuration: 0, logDir: '/log', startTime: Date.now(), endTime: Date.now(), maxSequenceId: 0, revision: 2 },
+    { params: expParams2, id: '#2', execDuration: 0, logDir: '/log', startTime: Date.now(), endTime: Date.now(), maxSequenceId: 0, revision: 2 },
+    { params: expParams2, id: '#2', execDuration: 0, logDir: '/log', startTime: Date.now(), endTime: Date.now(), maxSequenceId: 0, revision: 3 }
 ];
 
 const events: TrialJobEventRecord[] = [
@@ -118,7 +120,7 @@ describe('core/sqlDatabase', () => {
             await (<SqlDB>db).storeExperimentProfile(profile);
         }
         for (const event of events) {
-            await (<SqlDB>db).storeTrialJobEvent(<TrialJobEvent>event.event, event.trialJobId, event.data);
+            await (<SqlDB>db).storeTrialJobEvent(<TrialJobEvent>event.event, event.trialJobId, Date.now(), event.data);
         }
         for (const metric of metrics) {
             await (<SqlDB>db).storeMetricData(metric.trialJobId, JSON.stringify(metric));

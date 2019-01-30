@@ -1,8 +1,12 @@
-## How to define search space?
+# Search Space
 
-### Hyper-parameter Search Space
+## Overview
 
-* A search space configure example as follow:
+In NNI, tuner will sample parameters/architecture according to the search space, which is defined as a json file.
+
+To define a search space, users should define the name of variable, the type of sampling strategy and its parameters.
+
+* A example of search space definition as follow:
 
 ```python
 {
@@ -15,14 +19,15 @@
 
 ```
 
-The example define ```dropout_rate``` as variable which priori distribution is uniform distribution, and its value from ```0.1``` and ```0.5```.
-The tuner will sample parameters/architecture by understanding the search space first.
 
-User should define the name of variable, type and candidate value of variable.
-The candidate type and value for variable is here:
+Take the first line as an example. ```dropout_rate``` is defined as a variable whose priori distribution is a uniform distribution of a range from ```0.1``` and ```0.5```.
+
+## Types
+
+All types of sampling strategies and their parameter are listed here:
 
 * {"_type":"choice","_value":options}
-   * Which means the variable value is one of the options, which should be a list The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
+   * Which means the variable value is one of the options, which should be a list. The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
 <br/>
 
 * {"_type":"randint","_value":[upper]}
@@ -40,12 +45,12 @@ The candidate type and value for variable is here:
 <br/>
 
 * {"_type":"loguniform","_value":[low, high]}
-   * Which means the variable value is a value drawn according to exp(uniform(low, high)) so that the logarithm of the return value is uniformly distributed.
-   * When optimizing, this variable is constrained to the interval [exp(low), exp(high)].
+   * Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution like exp(uniform(log(low), log(high))), so that the logarithm of the return value is uniformly distributed.
+   * When optimizing, this variable is constrained to be positive.
 <br/>
 
 * {"_type":"qloguniform","_value":[low, high, q]}
-   * Which means the variable value is a value like round(exp(uniform(low, high)) / q) * q
+   * Which means the variable value is a value like round(loguniform(low, high)) / q) * q
    * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
 <br/>
 
@@ -66,3 +71,25 @@ The candidate type and value for variable is here:
    * Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
    * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 <br/>
+
+
+## Search Space Types Supported by Each Tuner
+
+|                   | choice  | randint | uniform | quniform | loguniform | qloguniform | normal  | qnormal | lognormal | qlognormal |
+|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|:------:|
+| TPE Tuner         | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
+| Random Search Tuner| &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
+| Anneal Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
+| Evolution Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
+| SMAC Tuner        | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    |      |  |  |    |     |
+| Batch Tuner       | &#10003; |  |  |   |     |      |  |  |    |     |
+| Grid Search Tuner | &#10003; |  |  | &#10003;  |     | &#10003;     |  |  |    |     |
+| Hyperband Advisor | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
+| Metis Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  |     |      |  |  |    |     |
+
+Note that In GridSearch Tuner, for users' convenience, the definition of `quniform` and `qloguniform` change, where q here specifies the number of values that will be sampled. Details about them are listed as follows
+
+* Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
+* Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
+
+Note that Metis Tuner only support numerical `choice` now

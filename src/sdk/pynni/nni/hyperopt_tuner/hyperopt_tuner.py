@@ -61,6 +61,8 @@ def json2space(in_x, name=ROOT):
             if _type == 'choice':
                 out_y = eval('hp.hp.'+_type)(name, _value)
             else:
+                if _type in ['loguniform', 'qloguniform']:
+                    _value[:2] = np.log(_value[:2])
                 out_y = eval('hp.hp.' + _type)(name, *_value)
         else:
             out_y = dict()
@@ -75,7 +77,7 @@ def json2space(in_x, name=ROOT):
     return out_y
 
 
-def json2paramater(in_x, paramater, name=ROOT):
+def json2parameter(in_x, parameter, name=ROOT):
     '''
     Change json to parameters.
     '''
@@ -85,22 +87,22 @@ def json2paramater(in_x, paramater, name=ROOT):
             _type = in_x[TYPE]
             name = name + '-' + _type
             if _type == 'choice':
-                _index = paramater[name]
+                _index = parameter[name]
                 out_y = {
                     INDEX: _index,
-                    VALUE: json2paramater(in_x[VALUE][_index], paramater, name=name+'[%d]' % _index)
+                    VALUE: json2parameter(in_x[VALUE][_index], parameter, name=name+'[%d]' % _index)
                 }
             else:
-                out_y = paramater[name]
+                out_y = parameter[name]
         else:
             out_y = dict()
             for key in in_x.keys():
-                out_y[key] = json2paramater(
-                    in_x[key], paramater, name + '[%s]' % str(key))
+                out_y[key] = json2parameter(
+                    in_x[key], parameter, name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
-            out_y.append(json2paramater(x_i, paramater, name + '[%d]' % i))
+            out_y.append(json2parameter(x_i, parameter, name + '[%d]' % i))
     else:
         logger.info('in_x is not a dict or a list in json2space fuinction %s', str(in_x))
     return out_y
@@ -127,7 +129,7 @@ def json2vals(in_x, vals, out_y, name=ROOT):
                 json2vals(in_x[key], vals[key], out_y, name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         for i, temp in enumerate(in_x):
-            json2vals(i, vals[temp], out_y, name + '[%d]' % temp)
+            json2vals(temp, vals[i], out_y, name + '[%d]' % i)
 
 
 def _split_index(params):
@@ -201,18 +203,19 @@ class HyperoptTuner(Tuner):
                 parameter[key] = None
 
         # remove '_index' from json2parameter and save params-id
-        total_params = json2paramater(self.json, parameter)
+        total_params = json2parameter(self.json, parameter)
         self.total_data[parameter_id] = total_params
         params = _split_index(total_params)
         return params
 
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, value):
         '''
         Record an observation of the objective function
         parameter_id : int
         parameters : dict of parameters
-        reward : reward of one trial
+        value: final metrics of the trial, including reward
         '''
+        reward = self.extract_scalar_reward(value)
         # restore the paramsters contains '_index'
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')

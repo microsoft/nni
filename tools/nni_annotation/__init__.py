@@ -69,6 +69,7 @@ def _generate_file_search_space(path, module):
 
 def expand_annotations(src_dir, dst_dir):
     """Expand annotations in user code.
+    Return dst_dir if annotation detected; return src_dir if not.
     src_dir: directory path of user code (str)
     dst_dir: directory to place generated files (str)
     """
@@ -76,6 +77,8 @@ def expand_annotations(src_dir, dst_dir):
         src_dir = src_dir[:-1]
     if dst_dir[-1] == '/':
         dst_dir = dst_dir[:-1]
+
+    annotated = False
 
     for src_subdir, dirs, files in os.walk(src_dir):
         assert src_subdir.startswith(src_dir)
@@ -86,19 +89,27 @@ def expand_annotations(src_dir, dst_dir):
             src_path = os.path.join(src_subdir, file_name)
             dst_path = os.path.join(dst_subdir, file_name)
             if file_name.endswith('.py'):
-                _expand_file_annotations(src_path, dst_path)
+                annotated |= _expand_file_annotations(src_path, dst_path)
             else:
                 shutil.copyfile(src_path, dst_path)
 
         for dir_name in dirs:
             os.makedirs(os.path.join(dst_subdir, dir_name), exist_ok=True)
 
+    return dst_dir if annotated else src_dir
+
 def _expand_file_annotations(src_path, dst_path):
     with open(src_path) as src, open(dst_path, 'w') as dst:
         try:
-            dst.write(code_generator.parse(src.read()))
+            annotated_code = code_generator.parse(src.read())
+            if annotated_code is None:
+                shutil.copyfile(src_path, dst_path)
+                return False
+            dst.write(annotated_code)
+            return True
+
         except Exception as exc:  # pylint: disable=broad-except
             if exc.args:
-                raise RuntimeError(src_path + ' ' + '\n'.join(exc.args))
+                raise RuntimeError(src_path + ' ' + '\n'.join(str(arg) for arg in exc.args))
             else:
                 raise RuntimeError('Failed to expand annotations for %s: %r' % (src_path, exc))

@@ -54,17 +54,18 @@ describe('Unit test for nnimanager', function () {
         trialConcurrency: 2,
         maxExecDuration: 5,
         maxTrialNum: 2,
+        trainingServicePlatform: 'local',
         searchSpace: '{"x":1}',
         tuner: {
-            className: 'EvolutionTuner',
+            className: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
             },
             checkpointDir: '',
-            gpuNum: 1
+            gpuNum: 0
         },
         assessor: {
-            className: 'MedianstopAssessor',
+            className: 'Medianstop',
             checkpointDir: '',
             gpuNum: 1
         }
@@ -73,23 +74,17 @@ describe('Unit test for nnimanager', function () {
     before(async () => {
         await initContainer();
         nniManager = component.get(Manager);
+        const expId: string = await nniManager.startExperiment(experimentParams);
+        assert(expId);
     });
 
-    after(() => {
+    after(async () => {
+        await nniManager.stopExperiment();
         cleanupUnitTest();
     })
 
     it('test resumeExperiment', () => {
         //TODO: add resume experiment unit test
-    })
-
-    it('test startExperiment', () => {
-
-        return nniManager.startExperiment(experimentParams).then(function (experimentId) {
-            expect(experimentId.length).to.be.equal(8);
-        }).catch(function (error) {
-            assert.fail(error);
-        })
     })
 
     it('test listTrialJobs', () => {
@@ -145,7 +140,6 @@ describe('Unit test for nnimanager', function () {
             assert.fail(error);
         })
     })
-
 
     it('test addCustomizedTrialJob', () => {
         return nniManager.addCustomizedTrialJob('hyperParams').then(() => {

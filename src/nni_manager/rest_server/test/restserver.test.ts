@@ -133,7 +133,7 @@ describe('Unit test for rest server', () => {
         });
     });
 
-    it('Test PUT experiment/cluster-metadata exception', (done: Mocha.Done) => {
+    it('Test PUT experiment/cluster-metadata bad key', (done: Mocha.Done) => {
         const req: request.Options = {
             uri: `${ROOT_URL}/experiment/cluster-metadata`,
             method: 'PUT',
@@ -146,7 +146,7 @@ describe('Unit test for rest server', () => {
             if (err) {
                 assert.fail(err.message);
             } else {
-                expect(res.statusCode).to.equal(500);
+                expect(res.statusCode).to.equal(400);
             }
             done();
         });
