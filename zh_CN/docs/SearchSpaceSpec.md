@@ -1,12 +1,12 @@
-# Search Space
+# 搜索空间
 
-## Overview
+## 概述
 
-In NNI, tuner will sample parameters/architecture according to the search space, which is defined as a json file.
+在 NNI 中，Tuner 会根据搜索空间来取样生成参数和网络架构。搜索空间通过 JSON 文件来定义。
 
-To define a search space, users should define the name of variable, the type of sampling strategy and its parameters.
+要定义搜索空间，需要定义变量名称、采样策略的类型及其参数。
 
-* A example of search space definition as follow:
+* 搜索空间样例如下：
 
 ```python
 {
