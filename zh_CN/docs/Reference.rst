@@ -1,11 +1,11 @@
-References
+参考
 ==================
 
 ..  toctree::
     :maxdepth: 3
     
-    Command Line <NNICTLDOC>
+    命令行<NNICTLDOC>
     Python API <sdk_reference>
     Annotation <AnnotationSpec>
-    Configuration<ExperimentConfig>
-    Search Space <SearchSpaceSpec>
+    配置<ExperimentConfig>
+    搜索空间<SearchSpaceSpec>
