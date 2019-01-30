@@ -48,7 +48,7 @@ net = build_graph_from_json(RCV_CONFIG)
 # 训练过程
 # ....
 
-# report the final accuracy to NNI
+# 将最终精度返回给 NNI
 nni.report_final_result(best_acc)
 ```
 
