@@ -1,8 +1,8 @@
 ###########################
-Python API Reference
+Python API 参考
 ###########################
 
-API for trial code
+Trial 代码 API
 ------------------------
 ..  autofunction:: nni.get_next_parameter
 ..  autofunction:: nni.get_current_parameter
@@ -11,7 +11,7 @@ API for trial code
 ..  autofunction:: nni.get_sequence_id
 
 
-API for tuners
+Tuner API
 ------------------------
 ..  autoclass:: nni.tuner.Tuner
     :members:
