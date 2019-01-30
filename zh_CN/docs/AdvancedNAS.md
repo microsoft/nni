@@ -12,7 +12,7 @@
 
 使用 NFS 配置（见下文），Trial 代码可以通过读写文件来共享模型权重。 建议使用 Tuner 的存储路径：
 
-```yml
+```yaml
 tuner:
   codeDir: path/to/customer_tuner
   classFileName: customer_tuner.py 
@@ -101,4 +101,4 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
 ## 样例
 
-详细用法，请参考[简单权重共享样例](../test/async_sharing_test)。 还有根据 [ga_squad](../examples/trials/ga_squad) 改动的阅读理解的[样例](../examples/trials/weight_sharing/ga_squad)。
+For details, please refer to this [simple weight sharing example](https://github.com/Microsoft/nni/tree/master/test/async_sharing_test). We also provided a [practice example](https://github.com/Microsoft/nni/tree/master/examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad) example.
