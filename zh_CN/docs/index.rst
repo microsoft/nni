@@ -1,21 +1,21 @@
 #########################################
-Neural Network Intelligence Documentation
+Neural Network Intelligence（NNI）文档
 #########################################
 
 ********
-Contents
+内容
 ********
 
 ..  toctree::
-    :caption: Table of Contents
+    :caption: 目录
     :maxdepth: 2
     :titlesonly:
 
-    Overview
-    GetStarted<QuickStart>
-    Tutorials
-    Examples
-    Reference
-    FAQ
-    Contribution
-    Changelog<RELEASE>
+    概述
+    入门<QuickStart>
+    教程
+    样例
+    参考
+    常见问答
+    贡献
+    版本日志<RELEASE>
