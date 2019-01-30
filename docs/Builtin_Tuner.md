@@ -39,7 +39,7 @@ TPE, as a black-box optimization, can be used in various scenarios and shows goo
 
 **Usage example:**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: TPE
@@ -65,7 +65,7 @@ Random search is suggested when each trial does not take too long (e.g., each tr
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: Random
@@ -91,7 +91,7 @@ Anneal is suggested when each trial does not take too long, and you have enough 
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: Anneal
@@ -117,7 +117,7 @@ Its requirement of computation resource is relatively high. Specifically, it req
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: Evolution
@@ -143,7 +143,7 @@ Similar to TPE, SMAC is also a black-box tuner which can be tried in various sce
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: SMAC
@@ -165,7 +165,7 @@ If the configurations you want to try have been decided, you can list them in se
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: BatchTuner
@@ -206,7 +206,7 @@ It is suggested when search space is small, it is feasible to exhaustively sweep
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: GridSearch
@@ -232,7 +232,7 @@ It is suggested when you have limited computation resource but have relatively l
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 advisor:
   builtinAdvisorName: Hyperband
@@ -256,7 +256,7 @@ NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so 
 
 **Suggested scenario**
 
-It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](../examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain.
+It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain.
 
 **Requirement of classArg**
 
@@ -268,7 +268,7 @@ It is suggested that you want to apply deep learning methods to your task (your 
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: NetworkMorphism
@@ -296,7 +296,7 @@ Metis Tuner requires [sklearn](https://scikit-learn.org/), so users should insta
 
 **Suggested scenario**
 
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](../examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK.
+Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK.
 
 **Requirement of classArg**
 
@@ -304,7 +304,7 @@ Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: MetisTuner
