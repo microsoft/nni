@@ -2,15 +2,15 @@
 
 **Trial（尝试）**是将一组参数组合（例如，超参）在模型上独立的一次尝试。
 
-定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI provide two approaches for you to define a trial: [NNI API](#nni-api) and [NNI Python annotation](#nni-annotation). You could also refer to [here](#more-examples) for more trial examples.
+定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来实现 Trial：trial: [NNI API](#nni-api) 以及 [NNI Python annotation](#nni-annotation)。 参考[这里的](#more-examples)更多 Trial 样例。
 
 <a name="nni-api"></a>
 
 ## NNI API
 
-### Step 1 - Prepare a SearchSpace parameters file.
+### 第一步：准备搜索空间参数文件。
 
-An example is shown below:
+样例如下：
 
 ```json
 {
@@ -21,21 +21,21 @@ An example is shown below:
 }
 ```
 
-Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search space. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.
+参考 [SearchSpaceSpec.md](./SearchSpaceSpec.md) 进一步了解搜索空间。 Tuner 会根据搜索空间来生成配置，即从每个超参的范围中选一个值。
 
-### Step 2 - Update model codes
+### 第二步：更新模型代码
 
 * Import NNI
     
-    Include `import nni` in your trial code to use NNI APIs.
+    在 Trial 代码中加上 `import nni`。
 
-* Get configuration from Tuner
+* 从 Tuner 获得参数值
 
 ```python
 RECEIVED_PARAMS = nni.get_next_parameter()
 ```
 
-`RECEIVED_PARAMS` is an object, for example: `{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
+`RECEIVED_PARAMS` 是一个对象，如： `{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
 
 * Report metric data periodically (optional)
 
