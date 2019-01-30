@@ -10,7 +10,7 @@ NNI 支持使用 [FrameworkController](https://github.com/Microsoft/frameworkcon
 4. 准备 **NFS 服务器** 并导出通用的装载 (mount)，推荐将 NFS 服务器路径映射到 `root_squash 选项`，否则可能会在 NNI 复制文件到 NFS 时出现权限问题。 参考[页面](https://linux.die.net/man/5/exports)，来了解关于 root_squash 选项，或 **Azure File Storage**。
 5. 在安装 NNI 并运行 nnictl 的计算机上安装 **NFS 客户端**。 运行此命令安装 NFSv4 客户端： ```apt-get install nfs-common```
 
-6. Install **NNI**, follow the install guide [here](QuickStart.md).
+6. 参考[指南](QuickStart.md)安装 **NNI**。
 
 ## Azure 部署的 Kubernetes 的准备工作
 
