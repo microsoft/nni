@@ -16,7 +16,7 @@
 
 2. 设置 `multiPhase` 的值为 `true`，并将第一步中实现的 Tuner 作为自定义 Tuner 进行配置，例如：
     
-    ```yml
+    ```yaml
     ...
     multiPhase: true
     tuner:
