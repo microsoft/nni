@@ -20,38 +20,21 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as os from 'os';
-import * as path from 'path';
 import * as component from '../common/component';
 
 @component.Singleton
 class ExperimentStartupInfo {
     private experimentId: string = '';
     private newExperiment: boolean = true;
-    private basePort: number = -1;
     private initialized: boolean = false;
-    private initTrialSequenceID: number = 0;
-    private logDir: string = '';
-    private logLevel: string = '';
 
-    public setStartupInfo(newExperiment: boolean, experimentId: string, basePort: number, logDir?: string, logLevel?: string): void {
+    public setStartupInfo(newExperiment: boolean, experimentId: string): void {
         assert(!this.initialized);
         assert(experimentId.trim().length > 0);
 
         this.newExperiment = newExperiment;
         this.experimentId = experimentId;
-        this.basePort = basePort;
         this.initialized = true;
-
-        if (logDir !== undefined && logDir.length > 0) {
-            this.logDir = path.join(logDir, getExperimentId());
-        } else {
-            this.logDir = path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
-        }
-
-        if (logLevel !== undefined && logLevel.length > 1) {
-            this.logLevel = logLevel;
-        }
     }
 
     public getExperimentId(): string {
@@ -60,39 +43,10 @@ class ExperimentStartupInfo {
         return this.experimentId;
     }
 
-    public getBasePort(): number {
-        assert(this.initialized);
-
-        return this.basePort;
-    }
-
     public isNewExperiment(): boolean {
         assert(this.initialized);
 
         return this.newExperiment;
-    }
-
-    public getLogDir(): string {
-        assert(this.initialized);
-
-        return this.logDir;
-    }
-
-    public getLogLevel(): string {
-        assert(this.initialized);
-
-        return this.logLevel;
-    }
-
-    public setInitTrialSequenceId(initSequenceId: number): void {
-        assert(this.initialized);
-        this.initTrialSequenceID = initSequenceId;
-    }
-
-    public getInitTrialSequenceId(): number {
-        assert(this.initialized);
-
-        return this.initTrialSequenceID;
     }
 }
 
@@ -100,31 +54,12 @@ function getExperimentId(): string {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getExperimentId();
 }
 
-function getBasePort(): number {
-    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getBasePort();
-}
-
 function isNewExperiment(): boolean {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).isNewExperiment();
 }
 
-function setInitTrialSequenceId(initSequenceId: number): void {
-    component.get<ExperimentStartupInfo>(ExperimentStartupInfo).setInitTrialSequenceId(initSequenceId);
+function setExperimentStartupInfo(newExperiment: boolean, experimentId: string): void {
+    component.get<ExperimentStartupInfo>(ExperimentStartupInfo).setStartupInfo(newExperiment, experimentId);
 }
 
-function getInitTrialSequenceId(): number {
-    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getInitTrialSequenceId();
-}
-
-function getExperimentStartupInfo(): ExperimentStartupInfo {
-    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo);
-}
-
-function setExperimentStartupInfo(
-    newExperiment: boolean, experimentId: string, basePort: number, logDir?: string, logLevel?: string): void {
-    component.get<ExperimentStartupInfo>(ExperimentStartupInfo)
-    .setStartupInfo(newExperiment, experimentId, basePort, logDir, logLevel);
-}
-
-export { ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment, getExperimentStartupInfo,
-    setExperimentStartupInfo, setInitTrialSequenceId, getInitTrialSequenceId };
+export { ExperimentStartupInfo, getExperimentId, isNewExperiment, setExperimentStartupInfo };

@@ -6,7 +6,7 @@ So when user want to write a Trial running on NNI, she/he should:
 
 **1)Have an original Trial could run**,
 
-Trial's code could be any machine learning code that could run in local. Here we use `mnist-keras.py` as example:
+Trial's code could be any machine learning code that could run in local. Here we use ```mnist-keras.py``` as example:
 
 ```python
 import argparse
@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
 **2)Get configure from Tuner**
 
-User import `nni` and use `nni.get_next_parameter()` to receive configure. Please noted **10**, **24** and **25** line in the following code.
+User import ```nni``` and use ```nni.get_parameters()``` to recive configure. Please noted **10**, **24** and **25** line in the following code.
 
 
 ```python
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     ARGS, UNKNOWN = PARSER.parse_known_args()
 
     PARAMS = generate_default_params()
-    RECEIVED_PARAMS = nni.get_next_parameter()
+    RECEIVED_PARAMS = nni.get_parameters()
     PARAMS.update(RECEIVED_PARAMS)
     train(ARGS, PARAMS)
 ```
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
 **3)  Send intermediate result**
 
-Use `nni.report_intermediate_result` to send intermediate result to Assessor. Please noted **5** line in the following code.
+Use ```nni.report_intermediate_result``` to send intermediate result to Assessor. Please noted **5** line in the following code.
 
 
 ```python
@@ -144,7 +144,7 @@ def train(args, params):
 ```
 **4) Send final result**  
 
-Use `nni.report_final_result` to send final result to Tuner. Please noted **15** line in the following code.
+Use ```nni.report_final_result``` to send final result to Trial. Please noted **15** line in the following code.
 
 ```python
 ...
@@ -165,7 +165,7 @@ def train(args, params):
 ...    
 ```
 
-Here is the complete example:
+Here is the complete exampe:
 
 
 ```python
@@ -271,7 +271,7 @@ if __name__ == '__main__':
 
     try:
         # get parameters from tuner
-        RECEIVED_PARAMS = nni.get_next_parameter()
+        RECEIVED_PARAMS = nni.get_parameters()
         LOG.debug(RECEIVED_PARAMS)
         PARAMS = generate_default_params()
         PARAMS.update(RECEIVED_PARAMS)

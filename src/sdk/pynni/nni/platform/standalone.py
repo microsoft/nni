@@ -22,10 +22,7 @@
 import json_tricks
 
 
-def get_next_parameter():
-    pass
-
-def get_sequence_id():
+def get_parameters():
     pass
 
 def send_metric(string):

@@ -35,7 +35,7 @@ import random
 import numpy as np
 
 from nni.tuner import Tuner
-from .. import parameter_expressions
+from . import parameter_expressions
 
 
 @unique
@@ -234,13 +234,12 @@ class EvolutionTuner(Tuner):
         config = _split_index(total_config)
         return config
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, reward):
         '''
         Record an observation of the objective function
         parameters: dict of parameters
-        value: final metrics of the trial, including reward
+        reward: reward of one trial
         '''
-        reward = self.extract_scalar_reward(value)
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')
         # restore the paramsters contains "_index"

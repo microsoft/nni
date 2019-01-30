@@ -32,14 +32,12 @@ import {
     TrialJobEvent,
     TrialJobEventRecord
 } from '../common/datastore';
-import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile } from '../common/manager';
-import { TrialJobDetail } from '../common/trainingService';
 
 /* tslint:disable:no-any */
 
 const createTables: string = `
-create table TrialJobEvent (timestamp integer, trialJobId text, event text, data text, logPath text, sequenceId integer);
+create table TrialJobEvent (timestamp integer, trialJobId text, event text, data text, logPath text);
 create index TrialJobEvent_trialJobId on TrialJobEvent(trialJobId);
 create index TrialJobEvent_event on TrialJobEvent(event);
 
@@ -53,8 +51,6 @@ create table ExperimentProfile (
     execDuration integer,
     startTime integer,
     endTime integer,
-    logDir text,
-    maxSequenceId integer,
     revision integer);
 create index ExperimentProfile_id on ExperimentProfile(id);
 `;
@@ -66,8 +62,6 @@ function loadExperimentProfile(row: any): ExperimentProfile {
         execDuration: row.execDuration,
         startTime: row.startTime === null ? undefined : row.startTime,
         endTime: row.endTime === null ? undefined : row.endTime,
-        logDir: row.logDir === null ? undefined : row.logDir,
-        maxSequenceId: row.maxSequenceId,
         revision: row.revision
     };
 }
@@ -78,8 +72,7 @@ function loadTrialJobEvent(row: any): TrialJobEventRecord {
         trialJobId: row.trialJobId,
         event: row.event,
         data: row.data === null ? undefined : row.data,
-        logPath: row.logPath === null ? undefined : row.logPath,
-        sequenceId: row.sequenceId === null ? undefined : row.sequenceId
+        logPath: row.logPath === null ? undefined : row.logPath
     };
 }
 
@@ -96,7 +89,6 @@ function loadMetricData(row: any): MetricDataRecord {
 
 class SqlDB implements Database {
     private db!: sqlite3.Database;
-    private log: Logger = getLogger();
     private initTask!: Deferred<void>;
 
     public init(createNew: boolean, dbDir: string): Promise<void> {
@@ -104,7 +96,6 @@ class SqlDB implements Database {
             return this.initTask.promise;
         }
         this.initTask = new Deferred<void>();
-        this.log.debug(`Database directory: ${dbDir}`);
         assert(fs.existsSync(dbDir));
 
         // tslint:disable-next-line:no-bitwise
@@ -136,18 +127,16 @@ class SqlDB implements Database {
     }
 
     public storeExperimentProfile(exp: ExperimentProfile): Promise<void> {
-        const sql: string = 'insert into ExperimentProfile values (?,?,?,?,?,?,?,?)';
+        const sql: string = 'insert into ExperimentProfile values (?,?,?,?,?,?)';
         const args: any[] = [
             JSON.stringify(exp.params),
             exp.id,
             exp.execDuration,
             exp.startTime === undefined ? null : exp.startTime,
             exp.endTime === undefined ? null : exp.endTime,
-            exp.logDir === undefined ? null : exp.logDir,
-            exp.maxSequenceId,
             exp.revision
         ];
-        this.log.trace(`storeExperimentProfile: SQL: ${sql}, args: ${JSON.stringify(args)}`);
+
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });
 
@@ -164,7 +153,7 @@ class SqlDB implements Database {
             sql = 'select * from ExperimentProfile where id=? and revision=?';
             args = [experimentId, revision];
         }
-        this.log.trace(`queryExperimentProfile: SQL: ${sql}, args: ${JSON.stringify(args)}`);
+
         const deferred: Deferred<ExperimentProfile[]> = new Deferred<ExperimentProfile[]>();
         this.db.all(sql, args, (err: Error | null, rows: any[]) => {
             this.resolve(deferred, err, rows, loadExperimentProfile);
@@ -179,14 +168,10 @@ class SqlDB implements Database {
         return profiles[0];
     }
 
-    public storeTrialJobEvent(
-        event: TrialJobEvent, trialJobId: string, timestamp: number, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
-        const sql: string = 'insert into TrialJobEvent values (?,?,?,?,?,?)';
-        const logPath: string | undefined = jobDetail === undefined ? undefined : jobDetail.url;
-        const sequenceId: number | undefined = jobDetail === undefined ? undefined : jobDetail.sequenceId;
-        const args: any[] = [timestamp, trialJobId, event, hyperParameter, logPath, sequenceId];
+    public storeTrialJobEvent(event: TrialJobEvent, trialJobId: string, data?: string, logPath?: string): Promise<void> {
+        const sql: string = 'insert into TrialJobEvent values (?,?,?,?,?)';
+        const args: any[] = [Date.now(), trialJobId, event, data, logPath];
 
-        this.log.trace(`storeTrialJobEvent: SQL: ${sql}, args: ${JSON.stringify(args)}`);
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });
 
@@ -209,7 +194,6 @@ class SqlDB implements Database {
             args = [trialJobId, event];
         }
 
-        this.log.trace(`queryTrialJobEvent: SQL: ${sql}, args: ${JSON.stringify(args)}`);
         const deferred: Deferred<TrialJobEventRecord[]> = new Deferred<TrialJobEventRecord[]>();
         this.db.all(sql, args, (err: Error | null, rows: any[]) => {
             this.resolve(deferred, err, rows, loadTrialJobEvent);
@@ -223,7 +207,6 @@ class SqlDB implements Database {
         const json: MetricDataRecord = JSON.parse(data);
         const args: any[] = [Date.now(), json.trialJobId, json.parameterId, json.type, json.sequence, JSON.stringify(json.data)];
 
-        this.log.trace(`storeMetricData: SQL: ${sql}, args: ${JSON.stringify(args)}`);
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });
 
@@ -246,7 +229,6 @@ class SqlDB implements Database {
             args = [trialJobId, metricType];
         }
 
-        this.log.trace(`queryMetricData: SQL: ${sql}, args: ${JSON.stringify(args)}`);
         const deferred: Deferred<MetricDataRecord[]> = new Deferred<MetricDataRecord[]>();
         this.db.all(sql, args, (err: Error | null, rows: any[]) => {
             this.resolve(deferred, err, rows, loadMetricData);
@@ -275,7 +257,6 @@ class SqlDB implements Database {
             for (const row of (<any[]>rows)) {
                 data.push(rowLoader(row));
             }
-            this.log.trace(`sql query result: ${JSON.stringify(data)}`);
             (<Deferred<T[]>>deferred).resolve(data);
         }
     }

@@ -20,15 +20,14 @@
 'use strict';
 
 import * as assert from 'assert';
-import { ChildProcess, spawn, StdioOptions } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import { Deferred } from 'ts-deferred';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import * as CommandType from '../commands';
 import { createDispatcherInterface, IpcInterface } from '../ipcInterface';
-import { NNIError } from '../../common/errors';
 
-let sentCommands: { [key: string]: string }[] = [];
-const receivedCommands: { [key: string]: string }[] = [];
+let sentCommands: {[key: string]: string}[] = [];
+const receivedCommands: {[key: string]: string}[] = [];
 
 let commandTooLong: Error | undefined;
 let rejectCommandType: Error | undefined;
@@ -38,7 +37,7 @@ function runProcess(): Promise<Error | null> {
     const deferred: Deferred<Error | null> = new Deferred<Error | null>();
 
     // create fake assessor process
-    const stdio: StdioOptions = ['ignore', 'pipe', process.stderr, 'pipe', 'pipe'];
+    const stdio: {}[] = ['ignore', 'pipe', process.stderr, 'pipe', 'pipe'];
     const proc: ChildProcess = spawn('python3 assessor.py', [], { stdio, cwd: 'core/test', shell: true });
 
     // record its sent/received commands on exit
@@ -106,13 +105,8 @@ describe('core/protocol', (): void => {
     });
 
     it('sendCommand() should throw on too long command', (): void => {
-        if (commandTooLong === undefined) {
-            assert.fail('Should throw error')
-        } else {
-            const err: Error | undefined = (<NNIError>commandTooLong).cause;
-            assert(err && err.name === 'RangeError');
-            assert(err && err.message === 'Command too long');
-        }
+        assert.equal((<Error>commandTooLong).name, 'RangeError');
+        assert.equal((<Error>commandTooLong).message, 'Command too long');
     });
 
     it('sendCommand() should throw on wrong command type', (): void => {

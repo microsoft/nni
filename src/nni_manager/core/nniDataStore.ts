@@ -25,18 +25,16 @@ import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
 import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
     TrialJobEvent, TrialJobEventRecord, TrialJobInfo } from '../common/datastore';
-import { NNIError } from '../common/errors';
-import { getExperimentId, isNewExperiment } from '../common/experimentStartupInfo';
+import { isNewExperiment } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile,  TrialJobStatistics } from '../common/manager';
-import { TrialJobDetail, TrialJobStatus } from '../common/trainingService';
+import { TrialJobStatus } from '../common/trainingService';
 import { getDefaultDatabaseDir, mkDirP } from '../common/utils';
 
 class NNIDataStore implements DataStore {
     private db: Database = component.get(Database);
     private log: Logger = getLogger();
     private initTask!: Deferred<void>;
-    private multiPhase: boolean | undefined;
 
     public init(): Promise<void> {
         if (this.initTask !== undefined) {
@@ -72,40 +70,17 @@ class NNIDataStore implements DataStore {
     }
 
     public async storeExperimentProfile(experimentProfile: ExperimentProfile): Promise<void> {
-        try {
-            await this.db.storeExperimentProfile(experimentProfile);
-        } catch (err) {
-            throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
-        }
+        await this.db.storeExperimentProfile(experimentProfile);
     }
 
     public getExperimentProfile(experimentId: string): Promise<ExperimentProfile> {
         return this.db.queryLatestExperimentProfile(experimentId);
     }
 
-    public storeTrialJobEvent(
-        event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
-        this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${hyperParameter}, jobDetail: ${JSON.stringify(jobDetail)}`);
+    public storeTrialJobEvent(event: TrialJobEvent, trialJobId: string, data?: string, logPath?: string): Promise<void> {
+        this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${data}, logpath: ${logPath}`);
 
-        // Use the timestamp in jobDetail as TrialJobEvent timestamp for different events
-        let timestamp: number | undefined;
-        if (event === 'WAITING' && jobDetail) {
-            timestamp = jobDetail.submitTime;
-        } else if (event === 'RUNNING' && jobDetail) {
-            timestamp = jobDetail.startTime;
-        } else if (['EARLY_STOPPED', 'SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED'].includes(event) && jobDetail) {
-            timestamp = jobDetail.endTime;
-        }
-        // Use current time as timestamp if timestamp is not assigned from jobDetail
-        if (timestamp === undefined) {
-            timestamp = Date.now();
-        }
-
-        return this.db.storeTrialJobEvent(event, trialJobId, timestamp, hyperParameter, jobDetail).catch(
-                (err: Error) => {
-                    throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
-                }
-            );
+        return this.db.storeTrialJobEvent(event, trialJobId, data, logPath);
     }
 
     public async getTrialJobStatistics(): Promise<any[]> {
@@ -137,56 +112,44 @@ class NNIDataStore implements DataStore {
     }
 
     public async getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
-        const trialJobs: TrialJobInfo[] = await this.queryTrialJobs(undefined, trialJobId);
+        const trialJobs = await this.queryTrialJobs(undefined, trialJobId);
 
         return trialJobs[0];
     }
 
     public async storeMetricData(trialJobId: string, data: string): Promise<void> {
-        const metrics: MetricData = JSON.parse(data);
-        // REQUEST_PARAMETER is used to request new parameters for multiphase trial job,
-        // it is not metrics, so it is skipped here.
-        if (metrics.type === 'REQUEST_PARAMETER') {
-
-            return;
-        }
+        const metrics = JSON.parse(data) as MetricData;
         assert(trialJobId === metrics.trial_job_id);
-        try {
-            await this.db.storeMetricData(trialJobId, JSON.stringify({
-                trialJobId: metrics.trial_job_id,
-                parameterId: metrics.parameter_id,
-                type: metrics.type,
-                sequence: metrics.sequence,
-                data: metrics.value,
-                timestamp: Date.now()
-            }));
-        } catch (err) {
-            throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
-        }
+        await this.db.storeMetricData(trialJobId, JSON.stringify({
+            trialJobId: metrics.trial_job_id,
+            parameterId: metrics.parameter_id,
+            type: metrics.type,
+            sequence: metrics.sequence,
+            data: metrics.value,
+            timestamp: Date.now()
+        }));
     }
 
-    public getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
+    public getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]> {
         return this.db.queryMetricData(trialJobId, metricType);
     }
 
     private async queryTrialJobs(status?: TrialJobStatus, trialJobId?: string): Promise<TrialJobInfo[]> {
-        const result: TrialJobInfo[] = [];
+        const result: TrialJobInfo[]= [];
         const trialJobEvents: TrialJobEventRecord[] = await this.db.queryTrialJobEvent(trialJobId);
         if (trialJobEvents === undefined) {
             return result;
         }
         const map: Map<string, TrialJobInfo> = this.getTrialJobsByReplayEvents(trialJobEvents);
 
-        const finalMetricsMap: Map<string, MetricDataRecord[]> = await this.getFinalMetricData(trialJobId);
-
-        for (const key of map.keys()) {
-            const jobInfo: TrialJobInfo | undefined = map.get(key);
+        for (let key of map.keys()) {
+            const jobInfo = map.get(key);
             if (jobInfo === undefined) {
                 continue;
             }
             if (!(status !== undefined && jobInfo.status !== status)) {
                 if (jobInfo.status === 'SUCCEEDED') {
-                    jobInfo.finalMetricData = finalMetricsMap.get(jobInfo.id);
+                    jobInfo.finalMetricData = await this.getFinalMetricData(jobInfo.id);
                 }
                 result.push(jobInfo);
             }
@@ -195,78 +158,26 @@ class NNIDataStore implements DataStore {
         return result;
     }
 
-    private async getFinalMetricData(trialJobId?: string): Promise<Map<string, MetricDataRecord[]>> {
-        const map: Map<string, MetricDataRecord[]> = new Map();
+    private async getFinalMetricData(trialJobId: string): Promise<any> {
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
-
-        const multiPhase: boolean = await this.isMultiPhase();
-
-        for (const metric of metrics) {
-            const existMetrics: MetricDataRecord[] | undefined = map.get(metric.trialJobId);
-            if (existMetrics !== undefined) {
-                if (!multiPhase) {
-                    this.log.error(`Found multiple FINAL results for trial job ${trialJobId}, metrics: ${JSON.stringify(metrics)}`);
-                } else {
-                    existMetrics.push(metric);
-                }
-            } else {
-                map.set(metric.trialJobId, [metric]);
-            }
-        }
-
-        return map;
-    }
-
-    private async isMultiPhase(): Promise<boolean> {
-        if (this.multiPhase === undefined) {
-            const expProfile: ExperimentProfile = await this.getExperimentProfile(getExperimentId());
-            if (expProfile !== undefined) {
-                this.multiPhase = expProfile.params.multiPhase;
-            } else {
-                return false;
-            }
-        }
-
-        if (this.multiPhase !== undefined) {
-            return this.multiPhase;
+        assert(metrics.length <= 1);
+        if (metrics.length === 1) {
+            return metrics[0];
         } else {
-            return false;
+            return undefined;
         }
     }
 
-    private getJobStatusByLatestEvent(oldStatus: TrialJobStatus, event: TrialJobEvent): TrialJobStatus {
+    private getJobStatusByLatestEvent(event: TrialJobEvent): TrialJobStatus {
         switch (event) {
             case 'USER_TO_CANCEL':
                 return 'USER_CANCELED';
             case 'ADD_CUSTOMIZED':
                 return 'WAITING';
-            case 'ADD_HYPERPARAMETER':
-                return oldStatus;
             default:
         }
 
         return <TrialJobStatus>event;
-    }
-
-    private mergeHyperParameters(hyperParamList: string[], newParamStr: string): string[] {
-        const mergedHyperParams: any[] = [];
-        let newParam: any;
-        try {
-            newParam = JSON.parse(newParamStr);
-        } catch (err) {
-            this.log.error(`Hyper parameter needs to be in json format: ${newParamStr}`);
-
-            return hyperParamList;
-        }
-        for (const hyperParamStr of hyperParamList) {
-            const hyperParam: any = JSON.parse(hyperParamStr);
-            mergedHyperParams.push(hyperParam);
-        }
-        if (mergedHyperParams.filter((value: any) => value.parameter_index === newParam.parameter_index).length <= 0) {
-            mergedHyperParams.push(newParam);
-        }
-
-        return mergedHyperParams.map<string>((value: any) => { return JSON.stringify(value); });
     }
 
     private getTrialJobsByReplayEvents(trialJobEvents: TrialJobEventRecord[]):  Map<string, TrialJobInfo> {
@@ -282,8 +193,7 @@ class NNIDataStore implements DataStore {
             } else {
                 jobInfo = {
                     id: record.trialJobId,
-                    status: this.getJobStatusByLatestEvent('UNKNOWN', record.event),
-                    hyperParameters: []
+                    status: this.getJobStatusByLatestEvent(record.event)
                 };
             }
             if (!jobInfo) {
@@ -298,17 +208,11 @@ class NNIDataStore implements DataStore {
                     if (record.logPath !== undefined) {
                         jobInfo.logPath = record.logPath;
                     }
-                    // Initially assign WAITING timestamp as job's start time,
-                    // If there is RUNNING state event, it will be updated as RUNNING state timestamp
-                    if (jobInfo.startTime === undefined && record.timestamp !== undefined) {
-                        jobInfo.startTime = record.timestamp;
-                    }
                     break;
                 case 'SUCCEEDED':
                 case 'FAILED':
                 case 'USER_CANCELED':
                 case 'SYS_CANCELED':
-                case 'EARLY_STOPPED':
                     if (record.logPath !== undefined) {
                         jobInfo.logPath = record.logPath;
                     }
@@ -318,16 +222,9 @@ class NNIDataStore implements DataStore {
                     }
                 default:
             }
-            jobInfo.status = this.getJobStatusByLatestEvent(jobInfo.status, record.event);
+            jobInfo.status = this.getJobStatusByLatestEvent(record.event);
             if (record.data !== undefined && record.data.trim().length > 0) {
-                if (jobInfo.hyperParameters !== undefined) {
-                    jobInfo.hyperParameters = this.mergeHyperParameters(jobInfo.hyperParameters, record.data);
-                } else {
-                    assert(false, 'jobInfo.hyperParameters is undefined');
-                }
-            }
-            if (record.sequenceId !== undefined && jobInfo.sequenceId === undefined) {
-                jobInfo.sequenceId = record.sequenceId;
+                jobInfo.hyperParameters = record.data;
             }
             map.set(record.trialJobId, jobInfo);
         }

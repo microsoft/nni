@@ -26,18 +26,13 @@ import { Writable } from 'stream';
 import { WritableStreamBuffer } from 'stream-buffers';
 import { format } from 'util';
 import * as component from '../common/component';
-import { getExperimentStartupInfo } from './experimentStartupInfo';
 import { getLogDir } from './utils';
 
-const FATAL: number = 1;
+const CRITICAL: number = 1;
 const ERROR: number = 2;
 const WARNING: number = 3;
 const INFO: number = 4;
 const DEBUG: number = 5;
-const TRACE: number = 6;
-
-const logLevelNameMap: Map<string, number> = new Map([['fatal', FATAL],
-    ['error', ERROR], ['warning', WARNING], ['info', INFO], ['debug', DEBUG], ['trace', TRACE]]);
 
 class BufferSerialEmitter {
     private buffer: Buffer;
@@ -45,7 +40,7 @@ class BufferSerialEmitter {
     private writable: Writable;
 
     constructor(writable: Writable) {
-        this.buffer = Buffer.alloc(0);
+        this.buffer = new Buffer(0);
         this.emitting = false;
         this.writable = writable;
     }
@@ -66,45 +61,26 @@ class BufferSerialEmitter {
                 this.emit();
             }
         });
-        this.buffer = Buffer.alloc(0);
+        this.buffer = new Buffer(0);
     }
 }
 
 @component.Singleton
 class Logger {
     private DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
-    private level: number = INFO;
+    private level: number = DEBUG;
     private bufferSerialEmitter: BufferSerialEmitter;
-    private writable: Writable;
 
     constructor(fileName?: string) {
         let logFile: string | undefined = fileName;
         if (logFile === undefined) {
             logFile = this.DEFAULT_LOGFILE;
         }
-        this.writable = fs.createWriteStream(logFile, {
+        this.bufferSerialEmitter = new BufferSerialEmitter(fs.createWriteStream(logFile, {
             flags: 'a+',
             encoding: 'utf8',
             autoClose: true
-        });
-        this.bufferSerialEmitter = new BufferSerialEmitter(this.writable);
-
-        const logLevelName: string = getExperimentStartupInfo()
-                                    .getLogLevel();
-        const logLevel: number | undefined = logLevelNameMap.get(logLevelName);
-        if (logLevel !== undefined) {
-            this.level = logLevel;
-        }
-    }
-
-    public close() {
-        this.writable.destroy();
-    }
-
-    public trace(...param: any[]): void {
-        if (this.level >= TRACE) {
-            this.log('TRACE', param);
-        }
+        }));
     }
 
     public debug(...param: any[]): void {
@@ -131,14 +107,14 @@ class Logger {
         }
     }
 
-    public fatal(...param: any[]): void {
-        this.log('FATAL', param);
+    public critical(...param: any[]): void {
+        this.log('CRITICAL', param);
     }
 
     private log(level: string, param: any[]): void {
         const buffer: WritableStreamBuffer = new WritableStreamBuffer();
         buffer.write(`[${(new Date()).toISOString()}] ${level} `);
-        buffer.write(format(null, param));
+        buffer.write(format.apply(null, param));
         buffer.write('\n');
         buffer.end();
         this.bufferSerialEmitter.feed(buffer.getContents());
@@ -153,4 +129,4 @@ function getLogger(fileName?: string): Logger {
     return component.get(Logger);
 }
 
-export { Logger, getLogger, logLevelNameMap };
+export { Logger, getLogger };

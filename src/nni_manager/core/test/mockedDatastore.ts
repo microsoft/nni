@@ -240,7 +240,6 @@ class MockedDataStore implements DataStore {
                 case 'FAILED':
                 case 'USER_CANCELED':
                 case 'SYS_CANCELED':
-                case 'EARLY_STOPPED':
                     jobInfo.endTime = Date.now();
             }
             jobInfo.status = this.getJobStatusByLatestEvent(record.event);

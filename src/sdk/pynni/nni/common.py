@@ -20,7 +20,6 @@
 
 
 from collections import namedtuple
-from datetime import datetime
 from io import TextIOBase
 import logging
 import os
@@ -40,19 +39,13 @@ env_args = _load_env_args()
 '''Arguments passed from environment'''
 
 
-_time_format = '%Y-%m-%d %H:%M:%S'
-class _LoggerFileWrapper(TextIOBase):
-    def __init__(self, logger_file):
-        self.file = logger_file
-        self.orig_stdout = sys.stdout
+class _LoggerFile(TextIOBase):
+    def __init__(self, logger):
+        self.logger = logger
 
     def write(self, s):
-        if s != '\n':
-            time = datetime.now().strftime(_time_format)
-            self.orig_stdout.write(s + '\n')
-            self.orig_stdout.flush()
-            self.file.write('[{}] PRINT '.format(time) + s + '\n')
-            self.file.flush()
+        if s != '\n':  # ignore line break, since logger will add it
+            self.logger.info(s)
         return len(s)
 
 
@@ -65,11 +58,12 @@ def init_logger(logger_file_path):
         logger_file_path = 'unittest.log'
     elif env_args.log_dir is not None:
         logger_file_path = os.path.join(env_args.log_dir, logger_file_path)
-    logger_file = open(logger_file_path, 'w')
-    fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
-    formatter = logging.Formatter(fmt, _time_format)
 
-    handler = logging.StreamHandler(logger_file)
+    fmt = '[%(asctime)s] %(levelname)s (%(name)s) %(message)s'
+    datefmt = '%Y-%m-%d %H:%M:%S'
+    formatter = logging.Formatter(fmt, datefmt)
+
+    handler = logging.FileHandler(logger_file_path)
     handler.setFormatter(formatter)
 
     root_logger = logging.getLogger()
@@ -79,13 +73,4 @@ def init_logger(logger_file_path):
     # these modules are too verbose
     logging.getLogger('matplotlib').setLevel(logging.INFO)
 
-    sys.stdout = _LoggerFileWrapper(logger_file)
-
-_multi_thread = False
-
-def enable_multi_thread():
-    global _multi_thread
-    _multi_thread = True
-
-def multi_thread_enabled():
-    return _multi_thread
+    sys.stdout = _LoggerFile(logging.getLogger('print'))

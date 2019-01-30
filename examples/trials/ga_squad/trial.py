@@ -46,7 +46,7 @@ except:
 
 def get_config():
     '''
-    Get config from argument parser.
+    Get config from arument parser.
     '''
     parser = argparse.ArgumentParser(
         description='This program is using genetic algorithm to search architecture for SQuAD.')
@@ -86,7 +86,7 @@ def get_id(word_dict, word):
 
 def load_embedding(path):
     '''
-    return embedding for a specific file by given file path.
+    return embedding for a specif file by given file path.
     '''
     EMBEDDING_DIM = 300
     embedding_dict = {}
@@ -338,7 +338,7 @@ def train_with_graph(graph, qp_pairs, dev_qp_pairs):
                 answers = generate_predict_json(
                     position1, position2, ids, contexts)
                 if save_path is not None:
-                    with open(os.path.join(save_path, 'epoch%d.prediction' % epoch), 'w') as file:
+                    with open(save_path + 'epoch%d.prediction' % epoch, 'w') as file:
                         json.dump(answers, file)
                 else:
                     answers = json.dumps(answers)
@@ -359,8 +359,8 @@ def train_with_graph(graph, qp_pairs, dev_qp_pairs):
                     bestacc = acc
 
                     if save_path is not None:
-                        saver.save(os.path.join(sess, save_path + 'epoch%d.model' % epoch))
-                        with open(os.path.join(save_path, 'epoch%d.score' % epoch), 'wb') as file:
+                        saver.save(sess, save_path + 'epoch%d.model' % epoch)
+                        with open(save_path + 'epoch%d.score' % epoch, 'wb') as file:
                             pickle.dump(
                                 (position1, position2, ids, contexts), file)
                 logger.debug('epoch %d acc %g bestacc %g' %
@@ -436,7 +436,7 @@ if __name__ == '__main__':
         qp_pairs, dev_qp_pairs = load_data()
         logger.debug('Init finish.')
 
-        original_params = nni.get_next_parameter()
+        original_params = nni.get_parameters()
         '''
         with open('data.json') as f:
             original_params = json.load(f)

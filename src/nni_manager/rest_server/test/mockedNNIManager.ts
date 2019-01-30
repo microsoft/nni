@@ -39,7 +39,7 @@ export const testManagerProvider: Provider = {
 export class MockedNNIManager extends Manager {
     public getStatus(): NNIManagerStatus {
         return {
-            status: 'RUNNING',
+            status: 'EXPERIMENT_RUNNING',
             errors: []
         }
     }
@@ -78,7 +78,6 @@ export class MockedNNIManager extends Manager {
             // tslint:disable-next-line:no-http-string
             url: 'http://test',
             workingDirectory: '/tmp/mocked',
-            sequenceId: 0,
             form: {
                 jobType: 'TRIAL'
             }
@@ -101,7 +100,13 @@ export class MockedNNIManager extends Manager {
     }
 
     public setClusterMetadata(key: string, value: string): Promise<void> {
-        return Promise.resolve();
+        const deferred: Deferred<void> = new Deferred<void>();
+        if (key === 'exception_test_key') {
+            deferred.reject(new Error('Test Error'));
+        }
+        deferred.resolve();
+
+        return deferred.promise;
     }
 
     public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
@@ -130,7 +135,6 @@ export class MockedNNIManager extends Manager {
                 trialConcurrency: 2,
                 maxExecDuration: 30,
                 maxTrialNum: 3,
-                trainingServicePlatform: 'local',
                 searchSpace: '{lr: 0.01}',
                 tuner: {
                     className: 'testTuner',
@@ -141,7 +145,6 @@ export class MockedNNIManager extends Manager {
             execDuration: 0,
             startTime: Date.now(),
             endTime: Date.now(),
-            maxSequenceId: 0,
             revision: 0
         };
 
@@ -153,28 +156,14 @@ export class MockedNNIManager extends Manager {
             status: 'SUCCEEDED',
             startTime: Date.now(),
             endTime: Date.now(),
-            finalMetricData: [{
-                timestamp: 0,
-                trialJobId: '3456',
-                parameterId: '123',
-                type: 'FINAL',
-                sequence: 0,
-                data: '0.2'
-            }]
+            finalMetricData: 'lr: 0.01, val accuracy: 0.89, batch size: 256'
         };
         const job2: TrialJobInfo = {
             id: '3456',
             status: 'FAILED',
             startTime: Date.now(),
             endTime: Date.now(),
-            finalMetricData: [{
-                timestamp: 0,
-                trialJobId: '3456',
-                parameterId: '123',
-                type: 'FINAL',
-                sequence: 0,
-                data: '0.2'
-            }]
+            finalMetricData: ''
         };
 
         return Promise.resolve([job1, job2]);

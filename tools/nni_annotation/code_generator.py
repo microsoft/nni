@@ -20,8 +20,8 @@
 
 
 import ast
+
 import astor
-from nni_cmd.common_utils import print_warning
 
 # pylint: disable=unidiomatic-typecheck
 
@@ -76,8 +76,6 @@ def parse_nni_variable(code):
     name_str = astor.to_source(name).strip()
     keyword_arg = ast.keyword(arg='name', value=ast.Str(s=name_str))
     arg.keywords.append(keyword_arg)
-    if arg.func.attr == 'choice':
-        convert_args_to_dict(arg)
 
     return name, arg
 
@@ -89,7 +87,7 @@ def parse_nni_function(code):
     """
     name, call = parse_annotation_function(code, 'function_choice')
     funcs = [ast.dump(func, False) for func in call.args]
-    convert_args_to_dict(call, with_lambda=True)
+    call.args = [make_lambda(arg) for arg in call.args]
 
     name_str = astor.to_source(name).strip()
     call.keywords[0].value = ast.Str(s=name_str)
@@ -97,31 +95,11 @@ def parse_nni_function(code):
     return call, funcs
 
 
-def convert_args_to_dict(call, with_lambda=False):
-    """Convert all args to a dict such that every key and value in the dict is the same as the value of the arg.
-    Return the AST Call node with only one arg that is the dictionary
-    """
-    keys, values = list(), list()
-    for arg in call.args:
-        if type(arg) in [ast.Str, ast.Num]:
-            arg_value = arg
-        else:
-        # if arg is not a string or a number, we use its source code as the key
-            arg_value = astor.to_source(arg).strip('\n"')
-            arg_value = ast.Str(str(arg_value))
-        arg = make_lambda(arg) if with_lambda else arg
-        keys.append(arg_value)
-        values.append(arg)
-    del call.args[:]
-    call.args.append(ast.Dict(keys=keys, values=values))
-
-    return call
-
-
 def make_lambda(call):
     """Wrap an AST Call node to lambda expression node.
     call: ast.Call node
     """
+    assert type(call) is ast.Call, 'Argument of nni.function_choice is not function call'
     empty_args = ast.arguments(args=[], vararg=None, kwarg=None, defaults=[])
     return ast.Lambda(args=empty_args, body=call)
 
@@ -183,7 +161,6 @@ class Transformer(ast.NodeTransformer):
     def __init__(self):
         self.stack = []
         self.last_line = 0
-        self.annotated = False
 
     def visit(self, node):
         if isinstance(node, (ast.expr, ast.stmt)):
@@ -213,18 +190,12 @@ class Transformer(ast.NodeTransformer):
 
     def _visit_string(self, node):
         string = node.value.s
-        if string.startswith('@nni.'):
-            self.annotated = True
-        else:
+
+        if not string.startswith('@nni.'):
             return node  # not an annotation, ignore it
 
-        if string.startswith('@nni.get_next_parameter('):
-            deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. Please remove this line in the trial code."
-            print_warning(deprecated_message)
-
-        if string.startswith('@nni.report_intermediate_result(')  \
-                or string.startswith('@nni.report_final_result(') \
-                or string.startswith('@nni.get_next_parameter('):
+        if string.startswith('@nni.report_intermediate_result(') \
+                or string.startswith('@nni.report_final_result('):
             return parse_annotation(string[1:])  # expand annotation string to code
 
         if string.startswith('@nni.variable(') \
@@ -245,7 +216,7 @@ class Transformer(ast.NodeTransformer):
 
 def parse(code):
     """Annotate user code.
-    Return annotated code (str) if annotation detected; return None if not.
+    Return annotated code (str).
     code: original user code (str)
     """
     try:
@@ -253,14 +224,10 @@ def parse(code):
     except Exception:
         raise RuntimeError('Bad Python code')
 
-    transformer = Transformer()
     try:
-        transformer.visit(ast_tree)
+        Transformer().visit(ast_tree)
     except AssertionError as exc:
         raise RuntimeError('%d: %s' % (ast_tree.last_line, exc.args[0]))
-
-    if not transformer.annotated:
-        return None
 
     last_future_import = -1
     import_nni = ast.Import(names=[ast.alias(name='nni', asname=None)])

@@ -84,7 +84,7 @@ class SendMetrics(keras.callbacks.Callback):
         Run on end of each epoch
         '''
         LOG.debug(logs)
-        nni.report_intermediate_result(logs["val_acc"])
+        nni.report_intermediate_result(logs['acc'])
 
 def train(args, params):
     '''
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     try:
         # get parameters from tuner
         # RECEIVED_PARAMS = {"optimizer": "Adam", "learning_rate": 0.00001}
-        RECEIVED_PARAMS = nni.get_next_parameter()
+        RECEIVED_PARAMS = nni.get_parameters()
         LOG.debug(RECEIVED_PARAMS)
         PARAMS = generate_default_params()
         PARAMS.update(RECEIVED_PARAMS)

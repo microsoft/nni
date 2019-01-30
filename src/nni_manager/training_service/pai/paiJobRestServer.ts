@@ -17,38 +17,4 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-'use strict';
-
-import * as component from '../../common/component';
-import { Inject } from 'typescript-ioc';
-import { PAITrainingService } from './paiTrainingService';
-import { ClusterJobRestServer } from '../common/clusterJobRestServer'
-
-/**
- * PAI Training service Rest server, provides rest API to support pai job metrics update
- * 
- */
-@component.Singleton
-export class PAIJobRestServer extends ClusterJobRestServer{
-    @Inject
-    private readonly paiTrainingService : PAITrainingService;
-
-    /**
-     * constructor to provide NNIRestServer's own rest property, e.g. port
-     */
-    constructor() {
-        super();
-        this.paiTrainingService = component.get(PAITrainingService);
-    }
-
-    protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
-        // Split metrics array into single metric, then emit
-        // Warning: If not split metrics into single ones, the behavior will be UNKNOWN
-        for (const singleMetric of metrics) {
-            this.paiTrainingService.MetricsEmitter.emit('metric', {
-                id : jobId,
-                data : singleMetric
-            });
-        }
-    }
-}
+ 

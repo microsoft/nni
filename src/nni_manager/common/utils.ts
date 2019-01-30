@@ -21,7 +21,6 @@
 
 import * as assert from 'assert';
 import { randomBytes } from 'crypto';
-import * as cpp from 'child-process-promise';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -30,14 +29,12 @@ import { Container } from 'typescript-ioc';
 import * as util from 'util';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, getExperimentId, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
+import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
-import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
-import { getLogger } from './log';
+import { TrainingService } from './trainingService';
 
 function getExperimentRootDir(): string {
-    return getExperimentStartupInfo()
-            .getLogDir();
+    return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
 }
 
 function getLogDir(): string{
@@ -46,10 +43,6 @@ function getLogDir(): string{
 
 function getDefaultDatabaseDir(): string {
     return path.join(getExperimentRootDir(), 'db');
-}
-
-function getCheckpointDir(): string {
-    return path.join(getExperimentRootDir(), 'checkpoint');
 }
 
 function mkDirP(dirPath: string): Promise<void> {
@@ -142,8 +135,7 @@ function parseArg(names: string[]): string {
 }
 
 /**
- * Generate command line to start automl algorithm(s), 
- * either start advisor or start a process which runs tuner and assessor
+ * Generate command line to start advisor process which runs tuner and assessor
  * @param tuner : For builtin tuner:
  *     {
  *         className: 'EvolutionTuner'
@@ -164,81 +156,43 @@ function parseArg(names: string[]): string {
  *     }
  *
  * @param assessor: similiar as tuner
- * @param advisor: similar as tuner
  *
  */
-function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiPhase: boolean = false, multiThread: boolean = false): string {
-    if ((tuner || assessor) && advisor) {
-        throw new Error('Error: specify both tuner/assessor and advisor is not allowed');
-    }
-    if (!tuner && !advisor) {
-        throw new Error('Error: specify neither tuner nor advisor is not allowed');
-    }
+function getMsgDispatcherCommand(tuner: any, assessor: any): string {
+    let command: string = `python3 -m nni --tuner_class_name ${tuner.className}`;
 
-    let command: string = `python3 -m nni`;
-    if (multiPhase) {
-        command += ' --multi_phase';
+    if (process.env.VIRTUAL_ENV) {
+        command = path.join(process.env.VIRTUAL_ENV, 'bin/') +command;
     }
 
-    if (multiThread) {
-        command += ' --multi_thread';
+    if (tuner.classArgs !== undefined) {
+        command += ` --tuner_args ${JSON.stringify(JSON.stringify(tuner.classArgs))}`;
     }
 
-    if (advisor) {
-        command += ` --advisor_class_name ${advisor.className}`;
-        if (advisor.classArgs !== undefined) {
-            command += ` --advisor_args ${JSON.stringify(JSON.stringify(advisor.classArgs))}`;
-        }
-        if (advisor.codeDir !== undefined && advisor.codeDir.length > 1) {
-            command += ` --advisor_directory ${advisor.codeDir}`;
-        }
-        if (advisor.classFileName !== undefined && advisor.classFileName.length > 1) {
-            command += ` --advisor_class_filename ${advisor.classFileName}`;
-        }
-    } else {
-        command += ` --tuner_class_name ${tuner.className}`;
-        if (tuner.classArgs !== undefined) {
-            command += ` --tuner_args ${JSON.stringify(JSON.stringify(tuner.classArgs))}`;
-        }
-        if (tuner.codeDir !== undefined && tuner.codeDir.length > 1) {
-            command += ` --tuner_directory ${tuner.codeDir}`;
-        }
-        if (tuner.classFileName !== undefined && tuner.classFileName.length > 1) {
-            command += ` --tuner_class_filename ${tuner.classFileName}`;
+    if (tuner.codeDir !== undefined && tuner.codeDir.length > 1) {
+        command += ` --tuner_directory ${tuner.codeDir}`;
+    }
+
+    if (tuner.classFileName !== undefined && tuner.classFileName.length > 1) {
+        command += ` --tuner_class_filename ${tuner.classFileName}`;
+    }
+
+    if (assessor !== undefined && assessor.className !== undefined) {
+        command += ` --assessor_class_name ${assessor.className}`;
+        if (assessor.classArgs !== undefined) {
+            command += ` --assessor_args ${JSON.stringify(JSON.stringify(assessor.classArgs))}`;
         }
 
-        if (assessor !== undefined && assessor.className !== undefined) {
-            command += ` --assessor_class_name ${assessor.className}`;
-            if (assessor.classArgs !== undefined) {
-                command += ` --assessor_args ${JSON.stringify(JSON.stringify(assessor.classArgs))}`;
-            }
-            if (assessor.codeDir !== undefined && assessor.codeDir.length > 1) {
-                command += ` --assessor_directory ${assessor.codeDir}`;
-            }
-            if (assessor.classFileName !== undefined && assessor.classFileName.length > 1) {
-                command += ` --assessor_class_filename ${assessor.classFileName}`;
-            }
+        if (assessor.codeDir !== undefined && assessor.codeDir.length > 1) {
+            command += ` --assessor_directory ${assessor.codeDir}`;
+        }
+
+        if (assessor.classFileName !== undefined && assessor.classFileName.length > 1) {
+            command += ` --assessor_class_filename ${assessor.classFileName}`;
         }
     }
 
     return command;
-}
-
-/**
- * Generate parameter file name based on HyperParameters object
- * @param hyperParameters HyperParameters instance
- */
-function generateParamFileName(hyperParameters : HyperParameters): string {
-    assert(hyperParameters !== undefined);
-    assert(hyperParameters.index >= 0);
-
-    let paramFileName : string;
-    if(hyperParameters.index == 0) {
-        paramFileName = 'parameter.cfg';
-    } else {
-        paramFileName = `parameter_${hyperParameters.index}.cfg`
-    }
-    return paramFileName;
 }
 
 /**
@@ -252,7 +206,7 @@ function prepareUnitTest(): void {
     Container.snapshot(TrainingService);
     Container.snapshot(Manager);
 
-    setExperimentStartupInfo(true, 'unittest', 8080);
+    setExperimentStartupInfo(true, 'unittest');
     mkDirPSync(getLogDir());
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');
@@ -275,76 +229,5 @@ function cleanupUnitTest(): void {
     Container.restore(ExperimentStartupInfo);
 }
 
-let cachedipv4Address : string = '';
-/**
- * Get IPv4 address of current machine
- */
-function getIPV4Address(): string {
-    if (cachedipv4Address && cachedipv4Address.length > 0) {
-        return cachedipv4Address;
-    }
-
-    if(os.networkInterfaces().eth0) {
-        for(const item of os.networkInterfaces().eth0) {
-            if(item.family === 'IPv4') {
-                cachedipv4Address = item.address;
-                return cachedipv4Address;
-            }
-        }
-    } else {
-        throw Error('getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.');
-    }
-
-    throw Error('getIPV4Address() failed because no valid IPv4 address found.')
-}
-
-function getRemoteTmpDir(osType: string): string {
-    if (osType == 'linux') {
-        return '/tmp';
-    } else {
-        throw Error(`remote OS ${osType} not supported`);
-    }
-}
-
-/**
- * Get the status of canceled jobs according to the hint isEarlyStopped
- */
-function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
-    return isEarlyStopped ? 'EARLY_STOPPED' : 'USER_CANCELED';
-}
-
-/**
- * Utility method to calculate file numbers under a directory, recursively
- * @param directory directory name
- */
-function countFilesRecursively(directory: string, timeoutMilliSeconds?: number): Promise<number> {
-    if(!fs.existsSync(directory)) {
-        throw Error(`Direcotory ${directory} doesn't exist`);
-    }
-
-    const deferred: Deferred<number> = new Deferred<number>();
-
-    let timeoutId : NodeJS.Timer
-    const delayTimeout : Promise<number> = new Promise((resolve : Function, reject : Function) : void => {
-        // Set timeout and reject the promise once reach timeout (5 seconds)
-        timeoutId = setTimeout(() => {
-            reject(new Error(`Timeout: path ${directory} has too many files`));
-        }, 5000);
-    });
-
-    let fileCount: number = -1;
-    cpp.exec(`find ${directory} -type f | wc -l`).then((result) => {
-        if(result.stdout && parseInt(result.stdout)) {
-            fileCount = parseInt(result.stdout);            
-        }
-        deferred.resolve(fileCount);
-    });
-
-    return Promise.race([deferred.promise, delayTimeout]).finally(() => {
-        clearTimeout(timeoutId);
-    });
-}
-
-export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
+export { getMsgDispatcherCommand, getLogDir, getExperimentRootDir, getDefaultDatabaseDir, mkDirP, delay, prepareUnitTest,
+    parseArg, cleanupUnitTest, uniqueString, randomSelect };

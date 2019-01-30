@@ -61,8 +61,7 @@ class Individual(object):
 
     def mutation(self, config=None, info=None, save_dir=None):
         self.result = None
-        if config is not None:
-            self.config = config
+        self.config = config
         self.config.mutation()
         self.restore_dir = self.save_dir
         self.save_dir = save_dir
@@ -96,7 +95,7 @@ class CustomerTuner(Tuner):
             temp = json.loads(graph_dumps(indiv.config))
         else:
             random.shuffle(self.population)
-            if self.population[0].result < self.population[1].result:
+            if self.population[0].result > self.population[1].result:
                 self.population[0] = self.population[1]
             indiv = copy.deepcopy(self.population[0])
             self.population.pop(1)
@@ -108,14 +107,13 @@ class CustomerTuner(Tuner):
         return temp
 
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, reward):
         '''
         Record an observation of the objective function
         parameter_id : int
         parameters : dict of parameters
-        value: final metrics of the trial, including reward
+        reward : reward of one trial
         '''
-        reward = self.extract_scalar_reward(value)
         if self.optimize_mode is OptimizeMode.Minimize:
             reward = -reward
 
@@ -123,7 +121,8 @@ class CustomerTuner(Tuner):
         logger.debug(str(parameters))
         logger.debug(str(reward))
 
-        indiv = Individual(graph_loads(parameters), result=reward)
+        indiv = graph_loads(parameters)
+        indiv.result = reward
         self.population.append(indiv)
         return
 
@@ -132,7 +131,7 @@ class CustomerTuner(Tuner):
 
 if __name__ =='__main__':
     tuner = CustomerTuner(OptimizeMode.Maximize)
-    config = tuner.generate_parameters(0)
+    config = tuner.generate_parameter(0)
     with open('./data.json', 'w') as outfile:
         json.dump(config, outfile)
     tuner.receive_trial_result(0, config, 0.99)

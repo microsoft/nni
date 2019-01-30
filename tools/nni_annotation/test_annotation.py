@@ -27,7 +27,6 @@ import ast
 import json
 import os
 import shutil
-import tempfile
 from unittest import TestCase, main
 
 
@@ -44,17 +43,11 @@ class AnnotationTestCase(TestCase):
             self.assertEqual(search_space, json.load(f))
 
     def test_code_generator(self):
-        code_dir = expand_annotations('testcase/usercode', '_generated')
-        self.assertEqual(code_dir, '_generated')
+        expand_annotations('testcase/usercode', '_generated')
         self._assert_source_equal('testcase/annotated/mnist.py', '_generated/mnist.py')
         self._assert_source_equal('testcase/annotated/dir/simple.py', '_generated/dir/simple.py')
         with open('testcase/usercode/nonpy.txt') as src, open('_generated/nonpy.txt') as dst:
             assert src.read() == dst.read()
-
-    def test_annotation_detecting(self):
-        dir_ = 'testcase/usercode/non_annotation'
-        code_dir = expand_annotations(dir_, tempfile.mkdtemp())
-        self.assertEqual(code_dir, dir_)
 
     def _assert_source_equal(self, src1, src2):
         with open(src1) as f1, open(src2) as f2:

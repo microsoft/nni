@@ -2,26 +2,25 @@ authorName: default
 experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 1h
-maxTrialNum: 20
+maxTrialNum: 1
 #choice: local, remote
 trainingServicePlatform: local
-searchSpacePath: search_space.json
+searchSpacePath: ~/nni/examples/trials/mnist/search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC should be installed through nnictl)
+  #choice: TPE, Random, Anneal, Evolution
   builtinTunerName: TPE
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
 assessor:
-  #choice: Medianstop, Curvefitting
+  #choice: Medianstop
   builtinAssessorName: Medianstop
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
-  codeDir: .
+  codeDir: ~/nni/examples/trials/mnist
   gpuNum: 0
