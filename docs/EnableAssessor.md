@@ -4,7 +4,8 @@ Assessor module is for assessing running trials. One common use case is early st
 
 ## Using NNI built-in Assessor
 Here we use the same example `examples/trials/mnist-annotation`. We use `Medianstop` assessor for this experiment. The yml configure file is shown below:
-```
+
+```yaml
 authorName: your_name
 experimentName: auto_mnist
 # how many trials could be concurrently running
@@ -30,11 +31,14 @@ trial:
   codeDir: /usr/share/nni/examples/trials/mnist-annotation
   gpuNum: 0
 ```
+
 For our built-in assessors, you need to fill two fields: `builtinAssessorName` which chooses NNI provided assessors (refer to [here]() for built-in assessors), `optimize_mode` which includes maximize and minimize (you want to maximize or minimize your trial result).
 
 ## Using user customized Assessor
+
 You can also write your own assessor following the guidance [here](). For example, you wrote an assessor for `examples/trials/mnist-annotation`. You should prepare the yml configure below:
-```
+
+```yaml
 authorName: your_name
 experimentName: auto_mnist
 # how many trials could be concurrently running
@@ -69,11 +73,14 @@ trial:
   codeDir: /usr/share/nni/examples/trials/mnist-annotation
   gpuNum: 0
 ```
+
 You need to fill: `codeDir`, `classFileName`, `className`, and pass parameters to \_\_init__ constructor through `classArgs` field if the \_\_init__ constructor of your assessor class has required parameters.
 
-**Note that** if you want to access a file (e.g., ```data.txt```) in the directory of your own assessor, you cannot use ```open('data.txt', 'r')```. Instead, you should use the following:
-```
+**Note that** if you want to access a file (e.g., `data.txt`) in the directory of your own assessor, you cannot use `open('data.txt', 'r')`. Instead, you should use the following:
+
+```python
 _pwd = os.path.dirname(__file__)
 _fd = open(os.path.join(_pwd, 'data.txt'), 'r')
 ```
-This is because your assessor is not executed in the directory of your assessor (i.e., ```pwd``` is not the directory of your own assessor).
+
+This is because your assessor is not executed in the directory of your assessor (i.e., `pwd` is not the directory of your own assessor).
