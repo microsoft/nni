@@ -142,8 +142,7 @@ machineList:
     
     **trialConcurrency** 定义了并发尝试任务的最大数量。
     
-        注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的尝试任务数量还没达到 trialConcurrency，尝试任务会被放入队列，等待分配 GPU 资源。
-        
+    注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的 Trial 任务数量还没达到 trialConcurrency，Trial 任务会被放入队列，等待分配 GPU 资源。
 
 * **maxExecDuration**
   
@@ -259,13 +258,11 @@ machineList:
     
     * **builtinAssessorName**
       
-          __builtinAssessorName__ 指定了系统 Assessor 的名称， NNI 内置 Assessor {__Medianstop__}
-          
+      **builtinAssessorName** 指定了系统 Assessor 的名称， NNI 内置的 Assessor 有 {**Medianstop**，等等}。
     
     * **classArgs**
       
-          __classArgs__ 指定了 Assessor 算法的参数。
-          
+      **classArgs** 指定了 Assessor 算法的参数。
   
   * **codeDir**, **classFileName**, **className** 和 **classArgs**
     
