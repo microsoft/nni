@@ -45,30 +45,30 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment �
         </ul>
       </td>
       <td>
-        <a href="docs/HowToChooseTuner.md">Tuner（调参器）</a>
+        <a href="docs/Builtin_Tuner.md">Tuner（调参器）</a>
         <ul>
-          <li><a href="docs/HowToChooseTuner.md#TPE">TPE</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Random">Random Search（随机搜索）</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Anneal">Anneal（退火算法）</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Evolution">Naive Evolution（进化算法）</a></li>
-          <li><a href="docs/HowToChooseTuner.md#SMAC">SMAC</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Batch">Batch（批处理）</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Grid">Grid Search（遍历搜索）</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Hyperband">Hyperband</a></li>
-          <li><a href="docs/HowToChooseTuner.md#NetworkMorphism">Network Morphism</a></li>
+          <li><a href="docs/Builtin_Tuner.md#TPE">TPE</a></li>
+          <li><a href="docs/Builtin_Tuner.md#Random">Random Search（随机搜索）</a></li>
+          <li><a href="docs/Builtin_Tuner.md#Anneal">Anneal（退火算法）</a></li>
+          <li><a href="docs/Builtin_Tuner.md#Evolution">Naive Evolution（进化算法）</a></li>
+          <li><a href="docs/Builtin_Tuner.md#SMAC">SMAC</a></li>
+          <li><a href="docs/Builtin_Tuner.md#Batch">Batch（批处理）</a></li>
+          <li><a href="docs/Builtin_Tuner.md#Grid">Grid Search（遍历搜索）</a></li>
+          <li><a href="docs/Builtin_Tuner.md#Hyperband">Hyperband</a></li>
+          <li><a href="docs/Builtin_Tuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README.md">ENAS</a></li>
-          <li><a href="docs/HowToChooseTuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
+          <li><a href="docs/Builtin_Tuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
         </ul> 
-          <a href="docs/HowToChooseTuner.md#assessor">Assessor（评估器）</a> 
+          <a href="docs/Builtin_Tuner.md#assessor">Assessor（评估器）</a> 
         <ul>
-          <li><a href="docs/HowToChooseTuner.md#Medianstop">Median Stop</a></li>
-          <li><a href="docs/HowToChooseTuner.md#Curvefitting">Curve Fitting</a></li>
+          <li><a href="docs/Builtin_Tuner.md#Medianstop">Median Stop</a></li>
+          <li><a href="docs/Builtin_Tuner.md#Curvefitting">Curve Fitting</a></li>
         </ul>
       </td>
       <td>
       <ul>
         <li><a href="docs/tutorial_1_CR_exp_local_api.md">本地计算机</a></li>
-        <li><a href="docs/tutorial_2_RemoteMachineMode.md">远程计算机</a></li>
+        <li><a href="docs/RemoteMachineMode.md">远程计算机</a></li>
         <li><a href="docs/PAIMode.md">OpenPAI</a></li>
         <li><a href="docs/KubeflowMode.md">Kubeflow</a></li>
         <li><a href="docs/KubeflowMode.md">基于 Kubernetes（AKS 等等）的 FrameworkController</a></li>
@@ -176,7 +176,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment �
 ## **文档**
 
 * [NNI 概述](docs/Overview.md)
-* [快速入门](docs/GetStarted.md)
+* [快速入门](docs/QuickStart.md)
 
 ## **入门**
 
@@ -184,21 +184,22 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment �
 * [使用命令行工具 nnictl](docs/NNICTLDOC.md)
 * [使用 NNIBoard](docs/WebUI.md)
 * [如何定义搜索空间](docs/SearchSpaceSpec.md)
-* [如何定义一次 Trial](docs/howto_1_WriteTrial.md)
-* [如何选择 Tuner、搜索算法](docs/HowToChooseTuner.md)
+* [如何定义一次 Trial](docs/Trials.md)
+* [如何选择 Tuner、搜索算法](docs/Builtin_Tuner.md)
 * [配置 Experiment](docs/ExperimentConfig.md)
-* [如何使用 Annotation](docs/howto_1_WriteTrial.md#nni-python-annotation)
+* [如何使用 Annotation](docs/Trials.md#nni-python-annotation)
 
 ## **教程**
 
 * [在本机运行 Experiment (支持多 GPU 卡)](docs/tutorial_1_CR_exp_local_api.md)
-* [在多机上运行 Experiment](docs/tutorial_2_RemoteMachineMode.md)
+* [在多机上运行 Experiment](docs/RemoteMachineMode.md)
 * [在 OpenPAI 上运行 Experiment](docs/PAIMode.md)
 * [在 Kubeflow 上运行 Experiment。](docs/KubeflowMode.md)
-* [使用不同的 Tuner 和 Assessor](docs/tutorial_3_tryTunersAndAssessors.md)
-* [实现自定义 Tuner](docs/howto_2_CustomizedTuner.md)
-* [实现自定义 Assessor](examples/assessors/README.md)
-* [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
+* [Try different tuners](docs/tuners.rst)
+* [Try different assessors](docs/assessors.rst)
+* [Implement a customized tuner](docs/Customize_Tuner.md)
+* [Implement a customized assessor](examples/assessors/README.md)
+* [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](examples/trials/ga_squad/README.md)
 
 ## **贡献**
 
