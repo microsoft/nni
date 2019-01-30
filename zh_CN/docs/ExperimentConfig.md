@@ -10,111 +10,114 @@
 
 ## 模板
 
-* **简化版（不包含 Annotation（标记）和 Assessor）** 
+* **简化版（不包含 Annotation（标记）和 Assessor）**
 
-    authorName: 
-    experimentName: 
-    trialConcurrency: 
-    maxExecDuration: 
-    maxTrialNum: 
-    #choice: local, remote, pai, kubeflow
-    trainingServicePlatform: 
-    searchSpacePath: 
-    #choice: true, false
-    useAnnotation: 
-    tuner:
-      #choice: TPE, Random, Anneal, Evolution
-      builtinTunerName:
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode:
-      gpuNum: 
-    trial:
-      command: 
-      codeDir: 
-      gpuNum: 
-    #machineList can be empty if the platform is local
-    machineList:
-      - ip: 
-        port: 
-        username: 
-        passwd: 
-    
+```yaml
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+searchSpacePath: 
+#可选项: true, false
+useAnnotation: 
+tuner:
+  #可选项: TPE, Random, Anneal, Evolution
+  builtinTunerName:
+  classArgs:
+    #可选项: maximize, minimize
+    optimize_mode:
+  gpuNum: 
+trial:
+  command: 
+  codeDir: 
+  gpuNum: 
+#在本地使用时，machineList 可为空
+machineList:
+  - ip: 
+    port: 
+    username: 
+    passwd:
+```
 
 * **使用 Assessor**
 
-    authorName: 
-    experimentName: 
-    trialConcurrency: 
-    maxExecDuration: 
-    maxTrialNum: 
-    #choice: local, remote, pai, kubeflow
-    trainingServicePlatform: 
-    searchSpacePath: 
-    #choice: true, false
-    useAnnotation: 
-    tuner:
-      #choice: TPE, Random, Anneal, Evolution
-      builtinTunerName:
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode:
-      gpuNum: 
-    assessor:
-      #choice: Medianstop
-      builtinAssessorName:
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode:
-      gpuNum: 
-    trial:
-      command: 
-      codeDir: 
-      gpuNum: 
-    #machineList can be empty if the platform is local
-    machineList:
-      - ip: 
-        port: 
-        username: 
-        passwd: 
-    
+```yaml
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+searchSpacePath: 
+#可选项: true, false
+useAnnotation: 
+tuner:
+  #可选项: TPE, Random, Anneal, Evolution
+  builtinTunerName:
+  classArgs:
+    #可选项: maximize, minimize
+    optimize_mode:
+  gpuNum: 
+assessor:
+  #可选项: Medianstop
+  builtinAssessorName:
+  classArgs:
+    #可选项: maximize, minimize
+    optimize_mode:
+  gpuNum: 
+trial:
+  command: 
+  codeDir: 
+  gpuNum: 
+#在本地使用时，machineList 可为空
+machineList:
+  - ip: 
+    port: 
+    username: 
+    passwd:
+```
 
 * **使用 Annotation**
 
-    authorName: 
-    experimentName: 
-    trialConcurrency: 
-    maxExecDuration: 
-    maxTrialNum: 
-    #choice: local, remote, pai, kubeflow
-    trainingServicePlatform: 
-    #choice: true, false
-    useAnnotation: 
-    tuner:
-      #choice: TPE, Random, Anneal, Evolution
-      builtinTunerName:
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode:
-      gpuNum: 
-    assessor:
-      #choice: Medianstop
-      builtinAssessorName:
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode:
-      gpuNum: 
-    trial:
-      command: 
-      codeDir: 
-      gpuNum: 
-    #machineList can be empty if the platform is local
-    machineList:
-      - ip: 
-        port: 
-        username: 
-        passwd: 
-    
+```yaml
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+#可选项: true, false
+useAnnotation: 
+tuner:
+  #可选项: TPE, Random, Anneal, Evolution
+  builtinTunerName:
+  classArgs:
+    #可选项: maximize, minimize
+    optimize_mode:
+  gpuNum: 
+assessor:
+  #可选项: Medianstop
+  builtinAssessorName:
+  classArgs:
+    #可选项: maximize, minimize
+    optimize_mode:
+  gpuNum: 
+trial:
+  command: 
+  codeDir: 
+  gpuNum: 
+#在本地使用时，machineList 可为空
+machineList:
+  - ip: 
+    port: 
+    username: 
+    passwd:
+```
 
 <a name="Configuration"></a>
 
@@ -137,19 +140,17 @@
   
   * 说明
     
-        __trialConcurrency__ specifies the max num of trial jobs run simultaneously.  
-        
-          Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
-        
+    **trialConcurrency** 定义了并发尝试任务的最大数量。
+    
+    注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的 Trial 任务数量还没达到 trialConcurrency，Trial 任务会被放入队列，等待分配 GPU 资源。
 
 * **maxExecDuration**
   
-  * Description
-  
-  **maxExecDuration** specifies the max duration time of an experiment.The unit of the time is {**s**, **m**, **h**, **d**}, which means {*seconds*, *minutes*, *hours*, *days*}.
-  
-          Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
-      
+  * 说明
+    
+    **maxExecDuration** 定义 Experiment 执行的最长时间。时间单位：{**s**, **m**, **h**, **d**}，分别代表：{*seconds*, *minutes*, *hours*, *days*}。
+    
+    注意：maxExecDuration 设置的是 Experiment 执行的时间，不是 Trial 的。 如果 Experiment 达到了设置的最大时间，Experiment 不会停止，但不会再启动新的 Trial 作业。
 
 * **maxTrialNum**
   
@@ -175,10 +176,9 @@
   
   * 说明
     
-        __searchSpacePath__ specifies the path of search space file, which should be a valid path in the local linux machine.
-        
-        Note: if set useAnnotation=True, the searchSpacePath field should be removed.
-        
+    **searchSpacePath** 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
+    
+    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
 
 * **useAnnotation**
   
@@ -217,8 +217,8 @@
   * **builtinTunerName** 和 **classArgs**
     
     * **builtinTunerName**
-    
-    **builtinTunerName** specifies the name of system tuner, NNI sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}
+      
+      **builtinTunerName** specifies the name of system tuner, NNI sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}
     
     * **classArgs**
       
@@ -228,30 +228,25 @@
     
     * **codeDir**
       
-            __codeDir__ specifies the directory of tuner code.
-          
+      **codeDir** specifies the directory of tuner code.
     
     * **classFileName**
       
-            __classFileName__ specifies the name of tuner file.
-          
+      **classFileName** specifies the name of tuner file.
     
     * **className**
       
-            __className__ specifies the name of tuner class.
-          
+      **className** specifies the name of tuner class.
     
     * **classArgs**
       
-            __classArgs__ specifies the arguments of tuner algorithm.
-          
-  
-  * **gpuNum**
+      **classArgs** specifies the arguments of tuner algorithm.
     
-        __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
-        
-        Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both. 
-        
+    * **gpuNum**
+      
+      **gpuNum** specifies the gpu number to run the tuner process. The value of this field should be a positive number.
+      
+      Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
 
 * **Assessor**
   
@@ -263,71 +258,59 @@
     
     * **builtinAssessorName**
       
-          __builtinAssessorName__ specifies the name of system assessor, NNI sdk provides one kind of assessor {__Medianstop__}
-          
+      **builtinAssessorName** specifies the name of system assessor, NNI sdk provides one kind of assessor {**Medianstop**}
     
     * **classArgs**
       
-          __classArgs__ specifies the arguments of assessor algorithm
-          
+      **classArgs** specifies the arguments of assessor algorithm
   
   * **codeDir**, **classFileName**, **className** 和 **classArgs**
     
     * **codeDir**
       
-           __codeDir__ specifies the directory of assessor code.
-          
+      **codeDir** specifies the directory of assessor code.
     
     * **classFileName**
       
-           __classFileName__ specifies the name of assessor file.
-          
+      **classFileName** specifies the name of assessor file.
     
     * **className**
       
-           __className__ specifies the name of assessor class.
-          
+      **className** specifies the name of assessor class.
     
     * **classArgs**
       
-           __classArgs__ specifies the arguments of assessor algorithm.
-          
+      **classArgs** specifies the arguments of assessor algorithm.
   
   * **gpuNum**
     
-        __gpuNum__ specifies the gpu number to run the assessor process. The value of this field should be a positive number.
-        
-        Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty. 
-        
+    **gpuNum** specifies the gpu number to run the assessor process. The value of this field should be a positive number.
+    
+    Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty.
 
 * **trial (local, remote)**
   
   * **command**
     
-        __command__  specifies the command to run trial process.
-        
+    **command** specifies the command to run trial process.
   
   * **codeDir**
     
-        __codeDir__ specifies the directory of your own trial file.
-        
+    **codeDir** specifies the directory of your own trial file.
   
   * **gpuNum**
     
-        __gpuNum__ specifies the num of gpu to run the trial process. Default value is 0. 
-        
+    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
 
 * **trial (pai)**
   
   * **command**
     
-        __command__  specifies the command to run trial process.
-        
+    **command** specifies the command to run trial process.
   
   * **codeDir**
     
-        __codeDir__ specifies the directory of the own trial file.
-        
+    **codeDir** specifies the directory of the own trial file.
   
   * **gpuNum**
     
@@ -417,32 +400,31 @@
 
 * **machineList**
   
-       __machineList__ should be set if users set __trainingServicePlatform__=remote, or it could be empty.
-      
+  **machineList** should be set if **trainingServicePlatform** is set to remote, or it should be empty.
   
   * **ip**
-  
-  **ip** is the ip address of remote machine.
+    
+    **ip** is the ip address of remote machine.
   
   * **port**
-  
-  **port** is the ssh port to be used to connect machine.
-  
-  Note: if users set port empty, the default value will be 22.
+    
+    **port** is the ssh port to be used to connect machine.
+    
+    Note: if users set port empty, the default value will be 22.
   
   * **username**
-  
-  **username** is the account of remote machine.
+    
+    **username** is the account of remote machine.
   
   * **passwd**
-  
-  **passwd** specifies the password of the account.
+    
+    **passwd** specifies the password of the account.
   
   * **sshKeyPath**
     
     If users use ssh key to login remote machine, could set **sshKeyPath** in config file. **sshKeyPath** is the path of ssh key file, which should be valid.
-  
-  Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
+    
+    Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
   
   * **passphrase**
     
@@ -470,11 +452,11 @@
     
     * **vaultName**
       
-      **vaultName** is the value of ```--vault-name``` used in az command.
+      **vaultName** is the value of `--vault-name` used in az command.
     
     * **name**
       
-      **name** is the value of ```--name``` used in az command.
+      **name** is the value of `--name` used in az command.
   
   * **azureStorage**
     
@@ -509,253 +491,259 @@
 * **本机模式**
   
   如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
-
-    authorName: test
-    experimentName: test_experiment
-    trialConcurrency: 3
-    maxExecDuration: 1h
-    maxTrialNum: 10
-    #choice: local, remote, pai, kubeflow
-    trainingServicePlatform: local
-    #choice: true, false
-    useAnnotation: true
-    tuner:
-      #choice: TPE, Random, Anneal, Evolution
-      builtinTunerName: TPE
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode: maximize
-      gpuNum: 0
-    trial:
-      command: python3 mnist.py
-      codeDir: /nni/mnist
-      gpuNum: 0
-    
-
-    Could add assessor configuration in config file if set assessor.
-    
-
-    authorName: test
-    experimentName: test_experiment
-    trialConcurrency: 3
-    maxExecDuration: 1h
-    maxTrialNum: 10
-    #choice: local, remote, pai, kubeflow
-    trainingServicePlatform: local
-    searchSpacePath: /nni/search_space.json
-    #choice: true, false
-    useAnnotation: false
-    tuner:
-      #choice: TPE, Random, Anneal, Evolution
-      builtinTunerName: TPE
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode: maximize
-      gpuNum: 0
-    assessor:
-      #choice: Medianstop
-      builtinAssessorName: Medianstop
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode: maximize
-      gpuNum: 0
-    trial:
-      command: python3 mnist.py
-      codeDir: /nni/mnist
-      gpuNum: 0
-    
-
-    Or you could specify your own tuner and assessor file as following:
-    
-
-    authorName: test
-    experimentName: test_experiment
-    trialConcurrency: 3
-    maxExecDuration: 1h
-    maxTrialNum: 10
-    #choice: local, remote, pai, kubeflow
-    trainingServicePlatform: local
-    searchSpacePath: /nni/search_space.json
-    #choice: true, false
-    useAnnotation: false
-    tuner:
-      codeDir: /nni/tuner
-      classFileName: mytuner.py
-      className: MyTuner
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode: maximize
-      gpuNum: 0
-    assessor:
-      codeDir: /nni/assessor
-      classFileName: myassessor.py
-      className: MyAssessor
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode: maximize
-      gpuNum: 0
-    trial:
-      command: python3 mnist.py
-      codeDir: /nni/mnist
-      gpuNum: 0
-    
+  
+  ```yaml
+  authorName: test
+  experimentName: test_experiment
+  trialConcurrency: 3
+  maxExecDuration: 1h
+  maxTrialNum: 10
+  #choice: local, remote, pai, kubeflow
+  trainingServicePlatform: local
+  #choice: true, false
+  useAnnotation: true
+  tuner:
+    #choice: TPE, Random, Anneal, Evolution
+    builtinTunerName: TPE
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+    gpuNum: 0
+  trial:
+    command: python3 mnist.py
+    codeDir: /nni/mnist
+    gpuNum: 0
+  ```
+  
+  You can add assessor configuration.
+  
+  ```yaml
+  authorName: test
+  experimentName: test_experiment
+  trialConcurrency: 3
+  maxExecDuration: 1h
+  maxTrialNum: 10
+  #choice: local, remote, pai, kubeflow
+  trainingServicePlatform: local
+  searchSpacePath: /nni/search_space.json
+  #choice: true, false
+  useAnnotation: false
+  tuner:
+    #choice: TPE, Random, Anneal, Evolution
+    builtinTunerName: TPE
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+    gpuNum: 0
+  assessor:
+    #choice: Medianstop
+    builtinAssessorName: Medianstop
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+    gpuNum: 0
+  trial:
+    command: python3 mnist.py
+    codeDir: /nni/mnist
+    gpuNum: 0
+  ```
+  
+  Or you could specify your own tuner and assessor file as following,
+  
+  ```yaml
+  authorName: test
+  experimentName: test_experiment
+  trialConcurrency: 3
+  maxExecDuration: 1h
+  maxTrialNum: 10
+  #choice: local, remote, pai, kubeflow
+  trainingServicePlatform: local
+  searchSpacePath: /nni/search_space.json
+  #choice: true, false
+  useAnnotation: false
+  tuner:
+    codeDir: /nni/tuner
+    classFileName: mytuner.py
+    className: MyTuner
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+    gpuNum: 0
+  assessor:
+    codeDir: /nni/assessor
+    classFileName: myassessor.py
+    className: MyAssessor
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+    gpuNum: 0
+  trial:
+    command: python3 mnist.py
+    codeDir: /nni/mnist
+    gpuNum: 0
+  ```
 
 * **remote mode**
-
-If run trial jobs in remote machine, users could specify the remote mahcine information as fllowing format:
-
-    authorName: test
-    experimentName: test_experiment
-    trialConcurrency: 3
-    maxExecDuration: 1h
-    maxTrialNum: 10
-    #choice: local, remote, pai, kubeflow
-    trainingServicePlatform: remote
-    searchSpacePath: /nni/search_space.json
-    #choice: true, false
-    useAnnotation: false
-    tuner:
-      #choice: TPE, Random, Anneal, Evolution
-      builtinTunerName: TPE
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode: maximize
-      gpuNum: 0
-    trial:
-      command: python3 mnist.py
-      codeDir: /nni/mnist
-      gpuNum: 0
-    #machineList can be empty if the platform is local
-    machineList:
-      - ip: 10.10.10.10
-        port: 22
-        username: test
-        passwd: test
-      - ip: 10.10.10.11
-        port: 22
-        username: test
-        passwd: test
-      - ip: 10.10.10.12
-        port: 22
-        username: test
-        sshKeyPath: /nni/sshkey
-        passphrase: qwert
-    
+  
+  If run trial jobs in remote machine, users could specify the remote mahcine information as fllowing format:
+  
+  ```yaml
+  authorName: test
+  experimentName: test_experiment
+  trialConcurrency: 3
+  maxExecDuration: 1h
+  maxTrialNum: 10
+  #choice: local, remote, pai, kubeflow
+  trainingServicePlatform: remote
+  searchSpacePath: /nni/search_space.json
+  #choice: true, false
+  useAnnotation: false
+  tuner:
+    #choice: TPE, Random, Anneal, Evolution
+    builtinTunerName: TPE
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+    gpuNum: 0
+  trial:
+    command: python3 mnist.py
+    codeDir: /nni/mnist
+    gpuNum: 0
+  #machineList can be empty if the platform is local
+  machineList:
+    - ip: 10.10.10.10
+      port: 22
+      username: test
+      passwd: test
+    - ip: 10.10.10.11
+      port: 22
+      username: test
+      passwd: test
+    - ip: 10.10.10.12
+      port: 22
+      username: test
+      sshKeyPath: /nni/sshkey
+      passphrase: qwert
+  ```
 
 * **pai mode**
-
-    authorName: test
-    experimentName: nni_test1
-    trialConcurrency: 1
-    maxExecDuration:500h
-    maxTrialNum: 1
-    #choice: local, remote, pai, kubeflow
-    trainingServicePlatform: pai
-    searchSpacePath: search_space.json
-    #choice: true, false
-    useAnnotation: false
-    tuner:
-      #choice: TPE, Random, Anneal, Evolution, BatchTuner
-      #SMAC (SMAC should be installed through nnictl)
-      builtinTunerName: TPE
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode: maximize
-    trial:
-      command: python3 main.py 
-      codeDir: .
-      gpuNum: 4
-      cpuNum: 2
-      memoryMB: 10000
-      #The docker image to run NNI job on pai
-      image: msranni/nni:latest
-      #The hdfs directory to store data on pai, format 'hdfs://host:port/directory'
-      dataDir: hdfs://10.11.12.13:9000/test
-      #The hdfs directory to store output data generated by NNI, format 'hdfs://host:port/directory'
-      outputDir: hdfs://10.11.12.13:9000/test
-    paiConfig:
-      #The username to login pai
-      userName: test
-      #The password to login pai
-      passWord: test
-      #The host of restful server of pai
-      host: 10.10.10.10
-    
+  
+  ```yaml
+  authorName: test
+  experimentName: nni_test1
+  trialConcurrency: 1
+  maxExecDuration:500h
+  maxTrialNum: 1
+  #choice: local, remote, pai, kubeflow
+  trainingServicePlatform: pai
+  searchSpacePath: search_space.json
+  #choice: true, false
+  useAnnotation: false
+  tuner:
+    #choice: TPE, Random, Anneal, Evolution, BatchTuner
+    #SMAC (SMAC should be installed through nnictl)
+    builtinTunerName: TPE
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+  trial:
+    command: python3 main.py
+    codeDir: .
+    gpuNum: 4
+    cpuNum: 2
+    memoryMB: 10000
+    #The docker image to run NNI job on pai
+    image: msranni/nni:latest
+    #The hdfs directory to store data on pai, format 'hdfs://host:port/directory'
+    dataDir: hdfs://10.11.12.13:9000/test
+    #The hdfs directory to store output data generated by NNI, format 'hdfs://host:port/directory'
+    outputDir: hdfs://10.11.12.13:9000/test
+  paiConfig:
+    #The username to login pai
+    userName: test
+    #The password to login pai
+    passWord: test
+    #The host of restful server of pai
+    host: 10.10.10.10
+  ```
 
 * **kubeflow mode**
-
-kubeflow use nfs as storage.
-
-    authorName: default
-    experimentName: example_mni
-    trialConcurrency: 1
-    maxExecDuration: 1h
-    maxTrialNum: 1
-    #choice: local, remote, pai, kubeflow
-    trainingServicePlatform: kubeflow
-    searchSpacePath: search_space.json
-    #choice: true, false
-    useAnnotation: false
-    tuner:
-      #choice: TPE, Random, Anneal, Evolution
-      builtinTunerName: TPE
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode: maximize
-    trial:
-      codeDir: .
-      worker:
-        replicas: 1
-        command: python3 mnist.py
-        gpuNum: 0
-        cpuNum: 1
-        memoryMB: 8192
-        image: msranni/nni:latest
-    kubeflowConfig:
-      operator: tf-operator
-      nfs:
-        server: 10.10.10.10
-        path: /var/nfs/general
-    
-
-kubeflow use azure storage
-
-    authorName: default
-    experimentName: example_mni
-    trialConcurrency: 1
-    maxExecDuration: 1h
-    maxTrialNum: 1
-    #choice: local, remote, pai, kubeflow
-    trainingServicePlatform: kubeflow
-    searchSpacePath: search_space.json
-    #choice: true, false
-    useAnnotation: false
-    #nniManagerIp: 10.10.10.10
-    tuner:
-      #choice: TPE, Random, Anneal, Evolution
-      builtinTunerName: TPE
-      classArgs:
-        #choice: maximize, minimize
-        optimize_mode: maximize
-    assessor:
-      builtinAssessorName: Medianstop
-      classArgs:
-        optimize_mode: maximize
+  
+  kubeflow with nfs storage.
+  
+  ```yaml
+  authorName: default
+  experimentName: example_mni
+  trialConcurrency: 1
+  maxExecDuration: 1h
+  maxTrialNum: 1
+  #choice: local, remote, pai, kubeflow
+  trainingServicePlatform: kubeflow
+  searchSpacePath: search_space.json
+  #choice: true, false
+  useAnnotation: false
+  tuner:
+    #choice: TPE, Random, Anneal, Evolution
+    builtinTunerName: TPE
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+  trial:
+    codeDir: .
+    worker:
+      replicas: 1
+      command: python3 mnist.py
       gpuNum: 0
-    trial:
-      codeDir: .
-      worker:
-        replicas: 1
-        command: python3 mnist.py
-        gpuNum: 0
-        cpuNum: 1
-        memoryMB: 4096
-        image: msranni/nni:latest
-    kubeflowConfig:
-      operator: tf-operator
-      keyVault:
-        vaultName: Contoso-Vault
-        name: AzureStorageAccountKey
-      azureStorage:
-        accountName: storage
-        azureShare: share01
+      cpuNum: 1
+      memoryMB: 8192
+      image: msranni/nni:latest
+  kubeflowConfig:
+    operator: tf-operator
+    nfs:
+      server: 10.10.10.10
+      path: /var/nfs/general
+  ```
+  
+  kubeflow with azure storage
+  
+  ```yaml
+  authorName: default
+  experimentName: example_mni
+  trialConcurrency: 1
+  maxExecDuration: 1h
+  maxTrialNum: 1
+  #choice: local, remote, pai, kubeflow
+  trainingServicePlatform: kubeflow
+  searchSpacePath: search_space.json
+  #choice: true, false
+  useAnnotation: false
+  #nniManagerIp: 10.10.10.10
+  tuner:
+    #choice: TPE, Random, Anneal, Evolution
+    builtinTunerName: TPE
+    classArgs:
+      #choice: maximize, minimize
+      optimize_mode: maximize
+  assessor:
+    builtinAssessorName: Medianstop
+    classArgs:
+      optimize_mode: maximize
+    gpuNum: 0
+  trial:
+    codeDir: .
+    worker:
+      replicas: 1
+      command: python3 mnist.py
+      gpuNum: 0
+      cpuNum: 1
+      memoryMB: 4096
+      image: msranni/nni:latest
+  kubeflowConfig:
+    operator: tf-operator
+    keyVault:
+      vaultName: Contoso-Vault
+      name: AzureStorageAccountKey
+    azureStorage:
+      accountName: storage
+      azureShare: share01
+  ```
