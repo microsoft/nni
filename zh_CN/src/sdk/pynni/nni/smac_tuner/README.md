@@ -1,1 +1,1 @@
-# Integration doc: SMAC on NNI
+# 集成文档：NNI 上使用 SMAC
