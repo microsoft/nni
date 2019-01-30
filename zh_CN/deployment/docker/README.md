@@ -2,7 +2,7 @@
 
 ## 1. 说明
 
-This is the Dockerfile of NNI project. 其中包含了 NNI 以及多个流行的深度学习框架。 在 `Ubuntu 16.04 LTS` 上进行过测试：
+这是 NNI 项目的 Dockerfile 文件。 其中包含了 NNI 以及多个流行的深度学习框架。 在 `Ubuntu 16.04 LTS` 上进行过测试：
 
     CUDA 9.0, CuDNN 7.0
     numpy 1.14.3,scipy 1.1.0
