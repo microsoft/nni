@@ -60,9 +60,9 @@ NNI 就是用来帮助调优工作的。它的工作流程如下：
 
 如果需要使用 NNI 来自动训练模型，找到最佳超参，需要如下三步：
 
-**Three things required to do when using NNI**
+**使用 NNI 时的三个步骤**
 
-**Step 1**: Give a `Search Space` file in json, includes the `name` and the `distribution` (discrete valued or continuous valued) of all the hyperparameters you need to search.
+**第一步**：定义 JSON 格式的`搜索空间`文件，包括所有需要搜索的超参的`名称`和`分布`（离散和连续值均可）。
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -76,9 +76,9 @@ NNI 就是用来帮助调优工作的。它的工作流程如下：
 + }
 ```
 
-*Implemented code directory: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/search_space.json)*
+*实现代码：[search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/search_space.json)*
 
-**Step 2**: Modified your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
+**第二步**：修改 `Trial` 代码来从 NNI 获取超参，并返回 NNI 最终结果。
 
 ```diff
 + import nni
@@ -103,9 +103,9 @@ NNI 就是用来帮助调优工作的。它的工作流程如下：
       run_trial(params)
 ```
 
-*Implemented code directory: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist.py)*
+*实现代码：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist.py)*
 
-**Step 3**: Define a `config` file in YAML, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
+**第三步**：定义 YAML 格式的`配置`文件，其中声明了搜索空间和 Trial 文件的`路径`，以及`其它信息`，如调优算法，最大尝试次数，最大运行时间等等。
 
 ```yaml
 authorName: default
@@ -114,29 +114,29 @@ trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
 trainingServicePlatform: local
-# The path to Search Space
+# 搜索空间文件
 searchSpacePath: search_space.json
 useAnnotation: false
 tuner:
   builtinTunerName: TPE
-# The path and the running command of trial
+# 运行的命令，以及 Trial 代码的路径
 trial:  
   command: python3 mnist.py
   codeDir: .
   gpuNum: 0
 ```
 
-*Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
+*实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
-All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
+上面的代码都已准备好，并保存在 [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)。
 
-When these things are done, **run the config.yml file from your command line to start the experiment**.
+上述步骤完成后，**从命令行运行 config.yml 文件来开始 Experiment**。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
-Note: **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](NNICTLDOC.md) for more usage of `nnictl`
+注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](NNICTLDOC.md)，了解 `nnictl` 更多用法。
 
 Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
 
