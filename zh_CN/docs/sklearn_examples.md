@@ -5,7 +5,7 @@ NNI supports many kinds of tuning algorithms to search the best models and/or hy
 
 ## 1. How to run the example
 
-To start using NNI, you should install the nni package, and use the command line tool `nnictl` to start an experiment. For more information about installation and preparing for the environment, please [refer](GetStarted.md). After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
+To start using NNI, you should install the nni package, and use the command line tool `nnictl` to start an experiment. For more information about installation and preparing for the environment, please [refer](QuickStart.md). After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
 
     nnictl create --config ./config.yml
     
