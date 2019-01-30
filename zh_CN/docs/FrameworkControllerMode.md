@@ -16,12 +16,12 @@ NNI 支持使用 [FrameworkController](https://github.com/Microsoft/frameworkcon
 
 1. NNI 支持基于 Azure Kubernetes Service 的 Kubeflow，参考[指南](https://azure.microsoft.com/en-us/services/kubernetes-service/)来设置 Azure Kubernetes Service。
 2. 安装 [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) 和 **kubectl**。 使用 `az login` 命令来设置 Azure 账户吗，并将 kubectl 客户端连接到 AKS，参考此[指南](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster)。
-3. 参考此[指南](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=portal)来创建 Azure 文件存储账户。 If you use Azure Kubernetes Service, NNI need Azure Storage Service to store code files and the output files.
-4. To access Azure storage service, NNI need the access key of the storage account, and NNI uses [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) Service to protect your private key. 设置 Azure Key Vault 服务，并添加密钥到 Key Vault 中来存取 Azure 存储账户。 参考[指南](https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli)来存储访问密钥。
+3. 参考此[指南](https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=portal)来创建 Azure 文件存储账户。 NNI 需要 Azure Storage Service 来存取代码和输出文件。
+4. NNI 需要访问密钥来连接 Azure 存储服务，NNI 使用 [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) 服务来保护私钥。 设置 Azure Key Vault 服务，并添加密钥到 Key Vault 中来存取 Azure 存储账户。 参考[指南](https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli)来存储访问密钥。
 
 ## 安装 FrameworkController
 
-Follow the [guideline](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run) to set up frameworkcontroller in the kubernetes cluster, NNI supports frameworkcontroller by the statefulset mode.
+参考[指南](https://github.com/Microsoft/frameworkcontroller/tree/master/example/run)来在 Kubernetes 集群中配置 Frameworkcontroller。NNI 通过 statefulset 模式来 支持 Frameworkcontroller。
 
 ## 设计
 
@@ -73,7 +73,7 @@ Frameworkcontroller 配置文件的格式如下：
         path: {your_nfs_server_exported_path}
     
 
-If you use Azure Kubernetes Service, you should set `frameworkcontrollerConfig` in your config YAML file as follows:
+如果使用了 Azure Kubernetes Service，需要在 YAML 文件中如下设置 `frameworkcontrollerConfig`：
 
     frameworkcontrollerConfig:
       storage: azureStorage
@@ -85,10 +85,10 @@ If you use Azure Kubernetes Service, you should set `frameworkcontrollerConfig` 
         azureShare: {your_azure_share_name}
     
 
-Note: You should explicitly set `trainingServicePlatform: frameworkcontroller` in NNI config YAML file if you want to start experiment in frameworkcontrollerConfig mode.
+注意：如果用 FrameworkController 模式运行，需要在 YAML 文件中显式设置 `trainingServicePlatform: frameworkcontroller`。
 
-The trial's config format for NNI frameworkcontroller mode is a simple version of frameworkcontroller's offical config, you could refer the [tensorflow example of frameworkcontroller](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) for deep understanding.  
-Trial configuration in frameworkcontroller mode have the following configuration keys:
+FrameworkController 模式的 Trial 配置格式，是 FrameworkController 官方配置的简化版。参考 [frameworkcontroller 的 tensorflow 样例](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) 了解详情。  
+frameworkcontroller 模式中的 Trial 配置使用以下主键：
 
 * taskRoles: 配置文件中可以设置多个任务角色，每个任务角色都是在 Kubernetes 集群中的基本执行单元。 
    * name: 任务角色的名字，例如，"worker", "ps", "master"。
