@@ -4,16 +4,16 @@ NNI provides state-of-the-art tuning algorithm as our builtin-tuners and makes t
 
 |Tuner|Brief Introduction of Algorithm|
 |---|---|
-|**TPE**<br>[(Usage)](#TPE)|The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model.|
-|**Random Search**<br>[(Usage)](#Random)|In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggest that we could use Random Search as the baseline when we have no knowledge about the prior distribution of hyper-parameters.|
-|**Anneal**<br>[(Usage)](#Anneal)|This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on the random search that leverages smoothness in the response surface. The annealing rate is not adaptive.|
-|**Naive Evolution**<br>[(Usage)](#Evolution)|Naive Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population-based on search space. For each generation, it chooses better ones and does some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naive Evolution requires many trials to works, but it's very simple and easy to expand new features.|
-|**SMAC**<br>[(Usage)](#SMAC)|SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on the SMAC3 Github repo.|
-|**Batch tuner**<br>[(Usage)](#Batch)|Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.|
-|**Grid Search**<br>[(Usage)](#GridSearch)|Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, qloguniform. The number q in quniform and qloguniform has special meaning (different from the spec in search space spec). It means the number of values that will be sampled evenly from the range low and high.|
-|[Hyperband](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperband_advisor)<br>[(Usage)](#Hyperband)|Hyperband tries to use the limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for the small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.|
-|[Network Morphism](https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/networkmorphism_tuner/README.md)<br>[(Usage)](#NetworkMorphism)|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train.|
-|**Metis Tuner**<br>[(Usage)](#MetisTuner)|Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter.|
+|**TPE** [(Usage)](#TPE)|The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model.|
+|**Random Search** [(Usage)](#Random)|In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggest that we could use Random Search as the baseline when we have no knowledge about the prior distribution of hyper-parameters.|
+|**Anneal** [(Usage)](#Anneal)|This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on the random search that leverages smoothness in the response surface. The annealing rate is not adaptive.|
+|**Naive Evolution** [(Usage)](#Evolution)|Naive Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population-based on search space. For each generation, it chooses better ones and does some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naive Evolution requires many trials to works, but it's very simple and easy to expand new features.|
+|**SMAC** [(Usage)](#SMAC)|SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on the SMAC3 Github repo.|
+|**Batch tuner** [(Usage)](#Batch)|Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.|
+|**Grid Search** [(Usage)](#GridSearch)|Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, qloguniform. The number q in quniform and qloguniform has special meaning (different from the spec in search space spec). It means the number of values that will be sampled evenly from the range low and high.|
+|[Hyperband](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperband_advisor) [(Usage)](#Hyperband)|Hyperband tries to use the limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for the small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.|
+|[Network Morphism](https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/networkmorphism_tuner/README.md) [(Usage)](#NetworkMorphism)|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train.|
+|**Metis Tuner** [(Usage)](#MetisTuner)|Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter.|
 
 <br>
 
@@ -39,7 +39,7 @@ TPE, as a black-box optimization, can be used in various scenarios and shows goo
 
 **Usage example:**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: TPE
@@ -65,7 +65,7 @@ Random search is suggested when each trial does not take too long (e.g., each tr
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: Random
@@ -91,7 +91,7 @@ Anneal is suggested when each trial does not take too long, and you have enough 
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: Anneal
@@ -117,7 +117,7 @@ Its requirement of computation resource is relatively high. Specifically, it req
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: Evolution
@@ -143,7 +143,7 @@ Similar to TPE, SMAC is also a black-box tuner which can be tried in various sce
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: SMAC
@@ -165,7 +165,7 @@ If the configurations you want to try have been decided, you can list them in se
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: BatchTuner
@@ -206,7 +206,7 @@ It is suggested when search space is small, it is feasible to exhaustively sweep
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: GridSearch
@@ -232,7 +232,7 @@ It is suggested when you have limited computation resource but have relatively l
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 advisor:
   builtinAdvisorName: Hyperband
@@ -256,7 +256,7 @@ NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so 
 
 **Suggested scenario**
 
-It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](../examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain.
+It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain.
 
 **Requirement of classArg**
 
@@ -268,7 +268,7 @@ It is suggested that you want to apply deep learning methods to your task (your 
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: NetworkMorphism
@@ -296,7 +296,7 @@ Metis Tuner requires [sklearn](https://scikit-learn.org/), so users should insta
 
 **Suggested scenario**
 
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](../examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK.
+Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK.
 
 **Requirement of classArg**
 
@@ -304,7 +304,7 @@ Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long
 
 **Usage example**
 
-```yml
+```yaml
 # config.yml
 tuner:
   builtinTunerName: MetisTuner

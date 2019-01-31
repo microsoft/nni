@@ -4,10 +4,8 @@ NNI provides state-of-the-art tuning algorithm in our builtin-assessors and make
 
 |Assessor|Brief Introduction of Algorithm|
 |---|---|
-|**Medianstop**<br>[(Usage)](#MedianStop)|Medianstop is a simple early stopping rule mentioned in the [paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf). It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.|
-|[Curvefitting](https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/curvefitting_assessor/README.md)<br>[(Usage)](#Curvefitting)|Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve|
-
-<br>
+|**Medianstop** [(Usage)](#MedianStop)|Medianstop is a simple early stopping rule mentioned in the [paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf). It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S.|
+|[Curvefitting](https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/curvefitting_assessor/README.md) [(Usage)](#Curvefitting)|Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve|
 
 ## Usage of Builtin Assessors
 
@@ -32,7 +30,7 @@ It is applicable in a wide range of performance curves, thus, can be used in var
 
 **Usage example:**
 
-```yml
+```yaml
 # config.yml
 assessor:
     builtinAssessorName: Medianstop
@@ -62,7 +60,7 @@ It is applicable in a wide range of performance curves, thus, can be used in var
 
 **Usage example:**
 
-```yml
+```yaml
 # config.yml
 assessor:
     builtinAssessorName: Curvefitting

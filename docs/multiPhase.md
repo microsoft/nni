@@ -16,7 +16,7 @@ To use multi-phase experiment, please follow below steps:
 
 1. Set `multiPhase` field to `true`, and configure your tuner implemented in step 1 as customized tuner in configuration file, for example:
 
-    ```yml
+    ```yaml
     ...
     multiPhase: true
     tuner:
