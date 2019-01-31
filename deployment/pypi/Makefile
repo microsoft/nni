@@ -12,7 +12,7 @@ else
 endif
 
 TIME_STAMP = $(shell date "+%y%m%d%H%M")
-NNI_VERSION_VALUE = $(shell git describe --tags)
+NNI_VERSION_VALUE = $(shell git describe --tags --abbrev=0)
 
 # To include time stamp in version value, run:
 # make version_ts=true build
