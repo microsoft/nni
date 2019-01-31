@@ -6,13 +6,13 @@
 
     CUDA 9.0, CuDNN 7.0
     numpy 1.14.3,scipy 1.1.0
-    TensorFlow 1.10.0
+    TensorFlow-gpu 1.10.0
     Keras 2.1.6
     PyTorch 0.4.1
     scikit-learn 0.20.0
     pandas 0.23.4
     lightgbm 2.2.2
-    NNI v0.5
+    NNI v0.5.1
     
 
 此 Dockerfile 可作为定制的参考。
@@ -31,18 +31,20 @@
         docker run -it nni/nni
     
 
+Note that if you want to use tensorflow, please uninstall tensorflow-gpu and install tensorflow in this docker container. Or modify `Dockerfile` to install tensorflow (without gpu) and build docker image.
+
 * 如果 docker 容器中有 GPU，确保安装了 [NVIDIA 容器运行包](https://github.com/NVIDIA/nvidia-docker)，然后运行下面的命令
 
         nvidia-docker run -it nni/nni
     
 
-或者
+or
 
         docker run --runtime=nvidia -it nni/nni
     
 
 ## 3.拉取 docker 映像
 
-使用下列命令从 docker Hub 中拉取 NNI docker 映像。
+Use the following command to retrieve the NNI docker image from Docker Hub
 
     docker pull msranni/nni:latest
