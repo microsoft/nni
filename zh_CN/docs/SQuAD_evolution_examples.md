@@ -140,7 +140,7 @@ paiConfig:
 nnictl create --config ~/nni/examples/trials/ga_squad/config_pai.yml
 ```
 
-## 4. 关于此 Trial 的技术细节
+## 4. 代码实现
 
 ### 4.1 实现方法
 
@@ -198,24 +198,24 @@ def graph_to_network(input1,
 topology = graph.is_topology()
 ```
 
-performs topological sorting on the internal graph representation, and the code inside the loop:
+将内部图表示进行拓扑排序，代码在下列循环中：
 
 ```python
 for _, topo_i in enumerate(topology):
 ```
 
-performs actually conversion that maps each layer to a part in Tensorflow computation graph.
+执行实际转换，将每层映射为 TensorFlow 计算图中的一部分。
 
-### 4.3 The tuner
+### 4.3 Tuner
 
-The tuner is much more simple than the trial. They actually share the same `graph.py`. Besides, the tuner has a `customer_tuner.py`, the most important class in which is `CustomerTuner`:
+Tuner 比 Trial 代码简单很多。 它们共用了同样的 `graph.py`。 此外，Tuner 有 `customer_tuner.py`，其中最重要的类是 `CustomerTuner`：
 
 ```python
 class CustomerTuner(Tuner):
     # ......
 
     def generate_parameters(self, parameter_id):
-        """Returns a set of trial graph config, as a serializable object.
+        """将一组 Trial 图配置作为序列化对象返回。
         parameter_id : int
         """
         if len(self.population) <= 0:
@@ -243,7 +243,7 @@ class CustomerTuner(Tuner):
     # ......
 ```
 
-As we can see, the overloaded method `generate_parameters` implements a pretty naive mutation algorithm. The code lines:
+重载函数 `generate_parameters` 实现了简单的变异算法。 代码如下：
 
 ```python
             if self.population[0].result > self.population[1].result:
@@ -251,11 +251,11 @@ As we can see, the overloaded method `generate_parameters` implements a pretty n
             indiv = copy.deepcopy(self.population[0])
 ```
 
-controls the mutation process. It will always take two random individuals in the population, only keeping and mutating the one with better result.
+控制突变过程。 它会在种群中随机取出两个个体，对更好结果的一个保留数据，并突变另一个。
 
-### 4.4 Model configuration format
+### 4.4 模型配置格式
 
-Here is an example of the model configuration, which is passed from the tuner to the trial in the architecture search procedure.
+这是模型配置的样例，在架构搜索过程中，从 Tuner 传入 Trial 的代码。
 
 ```json
 {
@@ -297,16 +297,16 @@ Here is an example of the model configuration, which is passed from the tuner to
             "output": [],
             "is_delete": false
         },
-        {"Comment": "More layers will be here for actual graphs."}
+        {"Comment": "实际图会有更多层。"}
     ]
 }
 ```
 
-Every model configuration will have a "layers" section, which is a JSON list of layer definitions. The definition of each layer is also a JSON object, where:
+每个模型配置都有一个 "layers" 部分，这是层定义的 JSON 列表。 每层的定义也是一个 JSON 对象：
 
-* `type` is the type of the layer. 0, 1, 2, 3, 4 corresponds to attention, self-attention, RNN, input and output layer respectively.
-* `size` is the length of the output. "x", "y" correspond to document length / question length, respectively.
-* `input_size` is the number of inputs the layer has.
-* `input` is the indices of layers taken as input of this layer.
-* `output` is the indices of layers use this layer's output as their input.
-* `is_delete` means whether the layer is still available.
+* `type` 是层的类型。 0, 1, 2, 3, 4 对应注意力、自注意力、RNN、输入和输出层。
+* `size` 是输出的长度。 "x", "y" 对应文档长度和问题长度。
+* `input_size` 是该层的输入数量。
+* `input` 表示输入层的索引。
+* `output` 是输出层的索引，该层会作为这些层的输入。
+* `is_delete` 表示此层是否可用。
