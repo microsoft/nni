@@ -24,7 +24,7 @@
 
 * **在 docker 映像中安装 NNI**
     
-    也可将 NNI 安装到 docker 映像中。 参考[这里](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md)来生成 NNI 的 Docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 `docker pull msranni/nni:latest`。
+    也可将 NNI 安装到 docker 映像中。 参考[这里](../deployment/docker/README.md)来生成 NNI 的 Docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 `docker pull msranni/nni:latest`。
 
 ## **系统需求**
 
