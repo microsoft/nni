@@ -20,7 +20,7 @@
 
 #### User Experience improvements
 
-* A better trial logging support for NNI experiments in PAI, Kubeflow and FrameworkController mode:
+* A better trial logging support for NNI experiments in OpenPAI, Kubeflow and FrameworkController mode:
   * An improved logging architecture to send stdout/stderr of trials to NNI manager via Http post. NNI manager will store trial's stdout/stderr messages in local log file.
   * Show the link for trial log file on WebUI.
 * Support to show final result's all key-value pairs.
@@ -83,9 +83,9 @@
 * Docker file update, add pytorch library 
 * Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API. 
 * OpenPAI training service bug fix
-  * Support NNI Manager IP configuration(nniManagerIp) in PAI cluster config file, to fix the issue that user’s machine has no eth0 device 
+  * Support NNI Manager IP configuration(nniManagerIp) in OpenPAI cluster config file, to fix the issue that user’s machine has no eth0 device 
   * File number in codeDir is capped to 1000 now, to avoid user mistakenly fill root dir for codeDir
-  * Don’t print useless ‘metrics is empty’ log int PAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks PAI trial’s output for debugging purpose
+  * Don’t print useless ‘metrics is empty’ log in OpenPAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks OpenPAI trial’s output for debugging purpose
   * Add timestamp at the beginning of each log entry in trial keeper.
 
 ## Release 0.3.0 - 11/2/2018
@@ -146,7 +146,7 @@
 
 ### Major Features
 
-* Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
+* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
   * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
   * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
 * Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](Builtin_Tuner.md) for instructions about how to use SMAC tuner)
