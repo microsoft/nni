@@ -22,17 +22,17 @@ NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进
 
 ```python
 def run_trial(params):
-    # 输入数据
+    # Input data
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    # 构建网络
+    # Build network
     mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
     mnist_network.build_network()
 
     test_acc = 0.0
     with tf.Session() as sess:
-        # 训练网络
+        # Train network
         mnist_network.train(sess, mnist)
-        # 评估网络
+        # Evaluate network
         test_acc = mnist_network.evaluate(mnist)
 
 if __name__ == '__main__':
@@ -105,7 +105,7 @@ NNI 就是用来帮助调优工作的。它的工作流程如下：
 
 *实现代码：[mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist.py)*
 
-**第三步**：定义 YAML 格式的`配置`文件，其中声明了搜索空间和 Trial 文件的`路径`，以及`其它信息`，如调优算法，最大尝试次数，最大运行时间等等。
+**Step 3**: Define a `config` file in YAML, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max duration arguments.
 
 ```yaml
 authorName: default
@@ -209,7 +209,7 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 可�
 下面是所有 Trial 的状态。 包括：
 
 * Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
-* 如果是 OpenPAI 的 Experiment，还可以看到 hdfsLogPath。
+* If you run on the OpenPAI platform, you can also see the hdfsLogPath.
 * Kill: 可终止正在运行的任务。
 * 支持搜索某个特定的 Trial。
 
