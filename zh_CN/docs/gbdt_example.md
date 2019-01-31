@@ -44,13 +44,13 @@ GBDT 有很多超参，但哪些才会影响性能或计算速度呢？ 基于�
 
 ## 2. 任务描述
 
-"auto-gbdt" 基于 LightGBM 和 NNI。 数据集有[训练数据](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train)和[测试数据](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train)。 Given the features and label in train data, we train a GBDT regression model and use it to predict.
+"auto-gbdt" 基于 LightGBM 和 NNI。 数据集有[训练数据](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train)和[测试数据](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train)。 根据数据中的特征和标签，训练一个 GBDT 回归模型，用来做预测。
 
-## 3. How to run in nni
+## 3. 如何运行 NNI
 
-### 3.1 Prepare your trial code
+### 3.1 准备 Trial 代码
 
-You need to prepare a basic code as following:
+基础代码如下：
 
 ```python
 <br />...
@@ -62,23 +62,23 @@ def get_default_parameters():
 
 def load_data(train_path='./data/regression.train', test_path='./data/regression.test'):
     '''
-    Load or create dataset
+    读取或创建数据集
     '''
     ...
 
     return lgb_train, lgb_eval, X_test, y_test
 
 def run(lgb_train, lgb_eval, params, X_test, y_test):
-    # train
+    # 训练
     gbm = lgb.train(params,
                     lgb_train,
                     num_boost_round=20,
                     valid_sets=lgb_eval,
                     early_stopping_rounds=5)
-    # predict
+    # 预测
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # eval 
+    # 评估
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.2 Prepare your search space.
+### 3.2 准备搜索空间
 
 If you like to tune `num_leaves`, `learning_rate`, `bagging_fraction` and `bagging_freq`, you could write a [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) as follow:
 
