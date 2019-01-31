@@ -44,7 +44,7 @@ GBDT 有很多超参，但哪些才会影响性能或计算速度呢？ 基于�
 
 ## 2. 任务描述
 
-"auto-gbdt" 基于 LightGBM 和 NNI。 The data including [train data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train). Given the features and label in train data, we train a GBDT regression model and use it to predict.
+"auto-gbdt" 基于 LightGBM 和 NNI。 数据集有[训练数据](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train)和[测试数据](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train)。 Given the features and label in train data, we train a GBDT regression model and use it to predict.
 
 ## 3. How to run in nni
 
