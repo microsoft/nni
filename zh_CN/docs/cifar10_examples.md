@@ -51,7 +51,7 @@ python3 -m pip install torchvision
 
 *实现代码：[main.py](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py)*
 
-也可以直接使用以前的代码来修改，参考：[如何编写 Trial](https://github.com/Microsoft/nni/blob/master/docs/Trials.md)。
+也可以直接使用以前的代码来修改，参考：[如何编写 Trial](./Trials.md)。
 
 **配置**
 
