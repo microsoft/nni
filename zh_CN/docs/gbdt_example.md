@@ -18,33 +18,33 @@ GBDT 有很多超参，但哪些才会影响性能或计算速度呢？ 基于�
 
 * `bagging_freq`. `bagging_freq` 可以是 [1, 2, 4, 8, 10]。
 
-* `num_iterations`. May larger if underfitting.
+* `num_iterations`. 如果达到期望的拟合精度，可以调整得大一些。
 
-> * For speed up
+> * 加速
 
-* `bagging_fraction`. The range of `bagging_fraction` could be [0.7, 1.0].
+* `bagging_fraction`. `bagging_fraction` 的范围应该是 [0.7, 1.0]。
 
-* `feature_fraction`. The range of `feature_fraction` could be [0.6, 1.0].
+* `feature_fraction`. `feature_fraction` 的范围应该是 [0.6, 1.0]。
 
 * `max_bin`.
 
-> * To avoid overfitting
+> * 避免过拟合
 
-* `min_data_in_leaf`. This depends on your dataset.
+* `min_data_in_leaf`. 取决于数据集。
 
-* `min_sum_hessian_in_leaf`. This depend on your dataset.
+* `min_sum_hessian_in_leaf`. 取决于数据集。
 
-* `lambda_l1` and `lambda_l2`.
+* `lambda_l1` 和 `lambda_l2`.
 
 * `min_gain_to_split`.
 
 * `num_leaves`.
 
-Reference link: [lightgbm](https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html) and [autoxgoboost](https://github.com/ja-thomas/autoxgboost/blob/master/poster_2018.pdf)
+更多信息可参考： [lightgbm](https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html) 和 [autoxgoboost](https://github.com/ja-thomas/autoxgboost/blob/master/poster_2018.pdf)
 
-## 2. Task description
+## 2. 任务描述
 
-Now we come back to our example "auto-gbdt" which run in lightgbm and nni. The data including [train data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train). Given the features and label in train data, we train a GBDT regression model and use it to predict.
+"auto-gbdt" 基于 lightgbm 和 NNI。 The data including [train data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train). Given the features and label in train data, we train a GBDT regression model and use it to predict.
 
 ## 3. How to run in nni
 
