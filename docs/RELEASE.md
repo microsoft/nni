@@ -1,5 +1,19 @@
 # ChangeLog
 
+## Release 0.5.1 - 1/31/2018
+### Improvements
+* Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md) configurable
+* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md), making it easier for debugging 
+
+### Documentation
+* Reorganized documentation & New Homepage Released: https://nni.readthedocs.io/en/latest/
+
+### Bug Fixes and Other Changes
+* Fix the bug of installation in python virtualenv, and refactor the installation logic
+* Fix the bug of HDFS access failure on PAI mode after PAI is upgraded. 
+* Fix the bug that sometimes in-place flushed stdout makes experiment crash
+
+
 ## Release 0.5.0 - 01/14/2019
 
 ### Major Features
