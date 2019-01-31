@@ -1,0 +1,19 @@
+
+jobs:
+- job: 'Build and upload nni test packages'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    matrix:
+      Python36:
+        PYTHON_VERSION: '3.6'
+
+  steps:
+  - script: python3 -m pip install twine --user
+    displayName: 'Install twine'
+  - script: make version_ts=true build
+    displayName: 'build bdsit_wheel'
+  - script: |
+      twine upload -u $(username) -p $(password) --repository-url https://test.pypi.org/legacy/ dist/*
+    displayName: 'upload package to testpypi'
+
