@@ -1,44 +1,44 @@
 # 更改日志
 
-## Release 0.5.1 - 1/31/2018
+## 发布 0.5.1 - 1/31/2018
 
-### Improvements
+### 改进
 
-* Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md) configurable
-* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md), making it easier for debugging 
+* 可配置[日志目录](ExperimentConfig.md)。
+* 支持[不同级别的日志](ExperimentConfig.md)，使其更易于调试。 
 
-### Documentation
+### 文档
 
-* Reorganized documentation & New Homepage Released: https://nni.readthedocs.io/en/latest/
+* 重新组织文档，新的主页位置：https://nni.readthedocs.io/en/latest/
 
-### Bug Fixes and Other Changes
+### Bug 修复和其它更新
 
-* Fix the bug of installation in python virtualenv, and refactor the installation logic
-* Fix the bug of HDFS access failure on PAI mode after PAI is upgraded. 
-* Fix the bug that sometimes in-place flushed stdout makes experiment crash
+* 修复了 Python 虚拟环境中安装的 Bug，并重构了安装逻辑。
+* 修复了在最新的 OpenPAI 下存取 HDFS 失败的问题。 
+* 修复了有时刷新 stdout 会造成 Experiment 崩溃的问题。
 
-## Release 0.5.0 - 01/14/2019
+## 发布 0.5.0 - 01/14/2019
 
 ### 主要功能
 
 #### 支持新的 Tuner 和 Assessor
 
-* Support [Metis tuner](./Builtin_Tuner.md#MetisTuner) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
-* Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
-* Support [Curve fitting assessor](./Builtin_Tuner.md#Curvefitting) for early stop policy using learning curve extrapolation.
-* Advanced Support of [Weight Sharing](./AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
+* 支持[Metis tuner](./Builtin_Tuner.md#MetisTuner) 作为 NNI 的 Tuner。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
+* 支持 [Curve fitting （曲线拟合）Assessor](./Builtin_Tuner.md#Curvefitting)，通过曲线拟合的策略来实现提前终止 Trial。
+* 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
 
 #### 改进训练平台
 
-* [FrameworkController Training service](./FrameworkControllerMode.md): Support run experiments using frameworkcontroller on kubernetes 
-  * FrameworkController is a Controller on kubernetes that is general enough to run (distributed) jobs with various machine learning frameworks, such as tensorflow, pytorch, MXNet.
-  * NNI provides unified and simple specification for job definition.
-  * MNIST example for how to use FrameworkController.
+* [FrameworkController 训练服务](./FrameworkControllerMode.md): 支持使用在 Kubernetes 上使用 FrameworkController。 
+  * FrameworkController 是 Kubernetes 上非常通用的控制器（Controller），能用来运行基于各种机器学习框架的分布式作业，如 TensorFlow，Pytorch， MXNet 等。
+  * NNI 为作业定义了统一而简单的规范。
+  * 如何使用 FrameworkController 的 MNIST 样例。
 
 #### 改进用户体验
 
-* A better trial logging support for NNI experiments in OpenPAI, Kubeflow and FrameworkController mode: 
-  * An improved logging architecture to send stdout/stderr of trials to NNI manager via Http post. NNI manager will store trial's stdout/stderr messages in local log file.
+* 为 OpenPAI, Kubeflow 和 FrameworkController 模式提供更好的日志支持。 
+  * 改进后的日志架构能将尝试的 stdout/stderr 通过 HTTP POST 方式发送给 NNI 管理器。 NNI 管理器将 Trial 的 stdout/stderr 消息存储在本地日志文件中。
   * Show the link for trial log file on WebUI.
 * Support to show final result's all key-value pairs.
 
@@ -199,6 +199,6 @@
 * Others 
   * Support simple GPU job scheduling
 
-### Known Issues
+### 已知问题
 
 [0.1.0 的已知问题](https://github.com/Microsoft/nni/labels/nni010knownissues)。
