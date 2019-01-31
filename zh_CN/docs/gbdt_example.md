@@ -103,9 +103,9 @@ if __name__ == '__main__':
 }
 ```
 
-More support variable type you could reference [here](https://github.com/Microsoft/nni/blob/master/docs/SearchSpaceSpec.md).
+参考[这里](https://github.com/Microsoft/nni/blob/master/docs/SearchSpaceSpec.md)，了解更多变量类型。
 
-### 3.3 Add SDK of nni into your code.
+### 3.3 在代码中使用 NNI SDK
 
 ```diff
 +import nni
@@ -118,23 +118,23 @@ def get_default_parameters():
 
 def load_data(train_path='./data/regression.train', test_path='./data/regression.test'):
     '''
-    Load or create dataset
+    读取或创建数据集
     '''
     ...
 
     return lgb_train, lgb_eval, X_test, y_test
 
 def run(lgb_train, lgb_eval, params, X_test, y_test):
-    # train
+    # 训练
     gbm = lgb.train(params,
                     lgb_train,
                     num_boost_round=20,
                     valid_sets=lgb_eval,
                     early_stopping_rounds=5)
-    # predict
+    # 预测
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # eval
+    # 评估
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 
@@ -149,20 +149,20 @@ if __name__ == '__main__':
     PARAMS = get_default_parameters()
     PARAMS.update(RECEIVED_PARAMS)
 
-    # train
+    # 训练
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.4 Write a config file and run it.
+### 3.4 编写配置文件并运行
 
-In the config file, you could set some settings including:
+在配置文件中，可以设置如下内容：
 
-* Experiment setting: `trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, etc.
-* Platform setting: `trainingServicePlatform`, etc.
-* Path seeting: `searchSpacePath`, `trial codeDir`, etc.
-* Algorithm setting: select `tuner` algorithm, `tuner optimize_mode`, etc.
+* Experiment 设置：`trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, 等等。
+* 平台设置：`trainingServicePlatform`，等等。
+* 路径设置：`searchSpacePath`, `trial codeDir`，等等。
+* 算法设置：选择 `Tuner` 算法，`优化方向`，等等。
 
-An config.yml as follow:
+config.yml 样例：
 
 ```yaml
 authorName: default
