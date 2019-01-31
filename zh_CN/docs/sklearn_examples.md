@@ -75,6 +75,6 @@ nnictl create --config ./config.yml
     
     就可以使用这些变量来编写 scikit-learn 的代码。
 
-* **step 3**  
-    After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job.  
-    You just need to use `nni.report_final_result(score)` to communitate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using `nni.report_intemediate_result(score)`. Note, you may not report intemediate result of your job, but you must report back your final result.
+* **第三步**  
+    完成训练后，可以得到模型分数，如：精度，召回率，均方差等等。 NNI 会将分数发送给 Tuner 算法，并据此生成下一组参数，所以需要将分数返回给 NNI。NNI 会开始下一个 Trial 任务。  
+    只需要在训练结束后调用 `nni.report_final_result(score)`，就可以将分数传给 NNI。 如果训练过程中有中间分数，也可以使用 `nni.report_intemediate_result(score)` 返回给 NNI。 注意， 可以不返回中间分数，但必须返回最终的分数。
