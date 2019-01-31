@@ -65,8 +65,8 @@
 * [Kubeflow Training service](./KubeflowMode.md)
   * Support tf-operator
   * [Distributed trial example](../examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
-* [Grid search tuner](../src/sdk/pynni/nni/README.md#Grid) 
-* [Hyperband tuner](../src/sdk/pynni/nni/README.md#Hyperband)
+* [Grid search tuner](Builtin_Tuner.md#GridSearch)
+* [Hyperband tuner](Builtin_Tuner.md#Hyperband)
 * Support launch NNI experiment on MAC
 * WebUI
   * UI support for hyperband tuner
