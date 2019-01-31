@@ -1,6 +1,6 @@
 
 jobs:
-- job: 'Build and upload nni test packages'
+- job: 'Prerelease_build_upload'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
