@@ -103,7 +103,7 @@ if __name__ == '__main__':
 }
 ```
 
-参考[这里](https://github.com/Microsoft/nni/blob/master/docs/SearchSpaceSpec.md)，了解更多变量类型。
+参考[这里](./SearchSpaceSpec.md)，了解更多变量类型。
 
 ### 3.3 在代码中使用 NNI SDK
 
