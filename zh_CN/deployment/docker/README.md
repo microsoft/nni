@@ -6,13 +6,13 @@
 
     CUDA 9.0, CuDNN 7.0
     numpy 1.14.3,scipy 1.1.0
-    TensorFlow 1.10.0
+    TensorFlow-gpu 1.10.0
     Keras 2.1.6
     PyTorch 0.4.1
     scikit-learn 0.20.0
     pandas 0.23.4
     lightgbm 2.2.2
-    NNI v0.5
+    NNI v0.5.1
     
 
 此 Dockerfile 可作为定制的参考。
@@ -30,6 +30,8 @@
 
         docker run -it nni/nni
     
+
+注意，如果要使用 tensorflow，需要先卸载 tensorflow-gpu，然后在 Docker 容器中安装 tensorflow。 或者修改 `Dockerfile` 来安装没有 GPU 的 tensorflow 版本，并重新生成 Docker 映像。
 
 * 如果 docker 容器中有 GPU，确保安装了 [NVIDIA 容器运行包](https://github.com/NVIDIA/nvidia-docker)，然后运行下面的命令
 
