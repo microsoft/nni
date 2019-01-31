@@ -49,7 +49,7 @@ nnictl create --config ./config.yml
     在 Python 代码中，可以将这些值作为一个 dict，读取到 Python 代码中。
 
 * **第二步**  
-    在代码最前面，加上 `import nni` 来导入 NNI 包。 首先，要使用 `nni.get_next_parameter()` 函数从 NNI 中获取参数。 Then you could use these parameters to update your code. For example, if you define your search_space.json like following format:
+    在代码最前面，加上 `import nni` 来导入 NNI 包。 首先，要使用 `nni.get_next_parameter()` 函数从 NNI 中获取参数。 然后在代码中使用这些参数。 例如，如果定义了如下的 search_space.json：
     
     ```json
     {
@@ -61,7 +61,7 @@ nnictl create --config ./config.yml
     }
     ```
     
-    You may get a parameter dict like this:
+    就会获得像下面一样的 dict：
     
     ```python
     params = {
@@ -73,7 +73,7 @@ nnictl create --config ./config.yml
     }
     ```
     
-    Then you could use these variables to write your scikit-learn code.
+    就可以使用这些变量来编写 scikit-learn 的代码。
 
 * **step 3**  
     After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job.  
