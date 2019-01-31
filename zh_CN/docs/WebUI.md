@@ -42,7 +42,7 @@
 
 ![](./img/webui-img/detail-local.png)
 
-* If you run on OpenPAI or Kubeflow platform, you can also see the hdfsLog.
+* 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
 
 ![](./img/webui-img/detail-pai.png)
 
