@@ -7,8 +7,9 @@ NNI supports many kinds of tuning algorithms to search the best models and/or hy
 
 To start using NNI, you should install the nni package, and use the command line tool `nnictl` to start an experiment. For more information about installation and preparing for the environment, please [refer](QuickStart.md). After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
 
-    nnictl create --config ./config.yml
-    
+```bash
+nnictl create --config ./config.yml
+```
 
 ## 2. Description of the example
 
@@ -25,35 +26,54 @@ This example uses the Boston Housing Dataset, this dataset consists of price of 
 
 It is easy to use nni in your sklearn code, there are only a few steps.
 
-* **step 1**  
-    Prepare a search_space.json to storage your choose spaces. For example, if you want to choose different models, you may try: 
-        {
-        "model_name":{"_type":"choice","_value":["LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"]}
-        } If you want to choose different models and parameters, you could put them together in a search_space.json file. 
+* **step 1**
     
-        {
-        "model_name":{"_type":"choice","_value":["LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"]},
-        "svr_kernel": {"_type":"choice","_value":["linear", "poly", "rbf"]},
-        "knr_weights": {"_type":"choice","_value":["uniform", "distance"]}
-        } Then you could read these values as a dict from your python code, please get into the step 2.
+    Prepare a search_space.json to storage your choose spaces. For example, if you want to choose different models, you may try:
+    
+    ```json
+    {
+    "model_name":{"_type":"choice","_value":["LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"]}
+    }
+    ```
+    
+    If you want to choose different models and parameters, you could put them together in a search_space.json file.
+    
+    ```json
+    {
+    "model_name":{"_type":"choice","_value":["LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"]},
+    "svr_kernel": {"_type":"choice","_value":["linear", "poly", "rbf"]},
+    "knr_weights": {"_type":"choice","_value":["uniform", "distance"]}
+    }
+    ```
+    
+    Then you could read these values as a dict from your python code, please get into the step 2.
 
 * **step 2**  
-    At the beginning of your python code, you should `import nni` to insure the packages works normally. First, you should use `nni.get_next_parameter()` function to get your parameters given by nni. Then you could use these parameters to update your code. For example, if you define your search_space.json like following format: 
-        {
-        "C": {"_type":"uniform","_value":[0.1, 1]},
-        "keral": {"_type":"choice","_value":["linear", "rbf", "poly", "sigmoid"]},
-        "degree": {"_type":"choice","_value":[1, 2, 3, 4]},
-        "gamma": {"_type":"uniform","_value":[0.01, 0.1]},
-        "coef0 ": {"_type":"uniform","_value":[0.01, 0.1]}
-        } You may get a parameter dict like this: 
+    At the beginning of your python code, you should `import nni` to insure the packages works normally. First, you should use `nni.get_next_parameter()` function to get your parameters given by nni. Then you could use these parameters to update your code. For example, if you define your search_space.json like following format:
     
-        params = {
-            'C': 1.0,
-            'keral': 'linear',
-            'degree': 3,
-            'gamma': 0.01,
-            'coef0': 0.01
-        } Then you could use these variables to write your scikit-learn code.
+    ```json
+    {
+    "C": {"_type":"uniform","_value":[0.1, 1]},
+    "keral": {"_type":"choice","_value":["linear", "rbf", "poly", "sigmoid"]},
+    "degree": {"_type":"choice","_value":[1, 2, 3, 4]},
+    "gamma": {"_type":"uniform","_value":[0.01, 0.1]},
+    "coef0 ": {"_type":"uniform","_value":[0.01, 0.1]}
+    }
+    ```
+    
+    You may get a parameter dict like this:
+    
+    ```python
+    params = {
+        'C': 1.0,
+        'keral': 'linear',
+        'degree': 3,
+        'gamma': 0.01,
+        'coef0': 0.01
+    }
+    ```
+    
+    Then you could use these variables to write your scikit-learn code.
 
 * **step 3**  
     After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job.  
