@@ -106,7 +106,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment �
 注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
-* 如果遇到如`Segmentation fault` 这样的任何错误请参考 [常见问题](docs/FAQ.md)。
+* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/FAQ.md)。
 
 **通过源代码安装**
 
