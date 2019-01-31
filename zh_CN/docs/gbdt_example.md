@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
 ### 3.2 准备搜索空间
 
-If you like to tune `num_leaves`, `learning_rate`, `bagging_fraction` and `bagging_freq`, you could write a [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) as follow:
+如果要调优 `num_leaves`, `learning_rate`, `bagging_fraction` 和 `bagging_freq`, 可创建一个 [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) 文件：
 
     {
         "num_leaves":{"_type":"choice","_value":[31, 28, 24, 20]},
