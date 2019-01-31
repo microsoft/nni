@@ -1,9 +1,9 @@
 # NNI 中使用 scikit-learn
 
-[Scikit-learn](https://github.com/scikit-learn/scikit-learn) 是数据挖掘和分析的流行工具。 它支持多种机器学习模型，如线性回归，逻辑回归，决策树，支持向量机等。 How to make the use of scikit-learn more efficiency is a valuable topic.  
-NNI supports many kinds of tuning algorithms to search the best models and/or hyper-parameters for scikit-learn, and support many kinds of environments like local machine, remote servers and cloud.
+[Scikit-learn](https://github.com/scikit-learn/scikit-learn) 是数据挖掘和分析的流行工具。 它支持多种机器学习模型，如线性回归，逻辑回归，决策树，支持向量机等。 提高 scikit-learn 的效率是非常有价值的课题。  
+NNI 支持多种调优算法，可以为 scikit-learn 搜索最佳的模型和超参，并支持本机、远程服务器组、云等各种环境。
 
-## 1. How to run the example
+## 1. 如何运行此样例
 
 To start using NNI, you should install the nni package, and use the command line tool `nnictl` to start an experiment. For more information about installation and preparing for the environment, please [refer](QuickStart.md). After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
 
