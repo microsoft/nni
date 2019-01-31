@@ -170,17 +170,17 @@ experimentName: example_auto-gbdt
 trialConcurrency: 1
 maxExecDuration: 10h
 maxTrialNum: 10
-#choice: local, remote, pai
+#可选项: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: search_space.json
-#choice: true, false
+#可选项: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC should be installed through nnictl)
+  #可选项: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC 需要先通过 nnictl 来安装)
   builtinTunerName: TPE
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode: minimize
 trial:
   command: python3 main.py
@@ -188,7 +188,7 @@ trial:
   gpuNum: 0
 ```
 
-Run this experiment with command as follow:
+使用下面的命令启动 Experiment：
 
 ```bash
 nnictl create --config ./config.yml
