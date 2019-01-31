@@ -36,7 +36,7 @@ nnictl create --config ./config.yml
     }
     ```
     
-    If you want to choose different models and parameters, you could put them together in a search_space.json file.
+    如果要选择不同的模型和参数，可以将它们放到同一个 search_space.json 文件中。
     
     ```json
     {
@@ -46,10 +46,10 @@ nnictl create --config ./config.yml
     }
     ```
     
-    Then you could read these values as a dict from your python code, please get into the step 2.
+    在 Python 代码中，可以将这些值作为一个 dict，读取到 Python 代码中。
 
-* **step 2**  
-    At the beginning of your python code, you should `import nni` to insure the packages works normally. First, you should use `nni.get_next_parameter()` function to get your parameters given by nni. Then you could use these parameters to update your code. For example, if you define your search_space.json like following format:
+* **第二步**  
+    在代码最前面，加上 `import nni` 来导入 NNI 包。 首先，要使用 `nni.get_next_parameter()` 函数从 NNI 中获取参数。 Then you could use these parameters to update your code. For example, if you define your search_space.json like following format:
     
     ```json
     {
