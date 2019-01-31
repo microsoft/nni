@@ -35,7 +35,7 @@
 
 #### 改进训练平台
 
-* 将 [Kubeflow 训练服务](KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
+* 将[Kubeflow 训练服务](KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
 * Kubeflow 训练服务支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
 * 改进将本地代码文件上传到 OpenPAI HDFS 的性能。
 * 修复 OpenPAI 在 WEB 界面的 Bug：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
@@ -65,8 +65,8 @@
 * [Kubeflow 训练服务](./KubeflowMode.md) 
   * 支持 tf-operator
   * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索 Tuner](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/README.md#Grid) 
-* [Hyperband Tuner](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/README.md#Hyperband)
+* [网格搜索 Tuner](../src/sdk/pynni/nni/README.md#Grid) 
+* [Hyperband Tuner](../src/sdk/pynni/nni/README.md#Hyperband)
 * 支持在 MAC 上运行 NNI Experiment
 * WebUI 
   * 支持 hyperband Tuner
@@ -100,7 +100,7 @@
   nnictl create --port 8081 --config <config file path>
   ```
 
-* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL 说明](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md)来查看完整帮助。
+* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL 说明](NNICTLDOC.md)来查看完整帮助。
 
 ### API 的新功能和更新
 
