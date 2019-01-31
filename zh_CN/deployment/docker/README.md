@@ -31,20 +31,20 @@
         docker run -it nni/nni
     
 
-Note that if you want to use tensorflow, please uninstall tensorflow-gpu and install tensorflow in this docker container. Or modify `Dockerfile` to install tensorflow (without gpu) and build docker image.
+注意，如果要使用 tensorflow，需要先卸载 tensorflow-gpu，然后在 Docker 容器中安装 tensorflow。 或者修改 `Dockerfile` 来安装没有 GPU 的 tensorflow 版本，并重新生成 Docker 映像。
 
 * 如果 docker 容器中有 GPU，确保安装了 [NVIDIA 容器运行包](https://github.com/NVIDIA/nvidia-docker)，然后运行下面的命令
 
         nvidia-docker run -it nni/nni
     
 
-or
+或者
 
         docker run --runtime=nvidia -it nni/nni
     
 
 ## 3.拉取 docker 映像
 
-Use the following command to retrieve the NNI docker image from Docker Hub
+使用下列命令从 docker Hub 中拉取 NNI docker 映像。
 
     docker pull msranni/nni:latest
