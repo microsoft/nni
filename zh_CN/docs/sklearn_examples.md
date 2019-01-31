@@ -1,34 +1,34 @@
 # NNI 中使用 scikit-learn
 
-[Scikit-learn](https://github.com/scikit-learn/scikit-learn) 是数据挖掘和分析的流行工具。 它支持多种机器学习模型，如线性回归，逻辑回归，决策树，支持向量机等。 提高 scikit-learn 的效率是非常有价值的课题。  
+[scikit-learn](https://github.com/scikit-learn/scikit-learn) (sklearn) 是数据挖掘和分析的流行工具。 它支持多种机器学习模型，如线性回归，逻辑回归，决策树，支持向量机等。 提高 scikit-learn 的效率是非常有价值的课题。  
 NNI 支持多种调优算法，可以为 scikit-learn 搜索最佳的模型和超参，并支持本机、远程服务器组、云等各种环境。
 
 ## 1. 如何运行此样例
 
-To start using NNI, you should install the nni package, and use the command line tool `nnictl` to start an experiment. For more information about installation and preparing for the environment, please [refer](QuickStart.md). After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
+安装 NNI 包，并使用命令行工具 `nnictl` 来启动 Experiment。 有关安装和环境准备的内容，参考[这里](QuickStart.md)。 安装完 NNI 后，进入相应的目录，输入下列命令即可启动 Experiment：
 
 ```bash
 nnictl create --config ./config.yml
 ```
 
-## 2. Description of the example
+## 2. 样例概述
 
-### 2.1 classification
+### 2.1 分类
 
-This example uses the dataset of digits, which is made up of 1797 8x8 images, and each image is a hand-written digit, the goal is to classify these images into 10 classes.  
-In this example, we use SVC as the model, and choose some parameters of this model, including `"C", "keral", "degree", "gamma" and "coef0"`. For more information of these parameters, please [refer](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html).
+此样例使用了数字数据集，由 1797 张 8x8 的图片组成，每张图片都是一个手写数字。目标是将这些图片分到 10 个类别中。  
+在此样例中，使用了 SVC 作为模型，并选择了一些参数，包括 `"C", "keral", "degree", "gamma" 和 "coef0"`。 关于这些参数的更多信息，可参考[这里](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)。
 
-### 2.2 regression
+### 2.2 回归
 
-This example uses the Boston Housing Dataset, this dataset consists of price of houses in various places in Boston and the information such as Crime (CRIM), areas of non-retail business in the town (INDUS), the age of people who own the house (AGE) etc to predict the house price of boston. In this example, we tune different kinds of regression models including `"LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"` and some parameters like `"svr_kernel", "knr_weights"`. You could get more details about these models from [here](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning).
+此样例使用了波士顿房价数据，数据集由波士顿各地区房价所组成，还包括了房屋的周边信息，例如：犯罪率 (CRIM)，非零售业务的面积 (INDUS)，房主年龄 (AGE) 等等。这些信息可用来预测波士顿的房价。 本例中，尝试了不同的回归模型，包括 `"LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"` 和一些参数，如 `"svr_kernel", "knr_weights"`。 关于这些模型算法和参数的更多信息，可参考[这里](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning)。
 
-## 3. How to write sklearn code using nni
+## 3. 如何在 NNI 中使用 sklearn
 
-It is easy to use nni in your sklearn code, there are only a few steps.
+只需要如下几步，即可在 sklearn 代码中使用 NNI。
 
-* **step 1**
+* **第一步**
     
-    Prepare a search_space.json to storage your choose spaces. For example, if you want to choose different models, you may try:
+    准备 search_space.json 文件来存储选择的搜索空间。 例如，如果要在不同的模型中选择：
     
     ```json
     {
