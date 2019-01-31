@@ -16,6 +16,7 @@ jobs:
       make version_ts=true build
     displayName: 'build bdsit_wheel'
   - script: |
+      cd deployment/pypi
       twine upload -u $(username) -p $(password) --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'upload package to testpypi'
 
