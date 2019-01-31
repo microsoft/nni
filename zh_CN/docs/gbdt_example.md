@@ -4,19 +4,19 @@
 
 梯度决策树（gradient boosting decision tree，GBDT）有很多流行的实现，如：[lightgbm](https://github.com/Microsoft/LightGBM), [xgboost](https://github.com/dmlc/xgboost), 和 [catboost](https://github.com/catboost/catboost)，等等。 GBDT 是解决经典机器学习问题的重要工具。 GBDT 也是一种鲁棒的算法，可以使用在很多领域。 GBDT 的超参越好，就能获得越好的性能。
 
-NNI is a great platform for tuning hyper-parameters, you could try various builtin search algorithm in nni and run multiple trials concurrently.
+NNI 是用来调优超参的平台，可以在 NNI 中尝试各种内置的搜索算法，并行运行多个 Trial。
 
-## 1. Search Space in GBDT
+## 1. GBDT 的搜索空间
 
-There are many hyper-parameters in GBDT, but what kind of parameters will affect the performance or speed? Based on some practical experience, some suggestion here(Take lightgbm as example):
+GBDT 有很多超参，但哪些才会影响性能或计算速度呢？ 基于实践经验，建议如下（以 lightgbm 为例）：
 
-> * For better accuracy
+> * 获得更好的精度
 
-* `learning_rate`. The range of `learning rate` could be [0.001, 0.9].
+* `learning_rate`. `学习率`的范围应该是 [0.001, 0.9]。
 
-* `num_leaves`. `num_leaves` is related to `max_depth`, you don't have to tune both of them.
+* `num_leaves`. `num_leaves` 与 `max_depth` 有关，不必两个值同时调整。
 
-* `bagging_freq`. `bagging_freq` could be [1, 2, 4, 8, 10]
+* `bagging_freq`. `bagging_freq` 可以是 [1, 2, 4, 8, 10]。
 
 * `num_iterations`. May larger if underfitting.
 
