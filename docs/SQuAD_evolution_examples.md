@@ -25,7 +25,7 @@ Also we have another version which time cost is less and performance is better. 
 Execute the following command to download needed files
 using the downloading script:
 
-```
+```bash
 chmod +x ./download.sh
 ./download.sh
 ```
@@ -34,14 +34,14 @@ Or Download manually
 
 1. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
 
-```
+```bash
 wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
 wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
 ```
 
 2. download "glove.840B.300d.txt" in https://nlp.stanford.edu/projects/glove/
 
-```
+```bash
 wget http://nlp.stanford.edu/data/glove.840B.300d.zip
 unzip glove.840B.300d.zip
 ```
@@ -49,7 +49,7 @@ unzip glove.840B.300d.zip
 ### 2.2 Update configuration
 Modify `nni/examples/trials/ga_squad/config.yml`, here is the default configuration:
 
-```
+```yaml
 authorName: default
 experimentName: example_ga_squad
 trialConcurrency: 1
@@ -75,7 +75,7 @@ In the "trial" part, if you want to use GPU to perform the architecture search, 
 
 ### 2.3 submit this job
 
-```
+```bash
 nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
 ```
 
@@ -84,9 +84,10 @@ nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
 Due to the memory limitation of upload, we only upload the source code and complete the data download and training on OpenPAI. This experiment requires sufficient memory that `memoryMB >= 32G`, and the training may last for several hours.
 
 ### 3.1 Update configuration
+
 Modify `nni/examples/trials/ga_squad/config_pai.yml`, here is the default configuration:
 
-```
+```yaml
 authorName: default
 experimentName: example_ga_squad
 trialConcurrency: 1
@@ -133,13 +134,14 @@ In the "trial" part, if you want to use GPU to perform the architecture search, 
 
 ### 3.2 submit this job
 
-```
+```bash
 nnictl create --config ~/nni/examples/trials/ga_squad/config_pai.yml
 ```
 
 ## 4. Technical details about the trial
 
 ### 4.1 How does it works
+
 The evolution-algorithm based architecture for question answering has two different parts just like any other examples: the trial and the tuner.
 
 ### 4.2 The trial
@@ -157,7 +159,7 @@ Among those files, `trial.py` and `graph_to_tf.py` are special.
 
 `graph_to_tf.py` has a function named as `graph_to_network`, here is its skeleton code:
 
-```
+```python
 def graph_to_network(input1,
                      input2,
                      input1_lengths,
@@ -190,13 +192,13 @@ def graph_to_network(input1,
 
 As we can see, this function is actually a compiler, that converts the internal model DAG configuration (which will be introduced in the `Model configuration format` section) `graph`, to a Tensorflow computation graph.
 
-```
+```python
 topology = graph.is_topology()
 ```
 
 performs topological sorting on the internal graph representation, and the code inside the loop:
 
-```
+```python
 for _, topo_i in enumerate(topology):
 ```
 
@@ -206,7 +208,7 @@ performs actually conversion that maps each layer to a part in Tensorflow comput
 
 The tuner is much more simple than the trial. They actually share the same `graph.py`. Besides, the tuner has a `customer_tuner.py`, the most important class in which is `CustomerTuner`:
 
-```
+```python
 class CustomerTuner(Tuner):
     # ......
 
@@ -235,13 +237,13 @@ class CustomerTuner(Tuner):
             indiv.mutation()
             graph = indiv.config
             temp =  json.loads(graph_dumps(graph))
-    
+
     # ......
 ```
 
 As we can see, the overloaded method `generate_parameters` implements a pretty naive mutation algorithm. The code lines:
 
-```
+```python
             if self.population[0].result > self.population[1].result:
                 self.population[0] = self.population[1]
             indiv = copy.deepcopy(self.population[0])
@@ -253,7 +255,7 @@ controls the mutation process. It will always take two random individuals in the
 
 Here is an example of the model configuration, which is passed from the tuner to the trial in the architecture search procedure.
 
-```
+```json
 {
     "max_layer_num": 50,
     "layers": [
@@ -300,9 +302,9 @@ Here is an example of the model configuration, which is passed from the tuner to
 
 Every model configuration will have a "layers" section, which is a JSON list of layer definitions. The definition of each layer is also a JSON object, where:
 
- * `type` is the type of the layer. 0, 1, 2, 3, 4 corresponds to attention, self-attention, RNN, input and output layer respectively.
- * `size` is the length of the output. "x", "y" correspond to document length / question length, respectively.
- * `input_size` is the number of inputs the layer has.
- * `input` is the indices of layers taken as input of this layer.
- * `output` is the indices of layers use this layer's output as their input.
- * `is_delete` means whether the layer is still available.
+* `type` is the type of the layer. 0, 1, 2, 3, 4 corresponds to attention, self-attention, RNN, input and output layer respectively.
+* `size` is the length of the output. "x", "y" correspond to document length / question length, respectively.
+* `input_size` is the number of inputs the layer has.
+* `input` is the indices of layers taken as input of this layer.
+* `output` is the indices of layers use this layer's output as their input.
+* `is_delete` means whether the layer is still available.
