@@ -32,7 +32,8 @@ setuptools.setup(
     package_dir = {
         'nni_annotation': '../../tools/nni_annotation',
         'nni_cmd': '../../tools/nni_cmd',
-        'nni_trial_tool':'../../tools/nni_trial_tool'
+        'nni_trial_tool':'../../tools/nni_trial_tool',
+        'nni_gpu_tool':'../../tools/nni_gpu_tool'
     },
     python_requires = '>=3.5',
     install_requires = [
