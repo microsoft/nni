@@ -53,7 +53,7 @@ GBDT 有很多超参，但哪些才会影响性能或计算速度呢？ 基于�
 基础代码如下：
 
 ```python
-<br />...
+...
 
 def get_default_parameters():
     ...
@@ -94,13 +94,14 @@ if __name__ == '__main__':
 
 如果要调优 `num_leaves`, `learning_rate`, `bagging_fraction` 和 `bagging_freq`, 可创建一个 [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) 文件：
 
-    {
-        "num_leaves":{"_type":"choice","_value":[31, 28, 24, 20]},
-        "learning_rate":{"_type":"choice","_value":[0.01, 0.05, 0.1, 0.2]},
-        "bagging_fraction":{"_type":"uniform","_value":[0.7, 1.0]},
-        "bagging_freq":{"_type":"choice","_value":[1, 2, 4, 8, 10]}
-    }
-    
+```json
+{
+    "num_leaves":{"_type":"choice","_value":[31, 28, 24, 20]},
+    "learning_rate":{"_type":"choice","_value":[0.01, 0.05, 0.1, 0.2]},
+    "bagging_fraction":{"_type":"uniform","_value":[0.7, 1.0]},
+    "bagging_freq":{"_type":"choice","_value":[1, 2, 4, 8, 10]}
+}
+```
 
 More support variable type you could reference [here](https://github.com/Microsoft/nni/blob/master/docs/SearchSpaceSpec.md).
 
@@ -133,7 +134,7 @@ def run(lgb_train, lgb_eval, params, X_test, y_test):
     # predict
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # eval 
+    # eval
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 
@@ -189,4 +190,6 @@ trial:
 
 Run this experiment with command as follow:
 
-    nnictl create --config ./config.yml
+```bash
+nnictl create --config ./config.yml
+```
