@@ -71,7 +71,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment �
         <li><a href="docs/RemoteMachineMode.md">远程计算机</a></li>
         <li><a href="docs/PAIMode.md">OpenPAI</a></li>
         <li><a href="docs/KubeflowMode.md">Kubeflow</a></li>
-        <li><a href="docs/KubeflowMode.md">基于 Kubernetes（AKS 等等）的 FrameworkController</a></li>
+        <li><a href="docs/FrameworkControllerMode.md">基于 Kubernetes（AKS 等等）的 FrameworkController</a></li>
       </ul>
       </td>
     </tr>
