@@ -20,7 +20,7 @@ pip install -r requirements.txt
 
 Modify `examples/trials/network_morphism/cifar10/config.yml` to fit your own task, note that searchSpacePath is not required in our configuration. Here is the default configuration:
 
-```yml
+```yaml
 authorName: default
 experimentName: example_cifar10-network-morphism
 trialConcurrency: 1

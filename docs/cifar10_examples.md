@@ -6,7 +6,7 @@
 
 ### **Goals**
 
-As we all know, the choice of model optimizer is directly affects the performance of the final matrix. The goal of this tutorial is to **tune a better performace optimizer** to train a relatively small convolutional neural network (CNN) for recognizing images.
+As we all know, the choice of model optimizer is directly affects the performance of the final metrics. The goal of this tutorial is to **tune a better performace optimizer** to train a relatively small convolutional neural network (CNN) for recognizing images.
 
 In this example, we have selected the following common deep learning optimizer:
 
@@ -65,19 +65,19 @@ code directory: [examples/trials/cifar10_pytorch/config_pai.yml][7]
 
 *The complete examples we have implemented: [examples/trials/cifar10_pytorch/][1]*
 
-#### Lauch the experiment
+#### Launch the experiment
 
 We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
 
- ```bash
-    nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
+```bash
+nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
 ```
 
 [1]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
 [2]: https://pytorch.org/
 [3]: https://www.cs.toronto.edu/~kriz/cifar.html
 [4]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
-[5]: https://github.com/Microsoft/nni/blob/master/docs/howto_1_WriteTrial.md
+[5]: https://github.com/Microsoft/nni/blob/master/docs/Trials.md
 [6]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml
 [7]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml
 [8]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/search_space.json

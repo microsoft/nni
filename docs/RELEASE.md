@@ -6,9 +6,9 @@
 
 #### New tuner and assessor supports
 
-* Support [Metis tuner](./HowToChooseTuner.md#MetisTuner) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
+* Support [Metis tuner](./Builtin_Tuner.md#MetisTuner) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
 * Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
-* Support [Curve fitting assessor](./HowToChooseTuner.md#Curvefitting) for early stop policy using learning curve extrapolation.
+* Support [Curve fitting assessor](./Builtin_Tuner.md#Curvefitting) for early stop policy using learning curve extrapolation.
 * Advanced Support of [Weight Sharing](./AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
 
 #### Training Service Enhancement
@@ -20,7 +20,7 @@
 
 #### User Experience improvements
 
-* A better trial logging support for NNI experiments in PAI, Kubeflow and FrameworkController mode:
+* A better trial logging support for NNI experiments in OpenPAI, Kubeflow and FrameworkController mode:
   * An improved logging architecture to send stdout/stderr of trials to NNI manager via Http post. NNI manager will store trial's stdout/stderr messages in local log file.
   * Show the link for trial log file on WebUI.
 * Support to show final result's all key-value pairs.
@@ -31,7 +31,7 @@
 
 #### New tuner supports
 
-* Support [network morphism](./HowToChooseTuner.md#NetworkMorphism) as a new tuner
+* Support [network morphism](./Builtin_Tuner.md#NetworkMorphism) as a new tuner
 
 #### Training Service improvements
 
@@ -64,8 +64,8 @@
 
 * [Kubeflow Training service](./KubeflowMode.md)
   * Support tf-operator
-  * [Distributed trial example](../examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
-* [Grid search tuner](Builtin_Tuner.md#GridSearch)
+  * [Distributed trial example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
+* [Grid search tuner](Builtin_Tuner.md#GridSearch) 
 * [Hyperband tuner](Builtin_Tuner.md#Hyperband)
 * Support launch NNI experiment on MAC
 * WebUI
@@ -83,9 +83,9 @@
 * Docker file update, add pytorch library 
 * Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API. 
 * OpenPAI training service bug fix
-  * Support NNI Manager IP configuration(nniManagerIp) in PAI cluster config file, to fix the issue that user’s machine has no eth0 device 
+  * Support NNI Manager IP configuration(nniManagerIp) in OpenPAI cluster config file, to fix the issue that user’s machine has no eth0 device 
   * File number in codeDir is capped to 1000 now, to avoid user mistakenly fill root dir for codeDir
-  * Don’t print useless ‘metrics is empty’ log int PAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks PAI trial’s output for debugging purpose
+  * Don’t print useless ‘metrics is empty’ log in OpenPAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks OpenPAI trial’s output for debugging purpose
   * Add timestamp at the beginning of each log entry in trial keeper.
 
 ## Release 0.3.0 - 11/2/2018
@@ -146,10 +146,10 @@
 
 ### Major Features
 
-* Support [OpenPAI](https://github.com/Microsoft/pai) (aka pai) Training Service (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
+* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
   * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
   * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
-* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](HowToChooseTuner.md) for instructions about how to use SMAC tuner)
+* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](Builtin_Tuner.md) for instructions about how to use SMAC tuner)
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO to handle categorical parameters. The SMAC supported by NNI is a wrapper on [SMAC3](https://github.com/automl/SMAC3)
 * Support NNI installation on [conda](https://conda.io/docs/index.html) and python virtual environment
 * Others

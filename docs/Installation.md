@@ -22,7 +22,7 @@ Currently we only support installation on Linux & Mac.
 
 * __Install NNI in docker image__
 
-  You can also install NNI in a docker image. Please follow the instructions [here](../deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
+  You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
 ## **System requirements**
 

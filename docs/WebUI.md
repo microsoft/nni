@@ -41,7 +41,7 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
 ![](./img/webui-img/detail-local.png)
 
-* If you run a pai or kubeflow experiment, you can also see the hdfsLog.
+* If you run on OpenPAI or Kubeflow platform, you can also see the hdfsLog.
 
 ![](./img/webui-img/detail-pai.png)
 

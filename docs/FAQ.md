@@ -19,7 +19,7 @@ Please try the following solutions in turn:
 * Install NNI with `--no-cache-dir` flag like `python3 -m pip install nni --no-cache-dir`
 
 ### Job management error: getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.
-Your machine don't have eth0 device, please set nniManagerIp in your config file manually. [refer](https://github.com/Microsoft/nni/blob/master/docs/ExperimentConfig.md)
+Your machine don't have eth0 device, please set [nniManagerIp](ExperimentConfig.md) in your config file manually. 
 
 ### Exceed the MaxDuration but didn't stop
 When the duration of experiment reaches the maximum duration, nniManager will not create new trials, but the existing trials will continue unless user manually stop the experiment. 
