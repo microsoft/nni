@@ -9,7 +9,9 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  - script: python3 -m pip install twine --user
+  - script: |
+      python3 -m pip install --upgrade pip setuptools --user
+      python3 -m pip install twine --user
     displayName: 'Install twine'
   - script: |
       cd deployment/pypi
