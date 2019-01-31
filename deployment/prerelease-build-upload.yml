@@ -14,7 +14,7 @@ jobs:
       python3 -m pip install twine --user
     displayName: 'Install twine'
   - script: |
-      git tag v0.1 #For test only, TODO remove
+      git tag v0.0.1 #For test only, TODO remove
       cd deployment/pypi
       make version_ts=true build
     displayName: 'build bdsit_wheel'
