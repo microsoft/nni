@@ -14,11 +14,11 @@ jobs:
       python3 -m pip install twine --user
     displayName: 'Install twine'
   - script: |
+      git tag v0.1 #For test only, TODO remove
       cd deployment/pypi
       make version_ts=true build
     displayName: 'build bdsit_wheel'
   - script: |
       cd deployment/pypi
-      twine upload -u $(username) -p $(password) --repository-url https://test.pypi.org/legacy/ dist/*
+      python3 -m twine upload -u $(username) -p $(password) --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'upload package to testpypi'
-
