@@ -8,7 +8,7 @@
 
 * 搜索空间样例如下：
 
-```python
+```yaml
 {
     "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
     "conv_size":{"_type":"choice","_value":[2,3,5,7]},
