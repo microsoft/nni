@@ -1,5 +1,19 @@
 # ChangeLog
 
+## Release 0.5.1 - 1/31/2018
+### Improvements
+* Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md) configurable
+* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md), making it easier for debugging 
+
+### Documentation
+* Reorganized documentation & New Homepage Released: https://nni.readthedocs.io/en/latest/
+
+### Bug Fixes and Other Changes
+* Fix the bug of installation in python virtualenv, and refactor the installation logic
+* Fix the bug of HDFS access failure on PAI mode after PAI is upgraded. 
+* Fix the bug that sometimes in-place flushed stdout makes experiment crash
+
+
 ## Release 0.5.0 - 01/14/2019
 
 ### Major Features
@@ -65,8 +79,8 @@
 * [Kubeflow Training service](./KubeflowMode.md)
   * Support tf-operator
   * [Distributed trial example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
-* [Grid search tuner](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/README.md#Grid) 
-* [Hyperband tuner](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/README.md#Hyperband)
+* [Grid search tuner](Builtin_Tuner.md#GridSearch) 
+* [Hyperband tuner](Builtin_Tuner.md#Hyperband)
 * Support launch NNI experiment on MAC
 * WebUI
   * UI support for hyperband tuner
