@@ -73,7 +73,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment �
         <li><a href="docs/RemoteMachineMode.md">远程计算机</a></li>
         <li><a href="docs/PAIMode.md">OpenPAI</a></li>
         <li><a href="docs/KubeflowMode.md">Kubeflow</a></li>
-        <li><a href="docs/KubeflowMode.md">基于 Kubernetes（AKS 等等）的 FrameworkController</a></li>
+        <li><a href="docs/FrameworkControllerMode.md">基于 Kubernetes（AKS 等等）的 FrameworkController</a></li>
       </ul>
       </td>
     </tr>
@@ -108,7 +108,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）Experiment �
 注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
-* 如果遇到如`Segmentation fault` 这样的任何错误请参考 [常见问题](docs/FAQ.md)。
+* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/FAQ.md)。
 
 **通过源代码安装**
 

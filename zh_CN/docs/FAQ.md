@@ -21,7 +21,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 * 更新或重新安装 Python 中的 pip： `python3 -m pip install -U pip`
 * 在安装 NNI 时，添加 `--no-cache-dir` 参数：`python3 -m pip install nni --no-cache-dir`
 
-### 作业管理错误：getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.
+### Job management error: getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.
 
 计算机没有 eth0 设备，需要在配置中设置 [nniManagerIp](ExperimentConfig.md)。
 
