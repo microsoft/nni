@@ -1,14 +1,31 @@
 # 更改日志
 
+## 发布 0.5.1 - 1/31/2018
+
+### 改进
+
+* 可配置[日志目录](ExperimentConfig.md)。
+* 支持[不同级别的日志](ExperimentConfig.md)，使其更易于调试。 
+
+### 文档
+
+* 重新组织文档，新的主页位置：https://nni.readthedocs.io/en/latest/
+
+### Bug 修复和其它更新
+
+* 修复了 Python 虚拟环境中安装的 Bug，并重构了安装逻辑。
+* 修复了在最新的 OpenPAI 下存取 HDFS 失败的问题。 
+* 修复了有时刷新 stdout 会造成 Experiment 崩溃的问题。
+
 ## 发布 0.5.0 - 01/14/2019
 
 ### 主要功能
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持 [Metis tuner](./HowToChooseTuner.md#MetisTuner) 作为 NNI 的 Tuner。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* 支持[Metis tuner](./Builtin_Tuner.md#MetisTuner) 作为 NNI 的 Tuner。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
-* 支持 [Curve fitting （曲线拟合）Assessor](./HowToChooseTuner.md#Curvefitting)，通过曲线拟合的策略来实现提前终止 Trial。
+* 支持 [Curve fitting （曲线拟合）Assessor](./Builtin_Tuner.md#Curvefitting)，通过曲线拟合的策略来实现提前终止 Trial。
 * 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
 
 #### 改进训练平台
@@ -31,7 +48,7 @@
 
 #### 支持新的 Tuner
 
-* 支持新 Tuner [network morphism](./HowToChooseTuner.md#NetworkMorphism)
+* 支持新 Tuner [network morphism](./Builtin_Tuner.md#NetworkMorphism)
 
 #### 改进训练平台
 
@@ -64,11 +81,11 @@
 
 * [Kubeflow 训练服务](./KubeflowMode.md) 
   * 支持 tf-operator
-  * Kubeflow 上的[分布式 Trial 样例](../examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索 Tuner](Builtin_Tuner.md#GridSearch)
+  * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
+* [网格搜索 Tuner](Builtin_Tuner.md#GridSearch) 
 * [Hyperband Tuner](Builtin_Tuner.md#Hyperband)
 * 支持在 MAC 上运行 NNI Experiment
-* WebUI 
+* Web 界面 
   * 支持 hyperband Tuner
   * 移除 tensorboard 按钮
   * 显示 Experiment 的错误消息
@@ -126,13 +143,13 @@
 
 ### 新样例
 
-* 公共的 NNI Docker 映像：
+* 公开的 NNI Docker 映像：
   
   ```bash
   docker pull msranni/nni:latest
   ```
 
-* 新的尝试样例： [NNI Sklearn 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
+* 新的 Trial 样例： [NNI Sklearn 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/sklearn)
 
 * 新的竞赛样例：[Kaggle Competition TGS Salt](https://github.com/Microsoft/nni/tree/master/examples/trials/kaggle-tgs-salt)
 
@@ -146,10 +163,10 @@
 
 ### 主要功能
 
-* 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练平台 (参考[这里](./PAIMode.md)来了解如何在 pai 模式下提交 NNI 任务) 
+* 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练服务 (参考[这里](./PAIMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
   * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
   * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
-* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](HowToChooseTuner.md)，了解如何使用 SMAC Tuner) 
+* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](Builtin_Tuner.md)，了解如何使用 SMAC Tuner) 
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
 * 支持将 NNI 安装在 [conda](https://conda.io/docs/index.html) 和 Python 虚拟环境中。
 * 其它 
