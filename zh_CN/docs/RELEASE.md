@@ -20,7 +20,7 @@
 
 #### 改进用户体验
 
-* 为 OpenPAI, Kubeflow 和 FrameworkController 模式提供更好的日志支持。 
+* A better trial logging support for NNI experiments in OpenPAI, Kubeflow and FrameworkController mode: 
   * 改进后的日志架构能将尝试的 stdout/stderr 通过 HTTP POST 方式发送给 NNI 管理器。 NNI 管理器将 Trial 的 stdout/stderr 消息存储在本地日志文件中。
   * 在 WEB 界面上显示 Trial 日志的链接。
 * 支持将最终结果显示为键值对。
@@ -83,9 +83,9 @@
 * 更新 Docker 文件，增加 pytorch 库 
 * 重构 'nnictl stop' 过程，发送 SIGTERM 给 NNI 管理器进程，而不是调用停止 Restful API. 
 * 修复 OpenPAI 训练服务的 Bug 
-  * 在 NNI 管理器中为 PAI 集群配置文件支持 IP 配置(nniManagerIp)，来修复用户计算机没有 eth0 设备的问题。 
+  * Support NNI Manager IP configuration(nniManagerIp) in OpenPAI cluster config file, to fix the issue that user’s machine has no eth0 device 
   * codeDir 中的文件数量上限改为1000，避免用户无意中填写了 root 目录。
-  * 移除 PAI 作业的 stdout 日志中无用的 ‘metrics is empty’。 在新指标被记录时，仅输出有用的消息，来减少用户检查 PAI Trial 输出时的困惑。
+  * Don’t print useless ‘metrics is empty’ log in OpenPAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks OpenPAI trial’s output for debugging purpose
   * 在 Trial keeper 的开始增加时间戳。
 
 ## 发布 0.3.0 - 11/2/2018
@@ -146,7 +146,7 @@
 
 ### 主要功能
 
-* 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练服务 (参考[这里](./PAIMode.md)来了解如何在 pai 模式下提交 NNI 任务) 
+* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode) 
   * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
   * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
 * 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](Builtin_Tuner.md)，了解如何使用 SMAC Tuner) 
