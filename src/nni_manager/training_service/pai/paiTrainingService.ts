@@ -324,17 +324,18 @@ class PAITrainingService implements TrainingService {
                 "Authorization": 'Bearer ' + this.paiToken
             }
         };
+
         request(stopJobRequest, (error: Error, response: request.Response, body: any) => {
             if (error || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
                 deferred.reject(error ? error.message : 'Stop trial failed, http code: ' + response.statusCode);                
             } else {
-                if (isEarlyStopped) {
-                    trialJobDetail.status = 'EARLY_STOPPED';
-                }
                 deferred.resolve();
             }
         });
+
+        // Set trialjobDetail's early stopped field, to mark the job's cancellation source
+        trialJobDetail.isEarlyStopped = isEarlyStopped;
 
         return deferred.promise; 
     }

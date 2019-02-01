@@ -103,8 +103,12 @@ export class PAIJobInfoCollector {
                             paiTrialJob.status = 'SUCCEEDED';
                             break;
                         case 'STOPPED':
-                            if (paiTrialJob.status !== 'EARLY_STOPPED') {
-                                paiTrialJob.status = 'USER_CANCELED';
+                            if (paiTrialJob.isEarlyStopped !== undefined) {
+                                paiTrialJob.status = paiTrialJob.isEarlyStopped === true ? 
+                                        'EARLY_STOPPED' : 'USER_CANCELED';
+                            } else {
+                                // if paiTrialJob's isEarlyStopped is undefined, that mean we didn't stop it via cancellation, mark it as SYS_CANCELLED by PAI
+                                paiTrialJob.status = 'SYS_CANCELED';
                             }
                             break;
                         case 'FAILED':

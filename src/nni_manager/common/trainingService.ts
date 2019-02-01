@@ -71,6 +71,7 @@ interface TrialJobDetail {
     readonly workingDirectory: string;
     readonly form: JobApplicationForm;
     readonly sequenceId: number;
+    isEarlyStopped?: boolean;
 }
 
 interface HostJobDetail {
