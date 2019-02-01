@@ -22,3 +22,13 @@ jobs:
       cd deployment/pypi
       python3 -m twine upload -u $(username) -p $(password) --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'upload package to testpypi'
+
+  - script: |
+      export IMG_TAG=`git describe --tags --abbrev=0`
+      cd deployment/docker
+      docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
+      sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/RUN python3 -m pip install --user --no-cache-dir --index-url https:\/\/test.pypi.org\/simple\/ --extra-index-url https:\/\/pypi.org\/simple nni/' Dockerfile
+      echo $IMG_TAG
+      docker build -f Dockerfile -t msranni/nni:$IMG_TAG .
+      docker push msranni/nni:$IMG_TAG
+    displayName: 'build and upload docker image'
