@@ -20,7 +20,7 @@ jobs:
     displayName: 'build bdsit_wheel'
   - script: |
       cd deployment/pypi
-      python3 -m twine upload -u $(username) -p $(password) --repository-url https://test.pypi.org/legacy/ dist/*
+      python3 -m twine upload -u $(testpypi_user) -p $(testpypi_pwd) --repository-url https://test.pypi.org/legacy/ dist/*
     displayName: 'upload package to testpypi'
 
   - script: |
