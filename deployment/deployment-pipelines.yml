@@ -1,6 +1,6 @@
 
 jobs:
-- job: 'Prerelease_build_upload'
+- job: 'Build_upload_nni_artifacts'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -25,7 +25,7 @@ jobs:
         make build
       fi
 
-    displayName: 'build bdsit_wheel'
+    displayName: 'build nni bdsit_wheel'
   - script: |
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
@@ -36,7 +36,7 @@ jobs:
         echo 'uploading release package to pypi...'
         python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
       fi
-    displayName: 'upload package to testpypi'
+    displayName: 'upload nni package to pypi/testpypi'
 
   - script: |
       export IMG_TAG=`git describe --tags --abbrev=0`
@@ -51,4 +51,4 @@ jobs:
       echo $IMG_TAG
       docker build -f Dockerfile -t msranni/nni:$IMG_TAG .
       docker push msranni/nni:$IMG_TAG
-    displayName: 'build and upload docker image'
+    displayName: 'build and upload nni docker image'
