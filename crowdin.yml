@@ -1,7 +1,7 @@
 files:
   - source: '/**/*.[mM][dD]'
     ignore:
-      - /zh_CN/*.*
+      - /%locale_with_underscore%/*.*
     translation: /%locale_with_underscore%/%original_path%/%original_file_name%
   - source: '/**/*.[pP][nN][gG]'
     translation: /%locale_with_underscore%/%original_path%/%original_file_name%
