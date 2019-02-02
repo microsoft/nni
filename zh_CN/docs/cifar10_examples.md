@@ -47,7 +47,7 @@ python3 -m pip install torchvision
 
 * 使用 `nni.get_next_parameter()` 来获取下一组训练的超参组合。
 * 使用 `nni.report_intermediate_result(acc)` 在每个 epoch 结束时返回中间结果。
-* 使用 `nni.report_intermediate_result(acc)` 在每个 Trial 结束时返回最终结果。
+* Use `nni.report_final_result(acc)` to report the final result before the trial end.
 
 *实现代码：[main.py](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py)*
 
