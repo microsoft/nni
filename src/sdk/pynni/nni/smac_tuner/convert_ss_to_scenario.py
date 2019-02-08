@@ -53,7 +53,6 @@ def generate_pcs(nni_search_space_content):
                             pcs_fd.write('%s categorical {%s} [%s]\n' % (
                                 key, 
                                 json.dumps(list(range(choice_len)))[1:-1], 
-                                #json.dumps(search_space[key]['_value'][0])))
                                 json.dumps(0)))
                             if key in categorical_dict:
                                 raise RuntimeError('%s has already existed, please make sure no search space with the same key.' % key)
