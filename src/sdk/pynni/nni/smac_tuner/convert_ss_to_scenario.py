@@ -55,7 +55,7 @@ def generate_pcs(nni_search_space_content):
                                 json.dumps(list(range(choice_len)))[1:-1], 
                                 json.dumps(0)))
                             if key in categorical_dict:
-                                raise RuntimeError('%s has already existed, please make sure no search space with the same key.' % key)
+                                raise RuntimeError('%s has already existed, please make sure search space has no duplicate key.' % key)
                             categorical_dict[key] = search_space[key]['_value']
                         elif search_space[key]['_type'] == 'randint':
                             # TODO: support lower bound in randint
