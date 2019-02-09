@@ -2,6 +2,8 @@
 
 NNI provides state-of-the-art tuning algorithm in our builtin-assessors and makes them easy to use. Below is the brief overview of NNI current builtin Assessors:
 
+Note: Click the **Assessor's name** to get a detailed description of the algorithm, click the corresponding **Usage** to get the Assessor's installation requirements, suggested scenario and using example.
+
 |Assessor|Brief Introduction of Algorithm|
 |---|---|
 |[Medianstop](../src/sdk/pynni/nni/medianstop_assessor/README.md) [(Usage)](#MedianStop)|Medianstop is a simple early stopping rule. It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S. [Reference Paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf)|
