@@ -22,8 +22,6 @@ from .curvefunctions import *
 
 # Number of curve functions we prepared, more details can be found in "curvefunctions.py"
 NUM_OF_FUNCTIONS = 12
-# Maximum number of iterations when fitting the curve optimal parameters
-MAXFEV = 1000000
 # Number of simulation time when we do MCMC sampling
 NUM_OF_SIMULATION_TIME = 20
 # Number of samples we select when we do MCMC sampling
@@ -52,16 +50,16 @@ class CurveModel(object):
             model = curve_combination_models[i]
             try:
                 if model_para_num[model] == 2:
-                    a, b = optimize.curve_fit(all_models[model], x, y, maxfev=MAXFEV)[0]
+                    a, b = optimize.curve_fit(all_models[model], x, y)[0]
                     model_para[model][0] = a
                     model_para[model][1] = b
                 elif model_para_num[model] == 3:
-                    a, b, c = optimize.curve_fit(all_models[model], x, y, maxfev=MAXFEV)[0]
+                    a, b, c = optimize.curve_fit(all_models[model], x, y)[0]
                     model_para[model][0] = a
                     model_para[model][1] = b
                     model_para[model][2] = c
                 elif model_para_num[model] == 4:
-                    a, b, c, d = optimize.curve_fit(all_models[model], x, y, maxfev=MAXFEV)[0]
+                    a, b, c, d = optimize.curve_fit(all_models[model], x, y)[0]
                     model_para[model][0] = a
                     model_para[model][1] = b
                     model_para[model][2] = c

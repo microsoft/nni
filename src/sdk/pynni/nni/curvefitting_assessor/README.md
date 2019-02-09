@@ -59,6 +59,10 @@ assessor:
       # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
       * The default value of threshold is 0.95.
       threshold: 0.95
+      # (optional) The gap interval between Assesor judgements.
+      # For example: if gap = 2, start_step = 6, then we will assess the result when we get 6, 8, 10, 12...intermedian result.
+      * The default value of gap is 1.
+      gap = 1
 ```
 
 ## 3. File Structure
