@@ -279,10 +279,9 @@ class RemoteMachineTrainingService implements TrainingService {
 
             const jobpidPath: string = this.getJobPidPath(trialJob.id);
             try {
-                await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, sshClient);
-                //TODO: delete and move set USER_CANCELLED/EARLY_STOP in getTrialJob
                 // Mark the toEarlyStop tag here
                 trialJob.isEarlyStopped = isEarlyStopped;
+                await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, sshClient);
             } catch (error) {
                 // Not handle the error since pkill failed will not impact trial job's current status
                 this.log.error(`remoteTrainingService.cancelTrialJob: ${error.message}`);
