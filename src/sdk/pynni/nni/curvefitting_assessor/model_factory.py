@@ -50,6 +50,7 @@ class CurveModel(object):
             model = curve_combination_models[i]
             try:
                 if model_para_num[model] == 2:
+                    # The default value of fit iterations maxfev = 100 * (N + 1), N indicates the number of points.
                     a, b = optimize.curve_fit(all_models[model], x, y)[0]
                     model_para[model][0] = a
                     model_para[model][1] = b

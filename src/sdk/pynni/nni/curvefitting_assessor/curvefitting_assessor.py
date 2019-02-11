@@ -81,7 +81,7 @@ class CurvefittingAssessor(Assessor):
             return AssessResult.Good
         if (curr_step - self.start_step) / self.gap < self.judgment_num:
             return AssessResult.Good
-        self.judgment_num = self.judgment_num + 1
+        self.judgment_num = (curr_step - self.start_step) / self.gap
         if not self.set_best_performance:
             return AssessResult.Good
 
