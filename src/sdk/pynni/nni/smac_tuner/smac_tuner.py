@@ -58,6 +58,7 @@ class SMACTuner(Tuner):
         self.first_one = True
         self.update_ss_done = False
         self.loguniform_key = set()
+        self.categorical_dict = {}
 
     def _main_cli(self):
         '''
@@ -128,7 +129,9 @@ class SMACTuner(Tuner):
         NOTE: updating search space is not supported.
         '''
         if not self.update_ss_done:
-            generate_scenario(search_space)
+            self.categorical_dict = generate_scenario(search_space)
+            if self.categorical_dict is None:
+                raise RuntimeError('categorical dict is not correctly returned after parsing search space.')
             self.optimizer = self._main_cli()
             self.smbo_solver = self.optimizer.solver
             self.loguniform_key = {key for key in search_space.keys() if search_space[key]['_type'] == 'loguniform'}
@@ -152,13 +155,21 @@ class SMACTuner(Tuner):
         else:
             self.smbo_solver.nni_smac_receive_runs(self.total_data[parameter_id], reward)
 
-    def convert_loguniform(self, challenger_dict):
+    def convert_loguniform_categorical(self, challenger_dict):
         '''
-        convert the values of type `loguniform` back to their initial range
+        Convert the values of type `loguniform` back to their initial range
+        Also, we convert categorical:
+        categorical values in search space are changed to list of numbers before,
+        those original values will be changed back in this function
         '''
         for key, value in challenger_dict.items():
+            # convert to loguniform
             if key in self.loguniform_key:
                 challenger_dict[key] = np.exp(challenger_dict[key])
+            # convert categorical back to original value
+            if key in self.categorical_dict:
+                idx = challenger_dict[key]
+                challenger_dict[key] = self.categorical_dict[key][idx]
         return challenger_dict
 
     def generate_parameters(self, parameter_id):
@@ -169,13 +180,13 @@ class SMACTuner(Tuner):
             init_challenger = self.smbo_solver.nni_smac_start()
             self.total_data[parameter_id] = init_challenger
             json_tricks.dumps(init_challenger.get_dictionary())
-            return self.convert_loguniform(init_challenger.get_dictionary())
+            return self.convert_loguniform_categorical(init_challenger.get_dictionary())
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             for challenger in challengers:
                 self.total_data[parameter_id] = challenger
                 json_tricks.dumps(challenger.get_dictionary())
-                return self.convert_loguniform(challenger.get_dictionary())
+                return self.convert_loguniform_categorical(challenger.get_dictionary())
 
     def generate_multiple_parameters(self, parameter_id_list):
         '''
@@ -189,7 +200,7 @@ class SMACTuner(Tuner):
                 init_challenger = self.smbo_solver.nni_smac_start()
                 self.total_data[one_id] = init_challenger
                 json_tricks.dumps(init_challenger.get_dictionary())
-                params.append(self.convert_loguniform(init_challenger.get_dictionary()))
+                params.append(self.convert_loguniform_categorical(init_challenger.get_dictionary()))
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             cnt = 0
@@ -199,6 +210,6 @@ class SMACTuner(Tuner):
                     break
                 self.total_data[parameter_id_list[cnt]] = challenger
                 json_tricks.dumps(challenger.get_dictionary())
-                params.append(self.convert_loguniform(challenger.get_dictionary()))
+                params.append(self.convert_loguniform_categorical(challenger.get_dictionary()))
                 cnt += 1
         return params
