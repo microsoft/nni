@@ -6,7 +6,7 @@ Firstly, if you are unsure or afraid of anything, just ask or submit the issue o
 
 However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover all the points we're looking for in your contributions, raising your chances of quickly merging or addressing your contributions.
 
-Looking for a quickstart, get acquainted with our [Get Started](./GetStarted.md) guide.
+Looking for a quickstart, get acquainted with our [Get Started](./QuickStart.md) guide.
 
 There are a few simple guidelines that you need to follow before providing your hacks. 
 
@@ -30,7 +30,7 @@ Provide PRs with appropriate tags for bug fixes or enhancements to the source co
 
 If you are looking for How to develop and debug the NNI source code, you can refer to [How to set up NNI developer environment doc](./SetupNNIDeveloperEnvironment.md) file in the `docs` folder.
 
-Similarly for [writing trials](./WriteYourTrial.md) or [starting experiments](StartExperiment.md). For everything else, refer [here](https://github.com/Microsoft/nni/tree/master/docs).
+Similarly for [Quick Start](QuickStart.md). For everything else, refer to [NNI Home page](http://nni.readthedocs.io).
 
 ## Solve Existing Issues
 Head over to [issues](https://github.com/Microsoft/nni/issues) to find issues where help is needed from contributors. You can find issues tagged with 'good-first-issue' or 'help-wanted' to contribute in. 

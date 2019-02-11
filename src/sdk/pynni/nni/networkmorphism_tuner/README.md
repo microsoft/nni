@@ -50,7 +50,7 @@ net = build_graph_from_json(RCV_CONFIG)
 # training procedure
 # ....
 
-# report the final accuracy to nni
+# report the final accuracy to NNI
 nni.report_final_result(best_acc)
 ```
 
