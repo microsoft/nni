@@ -12,7 +12,7 @@ setuptools.setup(
         'psutil',
         'astor',
         'schema',
-        'pyhdfs'
+        'PythonWebHDFS'
     ],
 
     author = 'Microsoft NNI Team',

@@ -42,7 +42,7 @@ setuptools.setup(
         'psutil',
         'requests',
         'astor',
-        'pyhdfs'
+        'PythonWebHDFS'
     ],
     classifiers = [
         'Programming Language :: Python :: 3',

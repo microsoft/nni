@@ -27,7 +27,6 @@ import shlex
 import re
 import sys
 import select
-import pyhdfs
 from pyhdfs import HdfsClient
 
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
@@ -55,8 +54,7 @@ def main_loop(args):
             if not args.webhdfs_path:
                 nni_log(LogType.Error, 'Please set webhdfs_path argument!')
                 raise Exception('webhdfs_path is needed!')
-            pyhdfs.WEBHDFS_PATH = args.webhdfs_path
-            hdfs_client = HdfsClient(hosts='{0}:80'.format(args.hdfs_host), user_name=args.pai_user_name, timeout=5)
+            hdfs_client = HdfsClient(hosts='{0}:80'.format(args.hdfs_host), user_name=args.pai_user_name, webhdfs_path=args.webhdfs_path, timeout=5)
         except Exception as e:
             nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
             raise e
