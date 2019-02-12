@@ -214,7 +214,7 @@ tuner:
 
 当搜索空间比较小，能够遍历整个搜索空间。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -230,17 +230,17 @@ tuner:
 
 > 名称：**Hyperband**
 
-**Suggested scenario**
+**建议场景**
 
-It is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.
+当搜索空间很大，但计算资源有限时建议使用。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 * **R** (*int, 可选, 默认为 60*) - 能分配给 Trial 的最大 STEPS (可以是 mini-batches 或 epochs 的数值)。 Trial 需要用 STEPS 来控制运行时间。
 * **eta** (*int, 可选, 默认为 3*) - `(eta-1)/eta` 是丢弃 Trial 的比例。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -260,15 +260,15 @@ advisor:
 
 > 名称：**NetworkMorphism**
 
-**Installation**
+**安装**
 
-NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so users should install it first.
+必须先安装 [pyTorch](https://pytorch.org/get-started/locally)。
 
-**Suggested scenario**
+**建议场景**
 
-It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain.
+需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 可修改[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此 Tuner 仅支持视觉领域。
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 * **task** (*('cv'), 可选, 默认为 'cv'*) - 实验的领域，当前仅支持视觉（cv）。
@@ -276,7 +276,7 @@ It is suggested that you want to apply deep learning methods to your task (your 
 * **input_channel** (*int, 可选, 默认为 3*) - 输入图像的通道数
 * **n_output_node** (*int, 可选, 默认为 10*) - 输出分类的数量
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -298,21 +298,21 @@ tuner:
 
 > 名称：**MetisTuner**
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
+注意，搜索空间仅支持 `choice`, `quniform`, `uniform` 和 `randint`。
 
-**Installation**
+**安装**
 
-Metis Tuner requires [sklearn](https://scikit-learn.org/), so users should install it first. User could use `pip3 install sklearn` to install it.
+Metis Tuner 需要先安装 [sklearn](https://scikit-learn.org/)。 可通过 `pip3 install sklearn` 命令来安装。
 
-**Suggested scenario**
+**建议场景**
 
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK.
+与 TPE 和 SMAC 类似，Metis 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 如何使用 Metis 的[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给 Tuner。
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
