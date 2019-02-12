@@ -1,6 +1,6 @@
 # Makefile and Installation Setup
 
-NNI uses GNU make for building and installing.
+NNI uses [GNU Make](https://www.gnu.org/software/make/) for building and installing.
 
 The `Makefile` offers standard targets `build`, `install`, and `uninstall`, as well as alternative installation targets for different setup:
 
@@ -14,7 +14,7 @@ The targets will be detailed later.
 
 ## Dependencies
 
-NNI requires at least Node.js, Yarn, and pip to build, while TypeScript is also recommended.
+NNI requires at least Node.js, Yarn, and PIP to build, while TypeScript is also recommended.
 
 NNI requires Node.js, and all dependency libraries to run.
 Required Node.js libraries (including TypeScript) can be installed by Yarn, and required Python libraries can be installed by setuptools or PIP.
@@ -64,8 +64,8 @@ Available variables are listed below:
 | `NODE`             | Node.js command                                         | see source file                   | see source file                                 |
 | `YARN`             | Yarn command                                            | see source file                   | see source file                                 |
 
-Note that these variables will influence installation destination as well as generated `nnictl` and `nnimanager` scripts.
-If the path to copy files is different from where they will run (e.g. when creating a distro package), please generate `nnictl` and `nnimanager` manually.
+Note that these variables will influence installation destination as well as generated `nnictl` scripts.
+If the path to copy files is different from where they will run (e.g. when creating a distro package), please generate `nnictl` manually.
 
 ### Targets
 
