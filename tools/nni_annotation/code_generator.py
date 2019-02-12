@@ -137,12 +137,12 @@ def test_variable_equal(node1, node2):
             if not test_variable_equal(v, getattr(node2, k)):
                 return False
         return True
-    elif isinstance(node1, list):
+    if isinstance(node1, list):
         if len(node1) != len(node2):
             return False
         return all(test_variable_equal(n1, n2) for n1, n2 in zip(node1, node2))
-    else:
-        return node1 == node2
+    
+    return node1 == node2
 
 
 def replace_variable_node(node, annotation):
