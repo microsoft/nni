@@ -1,5 +1,5 @@
-# Naive Evolution Tuners on NNI
+# Naive Evolution Tuner
 
-## Naive Evolution
+## Naive Evolution（进化算法）
 
-Naive Evolution comes from [Large-Scale Evolution of Image Classifiers](https://arxiv.org/pdf/1703.01041.pdf). It randomly initializes a population based on search space. For each generation, it chooses better ones and do some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naive Evolution requires many trials to works, but it's very simple and easily to expand new features.
+进化算法来自于 [Large-Scale Evolution of Image Classifiers](https://arxiv.org/pdf/1703.01041.pdf)。 它会基于搜索空间随机生成一个种群。 在每一代中，会选择较好的结果，并对其下一代进行一些变异（例如，改动一个超参，增加或减少一层）。 进化算法需要很多次 Trial 才能有效，但它也非常简单，也很容易扩展新功能。
