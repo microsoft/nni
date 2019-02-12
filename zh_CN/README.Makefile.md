@@ -59,7 +59,7 @@ Python 包使用 setuptools 安装，所以安装路径依赖于 Python 配置�
 | `NODE`             | Node.js 命令                     | 参考源代码                              | 参考源代码                                           |
 | `YARN`             | Yarn 命令                        | 参考源代码                              | 参考源代码                                           |
 
-注意，这些变量不仅会影响安装路径，也会影响申城的 `nnictl` 和 `nnimanager` 脚本。 如果复制文件的路径和运行时的不一样（例如，创建发行版本包时），需要手工编辑 `nnictl` 和 `nnimanager`。
+注意，这些变量不仅会影响安装路径，也会影响生成的 `nnictl` 和 `nnimanager` 脚本。 如果复制文件的路径和运行时的不一样（例如，创建发行版本包时），需要手工编辑 `nnictl` 和 `nnimanager`。
 
 ### 目标
 
