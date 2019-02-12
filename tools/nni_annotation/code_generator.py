@@ -127,6 +127,7 @@ def make_lambda(call):
 
 
 def test_variable_equal(node1, node2):
+    """Test whether two variables are the same."""
     if type(node1) is not type(node2):
         return False
     if isinstance(node1, ast.AST):
