@@ -25,6 +25,8 @@ import random
 import statistics
 import sys
 
+import numpy as np
+
 from enum import Enum, unique
 from multiprocessing.dummy import Pool as ThreadPool
 
@@ -120,10 +122,10 @@ class MetisTuner(Tuner):
                         self.x_types[idx] = 'range_int'
                     else:
                         bounds = []
-                        for value in range(key_range[0], key_range[1], key_range[2]):
+                        for value in np.arange(key_range[0], key_range[1], key_range[2]):
                             bounds.append(value)
                         self.x_bounds[idx] = bounds
-                        self.x_types[idx] = 'discrete_int'        
+                        self.x_types[idx] = 'discrete_int'
                 elif key_type == 'randint':
                     self.x_bounds[idx] = [0, key_range[0]]
                     self.x_types[idx] = 'range_int'
@@ -176,8 +178,8 @@ class MetisTuner(Tuner):
                                       no_candidates=self.no_candidates,
                                       minimize_starting_points=self.minimize_starting_points,
                                       minimize_constraints_fun=self.minimize_constraints_fun)
-        
-        logger.info("Generate paramageters:\n", str(results))
+
+        logger.info("Generate paramageters:\n%s", str(results))
         return results
 
 
@@ -192,8 +194,8 @@ class MetisTuner(Tuner):
             value = -value
 
         logger.info("Received trial result.")
-        logger.info("value is :", str(value))
-        logger.info("parameter is : ", str(parameters))
+        logger.info("value is :\t%f", value)
+        logger.info("parameter is :\t%s", str(parameters))
 
         # parse parameter to sample_x
         sample_x = [0 for i in range(len(self.key_order))]
