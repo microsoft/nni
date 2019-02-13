@@ -30,8 +30,6 @@ build:
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(CWD)nni/package.json
 	cd $(CWD)nni && yarn --prod
 	cd $(CWD) && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && python3 setup.py bdist_wheel -p $(WHEEL_SPEC)
-	cd $(CWD)../../src/sdk/pynni && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && python3 setup.py bdist_wheel
-	cp -r $(CWD)../../src/sdk/pynni/dist/*.whl $(CWD)dist
 	cd $(CWD)
 
 .PHONY: upload
@@ -41,7 +39,6 @@ upload:
 
 .PHONY: clean
 clean:
-	rm -rf $(CWD)../../src/sdk/pynni/dist
 	rm -rf $(CWD)build
 	rm -rf $(CWD)dist
 	rm -rf $(CWD)nni

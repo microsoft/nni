@@ -73,7 +73,7 @@ class BufferSerialEmitter {
 @component.Singleton
 class Logger {
     private DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
-    private level: number = DEBUG;
+    private level: number = INFO;
     private bufferSerialEmitter: BufferSerialEmitter;
     private writable: Writable;
 
@@ -138,7 +138,7 @@ class Logger {
     private log(level: string, param: any[]): void {
         const buffer: WritableStreamBuffer = new WritableStreamBuffer();
         buffer.write(`[${(new Date()).toISOString()}] ${level} `);
-        buffer.write(format(null, param));
+        buffer.write(format(param));
         buffer.write('\n');
         buffer.end();
         this.bufferSerialEmitter.feed(buffer.getContents());
@@ -153,4 +153,4 @@ function getLogger(fileName?: string): Logger {
     return component.get(Logger);
 }
 
-export { Logger, getLogger };
+export { Logger, getLogger, logLevelNameMap };
