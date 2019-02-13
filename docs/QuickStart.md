@@ -24,15 +24,15 @@ Here is an example script to train a CNN on MNIST dataset **without NNI**:
 def run_trial(params):
     # Input data
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    # Build MNIST network
+    # Build network
     mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
     mnist_network.build_network()
 
     test_acc = 0.0
     with tf.Session() as sess:
-        # Train MNIST network
+        # Train network
         mnist_network.train(sess, mnist)
-        # Evaluate MNIST network
+        # Evaluate network
         test_acc = mnist_network.evaluate(mnist)
 
 if __name__ == '__main__':
@@ -40,7 +40,7 @@ if __name__ == '__main__':
     run_trial(params)
 ```
 
-Note: If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_before.py](../examples/trials/mnist/mnist_before.py)
+Note: If you want to see the full implementation, please refer to [examples/trials/mnist/mnist_before.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist_before.py)
 
 The above code can only try one set of parameters at a time, if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
 
@@ -77,7 +77,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
 + }
 ```
 
-*Implemented code directory: [search_space.json](../examples/trials/mnist/search_space.json)*
+*Implemented code directory: [search_space.json](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/search_space.json)*
 
 **Step 2**: Modified your `Trial` file to get the hyperparameter set from NNI and report the final result to NNI.
 
@@ -102,11 +102,11 @@ If you want to use NNI to automatically train your model and find the optimal hy
       run_trial(params)
 ```
 
-*Implemented code directory: [mnist.py](../examples/trials/mnist/mnist.py)*
+*Implemented code directory: [mnist.py](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/mnist.py)*
 
-**Step 3**: Define a `config` file in YAML, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max runtime arguments.
+**Step 3**: Define a `config` file in YAML, which declare the `path` to search space and trial, also give `other information` such as tuning algorithm, max trial number and max duration arguments.
 
-```yml
+```yaml
 authorName: default
 experimentName: example_mnist
 trialConcurrency: 1
@@ -125,9 +125,9 @@ trial:
   gpuNum: 0
 ```
 
-*Implemented code directory: [config.yml](../examples/trials/mnist/config.yml)*
+*Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
-All the codes above are already prepared and stored in [examples/trials/mnist/](../examples/trials/mnist).
+All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
 
 When these things are done, **run the config.yml file from your command line to start the experiment**.
 
@@ -209,7 +209,7 @@ Click the tab "Trial Duration" to see the bar graph.
 Below is the status of the all trials. Specifically:
 
 * Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
-* If you run a pai experiment, you can also see the hdfsLogPath.
+* If you run on the OpenPAI platform, you can also see the hdfsLogPath.
 * Kill: you can kill a job that status is running.
 * Support to search for a specific trial.
 

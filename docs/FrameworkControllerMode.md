@@ -12,7 +12,7 @@ NNI supports running experiment using [FrameworkController](https://github.com/M
     apt-get install nfs-common 
     ```     
 
-6. Install **NNI**, follow the install guide [here](GetStarted.md).
+6. Install **NNI**, follow the install guide [here](QuickStart.md).
 
 ## Prerequisite for Azure Kubernetes Service
 1. NNI support kubeflow based on Azure Kubernetes Service, follow the [guideline](https://azure.microsoft.com/en-us/services/kubernetes-service/) to set up Azure Kubernetes Service.

@@ -13,7 +13,7 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
     apt-get install nfs-common 
     ```     
 
-7. Install **NNI**, follow the install guide [here](GetStarted.md).
+7. Install **NNI**, follow the install guide [here](QuickStart.md).
 
 ## Prerequisite for Azure Kubernetes Service
 1. NNI support kubeflow based on Azure Kubernetes Service, follow the [guideline](https://azure.microsoft.com/en-us/services/kubernetes-service/) to set up Azure Kubernetes Service.
@@ -179,7 +179,7 @@ Trial configuration in kubeflow mode have the following configuration keys:
     * gpuNum
     * image
         * Required key. In kubeflow mode, your trial program will be scheduled by Kubernetes to run in [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/). This key is used to specify the Docker image used to create the pod where your trail program will run. 
-        * We already build a docker image [msranni/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](../deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
+        * We already build a docker image [msranni/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
     * apiVersion
         * Required key. The API version of your kubeflow.
 * ps (optional). This config section is used to configure tensorflow parameter server role.
@@ -196,4 +196,4 @@ Notice: In kubeflow mode, NNIManager will start a rest server and listen on a po
 
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information. 
 
-Any problems when using NNI in kubeflow mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni), or send mail to nni@microsoft.com
+Any problems when using NNI in kubeflow mode, plesae create issues on [NNI Github repo](https://github.com/Microsoft/nni).
