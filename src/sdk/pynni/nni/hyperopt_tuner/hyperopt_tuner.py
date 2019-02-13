@@ -23,8 +23,9 @@ hyperopt_tuner.py
 
 import copy
 import logging
-
 from enum import Enum, unique
+from queue import Queue
+
 import numpy as np
 
 import hyperopt as hp
@@ -154,6 +155,8 @@ class HyperoptTuner(Tuner):
         self.json = None
         self.total_data = {}
         self.rval = None
+        self.parameters_queue = Queue()
+        self.max_queue_len = 20
 
     def _choose_tuner(self, algorithm_name):
         if algorithm_name == 'tpe':
@@ -178,7 +181,7 @@ class HyperoptTuner(Tuner):
                            pass_expr_memo_ctrl=None)
         algorithm = self._choose_tuner(self.algorithm_name)
         self.rval = hp.FMinIter(algorithm, domain, trials,
-                                max_evals=-1, rstate=rstate, verbose=0)
+                                max_evals=-1, rstate=rstate, verbose=0, max_queue_len=self.max_queue_len)
         self.rval.catch_eval_exceptions = False
 
     def generate_parameters(self, parameter_id):
@@ -186,24 +189,12 @@ class HyperoptTuner(Tuner):
         Returns a set of trial (hyper-)parameters, as a serializable object.
         parameter_id : int
         '''
-        rval = self.rval
-        trials = rval.trials
-        algorithm = rval.algo
-        new_ids = rval.trials.new_trial_ids(1)
-        rval.trials.refresh()
-        random_state = rval.rstate.randint(2**31-1)
-        new_trials = algorithm(new_ids, rval.domain, trials, random_state)
-        rval.trials.refresh()
-        vals = new_trials[0]['misc']['vals']
-        parameter = dict()
-        for key in vals:
-            try:
-                parameter[key] = vals[key][0].item()
-            except Exception:
-                parameter[key] = None
+        
+        if self.parameters_queue.empty():
+            self.update_parameters_queue()
 
-        # remove '_index' from json2parameter and save params-id
-        total_params = json2parameter(self.json, parameter)
+        total_params = self.parameters_queue.get()
+
         self.total_data[parameter_id] = total_params
         params = _split_index(total_params)
         return params
@@ -258,6 +249,7 @@ class HyperoptTuner(Tuner):
         trial['state'] = hp.JOB_STATE_DONE
         trials.insert_trial_docs([trial])
         trials.refresh()
+        self.update_parameters_queue()
 
     def miscs_update_idxs_vals(self, miscs, idxs, vals,
                                assert_all_vals_used=True,
@@ -265,7 +257,6 @@ class HyperoptTuner(Tuner):
         '''
         Unpack the idxs-vals format into the list of dictionaries that is
         `misc`.
-
         idxs_map: a dictionary of id->id mappings so that the misc['idxs'] can
             contain different numbers than the idxs argument. XXX CLARIFY
         '''
@@ -286,3 +277,26 @@ class HyperoptTuner(Tuner):
                 if assert_all_vals_used or tid in misc_by_id:
                     misc_by_id[tid]['idxs'][key] = [tid]
                     misc_by_id[tid]['vals'][key] = [val]
+    
+    def update_parameters_queue(self):
+        '''update the parameters queue when it is empty or when one trial result is received
+        '''
+        rval = self.rval
+        trials = rval.trials
+        algorithm = rval.algo
+        new_ids = rval.trials.new_trial_ids(self.max_queue_len)
+        rval.trials.refresh()
+        random_state = rval.rstate.randint(2**31-1)
+        new_trials = algorithm(new_ids, rval.domain, trials, random_state)
+        rval.trials.refresh()
+        for item in new_trials:
+            vals = item['misc']['vals']
+            parameter = dict()
+            for key in vals:
+                try:
+                    parameter[key] = vals[key][0].item()
+                except Exception:
+                    parameter[key] = None
+            # remove '_index' from json2parameter and save params-id
+            item_params = json2parameter(self.json, parameter)
+            self.parameters_queue.put(item_params)
