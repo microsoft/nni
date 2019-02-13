@@ -44,13 +44,10 @@ _time_format = '%Y-%m-%d %H:%M:%S'
 class _LoggerFileWrapper(TextIOBase):
     def __init__(self, logger_file):
         self.file = logger_file
-        self.orig_stdout = sys.stdout
 
     def write(self, s):
         if s != '\n':
             time = datetime.now().strftime(_time_format)
-            self.orig_stdout.write(s + '\n')
-            self.orig_stdout.flush()
             self.file.write('[{}] PRINT '.format(time) + s + '\n')
             self.file.flush()
         return len(s)

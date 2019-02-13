@@ -8,6 +8,7 @@ Currently we recommend sharing weights through NFS (Network File System), which 
 
 ### Weight Sharing through NFS file
 With the NFS setup (see below), trial code can share model weight through loading & saving files. Here we recommend that user feed the tuner with the storage path:
+
 ```yaml
 tuner:
   codeDir: path/to/customer_tuner
@@ -17,9 +18,10 @@ tuner:
     ...
     save_dir_root: /nfs/storage/path/
 ```
+
 And let tuner decide where to save & load weights and feed the paths to trials through `nni.get_next_parameters()`:
 
-![weight_sharing_design](./img/weight_sharing.png)
+<img src="https://user-images.githubusercontent.com/23273522/51817667-93ebf080-2306-11e9-8395-b18b322062bc.png" alt="drawing" width="700"/>
 
  For example, in tensorflow:
 ```python
@@ -32,29 +34,31 @@ tf.init_from_checkpoint(params['restore_path'])
 where `'save_path'` and `'restore_path'` in hyper-parameter can be managed by the tuner.
 
 ### NFS Setup
-In NFS, files are physically stored on a server machine, and trials on the client machine can read/write those files in the same way that they access local files.
+NFS follows the Client-Server Architecture, with an NFS server providing physical storage, trials on the remote machine with an NFS client can read/write those files in the same way that they access local files.
 
-#### Install NFS on server machine
-First, install NFS server:
+#### NFS Server
+An NFS server can be any machine as long as it can provide enough physical storage, and network connection with **remote machine** for NNI trials. Usually you can choose one of the remote machine as NFS Server.
+
+On Ubuntu, install NFS server through `apt-get`:
 ```bash
 sudo apt-get install nfs-kernel-server
 ```
 Suppose `/tmp/nni/shared` is used as the physical storage, then run:
 ```bash
-sudo mkdir -p /tmp/nni/shared
+mkdir -p /tmp/nni/shared
 sudo echo "/tmp/nni/shared *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/exports
 sudo service nfs-kernel-server restart
 ```
 You can check if the above directory is successfully exported by NFS using `sudo showmount -e localhost`
 
-#### Install NFS on client machine
-First, install NFS client:
+#### NFS Client
+For a trial on remote machine able to access shared files with NFS, an NFS client needs to be installed. For example, on Ubuntu:
 ```bash
 sudo apt-get install nfs-common
 ```
 Then create & mount the mounted directory of shared files:
 ```bash
-sudo mkdir -p /mnt/nfs/nni/
+mkdir -p /mnt/nfs/nni/
 sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 ```
 where `10.10.10.10` should be replaced by the real IP of NFS server machine in practice.
@@ -78,7 +82,7 @@ The feature of weight sharing enables trials from different machines, in which m
 ```
 
 ## Examples
-For details, please refer to this [simple weight sharing example](../test/async_sharing_test). We also provided a [practice example](../examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](../examples/trials/ga_squad) example.
+For details, please refer to this [simple weight sharing example](https://github.com/Microsoft/nni/tree/master/test/async_sharing_test). We also provided a [practice example](https://github.com/Microsoft/nni/tree/master/examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad) example.
 
 [1]: https://arxiv.org/abs/1802.03268
 [2]: https://arxiv.org/abs/1707.07012

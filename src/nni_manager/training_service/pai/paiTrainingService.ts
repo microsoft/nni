@@ -87,9 +87,11 @@ class PAITrainingService implements TrainingService {
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
         this.paiTokenUpdateInterval = 7200000; //2hours
+        this.log.info('Construct OpenPAI training service.');
     }
 
     public async run(): Promise<void> {
+        this.log.info('Run PAI training service.');
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         await restServer.start();
 
@@ -99,6 +101,7 @@ class PAITrainingService implements TrainingService {
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
             await delay(3000);
         }
+        this.log.info('PAI training service exit.');
     }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -353,7 +356,7 @@ class PAITrainingService implements TrainingService {
                     user: this.paiClusterConfig.userName,
                     // Refer PAI document for Pylon mapping https://github.com/Microsoft/pai/tree/master/docs/pylon
                     port: 80,
-                    path: '/webhdfs/webhdfs/v1',
+                    path: '/webhdfs/api/v1',
                     host: this.paiClusterConfig.host
                 });
 
@@ -446,6 +449,7 @@ class PAITrainingService implements TrainingService {
     }
 
     public async cleanUp(): Promise<void> {
+        this.log.info('Stopping PAI training service...');
         this.stopping = true;
 
         const deferred : Deferred<void> = new Deferred<void>();

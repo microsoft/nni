@@ -16,9 +16,9 @@ def detect_port(port):
 
 def find_port():
     '''Find a port which is free'''
-    port = random.randint(5000, 10000)
+    port = random.randint(10000, 20000)
     while detect_port(port):
-        port = random.randint(5000, 10000)
+        port = random.randint(10000, 20000)
     return port
 
 def start_container(image, name):

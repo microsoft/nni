@@ -26,13 +26,8 @@ import traceback
 import os
 import argparse
 
-from utils import check_experiment_status, fetch_nni_log_path, read_last_line, remove_files, setup_experiment
-
-GREEN = '\33[32m'
-RED = '\33[31m'
-CLEAR = '\33[0m'
-
-EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
+from utils import is_experiment_done, fetch_nni_log_path, read_last_line, remove_files, setup_experiment
+from utils import GREEN, RED, CLEAR, EXPERIMENT_URL
 
 def run(mode='local'):
     '''run naive integration test'''
@@ -55,7 +50,7 @@ def run(mode='local'):
         time.sleep(1)
         tuner_status = read_last_line('naive_test/tuner_result.txt')
         assessor_status = read_last_line('naive_test/assessor_result.txt')
-        experiment_status = check_experiment_status(nnimanager_log_path)
+        experiment_status = is_experiment_done(nnimanager_log_path)
 
         assert tuner_status != 'ERROR', 'Tuner exited with error'
         assert assessor_status != 'ERROR', 'Assessor exited with error'
