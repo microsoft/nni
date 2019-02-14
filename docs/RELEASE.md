@@ -49,7 +49,7 @@
 
 #### Training Service improvements
 
-* Migrate [Kubeflow training service](https://github.com/Microsoft/nni/blob/master/docs/KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
+* Migrate [Kubeflow training service](KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
 * [Pytorch-operator](https://github.com/kubeflow/pytorch-operator) support for Kubeflow training service
 * Improvement on local code files uploading to OpenPAI HDFS
 * Fixed OpenPAI integration WebUI bug: WebUI doesn't show latest trial job status, which is caused by OpenPAI token expiration
@@ -115,7 +115,7 @@
   ```
 
 * Support updating max trial number.
-  use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](https://github.com/Microsoft/nni/blob/master/docs/NNICTLDOC.md) for the fully usage of NNICTL.
+  use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](NNICTLDOC.md) for the fully usage of NNICTL.
 
 ### API new features and updates
 
