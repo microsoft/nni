@@ -48,11 +48,12 @@ setuptools.setup(
     long_description_content_type = 'text/markdown',
     license = 'MIT',
     url = 'https://github.com/Microsoft/nni',
-    packages = setuptools.find_packages('../../tools') + setuptools.find_packages('../../src/sdk/pynni')
+    packages = setuptools.find_packages('../../tools') + setuptools.find_packages('../../src/sdk/pynni', exclude=['tests']),
     package_dir = {
         'nni_annotation': '../../tools/nni_annotation',
         'nni_cmd': '../../tools/nni_cmd',
         'nni_trial_tool': '../../tools/nni_trial_tool',
+        'nni_gpu_tool': '../../tools/nni_gpu_tool',
         'nni': '../../src/sdk/pynni/nni'
     },
     python_requires = '>=3.5',
