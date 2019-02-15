@@ -1,10 +1,10 @@
 <p align="center">
-<img src="https://github.com/Microsoft/nni/blob/master/docs/img/nni_logo.png" width="300"/>
+<img src="docs/img/nni_logo.png" width="300"/>
 </p>
 
 * * *
 
-[![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/Microsoft/nni/blob/master/LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![Bug](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![Bug](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [English](../README.md)
 
@@ -13,7 +13,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 ### **NNI [v0.5.1](https://github.com/Microsoft/nni/releases) 已发布！**
 
 <p align="center">
-  <a href="#nni-v05-has-been-released"><img src="https://github.com/Microsoft/nni/blob/master/docs/img/overview.svg" /></a>
+  <a href="#nni-v05-has-been-released"><img src="docs/img/overview.svg" /></a>
 </p>
 
 <table>
@@ -21,15 +21,15 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
     <tr align="center" valign="bottom">
       <td>
         <b>支持的框架</b>
-        <img src="https://github.com/Microsoft/nni/blob/master/docs/img/bar.png"/>
+        <img src="docs/img/bar.png"/>
       </td>
       <td>
         <b>调优算法</b>
-        <img src="https://github.com/Microsoft/nni/blob/master/docs/img/bar.png"/>
+        <img src="docs/img/bar.png"/>
       </td>
       <td>
         <b>训练服务</b>
-        <img src="https://github.com/Microsoft/nni/blob/master/docs/img/bar.png"/>
+        <img src="docs/img/bar.png"/>
       </td>
     </tr>
     <tr/>
@@ -217,4 +217,4 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **许可协议**
 
-代码库遵循 [MIT 许可协议](https://github.com/Microsoft/nni/blob/master/LICENSE)
+The entire codebase is under [MIT license](LICENSE)
