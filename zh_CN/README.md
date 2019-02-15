@@ -217,4 +217,4 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **许可协议**
 
-The entire codebase is under [MIT license](LICENSE)
+代码库遵循 [MIT 许可协议](LICENSE)
