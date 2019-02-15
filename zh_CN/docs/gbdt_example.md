@@ -103,7 +103,7 @@ if __name__ == '__main__':
 }
 ```
 
-More support variable type you could reference [here](SearchSpaceSpec.md).
+参考[这里](SearchSpaceSpec.md)，了解更多变量类型。
 
 ### 3.3 在代码中使用 NNI SDK
 
