@@ -215,6 +215,10 @@ class HyperoptTuner(Tuner):
         Parameters
         ----------
         parameter_id : int
+
+        Returns
+        -------
+        params : dict
         """
         total_params = self.get_suggestion(random_search=False)
         if total_params in self.total_data.values():
@@ -286,6 +290,8 @@ class HyperoptTuner(Tuner):
         Unpack the idxs-vals format into the list of dictionaries that is
         `misc`.
 
+        Parameters
+        ----------
         idxs_map : dict
             idxs_map is a dictionary of id->id mappings so that the misc['idxs'] can
         contain different numbers than the idxs argument.
@@ -311,11 +317,15 @@ class HyperoptTuner(Tuner):
     def get_suggestion(self, random_search=False):
         """get suggestion from hyperopt
 
-        Keyword Arguments:
-            random_search {bool} -- [flag to indicate random search or not] (default: {False})
+        Parameters
+        ----------
+        random_search : bool
+            flag to indicate random search or not (default: {False})
 
-        Returns:
-            [dict] -- [parameter suggestion]
+        Returns
+        ----------
+        total_params : dict
+            parameter suggestion
         """
 
         rval = self.rval
@@ -334,7 +344,7 @@ class HyperoptTuner(Tuner):
         for key in vals:
             try:
                 parameter[key] = vals[key][0].item()
-            except Exception:
+            except KeyError:
                 parameter[key] = None
 
         # remove '_index' from json2parameter and save params-id
