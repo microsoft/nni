@@ -52,7 +52,7 @@
 
 #### 改进训练平台
 
-* Migrate [Kubeflow training service](KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
+* 将[Kubeflow 训练服务](KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
 * Kubeflow 训练服务支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
 * 改进将本地代码文件上传到 OpenPAI HDFS 的性能。
 * 修复 OpenPAI 在 WEB 界面的 Bug：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
@@ -117,7 +117,7 @@
   nnictl create --port 8081 --config <config file path>
   ```
 
-* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 Or refer to [NNICTL Spec](NNICTLDOC.md) for the fully usage of NNICTL.
+* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL](NNICTLDOC.md) 查看完整帮助。
 
 ### API 的新功能和更新
 
