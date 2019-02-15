@@ -187,7 +187,7 @@ class HyperoptTuner(Tuner):
         parameter_id : int
         '''
         total_params = self.get_suggestion(random_search=False)
-        while total_params in self.total_data.values():
+        if total_params in self.total_data.values():
             total_params = self.get_suggestion(random_search=True)
         self.total_data[parameter_id] = total_params
         params = _split_index(total_params)
