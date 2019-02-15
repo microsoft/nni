@@ -51,7 +51,7 @@ python3 -m pip install torchvision
 
 *实现代码：[main.py](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py)*
 
-You can also use your previous code directly, refer to [How to define a trial](Trials.md) for modify.
+还可直接修改现有的代码来支持 NNI，参考：[如何编写 Trial](Trials.md)。
 
 **配置**
 
