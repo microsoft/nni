@@ -17,10 +17,10 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
+"""
 batch_tuner.py including:
     class BatchTuner
-'''
+"""
 
 import copy
 from enum import Enum, unique
@@ -37,7 +37,7 @@ VALUE = '_value'
 
 
 class BatchTuner(Tuner):
-    '''
+    """
     BatchTuner is tuner will running all the configure that user want to run batchly.
     The search space only be accepted like:
     {
@@ -45,16 +45,20 @@ class BatchTuner(Tuner):
                              '_value': '[{...}, {...}, {...}]',
                           }
     }
-    '''
+    """
     
     def __init__(self):
         self.count = -1
         self.values = []
 
     def is_valid(self, search_space):
-        '''
+        """
         Check the search space is valid: only contains 'choice' type
-        '''
+        
+        Parameters
+        ----------
+        search_space : dict
+        """
         if not len(search_space) == 1:
             raise RuntimeError('BatchTuner only supprt one combined-paramreters key.')
         
@@ -69,9 +73,21 @@ class BatchTuner(Tuner):
         return None
 
     def update_search_space(self, search_space):
+        """Update the search space 
+                
+        Parameters
+        ----------
+        search_space : dict
+        """
         self.values = self.is_valid(search_space)
 
     def generate_parameters(self, parameter_id):
+        """Returns a dict of trial (hyper-)parameters, as a serializable object.
+
+        Parameters
+        ----------
+        parameter_id : int
+        """
         self.count +=1
         if self.count>len(self.values)-1:
             raise nni.NoMoreTrialError('no more parameters now.')
