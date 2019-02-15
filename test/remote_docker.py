@@ -30,8 +30,8 @@ def start_container(image, name):
     commit_id = output.decode('utf-8')
     exec_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '--user', '--no-cache-dir', '/tmp/nni/pynni/']
     check_call(exec_cmds)
-    with open(source_dir + '/port', 'w') as file:
-        file.write('    port: ' + str(port))
+    with open(source_dir + '/remote.yml', 'w') as file:
+        file.write(str(port))
 
 def stop_container(name):
     '''Stop docker container''' 
