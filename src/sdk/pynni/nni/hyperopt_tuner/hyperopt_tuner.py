@@ -147,7 +147,7 @@ class HyperoptTuner(Tuner):
     '''
     HyperoptTuner is a tuner which using hyperopt algorithm.
     '''
-    
+
     def __init__(self, algorithm_name, optimize_mode):
         self.algorithm_name = algorithm_name
         self.optimize_mode = OptimizeMode(optimize_mode)
@@ -186,24 +186,9 @@ class HyperoptTuner(Tuner):
         Returns a set of trial (hyper-)parameters, as a serializable object.
         parameter_id : int
         '''
-        rval = self.rval
-        trials = rval.trials
-        algorithm = rval.algo
-        new_ids = rval.trials.new_trial_ids(1)
-        rval.trials.refresh()
-        random_state = rval.rstate.randint(2**31-1)
-        new_trials = algorithm(new_ids, rval.domain, trials, random_state)
-        rval.trials.refresh()
-        vals = new_trials[0]['misc']['vals']
-        parameter = dict()
-        for key in vals:
-            try:
-                parameter[key] = vals[key][0].item()
-            except Exception:
-                parameter[key] = None
-
-        # remove '_index' from json2parameter and save params-id
-        total_params = json2parameter(self.json, parameter)
+        total_params = self.get_suggestion(random_search=False)
+        while total_params in self.total_data.values():
+            total_params = self.get_suggestion(random_search=True)
         self.total_data[parameter_id] = total_params
         params = _split_index(total_params)
         return params
@@ -286,3 +271,36 @@ class HyperoptTuner(Tuner):
                 if assert_all_vals_used or tid in misc_by_id:
                     misc_by_id[tid]['idxs'][key] = [tid]
                     misc_by_id[tid]['vals'][key] = [val]
+
+    def get_suggestion(self, random_search=False):
+        """get suggestion from hyperopt
+
+        Keyword Arguments:
+            random_search {bool} -- [flag to indicate random search or not] (default: {False})
+
+        Returns:
+            [dict] -- [parameter suggestion]
+        """
+
+        rval = self.rval
+        trials = rval.trials
+        algorithm = rval.algo
+        new_ids = rval.trials.new_trial_ids(1)
+        rval.trials.refresh()
+        random_state = rval.rstate.randint(2**31-1)
+        if random_search:
+            new_trials = hp.rand.suggest(new_ids, rval.domain, trials, random_state)
+        else:
+            new_trials = algorithm(new_ids, rval.domain, trials, random_state)
+        rval.trials.refresh()
+        vals = new_trials[0]['misc']['vals']
+        parameter = dict()
+        for key in vals:
+            try:
+                parameter[key] = vals[key][0].item()
+            except Exception:
+                parameter[key] = None
+
+        # remove '_index' from json2parameter and save params-id
+        total_params = json2parameter(self.json, parameter)
+        return total_params
