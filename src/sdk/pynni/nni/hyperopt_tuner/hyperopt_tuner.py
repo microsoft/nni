@@ -35,9 +35,9 @@ logger = logging.getLogger('hyperopt_AutoML')
 
 @unique
 class OptimizeMode(Enum):
-    '''
-    Oprimize Mode class
-    '''
+    """
+    Optimize Mode including Minimize and Maximize
+    """
     Minimize = 'minimize'
     Maximize = 'maximize'
 
@@ -49,9 +49,16 @@ INDEX = '_index'
 
 
 def json2space(in_x, name=ROOT):
-    '''
+    """
     Change json to search space in hyperopt.
-    '''
+
+    Parameters
+    ----------
+    in_x : dict/list/str/int/float
+        The part of json.
+    name : str
+        name could be ROOT, TYPE, VALUE or INDEX.
+    """
     out_y = copy.deepcopy(in_x)
     if isinstance(in_x, dict):
         if TYPE in in_x.keys():
@@ -78,9 +85,9 @@ def json2space(in_x, name=ROOT):
 
 
 def json2parameter(in_x, parameter, name=ROOT):
-    '''
+    """
     Change json to parameters.
-    '''
+    """
     out_y = copy.deepcopy(in_x)
     if isinstance(in_x, dict):
         if TYPE in in_x.keys():
@@ -133,6 +140,9 @@ def json2vals(in_x, vals, out_y, name=ROOT):
 
 
 def _split_index(params):
+    """
+    Delete index infromation from params
+    """
     result = {}
     for key in params:
         if isinstance(params[key], dict):
@@ -144,11 +154,18 @@ def _split_index(params):
 
 
 class HyperoptTuner(Tuner):
-    '''
+    """
     HyperoptTuner is a tuner which using hyperopt algorithm.
-    '''
+    """
     
     def __init__(self, algorithm_name, optimize_mode):
+        """
+        Parameters
+        ----------
+        algorithm_name : str
+            algorithm_name includes "tpe", "random_search" and anneal".
+        optimize_mode : str
+        """
         self.algorithm_name = algorithm_name
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.json = None
@@ -156,6 +173,12 @@ class HyperoptTuner(Tuner):
         self.rval = None
 
     def _choose_tuner(self, algorithm_name):
+        """
+        Parameters
+        ----------
+        algorithm_name : str
+            algorithm_name includes "tpe", "random_search" and anneal"
+        """
         if algorithm_name == 'tpe':
             return hp.tpe.suggest
         if algorithm_name == 'random_search':
@@ -165,11 +188,15 @@ class HyperoptTuner(Tuner):
         raise RuntimeError('Not support tuner algorithm in hyperopt.')
 
     def update_search_space(self, search_space):
-        '''
+        """
         Update search space definition in tuner by search_space in parameters.
-        '''
-        #assert self.json is None
 
+        Will called when first setup experiemnt or update search space in WebUI.
+        
+        Parameters
+        ----------
+        search_space : dict
+        """
         self.json = search_space
         search_space_instance = json2space(self.json)
         rstate = np.random.RandomState()
@@ -182,10 +209,17 @@ class HyperoptTuner(Tuner):
         self.rval.catch_eval_exceptions = False
 
     def generate_parameters(self, parameter_id):
-        '''
+        """
         Returns a set of trial (hyper-)parameters, as a serializable object.
+        
+        Parameters
+        ----------
         parameter_id : int
-        '''
+
+        Returns
+        -------
+        params : dict
+        """
         rval = self.rval
         trials = rval.trials
         algorithm = rval.algo
@@ -209,12 +243,17 @@ class HyperoptTuner(Tuner):
         return params
 
     def receive_trial_result(self, parameter_id, parameters, value):
-        '''
+        """
         Record an observation of the objective function
+        
+        Parameters
+        ----------
         parameter_id : int
-        parameters : dict of parameters
-        value: final metrics of the trial, including reward
-        '''
+        parameters : dict
+        value : dict/float
+            if value is dict, it should have "default" key.
+            value is final metrics of the trial.
+        """
         reward = self.extract_scalar_reward(value)
         # restore the paramsters contains '_index'
         if parameter_id not in self.total_data:
@@ -262,13 +301,14 @@ class HyperoptTuner(Tuner):
     def miscs_update_idxs_vals(self, miscs, idxs, vals,
                                assert_all_vals_used=True,
                                idxs_map=None):
-        '''
+        """
         Unpack the idxs-vals format into the list of dictionaries that is
         `misc`.
 
-        idxs_map: a dictionary of id->id mappings so that the misc['idxs'] can
-            contain different numbers than the idxs argument. XXX CLARIFY
-        '''
+        idxs_map : dict
+            idxs_map is a dictionary of id->id mappings so that the misc['idxs'] can 
+        contain different numbers than the idxs argument.
+        """
         if idxs_map is None:
             idxs_map = {}
 
