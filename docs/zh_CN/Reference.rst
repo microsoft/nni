@@ -1,10 +1,10 @@
-参考
+References
 ==================
 
 ..  toctree::
     :maxdepth: 3
     
-    命令行<NNICTLDOC>
-    Annotation<AnnotationSpec>
-    配置<ExperimentConfig>
-    搜索空间<SearchSpaceSpec>
+    Command Line <NNICTLDOC>
+    Annotation <AnnotationSpec>
+    Configuration<ExperimentConfig>
+    Search Space <SearchSpaceSpec>
