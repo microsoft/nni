@@ -1,31 +1,31 @@
 # NNI Annotation
 
-## Overview
+## 概述
 
-To improve user experience and reduce user effort, we design an annotation grammar. Using NNI annotation, users can adapt their code to NNI just by adding some standalone annotating strings, which does not affect the execution of the original code.
+为了获得良好的用户体验并减少对以后代码的影响，NNI 设计了通过 Annotation（标记）来使用的语法。 通过 Annotation，只需要在代码中加入一些注释字符串，就能启用 NNI，完全不影响代码原先的执行逻辑。
 
-Below is an example:
+样例如下：
 
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
 learning_rate = 0.1
 ```
 
-The meaning of this example is that NNI will choose one of several values (0.1, 0.01, 0.001) to assign to the learning_rate variable. Specifically, this first line is an NNI annotation, which is a single string. Following is an assignment statement. What nni does here is to replace the right value of this assignment statement according to the information provided by the annotation line.
+此样例中，NNI 会从 (0.1, 0.01, 0.001) 中选择一个值赋给 learning_rate 变量。 第一行就是 NNI 的 Annotation，是 Python 中的一个字符串。 接下来的一行需要是赋值语句。 NNI 会根据 Annotation 行的信息，来给这一行的变量赋上相应的值。
 
-In this way, users could either run the python code directly or launch NNI to tune hyper-parameter in this code, without changing any codes.
+通过这种方式，不需要修改任何代码，代码既可以直接运行，又可以使用 NNI 来调参。
 
-## Types of Annotation:
+## Annotation 的类型：
 
-In NNI, there are mainly four types of annotation:
+NNI 中，有 4 种类型的 Annotation；
 
-### 1. Annotate variables
+### 1. 变量
 
 `'''@nni.variable(sampling_algo, name)'''`
 
-`@nni.variable` is used in NNI to annotate a variable.
+`@nni.variable` 用来标记变量。
 
-**Arguments**
+**参数**
 
 - **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) such as `choice` or `uniform`. 
 - **name**: The name of the variable that the selected value will be assigned to. Note that this argument should be the same as the left value of the following assignment statement.
