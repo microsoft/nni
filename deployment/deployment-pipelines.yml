@@ -66,6 +66,9 @@ jobs:
       python3 -m pip install twine --user
     displayName: 'Install twine'
   - script: |
+      make install-dependencies
+    displayName: 'Install nni dependencies'
+  - script: |
       git tag v0.0.1 #For test only, TODO remove
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
