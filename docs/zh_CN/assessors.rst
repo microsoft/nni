@@ -1,17 +1,17 @@
-Assessor（评估器）
+Assessors
 ==============
-为了节省计算资源，在 NNI 中可通过创建 **Assessor**，来配置提前终止策略。
+In order to save our computing resources, NNI supports an early stop policy and creates **Assessor** to finish this job.
 
-Assessor 从 Trial 中接收中间结果，并通过指定的算法决定此 Trial 是否应该终止。 一旦 Trial 满足了提前终止策略（这表示 Assessor 认为最终结果不会太好），Assessor 会终止此 Trial，并将其状态标志为 `"EARLY_STOPPED"`。
+Assessor receives the intermediate result from Trial and decides whether the Trial should be killed by specific algorithm. Once the Trial experiment meets the early stop conditions(which means assessor is pessimistic about the final results), the assessor will kill the trial and the status of trial will be `"EARLY_STOPPED"`.
 
-这是 MNIST 在使用了 'Curvefitting' Assessor 的 'maximize' 模式后的实验结果，可以看到 Assessor 成功的将大量最终结果不好的 Trial **提前结束**了。 使用 Assessor，能在相同的计算资源下，得到更好的结果。
+Here is an experimental result of MNIST after using 'Curvefitting' Assessor in 'maximize' mode, you can see that assessor successfully **early stopped** many trials with bad hyperparameters in advance. If you use assessor, we may get better hyperparameters under the same computing resources.
 
-*实现代码：config_assessor.yml <https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config_assessor.yml>*
+*Implemented code directory: config_assessor.yml <https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config_assessor.yml>*
 
-..  image:: ./img/Assessor.png
+..  image:: ../img/Assessor.png
 
-与 Tuner 类似，可使用内置的 Assessor，也可以自定义 Assessor。 参考下列教程，获取详细信息：
+Like Tuners, users can either use built-in Assessors, or customize an Assessor on their own. Please refer to the following tutorials for detail:
 
 ..  toctree::
-    内置 Assessor<Builtin_Assessors>
-    自定义 Assessor<Customize_Assessor>
+    Builtin Assessors<Builtin_Assessors>
+    Customized Assessors<Customize_Assessor>
