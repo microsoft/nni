@@ -14,7 +14,9 @@ jobs:
       python3 -m pip install twine --user
     displayName: 'Install twine'
   - script: |
-      git tag v0.0.1 #For test only, TODO remove
+      # NNI build scripts (Makefile) uses branch tag as package version number
+      # To test this pipeline without impacting nni testpypi/pypi packages, uncomment following git tag command
+      # git tag v0.0.1
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
       then
@@ -69,7 +71,9 @@ jobs:
       make install-dependencies
     displayName: 'Install nni dependencies'
   - script: |
-      git tag v0.0.1 #For test only, TODO remove
+      # NNI build scripts (Makefile) uses branch tag as package version number
+      # To test this pipeline without impacting nni testpypi/pypi packages, uncomment following git tag command
+      # git tag v0.0.1
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
       then
