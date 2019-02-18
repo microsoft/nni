@@ -90,11 +90,9 @@ jobs:
       if [ $(build_type) = 'prerelease' ]
       then
         echo 'uploading prerelease package to testpypi...'
-        # Not to upload nni_sdk from Mac
-        python3 -m twine upload -u $(testpypi_user) -p $(testpypi_pwd) --repository-url https://test.pypi.org/legacy/ dist/nni-*
+        python3 -m twine upload -u $(testpypi_user) -p $(testpypi_pwd) --repository-url https://test.pypi.org/legacy/ dist/*
       else
         echo 'uploading release package to pypi...'
-        # Not to upload nni_sdk from Mac
-        python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/nni-*
+        python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
       fi
     displayName: 'upload nni package to pypi/testpypi'
