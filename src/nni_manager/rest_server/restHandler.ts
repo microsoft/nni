@@ -115,7 +115,6 @@ class NNIRestHandler {
             const ds: DataStore = component.get<DataStore>(DataStore);
             ds.init().then(() => {
                 res.send(this.nniManager.getStatus());
-                this.log.info('Datastore initialization done');
             }).catch(async (err: Error) => {
                 this.handle_error(err, res);
                 this.log.error(err.message);
