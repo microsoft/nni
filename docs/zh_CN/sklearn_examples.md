@@ -1,34 +1,34 @@
-# NNI 中使用 scikit-learn
+# Scikit-learn in NNI
 
-[scikit-learn](https://github.com/scikit-learn/scikit-learn) (sklearn) 是数据挖掘和分析的流行工具。 它支持多种机器学习模型，如线性回归，逻辑回归，决策树，支持向量机等。 提高 scikit-learn 的效率是非常有价值的课题。  
-NNI 支持多种调优算法，可以为 scikit-learn 搜索最佳的模型和超参，并支持本机、远程服务器组、云等各种环境。
+[Scikit-learn](https://github.com/scikit-learn/scikit-learn) is a pupular meachine learning tool for data mining and data analysis. It supports many kinds of meachine learning models like LinearRegression, LogisticRegression, DecisionTree, SVM etc. How to make the use of scikit-learn more efficiency is a valuable topic.  
+NNI supports many kinds of tuning algorithms to search the best models and/or hyper-parameters for scikit-learn, and support many kinds of environments like local machine, remote servers and cloud.
 
-## 1. 如何运行此样例
+## 1. How to run the example
 
-安装 NNI 包，并使用命令行工具 `nnictl` 来启动 Experiment。 有关安装和环境准备的内容，参考[这里](QuickStart.md)。 安装完 NNI 后，进入相应的目录，输入下列命令即可启动 Experiment：
+To start using NNI, you should install the nni package, and use the command line tool `nnictl` to start an experiment. For more information about installation and preparing for the environment, please [refer](QuickStart.md). After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
 
 ```bash
 nnictl create --config ./config.yml
 ```
 
-## 2. 样例概述
+## 2. Description of the example
 
-### 2.1 分类
+### 2.1 classification
 
-此样例使用了数字数据集，由 1797 张 8x8 的图片组成，每张图片都是一个手写数字。目标是将这些图片分到 10 个类别中。  
-在此样例中，使用了 SVC 作为模型，并选择了一些参数，包括 `"C", "keral", "degree", "gamma" 和 "coef0"`。 关于这些参数的更多信息，可参考[这里](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)。
+This example uses the dataset of digits, which is made up of 1797 8x8 images, and each image is a hand-written digit, the goal is to classify these images into 10 classes.  
+In this example, we use SVC as the model, and choose some parameters of this model, including `"C", "keral", "degree", "gamma" and "coef0"`. For more information of these parameters, please [refer](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html).
 
-### 2.2 回归
+### 2.2 regression
 
-此样例使用了波士顿房价数据，数据集由波士顿各地区房价所组成，还包括了房屋的周边信息，例如：犯罪率 (CRIM)，非零售业务的面积 (INDUS)，房主年龄 (AGE) 等等。这些信息可用来预测波士顿的房价。 本例中，尝试了不同的回归模型，包括 `"LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"` 和一些参数，如 `"svr_kernel", "knr_weights"`。 关于这些模型算法和参数的更多信息，可参考[这里](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning)。
+This example uses the Boston Housing Dataset, this dataset consists of price of houses in various places in Boston and the information such as Crime (CRIM), areas of non-retail business in the town (INDUS), the age of people who own the house (AGE) etc to predict the house price of boston. In this example, we tune different kinds of regression models including `"LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"` and some parameters like `"svr_kernel", "knr_weights"`. You could get more details about these models from [here](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning).
 
-## 3. 如何在 NNI 中使用 sklearn
+## 3. How to write sklearn code using nni
 
-只需要如下几步，即可在 sklearn 代码中使用 NNI。
+It is easy to use nni in your sklearn code, there are only a few steps.
 
-* **第一步**
+* **step 1**
     
-    准备 search_space.json 文件来存储选择的搜索空间。 例如，如果要在不同的模型中选择：
+    Prepare a search_space.json to storage your choose spaces. For example, if you want to choose different models, you may try:
     
     ```json
     {
@@ -36,7 +36,7 @@ nnictl create --config ./config.yml
     }
     ```
     
-    如果要选择不同的模型和参数，可以将它们放到同一个 search_space.json 文件中。
+    If you want to choose different models and parameters, you could put them together in a search_space.json file.
     
     ```json
     {
@@ -46,10 +46,10 @@ nnictl create --config ./config.yml
     }
     ```
     
-    在 Python 代码中，可以将这些值作为一个 dict，读取到 Python 代码中。
+    Then you could read these values as a dict from your python code, please get into the step 2.
 
-* **第二步**  
-    在代码最前面，加上 `import nni` 来导入 NNI 包。 首先，要使用 `nni.get_next_parameter()` 函数从 NNI 中获取参数。 然后在代码中使用这些参数。 例如，如果定义了如下的 search_space.json：
+* **step 2**  
+    At the beginning of your python code, you should `import nni` to insure the packages works normally. First, you should use `nni.get_next_parameter()` function to get your parameters given by nni. Then you could use these parameters to update your code. For example, if you define your search_space.json like following format:
     
     ```json
     {
@@ -61,7 +61,7 @@ nnictl create --config ./config.yml
     }
     ```
     
-    就会获得像下面一样的 dict：
+    You may get a parameter dict like this:
     
     ```python
     params = {
@@ -73,8 +73,8 @@ nnictl create --config ./config.yml
     }
     ```
     
-    就可以使用这些变量来编写 scikit-learn 的代码。
+    Then you could use these variables to write your scikit-learn code.
 
-* **第三步**  
-    完成训练后，可以得到模型分数，如：精度，召回率，均方差等等。 NNI 会将分数发送给 Tuner 算法，并据此生成下一组参数，所以需要将分数返回给 NNI。NNI 会开始下一个 Trial 任务。  
-    只需要在训练结束后调用 `nni.report_final_result(score)`，就可以将分数传给 NNI。 如果训练过程中有中间分数，也可以使用 `nni.report_intemediate_result(score)` 返回给 NNI。 注意， 可以不返回中间分数，但必须返回最终的分数。
+* **step 3**  
+    After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job.  
+    You just need to use `nni.report_final_result(score)` to communitate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using `nni.report_intemediate_result(score)`. Note, you may not report intemediate result of your job, but you must report back your final result.
