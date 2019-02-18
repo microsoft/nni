@@ -107,7 +107,7 @@ html_theme_options = {
 #
 # html_sidebars = {}
 
-html_logo = './img/nni_logo_dark.png'
+html_logo = '../img/nni_logo_dark.png'
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
