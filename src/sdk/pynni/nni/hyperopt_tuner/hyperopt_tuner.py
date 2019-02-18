@@ -157,7 +157,7 @@ class HyperoptTuner(Tuner):
     """
     HyperoptTuner is a tuner which using hyperopt algorithm.
     """
-    
+
     def __init__(self, algorithm_name, optimize_mode):
         """
         Parameters
@@ -192,7 +192,7 @@ class HyperoptTuner(Tuner):
         Update search space definition in tuner by search_space in parameters.
 
         Will called when first setup experiemnt or update search space in WebUI.
-        
+
         Parameters
         ----------
         search_space : dict
@@ -211,7 +211,7 @@ class HyperoptTuner(Tuner):
     def generate_parameters(self, parameter_id):
         """
         Returns a set of trial (hyper-)parameters, as a serializable object.
-        
+
         Parameters
         ----------
         parameter_id : int
@@ -220,24 +220,11 @@ class HyperoptTuner(Tuner):
         -------
         params : dict
         """
-        rval = self.rval
-        trials = rval.trials
-        algorithm = rval.algo
-        new_ids = rval.trials.new_trial_ids(1)
-        rval.trials.refresh()
-        random_state = rval.rstate.randint(2**31-1)
-        new_trials = algorithm(new_ids, rval.domain, trials, random_state)
-        rval.trials.refresh()
-        vals = new_trials[0]['misc']['vals']
-        parameter = dict()
-        for key in vals:
-            try:
-                parameter[key] = vals[key][0].item()
-            except Exception:
-                parameter[key] = None
-
-        # remove '_index' from json2parameter and save params-id
-        total_params = json2parameter(self.json, parameter)
+        total_params = self.get_suggestion(random_search=False)
+        # avoid generating same parameter with concurrent trials because hyperopt doesn't support parallel mode
+        if total_params in self.total_data.values():
+            # but it can cause deplicate parameter rarely
+            total_params = self.get_suggestion(random_search=True)
         self.total_data[parameter_id] = total_params
         params = _split_index(total_params)
         return params
@@ -245,7 +232,7 @@ class HyperoptTuner(Tuner):
     def receive_trial_result(self, parameter_id, parameters, value):
         """
         Record an observation of the objective function
-        
+
         Parameters
         ----------
         parameter_id : int
@@ -305,8 +292,10 @@ class HyperoptTuner(Tuner):
         Unpack the idxs-vals format into the list of dictionaries that is
         `misc`.
 
+        Parameters
+        ----------
         idxs_map : dict
-            idxs_map is a dictionary of id->id mappings so that the misc['idxs'] can 
+            idxs_map is a dictionary of id->id mappings so that the misc['idxs'] can
         contain different numbers than the idxs argument.
         """
         if idxs_map is None:
@@ -326,3 +315,40 @@ class HyperoptTuner(Tuner):
                 if assert_all_vals_used or tid in misc_by_id:
                     misc_by_id[tid]['idxs'][key] = [tid]
                     misc_by_id[tid]['vals'][key] = [val]
+
+    def get_suggestion(self, random_search=False):
+        """get suggestion from hyperopt
+
+        Parameters
+        ----------
+        random_search : bool
+            flag to indicate random search or not (default: {False})
+
+        Returns
+        ----------
+        total_params : dict
+            parameter suggestion
+        """
+
+        rval = self.rval
+        trials = rval.trials
+        algorithm = rval.algo
+        new_ids = rval.trials.new_trial_ids(1)
+        rval.trials.refresh()
+        random_state = rval.rstate.randint(2**31-1)
+        if random_search:
+            new_trials = hp.rand.suggest(new_ids, rval.domain, trials, random_state)
+        else:
+            new_trials = algorithm(new_ids, rval.domain, trials, random_state)
+        rval.trials.refresh()
+        vals = new_trials[0]['misc']['vals']
+        parameter = dict()
+        for key in vals:
+            try:
+                parameter[key] = vals[key][0].item()
+            except KeyError:
+                parameter[key] = None
+
+        # remove '_index' from json2parameter and save params-id
+        total_params = json2parameter(self.json, parameter)
+        return total_params
