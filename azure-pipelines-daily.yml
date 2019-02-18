@@ -41,11 +41,12 @@ jobs:
       ssh-keyscan 23.96.57.139 >> ~/.ssh/known_hosts
       cp $(Agent.TempDirectory)/remote_ci_private_key test/id_rsa
       chmod 600 test/id_rsa
-      yes | ssh -i test/id_rsa nni@23.96.57.139 -p 22 "cat /tmp/nnitest/$(Build.BuildId)/port" > port
-      cat port
+      yes | ssh -i test/id_rsa nni@23.96.57.139 -p 22 "cat /tmp/nnitest/$(Build.BuildId)/port" > test/port
+      cat test/port
     displayName: 'Get docker port'
   - script: |
       cd test
+      cat port
       PATH=$HOME/.local/bin:$PATH  docker_port=${cat port} docker_user=$(docker_user) docker_pwd=$(docker_pwd) python3 config_test.py --ts remote
     displayName: 'Built-in dispatcher tests'
   - task: SSH@0
