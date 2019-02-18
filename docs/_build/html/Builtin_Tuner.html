@@ -1,0 +1,501 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Built-in Tuners &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Built-in Assessors" href="Builtin_Assessors.html" />
+    <link rel="prev" title="QuickStart" href="QuickStart.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trials.html">Write Trial</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="tuners.html">Tuners</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Builtin Tuners</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Customize_Tuner.html">Customized Tuners</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Customize_Advisor.html">Customized Advisor</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training_services.html">Training Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Advanced Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Overview.html">Overview</a> &raquo;</li>
+        
+          <li><a href="QuickStart.html">QuickStart</a> &raquo;</li>
+        
+      <li>Built-in Tuners</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Builtin_Tuner.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="built-in-tuners">
+<h1>Built-in Tuners<a class="headerlink" href="#built-in-tuners" title="Permalink to this headline">¶</a></h1>
+<p>NNI provides state-of-the-art tuning algorithm as our builtin-tuners and makes them easy to use. Below is the brief summary of NNI currently built-in Tuners:</p>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Tuner</th>
+<th>Brief Introduction of Algorithm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TPE</strong> <a href="#TPE">(Usage)</a></td>
+<td>The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach. SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements, and then subsequently choose new hyperparameters to test based on this model.</td>
+</tr>
+<tr>
+<td><strong>Random Search</strong> <a href="#Random">(Usage)</a></td>
+<td>In Random Search for Hyper-Parameter Optimization show that Random Search might be surprisingly simple and effective. We suggest that we could use Random Search as the baseline when we have no knowledge about the prior distribution of hyper-parameters.</td>
+</tr>
+<tr>
+<td><strong>Anneal</strong> <a href="#Anneal">(Usage)</a></td>
+<td>This simple annealing algorithm begins by sampling from the prior, but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on the random search that leverages smoothness in the response surface. The annealing rate is not adaptive.</td>
+</tr>
+<tr>
+<td><strong>Naive Evolution</strong> <a href="#Evolution">(Usage)</a></td>
+<td>Naive Evolution comes from Large-Scale Evolution of Image Classifiers. It randomly initializes a population-based on search space. For each generation, it chooses better ones and does some mutation (e.g., change a hyperparameter, add/remove one layer) on them to get the next generation. Naive Evolution requires many trials to works, but it's very simple and easy to expand new features.</td>
+</tr>
+<tr>
+<td><strong>SMAC</strong> <a href="#SMAC">(Usage)</a></td>
+<td>SMAC is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO, in order to handle categorical parameters. The SMAC supported by nni is a wrapper on the SMAC3 Github repo. Notice, SMAC need to be installed by <code>nnictl package</code> command.</td>
+</tr>
+<tr>
+<td><strong>Batch tuner</strong> <a href="#Batch">(Usage)</a></td>
+<td>Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.</td>
+</tr>
+<tr>
+<td><strong>Grid Search</strong> <a href="#GridSearch">(Usage)</a></td>
+<td>Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, qloguniform. The number q in quniform and qloguniform has special meaning (different from the spec in search space spec). It means the number of values that will be sampled evenly from the range low and high.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperband_advisor">Hyperband</a> <a href="#Hyperband">(Usage)</a></td>
+<td>Hyperband tries to use the limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for the small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/networkmorphism_tuner/README.md">Network Morphism</a> <a href="#NetworkMorphism">(Usage)</a></td>
+<td>Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train.</td>
+</tr>
+<tr>
+<td><strong>Metis Tuner</strong> <a href="#MetisTuner">(Usage)</a></td>
+<td>Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter.</td>
+</tr>
+</tbody>
+</table><br><div class="section" id="usage-of-builtin-tuners">
+<h2>Usage of Builtin Tuners<a class="headerlink" href="#usage-of-builtin-tuners" title="Permalink to this headline">¶</a></h2>
+<p>Use builtin tuner provided by NNI SDK requires to declare the  <strong>builtinTunerName</strong> and <strong>classArgs</strong> in <code class="docutils literal notranslate"><span class="pre">config.yml</span></code> file. In this part, we will introduce the detailed usage about the suggested scenarios, classArg requirements and example for each tuner.</p>
+<p>Note: Please follow the format when you write your <code class="docutils literal notranslate"><span class="pre">config.yml</span></code> file. Some builtin tuner need to be installed by <code class="docutils literal notranslate"><span class="pre">nnictl</span> <span class="pre">package</span></code>, like SMAC.</p>
+<p><a name="TPE"></a></p>
+<p><img alt="https://placehold.it/15/1589F0/000000?text=+" src="https://placehold.it/15/1589F0/000000?text=+" /> <code class="docutils literal notranslate"><span class="pre">TPE</span></code></p>
+<blockquote>
+<div>Builtin Tuner Name: <strong>TPE</strong></div></blockquote>
+<p><strong>Suggested scenario</strong></p>
+<p>TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resource and can only try a small number of trials. From a large amount of experiments, we could found that TPE is far better than Random Search.</p>
+<p><strong>Requirement of classArg</strong></p>
+<ul class="simple">
+<li><strong>optimize_mode</strong> (<em>maximize or minimize, optional, default = maximize</em>) - If ‘maximize’, tuners will return the hyperparameter set with larger expectation. If ‘minimize’, tuner will return the hyperparameter set with smaller expectation.</li>
+</ul>
+<p><strong>Usage example:</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.yml</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">builtinTunerName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">TPE</span>
+  <span class="nt">classArgs</span><span class="p">:</span>
+    <span class="nt">optimize_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">maximize</span>
+</pre></div>
+</div>
+<br><p><a name="Random"></a></p>
+<p><img alt="https://placehold.it/15/1589F0/000000?text=+" src="https://placehold.it/15/1589F0/000000?text=+" /> <code class="docutils literal notranslate"><span class="pre">Random</span> <span class="pre">Search</span></code></p>
+<blockquote>
+<div>Builtin Tuner Name: <strong>Random</strong></div></blockquote>
+<p><strong>Suggested scenario</strong></p>
+<p>Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space. Random Search could be considered as baseline of search algorithm.</p>
+<p><strong>Requirement of classArg:</strong></p>
+<ul class="simple">
+<li><strong>optimize_mode</strong> (<em>maximize or minimize, optional, default = maximize</em>) - If ‘maximize’, tuners will return the hyperparameter set with larger expectation. If ‘minimize’, tuner will return the hyperparameter set with smaller expectation.</li>
+</ul>
+<p><strong>Usage example</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.yml</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">builtinTunerName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Random</span>
+  <span class="nt">classArgs</span><span class="p">:</span>
+    <span class="nt">optimize_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">maximize</span>
+</pre></div>
+</div>
+<br><p><a name="Anneal"></a></p>
+<p><img alt="https://placehold.it/15/1589F0/000000?text=+" src="https://placehold.it/15/1589F0/000000?text=+" /> <code class="docutils literal notranslate"><span class="pre">Anneal</span></code></p>
+<blockquote>
+<div>Builtin Tuner Name: <strong>Anneal</strong></div></blockquote>
+<p><strong>Suggested scenario</strong></p>
+<p>Anneal is suggested when each trial does not take too long, and you have enough computation resource(almost same with Random Search). Or the variables in search space could be sample from some prior distribution.</p>
+<p><strong>Requirement of classArg</strong></p>
+<ul class="simple">
+<li><strong>optimize_mode</strong> (<em>maximize or minimize, optional, default = maximize</em>) - If ‘maximize’, tuners will return the hyperparameter set with larger expectation. If ‘minimize’, tuner will return the hyperparameter set with smaller expectation.</li>
+</ul>
+<p><strong>Usage example</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.yml</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">builtinTunerName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Anneal</span>
+  <span class="nt">classArgs</span><span class="p">:</span>
+    <span class="nt">optimize_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">maximize</span>
+</pre></div>
+</div>
+<br><p><a name="Evolution"></a></p>
+<p><img alt="https://placehold.it/15/1589F0/000000?text=+" src="https://placehold.it/15/1589F0/000000?text=+" /> <code class="docutils literal notranslate"><span class="pre">Naive</span> <span class="pre">Evolution</span></code></p>
+<blockquote>
+<div>Builtin Tuner Name: <strong>Evolution</strong></div></blockquote>
+<p><strong>Suggested scenario</strong></p>
+<p>Its requirement of computation resource is relatively high. Specifically, it requires large initial population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.</p>
+<p><strong>Requirement of classArg</strong></p>
+<ul class="simple">
+<li><strong>optimize_mode</strong> (<em>maximize or minimize, optional, default = maximize</em>) - If ‘maximize’, tuners will return the hyperparameter set with larger expectation. If ‘minimize’, tuner will return the hyperparameter set with smaller expectation.</li>
+</ul>
+<p><strong>Usage example</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.yml</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">builtinTunerName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Evolution</span>
+  <span class="nt">classArgs</span><span class="p">:</span>
+    <span class="nt">optimize_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">maximize</span>
+</pre></div>
+</div>
+<br><p><a name="SMAC"></a></p>
+<p><img alt="https://placehold.it/15/1589F0/000000?text=+" src="https://placehold.it/15/1589F0/000000?text=+" /> <code class="docutils literal notranslate"><span class="pre">SMAC</span></code></p>
+<blockquote>
+<div>Builtin Tuner Name: <strong>SMAC</strong></div></blockquote>
+<p><strong>Installation</strong></p>
+<p>SMAC need to be installed by following command before first use.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl package install --name<span class="o">=</span>SMAC
+</pre></div>
+</div>
+<p><strong>Suggested scenario</strong></p>
+<p>Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.</p>
+<p><strong>Requirement of classArg</strong></p>
+<ul class="simple">
+<li><strong>optimize_mode</strong> (<em>maximize or minimize, optional, default = maximize</em>) - If ‘maximize’, tuners will return the hyperparameter set with larger expectation. If ‘minimize’, tuner will return the hyperparameter set with smaller expectation.</li>
+</ul>
+<p><strong>Usage example</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.yml</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">builtinTunerName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">SMAC</span>
+  <span class="nt">classArgs</span><span class="p">:</span>
+    <span class="nt">optimize_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">maximize</span>
+</pre></div>
+</div>
+<br><p><a name="Batch"></a></p>
+<p><img alt="https://placehold.it/15/1589F0/000000?text=+" src="https://placehold.it/15/1589F0/000000?text=+" /> <code class="docutils literal notranslate"><span class="pre">Batch</span> <span class="pre">Tuner</span></code></p>
+<blockquote>
+<div>Builtin Tuner Name: BatchTuner</div></blockquote>
+<p><strong>Suggested scenario</strong></p>
+<p>If the configurations you want to try have been decided, you can list them in searchspace file (using <code class="docutils literal notranslate"><span class="pre">choice</span></code>) and run them using batch tuner.</p>
+<p><strong>Usage example</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.yml</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">builtinTunerName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">BatchTuner</span>
+</pre></div>
+</div>
+<br><p>Note that the search space that BatchTuner supported like:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;combine_params&quot;</span><span class="p">:</span>
+    <span class="p">{</span>
+        <span class="nt">&quot;_type&quot;</span> <span class="p">:</span> <span class="s2">&quot;choice&quot;</span><span class="p">,</span>
+        <span class="nt">&quot;_value&quot;</span> <span class="p">:</span> <span class="p">[{</span><span class="nt">&quot;optimizer&quot;</span><span class="p">:</span> <span class="s2">&quot;Adam&quot;</span><span class="p">,</span> <span class="nt">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.00001</span><span class="p">},</span>
+                    <span class="p">{</span><span class="nt">&quot;optimizer&quot;</span><span class="p">:</span> <span class="s2">&quot;Adam&quot;</span><span class="p">,</span> <span class="nt">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.0001</span><span class="p">},</span>
+                    <span class="p">{</span><span class="nt">&quot;optimizer&quot;</span><span class="p">:</span> <span class="s2">&quot;Adam&quot;</span><span class="p">,</span> <span class="nt">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">},</span>
+                    <span class="p">{</span><span class="nt">&quot;optimizer&quot;</span><span class="p">:</span> <span class="s2">&quot;SGD&quot;</span><span class="p">,</span> <span class="nt">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">},</span> 
+                    <span class="p">{</span><span class="nt">&quot;optimizer&quot;</span><span class="p">:</span> <span class="s2">&quot;SGD&quot;</span><span class="p">,</span> <span class="nt">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.005</span><span class="p">},</span> 
+                    <span class="p">{</span><span class="nt">&quot;optimizer&quot;</span><span class="p">:</span> <span class="s2">&quot;SGD&quot;</span><span class="p">,</span> <span class="nt">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.0002</span><span class="p">}]</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The search space file including the high-level key <code class="docutils literal notranslate"><span class="pre">combine_params</span></code>. The type of params in search space must be <code class="docutils literal notranslate"><span class="pre">choice</span></code> and the <code class="docutils literal notranslate"><span class="pre">values</span></code> including all the combined-params value.</p>
+<p><a name="GridSearch"></a></p>
+<p><img alt="https://placehold.it/15/1589F0/000000?text=+" src="https://placehold.it/15/1589F0/000000?text=+" /> <code class="docutils literal notranslate"><span class="pre">Grid</span> <span class="pre">Search</span></code></p>
+<blockquote>
+<div>Builtin Tuner Name: <strong>Grid Search</strong></div></blockquote>
+<p><strong>Suggested scenario</strong></p>
+<p>Note that the only acceptable types of search space are <code class="docutils literal notranslate"><span class="pre">choice</span></code>, <code class="docutils literal notranslate"><span class="pre">quniform</span></code>, <code class="docutils literal notranslate"><span class="pre">qloguniform</span></code>. <strong>The number <code class="docutils literal notranslate"><span class="pre">q</span></code> in <code class="docutils literal notranslate"><span class="pre">quniform</span></code> and <code class="docutils literal notranslate"><span class="pre">qloguniform</span></code> has special meaning (different from the spec in <a class="reference internal" href="SearchSpaceSpec.html"><span class="doc">search space spec</span></a>). It means the number of values that will be sampled evenly from the range <code class="docutils literal notranslate"><span class="pre">low</span></code> and <code class="docutils literal notranslate"><span class="pre">high</span></code>.</strong></p>
+<p>It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space.</p>
+<p><strong>Usage example</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.yml</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">builtinTunerName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">GridSearch</span>
+</pre></div>
+</div>
+<br><p><a name="Hyperband"></a></p>
+<p><img alt="https://placehold.it/15/1589F0/000000?text=+" src="https://placehold.it/15/1589F0/000000?text=+" /> <code class="docutils literal notranslate"><span class="pre">Hyperband</span></code></p>
+<blockquote>
+<div>Builtin Advisor Name: <strong>Hyperband</strong></div></blockquote>
+<p><strong>Suggested scenario</strong></p>
+<p>It is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.</p>
+<p><strong>Requirement of classArg</strong></p>
+<ul class="simple">
+<li><strong>optimize_mode</strong> (<em>maximize or minimize, optional, default = maximize</em>) - If ‘maximize’, tuners will return the hyperparameter set with larger expectation. If ‘minimize’, tuner will return the hyperparameter set with smaller expectation.</li>
+<li><strong>R</strong> (<em>int, optional, default = 60</em>) - the maximum STEPS (could be the number of mini-batches or epochs) can be allocated to a trial. Each trial should use STEPS to control how long it runs.</li>
+<li><strong>eta</strong> (<em>int, optional, default = 3</em>) - <code class="docutils literal notranslate"><span class="pre">(eta-1)/eta</span></code> is the proportion of discarded trials</li>
+</ul>
+<p><strong>Usage example</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.yml</span>
+<span class="nt">advisor</span><span class="p">:</span>
+  <span class="nt">builtinAdvisorName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Hyperband</span>
+  <span class="nt">classArgs</span><span class="p">:</span>
+    <span class="nt">optimize_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">maximize</span>
+    <span class="nt">R</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">60</span>
+    <span class="nt">eta</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
+</pre></div>
+</div>
+<br><p><a name="NetworkMorphism"></a></p>
+<p><img alt="https://placehold.it/15/1589F0/000000?text=+" src="https://placehold.it/15/1589F0/000000?text=+" /> <code class="docutils literal notranslate"><span class="pre">Network</span> <span class="pre">Morphism</span></code></p>
+<blockquote>
+<div>Builtin Tuner Name: <strong>NetworkMorphism</strong></div></blockquote>
+<p><strong>Installation</strong></p>
+<p>NetworkMorphism requires <a class="reference external" href="https://pytorch.org/get-started/locally">pyTorch</a>, so users should install it first.</p>
+<p><strong>Suggested scenario</strong></p>
+<p>It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the <a class="reference external" href="https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py">example</a> to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain.</p>
+<p><strong>Requirement of classArg</strong></p>
+<ul class="simple">
+<li><strong>optimize_mode</strong> (<em>maximize or minimize, optional, default = maximize</em>) - If ‘maximize’, tuners will return the hyperparameter set with larger expectation. If ‘minimize’, tuner will return the hyperparameter set with smaller expectation.</li>
+<li><strong>task</strong> (<em>(‘cv’), optional, default = ‘cv’</em>) - The domain of experiment, for now, this tuner only supports the computer vision(cv) domain.</li>
+<li><strong>input_width</strong> (<em>int, optional, default = 32</em>) - input image width</li>
+<li><strong>input_channel</strong> (<em>int, optional, default = 3</em>) - input image channel</li>
+<li><strong>n_output_node</strong> (<em>int, optional, default = 10</em>) - number of classes</li>
+</ul>
+<p><strong>Usage example</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.yml</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">builtinTunerName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">NetworkMorphism</span>
+    <span class="l l-Scalar l-Scalar-Plain">classArgs</span><span class="p p-Indicator">:</span>
+      <span class="nt">optimize_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">maximize</span>
+      <span class="nt">task</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cv</span>
+      <span class="nt">input_width</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">32</span>
+      <span class="nt">input_channel</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3</span>
+      <span class="nt">n_output_node</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10</span>
+</pre></div>
+</div>
+<br><p><a name="MetisTuner"></a></p>
+<p><img alt="https://placehold.it/15/1589F0/000000?text=+" src="https://placehold.it/15/1589F0/000000?text=+" /> <code class="docutils literal notranslate"><span class="pre">Metis</span> <span class="pre">Tuner</span></code></p>
+<blockquote>
+<div>Builtin Tuner Name: <strong>MetisTuner</strong></div></blockquote>
+<p>Note that the only acceptable types of search space are <code class="docutils literal notranslate"><span class="pre">choice</span></code>, <code class="docutils literal notranslate"><span class="pre">quniform</span></code>, <code class="docutils literal notranslate"><span class="pre">uniform</span></code> and <code class="docutils literal notranslate"><span class="pre">randint</span></code>.</p>
+<p><strong>Installation</strong></p>
+<p>Metis Tuner requires <a class="reference external" href="https://scikit-learn.org/">sklearn</a>, so users should install it first. User could use <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">sklearn</span></code> to install it.</p>
+<p><strong>Suggested scenario</strong></p>
+<p>Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an <a class="reference external" href="https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json">example</a> about the use of Metis. User only need to send the final result like <code class="docutils literal notranslate"><span class="pre">accuracy</span></code> to tuner, by calling the nni SDK.</p>
+<p><strong>Requirement of classArg</strong></p>
+<ul class="simple">
+<li><strong>optimize_mode</strong> (<em>‘maximize’ or ‘minimize’, optional, default = ‘maximize’</em>) - If ‘maximize’, tuners will return the hyperparameter set with larger expectation. If ‘minimize’, tuner will return the hyperparameter set with smaller expectation.</li>
+</ul>
+<p><strong>Usage example</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config.yml</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">builtinTunerName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">MetisTuner</span>
+  <span class="nt">classArgs</span><span class="p">:</span>
+    <span class="nt">optimize_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">maximize</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Builtin_Assessors.html" class="btn btn-neutral float-right" title="Built-in Assessors" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="QuickStart.html" class="btn btn-neutral" title="QuickStart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

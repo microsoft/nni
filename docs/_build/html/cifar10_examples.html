@@ -1,0 +1,301 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>CIFAR-10 examples &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Scikit-learn in NNI" href="sklearn_examples.html" />
+    <link rel="prev" title="MNIST examples" href="mnist_examples.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Trials.html">Write Trial</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mnist_examples.html">MNIST examples</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Finding out best optimizer for Cifar10 classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sklearn_examples.html">How to tune Scikit-learn on NNI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SQuAD_evolution_examples.html">Automatic Model Architecture Search for Reading Comprehension.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gbdt_example.html">Tuning GBDT on NNI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tuners.html">Tuners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training_services.html">Training Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Advanced Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Overview.html">Overview</a> &raquo;</li>
+        
+          <li><a href="QuickStart.html">QuickStart</a> &raquo;</li>
+        
+          <li><a href="Trials.html">Write a Trial Run on NNI</a> &raquo;</li>
+        
+      <li>CIFAR-10 examples</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/cifar10_examples.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="cifar-10-examples">
+<h1>CIFAR-10 examples<a class="headerlink" href="#cifar-10-examples" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://www.cs.toronto.edu/%7Ekriz/cifar.html">CIFAR-10</a> classification is a common benchmark problem in machine learning. The CIFAR-10 dataset is the collection of images. It is one of the most widely used datasets for machine learning research which contains 60,000 32x32 color images in 10 different classes. Thus, we use CIFAR-10 classification as an example to introduce NNI usage.</p>
+<div class="section" id="goals">
+<h3><strong>Goals</strong><a class="headerlink" href="#goals" title="Permalink to this headline">¶</a></h3>
+<p>As we all know, the choice of model optimizer is directly affects the performance of the final metrics. The goal of this tutorial is to <strong>tune a better performace optimizer</strong> to train a relatively small convolutional neural network (CNN) for recognizing images.</p>
+<p>In this example, we have selected the following common deep learning optimizer:</p>
+<blockquote>
+<div>“SGD”, “Adadelta”, “Adagrad”, “Adam”, “Adamax”</div></blockquote>
+</div>
+<div class="section" id="experimental">
+<h3><strong>Experimental</strong><a class="headerlink" href="#experimental" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="preparations">
+<h4>Preparations<a class="headerlink" href="#preparations" title="Permalink to this headline">¶</a></h4>
+<p>This example requires pytorch. Pytorch install package should be chosen based on python version and cuda version.</p>
+<p>Here is an example of the environment python==3.5 and cuda == 8.0, then using the following commands to install <a class="reference external" href="https://pytorch.org/">pytorch</a>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3 -m pip install http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp35m-linux_x86_64.whl
+python3 -m pip install torchvision
+</pre></div>
+</div>
+</div>
+<div class="section" id="cifar-10-with-nni">
+<h4>CIFAR-10 with NNI<a class="headerlink" href="#cifar-10-with-nni" title="Permalink to this headline">¶</a></h4>
+<p><strong>Search Space</strong></p>
+<p>As we stated in the target, we target to find out the best <code class="docutils literal notranslate"><span class="pre">optimizer</span></code> for training CIFAR-10 classification. When using different optimizers, we also need to adjust <code class="docutils literal notranslate"><span class="pre">learning</span> <span class="pre">rates</span></code> and <code class="docutils literal notranslate"><span class="pre">network</span> <span class="pre">structure</span></code> accordingly. so we chose these three parameters as hyperparameters and write the following search space.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;lr&quot;</span><span class="p">:{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span> <span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mf">0.0001</span><span class="p">]},</span>
+    <span class="nt">&quot;optimizer&quot;</span><span class="p">:{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span> <span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="s2">&quot;SGD&quot;</span><span class="p">,</span> <span class="s2">&quot;Adadelta&quot;</span><span class="p">,</span> <span class="s2">&quot;Adagrad&quot;</span><span class="p">,</span> <span class="s2">&quot;Adam&quot;</span><span class="p">,</span> <span class="s2">&quot;Adamax&quot;</span><span class="p">]},</span>
+    <span class="nt">&quot;model&quot;</span><span class="p">:{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span> <span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="s2">&quot;vgg&quot;</span><span class="p">,</span> <span class="s2">&quot;resnet18&quot;</span><span class="p">,</span> <span class="s2">&quot;googlenet&quot;</span><span class="p">,</span> <span class="s2">&quot;densenet121&quot;</span><span class="p">,</span> <span class="s2">&quot;mobilenet&quot;</span><span class="p">,</span> <span class="s2">&quot;dpn92&quot;</span><span class="p">,</span> <span class="s2">&quot;senet18&quot;</span><span class="p">]}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><em>Implemented code directory: <a class="reference external" href="https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/search_space.json">search_space.json</a></em></p>
+<p><strong>Trial</strong></p>
+<p>The code for CNN training of each hyperparameters set, paying particular attention to the following points are specific for NNI:</p>
+<ul class="simple">
+<li>Use <code class="docutils literal notranslate"><span class="pre">nni.get_next_parameter()</span></code> to get next training hyperparameter set.</li>
+<li>Use <code class="docutils literal notranslate"><span class="pre">nni.report_intermediate_result(acc)</span></code> to report the intermedian result after finish each epoch.</li>
+<li>Use <code class="docutils literal notranslate"><span class="pre">nni.report_final_result(acc)</span></code> to report the final result before the trial end.</li>
+</ul>
+<p><em>Implemented code directory: <a class="reference external" href="https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py">main.py</a></em></p>
+<p>You can also use your previous code directly, refer to <a class="reference external" href="https://github.com/Microsoft/nni/blob/master/docs/Trials">How to define a trial</a> for modify.</p>
+<p><strong>Config</strong></p>
+<p>Here is the example of running this experiment on local(with multiple GPUs):</p>
+<p>code directory: <a class="reference external" href="https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml">examples/trials/cifar10_pytorch/config.yml</a></p>
+<p>Here is the example of running this experiment on OpenPAI:</p>
+<p>code directory: <a class="reference external" href="https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml">examples/trials/cifar10_pytorch/config_pai.yml</a></p>
+<p><em>The complete examples we have implemented: <a class="reference external" href="https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch">examples/trials/cifar10_pytorch/</a></em></p>
+</div>
+<div class="section" id="launch-the-experiment">
+<h4>Launch the experiment<a class="headerlink" href="#launch-the-experiment" title="Permalink to this headline">¶</a></h4>
+<p>We are ready for the experiment, let’s now <strong>run the config.yml file from your command line to start the experiment</strong>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="sklearn_examples.html" class="btn btn-neutral float-right" title="Scikit-learn in NNI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="mnist_examples.html" class="btn btn-neutral" title="MNIST examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

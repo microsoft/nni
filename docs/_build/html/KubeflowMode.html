@@ -1,0 +1,460 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Run an Experiment on Kubeflow &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Run an Experiment on FrameworkController" href="FrameworkControllerMode.html" />
+    <link rel="prev" title="Run an Experiment on OpenPAI" href="PAIMode.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trials.html">Write Trial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tuners.html">Tuners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="training_services.html">Training Platform</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html">Local</a></li>
+<li class="toctree-l3"><a class="reference internal" href="RemoteMachineMode.html">Remote</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PAIMode.html">OpenPAI</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Kubeflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FrameworkControllerMode.html">FrameworkController</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Advanced Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Overview.html">Overview</a> &raquo;</li>
+        
+          <li><a href="QuickStart.html">QuickStart</a> &raquo;</li>
+        
+      <li><strong>Run an Experiment on Kubeflow</strong></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/KubeflowMode.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="run-an-experiment-on-kubeflow">
+<h1><strong>Run an Experiment on Kubeflow</strong><a class="headerlink" href="#run-an-experiment-on-kubeflow" title="Permalink to this headline">¶</a></h1>
+<p>Now NNI supports running experiment on <a class="reference external" href="https://github.com/kubeflow/kubeflow">Kubeflow</a>, called kubeflow mode. Before starting to use NNI kubeflow mode, you should have a kubernetes cluster, either on-prem or <a class="reference external" href="https://azure.microsoft.com/en-us/services/kubernetes-service/">Azure Kubernetes Service(AKS)</a>, a Ubuntu machine on which <a class="reference external" href="https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/">kubeconfig</a> is setup to connect to your kubernetes cluster. If you are not familiar with kubernetes, <a class="reference external" href="https://kubernetes.io/docs/tutorials/kubernetes-basics/">here</a> is a good start. In kubeflow mode, your trial program will run as kubeflow job in kubernetes cluster.</p>
+<div class="section" id="prerequisite-for-on-premises-kubernetes-service">
+<h2>Prerequisite for on-premises Kubernetes Service<a class="headerlink" href="#prerequisite-for-on-premises-kubernetes-service" title="Permalink to this headline">¶</a></h2>
+<ol>
+<li><p class="first">A <strong>Kubernetes</strong> cluster using Kubernetes 1.8 or later. Follow this <a class="reference external" href="https://kubernetes.io/docs/setup/">guideline</a> to set up Kubernetes</p>
+</li>
+<li><p class="first">Download, set up, and deploy <strong>Kubelow</strong> to your Kubernetes cluster. Follow this <a class="reference external" href="https://www.kubeflow.org/docs/started/getting-started/">guideline</a> to set up Kubeflow</p>
+</li>
+<li><p class="first">Prepare a <strong>kubeconfig</strong> file, which will be used by NNI to interact with your kubernetes API server. By default, NNI manager will use $(HOME)/.kube/config as kubeconfig file’s path. You can also specify other kubeconfig files by setting the <strong>KUBECONFIG</strong> environment variable. Refer this <a class="reference external" href="https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig">guideline</a> to learn more about kubeconfig.</p>
+</li>
+<li><p class="first">If your NNI trial job needs GPU resource, you should follow this <a class="reference external" href="https://github.com/NVIDIA/k8s-device-plugin">guideline</a> to configure <strong>Nvidia device plugin for Kubernetes</strong>.</p>
+</li>
+<li><p class="first">Prepare a <strong>NFS server</strong> and export a general purpose mount (we recommend to map your NFS server path in <code class="docutils literal notranslate"><span class="pre">root_squash</span> <span class="pre">option</span></code>, otherwise permission issue may raise when NNI copy files to NFS. Refer this <a class="reference external" href="https://linux.die.net/man/5/exports">page</a> to learn what root_squash option is), or <strong>Azure File Storage</strong>.</p>
+</li>
+<li><p class="first">Install <strong>NFS client</strong> on the machine where you install NNI and run nnictl to create experiment. Run this command to install NFSv4 client:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="n">nfs</span><span class="o">-</span><span class="n">common</span> 
+</pre></div>
+</div>
+</li>
+<li><p class="first">Install <strong>NNI</strong>, follow the install guide <a class="reference internal" href="QuickStart.html"><span class="doc">here</span></a>.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="prerequisite-for-azure-kubernetes-service">
+<h2>Prerequisite for Azure Kubernetes Service<a class="headerlink" href="#prerequisite-for-azure-kubernetes-service" title="Permalink to this headline">¶</a></h2>
+<ol class="simple">
+<li>NNI support kubeflow based on Azure Kubernetes Service, follow the <a class="reference external" href="https://azure.microsoft.com/en-us/services/kubernetes-service/">guideline</a> to set up Azure Kubernetes Service.</li>
+<li>Install <a class="reference external" href="https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest">Azure CLI</a> and <strong>kubectl</strong>.  Use <code class="docutils literal notranslate"><span class="pre">az</span> <span class="pre">login</span></code> to set azure account, and connect kubectl client to AKS, refer this <a class="reference external" href="https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough#connect-to-the-cluster">guideline</a>.</li>
+<li>Deploy kubeflow on Azure Kubernetes Service, follow the <a class="reference external" href="https://www.kubeflow.org/docs/started/getting-started/">guideline</a>.</li>
+<li>Follow the <a class="reference external" href="https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=portal">guideline</a> to create azure file storage account. If you use Azure Kubernetes Service, NNI need Azure Storage Service to store code files and the output files.</li>
+<li>To access Azure storage service, NNI need the access key of the storage account, and NNI use <a class="reference external" href="https://azure.microsoft.com/en-us/services/key-vault/">Azure Key Vault</a> Service to protect your private key. Set up Azure Key Vault Service, add a secret to Key Vault to store the access key of Azure storage account. Follow this <a class="reference external" href="https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli">guideline</a> to store the access key.</li>
+</ol>
+</div>
+<div class="section" id="design">
+<h2>Design<a class="headerlink" href="#design" title="Permalink to this headline">¶</a></h2>
+<p><img alt="_images/kubeflow_training_design.png" src="_images/kubeflow_training_design.png" />
+Kubeflow training service instantiates a kubernetes rest client to interact with your K8s cluster’s API server.</p>
+<p>For each trial, we will upload all the files in your local codeDir path (configured in nni_config.yml) together with NNI generated files like parameter.cfg into a storage volumn. Right now we support two kinds of storage volumns: <a class="reference external" href="https://en.wikipedia.org/wiki/Network_File_System">nfs</a> and <a class="reference external" href="https://azure.microsoft.com/en-us/services/storage/files/">azure file storage</a>, you should configure the storage volumn in NNI config YAML file. After files are prepared, Kubeflow training service will call K8S rest API to create kubeflow jobs (<a class="reference external" href="https://github.com/kubeflow/tf-operator">tf-operator</a> job or <a class="reference external" href="https://github.com/kubeflow/pytorch-operator">pytorch-operator</a> job) in K8S, and mount your storage volumn into the job’s pod. Output files of kubeflow job, like stdout, stderr, trial.log or model files, will also be copied back to the storage volumn. NNI will show the storage volumn’s URL for each trial in WebUI, to allow user browse the log files and job’s output files.</p>
+</div>
+<div class="section" id="supported-operator">
+<h2>Supported operator<a class="headerlink" href="#supported-operator" title="Permalink to this headline">¶</a></h2>
+<p>NNI only support tf-operator and pytorch-operator of kubeflow, other operators is not tested.
+Users could set operator type in config file.
+The setting of tf-operator:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kubeflowConfig</span><span class="p">:</span>
+  <span class="n">operator</span><span class="p">:</span> <span class="n">tf</span><span class="o">-</span><span class="n">operator</span>
+</pre></div>
+</div>
+<p>The setting of pytorch-operator:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kubeflowConfig</span><span class="p">:</span>
+  <span class="n">operator</span><span class="p">:</span> <span class="n">pytorch</span><span class="o">-</span><span class="n">operator</span>
+</pre></div>
+</div>
+<p>If users want to use tf-operator, he could set <code class="docutils literal notranslate"><span class="pre">ps</span></code> and <code class="docutils literal notranslate"><span class="pre">worker</span></code> in trial config. If users want to use pytorch-operator, he could set <code class="docutils literal notranslate"><span class="pre">master</span></code> and <code class="docutils literal notranslate"><span class="pre">worker</span></code> in trial config.</p>
+</div>
+<div class="section" id="supported-storage-type">
+<h2>Supported storage type<a class="headerlink" href="#supported-storage-type" title="Permalink to this headline">¶</a></h2>
+<p>NNI support NFS and Azure Storage to store the code and output files, users could set storage type in config file and set the corresponding config.The setting for NFS storage are as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kubeflowConfig</span><span class="p">:</span>
+  <span class="n">storage</span><span class="p">:</span> <span class="n">nfs</span>
+  <span class="n">nfs</span><span class="p">:</span>
+    <span class="c1"># Your NFS server IP, like 10.10.10.10</span>
+    <span class="n">server</span><span class="p">:</span> <span class="p">{</span><span class="n">your_nfs_server_ip</span><span class="p">}</span>
+    <span class="c1"># Your NFS server export path, like /var/nfs/nni</span>
+    <span class="n">path</span><span class="p">:</span> <span class="p">{</span><span class="n">your_nfs_server_export_path</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>If you use Azure storage, you should  set <code class="docutils literal notranslate"><span class="pre">kubeflowConfig</span></code> in your config YAML file as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kubeflowConfig</span><span class="p">:</span>
+  <span class="n">storage</span><span class="p">:</span> <span class="n">azureStorage</span>
+  <span class="n">keyVault</span><span class="p">:</span>
+    <span class="n">vaultName</span><span class="p">:</span> <span class="p">{</span><span class="n">your_vault_name</span><span class="p">}</span>
+    <span class="n">name</span><span class="p">:</span> <span class="p">{</span><span class="n">your_secert_name</span><span class="p">}</span>
+  <span class="n">azureStorage</span><span class="p">:</span>
+    <span class="n">accountName</span><span class="p">:</span> <span class="p">{</span><span class="n">your_storage_account_name</span><span class="p">}</span>
+    <span class="n">azureShare</span><span class="p">:</span> <span class="p">{</span><span class="n">your_azure_share_name</span><span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="run-an-experiment">
+<h2>Run an experiment<a class="headerlink" href="#run-an-experiment" title="Permalink to this headline">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">examples/trials/mnist</span></code> as an example. This is a tensorflow job, and use tf-operator of kubeflow. The NNI config yml file’s content is like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">authorName</span><span class="p">:</span> <span class="n">default</span>
+<span class="n">experimentName</span><span class="p">:</span> <span class="n">example_mnist</span>
+<span class="n">trialConcurrency</span><span class="p">:</span> <span class="mi">2</span>
+<span class="n">maxExecDuration</span><span class="p">:</span> <span class="mi">1</span><span class="n">h</span>
+<span class="n">maxTrialNum</span><span class="p">:</span> <span class="mi">20</span>
+<span class="c1">#choice: local, remote, pai, kubeflow</span>
+<span class="n">trainingServicePlatform</span><span class="p">:</span> <span class="n">kubeflow</span>
+<span class="n">searchSpacePath</span><span class="p">:</span> <span class="n">search_space</span><span class="o">.</span><span class="n">json</span>
+<span class="c1">#choice: true, false</span>
+<span class="n">useAnnotation</span><span class="p">:</span> <span class="n">false</span>
+<span class="n">tuner</span><span class="p">:</span>
+  <span class="c1">#choice: TPE, Random, Anneal, Evolution</span>
+  <span class="n">builtinTunerName</span><span class="p">:</span> <span class="n">TPE</span>
+  <span class="n">classArgs</span><span class="p">:</span>
+    <span class="c1">#choice: maximize, minimize</span>
+    <span class="n">optimize_mode</span><span class="p">:</span> <span class="n">maximize</span>
+<span class="n">assessor</span><span class="p">:</span>
+  <span class="n">builtinAssessorName</span><span class="p">:</span> <span class="n">Medianstop</span>
+  <span class="n">classArgs</span><span class="p">:</span>
+    <span class="n">optimize_mode</span><span class="p">:</span> <span class="n">maximize</span>
+  <span class="n">gpuNum</span><span class="p">:</span> <span class="mi">0</span>
+<span class="n">trial</span><span class="p">:</span>
+  <span class="n">codeDir</span><span class="p">:</span> <span class="o">.</span>
+  <span class="n">worker</span><span class="p">:</span>
+    <span class="n">replicas</span><span class="p">:</span> <span class="mi">2</span>
+    <span class="n">command</span><span class="p">:</span> <span class="n">python3</span> <span class="n">dist_mnist</span><span class="o">.</span><span class="n">py</span>
+    <span class="n">gpuNum</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="n">cpuNum</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="n">memoryMB</span><span class="p">:</span> <span class="mi">8196</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">msranni</span><span class="o">/</span><span class="n">nni</span><span class="p">:</span><span class="n">latest</span>
+  <span class="n">ps</span><span class="p">:</span>
+    <span class="n">replicas</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="n">command</span><span class="p">:</span> <span class="n">python3</span> <span class="n">dist_mnist</span><span class="o">.</span><span class="n">py</span>
+    <span class="n">gpuNum</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="n">cpuNum</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="n">memoryMB</span><span class="p">:</span> <span class="mi">8196</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">msranni</span><span class="o">/</span><span class="n">nni</span><span class="p">:</span><span class="n">latest</span>
+<span class="n">kubeflowConfig</span><span class="p">:</span>
+  <span class="n">operator</span><span class="p">:</span> <span class="n">tf</span><span class="o">-</span><span class="n">operator</span>
+  <span class="n">apiVersion</span><span class="p">:</span> <span class="n">v1alpha2</span>
+  <span class="n">storage</span><span class="p">:</span> <span class="n">nfs</span>
+  <span class="n">nfs</span><span class="p">:</span>
+    <span class="c1"># Your NFS server IP, like 10.10.10.10</span>
+    <span class="n">server</span><span class="p">:</span> <span class="p">{</span><span class="n">your_nfs_server_ip</span><span class="p">}</span>
+    <span class="c1"># Your NFS server export path, like /var/nfs/nni</span>
+    <span class="n">path</span><span class="p">:</span> <span class="p">{</span><span class="n">your_nfs_server_export_path</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Note: You should explicitly set <code class="docutils literal notranslate"><span class="pre">trainingServicePlatform:</span> <span class="pre">kubeflow</span></code> in NNI config yml file if you want to start experiment in kubeflow mode.</p>
+<p>If you want to run Pytorch jobs, you could set your config files as follow:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">authorName</span><span class="p">:</span> <span class="n">default</span>
+<span class="n">experimentName</span><span class="p">:</span> <span class="n">example_mnist_distributed_pytorch</span>
+<span class="n">trialConcurrency</span><span class="p">:</span> <span class="mi">1</span>
+<span class="n">maxExecDuration</span><span class="p">:</span> <span class="mi">1</span><span class="n">h</span>
+<span class="n">maxTrialNum</span><span class="p">:</span> <span class="mi">10</span>
+<span class="c1">#choice: local, remote, pai, kubeflow</span>
+<span class="n">trainingServicePlatform</span><span class="p">:</span> <span class="n">kubeflow</span>
+<span class="n">searchSpacePath</span><span class="p">:</span> <span class="n">search_space</span><span class="o">.</span><span class="n">json</span>
+<span class="c1">#choice: true, false</span>
+<span class="n">useAnnotation</span><span class="p">:</span> <span class="n">false</span>
+<span class="n">tuner</span><span class="p">:</span>
+  <span class="c1">#choice: TPE, Random, Anneal, Evolution</span>
+  <span class="n">builtinTunerName</span><span class="p">:</span> <span class="n">TPE</span>
+  <span class="n">classArgs</span><span class="p">:</span>
+    <span class="c1">#choice: maximize, minimize</span>
+    <span class="n">optimize_mode</span><span class="p">:</span> <span class="n">minimize</span>
+<span class="n">trial</span><span class="p">:</span>
+  <span class="n">codeDir</span><span class="p">:</span> <span class="o">.</span>
+  <span class="n">master</span><span class="p">:</span>
+    <span class="n">replicas</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="n">command</span><span class="p">:</span> <span class="n">python3</span> <span class="n">dist_mnist</span><span class="o">.</span><span class="n">py</span>
+    <span class="n">gpuNum</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="n">cpuNum</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="n">memoryMB</span><span class="p">:</span> <span class="mi">2048</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">msranni</span><span class="o">/</span><span class="n">nni</span><span class="p">:</span><span class="n">latest</span>
+  <span class="n">worker</span><span class="p">:</span>
+    <span class="n">replicas</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="n">command</span><span class="p">:</span> <span class="n">python3</span> <span class="n">dist_mnist</span><span class="o">.</span><span class="n">py</span>
+    <span class="n">gpuNum</span><span class="p">:</span> <span class="mi">0</span>
+    <span class="n">cpuNum</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="n">memoryMB</span><span class="p">:</span> <span class="mi">2048</span>
+    <span class="n">image</span><span class="p">:</span> <span class="n">msranni</span><span class="o">/</span><span class="n">nni</span><span class="p">:</span><span class="n">latest</span>
+<span class="n">kubeflowConfig</span><span class="p">:</span>
+  <span class="n">operator</span><span class="p">:</span> <span class="n">pytorch</span><span class="o">-</span><span class="n">operator</span>
+  <span class="n">apiVersion</span><span class="p">:</span> <span class="n">v1alpha2</span>
+  <span class="n">nfs</span><span class="p">:</span>
+    <span class="c1"># Your NFS server IP, like 10.10.10.10</span>
+    <span class="n">server</span><span class="p">:</span> <span class="p">{</span><span class="n">your_nfs_server_ip</span><span class="p">}</span>
+    <span class="c1"># Your NFS server export path, like /var/nfs/nni</span>
+    <span class="n">path</span><span class="p">:</span> <span class="p">{</span><span class="n">your_nfs_server_export_path</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Trial configuration in kubeflow mode have the following configuration keys:</p>
+<ul class="simple">
+<li>codeDir<ul>
+<li>code directory, where you put training code and config files</li>
+</ul>
+</li>
+<li>worker (required). This config section is used to configure tensorflow worker role<ul>
+<li>replicas<ul>
+<li>Required key. Should be positive number depends on how many replication your want to run for tensorflow worker role.</li>
+</ul>
+</li>
+<li>command<ul>
+<li>Required key. Command to launch your trial job, like <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">mnist.py</span></code></li>
+</ul>
+</li>
+<li>memoryMB<ul>
+<li>Required key. Should be positive number based on your trial program’s memory requirement</li>
+</ul>
+</li>
+<li>cpuNum</li>
+<li>gpuNum</li>
+<li>image<ul>
+<li>Required key. In kubeflow mode, your trial program will be scheduled by Kubernetes to run in <a class="reference external" href="https://kubernetes.io/docs/concepts/workloads/pods/pod/">Pod</a>. This key is used to specify the Docker image used to create the pod where your trail program will run.</li>
+<li>We already build a docker image <a class="reference external" href="https://hub.docker.com/r/msranni/nni/">msranni/nni</a> on <a class="reference external" href="https://hub.docker.com/">Docker Hub</a>. It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at <a class="reference external" href="https://github.com/Microsoft/nni/tree/master/deployment/Dockerfile.build.base">here</a>. You can either use this image directly in your config file, or build your own image based on it.</li>
+</ul>
+</li>
+<li>apiVersion<ul>
+<li>Required key. The API version of your kubeflow.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>ps (optional). This config section is used to configure tensorflow parameter server role.</li>
+<li>master(optional). This config section is used to configure pytorch parameter server role.</li>
+</ul>
+<p>Once complete to fill NNI experiment config file and save (for example, save as exp_kubeflow.yml), then run the following command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">nnictl</span> <span class="n">create</span> <span class="o">--</span><span class="n">config</span> <span class="n">exp_kubeflow</span><span class="o">.</span><span class="n">yml</span>
+</pre></div>
+</div>
+<p>to start the experiment in kubeflow mode. NNI will create Kubeflow tfjob or pytorchjob for each trial, and the job name format is something like <code class="docutils literal notranslate"><span class="pre">nni_exp_{experiment_id}_trial_{trial_id}</span></code>.
+You can see the kubeflow tfjob created by NNI in your Kubernetes dashboard.</p>
+<p>Notice: In kubeflow mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI’s port plus 1. For example, if your WebUI port is <code class="docutils literal notranslate"><span class="pre">8080</span></code>, the rest server will listen on <code class="docutils literal notranslate"><span class="pre">8081</span></code>, to receive metrics from trial job running in Kubernetes. So you should <code class="docutils literal notranslate"><span class="pre">enable</span> <span class="pre">8081</span></code> TCP port in your firewall rule to allow incoming traffic.</p>
+<p>Once a trial job is completed, you can goto NNI WebUI’s overview page (like http://localhost:8080/oview) to check trial’s information.</p>
+<p>Any problems when using NNI in kubeflow mode, plesae create issues on <a class="reference external" href="https://github.com/Microsoft/nni">NNI Github repo</a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="FrameworkControllerMode.html" class="btn btn-neutral float-right" title="Run an Experiment on FrameworkController" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="PAIMode.html" class="btn btn-neutral" title="Run an Experiment on OpenPAI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,277 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Create multi-phase experiment &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial for Advanced Neural Architecture Search" href="AdvancedNAS.html" />
+    <link rel="prev" title="Advanced Features" href="advanced.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trials.html">Write Trial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tuners.html">Tuners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training_services.html">Training Platform</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="advanced.html">Advanced Features</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">MultiPhase</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AdvancedNAS.html">Tutorial for Advanced Neural Architecture Search</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Tutorials.html">Tutorials</a> &raquo;</li>
+        
+          <li><a href="advanced.html">Advanced Features</a> &raquo;</li>
+        
+      <li>Create multi-phase experiment</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/multiPhase.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="create-multi-phase-experiment">
+<h1>Create multi-phase experiment<a class="headerlink" href="#create-multi-phase-experiment" title="Permalink to this headline">¶</a></h1>
+<p>Typically each trial job gets single set of configuration (e.g. hyper parameters) from tuner and do some kind of experiment, let’s say train a model with that hyper parameter and reports its result to tuner. Sometimes you may want to train multiple models within one trial job to share information between models or saving system resource by creating less trial jobs, for example:</p>
+<ol class="simple">
+<li>Train multiple models sequentially in one trial job, so that later models can leverage the weights or other information of prior models and may use different hyper parameters.</li>
+<li>Train large amount of models on limited system resource, combine multiple models together to save system resource to create large amount of trial jobs.</li>
+<li>Any other scenario that you would like to train multiple models with different hyper parameters in one trial job, be aware that if you allocate multiple GPUs to a trial job and you train multiple models concurrently within on trial job, you need to allocate GPU resource properly by your trial code.</li>
+</ol>
+<p>In above cases, you can leverage NNI multi-phase experiment to train multiple models with different hyper parameters within each trial job.</p>
+<p>Multi-phase experiments refer to experiments whose trial jobs request multiple hyper parameters from tuner and report multiple final results to NNI.</p>
+<p>To use multi-phase experiment, please follow below steps:</p>
+<ol>
+<li><p class="first">Implement nni.multi_phase.MultiPhaseTuner. For example, this <a class="reference external" href="https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py">ENAS tuner</a> is a multi-phase Tuner which implements nni.multi_phase.MultiPhaseTuner. While implementing your MultiPhaseTuner, you may want to use the trial_job_id parameter of generate_parameters method to generate hyper parameters for each trial job.</p>
+</li>
+<li><p class="first">Set <code class="docutils literal notranslate"><span class="pre">multiPhase</span></code> field to <code class="docutils literal notranslate"><span class="pre">true</span></code>, and configure your tuner implemented in step 1 as customized tuner in configuration file, for example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nn">...</span>
+<span class="nt">multiPhase</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">codeDir</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">tuners/enas</span>
+  <span class="nt">classFileName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">nni_controller_ptb.py</span>
+  <span class="nt">className</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">ENASTuner</span>
+  <span class="nt">classArgs</span><span class="p">:</span>
+    <span class="nt">say_hello</span><span class="p">:</span> <span class="s">&quot;hello&quot;</span>
+<span class="nn">...</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Invoke nni.get_next_parameter() API for multiple times as needed in a trial, for example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+    <span class="c1"># get parameter from tuner</span>
+    <span class="n">tuner_param</span> <span class="o">=</span> <span class="n">nni</span><span class="o">.</span><span class="n">get_next_parameter</span><span class="p">()</span>
+
+    <span class="c1"># consume the params</span>
+    <span class="c1"># ...</span>
+    <span class="c1"># report final result somewhere for the parameter retrieved above</span>
+    <span class="n">nni</span><span class="o">.</span><span class="n">report_final_result</span><span class="p">()</span>
+    <span class="c1"># ...</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="AdvancedNAS.html" class="btn btn-neutral float-right" title="Tutorial for Advanced Neural Architecture Search" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="advanced.html" class="btn btn-neutral" title="Advanced Features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

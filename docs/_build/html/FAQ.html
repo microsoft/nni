@@ -1,0 +1,263 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>FAQ &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contribute to NNI" href="Contribution.html" />
+    <link rel="prev" title="NNI Annotation" href="AnnotationSpec.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>FAQ</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/FAQ.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="faq">
+<h1>FAQ<a class="headerlink" href="#faq" title="Permalink to this headline">¶</a></h1>
+<p>This page is for frequent asked questions and answers.</p>
+<div class="section" id="tmp-folder-fulled">
+<h2>tmp folder fulled<a class="headerlink" href="#tmp-folder-fulled" title="Permalink to this headline">¶</a></h2>
+<p>nnictl will use tmp folder as a temporary folder to copy files under codeDir when executing experimentation creation.
+When met errors like below, try to clean up <strong>tmp</strong> folder first.</p>
+<blockquote>
+<div>OSError: [Errno 28] No space left on device</div></blockquote>
+</div>
+<div class="section" id="cannot-get-trials-metrics-in-openpai-mode">
+<h2>Cannot get trials’ metrics in OpenPAI mode<a class="headerlink" href="#cannot-get-trials-metrics-in-openpai-mode" title="Permalink to this headline">¶</a></h2>
+<p>In OpenPAI training mode, we start a rest server which listens on 51189 port in NNI Manager to receive metrcis reported from trials running in OpenPAI cluster. If you didn’t see any metrics from WebUI in OpenPAI mode, check your machine where NNI manager runs on to make sure 51189 port is turned on in the firewall rule.</p>
+</div>
+<div class="section" id="segmentation-fault-core-dumped-when-installing">
+<h2>Segmentation Fault (core dumped) when installing<a class="headerlink" href="#segmentation-fault-core-dumped-when-installing" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div>make: *** [install-XXX] Segmentation fault (core dumped)</div></blockquote>
+<p>Please try the following solutions in turn:</p>
+<ul class="simple">
+<li>Update or reinstall you current python’s pip like <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">pip</span></code></li>
+<li>Install NNI with <code class="docutils literal notranslate"><span class="pre">--no-cache-dir</span></code> flag like <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">-m</span> <span class="pre">pip</span> <span class="pre">install</span> <span class="pre">nni</span> <span class="pre">--no-cache-dir</span></code></li>
+</ul>
+</div>
+<div class="section" id="job-management-error-getipv4address-failed-because-os-networkinterfaces-eth0-is-undefined">
+<h2>Job management error: getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.<a class="headerlink" href="#job-management-error-getipv4address-failed-because-os-networkinterfaces-eth0-is-undefined" title="Permalink to this headline">¶</a></h2>
+<p>Your machine don’t have eth0 device, please set <a class="reference internal" href="ExperimentConfig.html"><span class="doc">nniManagerIp</span></a> in your config file manually.</p>
+</div>
+<div class="section" id="exceed-the-maxduration-but-didn-t-stop">
+<h2>Exceed the MaxDuration but didn’t stop<a class="headerlink" href="#exceed-the-maxduration-but-didn-t-stop" title="Permalink to this headline">¶</a></h2>
+<p>When the duration of experiment reaches the maximum duration, nniManager will not create new trials, but the existing trials will continue unless user manually stop the experiment.</p>
+</div>
+<div class="section" id="could-not-stop-an-experiment-using-nnictl-stop">
+<h2>Could not stop an experiment using <code class="docutils literal notranslate"><span class="pre">nnictl</span> <span class="pre">stop</span></code><a class="headerlink" href="#could-not-stop-an-experiment-using-nnictl-stop" title="Permalink to this headline">¶</a></h2>
+<p>If you upgrade your NNI or you delete some config files of NNI when there is an experiment running, this kind of issue may happen because the loss of config file. You could use <code class="docutils literal notranslate"><span class="pre">ps</span> <span class="pre">-ef</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">node</span></code> to find the pid of your experiment, and use <code class="docutils literal notranslate"><span class="pre">kill</span> <span class="pre">-9</span> <span class="pre">{pid}</span></code> to kill it manually.</p>
+</div>
+<div class="section" id="could-not-get-default-metric-in-webui-of-virtual-machines">
+<h2>Could not get <code class="docutils literal notranslate"><span class="pre">default</span> <span class="pre">metric</span></code> in webUI of virtual machines<a class="headerlink" href="#could-not-get-default-metric-in-webui-of-virtual-machines" title="Permalink to this headline">¶</a></h2>
+<p>Config the network mode to bridge mode or other mode that could make virtual machine’s host accessible from external machine, and make sure the port of virtual machine is not forbidden by firewall.</p>
+</div>
+<div class="section" id="help-us-improve">
+<h2>Help us improve<a class="headerlink" href="#help-us-improve" title="Permalink to this headline">¶</a></h2>
+<p>Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Contribution.html" class="btn btn-neutral float-right" title="Contribute to NNI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="AnnotationSpec.html" class="btn btn-neutral" title="NNI Annotation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

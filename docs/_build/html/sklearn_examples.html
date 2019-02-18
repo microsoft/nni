@@ -1,0 +1,314 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Scikit-learn in NNI &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Automatic Model Architecture Search for Reading Comprehension" href="SQuAD_evolution_examples.html" />
+    <link rel="prev" title="CIFAR-10 examples" href="cifar10_examples.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Trials.html">Write Trial</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="mnist_examples.html">MNIST examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cifar10_examples.html">Finding out best optimizer for Cifar10 classification</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">How to tune Scikit-learn on NNI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SQuAD_evolution_examples.html">Automatic Model Architecture Search for Reading Comprehension.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gbdt_example.html">Tuning GBDT on NNI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tuners.html">Tuners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training_services.html">Training Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Advanced Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Overview.html">Overview</a> &raquo;</li>
+        
+          <li><a href="QuickStart.html">QuickStart</a> &raquo;</li>
+        
+          <li><a href="Trials.html">Write a Trial Run on NNI</a> &raquo;</li>
+        
+      <li>Scikit-learn in NNI</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/sklearn_examples.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="scikit-learn-in-nni">
+<h1>Scikit-learn in NNI<a class="headerlink" href="#scikit-learn-in-nni" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="https://github.com/scikit-learn/scikit-learn">Scikit-learn</a> is a pupular meachine learning tool for data mining and data analysis. It supports many kinds of meachine learning models like LinearRegression, LogisticRegression, DecisionTree, SVM etc. How to make the use of scikit-learn more efficiency is a valuable topic.NNI supports many kinds of tuning algorithms to search the best models and/or hyper-parameters for scikit-learn, and support many kinds of environments like local machine, remote servers and cloud.</p>
+<div class="section" id="how-to-run-the-example">
+<h2>1. How to run the example<a class="headerlink" href="#how-to-run-the-example" title="Permalink to this headline">¶</a></h2>
+<p>To start using NNI, you should install the nni package, and use the command line tool <code class="docutils literal notranslate"><span class="pre">nnictl</span></code> to start an experiment. For more information about installation and preparing for the environment,  please <a class="reference internal" href="QuickStart.html"><span class="doc">refer</span></a>.
+After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl create --config ./config.yml
+</pre></div>
+</div>
+</div>
+<div class="section" id="description-of-the-example">
+<h2>2. Description of the example<a class="headerlink" href="#description-of-the-example" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="classification">
+<h3>2.1 classification<a class="headerlink" href="#classification" title="Permalink to this headline">¶</a></h3>
+<p>This example uses the dataset of digits, which is made up of 1797 8x8 images, and each image is a hand-written digit, the goal is to classify these images into 10 classes.In this example, we use SVC as the model, and choose some parameters of this model, including <code class="docutils literal notranslate"><span class="pre">&quot;C&quot;,</span> <span class="pre">&quot;keral&quot;,</span> <span class="pre">&quot;degree&quot;,</span> <span class="pre">&quot;gamma&quot;</span> <span class="pre">and</span> <span class="pre">&quot;coef0&quot;</span></code>. For more information of these parameters, please <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html">refer</a>.</p>
+</div>
+<div class="section" id="regression">
+<h3>2.2 regression<a class="headerlink" href="#regression" title="Permalink to this headline">¶</a></h3>
+<p>This example uses the Boston Housing Dataset, this dataset consists of price of houses in various places in Boston and the information such as Crime (CRIM), areas of non-retail business in the town (INDUS), the age of people who own the house (AGE) etc to predict the house price of boston.
+In this example, we tune different kinds of regression models including <code class="docutils literal notranslate"><span class="pre">&quot;LinearRegression&quot;,</span> <span class="pre">&quot;SVR&quot;,</span> <span class="pre">&quot;KNeighborsRegressor&quot;,</span> <span class="pre">&quot;DecisionTreeRegressor&quot;</span></code> and some parameters like <code class="docutils literal notranslate"><span class="pre">&quot;svr_kernel&quot;,</span> <span class="pre">&quot;knr_weights&quot;</span></code>. You could get more details about these models from <a class="reference external" href="https://scikit-learn.org/stable/supervised_learning.html#supervised-learning">here</a>.</p>
+</div>
+</div>
+<div class="section" id="how-to-write-sklearn-code-using-nni">
+<h2>3. How to write sklearn code using nni<a class="headerlink" href="#how-to-write-sklearn-code-using-nni" title="Permalink to this headline">¶</a></h2>
+<p>It is easy to use nni in your sklearn code, there are only a few steps.</p>
+<ul>
+<li><p class="first"><strong>step 1</strong></p>
+<p>Prepare a search_space.json to storage your choose spaces.
+For example, if you want to choose different models, you may try:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;model_name&quot;</span><span class="p">:{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="s2">&quot;LinearRegression&quot;</span><span class="p">,</span> <span class="s2">&quot;SVR&quot;</span><span class="p">,</span> <span class="s2">&quot;KNeighborsRegressor&quot;</span><span class="p">,</span> <span class="s2">&quot;DecisionTreeRegressor&quot;</span><span class="p">]}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>If you want to choose different models and parameters, you could put them together in a search_space.json file.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;model_name&quot;</span><span class="p">:{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="s2">&quot;LinearRegression&quot;</span><span class="p">,</span> <span class="s2">&quot;SVR&quot;</span><span class="p">,</span> <span class="s2">&quot;KNeighborsRegressor&quot;</span><span class="p">,</span> <span class="s2">&quot;DecisionTreeRegressor&quot;</span><span class="p">]},</span>
+  <span class="nt">&quot;svr_kernel&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;poly&quot;</span><span class="p">,</span> <span class="s2">&quot;rbf&quot;</span><span class="p">]},</span>
+  <span class="nt">&quot;knr_weights&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;distance&quot;</span><span class="p">]}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Then you could read these values as a dict from your python code, please get into the step 2.</p>
+</li>
+<li><p class="first"><strong>step 2</strong>At the beginning of your python code, you should <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">nni</span></code> to insure the packages works normally.
+First, you should use <code class="docutils literal notranslate"><span class="pre">nni.get_next_parameter()</span></code> function to get your parameters given by nni. Then you could use these parameters to update your code.
+For example, if you define your search_space.json like following format:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="nt">&quot;C&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]},</span>
+  <span class="nt">&quot;keral&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;rbf&quot;</span><span class="p">,</span> <span class="s2">&quot;poly&quot;</span><span class="p">,</span> <span class="s2">&quot;sigmoid&quot;</span><span class="p">]},</span>
+  <span class="nt">&quot;degree&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]},</span>
+  <span class="nt">&quot;gamma&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]},</span>
+  <span class="nt">&quot;coef0 &quot;</span><span class="p">:</span> <span class="p">{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="mf">0.01</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>You may get a parameter dict like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+      <span class="s1">&#39;keral&#39;</span><span class="p">:</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;degree&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+      <span class="s1">&#39;gamma&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+      <span class="s1">&#39;coef0&#39;</span><span class="p">:</span> <span class="mf">0.01</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Then you could use these variables to write your scikit-learn code.</p>
+</li>
+<li><p class="first"><strong>step 3</strong>After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job.You just need to use <code class="docutils literal notranslate"><span class="pre">nni.report_final_result(score)</span></code> to communitate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using <code class="docutils literal notranslate"><span class="pre">nni.report_intemediate_result(score)</span></code>. Note, you may not report intemediate result of your job, but you must report back your final result.</p>
+</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="SQuAD_evolution_examples.html" class="btn btn-neutral float-right" title="Automatic Model Architecture Search for Reading Comprehension" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="cifar10_examples.html" class="btn btn-neutral" title="CIFAR-10 examples" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

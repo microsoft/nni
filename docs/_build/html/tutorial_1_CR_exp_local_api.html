@@ -1,0 +1,388 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorial: Create and Run an Experiment on local with NNI API &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Run an Experiment on Multiple Machines" href="RemoteMachineMode.html" />
+    <link rel="prev" title="GBDT in nni" href="gbdt_example.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trials.html">Write Trial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tuners.html">Tuners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="training_services.html">Training Platform</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Local</a></li>
+<li class="toctree-l3"><a class="reference internal" href="RemoteMachineMode.html">Remote</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PAIMode.html">OpenPAI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="KubeflowMode.html">Kubeflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FrameworkControllerMode.html">FrameworkController</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Advanced Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Overview.html">Overview</a> &raquo;</li>
+        
+          <li><a href="QuickStart.html">QuickStart</a> &raquo;</li>
+        
+      <li><strong>Tutorial: Create and Run an Experiment on local with NNI API</strong></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/tutorial_1_CR_exp_local_api.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorial-create-and-run-an-experiment-on-local-with-nni-api">
+<h1><strong>Tutorial: Create and Run an Experiment on local with NNI API</strong><a class="headerlink" href="#tutorial-create-and-run-an-experiment-on-local-with-nni-api" title="Permalink to this headline">¶</a></h1>
+<p>In this tutorial, we will use the example in [~/examples/trials/mnist] to explain how to create and run an experiment on local with NNI API.</p>
+<blockquote>
+<div>Before starts</div></blockquote>
+<p>You have an implementation for MNIST classifer using convolutional layers, the Python code is in <code class="docutils literal notranslate"><span class="pre">mnist_before.py</span></code>.</p>
+<blockquote>
+<div>Step 1 - Update model codes</div></blockquote>
+<p>To enable NNI API, make the following changes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>1.1 Declare NNI API
+    Include `import nni` in your trial code to use NNI APIs.
+
+1.2 Get predefined parameters
+    Use the following code snippet:
+
+        RECEIVED_PARAMS = nni.get_next_parameter()
+
+    to get hyper-parameters&#39; values assigned by tuner. `RECEIVED_PARAMS` is an object, for example: 
+
+        {&quot;conv_size&quot;: 2, &quot;hidden_size&quot;: 124, &quot;learning_rate&quot;: 0.0307, &quot;dropout_rate&quot;: 0.2029}
+
+1.3 Report NNI results
+    Use the API: 
+
+        `nni.report_intermediate_result(accuracy)` 
+    
+    to send `accuracy` to assessor.
+    
+    Use the API:
+
+        `nni.report_final_result(accuracy)` 
+        
+    to send `accuracy` to tuner. 
+</pre></div>
+</div>
+<p>We had made the changes and saved it to <code class="docutils literal notranslate"><span class="pre">mnist.py</span></code>.</p>
+<p><strong>NOTE</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
+assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
+tuner    - The tuner will generate next parameters/architecture based on the explore history (final result of all trials).
+</pre></div>
+</div>
+<blockquote>
+<div>Step 2 - Define SearchSpace</div></blockquote>
+<p>The hyper-parameters used in <code class="docutils literal notranslate"><span class="pre">Step</span> <span class="pre">1.2</span> <span class="pre">-</span> <span class="pre">Get</span> <span class="pre">predefined</span> <span class="pre">parameters</span></code> is defined in a <code class="docutils literal notranslate"><span class="pre">search_space.json</span></code> file like below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;dropout_rate&quot;</span><span class="p">:{</span><span class="s2">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span><span class="s2">&quot;_value&quot;</span><span class="p">:[</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.5</span><span class="p">]},</span>
+    <span class="s2">&quot;conv_size&quot;</span><span class="p">:{</span><span class="s2">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span><span class="s2">&quot;_value&quot;</span><span class="p">:[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">]},</span>
+    <span class="s2">&quot;hidden_size&quot;</span><span class="p">:{</span><span class="s2">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span><span class="s2">&quot;_value&quot;</span><span class="p">:[</span><span class="mi">124</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">1024</span><span class="p">]},</span>
+    <span class="s2">&quot;learning_rate&quot;</span><span class="p">:{</span><span class="s2">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span><span class="s2">&quot;_value&quot;</span><span class="p">:[</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Refer to <a class="reference internal" href="SearchSpaceSpec.html"><span class="doc">SearchSpaceSpec.md</span></a> to learn more about search space.</p>
+<blockquote>
+<div>Step 3 - Define Experiment</div></blockquote>
+<blockquote>
+<div><blockquote>
+<div>3.1 enable NNI API mode</div></blockquote>
+</div></blockquote>
+<p>To enable NNI API mode, you need to set useAnnotation to <em>false</em> and provide the path of SearchSpace file (you just defined in step 1):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">useAnnotation</span><span class="p">:</span> <span class="n">false</span>
+<span class="n">searchSpacePath</span><span class="p">:</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">your</span><span class="o">/</span><span class="n">search_space</span><span class="o">.</span><span class="n">json</span>
+</pre></div>
+</div>
+<p>To run an experiment in NNI, you only needed:</p>
+<ul class="simple">
+<li>Provide a runnable trial</li>
+<li>Provide or choose a tuner</li>
+<li>Provide a YAML experiment configure file</li>
+<li>(optional) Provide or choose an assessor</li>
+</ul>
+<p><strong>Prepare trial</strong>:</p>
+<blockquote>
+<div>A set of examples can be found in ~/nni/examples after your installation, run <code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">~/nni/examples/trials</span></code> to see all the trial examples.</div></blockquote>
+<p>Let’s use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run <code class="docutils literal notranslate"><span class="pre">ls</span> <span class="pre">~/nni/examples/trials</span></code> to see all the trial examples. You can simply execute the following command to run the NNI mnist example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">python</span> <span class="o">~/</span><span class="n">nni</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">trials</span><span class="o">/</span><span class="n">mnist</span><span class="o">-</span><span class="n">annotation</span><span class="o">/</span><span class="n">mnist</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>This command will be filled in the YAML configure file below. Please refer to <a class="reference internal" href="Trials.html"><span class="doc">here</span></a> for how to write your own trial.</p>
+<p><strong>Prepare tuner</strong>: NNI supports several popular automl algorithms, including Random Search, Tree of Parzen Estimators (TPE), Evolution algorithm etc. Users can write their own tuner (refer to <a class="reference internal" href="Customize_Tuner.html"><span class="doc">here</span></a>), but for simplicity, here we choose a tuner provided by NNI as below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">tuner</span><span class="p">:</span>
+    <span class="n">builtinTunerName</span><span class="p">:</span> <span class="n">TPE</span>
+    <span class="n">classArgs</span><span class="p">:</span>
+      <span class="n">optimize_mode</span><span class="p">:</span> <span class="n">maximize</span>
+</pre></div>
+</div>
+<p><em>builtinTunerName</em> is used to specify a tuner in NNI, <em>classArgs</em> are the arguments pass to the tuner (the spec of builtin tuners can be found <a class="reference internal" href="Builtin_Tuner.html"><span class="doc">here</span></a>), <em>optimization_mode</em> is to indicate whether you want to maximize or minimize your trial’s result.</p>
+<p><strong>Prepare configure file</strong>: Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI provides a demo configure file for each trial example, <code class="docutils literal notranslate"><span class="pre">cat</span> <span class="pre">~/nni/examples/trials/mnist-annotation/config.yml</span></code> to see it. Its content is basically shown below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">authorName</span><span class="p">:</span> <span class="n">your_name</span>
+<span class="n">experimentName</span><span class="p">:</span> <span class="n">auto_mnist</span>
+
+<span class="c1"># how many trials could be concurrently running</span>
+<span class="n">trialConcurrency</span><span class="p">:</span> <span class="mi">1</span>
+
+<span class="c1"># maximum experiment running duration</span>
+<span class="n">maxExecDuration</span><span class="p">:</span> <span class="mi">3</span><span class="n">h</span>
+
+<span class="c1"># empty means never stop</span>
+<span class="n">maxTrialNum</span><span class="p">:</span> <span class="mi">100</span>
+
+<span class="c1"># choice: local, remote  </span>
+<span class="n">trainingServicePlatform</span><span class="p">:</span> <span class="n">local</span>
+
+<span class="c1"># choice: true, false  </span>
+<span class="n">useAnnotation</span><span class="p">:</span> <span class="n">true</span>
+<span class="n">tuner</span><span class="p">:</span>
+  <span class="n">builtinTunerName</span><span class="p">:</span> <span class="n">TPE</span>
+  <span class="n">classArgs</span><span class="p">:</span>
+    <span class="n">optimize_mode</span><span class="p">:</span> <span class="n">maximize</span>
+<span class="n">trial</span><span class="p">:</span>
+  <span class="n">command</span><span class="p">:</span> <span class="n">python</span> <span class="n">mnist</span><span class="o">.</span><span class="n">py</span>
+  <span class="n">codeDir</span><span class="p">:</span> <span class="o">~/</span><span class="n">nni</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">trials</span><span class="o">/</span><span class="n">mnist</span><span class="o">-</span><span class="n">annotation</span>
+  <span class="n">gpuNum</span><span class="p">:</span> <span class="mi">0</span>
+</pre></div>
+</div>
+<p>Here <em>useAnnotation</em> is true because this trial example uses our python annotation (refer to <a class="reference internal" href="AnnotationSpec.html"><span class="doc">here</span></a> for details). For trial, we should provide <em>trialCommand</em> which is the command to run the trial, provide <em>trialCodeDir</em> where the trial code is. The command will be executed in this directory. We should also provide how many GPUs a trial requires.</p>
+<p>With all these steps done, we can run the experiment with the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">nnictl</span> <span class="n">create</span> <span class="o">--</span><span class="n">config</span> <span class="o">~/</span><span class="n">nni</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">trials</span><span class="o">/</span><span class="n">mnist</span><span class="o">-</span><span class="n">annotation</span><span class="o">/</span><span class="n">config</span><span class="o">.</span><span class="n">yml</span>
+</pre></div>
+</div>
+<p>You can refer to <a class="reference internal" href="NNICTLDOC.html"><span class="doc">here</span></a> for more usage guide of <em>nnictl</em> command line tool.</p>
+<div class="section" id="view-experiment-results">
+<h2>View experiment results<a class="headerlink" href="#view-experiment-results" title="Permalink to this headline">¶</a></h2>
+<p>The experiment has been running now. Other than <em>nnictl</em>, NNI also provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features.</p>
+</div>
+<div class="section" id="using-multiple-local-gpus-to-speed-up-search">
+<h2>Using multiple local GPUs to speed up search<a class="headerlink" href="#using-multiple-local-gpus-to-speed-up-search" title="Permalink to this headline">¶</a></h2>
+<p>The following steps assume that you have 4 NVIDIA GPUs installed at local and <a class="reference external" href="https://www.tensorflow.org/install/gpu">tensorflow with GPU support</a>. The demo enables 4 concurrent trail jobs and each trail job uses 1 GPU.</p>
+<p><strong>Prepare configure file</strong>: NNI provides a demo configuration file for the setting above, <code class="docutils literal notranslate"><span class="pre">cat</span> <span class="pre">~/nni/examples/trials/mnist-annotation/config_gpu.yml</span></code> to see it. The trailConcurrency and gpuNum are different from the basic configure file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+
+<span class="c1"># how many trials could be concurrently running</span>
+<span class="n">trialConcurrency</span><span class="p">:</span> <span class="mi">4</span>
+
+<span class="o">...</span>
+
+<span class="n">trial</span><span class="p">:</span>
+  <span class="n">command</span><span class="p">:</span> <span class="n">python</span> <span class="n">mnist</span><span class="o">.</span><span class="n">py</span>
+  <span class="n">codeDir</span><span class="p">:</span> <span class="o">~/</span><span class="n">nni</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">trials</span><span class="o">/</span><span class="n">mnist</span><span class="o">-</span><span class="n">annotation</span>
+  <span class="n">gpuNum</span><span class="p">:</span> <span class="mi">1</span>
+</pre></div>
+</div>
+<p>We can run the experiment with the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  <span class="n">nnictl</span> <span class="n">create</span> <span class="o">--</span><span class="n">config</span> <span class="o">~/</span><span class="n">nni</span><span class="o">/</span><span class="n">examples</span><span class="o">/</span><span class="n">trials</span><span class="o">/</span><span class="n">mnist</span><span class="o">-</span><span class="n">annotation</span><span class="o">/</span><span class="n">config_gpu</span><span class="o">.</span><span class="n">yml</span>
+</pre></div>
+</div>
+<p>You can use <em>nnictl</em> command line tool or WebUI to trace the training progress. <em>nvidia_smi</em> command line tool can also help you to monitor the GPU usage during training.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="RemoteMachineMode.html" class="btn btn-neutral float-right" title="Run an Experiment on Multiple Machines" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="gbdt_example.html" class="btn btn-neutral" title="GBDT in nni" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

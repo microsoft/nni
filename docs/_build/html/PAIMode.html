@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Run an Experiment on OpenPAI &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Run an Experiment on Kubeflow" href="KubeflowMode.html" />
+    <link rel="prev" title="Run an Experiment on Multiple Machines" href="RemoteMachineMode.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trials.html">Write Trial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tuners.html">Tuners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="training_services.html">Training Platform</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html">Local</a></li>
+<li class="toctree-l3"><a class="reference internal" href="RemoteMachineMode.html">Remote</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">OpenPAI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="KubeflowMode.html">Kubeflow</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FrameworkControllerMode.html">FrameworkController</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Advanced Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Overview.html">Overview</a> &raquo;</li>
+        
+          <li><a href="QuickStart.html">QuickStart</a> &raquo;</li>
+        
+      <li><strong>Run an Experiment on OpenPAI</strong></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/PAIMode.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="run-an-experiment-on-openpai">
+<h1><strong>Run an Experiment on OpenPAI</strong><a class="headerlink" href="#run-an-experiment-on-openpai" title="Permalink to this headline">¶</a></h1>
+<p>NNI supports running an experiment on <a class="reference external" href="https://github.com/Microsoft/pai">OpenPAI</a> (aka pai), called pai mode. Before starting to use NNI pai mode, you should have an account to access an <a class="reference external" href="https://github.com/Microsoft/pai">OpenPAI</a> cluster. See <a class="reference external" href="https://github.com/Microsoft/pai#how-to-deploy">here</a> if you don’t have any OpenPAI account and want to deploy an OpenPAI cluster. In pai mode, your trial program will run in pai’s container created by Docker.</p>
+<div class="section" id="setup-environment">
+<h2>Setup environment<a class="headerlink" href="#setup-environment" title="Permalink to this headline">¶</a></h2>
+<p>Install NNI, follow the install guide <a class="reference internal" href="QuickStart.html"><span class="doc">here</span></a>.</p>
+</div>
+<div class="section" id="run-an-experiment">
+<h2>Run an experiment<a class="headerlink" href="#run-an-experiment" title="Permalink to this headline">¶</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">examples/trials/mnist-annotation</span></code> as an example. The NNI config YAML file’s content is like:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">authorName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">your_name</span>
+<span class="nt">experimentName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">auto_mnist</span>
+<span class="c1"># how many trials could be concurrently running</span>
+<span class="nt">trialConcurrency</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="c1"># maximum experiment running duration</span>
+<span class="nt">maxExecDuration</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">3h</span>
+<span class="c1"># empty means never stop</span>
+<span class="nt">maxTrialNum</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="c1"># choice: local, remote, pai</span>
+<span class="nt">trainingServicePlatform</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">pai</span>
+<span class="c1"># choice: true, false  </span>
+<span class="nt">useAnnotation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">builtinTunerName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">TPE</span>
+  <span class="nt">classArgs</span><span class="p">:</span>
+    <span class="nt">optimize_mode</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">maximize</span>
+<span class="nt">trial</span><span class="p">:</span>
+  <span class="nt">command</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">python3 mnist.py</span>
+  <span class="nt">codeDir</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">~/nni/examples/trials/mnist-annotation</span>
+  <span class="nt">gpuNum</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0</span>
+  <span class="nt">cpuNum</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+  <span class="nt">memoryMB</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">8196</span>
+  <span class="nt">image</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">openpai/pai.example.tensorflow</span>
+  <span class="nt">dataDir</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">hdfs://10.1.1.1:9000/nni</span>
+  <span class="nt">outputDir</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">hdfs://10.1.1.1:9000/nni</span>
+<span class="c1"># Configuration to access OpenPAI Cluster</span>
+<span class="nt">paiConfig</span><span class="p">:</span>
+  <span class="nt">userName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">your_pai_nni_user</span>
+  <span class="nt">passWord</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">your_pai_password</span>
+  <span class="nt">host</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">10.1.1.1</span>
+</pre></div>
+</div>
+<p>Note: You should set <code class="docutils literal notranslate"><span class="pre">trainingServicePlatform:</span> <span class="pre">pai</span></code> in NNI config YAML file if you want to start experiment in pai mode.</p>
+<p>Compared with LocalMode and <a class="reference internal" href="RemoteMachineMode.html"><span class="doc">RemoteMachineMode</span></a>, trial configuration in pai mode have five additional keys:</p>
+<ul class="simple">
+<li>cpuNum<ul>
+<li>Required key. Should be positive number based on your trial program’s CPU  requirement</li>
+</ul>
+</li>
+<li>memoryMB<ul>
+<li>Required key. Should be positive number based on your trial program’s memory requirement</li>
+</ul>
+</li>
+<li>image<ul>
+<li>Required key. In pai mode, your trial program will be scheduled by OpenPAI to run in <a class="reference external" href="https://www.docker.com/">Docker container</a>. This key is used to specify the Docker image used to create the container in which your trial will run.</li>
+<li>We already build a docker image <a class="reference external" href="https://hub.docker.com/r/msranni/nni/">nnimsra/nni</a> on <a class="reference external" href="https://hub.docker.com/">Docker Hub</a>. It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at <a class="reference external" href="https://github.com/Microsoft/nni/tree/master/deployment/Dockerfile.build.base">here</a>. You can either use this image directly in your config file, or build your own image based on it.</li>
+</ul>
+</li>
+<li>dataDir<ul>
+<li>Optional key. It specifies the HDFS data direcotry for trial to download data. The format should be something like hdfs://{your HDFS host}:9000/{your data directory}</li>
+</ul>
+</li>
+<li>outputDir<ul>
+<li>Optional key. It specifies the HDFS output direcotry for trial. Once the trial is completed (either succeed or fail), trial’s stdout, stderr will be copied to this directory by NNI sdk automatically. The format should be something like hdfs://{your HDFS host}:9000/{your output directory}</li>
+</ul>
+</li>
+</ul>
+<p>Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">nnictl</span> <span class="n">create</span> <span class="o">--</span><span class="n">config</span> <span class="n">exp_pai</span><span class="o">.</span><span class="n">yml</span>
+</pre></div>
+</div>
+<p>to start the experiment in pai mode. NNI will create OpenPAI job for each trial, and the job name format is something like <code class="docutils literal notranslate"><span class="pre">nni_exp_{experiment_id}_trial_{trial_id}</span></code>.
+You can see jobs created by NNI in the OpenPAI cluster’s web portal, like:
+<img alt="_images/nni_pai_joblist.jpg" src="_images/nni_pai_joblist.jpg" /></p>
+<p>Notice: In pai mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI’s port plus 1. For example, if your WebUI port is <code class="docutils literal notranslate"><span class="pre">8080</span></code>, the rest server will listen on <code class="docutils literal notranslate"><span class="pre">8081</span></code>, to receive metrics from trial job running in Kubernetes. So you should <code class="docutils literal notranslate"><span class="pre">enable</span> <span class="pre">8081</span></code> TCP port in your firewall rule to allow incoming traffic.</p>
+<p>Once a trial job is completed, you can goto NNI WebUI’s overview page (like http://localhost:8080/oview) to check trial’s information.</p>
+<p>Expand a trial information in trial list view, click the logPath link like:
+<img alt="_images/nni_webui_joblist.jpg" src="_images/nni_webui_joblist.jpg" /></p>
+<p>And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS:
+<img alt="_images/nni_trial_hdfs_output.jpg" src="_images/nni_trial_hdfs_output.jpg" /></p>
+<p>You can see there’re three fils in output folder: stderr, stdout, and trial.log</p>
+<p>If you also want to save trial’s other output into HDFS, like model files, you can use environment variable <code class="docutils literal notranslate"><span class="pre">NNI_OUTPUT_DIR</span></code> in your trial code to save your own output files, and NNI SDK will copy all the files in <code class="docutils literal notranslate"><span class="pre">NNI_OUTPUT_DIR</span></code> from trial’s container to HDFS.</p>
+<p>Any problems when using NNI in pai mode, plesae create issues on <a class="reference external" href="https://github.com/Microsoft/nni">NNI github repo</a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="KubeflowMode.html" class="btn btn-neutral float-right" title="Run an Experiment on Kubeflow" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="RemoteMachineMode.html" class="btn btn-neutral" title="Run an Experiment on Multiple Machines" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

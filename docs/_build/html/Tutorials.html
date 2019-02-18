@@ -1,0 +1,750 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Tutorials &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation of NNI" href="Installation.html" />
+    <link rel="prev" title="Customize Assessor" href="Customize_Assessor.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trials.html">Write Trial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tuners.html">Tuners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training_services.html">Training Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Advanced Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Tutorials</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Tutorials.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorials">
+<h1>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Installation.html">Installation of NNI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Installation.html#installation"><strong>Installation</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="Installation.html#system-requirements"><strong>System requirements</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="Installation.html#further-reading">Further reading</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Overview.html">Overview</a><ul>
+<li class="toctree-l4"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/docs/../../src/sdk">a test link</a></li>
+<li class="toctree-l4"><a class="reference internal" href="Overview.html#key-concepts">Key Concepts</a></li>
+<li class="toctree-l4"><a class="reference internal" href="Overview.html#learn-more">Learn More</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="QuickStart.html">Get started</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="QuickStart.html#installation">Installation</a></li>
+<li class="toctree-l6"><a class="reference internal" href="QuickStart.html#hello-world-example-on-mnist">“Hello World” example on MNIST</a></li>
+<li class="toctree-l6"><a class="reference internal" href="QuickStart.html#webui">WebUI</a><ul>
+<li class="toctree-l7"><a class="reference internal" href="QuickStart.html#view-summary-page">View summary page</a></li>
+<li class="toctree-l7"><a class="reference internal" href="QuickStart.html#view-trials-detail-page">View trials detail page</a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="QuickStart.html#related-topic">Related Topic</a><ul>
+<li class="toctree-l7"><a class="reference internal" href="Builtin_Tuner.html">Try different Tuners</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="Builtin_Tuner.html#usage-of-builtin-tuners">Usage of Builtin Tuners</a></li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="Builtin_Assessors.html">Try different Assessors</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="Builtin_Assessors.html#usage-of-builtin-assessors">Usage of Builtin Assessors</a></li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="NNICTLDOC.html">How to use command line tool nnictl</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="NNICTLDOC.html#introduction">Introduction</a></li>
+<li class="toctree-l8"><a class="reference internal" href="NNICTLDOC.html#commands">Commands</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="NNICTLDOC.html#manage-an-experiment">Manage an experiment</a></li>
+<li class="toctree-l9"><a class="reference internal" href="NNICTLDOC.html#manage-experiment-information">Manage experiment information</a></li>
+<li class="toctree-l9"><a class="reference internal" href="NNICTLDOC.html#manage-log">Manage log</a></li>
+<li class="toctree-l9"><a class="reference internal" href="NNICTLDOC.html#manage-webui">Manage webui</a></li>
+<li class="toctree-l9"><a class="reference internal" href="NNICTLDOC.html#manage-tensorboard">Manage tensorboard</a></li>
+<li class="toctree-l9"><a class="reference internal" href="NNICTLDOC.html#manage-package">Manage package</a></li>
+<li class="toctree-l9"><a class="reference internal" href="NNICTLDOC.html#check-nni-version">Check NNI version</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="Trials.html">How to write a trial</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="Trials.html#nni-api">NNI API</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="Trials.html#step-1-prepare-a-searchspace-parameters-file">Step 1 - Prepare a SearchSpace parameters file.</a></li>
+<li class="toctree-l9"><a class="reference internal" href="Trials.html#step-2-update-model-codes">Step 2 - Update model codes</a></li>
+<li class="toctree-l9"><a class="reference internal" href="Trials.html#step-3-enable-nni-api">Step 3 - Enable NNI API</a></li>
+</ul>
+</li>
+<li class="toctree-l8"><a class="reference internal" href="Trials.html#nni-python-annotation">NNI Python Annotation</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="Trials.html#step-1-update-codes-with-annotations">Step 1 - Update codes with annotations</a></li>
+<li class="toctree-l9"><a class="reference internal" href="Trials.html#step-2-enable-nni-annotation">Step 2 - Enable NNI Annotation</a></li>
+</ul>
+</li>
+<li class="toctree-l8"><a class="reference internal" href="Trials.html#more-trial-examples">More Trial Examples</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="mnist_examples.html">MNIST examples</a></li>
+<li class="toctree-l9"><a class="reference internal" href="cifar10_examples.html">Finding out best optimizer for Cifar10 classification</a><ul>
+<li class="toctree-l10"><a class="reference internal" href="cifar10_examples.html#overview">Overview</a><ul>
+<li class="toctree-l11"><a class="reference internal" href="cifar10_examples.html#goals"><strong>Goals</strong></a></li>
+<li class="toctree-l11"><a class="reference internal" href="cifar10_examples.html#experimental"><strong>Experimental</strong></a><ul>
+<li class="toctree-l12"><a class="reference internal" href="cifar10_examples.html#preparations">Preparations</a></li>
+<li class="toctree-l12"><a class="reference internal" href="cifar10_examples.html#cifar-10-with-nni">CIFAR-10 with NNI</a></li>
+<li class="toctree-l12"><a class="reference internal" href="cifar10_examples.html#launch-the-experiment">Launch the experiment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l9"><a class="reference internal" href="sklearn_examples.html">How to tune Scikit-learn on NNI</a><ul>
+<li class="toctree-l10"><a class="reference internal" href="sklearn_examples.html#how-to-run-the-example">1. How to run the example</a></li>
+<li class="toctree-l10"><a class="reference internal" href="sklearn_examples.html#description-of-the-example">2. Description of the example</a><ul>
+<li class="toctree-l11"><a class="reference internal" href="sklearn_examples.html#classification">2.1 classification</a></li>
+<li class="toctree-l11"><a class="reference internal" href="sklearn_examples.html#regression">2.2 regression</a></li>
+</ul>
+</li>
+<li class="toctree-l10"><a class="reference internal" href="sklearn_examples.html#how-to-write-sklearn-code-using-nni">3. How to write sklearn code using nni</a></li>
+</ul>
+</li>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html">Automatic Model Architecture Search for Reading Comprehension.</a><ul>
+<li class="toctree-l10"><a class="reference internal" href="SQuAD_evolution_examples.html#search-space">1. Search Space</a><ul>
+<li class="toctree-l11"><a class="reference internal" href="SQuAD_evolution_examples.html#new-version">New version</a></li>
+</ul>
+</li>
+<li class="toctree-l10"><a class="reference internal" href="SQuAD_evolution_examples.html#how-to-run-this-example-in-local">2. How to run this example in local?</a><ul>
+<li class="toctree-l11"><a class="reference internal" href="SQuAD_evolution_examples.html#use-downloading-script-to-download-data">2.1 Use downloading script to download data</a></li>
+<li class="toctree-l11"><a class="reference internal" href="SQuAD_evolution_examples.html#update-configuration">2.2 Update configuration</a></li>
+<li class="toctree-l11"><a class="reference internal" href="SQuAD_evolution_examples.html#submit-this-job">2.3 submit this job</a></li>
+</ul>
+</li>
+<li class="toctree-l10"><a class="reference internal" href="SQuAD_evolution_examples.html#run-this-example-on-openpai">3 Run this example on OpenPAI</a><ul>
+<li class="toctree-l11"><a class="reference internal" href="SQuAD_evolution_examples.html#id1">3.1 Update configuration</a></li>
+<li class="toctree-l11"><a class="reference internal" href="SQuAD_evolution_examples.html#id2">3.2 submit this job</a></li>
+</ul>
+</li>
+<li class="toctree-l10"><a class="reference internal" href="SQuAD_evolution_examples.html#technical-details-about-the-trial">4. Technical details about the trial</a><ul>
+<li class="toctree-l11"><a class="reference internal" href="SQuAD_evolution_examples.html#how-does-it-works">4.1 How does it works</a></li>
+<li class="toctree-l11"><a class="reference internal" href="SQuAD_evolution_examples.html#the-trial">4.2 The trial</a></li>
+<li class="toctree-l11"><a class="reference internal" href="SQuAD_evolution_examples.html#the-tuner">4.3 The tuner</a></li>
+<li class="toctree-l11"><a class="reference internal" href="SQuAD_evolution_examples.html#model-configuration-format">4.4 Model configuration format</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l9"><a class="reference internal" href="gbdt_example.html">Tuning GBDT on NNI</a><ul>
+<li class="toctree-l10"><a class="reference internal" href="gbdt_example.html#search-space-in-gbdt">1. Search Space in GBDT</a></li>
+<li class="toctree-l10"><a class="reference internal" href="gbdt_example.html#task-description">2. Task description</a></li>
+<li class="toctree-l10"><a class="reference internal" href="gbdt_example.html#how-to-run-in-nni">3. How to run in nni</a><ul>
+<li class="toctree-l11"><a class="reference internal" href="gbdt_example.html#prepare-your-trial-code">3.1 Prepare your trial code</a></li>
+<li class="toctree-l11"><a class="reference internal" href="gbdt_example.html#prepare-your-search-space">3.2 Prepare your search space.</a></li>
+<li class="toctree-l11"><a class="reference internal" href="gbdt_example.html#add-sdk-of-nni-into-your-code">3.3 Add SDK of nni into your code.</a></li>
+<li class="toctree-l11"><a class="reference internal" href="gbdt_example.html#write-a-config-file-and-run-it">3.4 Write a config file and run it.</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html">How to run an experiment on local (with multiple GPUs)?</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html#view-experiment-results">View experiment results</a></li>
+<li class="toctree-l8"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html#using-multiple-local-gpus-to-speed-up-search">Using multiple local GPUs to speed up search</a></li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="RemoteMachineMode.html">How to run an experiment on multiple machines?</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="RemoteMachineMode.html#setup-nni-environment">Setup NNI environment</a></li>
+<li class="toctree-l8"><a class="reference internal" href="RemoteMachineMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="PAIMode.html">How to run an experiment on OpenPAI?</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="PAIMode.html#setup-environment">Setup environment</a></li>
+<li class="toctree-l8"><a class="reference internal" href="PAIMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="KubeflowMode.html">How to run an experiment on Kubernetes through Kubeflow?</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="KubeflowMode.html#prerequisite-for-on-premises-kubernetes-service">Prerequisite for on-premises Kubernetes Service</a></li>
+<li class="toctree-l8"><a class="reference internal" href="KubeflowMode.html#prerequisite-for-azure-kubernetes-service">Prerequisite for Azure Kubernetes Service</a></li>
+<li class="toctree-l8"><a class="reference internal" href="KubeflowMode.html#design">Design</a></li>
+<li class="toctree-l8"><a class="reference internal" href="KubeflowMode.html#supported-operator">Supported operator</a></li>
+<li class="toctree-l8"><a class="reference internal" href="KubeflowMode.html#supported-storage-type">Supported storage type</a></li>
+<li class="toctree-l8"><a class="reference internal" href="KubeflowMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="FrameworkControllerMode.html">How to run an experiment on Kubernetes through FrameworkController?</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="FrameworkControllerMode.html#prerequisite-for-on-premises-kubernetes-service">Prerequisite for on-premises Kubernetes Service</a></li>
+<li class="toctree-l8"><a class="reference internal" href="FrameworkControllerMode.html#prerequisite-for-azure-kubernetes-service">Prerequisite for Azure Kubernetes Service</a></li>
+<li class="toctree-l8"><a class="reference internal" href="FrameworkControllerMode.html#set-up-frameworkcontroller">Set up FrameworkController</a></li>
+<li class="toctree-l8"><a class="reference internal" href="FrameworkControllerMode.html#design">Design</a></li>
+<li class="toctree-l8"><a class="reference internal" href="FrameworkControllerMode.html#example">Example</a></li>
+<li class="toctree-l8"><a class="reference internal" href="FrameworkControllerMode.html#how-to-run-example">How to run example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="Trials.html">How to adapt your trial code on NNI?</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="Trials.html#nni-api">NNI API</a><ul>
+<li class="toctree-l7"><a class="reference internal" href="Trials.html#step-1-prepare-a-searchspace-parameters-file">Step 1 - Prepare a SearchSpace parameters file.</a></li>
+<li class="toctree-l7"><a class="reference internal" href="Trials.html#step-2-update-model-codes">Step 2 - Update model codes</a></li>
+<li class="toctree-l7"><a class="reference internal" href="Trials.html#step-3-enable-nni-api">Step 3 - Enable NNI API</a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="Trials.html#nni-python-annotation">NNI Python Annotation</a><ul>
+<li class="toctree-l7"><a class="reference internal" href="Trials.html#step-1-update-codes-with-annotations">Step 1 - Update codes with annotations</a></li>
+<li class="toctree-l7"><a class="reference internal" href="Trials.html#step-2-enable-nni-annotation">Step 2 - Enable NNI Annotation</a></li>
+</ul>
+</li>
+<li class="toctree-l6"><a class="reference internal" href="Trials.html#more-trial-examples">More Trial Examples</a><ul>
+<li class="toctree-l7"><a class="reference internal" href="mnist_examples.html">MNIST examples</a></li>
+<li class="toctree-l7"><a class="reference internal" href="cifar10_examples.html">Finding out best optimizer for Cifar10 classification</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="cifar10_examples.html#overview">Overview</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="cifar10_examples.html#goals"><strong>Goals</strong></a></li>
+<li class="toctree-l9"><a class="reference internal" href="cifar10_examples.html#experimental"><strong>Experimental</strong></a><ul>
+<li class="toctree-l10"><a class="reference internal" href="cifar10_examples.html#preparations">Preparations</a></li>
+<li class="toctree-l10"><a class="reference internal" href="cifar10_examples.html#cifar-10-with-nni">CIFAR-10 with NNI</a></li>
+<li class="toctree-l10"><a class="reference internal" href="cifar10_examples.html#launch-the-experiment">Launch the experiment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="sklearn_examples.html">How to tune Scikit-learn on NNI</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="sklearn_examples.html#how-to-run-the-example">1. How to run the example</a></li>
+<li class="toctree-l8"><a class="reference internal" href="sklearn_examples.html#description-of-the-example">2. Description of the example</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="sklearn_examples.html#classification">2.1 classification</a></li>
+<li class="toctree-l9"><a class="reference internal" href="sklearn_examples.html#regression">2.2 regression</a></li>
+</ul>
+</li>
+<li class="toctree-l8"><a class="reference internal" href="sklearn_examples.html#how-to-write-sklearn-code-using-nni">3. How to write sklearn code using nni</a></li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="SQuAD_evolution_examples.html">Automatic Model Architecture Search for Reading Comprehension.</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="SQuAD_evolution_examples.html#search-space">1. Search Space</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html#new-version">New version</a></li>
+</ul>
+</li>
+<li class="toctree-l8"><a class="reference internal" href="SQuAD_evolution_examples.html#how-to-run-this-example-in-local">2. How to run this example in local?</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html#use-downloading-script-to-download-data">2.1 Use downloading script to download data</a></li>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html#update-configuration">2.2 Update configuration</a></li>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html#submit-this-job">2.3 submit this job</a></li>
+</ul>
+</li>
+<li class="toctree-l8"><a class="reference internal" href="SQuAD_evolution_examples.html#run-this-example-on-openpai">3 Run this example on OpenPAI</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html#id1">3.1 Update configuration</a></li>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html#id2">3.2 submit this job</a></li>
+</ul>
+</li>
+<li class="toctree-l8"><a class="reference internal" href="SQuAD_evolution_examples.html#technical-details-about-the-trial">4. Technical details about the trial</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html#how-does-it-works">4.1 How does it works</a></li>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html#the-trial">4.2 The trial</a></li>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html#the-tuner">4.3 The tuner</a></li>
+<li class="toctree-l9"><a class="reference internal" href="SQuAD_evolution_examples.html#model-configuration-format">4.4 Model configuration format</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l7"><a class="reference internal" href="gbdt_example.html">Tuning GBDT on NNI</a><ul>
+<li class="toctree-l8"><a class="reference internal" href="gbdt_example.html#search-space-in-gbdt">1. Search Space in GBDT</a></li>
+<li class="toctree-l8"><a class="reference internal" href="gbdt_example.html#task-description">2. Task description</a></li>
+<li class="toctree-l8"><a class="reference internal" href="gbdt_example.html#how-to-run-in-nni">3. How to run in nni</a><ul>
+<li class="toctree-l9"><a class="reference internal" href="gbdt_example.html#prepare-your-trial-code">3.1 Prepare your trial code</a></li>
+<li class="toctree-l9"><a class="reference internal" href="gbdt_example.html#prepare-your-search-space">3.2 Prepare your search space.</a></li>
+<li class="toctree-l9"><a class="reference internal" href="gbdt_example.html#add-sdk-of-nni-into-your-code">3.3 Add SDK of nni into your code.</a></li>
+<li class="toctree-l9"><a class="reference internal" href="gbdt_example.html#write-a-config-file-and-run-it">3.4 Write a config file and run it.</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="Builtin_Tuner.html">What are tuners supported by NNI?</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="Builtin_Tuner.html#usage-of-builtin-tuners">Usage of Builtin Tuners</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="Customize_Tuner.html">How to customize your own tuner?</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="Customize_Tuner.html#id1">Customize Tuner</a><ul>
+<li class="toctree-l7"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/evolution_tuner">evolution-tuner</a></li>
+<li class="toctree-l7"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperopt_tuner">hyperopt-tuner</a></li>
+<li class="toctree-l7"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/examples/tuners/ga_customer_tuner">evolution-based-customized-tuner</a></li>
+<li class="toctree-l7"><a class="reference internal" href="Customize_Tuner.html#write-a-more-advanced-automl-algorithm">Write a more advanced automl algorithm</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="Builtin_Assessors.html">What are assessors supported by NNI?</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="Builtin_Assessors.html#usage-of-builtin-assessors">Usage of Builtin Assessors</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="Customize_Assessor.html">How to customize your own assessor?</a><ul>
+<li class="toctree-l6"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/medianstop_assessor">medianstop-assessor</a></li>
+<li class="toctree-l6"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/curvefitting_assessor">curvefitting-assessor</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html">How to run an experiment on local?</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html#view-experiment-results">View experiment results</a></li>
+<li class="toctree-l6"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html#using-multiple-local-gpus-to-speed-up-search">Using multiple local GPUs to speed up search</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="RemoteMachineMode.html">How to run an experiment on multiple machines?</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="RemoteMachineMode.html#setup-nni-environment">Setup NNI environment</a></li>
+<li class="toctree-l6"><a class="reference internal" href="RemoteMachineMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="PAIMode.html">How to run an experiment on OpenPAI?</a><ul>
+<li class="toctree-l6"><a class="reference internal" href="PAIMode.html#setup-environment">Setup environment</a></li>
+<li class="toctree-l6"><a class="reference internal" href="PAIMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="mnist_examples.html">Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="NNICTLDOC.html">Use command line tool nnictl</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="NNICTLDOC.html#introduction">Introduction</a></li>
+<li class="toctree-l4"><a class="reference internal" href="NNICTLDOC.html#commands">Commands</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="NNICTLDOC.html#manage-an-experiment">Manage an experiment</a></li>
+<li class="toctree-l5"><a class="reference internal" href="NNICTLDOC.html#manage-experiment-information">Manage experiment information</a></li>
+<li class="toctree-l5"><a class="reference internal" href="NNICTLDOC.html#manage-log">Manage log</a></li>
+<li class="toctree-l5"><a class="reference internal" href="NNICTLDOC.html#manage-webui">Manage webui</a></li>
+<li class="toctree-l5"><a class="reference internal" href="NNICTLDOC.html#manage-tensorboard">Manage tensorboard</a></li>
+<li class="toctree-l5"><a class="reference internal" href="NNICTLDOC.html#manage-package">Manage package</a></li>
+<li class="toctree-l5"><a class="reference internal" href="NNICTLDOC.html#check-nni-version">Check NNI version</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="WebUI.html">Use NNIBoard</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="WebUI.html#view-summary-page">View summary page</a></li>
+<li class="toctree-l4"><a class="reference internal" href="WebUI.html#view-job-default-metric">View job default metric</a></li>
+<li class="toctree-l4"><a class="reference internal" href="WebUI.html#view-hyper-parameter">View hyper parameter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="WebUI.html#view-trial-duration">View Trial Duration</a></li>
+<li class="toctree-l4"><a class="reference internal" href="WebUI.html#view-trials-status">View trials status</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="SearchSpaceSpec.html">Define search space</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="SearchSpaceSpec.html#overview">Overview</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SearchSpaceSpec.html#types">Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="SearchSpaceSpec.html#search-space-types-supported-by-each-tuner">Search Space Types Supported by Each Tuner</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ExperimentConfig.html">Config an experiment</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ExperimentConfig.html#template">Template</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ExperimentConfig.html#configuration-spec">Configuration spec</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ExperimentConfig.html#examples">Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html">How to run an experiment on local (with multiple GPUs)?</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html#view-experiment-results">View experiment results</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html#using-multiple-local-gpus-to-speed-up-search">Using multiple local GPUs to speed up search</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="RemoteMachineMode.html">How to run an experiment on multiple machines?</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="RemoteMachineMode.html#setup-nni-environment">Setup NNI environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="RemoteMachineMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="PAIMode.html">How to run an experiment on OpenPAI?</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="PAIMode.html#setup-environment">Setup environment</a></li>
+<li class="toctree-l4"><a class="reference internal" href="PAIMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="KubeflowMode.html">How to run an experiment on Kubernetes through Kubeflow?</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="KubeflowMode.html#prerequisite-for-on-premises-kubernetes-service">Prerequisite for on-premises Kubernetes Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="KubeflowMode.html#prerequisite-for-azure-kubernetes-service">Prerequisite for Azure Kubernetes Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="KubeflowMode.html#design">Design</a></li>
+<li class="toctree-l4"><a class="reference internal" href="KubeflowMode.html#supported-operator">Supported operator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="KubeflowMode.html#supported-storage-type">Supported storage type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="KubeflowMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="FrameworkControllerMode.html">How to run an experiment on Kubernetes through FrameworkController?</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="FrameworkControllerMode.html#prerequisite-for-on-premises-kubernetes-service">Prerequisite for on-premises Kubernetes Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FrameworkControllerMode.html#prerequisite-for-azure-kubernetes-service">Prerequisite for Azure Kubernetes Service</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FrameworkControllerMode.html#set-up-frameworkcontroller">Set up FrameworkController</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FrameworkControllerMode.html#design">Design</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FrameworkControllerMode.html#example">Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="FrameworkControllerMode.html#how-to-run-example">How to run example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Trials.html">Write Trial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Trials.html#nni-api">NNI API</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Trials.html#step-1-prepare-a-searchspace-parameters-file">Step 1 - Prepare a SearchSpace parameters file.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Trials.html#step-2-update-model-codes">Step 2 - Update model codes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Trials.html#step-3-enable-nni-api">Step 3 - Enable NNI API</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Trials.html#nni-python-annotation">NNI Python Annotation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Trials.html#step-1-update-codes-with-annotations">Step 1 - Update codes with annotations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="Trials.html#step-2-enable-nni-annotation">Step 2 - Enable NNI Annotation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Trials.html#more-trial-examples">More Trial Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mnist_examples.html">MNIST examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cifar10_examples.html">Finding out best optimizer for Cifar10 classification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="cifar10_examples.html#overview">Overview</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="cifar10_examples.html#goals"><strong>Goals</strong></a></li>
+<li class="toctree-l5"><a class="reference internal" href="cifar10_examples.html#experimental"><strong>Experimental</strong></a><ul>
+<li class="toctree-l6"><a class="reference internal" href="cifar10_examples.html#preparations">Preparations</a></li>
+<li class="toctree-l6"><a class="reference internal" href="cifar10_examples.html#cifar-10-with-nni">CIFAR-10 with NNI</a></li>
+<li class="toctree-l6"><a class="reference internal" href="cifar10_examples.html#launch-the-experiment">Launch the experiment</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sklearn_examples.html">How to tune Scikit-learn on NNI</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sklearn_examples.html#how-to-run-the-example">1. How to run the example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sklearn_examples.html#description-of-the-example">2. Description of the example</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="sklearn_examples.html#classification">2.1 classification</a></li>
+<li class="toctree-l5"><a class="reference internal" href="sklearn_examples.html#regression">2.2 regression</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="sklearn_examples.html#how-to-write-sklearn-code-using-nni">3. How to write sklearn code using nni</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="SQuAD_evolution_examples.html">Automatic Model Architecture Search for Reading Comprehension.</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="SQuAD_evolution_examples.html#search-space">1. Search Space</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="SQuAD_evolution_examples.html#new-version">New version</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="SQuAD_evolution_examples.html#how-to-run-this-example-in-local">2. How to run this example in local?</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="SQuAD_evolution_examples.html#use-downloading-script-to-download-data">2.1 Use downloading script to download data</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SQuAD_evolution_examples.html#update-configuration">2.2 Update configuration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SQuAD_evolution_examples.html#submit-this-job">2.3 submit this job</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="SQuAD_evolution_examples.html#run-this-example-on-openpai">3 Run this example on OpenPAI</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="SQuAD_evolution_examples.html#id1">3.1 Update configuration</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SQuAD_evolution_examples.html#id2">3.2 submit this job</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="SQuAD_evolution_examples.html#technical-details-about-the-trial">4. Technical details about the trial</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="SQuAD_evolution_examples.html#how-does-it-works">4.1 How does it works</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SQuAD_evolution_examples.html#the-trial">4.2 The trial</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SQuAD_evolution_examples.html#the-tuner">4.3 The tuner</a></li>
+<li class="toctree-l5"><a class="reference internal" href="SQuAD_evolution_examples.html#model-configuration-format">4.4 Model configuration format</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="gbdt_example.html">Tuning GBDT on NNI</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="gbdt_example.html#search-space-in-gbdt">1. Search Space in GBDT</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gbdt_example.html#task-description">2. Task description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="gbdt_example.html#how-to-run-in-nni">3. How to run in nni</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="gbdt_example.html#prepare-your-trial-code">3.1 Prepare your trial code</a></li>
+<li class="toctree-l5"><a class="reference internal" href="gbdt_example.html#prepare-your-search-space">3.2 Prepare your search space.</a></li>
+<li class="toctree-l5"><a class="reference internal" href="gbdt_example.html#add-sdk-of-nni-into-your-code">3.3 Add SDK of nni into your code.</a></li>
+<li class="toctree-l5"><a class="reference internal" href="gbdt_example.html#write-a-config-file-and-run-it">3.4 Write a config file and run it.</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tuners.html">Tuners</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builtin_Tuner.html">Builtin Tuners</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Builtin_Tuner.html#usage-of-builtin-tuners">Usage of Builtin Tuners</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Customize_Tuner.html">Customized Tuners</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Customize_Tuner.html#id1">Customize Tuner</a><ul>
+<li class="toctree-l4"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/evolution_tuner">evolution-tuner</a></li>
+<li class="toctree-l4"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperopt_tuner">hyperopt-tuner</a></li>
+<li class="toctree-l4"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/examples/tuners/ga_customer_tuner">evolution-based-customized-tuner</a></li>
+<li class="toctree-l4"><a class="reference internal" href="Customize_Tuner.html#write-a-more-advanced-automl-algorithm">Write a more advanced automl algorithm</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Customize_Advisor.html">Customized Advisor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="assessors.html">Assessors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="Builtin_Assessors.html">Builtin Assessors</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="Builtin_Assessors.html#usage-of-builtin-assessors">Usage of Builtin Assessors</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Customize_Assessor.html">Customized Assessors</a><ul>
+<li class="toctree-l3"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/medianstop_assessor">medianstop-assessor</a></li>
+<li class="toctree-l3"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/curvefitting_assessor">curvefitting-assessor</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="WebUI.html">WebUI</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html#view-summary-page">View summary page</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html#view-job-default-metric">View job default metric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html#view-hyper-parameter">View hyper parameter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html#view-trial-duration">View Trial Duration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html#view-trials-status">View trials status</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="training_services.html">Training Platform</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html">Local</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html#view-experiment-results">View experiment results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tutorial_1_CR_exp_local_api.html#using-multiple-local-gpus-to-speed-up-search">Using multiple local GPUs to speed up search</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="RemoteMachineMode.html">Remote</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="RemoteMachineMode.html#setup-nni-environment">Setup NNI environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="RemoteMachineMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="PAIMode.html">OpenPAI</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="PAIMode.html#setup-environment">Setup environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="PAIMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="KubeflowMode.html">Kubeflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="KubeflowMode.html#prerequisite-for-on-premises-kubernetes-service">Prerequisite for on-premises Kubernetes Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="KubeflowMode.html#prerequisite-for-azure-kubernetes-service">Prerequisite for Azure Kubernetes Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="KubeflowMode.html#design">Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="KubeflowMode.html#supported-operator">Supported operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="KubeflowMode.html#supported-storage-type">Supported storage type</a></li>
+<li class="toctree-l3"><a class="reference internal" href="KubeflowMode.html#run-an-experiment">Run an experiment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="FrameworkControllerMode.html">FrameworkController</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="FrameworkControllerMode.html#prerequisite-for-on-premises-kubernetes-service">Prerequisite for on-premises Kubernetes Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FrameworkControllerMode.html#prerequisite-for-azure-kubernetes-service">Prerequisite for Azure Kubernetes Service</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FrameworkControllerMode.html#set-up-frameworkcontroller">Set up FrameworkController</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FrameworkControllerMode.html#design">Design</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FrameworkControllerMode.html#example">Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="FrameworkControllerMode.html#how-to-run-example">How to run example</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced.html">Advanced Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="multiPhase.html">MultiPhase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AdvancedNAS.html">Tutorial for Advanced Neural Architecture Search</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="AdvancedNAS.html#weight-sharing-among-trials">Weight Sharing among trials</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="AdvancedNAS.html#weight-sharing-through-nfs-file">Weight Sharing through NFS file</a></li>
+<li class="toctree-l4"><a class="reference internal" href="AdvancedNAS.html#nfs-setup">NFS Setup</a><ul>
+<li class="toctree-l5"><a class="reference internal" href="AdvancedNAS.html#nfs-server">NFS Server</a></li>
+<li class="toctree-l5"><a class="reference internal" href="AdvancedNAS.html#nfs-client">NFS Client</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="AdvancedNAS.html#asynchornous-dispatcher-mode-for-trial-dependency-control">Asynchornous Dispatcher Mode for trial dependency control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="AdvancedNAS.html#examples">Examples</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Installation.html" class="btn btn-neutral float-right" title="Installation of NNI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Customize_Assessor.html" class="btn btn-neutral" title="Customize Assessor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1046 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>nnictl &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Write a Trial Run on NNI" href="Trials.html" />
+    <link rel="prev" title="Built-in Assessors" href="Builtin_Assessors.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Reference.html">References</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AnnotationSpec.html">Annotation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExperimentConfig.html">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SearchSpaceSpec.html">Search Space</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Overview.html">Overview</a> &raquo;</li>
+        
+          <li><a href="QuickStart.html">QuickStart</a> &raquo;</li>
+        
+      <li>nnictl</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/NNICTLDOC.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="nnictl">
+<h1>nnictl<a class="headerlink" href="#nnictl" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p><strong>nnictl</strong> is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc.</p>
+</div>
+<div class="section" id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
+<p>nnictl support commands:</p>
+<ul class="simple">
+<li><a class="reference external" href="#create">nnictl create</a></li>
+<li><a class="reference external" href="#resume">nnictl resume</a></li>
+<li><a class="reference external" href="#stop">nnictl stop</a></li>
+<li><a class="reference external" href="#update">nnictl update</a></li>
+<li><a class="reference external" href="#trial">nnictl trial</a></li>
+<li><a class="reference external" href="#top">nnictl top</a></li>
+<li><a class="reference external" href="#experiment">nnictl experiment</a></li>
+<li><a class="reference external" href="#config">nnictl config</a></li>
+<li><a class="reference external" href="#log">nnictl log</a></li>
+<li><a class="reference external" href="#webui">nnictl webui</a></li>
+<li><a class="reference external" href="#tensorboard">nnictl tensorboard</a></li>
+<li><a class="reference external" href="#package">nnictl package</a></li>
+<li><a class="reference external" href="#version">nnictl –version</a></li>
+</ul>
+<div class="section" id="manage-an-experiment">
+<h3>Manage an experiment<a class="headerlink" href="#manage-an-experiment" title="Permalink to this headline">¶</a></h3>
+<p><a name="create"></a></p>
+<ul>
+<li><p class="first"><strong>nnictl create</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>You can use this command to create a new experiment, using the configuration specified in config file.</p>
+<p>After this command is successfully done, the context will be set as this experiment, which means the following command you issued is associated with this experiment, unless you explicitly changes the context(not supported yet).</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl create <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>--config, -c</td>
+<td>True</td>
+<td></td>
+<td>YAML configure file of the experiment</td>
+</tr>
+<tr>
+<td>--port, -p</td>
+<td>False</td>
+<td></td>
+<td>the port of restful server</td>
+</tr>
+</tbody>
+</table><p><a name="resume"></a></p>
+<ul>
+<li><p class="first"><strong>nnictl resume</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>You can use this command to resume a stopped experiment.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl resume <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>The id of the experiment you want to resume</td>
+</tr>
+<tr>
+<td>--port, -p</td>
+<td>False</td>
+<td></td>
+<td>Rest port of the experiment you want to resume</td>
+</tr>
+</tbody>
+</table><p><a name="stop"></a></p>
+<ul>
+<li><p class="first"><strong>nnictl stop</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>You can use this command to stop a running experiment or multiple experiments.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl stop <span class="o">[</span>id<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Detail</p>
+<ol class="simple">
+<li>If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.</li>
+<li>If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.</li>
+<li>If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.</li>
+<li>If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.</li>
+<li>If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.</li>
+<li>Users could use ‘nnictl stop all’ to stop all experiments.</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+<p><a name="update"></a></p>
+<ul>
+<li><p class="first"><strong>nnictl update</strong></p>
+<ul>
+<li><p class="first"><strong>nnictl update searchspace</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>You can use this command to update an experiment’s search space.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl update searchspace <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+<tr>
+<td>--filename, -f</td>
+<td>True</td>
+<td></td>
+<td>the file storing your new search space</td>
+</tr>
+</tbody>
+</table><ul>
+<li><p class="first"><strong>nnictl update concurrency</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>You can use this command to update an experiment’s concurrency.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl update concurrency <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+<tr>
+<td>--value, -v</td>
+<td>True</td>
+<td></td>
+<td>the number of allowed concurrent trials</td>
+</tr>
+</tbody>
+</table><ul>
+<li><p class="first"><strong>nnictl update duration</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>You can use this command to update an experiment’s duration.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl update duration <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+<tr>
+<td>--value, -v</td>
+<td>True</td>
+<td></td>
+<td>the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.</td>
+</tr>
+</tbody>
+</table><ul>
+<li><p class="first"><strong>nnictl update trialnum</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>You can use this command to update an experiment’s maxtrialnum.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl update trialnum <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+<tr>
+<td>--value, -v</td>
+<td>True</td>
+<td></td>
+<td>the new number of maxtrialnum you want to set</td>
+</tr>
+</tbody>
+</table><p><a name="trial"></a></p>
+<ul>
+<li><p class="first"><strong>nnictl trial</strong></p>
+<ul>
+<li><p class="first"><strong>nnictl trial ls</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>You can use this command to show trial’s information.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl trial ls
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+</tbody>
+</table><ul>
+<li><p class="first"><strong>nnictl trial kill</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>You can use this command to kill a trial job.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl trial <span class="nb">kill</span> <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+<tr>
+<td>--trialid, -t</td>
+<td>True</td>
+<td></td>
+<td>ID of the trial you want to kill.</td>
+</tr>
+</tbody>
+</table><p><a name="top"></a></p>
+<ul>
+<li><p class="first"><strong>nnictl top</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Monitor all of running experiments.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl top
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+<tr>
+<td>--time, -t</td>
+<td>False</td>
+<td></td>
+<td>The interval to update the experiment status, the unit of time is second, and the default value is 3 second.</td>
+</tr>
+</tbody>
+</table><p><a name="experiment"></a></p>
+</div>
+<div class="section" id="manage-experiment-information">
+<h3>Manage experiment information<a class="headerlink" href="#manage-experiment-information" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first"><strong>nnictl experiment show</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Show the information of experiment.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl experiment show
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+</tbody>
+</table><ul>
+<li><p class="first"><strong>nnictl experiment status</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Show the status of experiment.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl experiment status
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+</tbody>
+</table><ul>
+<li><p class="first"><strong>nnictl experiment list</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Show the information of all the (running) experiments.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl experiment list
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+<p><a name="config"></a></p>
+<ul>
+<li><p class="first"><strong>nnictl config show</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Display the current context information.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl config show
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+<p><a name="log"></a></p>
+</div>
+<div class="section" id="manage-log">
+<h3>Manage log<a class="headerlink" href="#manage-log" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first"><strong>nnictl log stdout</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Show the stdout log content.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl log stdout <span class="o">[</span>options<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+<tr>
+<td>--head, -h</td>
+<td>False</td>
+<td></td>
+<td>show head lines of stdout</td>
+</tr>
+<tr>
+<td>--tail, -t</td>
+<td>False</td>
+<td></td>
+<td>show tail lines of stdout</td>
+</tr>
+<tr>
+<td>--path, -p</td>
+<td>False</td>
+<td></td>
+<td>show the path of stdout file</td>
+</tr>
+</tbody>
+</table><ul>
+<li><p class="first"><strong>nnictl log stderr</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Show the stderr log content.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl log stderr <span class="o">[</span>options<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+<tr>
+<td>--head, -h</td>
+<td>False</td>
+<td></td>
+<td>show head lines of stderr</td>
+</tr>
+<tr>
+<td>--tail, -t</td>
+<td>False</td>
+<td></td>
+<td>show tail lines of stderr</td>
+</tr>
+<tr>
+<td>--path, -p</td>
+<td>False</td>
+<td></td>
+<td>show the path of stderr file</td>
+</tr>
+</tbody>
+</table><ul>
+<li><p class="first"><strong>nnictl log trial</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Show trial log path.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl log trial <span class="o">[</span>options<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>the id of trial</td>
+</tr>
+</tbody>
+</table><p><a name="webui"></a></p>
+</div>
+<div class="section" id="manage-webui">
+<h3>Manage webui<a class="headerlink" href="#manage-webui" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><strong>nnictl webui url</strong></li>
+</ul>
+<p><a name="tensorboard"></a></p>
+</div>
+<div class="section" id="manage-tensorboard">
+<h3>Manage tensorboard<a class="headerlink" href="#manage-tensorboard" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first"><strong>nnictl tensorboard start</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Start the tensorboard process.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl tensorboard start
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+<tr>
+<td>--trialid</td>
+<td>False</td>
+<td></td>
+<td>ID of the trial</td>
+</tr>
+<tr>
+<td>--port</td>
+<td>False</td>
+<td>6006</td>
+<td>The port of the tensorboard process</td>
+</tr>
+</tbody>
+</table><ul>
+<li><p class="first">Detail</p>
+<ol class="simple">
+<li>NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later.</li>
+<li>If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path.</li>
+<li>In local mode, nnictl will set –logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.</li>
+<li>In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.</li>
+<li>If there is only one trial job, you don’t need to set trialid. If there are multiple trial jobs running, you should set the trialid, or you could use [nnictl tensorboard start –trialid all] to map –logdir to all trial log paths.</li>
+</ol>
+</li>
+<li><p class="first"><strong>nnictl tensorboard stop</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Stop all of the tensorboard process.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl tensorboard stop
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>id</td>
+<td>False</td>
+<td></td>
+<td>ID of the experiment you want to set</td>
+</tr>
+</tbody>
+</table><p><a name="package"></a></p>
+</div>
+<div class="section" id="manage-package">
+<h3>Manage package<a class="headerlink" href="#manage-package" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first"><strong>nnictl package install</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Install the packages needed in nni experiments.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl package install <span class="o">[</span>OPTIONS<span class="o">]</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Options</p>
+</li>
+</ul>
+</li>
+</ul>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th>Name, shorthand</th>
+<th>Required</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>--name</td>
+<td>True</td>
+<td></td>
+<td>The name of package to be installed</td>
+</tr>
+</tbody>
+</table><ul>
+<li><p class="first"><strong>nnictl package show</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>List the packages supported.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl package show
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+<p><a name="version"></a></p>
+</div>
+<div class="section" id="check-nni-version">
+<h3>Check NNI version<a class="headerlink" href="#check-nni-version" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first"><strong>nnictl –version</strong></p>
+<ul>
+<li><p class="first">Description</p>
+<p>Describe the current version of NNI installed.</p>
+</li>
+<li><p class="first">Usage</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>nnictl --version
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Trials.html" class="btn btn-neutral float-right" title="Write a Trial Run on NNI" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Builtin_Assessors.html" class="btn btn-neutral" title="Built-in Assessors" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
