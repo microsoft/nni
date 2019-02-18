@@ -1,16 +1,16 @@
-# 高级神经网络架构搜索教程
+# Tutorial for Advanced Neural Architecture Search
 
-目前，许多 NAS（Neural Architecture Search，神经网络架构搜索）算法都在 Trial 上使用了 **权重共享（weight sharing）** 的方法来加速训练过程。 例如，[ENAS](https://arxiv.org/abs/1802.03268) 与以前的 [NASNet](https://arxiv.org/abs/1707.07012) 算法相比，通过'*子模型间的参数共享（parameter sharing between child models）*'提高了 1000 倍的效率。 而例如 [DARTS](https://arxiv.org/abs/1806.09055), [Network Morphism](https://arxiv.org/abs/1806.10282), 和 [Evolution](https://arxiv.org/abs/1703.01041) 等算法也利用或者隐式的利用了权重共享。
+Currently many of the NAS algorithms leverage the technique of **weight sharing** among trials to accelerate its training process. For example, [ENAS](https://arxiv.org/abs/1802.03268) delivers 1000x effiency with '*parameter sharing between child models*', compared with the previous [NASNet](https://arxiv.org/abs/1707.07012) algorithm. Other NAS algorithms such as [DARTS](https://arxiv.org/abs/1806.09055), [Network Morphism](https://arxiv.org/abs/1806.10282), and [Evolution](https://arxiv.org/abs/1703.01041) is also leveraging, or has the potential to leverage weight sharing.
 
-本教程介绍了如何使用权重共享。
+This is a tutorial on how to enable weight sharing in NNI.
 
-## 权重共享
+## Weight Sharing among trials
 
-推荐通过 NFS （Network File System）进行权重共享，它是轻量、相对高效的多机共享文件方案。 欢迎社区来共享更多高效的技术。
+Currently we recommend sharing weights through NFS (Network File System), which supports sharing files across machines, and is light-weighted, (relatively) efficient. We also welcome contributions from the community on more efficient techniques.
 
-### 通过 NFS 文件使用权重共享
+### Weight Sharing through NFS file
 
-使用 NFS 配置（见下文），Trial 代码可以通过读写文件来共享模型权重。 建议使用 Tuner 的存储路径：
+With the NFS setup (see below), trial code can share model weight through loading & saving files. Here we recommend that user feed the tuner with the storage path:
 
 ```yaml
 tuner:
@@ -22,37 +22,37 @@ tuner:
     save_dir_root: /nfs/storage/path/
 ```
 
-并让 Tuner 来决定在什么路径读写权重文件，通过 `nni.get_next_parameters()` 来获取路径：
+And let tuner decide where to save & load weights and feed the paths to trials through `nni.get_next_parameters()`:
 
 <img src="https://user-images.githubusercontent.com/23273522/51817667-93ebf080-2306-11e9-8395-b18b322062bc.png" alt="drawing" width="700" />
 
-例如，在 Tensorflow 中：
+For example, in tensorflow:
 
 ```python
-# 保存 models
+# save models
 saver = tf.train.Saver()
 saver.save(sess, os.path.join(params['save_path'], 'model.ckpt'))
-# 读取 models
+# load models
 tf.init_from_checkpoint(params['restore_path'])
 ```
 
-超参中的 `'save_path'` 和 `'restore_path'` 可以通过 Tuner 来管理。
+where `'save_path'` and `'restore_path'` in hyper-parameter can be managed by the tuner.
 
-### NFS 配置
+### NFS Setup
 
-NFS 使用了客户端/服务器架构。通过一个 NFS 服务器来提供物理存储，远程计算机上的 Trial 使用 NFS 客户端来读写文件，操作上和本地文件相同。
+NFS follows the Client-Server Architecture, with an NFS server providing physical storage, trials on the remote machine with an NFS client can read/write those files in the same way that they access local files.
 
-#### NFS 服务器
+#### NFS Server
 
-如果有足够的存储空间，并能够让 NNI 的 Trial 通过**远程机器**来连接，NFS 服务可以安装在任何计算机上。 通常，可以选择一台远程服务器作为 NFS 服务。
+An NFS server can be any machine as long as it can provide enough physical storage, and network connection with **remote machine** for NNI trials. Usually you can choose one of the remote machine as NFS Server.
 
-在 Ubuntu 上，可通过 `apt-get` 安装 NFS 服务：
+On Ubuntu, install NFS server through `apt-get`:
 
 ```bash
 sudo apt-get install nfs-kernel-server
 ```
 
-假设 `/tmp/nni/shared` 是物理存储位置，然后运行：
+Suppose `/tmp/nni/shared` is used as the physical storage, then run:
 
 ```bash
 mkdir -p /tmp/nni/shared
@@ -60,33 +60,33 @@ sudo echo "/tmp/nni/shared *(rw,sync,no_subtree_check,no_root_squash)" >> /etc/e
 sudo service nfs-kernel-server restart
 ```
 
-可以通过命令 `sudo showmount -e localhost` 来检查上述目录是否通过 NFS 成功导出了
+You can check if the above directory is successfully exported by NFS using `sudo showmount -e localhost`
 
-#### NFS 客户端
+#### NFS Client
 
-为了通过 NFS 访问远程共享文件，需要安装 NFS 客户端。 例如，在 Ubuntu 上运行：
+For a trial on remote machine able to access shared files with NFS, an NFS client needs to be installed. For example, on Ubuntu:
 
 ```bash
 sudo apt-get install nfs-common
 ```
 
-然后创建并装载上共享目录：
+Then create & mount the mounted directory of shared files:
 
 ```bash
 mkdir -p /mnt/nfs/nni/
 sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 ```
 
-实际使用时，IP `10.10.10.10` 需要替换为 NFS 服务器的真实地址。
+where `10.10.10.10` should be replaced by the real IP of NFS server machine in practice.
 
-## Trial 依赖控制的异步调度模式
+## Asynchornous Dispatcher Mode for trial dependency control
 
-多机间启用权重的 Trial，一般是通过**先写后读**的方式来保持一致性。 子节点在父节点的 Trial 完成训练前，不应该读取父节点模型。 要解决这个问题，要通过 `multiThread: true` 来启用**异步调度模式**。在 `config.yml` 中，每次收到 `NEW_TRIAL` 请求，分派一个新的 Trial 时，Tuner 线程可以决定是否阻塞当前线程。 例如：
+The feature of weight sharing enables trials from different machines, in which most of the time **read after write** consistency must be assured. After all, the child model should not load parent model before parent trial finishes training. To deal with this, users can enable **asynchronous dispatcher mode** with `multiThread: true` in `config.yml` in NNI, where the dispatcher assign a tuner thread each time a `NEW_TRIAL` request comes in, and the tuner thread can decide when to submit a new trial by blocking and unblocking the thread itself. For example:
 
 ```python
     def generate_parameters(self, parameter_id):
         self.thread_lock.acquire()
-        indiv = # 新 Trial 的配置
+        indiv = # configuration for a new trial
         self.events[parameter_id] = threading.Event()
         self.thread_lock.release()
         if indiv.parent_id is not None:
@@ -94,11 +94,11 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
     def receive_trial_result(self, parameter_id, parameters, reward):
         self.thread_lock.acquire()
-        # 处理 Trial 结果的配置
+        # code for processing trial results
         self.thread_lock.release()
         self.events[parameter_id].set()
 ```
 
-## 样例
+## Examples
 
-详细内容参考：[简单的参数共享样例](https://github.com/Microsoft/nni/tree/master/test/async_sharing_test)。 基于上一个 [ga_squad](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad) 样例，还提供了新的 [样例](https://github.com/Microsoft/nni/tree/master/examples/trials/weight_sharing/ga_squad)。
+For details, please refer to this [simple weight sharing example](https://github.com/Microsoft/nni/tree/master/test/async_sharing_test). We also provided a [practice example](https://github.com/Microsoft/nni/tree/master/examples/trials/weight_sharing/ga_squad) for reading comprehension, based on previous [ga_squad](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad) example.
