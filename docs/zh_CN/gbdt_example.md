@@ -1,56 +1,56 @@
-# GBDT
+# GBDT in nni
 
-梯度提升是机器学习中回归和分类问题的一种方法。它由一组弱分类模型所组成，决策树是其中的典型。 像其它提升方法一样，它也分步来构建模型，并使用可微分的损失函数来优化。
+Gradient boosting is a machine learning technique for regression and classification problems, which produces a prediction model in the form of an ensemble of weak prediction models, typically decision trees. It builds the model in a stage-wise fashion as other boosting methods do, and it generalizes them by allowing optimization of an arbitrary differentiable loss function.
 
-梯度决策树（gradient boosting decision tree，GBDT）有很多流行的实现，如：[LightGBM](https://github.com/Microsoft/LightGBM), [xgboost](https://github.com/dmlc/xgboost), 和 [catboost](https://github.com/catboost/catboost)，等等。 GBDT 是解决经典机器学习问题的重要工具。 GBDT 也是一种鲁棒的算法，可以使用在很多领域。 GBDT 的超参越好，就能获得越好的性能。
+Gradient boosting decision tree has many popular implementations, such as [lightgbm](https://github.com/Microsoft/LightGBM), [xgboost](https://github.com/dmlc/xgboost), and [catboost](https://github.com/catboost/catboost), etc. GBDT is a great tool for solving the problem of traditional machine learning problem. Since GBDT is a robust algorithm, it could use in many domains. The better hyper-parameters for GBDT, the better performance you could achieve.
 
-NNI 是用来调优超参的平台，可以在 NNI 中尝试各种内置的搜索算法，并行运行多个 Trial。
+NNI is a great platform for tuning hyper-parameters, you could try various builtin search algorithm in nni and run multiple trials concurrently.
 
-## 1. GBDT 的搜索空间
+## 1. Search Space in GBDT
 
-GBDT 有很多超参，但哪些才会影响性能或计算速度呢？ 基于实践经验，建议如下（以 lightgbm 为例）：
+There are many hyper-parameters in GBDT, but what kind of parameters will affect the performance or speed? Based on some practical experience, some suggestion here(Take lightgbm as example):
 
-> * 获得更好的精度
+> * For better accuracy
 
-* `learning_rate`. `学习率`的范围应该是 [0.001, 0.9]。
+* `learning_rate`. The range of `learning rate` could be [0.001, 0.9].
 
-* `num_leaves`. `num_leaves` 与 `max_depth` 有关，不必两个值同时调整。
+* `num_leaves`. `num_leaves` is related to `max_depth`, you don't have to tune both of them.
 
-* `bagging_freq`. `bagging_freq` 可以是 [1, 2, 4, 8, 10]。
+* `bagging_freq`. `bagging_freq` could be [1, 2, 4, 8, 10]
 
-* `num_iterations`. 如果达到期望的拟合精度，可以调整得大一些。
+* `num_iterations`. May larger if underfitting.
 
-> * 加速
+> * For speed up
 
-* `bagging_fraction`. `bagging_fraction` 的范围应该是 [0.7, 1.0]。
+* `bagging_fraction`. The range of `bagging_fraction` could be [0.7, 1.0].
 
-* `feature_fraction`. `feature_fraction` 的范围应该是 [0.6, 1.0]。
+* `feature_fraction`. The range of `feature_fraction` could be [0.6, 1.0].
 
 * `max_bin`.
 
-> * 避免过拟合
+> * To avoid overfitting
 
-* `min_data_in_leaf`. 取决于数据集。
+* `min_data_in_leaf`. This depends on your dataset.
 
-* `min_sum_hessian_in_leaf`. 取决于数据集。
+* `min_sum_hessian_in_leaf`. This depend on your dataset.
 
-* `lambda_l1` 和 `lambda_l2`.
+* `lambda_l1` and `lambda_l2`.
 
 * `min_gain_to_split`.
 
 * `num_leaves`.
 
-更多信息可参考： [lightgbm](https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html) 和 [autoxgoboost](https://github.com/ja-thomas/autoxgboost/blob/master/poster_2018.pdf)
+Reference link: [lightgbm](https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html) and [autoxgoboost](https://github.com/ja-thomas/autoxgboost/blob/master/poster_2018.pdf)
 
-## 2. 任务描述
+## 2. Task description
 
-"auto-gbdt" 基于 LightGBM 和 NNI。 数据集有[训练数据](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train)和[测试数据](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train)。 根据数据中的特征和标签，训练一个 GBDT 回归模型，用来做预测。
+Now we come back to our example "auto-gbdt" which run in lightgbm and nni. The data including [train data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train). Given the features and label in train data, we train a GBDT regression model and use it to predict.
 
-## 3. 如何运行 NNI
+## 3. How to run in nni
 
-### 3.1 准备 Trial 代码
+### 3.1 Prepare your trial code
 
-基础代码如下：
+You need to prepare a basic code as following:
 
 ```python
 ...
@@ -62,23 +62,23 @@ def get_default_parameters():
 
 def load_data(train_path='./data/regression.train', test_path='./data/regression.test'):
     '''
-    读取或创建数据集
+    Load or create dataset
     '''
     ...
 
     return lgb_train, lgb_eval, X_test, y_test
 
 def run(lgb_train, lgb_eval, params, X_test, y_test):
-    # 训练
+    # train
     gbm = lgb.train(params,
                     lgb_train,
                     num_boost_round=20,
                     valid_sets=lgb_eval,
                     early_stopping_rounds=5)
-    # 预测
+    # predict
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # 评估
+    # eval
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 
@@ -90,9 +90,9 @@ if __name__ == '__main__':
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.2 准备搜索空间
+### 3.2 Prepare your search space.
 
-如果要调优 `num_leaves`, `learning_rate`, `bagging_fraction` 和 `bagging_freq`, 可创建一个 [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) 文件：
+If you like to tune `num_leaves`, `learning_rate`, `bagging_fraction` and `bagging_freq`, you could write a [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) as follow:
 
 ```json
 {
@@ -103,9 +103,9 @@ if __name__ == '__main__':
 }
 ```
 
-参考[这里](SearchSpaceSpec.md)，了解更多变量类型。
+More support variable type you could reference [here](SearchSpaceSpec.md).
 
-### 3.3 在代码中使用 NNI SDK
+### 3.3 Add SDK of nni into your code.
 
 ```diff
 +import nni
@@ -118,23 +118,23 @@ def get_default_parameters():
 
 def load_data(train_path='./data/regression.train', test_path='./data/regression.test'):
     '''
-    读取或创建数据集
+    Load or create dataset
     '''
     ...
 
     return lgb_train, lgb_eval, X_test, y_test
 
 def run(lgb_train, lgb_eval, params, X_test, y_test):
-    # 训练
+    # train
     gbm = lgb.train(params,
                     lgb_train,
                     num_boost_round=20,
                     valid_sets=lgb_eval,
                     early_stopping_rounds=5)
-    # 预测
+    # predict
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # 评估
+    # eval
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 
@@ -149,20 +149,20 @@ if __name__ == '__main__':
     PARAMS = get_default_parameters()
     PARAMS.update(RECEIVED_PARAMS)
 
-    # 训练
+    # train
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.4 编写配置文件并运行
+### 3.4 Write a config file and run it.
 
-在配置文件中，可以设置如下内容：
+In the config file, you could set some settings including:
 
-* Experiment 设置：`trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, 等等。
-* 平台设置：`trainingServicePlatform`，等等。
-* 路径设置：`searchSpacePath`, `trial codeDir`，等等。
-* 算法设置：选择 `Tuner` 算法，`优化方向`，等等。
+* Experiment setting: `trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, etc.
+* Platform setting: `trainingServicePlatform`, etc.
+* Path seeting: `searchSpacePath`, `trial codeDir`, etc.
+* Algorithm setting: select `tuner` algorithm, `tuner optimize_mode`, etc.
 
-config.yml 样例：
+An config.yml as follow:
 
 ```yaml
 authorName: default
@@ -170,17 +170,17 @@ experimentName: example_auto-gbdt
 trialConcurrency: 1
 maxExecDuration: 10h
 maxTrialNum: 10
-#可选项: local, remote, pai
+#choice: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: search_space.json
-#可选项: true, false
+#choice: true, false
 useAnnotation: false
 tuner:
-  #可选项: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC 需要先通过 nnictl 来安装)
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: TPE
   classArgs:
-    #可选项: maximize, minimize
+    #choice: maximize, minimize
     optimize_mode: minimize
 trial:
   command: python3 main.py
@@ -188,7 +188,7 @@ trial:
   gpuNum: 0
 ```
 
-使用下面的命令启动 Experiment：
+Run this experiment with command as follow:
 
 ```bash
 nnictl create --config ./config.yml
