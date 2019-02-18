@@ -114,7 +114,12 @@ if __name__ == '__main__':
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai'], default='local')
     parser.add_argument("--local_gpu", action='store_true')
     parser.add_argument("--preinstall", action='store_true')
+    parser.add_argument("--remote_user", type=str)
+    parser.add_argument("--remote_pwd", type=str)
     args = parser.parse_args()
+    print('--------------------remote account-------------')
+    print(args.remote_user)
+    print(args.remote_pwd)
 
     setup_experiment(args.preinstall)
 

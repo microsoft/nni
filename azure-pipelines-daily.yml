@@ -53,7 +53,7 @@ jobs:
   #   displayName: 'Integration tests'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts remote
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts remote --remote_user $(docker_user) --remote_pwd $(docker_pwd)
     displayName: 'Built-in dispatcher tests'
   - task: SSH@0
     inputs:
