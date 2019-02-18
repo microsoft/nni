@@ -1,9 +1,9 @@
-NNI 支持的训练平台介绍
+Introduction to NNI Training Services
 =====================================
 
 ..  toctree::
-    本机<tutorial_1_CR_exp_local_api>
-    远程<RemoteMachineMode>
+    Local<tutorial_1_CR_exp_local_api>
+    Remote<RemoteMachineMode>
     OpenPAI<PAIMode>
     Kubeflow<KubeflowMode>
     FrameworkController<FrameworkControllerMode>
