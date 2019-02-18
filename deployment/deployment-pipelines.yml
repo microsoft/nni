@@ -1,6 +1,6 @@
 
 jobs:
-- job: 'Build_upload_nni_artifacts'
+- job: 'Build_upload_nni_artifacts_ubuntu'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -53,7 +53,7 @@ jobs:
       docker push msranni/nni:$IMG_TAG
     displayName: 'build and upload nni docker image'
 
-- job: 'macOS_10_13'
+- job: 'Build_upload_nni_artifacts_macos'
   pool:
     vmImage: 'macOS 10.13'
   strategy:
