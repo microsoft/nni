@@ -108,6 +108,7 @@ export namespace ValidationSchemas {
             }),
             frameworkcontroller_config: joi.object({
                 storage: joi.string().min(1),
+                serviceAccountName: joi.string().min(1),
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()
@@ -184,16 +185,6 @@ export namespace ValidationSchemas {
             endTime: joi.number(),
             logDir: joi.string(),
             maxSequenceId: joi.number()
-        }
-    };
-    export const STARTTENSORBOARD = {
-        query: {
-            job_ids: joi.string().min(5).max(5).required()
-        }
-    };
-    export const STOPTENSORBOARD = {
-        query: {
-            endpoint: joi.string().uri().required()
         }
     };
 }

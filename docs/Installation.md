@@ -1,36 +1,28 @@
-**Installation of NNI**
-===
+# Installation of NNI
 
 Currently we only support installation on Linux & Mac.
 
 ## **Installation**
-* __Dependencies__
-
-  ```bash
-  python >= 3.5
-  git
-  wget
-  ```
-
-  python pip should also be correctly installed. You could use "python3 -m pip -v" to check pip version. 
 
 * __Install NNI through pip__
 
+  Prerequisite: `python >= 3.5`
   ```bash
-  python3 -m pip install --user --upgrade nni
+  python3 -m pip install --upgrade nni
   ```
 
 * __Install NNI through source code__
 
+  Prerequisite: `python >=3.5, git, wget`
   ```bash
-  git clone -b v0.5 https://github.com/Microsoft/nni.git
+  git clone -b v0.5.1 https://github.com/Microsoft/nni.git
   cd nni
-  source install.sh
+  ./install.sh
   ```
 
 * __Install NNI in docker image__
 
-  You can also install NNI in a docker image. Please follow the instructions [here](../deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
+  You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
 ## **System requirements**
 
@@ -66,5 +58,7 @@ Below are the minimum system requirements for NNI on macOS. Due to potential pro
 * [Define search space](SearchSpaceSpec.md)
 * [Config an experiment](ExperimentConfig.md)
 * [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
-* [How to run an experiment on multiple machines?](tutorial_2_RemoteMachineMode.md)
+* [How to run an experiment on multiple machines?](RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
+* [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)
+* [How to run an experiment on Kubernetes through FrameworkController?](FrameworkControllerMode.md)
