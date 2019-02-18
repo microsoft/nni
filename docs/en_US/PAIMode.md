@@ -62,17 +62,17 @@ nnictl create --config exp_pai.yml
 ```
 to start the experiment in pai mode. NNI will create OpenPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 
 You can see jobs created by NNI in the OpenPAI cluster's web portal, like:
-![](./img/nni_pai_joblist.jpg)
+![](../img/nni_pai_joblist.jpg)
 
 Notice: In pai mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic. 
 
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information. 
 
 Expand a trial information in trial list view, click the logPath link like:
-![](./img/nni_webui_joblist.jpg)
+![](../img/nni_webui_joblist.jpg)
 
 And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS:
-![](./img/nni_trial_hdfs_output.jpg)
+![](../img/nni_trial_hdfs_output.jpg)
 
 You can see there're three fils in output folder: stderr, stdout, and trial.log
 
