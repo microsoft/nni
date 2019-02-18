@@ -52,3 +52,40 @@ jobs:
       docker build -f Dockerfile -t msranni/nni:$IMG_TAG .
       docker push msranni/nni:$IMG_TAG
     displayName: 'build and upload nni docker image'
+
+- job: 'macOS_10_13'
+  pool:
+    vmImage: 'macOS 10.13'
+  strategy:
+    matrix:
+      Python36:
+        PYTHON_VERSION: '3.6'
+  steps:
+  - script: |
+      python3 -m pip install --upgrade pip setuptools --user
+      python3 -m pip install twine --user
+    displayName: 'Install twine'
+  - script: |
+      git tag v0.0.1 #For test only, TODO remove
+      cd deployment/pypi
+      if [ $(build_type) = 'prerelease' ]
+      then
+        echo 'building prerelease package...'
+        make version_ts=true build
+      else
+        echo 'building release package...'
+        make build
+      fi
+
+    displayName: 'build nni bdsit_wheel'
+  - script: |
+      cd deployment/pypi
+      if [ $(build_type) = 'prerelease' ]
+      then
+        echo 'uploading prerelease package to testpypi...'
+        python3 -m twine upload -u $(testpypi_user) -p $(testpypi_pwd) --repository-url https://test.pypi.org/legacy/ dist/*
+      else
+        echo 'uploading release package to pypi...'
+        python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
+      fi
+    displayName: 'upload nni package to pypi/testpypi'
