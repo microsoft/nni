@@ -40,9 +40,12 @@ def gen_new_config(config_file, training_service='local'):
 
     ts = get_yml_content('training_service.yml')[training_service]
     if training_service == 'remote':
-        print('-----------------remote---------------')
         print(os.environ['docker_user'])
         print(os.environ['docker_pwd'])
+        print(os.environ['docker_port'])
+        ts['machineList'][0]['port'] = os.environ['docker_port']
+        ts['machineList'][0]['username'] = os.environ['docker_user']
+        ts['machineList'][0]['passwd'] = os.environ['docker_pwd']
     config.update(ts)
     print(config)
     dump_yml_content(new_config_file, config)
