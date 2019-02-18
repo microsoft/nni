@@ -39,8 +39,10 @@ def gen_new_config(config_file, training_service='local'):
     new_config_file = config_file + '.tmp'
 
     ts = get_yml_content('training_service.yml')[training_service]
-    print(config)
-    print(ts)
+    if training_service == 'remote':
+        print('-----------------remote---------------')
+        print(os.environ['docker_user'])
+        print(os.environ['docker_user'])
     config.update(ts)
     print(config)
     dump_yml_content(new_config_file, config)
