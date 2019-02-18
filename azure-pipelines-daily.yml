@@ -33,15 +33,15 @@ jobs:
       runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
     displayName: 'Start docker'
-  # - task: DownloadSecureFile@1
-  #   inputs:
-  #     secureFile: id_rsa
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: remote_ci_private_key
   - script: |
-      # mkdir ~/.ssh
-      # ssh-keyscan 23.96.57.139 >> ~/.ssh/known_hosts
-      # cp $(Agent.TempDirectory)/id_rsa test/id_rsa
-      # chmod 600 test/id_rsa
-      $(docker_pwd) | ssh root@23.96.57.139 -p 22 "cat /tmp/nnitest/$(Build.BuildId)/port" > test/port
+      mkdir ~/.ssh
+      ssh-keyscan 23.96.57.139 >> ~/.ssh/known_hosts
+      cp $(Agent.TempDirectory)/remote_ci_private_key test/id_rsa
+      chmod 600 test/id_rsa
+      yes | ssh -i test/id_rsa root@23.96.57.139 -p 22 "cat /tmp/nnitest/$(Build.BuildId)/port" > test/port
       cat test/port
     displayName: 'Get docker port'
   - script: |
