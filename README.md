@@ -197,11 +197,11 @@ This project welcomes contributions and suggestions, we use [GitHub issues](http
 
 Issues with the **good first issue** label are simple and easy-to-start ones that we recommend new contributors to start with.
 
-To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/SetupNNIDeveloperEnvironment.md)
+To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/en_US/SetupNNIDeveloperEnvironment.md)
 
-Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/CONTRIBUTING.md)
+Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/en_US/CONTRIBUTING.md)
 
-We are in construction of the instruction for [How to Debug](docs/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
+We are in construction of the instruction for [How to Debug](docs/en_US/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
 
 ## **License** 
 The entire codebase is under [MIT license](LICENSE)
