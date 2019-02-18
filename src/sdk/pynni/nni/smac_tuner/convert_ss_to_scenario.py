@@ -41,6 +41,7 @@ def generate_pcs(nni_search_space_content):
     # parameter_name real [min_value, max_value] [default value] log
     # https://automl.github.io/SMAC3/stable/options.html
     '''
+    categorical_dict = {}
     search_space = nni_search_space_content
     with open('param_config_space.pcs', 'w') as pcs_fd:
         if isinstance(search_space, dict):
@@ -48,10 +49,14 @@ def generate_pcs(nni_search_space_content):
                 if isinstance(search_space[key], dict):
                     try:
                         if search_space[key]['_type'] == 'choice':
+                            choice_len = len(search_space[key]['_value'])
                             pcs_fd.write('%s categorical {%s} [%s]\n' % (
                                 key, 
-                                json.dumps(search_space[key]['_value'])[1:-1], 
-                                json.dumps(search_space[key]['_value'][0])))
+                                json.dumps(list(range(choice_len)))[1:-1], 
+                                json.dumps(0)))
+                            if key in categorical_dict:
+                                raise RuntimeError('%s has already existed, please make sure search space has no duplicate key.' % key)
+                            categorical_dict[key] = search_space[key]['_value']
                         elif search_space[key]['_type'] == 'randint':
                             # TODO: support lower bound in randint
                             pcs_fd.write('%s integer [0, %d] [%d]\n' % (
@@ -83,6 +88,8 @@ def generate_pcs(nni_search_space_content):
                         raise RuntimeError('_type or _value error.')
         else:
             raise RuntimeError('incorrect search space.')
+        return categorical_dict
+    return None
 
 def generate_scenario(ss_content):
     '''
@@ -119,7 +126,7 @@ def generate_scenario(ss_content):
         sce_fd.write('paramfile = param_config_space.pcs\n')
         sce_fd.write('run_obj = quality\n')
 
-    generate_pcs(ss_content)
+    return generate_pcs(ss_content)
 
 if __name__ == '__main__':
     generate_scenario('search_space.json')

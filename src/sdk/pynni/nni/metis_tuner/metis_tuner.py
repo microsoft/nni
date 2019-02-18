@@ -25,6 +25,8 @@ import random
 import statistics
 import sys
 
+import numpy as np
+
 from enum import Enum, unique
 from multiprocessing.dummy import Pool as ThreadPool
 
@@ -43,9 +45,9 @@ logger = logging.getLogger("Metis_Tuner_AutoML")
 
 @unique
 class OptimizeMode(Enum):
-    '''
+    """
     Optimize Mode class
-    '''
+    """
     Minimize = 'minimize'
     Maximize = 'maximize'
 
@@ -57,27 +59,38 @@ CONSTRAINT_PARAMS_IDX = []
 
 
 class MetisTuner(Tuner):
-    '''
+    """
     Metis Tuner
-    '''
+
+    More algorithm information you could reference here:
+    https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
+    """
 
     def __init__(self, optimize_mode="maximize", no_resampling=True, no_candidates=True,
                  selection_num_starting_points=10, cold_start_num=10):
-        '''
-        optimize_mode: is a string that including two mode "maximize" and "minimize"
+        """
+        Parameters
+        ----------
+        optimize_mode : str
+            optimize_mode is a string that including two mode "maximize" and "minimize"
         
-        no_resampling: True or False. Should Metis consider re-sampling as part of the search strategy?
+        no_resampling : bool
+            True or False. Should Metis consider re-sampling as part of the search strategy?
         If you are confident that the training dataset is noise-free, then you do not need re-sampling.
         
-        no_candidates: True or False. Should Metis suggest parameters for the next benchmark?
+        no_candidates: bool
+            True or False. Should Metis suggest parameters for the next benchmark?
         If you do not plan to do more benchmarks, Metis can skip this step.
         
-        selection_num_starting_points: how many times Metis should try to find the global optimal in the search space?
+        selection_num_starting_points: int
+            how many times Metis should try to find the global optimal in the search space?
         The higher the number, the longer it takes to output the solution.
         
-        cold_start_num: Metis need some trial result to get cold start. when the number of trial result is less than
+        cold_start_num: int
+            Metis need some trial result to get cold start. when the number of trial result is less than
         cold_start_num, Metis will randomly sample hyper-parameter for trial.
-        '''
+        """
+
         self.samples_x = []
         self.samples_y = []
         self.samples_y_aggregation = []
@@ -93,9 +106,12 @@ class MetisTuner(Tuner):
 
 
     def update_search_space(self, search_space):
-        '''
-        Update the self.x_bounds and self.x_types by the search_space.json
-        '''
+        """Update the self.x_bounds and self.x_types by the search_space.json
+
+        Parameters
+        ----------
+        search_space : dict
+        """
         self.x_bounds = [[] for i in range(len(search_space))]
         self.x_types = [NONE_TYPE for i in range(len(search_space))]
 
@@ -120,10 +136,10 @@ class MetisTuner(Tuner):
                         self.x_types[idx] = 'range_int'
                     else:
                         bounds = []
-                        for value in range(key_range[0], key_range[1], key_range[2]):
+                        for value in np.arange(key_range[0], key_range[1], key_range[2]):
                             bounds.append(value)
                         self.x_bounds[idx] = bounds
-                        self.x_types[idx] = 'discrete_int'        
+                        self.x_types[idx] = 'discrete_int'
                 elif key_type == 'randint':
                     self.x_bounds[idx] = [0, key_range[0]]
                     self.x_types[idx] = 'range_int'
@@ -150,9 +166,16 @@ class MetisTuner(Tuner):
 
 
     def _pack_output(self, init_parameter):
-        '''
-        Pack the output
-        '''
+        """Pack the output
+
+        Parameters
+        ----------
+        init_parameter : dict
+
+        Returns
+        -------
+        output : dict
+        """
         output = {}
         for i, param in enumerate(init_parameter):
             output[self.key_order[i]] = param
@@ -160,12 +183,19 @@ class MetisTuner(Tuner):
 
 
     def generate_parameters(self, parameter_id):
-        '''
-        This function is for generate parameters to trial. 
+        """Generate next parameter for trial
         If the number of trial result is lower than cold start number,
         metis will first random generate some parameters.
         Otherwise, metis will choose the parameters by the Gussian Process Model and the Gussian Mixture Model.
-        '''
+
+        Parameters
+        ----------
+        parameter_id : int
+    
+        Returns
+        -------
+        result : dict
+        """
         if self.samples_x or len(self.samples_x) < self.cold_start_num:
             init_parameter = _rand_init(self.x_bounds, self.x_types, 1)[0]
             results = self._pack_output(init_parameter)
@@ -176,24 +206,28 @@ class MetisTuner(Tuner):
                                       no_candidates=self.no_candidates,
                                       minimize_starting_points=self.minimize_starting_points,
                                       minimize_constraints_fun=self.minimize_constraints_fun)
-        
-        logger.info("Generate paramageters:\n", str(results))
+
+        logger.info("Generate paramageters:\n%s", str(results))
         return results
 
 
     def receive_trial_result(self, parameter_id, parameters, value):
-        '''
-        Tuner receive result from trial.
-        An value example as follow:
-            value: 99.5%
-        '''
+        """Tuner receive result from trial.
+
+        Parameters
+        ----------
+        parameter_id : int
+        parameters : dict
+        value : dict/float
+            if value is dict, it should have "default" key.
+        """
         value = self.extract_scalar_reward(value)
         if self.optimize_mode == OptimizeMode.Maximize:
             value = -value
 
         logger.info("Received trial result.")
-        logger.info("value is :", str(value))
-        logger.info("parameter is : ", str(parameters))
+        logger.info("value is :\t%f", value)
+        logger.info("parameter is :\t%s", str(parameters))
 
         # parse parameter to sample_x
         sample_x = [0 for i in range(len(self.key_order))]
@@ -432,9 +466,8 @@ def _rand_init(x_bounds, x_types, selection_num_starting_points):
 
 
 def get_median(temp_list):
-    '''
-    Return median
-    '''
+    """Return median
+    """
     num = len(temp_list)
     temp_list.sort()
     print(temp_list)
