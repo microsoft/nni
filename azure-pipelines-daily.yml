@@ -42,6 +42,7 @@ jobs:
       cp $(Agent.TempDirectory)/remote_ci_private_key test/id_rsa
       chmod 600 test/id_rsa
       yes | ssh -i test/id_rsa nni@23.96.57.139 -p 22 "cat /tmp/nnitest/$(Build.BuildId)/port" > port
+      mv port /test/port
       cat test/port
     displayName: 'Get docker port'
   - script: |
