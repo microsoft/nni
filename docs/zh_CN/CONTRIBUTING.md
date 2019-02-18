@@ -1,44 +1,56 @@
-# 改进 Neural Network Intelligence (NNI)
+# Contributing to Neural Network Intelligence (NNI)
 
-欢迎！！ 我们非常欢迎贡献者，特别是代码贡献者。
+Great!! We are always on the lookout for more contributors to our code base.
 
-首先，如果有什么不确定的事情，可随时提交问题或拉取请求。 不会有人因此而抱怨。:) 最有可能的是，会有礼貌的请求你修改一些内容。 我们会感激任何形式的贡献，不想用一堆规则来阻止这些贡献。
+Firstly, if you are unsure or afraid of anything, just ask or submit the issue or pull request anyways. You won't be yelled at for giving your best effort. The worst that can happen is that you'll be politely asked to change something. We appreciate any sort of contributions and don't want a wall of rules to get in the way of that.
 
-不管怎样，如果想要更有效的贡献代码，可以阅读以下内容。 本文档包括了所有在贡献中需要注意的要点，会加快合并代码、解决问题的速度。
+However, for those individuals who want a bit more guidance on the best way to contribute to the project, read on. This document will cover all the points we're looking for in your contributions, raising your chances of quickly merging or addressing your contributions.
 
-查看[快速入门](./QuickStart.md)来初步了解。
+Looking for a quickstart, get acquainted with our [Get Started](./QuickStart.md) guide.
 
-下面是一些简单的贡献指南。
+There are a few simple guidelines that you need to follow before providing your hacks.
 
-## 提交问题
+## Raising Issues
 
-在提出问题时，请说明以下事项：
+When raising issues, please specify the following:
 
-- 按照问题模板的内容来填写安装的细节，以便评审者检查。
-- 出现问题的场景 (尽量详细，以便重现问题)。
-- 错误和日志消息。
-- 其它可能有用的细节信息。
+* Setup details needs to be filled as specified in the issue template clearly for the reviewer to check.
+* A scenario where the issue occurred (with details on how to reproduce it).
+* Errors and log messages that are displayed by the software.
+* Any other details that might be useful.
 
-## 提交新功能建议
+## Submit Proposals for New Features
 
-- 在适配使用场景时，总会需要一些新的功能。 可以加入新功能的讨论，也可以直接提交新功能的拉取请求。
+* There is always something more that is required, to make it easier to suit your use-cases. Feel free to join the discussion on new features or raise a PR with your proposed change.
 
-- 在自己的 github 账户下 fork 存储库。 在 fork 后， 对于 add, commit, push, 或 squash (如需要) 等改动都需要详细的提交消息。 然后就可以提交拉取请求了。
+* Fork the repository under your own github handle. After cloning the repository. Add, commit, push and sqaush (if necessary) the changes with detailed commit messages to your fork. From where you can proceed to making a pull request.
 
-## 参与源代码和 Bug 修复
+## Contributing to Source Code and Bug Fixes
 
-拉取请求需要选好正确的标签，表明是 Bug 修复还是功能改进。 所有代码都需要遵循正确的命名约定和代码风格。
+Provide PRs with appropriate tags for bug fixes or enhancements to the source code. Do follow the correct naming conventions and code styles when you work on and do try to implement all code reviews along the way.
 
-参考[如何配置 NNI 的开发环境](./SetupNNIDeveloperEnvironment.md)，来安装开发环境。
+If you are looking for How to develop and debug the NNI source code, you can refer to [How to set up NNI developer environment doc](./SetupNNIDeveloperEnvironment.md) file in the `docs` folder.
 
-与[快速入门](QuickStart.md)类似。 其它内容，参考[NNI 文档](http://nni.readthedocs.io)。
+Similarly for [Quick Start](QuickStart.md). For everything else, refer to [NNI Home page](http://nni.readthedocs.io).
 
-## 处理现有问题
+## Solve Existing Issues
 
-查看[问题列表](https://github.com/Microsoft/nni/issues)，找到需要贡献的问题。 可以找找有 'good-first-issue' 或 'help-wanted' 标签的来开始贡献。
+Head over to [issues](https://github.com/Microsoft/nni/issues) to find issues where help is needed from contributors. You can find issues tagged with 'good-first-issue' or 'help-wanted' to contribute in.
 
-修改问题的注释和指派人来表明此问题已经开始跟进。 如果上述问题在一周内没有拉取请求或更新状态，这个问题会重新开放给所有人。 高优先级的 Bug 和回归问题需在一天内响应。
+A person looking to contribute can take up an issue by claiming it as a comment/assign their Github ID to it. In case there is no PR or update in progress for a week on the said issue, then the issue reopens for anyone to take up again. We need to consider high priority issues/regressions where response time must be a day or so.
 
-## 代码风格和命名约定
+## Code Styles & Naming Conventions
 
-NNI 遵循 [PEP8](https://www.python.org/dev/peps/pep-0008/) 的 Python 代码命名约定。在提交拉取请求时，请尽量遵循此规范。 可通过`flake8`或`pylint`的提示工具来帮助遵循规范。
+* We follow [PEP8](https://www.python.org/dev/peps/pep-0008/) for Python code and naming conventions, do try to adhere to the same when making a pull request or making a change. One can also take the help of linters such as `flake8` or `pylint`
+* We also follow [NumPy Docstring Style](https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy) for Python Docstring Conventions. During the [documentation building](CONTRIBUTING.md#documentation), we use [sphinx.ext.napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) to generate Python API documentation from Docstring.
+
+## Documentation
+
+Our documentation is built with [sphinx](http://sphinx-doc.org/), supporting [Markdown](https://guides.github.com/features/mastering-markdown/) and [reStructuredText](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) format. All our documentations are placed under [docs/en_US](https://github.com/Microsoft/nni/tree/master/docs).
+
+* Before submitting the documentation change, please **build homepage locally**: `cd docs/en_US && make html`, then you can see all the built documentation webpage under the folder `docs/en_US/_build/html`. It's also highly recommended taking care of **every WARNING** during the build, which is very likely the signal of a **deadlink** and other annoying issues.
+
+* For links, please consider using **relative paths** first. However, if the documentation is written in Markdown format, and:
+    
+    * It's an image link which needs to be formatted with embedded html grammar, please use global URL like `https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png`, which can be automatically generated by dragging picture onto [Github Issue](https://github.com/Microsoft/nni/issues/new) Box.
+    * It cannot be re-formatted by sphinx, such as source code, please use its global URL. For source code that links to our github repo, please use URLs rooted at `https://github.com/Microsoft/nni/tree/master/` ([mnist.py](https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/mnist.py) for example).
