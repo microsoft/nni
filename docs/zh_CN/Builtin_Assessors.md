@@ -1,15 +1,15 @@
-# Built-in Assessors
+# 内置 Assessor
 
-NNI provides state-of-the-art tuning algorithm in our builtin-assessors and makes them easy to use. Below is the brief overview of NNI current builtin Assessors:
+NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Assessor 的介绍：
 
-Note: Click the **Assessor's name** to get a detailed description of the algorithm, click the corresponding **Usage** to get the Assessor's installation requirements, suggested scenario and using example.
+注意：点击 **Assessor 的名称**可跳转到算法的详细描述，点击**用法**可看到 Assessor 的安装要求、建议场景和使用样例等等。
 
-| Assessor                                                                                                                                | Brief Introduction of Algorithm                                                                                                                                                                                                                                                                                                                                                                          |
-| --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [Medianstop](https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/medianstop_assessor/README.md) [(Usage)](#MedianStop)       | Medianstop is a simple early stopping rule. It stops a pending trial X at step S if the trial’s best objective value by step S is strictly worse than the median value of the running averages of all completed trials’ objectives reported up to step S. [Reference Paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf)                                   |
-| [Curvefitting](https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/curvefitting_assessor/README.md) [(Usage)](#Curvefitting) | Curve Fitting Assessor is a LPA(learning, predicting, assessing) algorithm. It stops a pending trial X at step S if the prediction of final epoch's performance worse than the best final performance in the trial history. In this algorithm, we use 12 curves to fit the accuracy curve. [Reference Paper](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf) |
+| Assessor                                                                                                                                   | 算法简介                                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Medianstop](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/medianstop_assessor/README.md) [(用法)](#MedianStop)       | Medianstop 是一个简单的提前终止算法。 如果 Trial X 的在步骤 S 的最好目标值比所有已完成 Trial 的步骤 S 的中位数值明显要低，这个 Trial 就会被提前停止。 [参考论文](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf)                                                         |
+| [Curvefitting](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/curvefitting_assessor/README.md) [(用法)](#Curvefitting) | Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的 Trial X 在 step S 比性能最好的 Trial 要差，就会提前终止它。 此算法中采用了 12 种曲线来拟合精度曲线。 [参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf) |
 
-## Usage of Builtin Assessors
+## 用法
 
 Use builtin assessors provided by NNI SDK requires to declare the **builtinAssessorName** and **classArgs** in `config.yml` file. In this part, we will introduce the detailed usage about the suggested scenarios, classArg requirements, and example for each assessor.
 
