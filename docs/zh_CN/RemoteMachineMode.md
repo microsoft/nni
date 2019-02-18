@@ -1,24 +1,24 @@
-# 在多机上运行 Experiment
+# Run an Experiment on Multiple Machines
 
-NNI 支持通过 SSH 通道在多台计算机上运行 Experiment，称为 `remote` 模式。 NNI 需要这些计算机的访问权限，并假定已配置好了深度学习训练环境。
+NNI supports running an experiment on multiple machines through SSH channel, called `remote` mode. NNI assumes that you have access to those machines, and already setup the environment for running deep learning training code.
 
-例如：有三台服务器，登录账户为 `bob`（注意：账户不必在各台计算机上一致）：
+e.g. Three machines and you login in with account `bob` (Note: the account is not necessarily the same on different machine):
 
-| IP       | 用户名 | 密码     |
-| -------- | --- | ------ |
-| 10.1.1.1 | bob | bob123 |
-| 10.1.1.2 | bob | bob123 |
-| 10.1.1.3 | bob | bob123 |
+| IP       | Username | Password |
+| -------- | -------- | -------- |
+| 10.1.1.1 | bob      | bob123   |
+| 10.1.1.2 | bob      | bob123   |
+| 10.1.1.3 | bob      | bob123   |
 
-## 设置 NNI 环境
+## Setup NNI environment
 
-按照[指南](QuickStart.md)在每台计算机上安装 NNI。
+Install NNI on each of your machines following the install guide [here](QuickStart.md).
 
-## 运行 Experiment
+## Run an experiment
 
-在另一台计算机，或在其中任何一台上安装 NNI，并运行 nnictl 工具。
+Install NNI on another machine which has network accessibility to those three machines above, or you can just use any machine above to run nnictl command line tool.
 
-以 `examples/trials/mnist-annotation` 为例。 `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` 来查看详细配置：
+We use `examples/trials/mnist-annotation` as an example here. `cat ~/nni/examples/trials/mnist-annotation/config_remote.yml` to see the detailed configuration file:
 
 ```yaml
 authorName: default
@@ -26,27 +26,27 @@ experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
-#可选项: local, remote, pai
+#choice: local, remote, pai
 trainingServicePlatform: remote
-#可选项: true, false
+#choice: true, false
 useAnnotation: true
 tuner:
-  #可选项: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC 需要通过 nnictl 安装)
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: TPE
   classArgs:
-    #可选项: maximize, minimize
+    #choice: maximize, minimize
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
   codeDir: .
   gpuNum: 0
-#local 模式下 machineList 可为空
+#machineList can be empty if the platform is local
 machineList:
   - ip: 10.1.1.1
     username: bob
     passwd: bob123
-    #使用默认端口 22 时，该配置可跳过
+    #port can be skip if using default ssh port 22
     #port: 22
   - ip: 10.1.1.2
     username: bob
@@ -56,10 +56,10 @@ machineList:
     passwd: bob123
 ```
 
-填好 `machineList` 部分，然后运行：
+Simply filling the `machineList` section and then run:
 
 ```bash
 nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
 ```
 
-来启动 Experiment。
+to start the experiment.
