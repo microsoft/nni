@@ -1,68 +1,68 @@
 # NNI Annotation
 
-## 概述
+## Overview
 
-为了获得良好的用户体验并减少对以后代码的影响，NNI 设计了通过 Annotation（标记）来使用的语法。 通过 Annotation，只需要在代码中加入一些注释字符串，就能启用 NNI，完全不影响代码原先的执行逻辑。
+To improve user experience and reduce user effort, we design an annotation grammar. Using NNI annotation, users can adapt their code to NNI just by adding some standalone annotating strings, which does not affect the execution of the original code.
 
-样例如下：
+Below is an example:
 
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
 learning_rate = 0.1
 ```
 
-此样例中，NNI 会从 (0.1, 0.01, 0.001) 中选择一个值赋给 learning_rate 变量。 第一行就是 NNI 的 Annotation，是 Python 中的一个字符串。 接下来的一行需要是赋值语句。 NNI 会根据 Annotation 行的信息，来给这一行的变量赋上相应的值。
+The meaning of this example is that NNI will choose one of several values (0.1, 0.01, 0.001) to assign to the learning_rate variable. Specifically, this first line is an NNI annotation, which is a single string. Following is an assignment statement. What nni does here is to replace the right value of this assignment statement according to the information provided by the annotation line.
 
-通过这种方式，不需要修改任何代码，代码既可以直接运行，又可以使用 NNI 来调参。
+In this way, users could either run the python code directly or launch NNI to tune hyper-parameter in this code, without changing any codes.
 
-## Annotation 的类型：
+## Types of Annotation:
 
-NNI 中，有 4 种类型的 Annotation；
+In NNI, there are mainly four types of annotation:
 
-### 1. 变量
+### 1. Annotate variables
 
 `'''@nni.variable(sampling_algo, name)'''`
 
-`@nni.variable` 用来标记变量。
+`@nni.variable` is used in NNI to annotate a variable.
 
-**参数**
+**Arguments**
 
-- **sampling_algo**: 指定搜索空间的采样算法。 可将其换成 NNI 支持的其它采样函数，函数要以 `nni.` 开头。例如，`choice` 或 `uniform`，详见 [SearchSpaceSpec](SearchSpaceSpec.md)。 
-- **name**: 将被赋值的变量名称。 注意，此参数应该与下面一行等号左边的值相同。
+- **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) such as `choice` or `uniform`. 
+- **name**: The name of the variable that the selected value will be assigned to. Note that this argument should be the same as the left value of the following assignment statement.
 
-例如：
+An example here is:
 
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
 learning_rate = 0.1
 ```
 
-### 2. 函数
+### 2. Annotate functions
 
 `'''@nni.function_choice(*functions, name)'''`
 
-`@nni.function_choice` 可以从几个函数中选择一个来执行。
+`@nni.function_choice` is used to choose one from several functions.
 
-**参数**
+**Arguments**
 
-- **\*functions**: 可选择的函数。 注意，必须是包括参数的完整函数调用。 例如 `max_pool(hidden_layer, pool_size)`。
-- **name**: 将被替换的函数名称。
+- **\*functions**: Several functions that are waiting to be selected from. Note that it should be a complete function call with arguments. Such as `max_pool(hidden_layer, pool_size)`.
+- **name**: The name of the function that will be replaced in the following assignment statement.
 
-例如：
+An example here is:
 
 ```python
 """@nni.function_choice(max_pool(hidden_layer, pool_size), avg_pool(hidden_layer, pool_size), name=max_pool)"""
 h_pooling = max_pool(hidden_layer, pool_size)
 ```
 
-### 3. 中间结果
+### 3. Annotate intermediate result
 
 `'''@nni.report_intermediate_result(metrics)'''`
 
-`@nni.report_intermediate_result` 用来返回中间结果，这和 <Trials.md> 中的 `nni.report_intermediate_result` 用法一样。
+`@nni.report_intermediate_result` is used to report intermediate result, whose usage is the same as `nni.report_intermediate_result` in <Trials.md>
 
-### 4. 最终结果
+### 4. Annotate final result
 
 `'''@nni.report_final_result(metrics)'''`
 
-`@nni.report_final_result` 用来返回当前 Trial 的最终结果，这和 <Trials.md> 中的 `nni.report_final_result` 用法一样。
+`@nni.report_final_result` is used to report the final result of the current trial, whose usage is the same as `nni.report_final_result` in <Trials.md>
