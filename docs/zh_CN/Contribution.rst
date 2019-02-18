@@ -1,8 +1,8 @@
 ###############################
-为 NNI 做贡献
+Contribute to NNI
 ###############################
 
 ..  toctree::
-    设置开发环境<SetupNNIDeveloperEnvironment>
-    贡献指南<CONTRIBUTING>
-    如何调试<HowToDebug>
+    Development Setup<SetupNNIDeveloperEnvironment>
+    Contribution Guide<CONTRIBUTING>
+    Debug HowTo<HowToDebug>
