@@ -20,19 +20,19 @@ jobs:
       targetFolder: /tmp/nnitest/$(Build.BuildId)/pynni
       overwrite: true
     displayName: 'Copy sdk files to remote machine'
-  # - task: CopyFilesOverSSH@0
-  #   inputs:
-  #     sshEndpoint: remote_139
-  #     sourceFolder: test
-  #     targetFolder: /tmp/nnitest/$(Build.BuildId)/test
-  #     overwrite: true
-  #   displayName: 'Copy test files to remote machine'
-  # - task: SSH@0
-  #   inputs:
-  #     sshEndpoint: remote_139
-  #     runOptions: commands
-  #     commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
-  #   displayName: 'Start docker'
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: remote_139
+      sourceFolder: test
+      targetFolder: /tmp/nnitest/$(Build.BuildId)/test
+      overwrite: true
+    displayName: 'Copy test files to remote machine'
+  - task: SSH@0
+    inputs:
+      sshEndpoint: remote_139
+      runOptions: commands
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
+    displayName: 'Start docker'
   # - script: | 
   #     python3 / --user $(docker_user) --pwd $(docker_pwd)
   # - task: DownloadSecureFile@1
