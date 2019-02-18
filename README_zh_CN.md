@@ -47,33 +47,33 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
         </ul>
       </td>
       <td>
-        <a href="docs/Builtin_Tuner.md">Tuner（调参器）</a>
+        <a href="docs/en_US/Builtin_Tuner.md">Tuner（调参器）</a>
         <ul>
-          <li><a href="docs/Builtin_Tuner.md#TPE">TPE</a></li>
-          <li><a href="docs/Builtin_Tuner.md#Random">Random Search（随机搜索）</a></li>
-          <li><a href="docs/Builtin_Tuner.md#Anneal">Anneal（退火算法）</a></li>
-          <li><a href="docs/Builtin_Tuner.md#Evolution">Naive Evolution（进化算法）</a></li>
-          <li><a href="docs/Builtin_Tuner.md#SMAC">SMAC</a></li>
-          <li><a href="docs/Builtin_Tuner.md#Batch">Batch（批处理）</a></li>
-          <li><a href="docs/Builtin_Tuner.md#Grid">Grid Search（遍历搜索）</a></li>
-          <li><a href="docs/Builtin_Tuner.md#Hyperband">Hyperband</a></li>
-          <li><a href="docs/Builtin_Tuner.md#NetworkMorphism">Network Morphism</a></li>
+          <li><a href="docs/en_US/Builtin_Tuner.md#TPE">TPE</a></li>
+          <li><a href="docs/en_US/Builtin_Tuner.md#Random">Random Search（随机搜索）</a></li>
+          <li><a href="docs/en_US/Builtin_Tuner.md#Anneal">Anneal（退火算法）</a></li>
+          <li><a href="docs/en_US/Builtin_Tuner.md#Evolution">Naive Evolution（进化算法）</a></li>
+          <li><a href="docs/en_US/Builtin_Tuner.md#SMAC">SMAC</a></li>
+          <li><a href="docs/en_US/Builtin_Tuner.md#Batch">Batch（批处理）</a></li>
+          <li><a href="docs/en_US/Builtin_Tuner.md#Grid">Grid Search（遍历搜索）</a></li>
+          <li><a href="docs/en_US/Builtin_Tuner.md#Hyperband">Hyperband</a></li>
+          <li><a href="docs/en_US/Builtin_Tuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README.md">ENAS</a></li>
-          <li><a href="docs/Builtin_Tuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
+          <li><a href="docs/en_US/Builtin_Tuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
         </ul> 
           <a href="docs/Builtin_Assessors.md#assessor">Assessor（评估器）</a> 
         <ul>
-          <li><a href="docs/Builtin_Assessors.md#Medianstop">Median Stop</a></li>
-          <li><a href="docs/Builtin_Assessors.md#Curvefitting">Curve Fitting</a></li>
+          <li><a href="docs/en_US/Builtin_Assessors.md#Medianstop">Median Stop</a></li>
+          <li><a href="docs/en_US/Builtin_Assessors.md#Curvefitting">Curve Fitting</a></li>
         </ul>
       </td>
       <td>
       <ul>
-        <li><a href="docs/tutorial_1_CR_exp_local_api.md">本地计算机</a></li>
-        <li><a href="docs/RemoteMachineMode.md">远程计算机</a></li>
-        <li><a href="docs/PAIMode.md">OpenPAI</a></li>
-        <li><a href="docs/KubeflowMode.md">Kubeflow</a></li>
-        <li><a href="docs/FrameworkControllerMode.md">基于 Kubernetes（AKS 等等）的 FrameworkController</a></li>
+        <li><a href="docs/en_US/tutorial_1_CR_exp_local_api.md">本地计算机</a></li>
+        <li><a href="docs/en_US/RemoteMachineMode.md">远程计算机</a></li>
+        <li><a href="docs/en_US/PAIMode.md">OpenPAI</a></li>
+        <li><a href="docs/en_US/KubeflowMode.md">Kubeflow</a></li>
+        <li><a href="docs/en_US/FrameworkControllerMode.md">基于 Kubernetes（AKS 等等）的 FrameworkController</a></li>
       </ul>
       </td>
     </tr>
@@ -108,7 +108,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
-* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/FAQ.md)。
+* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/FAQ.md)
 
 **通过源代码安装**
 
@@ -121,7 +121,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
     source install.sh   
 ```
 
-参考[安装 NNI](docs/Installation.md) 了解系统需求。
+For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)
 
 **验证安装**
 
@@ -168,7 +168,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
     -----------------------------------------------------------------------
     
 
-* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里的](docs/WebUI.md)更多页面示例。
+* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 [Here](docs/en_US/WebUI.md) are more Web UI pages.
 
 <table style="border: none">
     <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
@@ -177,30 +177,30 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **文档**
 
-* [NNI 概述](docs/Overview.md)
-* [快速入门](docs/QuickStart.md)
+* [NNI 概述](docs/en_US/Overview.md)
+* [快速入门](docs/en_US/QuickStart.md)
 
 ## **入门**
 
-* [安装 NNI](docs/Installation.md)
-* [使用命令行工具 nnictl](docs/NNICTLDOC.md)
-* [使用 NNIBoard](docs/WebUI.md)
-* [如何定义搜索空间](docs/SearchSpaceSpec.md)
-* [如何定义一次 Trial](docs/Trials.md)
-* [如何选择 Tuner、搜索算法](docs/Builtin_Tuner.md)
-* [配置 Experiment](docs/ExperimentConfig.md)
-* [如何使用 Annotation](docs/Trials.md#nni-python-annotation)
+* [安装 NNI](docs/en_US/Installation.md)
+* [使用命令行工具 nnictl](docs/en_US/NNICTLDOC.md)
+* [使用 NNIBoard](docs/en_US/WebUI.md)
+* [如何定义搜索空间](docs/en_US/SearchSpaceSpec.md)
+* [如何定义一次 Trial](docs/en_US/Trials.md)
+* [如何选择 Tuner、搜索算法](docs/en_US/Builtin_Tuner.md)
+* [配置 Experiment](docs/en_US/ExperimentConfig.md)
+* [如何使用 Annotation](docs/en_US/Trials.md#nni-python-annotation)
 
 ## **教程**
 
-* [在本机运行 Experiment (支持多 GPU 卡)](docs/tutorial_1_CR_exp_local_api.md)
-* [在多机上运行 Experiment](docs/RemoteMachineMode.md)
-* [在 OpenPAI 上运行 Experiment](docs/PAIMode.md)
-* [在 Kubeflow 上运行 Experiment。](docs/KubeflowMode.md)
-* [尝试不同的 Tuner](docs/tuners.rst)
-* [尝试不同的 Assessor](docs/assessors.rst)
-* [实现自定义 Tuner](docs/Customize_Tuner.md)
-* [实现自定义 Assessor](docs/Customize_Assessor.md)
+* [在本机运行 Experiment (支持多 GPU 卡)](docs/en_US/tutorial_1_CR_exp_local_api.md)
+* [在多机上运行 Experiment](docs/en_US/RemoteMachineMode.md)
+* [在 OpenPAI 上运行 Experiment](docs/en_US/PAIMode.md)
+* [在 Kubeflow 上运行 Experiment。](docs/en_US/KubeflowMode.md)
+* [尝试不同的 Tuner](docs/en_US/tuners.rst)
+* [尝试不同的 Assessor](docs/en_US/assessors.rst)
+* [实现自定义 Tuner](docs/en_US/Customize_Tuner.md)
+* [实现自定义 Assessor](docs/en_US/Customize_Assessor.md)
 * [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
 
 ## **贡献**
@@ -209,11 +209,11 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 推荐新贡献者从标有 **good first issue** 的简单需求开始。
 
-如要安装 NNI 开发环境，参考： [配置 NNI 开发环境](docs/SetupNNIDeveloperEnvironment.md)。
+To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/en_US/SetupNNIDeveloperEnvironment.md)
 
-在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/CONTRIBUTING.md)。
+Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/en_US/CONTRIBUTING.md)
 
-我们正在编写 [如何调试](docs/HowToDebug.md) 的页面，欢迎提交建议和问题。
+We are in construction of the instruction for [How to Debug](docs/en_US/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
 
 ## **许可协议**
 
