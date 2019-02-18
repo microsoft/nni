@@ -11,26 +11,26 @@ NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 As
 
 ## 用法
 
-Use builtin assessors provided by NNI SDK requires to declare the **builtinAssessorName** and **classArgs** in `config.yml` file. In this part, we will introduce the detailed usage about the suggested scenarios, classArg requirements, and example for each assessor.
+要使用 NNI 内置的 Assessor，需要在 `config.yml` 文件中添加 **builtinAssessorName** 和 **classArgs**。 这一节会介绍推荐的场景、参数等详细用法以及样例。
 
-Note: Please follow the format when you write your `config.yml` file.
+注意：参考样例中的格式来创建新的 `config.yml` 文件。
 
 <a name="MedianStop"></a>
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `Median Stop Assessor`
 
-> Builtin Assessor Name: **Medianstop**
+> 名称：**Medianstop**
 
-**Suggested scenario**
+**建议场景**
 
-It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress.
+适用于各种性能曲线，可用到各种场景中来加速优化过程。
 
-**Requirement of classArg**
+**参数**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', assessor will **stop** the trial with smaller expectation. If 'minimize', assessor will **stop** the trial with larger expectation.
-* **start_step** (*int, optional, default = 0*) - A trial is determined to be stopped or not, only after receiving start_step number of reported intermediate results.
+* **optimize_mode** (*maximize 或 minimize, 可选, 默认值为 maximize*) - 如果为 'maximize', Assessor 会在结果小于期望值时**终止** Trial。 如果为 'minimize'，Assessor 会在结果大于期望值时**终止** Trial。
+* **start_step** (*int, 可选, 默认值为 0*) - 只有收到 start_step 个中间结果后，才开始判断是否一个 Trial 应该被终止。
 
-**Usage example:**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -47,20 +47,20 @@ assessor:
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `Curve Fitting Assessor`
 
-> Builtin Assessor Name: **Curvefitting**
+> 名称：**Curvefitting**
 
-**Suggested scenario**
+**建议场景**
 
-It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. Even better, it's able to handle and assess curves with similar performance.
+适用于各种性能曲线，可用到各种场景中来加速优化过程。 更好的地方是，它能处理并评估性能类似的曲线。
 
-**Requirement of classArg**
+**参数**
 
-* **epoch_num** (*int, **required***) - The total number of epoch. We need to know the number of epoch to determine which point we need to predict.
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', assessor will **stop** the trial with smaller expectation. If 'minimize', assessor will **stop** the trial with larger expectation.
-* **start_step** (*int, optional, default = 6*) - A trial is determined to be stopped or not, we start to predict only after receiving start_step number of reported intermediate results.
-* **threshold** (*float, optional, default = 0.95*) - The threshold that we decide to early stop the worse performance curve. For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
+* **epoch_num** (*int, **必需***) - epoch 的总数。 需要此数据来决定需要预测点的总数。
+* **optimize_mode** (*maximize 或 minimize, 可选, 默认值为 maximize*) - 如果为 'maximize', Assessor 会在结果小于期望值时**终止** Trial。 如果为 'minimize'，Assessor 会在结果大于期望值时**终止** Trial。
+* **start_step** (*int, 可选, 默认值为 6*) - 只有收到 start_step 个中间结果后，才开始判断是否一个 Trial 应该被终止。
+* **threshold** (*float, 可选, 默认值为 0.95*) - 用来确定提前终止较差结果的阈值。 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
 
-**Usage example:**
+**使用样例：**
 
 ```yaml
 # config.yml
