@@ -1,6 +1,6 @@
 
 jobs:
-- job: 'Build_upload_nni_artifacts_ubuntu'
+- job: 'Build_upload_nni_ubuntu'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -16,7 +16,7 @@ jobs:
   - script: |
       # NNI build scripts (Makefile) uses branch tag as package version number
       # To test this pipeline without impacting nni testpypi/pypi packages, uncomment following git tag command
-      git tag v0.0.1
+      # git tag v0.0.1
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
       then
@@ -55,7 +55,7 @@ jobs:
       docker push msranni/nni:$IMG_TAG
     displayName: 'build and upload nni docker image'
 
-- job: 'Build_upload_nni_artifacts_macos'
+- job: 'Build_upload_nni_macos'
   pool:
     vmImage: 'macOS 10.13'
   strategy:
@@ -73,7 +73,7 @@ jobs:
   - script: |
       # NNI build scripts (Makefile) uses branch tag as package version number
       # To test this pipeline without impacting nni testpypi/pypi packages, uncomment following git tag command
-      git tag v0.0.1
+      # git tag v0.0.1
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
       then
