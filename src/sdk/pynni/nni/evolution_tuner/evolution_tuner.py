@@ -17,16 +17,12 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
+"""
 evolution_tuner.py including:
     class OptimizeMode
     class Individual
     class EvolutionTuner
-if OptimizeMode is 'minimize', it means the tuner need to minimize the reward
-that received from Trial.
-if OptimizeMode is 'maximize', it means the tuner need to maximize the reward
-that received from Trial.
-'''
+"""
 
 import copy
 from enum import Enum, unique
@@ -40,18 +36,22 @@ from .. import parameter_expressions
 
 @unique
 class OptimizeMode(Enum):
-    '''
-    Optimize Mode class
-    '''
+    """Optimize Mode class
+
+    if OptimizeMode is 'minimize', it means the tuner need to minimize the reward
+    that received from Trial.
+
+    if OptimizeMode is 'maximize', it means the tuner need to maximize the reward
+    that received from Trial.
+    """
     Minimize = 'minimize'
     Maximize = 'maximize'
 
 
 @unique
 class NodeType(Enum):
-    '''
-    Node Type class
-    '''
+    """Node Type class
+    """
     Root = 'root'
     Type = '_type'
     Value = '_value'
@@ -59,9 +59,8 @@ class NodeType(Enum):
 
 
 def json2space(x, oldy=None, name=NodeType.Root.value):
-    '''
-    Change search space from json format to hyperopt format
-    '''
+    """Change search space from json format to hyperopt format
+    """
     y = list()
     if isinstance(x, dict):
         if NodeType.Type.value in x.keys():
@@ -89,9 +88,8 @@ def json2space(x, oldy=None, name=NodeType.Root.value):
 
 
 def json2paramater(x, is_rand, random_state, oldy=None, Rand=False, name=NodeType.Root.value):
-    '''
-    Json to pramaters.
-    '''
+    """Json to pramaters.
+    """
     if isinstance(x, dict):
         if NodeType.Type.value in x.keys():
             _type = x[NodeType.Type.value]
@@ -131,6 +129,16 @@ def json2paramater(x, is_rand, random_state, oldy=None, Rand=False, name=NodeTyp
 
 
 def _split_index(params):
+    """Delete index information from params
+
+    Parameters
+    ----------
+    params : dict
+
+    Returns
+    -------
+    result : dict
+    """
     result = {}
     for key in params:
         if isinstance(params[key], dict):
@@ -142,10 +150,19 @@ def _split_index(params):
 
 
 class Individual(object):
-    '''
+    """
     Indicidual class to store the indv info.
-    '''
+    """
+
     def __init__(self, config=None, info=None, result=None, save_dir=None):
+        """
+        Parameters
+        ----------
+        config : str
+        info : str
+        result : float
+        save_dir : str
+        """
         self.config = config
         self.result = result
         self.info = info
@@ -157,6 +174,13 @@ class Individual(object):
             ", config :" + str(self.config) + ", result: " + str(self.result)
 
     def mutation(self, config=None, info=None, save_dir=None):
+        """
+        Parameters
+        ----------
+        config : str
+        info : str
+        save_dir : str
+        """
         self.result = None
         self.config = config
         self.restore_dir = self.save_dir
@@ -165,13 +189,22 @@ class Individual(object):
 
 
 class EvolutionTuner(Tuner):
-    '''
-    EvolutionTuner is tuner using evolution algorithm.
-    '''
+    """
+    EvolutionTuner is tuner using navie evolution algorithm.
+    """
 
     def __init__(self, optimize_mode, population_size=32):
+        """
+        Parameters
+        ----------
+        optimize_mode : str
+        population_size : int
+            initial population size. The larger population size,
+        the better evolution performance.
+        """
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.population_size = population_size
+
         self.trial_result = []
         self.searchspace_json = None
         self.total_data = {}
@@ -180,10 +213,13 @@ class EvolutionTuner(Tuner):
         self.space = None
 
     def update_search_space(self, search_space):
-        '''
-        Update search space
-        search_space: search_space the json file that user pre-defined.
-        '''
+        """Update search space. 
+        Search_space contains the information that user pre-defined.
+
+        Parameters
+        ----------
+        search_space : dict
+        """
         self.searchspace_json = search_space
         self.space = json2space(self.searchspace_json)
 
@@ -198,8 +234,15 @@ class EvolutionTuner(Tuner):
             self.population.append(Individual(config=config))
 
     def generate_parameters(self, parameter_id):
-        """Returns a set of trial (hyper-)parameters, as a serializable object.
+        """Returns a dict of trial (hyper-)parameters, as a serializable object.
+
+        Parameters
+        ----------
         parameter_id : int
+    
+        Returns
+        -------
+        config : dict
         """
         if not self.population:
             raise RuntimeError('The population is empty')
@@ -235,10 +278,14 @@ class EvolutionTuner(Tuner):
         return config
 
     def receive_trial_result(self, parameter_id, parameters, value):
-        '''
-        Record an observation of the objective function
-        parameters: dict of parameters
-        value: final metrics of the trial, including reward
+        '''Record the result from a trial
+
+        Parameters
+        ----------
+        parameters: dict
+        value : dict/float
+            if value is dict, it should have "default" key.
+            value is final metrics of the trial.
         '''
         reward = self.extract_scalar_reward(value)
         if parameter_id not in self.total_data:

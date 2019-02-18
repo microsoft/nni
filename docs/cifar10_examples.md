@@ -47,7 +47,7 @@ The code for CNN training of each hyperparameters set, paying particular attenti
 
 * Use `nni.get_next_parameter()` to get next training hyperparameter set.
 * Use `nni.report_intermediate_result(acc)` to report the intermedian result after finish each epoch.
-* Use `nni.report_intermediate_result(acc)` to report the final result before the trial end.
+* Use `nni.report_final_result(acc)` to report the final result before the trial end.
 
 *Implemented code directory: [main.py][9]*
 
@@ -77,7 +77,7 @@ nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
 [2]: https://pytorch.org/
 [3]: https://www.cs.toronto.edu/~kriz/cifar.html
 [4]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
-[5]: https://github.com/Microsoft/nni/blob/master/docs/Trials.md
+[5]: Trials.md
 [6]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml
 [7]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml
 [8]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/search_space.json

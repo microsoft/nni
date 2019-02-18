@@ -5,7 +5,6 @@ Gradient boosting decision tree has many popular implementations, such as [light
 
 NNI is a great platform for tuning hyper-parameters, you could try various builtin search algorithm in nni and run multiple trials concurrently. 
 
-
 ## 1. Search Space in GBDT
 There are many hyper-parameters in GBDT, but what kind of parameters will affect the performance or speed? Based on some practical experience, some suggestion here(Take lightgbm as example):
 
@@ -13,7 +12,7 @@ There are many hyper-parameters in GBDT, but what kind of parameters will affect
 * `learning_rate`. The range of `learning rate` could be [0.001, 0.9].
 
 * `num_leaves`. `num_leaves` is related to `max_depth`, you don't have to tune both of them.
-    
+
 * `bagging_freq`. `bagging_freq` could be [1, 2, 4, 8, 10]
 
 * `num_iterations`. May larger if underfitting.
@@ -22,7 +21,7 @@ There are many hyper-parameters in GBDT, but what kind of parameters will affect
 * `bagging_fraction`. The range of `bagging_fraction` could be [0.7, 1.0].
 
 * `feature_fraction`. The range of `feature_fraction` could be [0.6, 1.0].
-    
+
 * `max_bin`.
 
 > * To avoid overfitting
@@ -37,19 +36,19 @@ There are many hyper-parameters in GBDT, but what kind of parameters will affect
 * `num_leaves`.
 
 Reference link:
-[lightgbm](https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html) and 
-[autoxgoboost](https://github.com/ja-thomas/autoxgboost/blob/master/poster_2018.pdf)
+[lightgbm](https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html) and [autoxgoboost](https://github.com/ja-thomas/autoxgboost/blob/master/poster_2018.pdf)
 
 ## 2. Task description
-Now we come back to our example "auto-gbdt" which run in lightgbm and nni. The data including [train data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train). 
+Now we come back to our example "auto-gbdt" which run in lightgbm and nni. The data including [train data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train).
 Given the features and label in train data, we train a GBDT regression model and use it to predict.
 
 ## 3. How to run in nni
 
 ### 3.1 Prepare your trial code
-You need to prepare a basic code as following:
-``` python
 
+You need to prepare a basic code as following:
+
+```python
 ...
 
 def get_default_parameters():
@@ -75,7 +74,7 @@ def run(lgb_train, lgb_eval, params, X_test, y_test):
     # predict
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # eval 
+    # eval
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 
@@ -88,9 +87,9 @@ if __name__ == '__main__':
 ```
 
 ### 3.2 Prepare your search space.
-If you like to tune `num_leaves`, `learning_rate`, `bagging_fraction` and `bagging_freq`, 
-you could write a [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) as follow:
-```
+If you like to tune `num_leaves`, `learning_rate`, `bagging_fraction` and `bagging_freq`, you could write a [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) as follow:
+
+```json
 {
     "num_leaves":{"_type":"choice","_value":[31, 28, 24, 20]},
     "learning_rate":{"_type":"choice","_value":[0.01, 0.05, 0.1, 0.2]},
@@ -99,9 +98,10 @@ you could write a [search_space.json](https://github.com/Microsoft/nni/blob/mast
 }
 ```
 
-More support variable type you could reference [here](https://github.com/Microsoft/nni/blob/master/docs/SearchSpaceSpec.md).
+More support variable type you could reference [here](SearchSpaceSpec.md).
 
 ### 3.3 Add SDK of nni into your code.
+
 ```diff
 +import nni
 ...
@@ -129,7 +129,7 @@ def run(lgb_train, lgb_eval, params, X_test, y_test):
     # predict
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # eval 
+    # eval
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 +   nni.report_final_result(rmse)
@@ -147,6 +147,7 @@ if __name__ == '__main__':
 ```
 
 ### 3.4 Write a config file and run it.
+
 In the config file, you could set some settings including:
 
 * Experiment setting: `trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, etc.
@@ -155,6 +156,7 @@ In the config file, you could set some settings including:
 * Algorithm setting: select `tuner` algorithm, `tuner optimize_mode`, etc.
 
 An config.yml as follow:
+
 ```yaml
 authorName: default
 experimentName: example_auto-gbdt
@@ -180,6 +182,7 @@ trial:
 ```
 
 Run this experiment with command as follow:
-```
+
+```bash
 nnictl create --config ./config.yml
 ```
