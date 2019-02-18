@@ -74,10 +74,10 @@ jobs:
       if [ $(build_type) = 'prerelease' ]
       then
         echo 'building prerelease package...'
-        make version_ts=true build
+        PATH=$HOME/Library/Python/3.7/bin:$PATH make version_ts=true build
       else
         echo 'building release package...'
-        make build
+        PATH=$HOME/Library/Python/3.7/bin:$PATH make build
       fi
 
     displayName: 'build nni bdsit_wheel'
