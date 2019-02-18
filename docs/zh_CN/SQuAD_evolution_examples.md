@@ -1,55 +1,55 @@
-# 在阅读理解上使用自动模型架构搜索
+# Automatic Model Architecture Search for Reading Comprehension
 
-该样例展示了如何使用遗传算法为阅读理解任务找到好的模型架构。
+This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension.
 
-## 1. 搜索空间
+## 1. Search Space
 
-对于阅读理解项目，注意力和循环神经网络（RNN）已经被证明非常有效。 使用的搜索空间如下：
+Since attention and recurrent neural network (RNN) have been proven effective in Reading Comprehension. We conclude the search space as follow:
 
-1. IDENTITY (Effectively 表示继续训练)。
-2. INSERT-RNN-LAYER (插入 LSTM。 在 Experiment 中比较了 GRU 和 LSTM 的性能后，我们决定在这里采用 LSTM。)
+1. IDENTITY (Effectively means keep training).
+2. INSERT-RNN-LAYER (Inserts a LSTM. Comparing the performance of GRU and LSTM in our experiment, we decided to use LSTM here.)
 3. REMOVE-RNN-LAYER
-4. INSERT-ATTENTION-LAYER (插入注意力层。)
+4. INSERT-ATTENTION-LAYER(Inserts an attention layer.)
 5. REMOVE-ATTENTION-LAYER
-6. ADD-SKIP (在随机层之间一致).
-7. REMOVE-SKIP (移除随机跳过).
+6. ADD-SKIP (Identity between random layers).
+7. REMOVE-SKIP (Removes random skip).
 
-![](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad/ga_squad.png)
+![](../../examples/trials/ga_squad/ga_squad.png)
 
-### 新版本
+### New version
 
-另一个时间更快，性能更好的版本正在开发中。 很快将发布。
+Also we have another version which time cost is less and performance is better. We will release soon.
 
-## 2. 如何在本机运行此样例？
+## 2. How to run this example in local?
 
-### 2.1 使用下载脚本来下载数据
+### 2.1 Use downloading script to download data
 
-执行下列命令来下载所需要的数据：
+Execute the following command to download needed files using the downloading script:
 
 ```bash
 chmod +x ./download.sh
 ./download.sh
 ```
 
-或手动下载
+Or Download manually
 
-1. 在 https://rajpurkar.github.io/SQuAD-explorer/ 下载 "dev-v1.1.json" 和 "train-v1.1.json"。
+1. download "dev-v1.1.json" and "train-v1.1.json" in https://rajpurkar.github.io/SQuAD-explorer/
 
 ```bash
 wget https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json
 wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
 ```
 
-2. 在 https://nlp.stanford.edu/projects/glove/ 下载 "glove.840B.300d.txt"。
+2. download "glove.840B.300d.txt" in https://nlp.stanford.edu/projects/glove/
 
 ```bash
 wget http://nlp.stanford.edu/data/glove.840B.300d.zip
 unzip glove.840B.300d.zip
 ```
 
-### 2.2 更新配置
+### 2.2 Update configuration
 
-修改 `nni/examples/trials/ga_squad/config.yml`，以下是默认配置：
+Modify `nni/examples/trials/ga_squad/config.yml`, here is the default configuration:
 
 ```yaml
 authorName: default
@@ -57,9 +57,9 @@ experimentName: example_ga_squad
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 1
-#可选项: local, remote
+#choice: local, remote
 trainingServicePlatform: local
-#可选项: true, false
+#choice: true, false
 useAnnotation: false
 tuner:
   codeDir: ~/nni/examples/tuners/ga_customer_tuner
@@ -73,21 +73,21 @@ trial:
   gpuNum: 0
 ```
 
-在 "Trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
+In the "trial" part, if you want to use GPU to perform the architecture search, change `gpuNum` from `0` to `1`. You need to increase the `maxTrialNum` and `maxExecDuration`, according to how long you want to wait for the search result.
 
-### 2.3 提交任务
+### 2.3 submit this job
 
 ```bash
 nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
 ```
 
-## 3 在 OpenPAI 上运行此样例
+## 3 Run this example on OpenPAI
 
-根据上传大小的限制，仅上传源代码，并在训练过程中下载数据。 本 Experiment 需要的内存 `memoryMB >= 32G`，训练过程可能需要数小时。
+Due to the memory limitation of upload, we only upload the source code and complete the data download and training on OpenPAI. This experiment requires sufficient memory that `memoryMB >= 32G`, and the training may last for several hours.
 
-### 3.1 更新配置
+### 3.1 Update configuration
 
-修改 `nni/examples/trials/ga_squad/config_pai.yml`，以下是默认配置：
+Modify `nni/examples/trials/ga_squad/config_pai.yml`, here is the default configuration:
 
 ```yaml
 authorName: default
@@ -95,71 +95,71 @@ experimentName: example_ga_squad
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
-#可选项: local, remote, pai
+#choice: local, remote, pai
 trainingServicePlatform: pai
-#可选项: true, false
+#choice: true, false
 useAnnotation: false
-# nni_manager 的 ip
+#Your nni_manager ip
 nniManagerIp: 10.10.10.10
 tuner:
-  codeDir: ../../tuners/ga_customer_tuner
+  codeDir: https://github.com/Microsoft/nni/tree/master/examples/tuners/ga_customer_tuner
   classFileName: customer_tuner.py
   className: CustomerTuner
   classArgs:
     optimize_mode: maximize
 trial:
   command: chmod +x ./download.sh && ./download.sh && python3 trial.py
-  codeDir: https://github.com/Microsoft/nni/tree/master/examples/tuners/ga_customer_tuner
+  codeDir: .
   gpuNum: 0
   cpuNum: 1
   memoryMB: 32869
-  #在 OpenPAI 上运行 NNI 任务的 Docker 映像
+  #The docker image to run nni job on OpenPAI
   image: msranni/nni:latest
-  #在 OpenPAI 的 hdfs 目录上存储数据的目录，如：'hdfs://host:port/directory'
+  #The hdfs directory to store data on OpenPAI, format 'hdfs://host:port/directory'
   dataDir: hdfs://10.10.10.10:9000/username/nni
-  #在 OpenPAI 的 hdfs 目录上存储输出的目录，如：'hdfs://host:port/directory'
+  #The hdfs directory to store output data generated by nni, format 'hdfs://host:port/directory'
   outputDir: hdfs://10.10.10.10:9000/username/nni
 paiConfig:
-  #登录 OpenPAI 的用户名
+  #The username to login OpenPAI
   userName: username
-  #登录 OpenPAI 的密码
+  #The password to login OpenPAI
   passWord: password
-  # OpenPAI 的 RESTful 服务器地址
+  #The host of restful server of OpenPAI
   host: 10.10.10.10
 ```
 
-将默认值改为个人账户和服务器信息。 包括 `nniManagerIp`, `dataDir`, `outputDir`, `userName`, `passWord` 和 `host`。
+Please change the default value to your personal account and machine information. Including `nniManagerIp`, `dataDir`, `outputDir`, `userName`, `passWord` and `host`.
 
-在 "trial" 部分中，如果需要使用 GPU 来进行架构搜索，可将 `gpuNum` 从 `0` 改为 `1`。 根据训练时长，可以增加 `maxTrialNum` 和 `maxExecDuration`。
+In the "trial" part, if you want to use GPU to perform the architecture search, change `gpuNum` from `0` to `1`. You need to increase the `maxTrialNum` and `maxExecDuration`, according to how long you want to wait for the search result.
 
-`trialConcurrency` 是并发运行的 Trial 的数量。如果将 `gpuNum` 设置为 1，则需要与 GPU 数量一致。
+`trialConcurrency` is the number of trials running concurrently, which is the number of GPUs you want to use, if you are setting `gpuNum` to 1.
 
-### 3.2 提交任务
+### 3.2 submit this job
 
 ```bash
 nnictl create --config ~/nni/examples/trials/ga_squad/config_pai.yml
 ```
 
-## 4. 代码实现
+## 4. Technical details about the trial
 
-### 4.1 实现方法
+### 4.1 How does it works
 
-基于进化算法架构的问答和其它样例一样，有两个部分：Trial 和 Tuner。
+The evolution-algorithm based architecture for question answering has two different parts just like any other examples: the trial and the tuner.
 
-### 4.2 Trial
+### 4.2 The trial
 
-Trial 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
+The trial has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
 
-* `attention.py` 包含了 Tensorflow 注意力算法的实现。
-* `data.py` 包含了数据处理函数。
-* `evaluate.py` 包含了评估脚本。
-* `graph.py` 包含了计算图的定义。
-* `rnn.py` 包含了 TensorFlow 的 GRU 实现。
-* `train_model.py` 是整个文档模型的封装。
+* `attention.py` contains an implementation for attention mechanism in Tensorflow.
+* `data.py` contains functions for data preprocessing.
+* `evaluate.py` contains the evaluation script.
+* `graph.py` contains the definition of the computation graph.
+* `rnn.py` contains an implementation for GRU in Tensorflow.
+* `train_model.py` is a wrapper for the whole question answering model.
 
-这些文件中，`trial.py` 和 `graph_to_tf.py` 非常特别。
+Among those files, `trial.py` and `graph_to_tf.py` are special.
 
-`graph_to_tf.py` 有一个叫做 `graph_to_network`的函数，其框架代码如下：
+`graph_to_tf.py` has a function named as `graph_to_network`, here is its skeleton code:
 
 ```python
 def graph_to_network(input1,
@@ -189,33 +189,33 @@ def graph_to_network(input1,
             # ......
         elif graph.layers[topo_i].graph_type == LayerType.attention.value:
             # ......
-        # 处理更多层
+        # More layers to handle
 ```
 
-正如我们看到的，这个函数实际上是个编译器。它将内部模型的 DAG 配置`图`（在`模型配置格式`章节介绍）转换为 Tensorflow 的计算图。
+As we can see, this function is actually a compiler, that converts the internal model DAG configuration (which will be introduced in the `Model configuration format` section) `graph`, to a Tensorflow computation graph.
 
 ```python
 topology = graph.is_topology()
 ```
 
-将内部图表示进行拓扑排序，代码在下列循环中：
+performs topological sorting on the internal graph representation, and the code inside the loop:
 
 ```python
 for _, topo_i in enumerate(topology):
 ```
 
-执行实际转换，将每层映射为 TensorFlow 计算图中的一部分。
+performs actually conversion that maps each layer to a part in Tensorflow computation graph.
 
-### 4.3 Tuner
+### 4.3 The tuner
 
-Tuner 比 Trial 代码简单很多。 它们共用了同样的 `graph.py`。 此外，Tuner 有 `customer_tuner.py`，其中最重要的类是 `CustomerTuner`：
+The tuner is much more simple than the trial. They actually share the same `graph.py`. Besides, the tuner has a `customer_tuner.py`, the most important class in which is `CustomerTuner`:
 
 ```python
 class CustomerTuner(Tuner):
     # ......
 
     def generate_parameters(self, parameter_id):
-        """将一组 Trial 图配置作为序列化对象返回。
+        """Returns a set of trial graph config, as a serializable object.
         parameter_id : int
         """
         if len(self.population) <= 0:
@@ -243,7 +243,7 @@ class CustomerTuner(Tuner):
     # ......
 ```
 
-重载函数 `generate_parameters` 实现了简单的变异算法。 代码如下：
+As we can see, the overloaded method `generate_parameters` implements a pretty naive mutation algorithm. The code lines:
 
 ```python
             if self.population[0].result > self.population[1].result:
@@ -251,11 +251,11 @@ class CustomerTuner(Tuner):
             indiv = copy.deepcopy(self.population[0])
 ```
 
-控制突变过程。 它会在种群中随机取出两个个体，对更好结果的一个保留数据，并突变另一个。
+controls the mutation process. It will always take two random individuals in the population, only keeping and mutating the one with better result.
 
-### 4.4 模型配置格式
+### 4.4 Model configuration format
 
-这是模型配置的样例，在架构搜索过程中，从 Tuner 传入 Trial 的代码。
+Here is an example of the model configuration, which is passed from the tuner to the trial in the architecture search procedure.
 
 ```json
 {
@@ -297,16 +297,16 @@ class CustomerTuner(Tuner):
             "output": [],
             "is_delete": false
         },
-        {"Comment": "实际图会有更多层。"}
+        {"Comment": "More layers will be here for actual graphs."}
     ]
 }
 ```
 
-每个模型配置都有一个 "layers" 部分，这是层定义的 JSON 列表。 每层的定义也是一个 JSON 对象：
+Every model configuration will have a "layers" section, which is a JSON list of layer definitions. The definition of each layer is also a JSON object, where:
 
-* `type` 是层的类型。 0, 1, 2, 3, 4 对应注意力、自注意力、RNN、输入和输出层。
-* `size` 是输出的长度。 "x", "y" 对应文档长度和问题长度。
-* `input_size` 是该层的输入数量。
-* `input` 表示输入层的索引。
-* `output` 是输出层的索引，该层会作为这些层的输入。
-* `is_delete` 表示此层是否可用。
+* `type` is the type of the layer. 0, 1, 2, 3, 4 corresponds to attention, self-attention, RNN, input and output layer respectively.
+* `size` is the length of the output. "x", "y" correspond to document length / question length, respectively.
+* `input_size` is the number of inputs the layer has.
+* `input` is the indices of layers taken as input of this layer.
+* `output` is the indices of layers use this layer's output as their input.
+* `is_delete` means whether the layer is still available.
