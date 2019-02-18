@@ -1,42 +1,42 @@
-# 常见问答
+# FAQ
 
-此页为常见问题
+This page is for frequent asked questions and answers.
 
-### tmp 目录没空间了
+### tmp folder fulled
 
-nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下的文件。 当遇到下列错误时，先试试清空 **tmp** 目录。
+nnictl will use tmp folder as a temporary folder to copy files under codeDir when executing experimentation creation. When met errors like below, try to clean up **tmp** folder first.
 
 > OSError: [Errno 28] No space left on device
 
-### OpenPAI 模式下无法获得 Trial 的数据
+### Cannot get trials' metrics in OpenPAI mode
 
-在 OpenPAI 的训练模式下，NNI 管理器会在端口 51189 启动一个 RESTful 服务，来接收 OpenPAI 集群中 Trial 任务的指标数据。 如果在 OpenPAI 模式下的网页中不能看到任何指标，需要检查 51189 端口是否在防火墙规则中已打开。
+In OpenPAI training mode, we start a rest server which listens on 51189 port in NNI Manager to receive metrcis reported from trials running in OpenPAI cluster. If you didn't see any metrics from WebUI in OpenPAI mode, check your machine where NNI manager runs on to make sure 51189 port is turned on in the firewall rule.
 
-### 安装时出现 Segmentation Fault (core dumped)
+### Segmentation Fault (core dumped) when installing
 
 > make: *** [install-XXX] Segmentation fault (core dumped)
 
-可依次试试以下方法：
+Please try the following solutions in turn:
 
-* 更新或重新安装 Python 中的 pip： `python3 -m pip install -U pip`
-* 在安装 NNI 时，添加 `--no-cache-dir` 参数：`python3 -m pip install nni --no-cache-dir`
+* Update or reinstall you current python's pip like `python3 -m pip install -U pip`
+* Install NNI with `--no-cache-dir` flag like `python3 -m pip install nni --no-cache-dir`
 
 ### Job management error: getIPV4Address() failed because os.networkInterfaces().eth0 is undefined.
 
-计算机没有 eth0 设备，需要在配置中设置 [nniManagerIp](ExperimentConfig.md)。
+Your machine don't have eth0 device, please set [nniManagerIp](ExperimentConfig.md) in your config file manually.
 
-### 运行时间超过了 MaxDuration ，但没有停止
+### Exceed the MaxDuration but didn't stop
 
-当 Experiment 到达最长运行时间时，nniManager 不会创建新的 Trial ，但除非手动停止 Experiment，运行中的 Trial 会继续运行直到结束。
+When the duration of experiment reaches the maximum duration, nniManager will not create new trials, but the existing trials will continue unless user manually stop the experiment.
 
-### 使用 `nnictl stop` 无法停止 Experiment
+### Could not stop an experiment using `nnictl stop`
 
-如果在实验运行时，升级了 nni 或删除了一些配置文件，会因为丢失配置文件而出现这类错误。 可以使用 `ps -ef | grep node` 命令来找到 Experiment 的 pid，并用 `kill -9 {pid}` 命令来停止 Experiment 进程。
+If you upgrade your NNI or you delete some config files of NNI when there is an experiment running, this kind of issue may happen because the loss of config file. You could use `ps -ef | grep node` to find the pid of your experiment, and use `kill -9 {pid}` to kill it manually.
 
-### 无法在虚拟机的 NNI 网页中看到 `指标数据`
+### Could not get `default metric` in webUI of virtual machines
 
-将虚拟机的网络配置为桥接模式来让虚拟机能被网络访问，并确保虚拟机的防火墙没有禁止相关端口。
+Config the network mode to bridge mode or other mode that could make virtual machine's host accessible from external machine, and make sure the port of virtual machine is not forbidden by firewall.
 
-### 帮助改进
+### Help us improve
 
-在创建新问题前，请在 https://github.com/Microsoft/nni/issues 查看是否有人已经报告了相似的问题。
+Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.
