@@ -169,8 +169,8 @@ You can use these commands to get more information about the experiment
 </table>
 
 ## **Documentation**
-* [NNI overview](docs/Overview.md)
-* [Quick start](docs/QuickStart.md)
+* [NNI overview](docs/en_US/Overview.md)
+* [Quick start](docs/en_US/QuickStart.md)
 
 ## **How to**
 * [Install NNI](docs/en_US/Installation.md)
