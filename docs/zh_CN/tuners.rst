@@ -1,16 +1,16 @@
 #################
-Tuner（调参器）
+Tuners
 #################
 
-NNI 能用简单快速的方法来配置超参调优算法，称之为 **Tuner**。
+NNI provides an easy way to adopt an approach to set up parameter tuning algorithms, we call them **Tuner**.
 
-Tuner 从 Trial 接收指标结果，来评估一组超参或网络结构的性能。 然后 Tuner 会将下一组超参或网络结构的配置发送给新的 Trial。
+Tuner receives metrics from `Trial` to evaluate the performance of a specific parameters/architecture configures. And tuner sends next hyper-parameter or architecture configure to Trial.
 
-在 NNI 中，有两种方法来选择调优算法：可以使用内置的 Tuner，也可以自定义 Tuner。 另外，也可以使用 Advisor，它同时支持 Tuner 和 Assessor 的功能。
+In NNI, we support two approaches to set the tuner: first is directly use builtin tuner provided by nni sdk, second is customize a tuner file by yourself. We also have Advisor that combines the functinality of Tuner & Assessor.
 
-详细信息，参考以下教程：
+For details, please refer to the following tutorials:
 
 ..  toctree::
-    内置 Tuner<Builtin_Tuner>
-    自定义 Tuner<Customize_Tuner>
-    自定义 Advisor<Customize_Advisor>
+    Builtin Tuners<Builtin_Tuner>
+    Customized Tuners<Customize_Tuner>
+    Customized Advisor<Customize_Advisor>
