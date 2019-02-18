@@ -40,10 +40,7 @@ def gen_new_config(config_file, training_service='local'):
 
     ts = get_yml_content('training_service.yml')[training_service]
     if training_service == 'remote':
-        print(os.environ['docker_user'])
-        print(os.environ['docker_pwd'])
-        print(os.environ['docker_port'])
-        ts['machineList'][0]['port'] = os.environ['docker_port']
+        ts['machineList'][0]['port'] = int(os.environ['docker_port'])
         ts['machineList'][0]['username'] = os.environ['docker_user']
         ts['machineList'][0]['passwd'] = os.environ['docker_pwd']
     config.update(ts)
@@ -117,8 +114,6 @@ if __name__ == '__main__':
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai'], default='local')
     parser.add_argument("--local_gpu", action='store_true')
     parser.add_argument("--preinstall", action='store_true')
-    parser.add_argument("--remote_user", type=str)
-    parser.add_argument("--remote_pwd", type=str)
     args = parser.parse_args()
 
     setup_experiment(args.preinstall)
