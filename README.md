@@ -189,7 +189,7 @@ You can use these commands to get more information about the experiment
 * [Try different tuners](docs/tuners.rst)
 * [Try different assessors](docs/assessors.rst)
 * [Implement a customized tuner](docs/Customize_Tuner.md)
-* [Implement a customized assessor](examples/assessors/README.md)
+* [Implement a customized assessor](docs/Customize_Assessor.md)
 * [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](examples/trials/ga_squad/README.md)
 
 ## **Contribute**
