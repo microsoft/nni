@@ -8,7 +8,7 @@ Here is an experimental result of MNIST after using 'Curvefitting' Assessor in '
 
 *Implemented code directory: config_assessor.yml <https://github.com/Microsoft/nni/blob/master/examples/trials/mnist/config_assessor.yml>*
 
-..  image:: ./img/Assessor.png
+..  image:: ../img/Assessor.png
 
 Like Tuners, users can either use built-in Assessors, or customize an Assessor on their own. Please refer to the following tutorials for detail:
 
