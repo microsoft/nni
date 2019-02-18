@@ -42,7 +42,7 @@ def gen_new_config(config_file, training_service='local'):
     if training_service == 'remote':
         print('-----------------remote---------------')
         print(os.environ['docker_user'])
-        print(os.environ['docker_user'])
+        print(os.environ['docker_pwd'])
     config.update(ts)
     print(config)
     dump_yml_content(new_config_file, config)
