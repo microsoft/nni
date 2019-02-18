@@ -1,20 +1,20 @@
-## 创建多阶段的 Experiment
+## Create multi-phase experiment
 
-通常情况下，每个 Trial 作业只从 Tuner 获得一组配置（如超参），然后运行 Experiment。也就是说，通过这组超参来训练模型，并返回结果给 Tuner。 有时候，可能需要在一个 Trial 作业中训练多个模型，并在它们之间共享信息，或者通过创建更少的 Trial 任务来节省资源。例如：
+Typically each trial job gets single set of configuration (e.g. hyper parameters) from tuner and do some kind of experiment, let's say train a model with that hyper parameter and reports its result to tuner. Sometimes you may want to train multiple models within one trial job to share information between models or saving system resource by creating less trial jobs, for example:
 
-1. 在一个 Trial 作业中依次训练多个模型。这样，后面的模型可以利用先前模型的权重和其它信息，并可以使用不同的超参组合。
-2. 在有限的资源上训练大量的模型，将多个模型放到一个 Trial 作业中训练，能够节约系统创建 Trial 作业的时间。
-3. 还有的情况，希望在一个 Trial 任务中训练多个需要不同超参的模型。注意，如果为一个 Trial 作业分配多个 GPU，并且会并发训练模型，需要在代码中正确分配 GPU 资源。
+1. Train multiple models sequentially in one trial job, so that later models can leverage the weights or other information of prior models and may use different hyper parameters.
+2. Train large amount of models on limited system resource, combine multiple models together to save system resource to create large amount of trial jobs.
+3. Any other scenario that you would like to train multiple models with different hyper parameters in one trial job, be aware that if you allocate multiple GPUs to a trial job and you train multiple models concurrently within on trial job, you need to allocate GPU resource properly by your trial code.
 
-在上述情况中，可利用 NNI 的多阶段 Experiment 来在同一个 Trial 任务中训练具有不同超参的多个模型。
+In above cases, you can leverage NNI multi-phase experiment to train multiple models with different hyper parameters within each trial job.
 
-多阶段 Experiment，是指 Trial 作业会从 Tuner 请求多次超参，并多次返回最终结果。
+Multi-phase experiments refer to experiments whose trial jobs request multiple hyper parameters from tuner and report multiple final results to NNI.
 
-参考以下步骤来使用多阶段 Experiment：
+To use multi-phase experiment, please follow below steps:
 
-1. 实现 nni.multi_phase.MultiPhaseTuner。 例如，[ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py) 就是一个实现了 nni.multi_phase.MultiPhaseTuner 的 Tuner。 在实现多阶段 Tuner 时，可能要用 generate_parameters 中的 trial_job_id 参数来为每个 Trial 作业生成超参。
+1. Implement nni.multi_phase.MultiPhaseTuner. For example, this [ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py) is a multi-phase Tuner which implements nni.multi_phase.MultiPhaseTuner. While implementing your MultiPhaseTuner, you may want to use the trial_job_id parameter of generate_parameters method to generate hyper parameters for each trial job.
 
-2. 设置 `multiPhase` 的值为 `true`，并将第一步中实现的 Tuner 作为自定义 Tuner 进行配置，例如：
+2. Set `multiPhase` field to `true`, and configure your tuner implemented in step 1 as customized tuner in configuration file, for example:
     
     ```yaml
     ...
@@ -28,16 +28,16 @@
     ...
     ```
 
-3. 根据需要，在 Trial 代码中可多次调用 nni.get_next_parameter() API，例如：
+3. Invoke nni.get_next_parameter() API for multiple times as needed in a trial, for example:
     
     ```python
     for i in range(5):
-        # 从 Tuner 中获得参数
+        # get parameter from tuner
         tuner_param = nni.get_next_parameter()
     
-        # 使用参数
+        # consume the params
         # ...
-        # 为上面获取的参数返回最终结果
+        # report final result somewhere for the parameter retrieved above
         nni.report_final_result()
         # ...
     ```
