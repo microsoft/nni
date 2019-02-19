@@ -436,17 +436,17 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写  | 是否必需 | 默认值 | 说明                                  |
-  | ------ | ---- | --- | ----------------------------------- |
-  | --name | True |     | The name of package to be installed |
+  | 参数及缩写  | 是否必需 | 默认值 | 说明      |
+  | ------ | ---- | --- | ------- |
+  | --name | True |     | 要安装的包名称 |
 
 * **nnictl package show**
   
-  * Description
+  * 说明
     
-    List the packages supported.
+    列出支持的安装包
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl package show
@@ -454,15 +454,15 @@ nnictl 支持的命令：
 
 <a name="version"></a>
 
-### Check NNI version
+### 检查 NNI 版本
 
 * **nnictl --version**
   
-  * Description
+  * 说明
     
-    Describe the current version of NNI installed.
+    显示当前安装的 NNI 的版本。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl --version
