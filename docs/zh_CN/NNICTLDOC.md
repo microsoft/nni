@@ -109,66 +109,66 @@ nnictl 支持的命令：
     
     * 选项
   
-  | 参数及缩写          | Required | Default | Description                            |
-  | -------------- | -------- | ------- | -------------------------------------- |
-  | id             | False    |         | ID of the experiment you want to set   |
-  | --filename, -f | True     |         | the file storing your new search space |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                    |
+  | -------------- | ----- | --- | --------------------- |
+  | id             | False |     | 需要设置的 Experiment 的 id |
+  | --filename, -f | True  |     | 新的搜索空间文件名             |
   
   * **nnictl update concurrency**
     
-    * Description
+    * 说明
       
-      You can use this command to update an experiment's concurrency.
+      可以用此命令来更新 Experiment 的并发设置。
     
-    * Usage
+    * 用法
       
       ```bash
       nnictl update concurrency [OPTIONS]
       ```
     
-    * Options
+    * 选项
   
-  | Name, shorthand | Required | Default | Description                             |
-  | --------------- | -------- | ------- | --------------------------------------- |
-  | id              | False    |         | ID of the experiment you want to set    |
-  | --value, -v     | True     |         | the number of allowed concurrent trials |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                    |
+  | ----------- | ----- | --- | --------------------- |
+  | id          | False |     | 需要设置的 Experiment 的 id |
+  | --value, -v | True  |     | 允许同时运行的 Trial 的数量     |
   
   * **nnictl update duration**
     
-    * Description
+    * 说明
       
-      You can use this command to update an experiment's duration.
+      可以用此命令来更新 Experiment 的运行时间。
     
-    * Usage
+    * 用法
       
       ```bash
       nnictl update duration [OPTIONS]
       ```
     
-    * Options
-  | Name, shorthand | Required | Default | Description                                                                                                                                  |
-  | --------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-  | id              | False    |         | ID of the experiment you want to set                                                                                                         |
-  | --value, -v     | True     |         | the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days. |
+    * 选项
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                                                                      |
+  | ----------- | ----- | --- | ----------------------------------------------------------------------- |
+  | id          | False |     | 需要设置的 Experiment 的 id                                                   |
+  | --value, -v | True  |     | Experiment 持续时间如没有单位，则为秒。 后缀可以为 's' 即秒 (默认值), 'm' 即分钟, 'h' 即小时或 'd' 即天。 |
   
   * **nnictl update trialnum**
     
-    * Description
+    * 说明
       
-      You can use this command to update an experiment's maxtrialnum.
+      可以用此命令来更新 Experiment 的最大 Trial 数量。
     
-    * Usage
+    * 用法
       
       ```bash
       nnictl update trialnum [OPTIONS]
       ```
     
-    * Options
+    * 选项
   
-  | Name, shorthand | Required | Default | Description                                   |
-  | --------------- | -------- | ------- | --------------------------------------------- |
-  | id              | False    |         | ID of the experiment you want to set          |
-  | --value, -v     | True     |         | the new number of maxtrialnum you want to set |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                    |
+  | ----------- | ----- | --- | --------------------- |
+  | id          | False |     | 需要设置的 Experiment 的 id |
+  | --value, -v | True  |     | 需要设置的 maxtrialnum 的数量 |
 
 <a name="trial"></a>
 
@@ -176,109 +176,109 @@ nnictl 支持的命令：
   
   * **nnictl trial ls**
     
-    * Description
+    * 说明
       
-      You can use this command to show trial's information.
+      使用此命令来查看 Trial 的信息。
     
-    * Usage
+    * 用法
       
       ```bash
       nnictl trial ls
       ```
     
-    * Options
+    * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
+  | ----- | ----- | --- | --------------------- |
+  | id    | False |     | 需要设置的 Experiment 的 id |
   
   * **nnictl trial kill**
     
-    * Description
+    * 说明
       
-      You can use this command to kill a trial job.
+      此命令用于终止 Trial。
     
-    * Usage
+    * 用法
       
       ```bash
       nnictl trial kill [OPTIONS]
       ```
     
-    * Options
+    * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
-  | --trialid, -t   | True     |         | ID of the trial you want to kill.    |
+  | 参数及缩写         | 是否必需  | 默认值 | 说明                    |
+  | ------------- | ----- | --- | --------------------- |
+  | id            | False |     | 需要设置的 Experiment 的 id |
+  | --trialid, -t | True  |     | 需要终止的 Trial 的 id。     |
 
 <a name="top"></a>
 
 * **nnictl top**
   
-  * Description
+  * 说明
     
-    Monitor all of running experiments.
+    查看正在运行的 Experiment。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl top
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                                                                                  |
-  | --------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set                                                                         |
-  | --time, -t      | False    |         | The interval to update the experiment status, the unit of time is second, and the default value is 3 second. |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                                   |
+  | ---------- | ----- | --- | ------------------------------------ |
+  | id         | False |     | 需要设置的 Experiment 的 id                |
+  | --time, -t | False |     | 刷新 Experiment 状态的时间间隔，单位为秒，默认值为 3 秒。 |
 
 <a name="experiment"></a>
 
-### Manage experiment information
+### 管理 Experiment 信息
 
 * **nnictl experiment show**
   
-  * Description
+  * 说明
     
-    Show the information of experiment.
+    显示 Experiment 的信息。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment show
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
+  | ----- | ----- | --- | --------------------- |
+  | id    | False |     | 需要设置的 Experiment 的 id |
 
 * **nnictl experiment status**
   
-  * Description
+  * 说明
     
-    Show the status of experiment.
+    显示 Experiment 的状态。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment status
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
+  | ----- | ----- | --- | --------------------- |
+  | id    | False |     | 需要设置的 Experiment 的 id |
 
 * **nnictl experiment list**
   
-  * Description
+  * 说明
     
-    Show the information of all the (running) experiments.
+    显示正在运行的 Experiment 的信息
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment list
@@ -288,11 +288,11 @@ nnictl 支持的命令：
 
 * **nnictl config show**
   
-  * Description
+  * 说明
     
-    Display the current context information.
+    显示当前上下文信息。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl config show
@@ -300,145 +300,145 @@ nnictl 支持的命令：
 
 <a name="log"></a>
 
-### Manage log
+### 管理日志
 
 * **nnictl log stdout**
   
-  * Description
+  * 说明
     
-    Show the stdout log content.
+    显示 stdout 日志内容。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl log stdout [options]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
-  | --head, -h      | False    |         | show head lines of stdout            |
-  | --tail, -t      | False    |         | show tail lines of stdout            |
-  | --path, -p      | False    |         | show the path of stdout file         |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
+  | ---------- | ----- | --- | --------------------- |
+  | id         | False |     | 需要设置的 Experiment 的 id |
+  | --head, -h | False |     | 显示 stdout 开始的若干行      |
+  | --tail, -t | False |     | 显示 stdout 结尾的若干行      |
+  | --path, -p | False |     | 显示 stdout 文件的路径       |
 
 * **nnictl log stderr**
   
-  * Description
+  * 说明
     
-    Show the stderr log content.
+    显示 stderr 日志内容。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl log stderr [options]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
-  | --head, -h      | False    |         | show head lines of stderr            |
-  | --tail, -t      | False    |         | show tail lines of stderr            |
-  | --path, -p      | False    |         | show the path of stderr file         |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
+  | ---------- | ----- | --- | --------------------- |
+  | id         | False |     | 需要设置的 Experiment 的 id |
+  | --head, -h | False |     | 显示 stderr 开始的若干行      |
+  | --tail, -t | False |     | 显示 stderr 结尾的若干行      |
+  | --path, -p | False |     | 显示 stderr 文件的路径       |
 
 * **nnictl log trial**
   
-  * Description
+  * 说明
     
-    Show trial log path.
+    显示 Trial 日志的路径。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl log trial [options]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description     |
-  | --------------- | -------- | ------- | --------------- |
-  | id              | False    |         | the id of trial |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明         |
+  | ----- | ----- | --- | ---------- |
+  | id    | False |     | Trial 的 id |
 
 <a name="webui"></a>
 
-### Manage webui
+### 管理网页
 
 * **nnictl webui url**
 
 <a name="tensorboard"></a>
 
-### Manage tensorboard
+### 管理 tensorboard
 
 * **nnictl tensorboard start**
   
-  * Description
+  * 说明
     
-    Start the tensorboard process.
+    启动 tensorboard 进程。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl tensorboard start
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
-  | --trialid       | False    |         | ID of the trial                      |
-  | --port          | False    | 6006    | The port of the tensorboard process  |
+  | 参数及缩写     | 是否必需  | 默认值  | 说明                    |
+  | --------- | ----- | ---- | --------------------- |
+  | id        | False |      | 需要设置的 Experiment 的 id |
+  | --trialid | False |      | Trial 的 id            |
+  | --port    | False | 6006 | tensorboard 进程的端口     |
   
-  * Detail
+  * 详细说明
     
-    1. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later. 
-    2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path. 
-    3. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
-    4. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
-    5. If there is only one trial job, you don't need to set trialid. If there are multiple trial jobs running, you should set the trialid, or you could use [nnictl tensorboard start --trialid all] to map --logdir to all trial log paths.
+    1. NNICTL 当前仅支持本机和远程平台的 tensorboard，其它平台暂不支持。 
+    2. 如果要使用 tensorboard，需要将 tensorboard 日志输出到环境变量 [NNI_OUTPUT_DIR] 路径下。 
+    3. 在 local 模式中，nnictl 会直接设置 --logdir=[NNI_OUTPUT_DIR] 并启动 tensorboard 进程。
+    4. 在 remote 模式中，nnictl 会创建一个 ssh 客户端来将日志数据从远程计算机复制到本机临时目录中，然后在本机开始 tensorboard 进程。 需要注意的是，nnictl 只在使用此命令时复制日志数据，如果要查看最新的 tensorboard 结果，需要再次执行 nnictl tensorboard 命令。
+    5. 如果只有一个 Trial 任务，不需要设置 trialid。 如果有多个运行的 Trial 作业，需要设置 trialid，或使用 [nnictl tensorboard start --trialid all] 来将 --logdir 映射到所有 Trial 的路径。
 
 * **nnictl tensorboard stop**
   
-  * Description
+  * 说明
     
-    Stop all of the tensorboard process.
+    停止所有 tensorboard 进程。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl tensorboard stop
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
+  | ----- | ----- | --- | --------------------- |
+  | id    | False |     | 需要设置的 Experiment 的 id |
 
 <a name="package"></a>
 
-### Manage package
+### 管理安装包
 
 * **nnictl package install**
   
-  * Description
+  * 说明
     
-    Install the packages needed in nni experiments.
+    安装 NNI 实验所需要的包。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl package install [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                         |
-  | --------------- | -------- | ------- | ----------------------------------- |
-  | --name          | True     |         | The name of package to be installed |
+  | 参数及缩写  | 是否必需 | 默认值 | 说明                                  |
+  | ------ | ---- | --- | ----------------------------------- |
+  | --name | True |     | The name of package to be installed |
 
 * **nnictl package show**
   
