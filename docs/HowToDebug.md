@@ -16,7 +16,7 @@ There are three parts that might have logs in NNI. They are nnimanager, dispatch
 
 ### nnictl
 
-All possible errors errors when launching NNI can be found here.
+All possible errors that happen when launching NNI can be found here.
 
 You can use `nnictl log stderr` to find error information. Or find it in `~/nni/nnictl/log/stderr`.
 
