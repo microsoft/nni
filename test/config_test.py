@@ -120,8 +120,6 @@ def run(args):
             subprocess.run(['nnictl', 'stop'])
 
 if __name__ == '__main__':
-    import tensorflow as tf
-    print('TF VERSION:', tf.__version__)
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai'], default='local')
