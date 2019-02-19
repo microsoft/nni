@@ -160,9 +160,9 @@ if __name__ == '__main__':
 * Experiment 设置：`trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, 等等。
 * 平台设置：`trainingServicePlatform`，等等。
 * 路径设置：`searchSpacePath`, `trial codeDir`，等等。
-* Algorithm setting: select `tuner` algorithm, `tuner optimize_mode`, etc.
+* 算法设置：选择 `Tuner` 算法，`优化方向`，等等。
 
-An config.yml as follow:
+config.yml 样例：
 
 ```yaml
 authorName: default
@@ -170,17 +170,17 @@ experimentName: example_auto-gbdt
 trialConcurrency: 1
 maxExecDuration: 10h
 maxTrialNum: 10
-#choice: local, remote, pai
+#可选项: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: search_space.json
-#choice: true, false
+#可选项: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC should be installed through nnictl)
+  #可选项: TPE, Random, Anneal, Evolution, BatchTuner
+  #SMAC (SMAC 需要先通过 nnictl 来安装)
   builtinTunerName: TPE
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode: minimize
 trial:
   command: python3 main.py
@@ -188,7 +188,7 @@ trial:
   gpuNum: 0
 ```
 
-Run this experiment with command as follow:
+使用下面的命令启动 Experiment：
 
 ```bash
 nnictl create --config ./config.yml
