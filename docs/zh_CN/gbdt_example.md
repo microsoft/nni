@@ -159,7 +159,7 @@ if __name__ == '__main__':
 
 * Experiment 设置：`trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, 等等。
 * 平台设置：`trainingServicePlatform`，等等。
-* Path seeting: `searchSpacePath`, `trial codeDir`, etc.
+* 路径设置：`searchSpacePath`, `trial codeDir`，等等。
 * Algorithm setting: select `tuner` algorithm, `tuner optimize_mode`, etc.
 
 An config.yml as follow:
