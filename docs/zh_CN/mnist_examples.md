@@ -5,44 +5,44 @@
 - [MNIST 中使用 NNI API](#mnist)
 - [MNIST 中使用 NNI 标记（annotation）](#mnist-annotation)
 - [在 Keras 中使用 MNIST](#mnist-keras)
-- [MNIST -- tuning with batch tuner](#mnist-batch)
-- [MNIST -- tuning with hyperband](#mnist-hyperband)
-- [MNIST -- tuning within a nested search space](#mnist-nested)
-- [distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)
-- [distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)
+- [MNIST -- 用批处理调参器来调优](#mnist-batch)
+- [MNIST -- 用 hyperband 调优](#mnist-hyperband)
+- [MNIST -- 用嵌套搜索空间调优](#mnist-nested)
+- [用 Kubeflow 运行分布式的 MNIST (tensorflow)](#mnist-kubeflow-tf)
+- [用 Kubeflow 运行分布式的 MNIST (PyTorch)](#mnist-kubeflow-pytorch)
 
 <a name="mnist"></a>
-**MNIST with NNI API**
+**MNIST 中使用 NNI API**
 
-This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer. We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc. It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an exmaple YAML file which enables assessor.
+这是个简单的卷积网络，有两个卷积层，两个池化层和一个全连接层。 调优的超参包括 dropout 比率，卷积层大小，隐藏层（全连接层）大小等等。 它能用 NNI 中大部分内置的调参器来调优，如 TPE，SMAC，Random。 样例的 YAML 文件也启用了评估器来提前终止一些中间结果不好的尝试。
 
-`code directory: examples/trials/mnist/`
+`代码目录: examples/trials/mnist/`
 
 <a name="mnist-annotation"></a>
-**MNIST with NNI annotation**
+**MNIST 中使用 NNI 标记（annotation）**
 
-This example is similar to the example above, the only difference is that this example uses NNI annotation to specify search space and report results, while the example above uses NNI apis to receive configuration and report results.
+此样例与上例类似，上例使用的是 NNI API 来指定搜索空间并返回结果，而此例使用的是 NNI 标记。
 
-`code directory: examples/trials/mnist-annotation/`
+`代码目录: examples/trials/mnist-annotation/`
 
 <a name="mnist-keras"></a>
-**MNIST in keras**
+**在 Keras 中使用 MNIST**
 
-This example is implemented in keras. It is also a network for MNIST dataset, with two convolution layers, one pooling layer, and two fully connected layers.
+此样例由 Keras 实现。 这也是 MNIST 数据集的网络，包括两个卷积层，一个池化层和两个全连接层。
 
-`code directory: examples/trials/mnist-keras/`
+`代码目录: examples/trials/mnist-keras/`
 
 <a name="mnist-batch"></a>
-**MNIST -- tuning with batch tuner**
+**MNIST -- 用批处理调参器来调优**
 
-This example is to show how to use batch tuner. Users simply list all the configurations they want to try in the search space file. NNI will try all of them.
+此样例演示了如何使用批处理调参器。 只需要在搜索空间文件中列出所有要尝试的配置， NNI 会逐个尝试。
 
-`code directory: examples/trials/mnist-batch-tune-keras/`
+`代码目录: examples/trials/mnist-batch-tune-keras/`
 
 <a name="mnist-hyperband"></a>
-**MNIST -- tuning with hyperband**
+**MNIST -- 用 hyperband 调优**
 
-This example is to show how to use hyperband to tune the model. There is one more key `STEPS` in the received configuration for trials to control how long it can run (e.g., number of iterations).
+此样例演示了如何使用 hyperband 来调优模型。 There is one more key `STEPS` in the received configuration for trials to control how long it can run (e.g., number of iterations).
 
 `code directory: examples/trials/mnist-hyperband/`
 
