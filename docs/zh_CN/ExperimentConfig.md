@@ -1,496 +1,496 @@
-# Experiment config reference
+# Experiment（实验）配置参考
 
-A config file is needed when create an experiment, the path of the config file is provide to nnictl. The config file is written in YAML format, and need to be written correctly. This document describes the rule to write config file, and will provide some examples and templates.
+创建 Experiment 时，需要给 nnictl 命令提供配置文件的路径。 配置文件是 YAML 格式，需要保证其格式正确。 本文介绍了配置文件的内容，并提供了一些示例和模板。
 
-* [Template](#Template) (the templates of an config file)
-* [Configuration spec](#Configuration) (the configuration specification of every attribute in config file)
-* [Examples](#Examples) (the examples of config file)
+* [模板](#Template) (配置文件的模板)
+* [配置说明](#Configuration) (配置文件每个项目的说明)
+* [样例](#Examples) (配置文件样例)
 
 <a name="Template"></a>
 
-## Template
+## 模板
 
-* **light weight(without Annotation and Assessor)**
+* **简化版（不包含 Annotation（标记）和 Assessor）**
 
 ```yaml
-authorName:
-experimentName:
-trialConcurrency:
-maxExecDuration:
-maxTrialNum:
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform:
-searchSpacePath:
-#choice: true, false
-useAnnotation:
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+searchSpacePath: 
+#可选项: true, false
+useAnnotation: 
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuNum: 
 trial:
-  command:
-  codeDir:
-  gpuNum:
-#machineList can be empty if the platform is local
+  command: 
+  codeDir: 
+  gpuNum: 
+#在本地使用时，machineList 可为空
 machineList:
-  - ip:
-    port:
-    username:
+  - ip: 
+    port: 
+    username: 
     passwd:
 ```
 
-* **Use Assessor**
+* **使用 Assessor**
 
 ```yaml
-authorName:
-experimentName:
-trialConcurrency:
-maxExecDuration:
-maxTrialNum:
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform:
-searchSpacePath:
-#choice: true, false
-useAnnotation:
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+searchSpacePath: 
+#可选项: true, false
+useAnnotation: 
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuNum: 
 assessor:
-  #choice: Medianstop
+  #可选项: Medianstop
   builtinAssessorName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuNum: 
 trial:
-  command:
-  codeDir:
-  gpuNum:
-#machineList can be empty if the platform is local
+  command: 
+  codeDir: 
+  gpuNum: 
+#在本地使用时，machineList 可为空
 machineList:
-  - ip:
-    port:
-    username:
+  - ip: 
+    port: 
+    username: 
     passwd:
 ```
 
-* **Use Annotation**
+* **使用 Annotation**
 
 ```yaml
-authorName:
-experimentName:
-trialConcurrency:
-maxExecDuration:
-maxTrialNum:
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform:
-#choice: true, false
-useAnnotation:
+authorName: 
+experimentName: 
+trialConcurrency: 
+maxExecDuration: 
+maxTrialNum: 
+#可选项: local, remote, pai, kubeflow
+trainingServicePlatform: 
+#可选项: true, false
+useAnnotation: 
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #可选项: TPE, Random, Anneal, Evolution
   builtinTunerName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuNum: 
 assessor:
-  #choice: Medianstop
+  #可选项: Medianstop
   builtinAssessorName:
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode:
-  gpuNum:
+  gpuNum: 
 trial:
-  command:
-  codeDir:
-  gpuNum:
-#machineList can be empty if the platform is local
+  command: 
+  codeDir: 
+  gpuNum: 
+#在本地使用时，machineList 可为空
 machineList:
-  - ip:
-    port:
-    username:
+  - ip: 
+    port: 
+    username: 
     passwd:
 ```
 
 <a name="Configuration"></a>
 
-## Configuration spec
+## 说明
 
 * **authorName**
   
-  * Description
+  * 说明
     
-    **authorName** is the name of the author who create the experiment. TBD: add default value
+    **authorName** 是创建 Experiment 的作者。 待定: 增加默认值
 
 * **experimentName**
   
-  * Description
+  * 说明
     
-    **experimentName** is the name of the experiment created.  
-    TBD: add default value
+    **experimentName** 是 Experiment 的名称。  
+    待实现：增加默认值
 
 * **trialConcurrency**
   
-  * Description
+  * 说明
     
-    **trialConcurrency** specifies the max num of trial jobs run simultaneously.
+    **trialConcurrency** 定义了并发尝试任务的最大数量。
     
-    Note: if trialGpuNum is bigger than the free gpu numbers, and the trial jobs running simultaneously can not reach trialConcurrency number, some trial jobs will be put into a queue to wait for gpu allocation.
+    注意：如果 trialGpuNum 大于空闲的 GPU 数量，并且并发的 Trial 任务数量还没达到 trialConcurrency，Trial 任务会被放入队列，等待分配 GPU 资源。
 
 * **maxExecDuration**
   
-  * Description
+  * 说明
     
-    **maxExecDuration** specifies the max duration time of an experiment.The unit of the time is {**s**, **m**, **h**, **d**}, which means {*seconds*, *minutes*, *hours*, *days*}.
+    **maxExecDuration** 定义 Experiment 执行的最长时间。时间单位：{**s**, **m**, **h**, **d**}，分别代表：{*seconds*, *minutes*, *hours*, *days*}。
     
-    Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
+    注意：maxExecDuration 设置的是 Experiment 执行的时间，不是 Trial 的。 如果 Experiment 达到了设置的最大时间，Experiment 不会停止，但不会再启动新的 Trial 作业。
 
 * **maxTrialNum**
   
-  * Description
+  * 说明
     
-    **maxTrialNum** specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
+    **maxTrialNum** 定义了 Trial 任务的最大数量，成功和失败的都计算在内。
 
 * **trainingServicePlatform**
   
-  * Description
+  * 说明
     
-    **trainingServicePlatform** specifies the platform to run the experiment, including {**local**, **remote**, **pai**, **kubeflow**}.
+    **trainingServicePlatform** 定义运行 Experiment 的平台，包括：{**local**, **remote**, **pai**, **kubeflow**}.
     
-    * **local** run an experiment on local ubuntu machine.
+    * **local** 在本机的 ubuntu 上运行 Experiment。
     
-    * **remote** submit trial jobs to remote ubuntu machines, and **machineList** field should be filed in order to set up SSH connection to remote machine.
+    * **remote** 将任务提交到远程的 Ubuntu 上，必须用 **machineList** 来指定远程的 SSH 连接信息。
     
-    * **pai** submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
+    * **pai** 提交任务到微软开源的 [OpenPAI](https://github.com/Microsoft/pai) 上。 更多 OpenPAI 配置，参考 [pai 模式](./PAIMode.md)。
     
-    * **kubeflow** submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
+    * **kubeflow** 提交任务至 [Kubeflow](https://www.kubeflow.org/docs/about/kubeflow/)。 NNI 支持基于 Kubeflow 的 Kubenetes，以及[Azure Kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/)。
 
 * **searchSpacePath**
   
-  * Description
+  * 说明
     
-    **searchSpacePath** specifies the path of search space file, which should be a valid path in the local linux machine.
+    **searchSpacePath** 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
     
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+    注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
 * **useAnnotation**
   
-  * Description
+  * 说明
     
-    **useAnnotation** use annotation to analysis trial code and generate search space.
+    **useAnnotation** 定义使用标记来分析代码并生成搜索空间。
     
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+    注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
 * **nniManagerIp**
   
-  * Description
+  * 说明
     
-    **nniManagerIp** set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+    **nniManagerIp** 设置 NNI 管理器运行的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
     
-    Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
+    注意: 可在 NNI 管理器机器上运行 ifconfig 来检查 eth0 是否存在。 如果不存在，推荐显式设置 nnimanagerIp。
 
 * **logDir**
   
-  * Description
+  * 说明
     
-    **logDir** configures the directory to store logs and data of the experiment. The default value is `<user home directory>/nni/experiment`
+    **logDir** 配置存储日志和数据的目录。 默认值是 `<user home directory>/nni/experiment`
 
 * **logLevel**
   
-  * Description
+  * 说明
     
-    **logLevel** sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
+    **logLevel** 为 Experiment 设置日志级别，支持的日志级别有：`trace, debug, info, warning, error, fatal`。 默认值是 `info`。
 
-* **tuner**
+* **Tuner**
   
-  * Description
+  * 说明
     
-    **tuner** specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk, need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **tuner** 指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 SDK 提供的 Tuner，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
-  * **builtinTunerName** and **classArgs**
+  * **builtinTunerName** 和 **classArgs**
     
     * **builtinTunerName**
       
-      **builtinTunerName** specifies the name of system tuner, NNI sdk provides four kinds of tuner, including {**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}
+      **builtinTunerName** 指定了系统 Tuner 的名字，NNI SDK 提供了多种 Tuner，如：{**TPE**, **Random**, **Anneal**, **Evolution**, **BatchTuner**, **GridSearch**}。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm. If the **builtinTunerName** is in {**TPE**, **Random**, **Anneal**, **Evolution**}, user should set **optimize_mode**.
+      **classArgs** 指定了 Tuner 算法的参数。 如果 **builtinTunerName** 是{**TPE**, **Random**, **Anneal**, **Evolution**}，用户需要设置 **optimize_mode**。
   
-  * **codeDir**, **classFileName**, **className** and **classArgs**
+  * **codeDir**, **classFileName**, **className** 和 **classArgs**
     
     * **codeDir**
       
-      **codeDir** specifies the directory of tuner code.
+      **codeDir** 指定 Tuner 代码的目录。
     
     * **classFileName**
       
-      **classFileName** specifies the name of tuner file.
+      **classFileName** 指定 Tuner 文件名。
     
     * **className**
       
-      **className** specifies the name of tuner class.
+      **className** 指定 Tuner 类名。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of tuner algorithm.
+      **classArgs** 指定了 Tuner 算法的参数。
     
     * **gpuNum**
       
-      **gpuNum** specifies the gpu number to run the tuner process. The value of this field should be a positive number.
+      **gpuNum** 指定了运行 Tuner 进程的 GPU 数量。 此字段的值必须是正整数。
       
-      Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
+      注意: 只能使用一种方法来指定 Tuner，例如：设置{tunerName, optimizationMode} 或 {tunerCommand, tunerCwd}，不能同时设置。
 
-* **assessor**
+* **Assessor**
   
-  * Description
+  * 说明
     
-    **assessor** specifies the assessor algorithm to run an experiment, there are two kinds of ways to set assessor. One way is to use assessor provided by NNI sdk, users need to set **builtinAssessorName** and **classArgs**. Another way is to use users' own assessor file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
+    **assessor** 指定了 Experiment 的 Assessor 算法。有两种方法可设置 Assessor。 一种方法是使用 SDK 提供的 Assessor，需要设置 **builtinAssessorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Assessor，需要设置 **codeDirectory**，**classFileName**，**className** 和 **classArgs**。
   
-  * **builtinAssessorName** and **classArgs**
+  * **builtinAssessorName** 和 **classArgs**
     
     * **builtinAssessorName**
       
-      **builtinAssessorName** specifies the name of system assessor, NNI sdk provides one kind of assessor {**Medianstop**}
+      **builtinAssessorName** 指定了系统 Assessor 的名称， NNI 内置的 Assessor 有 {**Medianstop**，等等}。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of assessor algorithm
+      **classArgs** 指定了 Assessor 算法的参数。
   
-  * **codeDir**, **classFileName**, **className** and **classArgs**
+  * **codeDir**, **classFileName**, **className** 和 **classArgs**
     
     * **codeDir**
       
-      **codeDir** specifies the directory of assessor code.
+      **codeDir** 指定 Assessor 代码的目录。
     
     * **classFileName**
       
-      **classFileName** specifies the name of assessor file.
+      **classFileName** 指定 Assessor 文件名。
     
     * **className**
       
-      **className** specifies the name of assessor class.
+      **className** 指定 Assessor 类名。
     
     * **classArgs**
       
-      **classArgs** specifies the arguments of assessor algorithm.
+      **classArgs** 指定了 Assessor 算法的参数。
   
   * **gpuNum**
     
-    **gpuNum** specifies the gpu number to run the assessor process. The value of this field should be a positive number.
+    **gpuNum** 指定了运行 Assessor 进程的 GPU 数量。 此字段的值必须是正整数。
     
-    Note: users' could only specify one way to set assessor, for example,set {assessorName, optimizationMode} or {assessorCommand, assessorCwd}, and users could not set them both.If users do not want to use assessor, assessor fileld should leave to empty.
+    注意: 只能使用一种方法来指定 Assessor，例如：设置 {assessorName, optimizationMode} 或 {assessorCommand, assessorCwd}，不能同时设置。如果不需要使用 Assessor，可将其置为空。
 
-* **trial(local, remote)**
+* **trial (local, remote)**
   
   * **command**
     
-    **command** specifies the command to run trial process.
+    **command** 指定了运行 Trial 进程的命令行。
   
   * **codeDir**
     
-    **codeDir** specifies the directory of your own trial file.
+    **codeDir** 指定了 Trial 代码文件的目录。
   
   * **gpuNum**
     
-    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
+    **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
 
-* **trial(pai)**
+* **trial (pai)**
   
   * **command**
     
-    **command** specifies the command to run trial process.
+    **command** 指定了运行 Trial 进程的命令行。
   
   * **codeDir**
     
-    **codeDir** specifies the directory of the own trial file.
+    **codeDir** 指定了 Trial 代码文件的目录。
   
   * **gpuNum**
     
-    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
+    **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
   
   * **cpuNum**
     
-    **cpuNum** is the cpu number of cpu to be used in pai container.
+    **cpuNum** 指定了 OpenPAI 容器中使用的 CPU 数量。
   
   * **memoryMB**
     
-    **memoryMB** set the momory size to be used in pai's container.
+    **memoryMB** 指定了 OpenPAI 容器中使用的内存数量。
   
   * **image**
     
-    **image** set the image to be used in pai.
+    **image** 指定了 OpenPAI 中使用的 docker 映像。
   
   * **dataDir**
     
-    **dataDir** is the data directory in hdfs to be used.
+    **dataDir** 是 HDFS 中用到的数据目录变量。
   
   * **outputDir**
     
-    **outputDir** is the output directory in hdfs to be used in pai, the stdout and stderr files are stored in the directory after job finished.
+    **outputDir** 是 HDFS 中用到的输出目录变量。在 OpenPAI 中，stdout 和 stderr 文件会在作业完成后，存放在此目录中。
 
-* **trial(kubeflow)**
+* **trial (kubeflow)**
   
   * **codeDir**
     
-    **codeDir** is the local directory where the code files in.
+    **codeDir** 指定了代码文件的本机路径。
   
-  * **ps(optional)**
+  * **ps (可选)**
     
-    **ps** is the configuration for kubeflow's tensorflow-operator.
+    **ps** 是 Kubeflow 的 Tensorflow-operator 配置。
     
     * **replicas**
       
-      **replicas** is the replica number of **ps** role.
+      **replicas** 是 **ps** 角色的副本数量。
     
     * **command**
       
-      **command** is the run script in **ps**'s container.
+      **command** 是在 **ps** 的容器中运行的脚本命令。
     
     * **gpuNum**
       
-      **gpuNum** set the gpu number to be used in **ps** container.
+      **gpuNum** 是在 **ps** 容器中使用的 GPU 数量。
     
     * **cpuNum**
       
-      **cpuNum** set the cpu number to be used in **ps** container.
+      **cpuNum** 是在 **ps** 容器中使用的 CPU 数量。
     
     * **memoryMB**
       
-      **memoryMB** set the memory size of the container.
+      **memoryMB** 指定了容器中使用的内存数量。
     
     * **image**
       
-      **image** set the image to be used in **ps**.
+      **image** 设置了 **ps** 使用的 docker 映像。
   
   * **worker**
     
-    **worker** is the configuration for kubeflow's tensorflow-operator.
+    **worker** 是 Kubeflow 的 Tensorflow-operator 配置。
     
     * **replicas**
       
-      **replicas** is the replica number of **worker** role.
+      **replicas** 是 **worker** 角色的副本数量。
     
     * **command**
       
-      **command** is the run script in **worker**'s container.
+      **command** 是在 **worker** 的容器中运行的脚本命令。
     
     * **gpuNum**
       
-      **gpuNum** set the gpu number to be used in **worker** container.
+      **gpuNum** 是在 **worker** 容器中使用的 GPU 数量。
     
     * **cpuNum**
       
-      **cpuNum** set the cpu number to be used in **worker** container.
+      **cpuNum** 是在 **worker** 容器中使用的 CPU 数量。
     
     * **memoryMB**
       
-      **memoryMB** set the memory size of the container.
+      **memoryMB** 指定了容器中使用的内存数量。
     
     * **image**
       
-      **image** set the image to be used in **worker**.
+      **image** 设置了 **worker** 使用的 docker 映像。
 
 * **machineList**
   
-  **machineList** should be set if **trainingServicePlatform** is set to remote, or it should be empty.
+  如果 **trainingServicePlatform** 为 remote，则需要设置 **machineList**。否则应将其置为空。
   
   * **ip**
     
-    **ip** is the ip address of remote machine.
+    **ip** 是远程计算机的 ip 地址。
   
   * **port**
     
-    **port** is the ssh port to be used to connect machine.
+    **端口** 是用于连接远程计算机的 ssh 端口。
     
-    Note: if users set port empty, the default value will be 22.
+    注意：如果 port 设为空，则为默认值 22。
   
   * **username**
     
-    **username** is the account of remote machine.
+    **username** 是远程计算机的用户名。
   
   * **passwd**
     
-    **passwd** specifies the password of the account.
+    **passwd** 指定了账户的密码。
   
   * **sshKeyPath**
     
-    If users use ssh key to login remote machine, could set **sshKeyPath** in config file. **sshKeyPath** is the path of ssh key file, which should be valid.
+    如果要使用 ssh 密钥登录远程计算机，则需要设置 **sshKeyPath**。 **sshKeyPath** 为有效的 ssh 密钥文件路径。
     
-    Note: if users set passwd and sshKeyPath simultaneously, NNI will try passwd.
+    注意：如果同时设置了 passwd 和 sshKeyPath，NNI 会使用 passwd。
   
   * **passphrase**
     
-    **passphrase** is used to protect ssh key, which could be empty if users don't have passphrase.
+    **passphrase** 用于保护 ssh 密钥，如果没有使用，可为空。
 
 * **kubeflowConfig**:
   
   * **operator**
     
-    **operator** specify the kubeflow's operator to be used, NNI support **tf-operator** in current version.
+    **operator** 指定了 kubeflow 使用的 operator，NNI 当前版本支持 **tf-operator**。
   
-  * **storage**
+  * **存储**
     
-    **storage** specify the storage type of kubeflow, including {**nfs**, **azureStorage**}. This field is optional, and the default value is **nfs**. If the config use azureStorage, this field must be completed.
+    **storage** 指定了 kubeflow 的存储类型，包括 {**nfs**，**azureStorage**}。 此字段可选，默认值为 **nfs**。 如果使用了 azureStorage，此字段必须填写。
   
   * **nfs**
     
-    **server** is the host of nfs server
+    **server** 是 NFS 服务器的地址
     
-    **path** is the mounted path of nfs
+    **path** 是 NFS 挂载的路径
   
   * **keyVault**
     
-    If users want to use azure kubernetes service, they should set keyVault to storage the private key of your azure storage account. Refer: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
+    如果用户使用 Azure Kubernetes Service，需要设置 keyVault 来使用 Azure 存储账户的私钥。 参考: https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
     
     * **vaultName**
       
-      **vaultName** is the value of `--vault-name` used in az command.
+      **vaultName** 是 az 命令中 `--vault-name` 的值。
     
     * **name**
       
-      **name** is the value of `--name` used in az command.
+      **name** 是 az 命令中 `--name` 的值。
   
   * **azureStorage**
     
-    If users use azure kubernetes service, they should set azure storage account to store code files.
+    如果用户使用了 Azure Kubernetes Service，需要设置 Azure 存储账户来存放代码文件。
     
     * **accountName**
       
-      **accountName** is the name of azure storage account.
+      **accountName** 是 Azure 存储账户的名称。
     
     * **azureShare**
       
-      **azureShare** is the share of the azure file storage.
+      **azureShare** 是 Azure 文件存储的共享参数。
 
 * **paiConfig**
   
   * **userName**
     
-    **userName** is the user name of your pai account.
+    **userName** 是 OpenPAI 的用户名。
   
   * **password**
     
-    **password** is the password of the pai account.
+    **password** 是 OpenPAI 用户的密码。
   
   * **host**
     
-    **host** is the host of pai.
+    **host** 是 OpenPAI 的主机地址。
 
 <a name="Examples"></a>
 
-## Examples
+## 样例
 
-* **local mode**
+* **本机模式**
   
-  If users want to run trial jobs in local machine, and use annotation to generate search space, could use the following config:
+  如果要在本机运行 Trial 任务，并使用标记来生成搜索空间，可参考下列配置：
   
   ```yaml
   authorName: test
@@ -498,15 +498,15 @@ machineList:
   trialConcurrency: 3
   maxExecDuration: 1h
   maxTrialNum: 10
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: local
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: true
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
     gpuNum: 0
   trial:
@@ -515,7 +515,7 @@ machineList:
     gpuNum: 0
   ```
   
-  You can add assessor configuration.
+  增加 Assessor 配置
   
   ```yaml
   authorName: test
@@ -523,23 +523,23 @@ machineList:
   trialConcurrency: 3
   maxExecDuration: 1h
   maxTrialNum: 10
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: local
   searchSpacePath: /nni/search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
     gpuNum: 0
   assessor:
-    #choice: Medianstop
+    #可选项: Medianstop
     builtinAssessorName: Medianstop
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
     gpuNum: 0
   trial:
@@ -548,7 +548,7 @@ machineList:
     gpuNum: 0
   ```
   
-  Or you could specify your own tuner and assessor file as following,
+  或者可以指定自定义的 Tuner 和 Assessor：
   
   ```yaml
   authorName: test
@@ -556,17 +556,17 @@ machineList:
   trialConcurrency: 3
   maxExecDuration: 1h
   maxTrialNum: 10
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: local
   searchSpacePath: /nni/search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   tuner:
     codeDir: /nni/tuner
     classFileName: mytuner.py
     className: MyTuner
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
     gpuNum: 0
   assessor:
@@ -583,9 +583,9 @@ machineList:
     gpuNum: 0
   ```
 
-* **remote mode**
+* **远程模式**
   
-  If run trial jobs in remote machine, users could specify the remote mahcine information as fllowing format:
+  如果在远程服务器上运行 Trial 任务，需要增加服务器信息：
   
   ```yaml
   authorName: test
@@ -593,24 +593,25 @@ machineList:
   trialConcurrency: 3
   maxExecDuration: 1h
   maxTrialNum: 10
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: remote
   searchSpacePath: /nni/search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
     gpuNum: 0
   trial:
     command: python3 mnist.py
     codeDir: /nni/mnist
     gpuNum: 0
-  #machineList can be empty if the platform is local
+  # 如果是本地 Experiment，machineList 可为空。
   machineList:
+  
     - ip: 10.10.10.10
       port: 22
       username: test
@@ -626,7 +627,7 @@ machineList:
       passphrase: qwert
   ```
 
-* **pai mode**
+* **pai 模式**
   
   ```yaml
   authorName: test
@@ -634,17 +635,17 @@ machineList:
   trialConcurrency: 1
   maxExecDuration:500h
   maxTrialNum: 1
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: pai
   searchSpacePath: search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   tuner:
-    #choice: TPE, Random, Anneal, Evolution, BatchTuner
-    #SMAC (SMAC should be installed through nnictl)
+    #可选项: TPE, Random, Anneal, Evolution, BatchTuner
+    #SMAC (SMAC 需要使用 nnictl package 单独安装)
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
   trial:
     command: python3 main.py
@@ -652,24 +653,24 @@ machineList:
     gpuNum: 4
     cpuNum: 2
     memoryMB: 10000
-    #The docker image to run NNI job on pai
+    # 在 OpenPAI 上用来运行 Nni 作业的 docker 映像
     image: msranni/nni:latest
-    #The hdfs directory to store data on pai, format 'hdfs://host:port/directory'
+    # 在 OpenPAI 的 hdfs 上存储数据的目录，如：'hdfs://host:port/directory'
     dataDir: hdfs://10.11.12.13:9000/test
-    #The hdfs directory to store output data generated by NNI, format 'hdfs://host:port/directory'
+    # 在 OpenPAI 的 hdfs 上存储输出的目录，如：'hdfs://host:port/directory'
     outputDir: hdfs://10.11.12.13:9000/test
   paiConfig:
-    #The username to login pai
+    # OpenPAI 用户名
     userName: test
-    #The password to login pai
+    # OpenPAI 密码
     passWord: test
-    #The host of restful server of pai
+    # OpenPAI 服务器 Ip
     host: 10.10.10.10
   ```
 
-* **kubeflow mode**
+* **Kubeflow 模式**
   
-  kubeflow with nfs storage.
+  使用 NFS 存储。
   
   ```yaml
   authorName: default
@@ -677,16 +678,16 @@ machineList:
   trialConcurrency: 1
   maxExecDuration: 1h
   maxTrialNum: 1
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: kubeflow
   searchSpacePath: search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
   trial:
     codeDir: .
@@ -704,7 +705,7 @@ machineList:
       path: /var/nfs/general
   ```
   
-  kubeflow with azure storage
+  使用 Azure 存储。
   
   ```yaml
   authorName: default
@@ -712,17 +713,17 @@ machineList:
   trialConcurrency: 1
   maxExecDuration: 1h
   maxTrialNum: 1
-  #choice: local, remote, pai, kubeflow
+  #可选项: local, remote, pai, kubeflow
   trainingServicePlatform: kubeflow
   searchSpacePath: search_space.json
-  #choice: true, false
+  #可选项: true, false
   useAnnotation: false
   #nniManagerIp: 10.10.10.10
   tuner:
-    #choice: TPE, Random, Anneal, Evolution
+    #可选项: TPE, Random, Anneal, Evolution
     builtinTunerName: TPE
     classArgs:
-      #choice: maximize, minimize
+      #可选项: maximize, minimize
       optimize_mode: maximize
   assessor:
     builtinAssessorName: Medianstop
