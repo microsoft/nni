@@ -1,3 +1,3 @@
-# **How to Debug in NNI**
+# **在 NNI 中调试代码**
 
-*Coming soon*
+*编写中……*
