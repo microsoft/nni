@@ -11,7 +11,14 @@ else
 	$(error platform $(UNAME_S) not supported)
 endif
 
-NNI_VERSION_VALUE = $(shell git describe --tags)
+TIME_STAMP = $(shell date "+%y%m%d%H%M")
+NNI_VERSION_VALUE = $(shell git describe --tags --abbrev=0)
+
+# To include time stamp in version value, run:
+# make version_ts=true build
+ifeq ($(version_ts), true)
+	NNI_VERSION_VALUE := $(NNI_VERSION_VALUE).$(TIME_STAMP)
+endif
 NNI_VERSION_TEMPLATE = 999.0.0-developing
 
 .PHONY: build
