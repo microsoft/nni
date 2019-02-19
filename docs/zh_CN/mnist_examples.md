@@ -42,27 +42,27 @@
 <a name="mnist-hyperband"></a>
 **MNIST -- 用 hyperband 调优**
 
-此样例演示了如何使用 hyperband 来调优模型。 There is one more key `STEPS` in the received configuration for trials to control how long it can run (e.g., number of iterations).
+此样例演示了如何使用 hyperband 来调优模型。 在尝试收到的配置中，有个主键叫做 `STEPS`，尝试要用它来控制运行多长时间（例如，控制迭代的次数）。
 
-`code directory: examples/trials/mnist-hyperband/`
+`代码目录: examples/trials/mnist-hyperband/`
 
 <a name="mnist-nested"></a>
-**MNIST -- tuning within a nested search space**
+**MNIST -- 用嵌套搜索空间调优**
 
-This example is to show that NNI also support nested search space. The search space file is an example of how to define nested search space.
+此样例演示了 NNI 如何支持嵌套的搜索空间。 搜索空间文件示了如何定义嵌套的搜索空间。
 
-`code directory: examples/trials/mnist-cascading-search-space/`
+`代码目录: examples/trials/mnist-cascading-search-space/`
 
 <a name="mnist-kubeflow-tf"></a>
-**distributed MNIST (tensorflow) using kubeflow**
+**用 Kubeflow 运行分布式的 MNIST (tensorflow)**
 
-This example is to show how to run distributed training on kubeflow through NNI. Users can simply provide distributed training code and a configure file which specifies the kubeflow mode. For example, what is the command to run ps and what is the command to run worker, and how many resources they consume. This example is implemented in tensorflow, thus, uses kubeflow tensorflow operator.
+此样例展示了如何通过 NNI 来在 Kubeflow 上运行分布式训练。 只需要简单的提供分布式训练代码，并在配置文件中指定 kubeflow 模式。 例如，运行 ps 和 worker 的命令行，以及各自需要的资源。 此样例使用了 Tensorflow 来实现，因而，需要使用 Kubeflow 的 tf-operator。
 
-`code directory: examples/trials/mnist-distributed/`
+`代码目录: examples/trials/mnist-distributed/`
 
 <a name="mnist-kubeflow-pytorch"></a>
-**distributed MNIST (pytorch) using kubeflow**
+**用 Kubeflow 运行分布式的 MNIST (PyTorch)**
 
-Similar to the previous example, the difference is that this example is implemented in pytorch, thus, it uses kubeflow pytorch operator.
+与前面的样例类似，不同之处是此样例是 Pytorch 实现的，因而需要使用 Kubeflow 的 pytorch-operator。
 
-`code directory: examples/trials/mnist-distributed-pytorch/`
+`代码目录: examples/trials/mnist-distributed-pytorch/`
