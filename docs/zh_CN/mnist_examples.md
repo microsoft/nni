@@ -1,10 +1,10 @@
-# MNIST examples
+# MNIST 样例
 
-CNN MNIST classifier for deep learning is similar to `hello world` for programming languages. Thus, we use MNIST as example to introduce different features of NNI. The examples are listed below:
+在深度学习中，用 CNN 来分类 MNIST 数据，就像介绍编程语言中的 `hello world` 样例。 因此，NNI 将 MNIST 作为样例来介绍功能。 样例如下：
 
-- [MNIST with NNI API](#mnist)
-- [MNIST with NNI annotation](#mnist-annotation)
-- [MNIST in keras](#mnist-keras)
+- [MNIST 中使用 NNI API](#mnist)
+- [MNIST 中使用 NNI 标记（annotation）](#mnist-annotation)
+- [在 Keras 中使用 MNIST](#mnist-keras)
 - [MNIST -- tuning with batch tuner](#mnist-batch)
 - [MNIST -- tuning with hyperband](#mnist-hyperband)
 - [MNIST -- tuning within a nested search space](#mnist-nested)
