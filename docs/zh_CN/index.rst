@@ -7,15 +7,15 @@ Neural Network Intelligence（NNI）文档
 ********
 
 ..  toctree::
-    :caption: Table of Contents
+    :caption: 目录
     :maxdepth: 2
     :titlesonly:
 
-    Overview
-    QuickStart<QuickStart>
-    Tutorials
-    Examples
-    Reference
-    FAQ
-    Contribution
-    Changelog<RELEASE>
+    概述<Overview>
+    入门<QuickStart>
+    教程<Tutorials>
+    样例<Examples>
+    参考<Reference>
+    常见问答<FAQ>
+    贡献<Contribution>
+    版本日志<RELEASE>
