@@ -4,6 +4,7 @@ maxExecDuration: 5m
 maxTrialNum: 2
 trialConcurrency: 1
 searchSpacePath: ./mnist_search_space.json
+nniManagerIp: 172.17.0.1
 
 tuner:
   builtinTunerName: Random
