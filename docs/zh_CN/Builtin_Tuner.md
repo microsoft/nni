@@ -237,10 +237,10 @@ tuner:
 **参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
-* **R** (*int, 可选, 默认为 60*) - 能分配给 Trial 的最大 STEPS (可以是 mini-batches 或 epochs 的数值)。 Each trial should use STEPS to control how long it runs.
-* **eta** (*int, optional, default = 3*) - `(eta-1)/eta` is the proportion of discarded trials
+* **R** (*int, 可选, 默认为 60*) - 能分配给 Trial 的最大 STEPS (可以是 mini-batches 或 epochs 的数值)。 Trial 需要用 STEPS 来控制运行时间。
+* **eta** (*int, 可选, 默认为 3*) - `(eta-1)/eta` 是丢弃 Trial 的比例。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -258,25 +258,25 @@ advisor:
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `Network Morphism`
 
-> Builtin Tuner Name: **NetworkMorphism**
+> 名称：**NetworkMorphism**
 
-**Installation**
+**安装**
 
-NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so users should install it first.
+必须先安装 [pyTorch](https://pytorch.org/get-started/locally)。
 
-**Suggested scenario**
+**建议场景**
 
-It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain.
+需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 可修改[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此 Tuner 仅支持视觉领域。
 
-**Requirement of classArg**
+**参数**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
-* **task** (*('cv'), optional, default = 'cv'*) - The domain of experiment, for now, this tuner only supports the computer vision(cv) domain.
-* **input_width** (*int, optional, default = 32*) - input image width
-* **input_channel** (*int, optional, default = 3*) - input image channel
-* **n_output_node** (*int, optional, default = 10*) - number of classes
+* **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
+* **task** (*('cv'), 可选, 默认为 'cv'*) - 实验的领域，当前仅支持视觉（cv）。
+* **input_width** (*int, 可选, 默认为 = 32*) - 输入图像的宽度
+* **input_channel** (*int, 可选, 默认为 3*) - 输入图像的通道数
+* **n_output_node** (*int, 可选, 默认为 10*) - 输出分类的数量
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
