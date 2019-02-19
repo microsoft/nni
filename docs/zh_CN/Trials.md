@@ -1,16 +1,16 @@
-# Write a Trial Run on NNI
+# 实现 NNI 的 Trial（尝试）代码
 
-A **Trial** in NNI is an individual attempt at applying a configuration (e.g., a set of hyper-parameters) on a model.
+**Trial（尝试）**是将一组参数组合（例如，超参）在模型上独立的一次尝试。
 
-To define an NNI trial, you need to firstly define the set of parameters (i.e., search space) and then update the model. NNI provide two approaches for you to define a trial: [NNI API](#nni-api) and [NNI Python annotation](#nni-annotation). You could also refer to [here](#more-examples) for more trial examples.
+定义 NNI 的 Trial，需要首先定义参数组，并更新模型代码。 NNI 有两种方法来实现 Trial：[NNI API](#nni-api) 以及 [NNI Python annotation](#nni-annotation)。 参考[这里的](#more-examples)更多 Trial 样例。
 
 <a name="nni-api"></a>
 
 ## NNI API
 
-### Step 1 - Prepare a SearchSpace parameters file.
+### 第一步：准备搜索空间参数文件。
 
-An example is shown below:
+样例如下：
 
 ```json
 {
@@ -21,63 +21,63 @@ An example is shown below:
 }
 ```
 
-Refer to [SearchSpaceSpec.md](./SearchSpaceSpec.md) to learn more about search space. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.
+参考 [SearchSpaceSpec.md](./SearchSpaceSpec.md) 进一步了解搜索空间。 Tuner 会根据搜索空间来生成配置，即从每个超参的范围中选一个值。
 
-### Step 2 - Update model codes
+### 第二步：更新模型代码
 
 * Import NNI
     
-    Include `import nni` in your trial code to use NNI APIs.
+    在 Trial 代码中加上 `import nni`。
 
-* Get configuration from Tuner
+* 从 Tuner 获得参数值
 
 ```python
 RECEIVED_PARAMS = nni.get_next_parameter()
 ```
 
-`RECEIVED_PARAMS` is an object, for example: `{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
+`RECEIVED_PARAMS` 是一个对象，如： `{"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}`.
 
-* Report metric data periodically (optional)
+* 定期返回指标数据（可选）
 
 ```python
 nni.report_intermediate_result(metrics)
 ```
 
-`metrics` could be any python object. If users use NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, 2) a dict object that has a key named `default` whose value is a number. This `metrics` is reported to [assessor](Builtin_Assessors.md). Usually, `metrics` could be periodically evaluated loss or accuracy.
+`指标`可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，`指标`只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 `default`，值为数值的项目。 `指标`会发送给[Assessor](Builtin_Assessors.md)。 通常，`指标`是损失值或精度。
 
-* Report performance of the configuration
+* 返回配置的最终性能
 
 ```python
 nni.report_final_result(metrics)
 ```
 
-`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](Builtin_Tuner.md).
+`指标`也可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，`指标`格式和 `report_intermediate_result` 中一样，这个数值表示模型的性能，如精度、损失值等。 `指标`会发送给 [Tuner](Builtin_Tuner.md)。
 
-### Step 3 - Enable NNI API
+### 第三步：启用 NNI API
 
-To enable NNI API mode, you need to set useAnnotation to *false* and provide the path of SearchSpace file (you just defined in step 1):
+要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径（即第一步中定义的文件）：
 
 ```yaml
 useAnnotation: false
 searchSpacePath: /path/to/your/search_space.json
 ```
 
-You can refer to [here](ExperimentConfig.md) for more information about how to set up experiment configurations.
+参考 [这里](ExperimentConfig.md) 进一步了解如何配置实验。
 
-*Please refer to [here](https://nni.readthedocs.io/en/latest/sdk_reference.html) for more APIs (e.g., `nni.get_sequence_id()`) provided by NNI.
+* 参考[这里](https://nni.readthedocs.io/en/latest/sdk_reference.html)，了解更多 NNI API (例如 `nni.get_sequence_id()`)。
 
 <a name="nni-annotation"></a>
 
-## NNI Python Annotation
+## NNI Annotation
 
-An alternative to writing a trial is to use NNI's syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don't have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:
+另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 就像其它 Python Annotation，NNI 的 Annotation 和代码中的注释一样。 不需要在代码中做大量改动。 只需要添加一些 NNI Annotation，就能够：
 
-* annotate the variables you want to tune 
-* specify in which range you want to tune the variables
-* annotate which variable you want to report as intermediate result to `assessor`
-* annotate which variable you want to report as the final result (e.g. model accuracy) to `tuner`. 
+* 标记需要调整的参数变量 
+* 指定变量的搜索空间范围
+* 标记哪个变量需要作为中间结果范围给 `Assessor`
+* 标记哪个变量需要作为最终结果（例如：模型精度）返回给 `Tuner`。 
 
-Again, take MNIST as an example, it only requires 2 steps to write a trial with NNI Annotation.
+同样以 MNIST 为例，只需要两步就能用 NNI Annotation 来实现 Trial 代码。
 
 ### Step 1 - Update codes with annotations
 
