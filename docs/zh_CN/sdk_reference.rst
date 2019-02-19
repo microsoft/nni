@@ -1,8 +1,8 @@
 ###########################
-Python API Reference
+Python API 参考
 ###########################
 
-Trial
+Trial（尝试）
 ------------------------
 ..  autofunction:: nni.get_next_parameter
 ..  autofunction:: nni.get_current_parameter
@@ -11,7 +11,7 @@ Trial
 ..  autofunction:: nni.get_sequence_id
 
 
-Tuner
+Tuner（调参器）
 ------------------------
 ..  autoclass:: nni.tuner.Tuner
     :members:
@@ -28,7 +28,7 @@ Tuner
 ..  autoclass:: nni.smac_tuner.smac_tuner.SMACTuner
     :members:
 
-Assessor
+Assessor（评估器）
 ------------------------
 ..  autoclass:: nni.assessor.Assessor
     :members:
