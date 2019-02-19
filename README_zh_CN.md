@@ -6,7 +6,7 @@
 
 [![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![Bug](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[English](../README.md)
+[English](README_zh_CN.md)
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
@@ -108,7 +108,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
-* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/FAQ.md)
+* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/FAQ.md)。
 
 **通过源代码安装**
 
@@ -121,7 +121,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
     source install.sh   
 ```
 
-For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)
+参考[安装 NNI](docs/zh_CN/Installation.md) 了解系统需求。
 
 **验证安装**
 
@@ -168,7 +168,7 @@ For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Ins
     -----------------------------------------------------------------------
     
 
-* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 [Here](docs/en_US/WebUI.md) are more Web UI pages.
+* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里的](docs/zh_CN/WebUI.md)更多页面示例。
 
 <table style="border: none">
     <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
@@ -209,11 +209,11 @@ For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Ins
 
 推荐新贡献者从标有 **good first issue** 的简单需求开始。
 
-To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/en_US/SetupNNIDeveloperEnvironment.md)
+如要安装 NNI 开发环境，参考： [配置 NNI 开发环境](docs/zh_CN/SetupNNIDeveloperEnvironment.md)。
 
-Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/en_US/CONTRIBUTING.md)
+在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/zh_CN/CONTRIBUTING.md)。
 
-We are in construction of the instruction for [How to Debug](docs/en_US/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
+我们正在编写[如何调试](docs/zh_CN/HowToDebug.md) 的页面，欢迎提交建议和问题。
 
 ## **许可协议**
 
