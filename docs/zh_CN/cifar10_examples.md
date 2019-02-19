@@ -1,35 +1,35 @@
-# CIFAR-10 examples
+# CIFAR-10 样例
 
-## Overview
+## 概述
 
-[CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) classification is a common benchmark problem in machine learning. The CIFAR-10 dataset is the collection of images. It is one of the most widely used datasets for machine learning research which contains 60,000 32x32 color images in 10 different classes. Thus, we use CIFAR-10 classification as an example to introduce NNI usage.
+[CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html) 分类是机器学习中常用的基准问题。 CIFAR-10 数据集是图像的集合。 它也是机器学习领域最常用的数据集之一，包含 60000 万张 32x32 的图像，共有 10 个分类。 因此以 CIFAR-10 分类为例来介绍 NNI 的用法。
 
-### **Goals**
+### **目标**
 
-As we all know, the choice of model optimizer is directly affects the performance of the final metrics. The goal of this tutorial is to **tune a better performace optimizer** to train a relatively small convolutional neural network (CNN) for recognizing images.
+总所周知，模型 optimizer (优化器）的选择直接影响了最终指标的性能。 本教程的目标是**调优出性能更好的优化器**，从而为图像识别训练出一个相对较小的卷积网络（CNN）。
 
-In this example, we have selected the following common deep learning optimizer:
+本例中，选择了以下常见的深度学习优化器：
 
 > "SGD", "Adadelta", "Adagrad", "Adam", "Adamax"
 
-### **Experimental**
+### **实验**
 
-#### Preparations
+#### 准备
 
-This example requires pytorch. Pytorch install package should be chosen based on python version and cuda version.
+此样例需要安装 PyTorch。 PyTorch 安装包需要选择所基于的 Python 和 CUDA 版本。
 
-Here is an example of the environment python==3.5 and cuda == 8.0, then using the following commands to install [pytorch](https://pytorch.org/):
+这是环境 python==3.5 且 cuda == 8.0 的样例，然后用下列命令来安装 [ PyTorch](https://pytorch.org/)：
 
 ```bash
 python3 -m pip install http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp35m-linux_x86_64.whl
 python3 -m pip install torchvision
 ```
 
-#### CIFAR-10 with NNI
+#### NNI 与 CIFAR-10
 
-**Search Space**
+**搜索空间**
 
-As we stated in the target, we target to find out the best `optimizer` for training CIFAR-10 classification. When using different optimizers, we also need to adjust `learning rates` and `network structure` accordingly. so we chose these three parameters as hyperparameters and write the following search space.
+正如本文目标，要为 CIFAR-10 找到最好的`优化器`。 使用不同的优化器时，还要相应的调整`学习率`和`网络架构`。 因此，选择这三个参数作为超参，并创建如下的搜索空间。
 
 ```json
 {
@@ -39,35 +39,35 @@ As we stated in the target, we target to find out the best `optimizer` for train
 }
 ```
 
-*Implemented code directory: [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/search_space.json)*
+*实现代码：[search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/search_space.json)*
 
-**Trial**
+**Trial（尝试）**
 
-The code for CNN training of each hyperparameters set, paying particular attention to the following points are specific for NNI:
+这是超参集合的训练代码，关注以下几点：
 
-* Use `nni.get_next_parameter()` to get next training hyperparameter set.
-* Use `nni.report_intermediate_result(acc)` to report the intermedian result after finish each epoch.
-* Use `nni.report_final_result(acc)` to report the final result before the trial end.
+* 使用 `nni.get_next_parameter()` 来获取下一组训练的超参组合。
+* 使用 `nni.report_intermediate_result(acc)` 在每个 epoch 结束时返回中间结果。
+* 使用 `nni.report_final_result(acc)` 在每个 Trial 结束时返回最终结果。
 
-*Implemented code directory: [main.py](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py)*
+*实现代码：[main.py](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/main.py)*
 
-You can also use your previous code directly, refer to [How to define a trial](Trials.md) for modify.
+还可直接修改现有的代码来支持 NNI，参考：[如何编写 Trial](Trials.md)。
 
-**Config**
+**配置**
 
-Here is the example of running this experiment on local(with multiple GPUs):
+这是在本机运行 Experiment 的样例（多GPU）：
 
-code directory: [examples/trials/cifar10_pytorch/config.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml)
+代码：[examples/trials/cifar10_pytorch/config.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml)
 
-Here is the example of running this experiment on OpenPAI:
+这是在 OpenPAI 上运行 Experiment 的样例：
 
-code directory: [examples/trials/cifar10_pytorch/config_pai.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml)
+代码：[examples/trials/cifar10_pytorch/config_pai.yml](https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml)
 
-*The complete examples we have implemented: [examples/trials/cifar10_pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch)*
+*完整样例：[examples/trials/cifar10_pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch)*
 
-#### Launch the experiment
+#### 运行 Experiment
 
-We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
+以上即为 Experiment 的代码介绍，**从命令行运行 config.yml 文件来开始 Experiment**。
 
 ```bash
 nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
