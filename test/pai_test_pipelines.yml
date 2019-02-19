@@ -7,6 +7,11 @@ jobs:
       Python36:
         PYTHON_VERSION: '3.6'
   steps:
+  - script: python3 -m pip install --upgrade pip setuptools --user
+    displayName: 'Install python tools'
+  - script: |
+      source install.sh
+    displayName: 'Install nni toolkit via source code'
   - script: |
       cd test
       python3 generate_pai_config.py --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) \
