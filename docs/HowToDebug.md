@@ -5,6 +5,7 @@
 
 There are three parts that might have logs in NNI. They are nnimanager, dispatcher and trial. Here we will introduce them succinctly. More information please refer to [Overview](Overview.md).
 
+- **nnictl**: NNI controller is the nni command line tool that is used to started NNI.
 - **nnimanager**: nnimanager is the core of NNI, whose log is important when the whole experiment fails (e.g., no webUI or training service fails)
 - **Dispatcher**: Dispatcher is the collective name of **Tuner** and **Assessor**. Logs of dispatcher are related to the tuner or assessor code.
     - **Tuner**: Tuner is an AutoML algorithm, which generates a new configuration for the next try. A new trial will run with this configuration.
@@ -12,6 +13,13 @@ There are three parts that might have logs in NNI. They are nnimanager, dispatch
 - **Trial**: Trial code is the code you write to run your experiment, which is an individual attempt at applying a new configuration (e.g., a set of hyperparameter values, a specific nerual architecture).
 
 ## Where is the log
+
+### nnictl
+
+All possible errors errors when launching NNI can be found here.
+
+You can use `nnictl log stderr` to find error information. Or find it in `~/nni/nnictl/log/stderr`.
+
 
 ### Experiment Root Directory
 Every experiment has a root folder, which is shown on the right-top corner of webUI. Or you could assemble it by replacing the `experiment_id` with your actual experiment_id in path `~/nni/experiment/experiment_id/` in case of webUI failure. `experiment_id` could be seen when you run `nnictl create ...` to create a new experiment.
@@ -26,21 +34,39 @@ Usually in webUI, you can click `+` in the left of every trial to expand it to s
 
 There are different kinds of errors. However, they can be divided into three categories based on their severity. So when nni fails, check each part sequentially.
 
-### **nnimanger** Failed
+Generally, if webUI is started successfully, there is a `Status` in the `Overview` tab, serving as a possible indicator of what kind of error happens. Otherwise you should check manually.
 
-Usually this is the most serious error. When this happens, the whole experiment fails and no trial will be run.
+### **NNI** Fails
 
-When this happens, you should check the nnimanager's log to find if there is any error.
+This is the most serious error. When this happens, the whole experiment fails and no trial will be run. Usually this might be related to some installation problem.
 
-
-
-
-### **Dispatcher** Failed
-
-Dispatcher fails. Usually for some new users of NNI, it means that tuner fails. You could check dispatcher's log to see what happens to your dispatcher. For built-in tuner, some common errors might be invalid search space (unsupported type of search space).
+When this happens, you should check `nnictl`'s error output file `stderr` and then the `nnimanager`'s log to find if there is any error.
 
 
-### **Trial** Failed
+### **Dispatcher** Fails
+
+Dispatcher fails. Usually, for some new users of NNI, it means that tuner fails. You could check dispatcher's log to see what happens to your dispatcher. For built-in tuner, some common errors might be invalid search space (unsupported type of search space or inconsistence between initializing args in configuration file and actual tuner's \_\_init\_\_ function args).
+
+Take the later situation as an example. If you write a customized tuner who's \_\_init\_\_ function has an argument called `optimize_mode`, which you do not provide in your configuration file, NNI will fail to run your tuner so the experiment fails. You can see errors in the webUI like:
+
+![](img/dispatcher_error.jpg)
+
+Here we can see it is a dispatcher error. So we can check the dispatcher log, which might look like:
+
+```
+[2019-02-19 19:36:45] DEBUG (nni.main/MainThread) START
+[2019-02-19 19:36:47] ERROR (nni.main/MainThread) __init__() missing 1 required positional arguments: 'optimize_mode'
+Traceback (most recent call last):
+  File "/usr/lib/python3.7/site-packages/nni/__main__.py", line 202, in <module>
+    main()
+  File "/usr/lib/python3.7/site-packages/nni/__main__.py", line 164, in main
+    args.tuner_args)
+  File "/usr/lib/python3.7/site-packages/nni/__main__.py", line 81, in create_customized_class_instance
+    instance = class_constructor(**class_args)
+TypeError: __init__() missing 1 required positional arguments: 'optimize_mode'.
+```
+
+### **Trial** Fails
 
 In this situation, NNI can still run and dispatch trials. 
 
