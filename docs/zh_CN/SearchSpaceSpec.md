@@ -1,12 +1,12 @@
-# Search Space
+# 搜索空间
 
-## Overview
+## 概述
 
-In NNI, tuner will sample parameters/architecture according to the search space, which is defined as a json file.
+在 NNI 中，Tuner 会根据搜索空间来取样生成参数和网络架构。搜索空间通过 JSON 文件来定义。
 
-To define a search space, users should define the name of variable, the type of sampling strategy and its parameters.
+要定义搜索空间，需要定义变量名称、采样策略的类型及其参数。
 
-* A example of search space definition as follow:
+* 搜索空间样例如下：
 
 ```yaml
 {
@@ -19,59 +19,59 @@ To define a search space, users should define the name of variable, the type of 
 
 ```
 
-Take the first line as an example. `dropout_rate` is defined as a variable whose priori distribution is a uniform distribution of a range from `0.1` and `0.5`.
+将第一行作为样例。 `dropout_rate` 定义了一个变量，先验分布为均匀分布，范围从 `0.1` 到 `0.5`。
 
-## Types
+## 类型
 
-All types of sampling strategies and their parameter are listed here:
+所有采样策略和参数如下：
 
 * {"_type":"choice","_value":options}
   
-  * Which means the variable value is one of the options, which should be a list. The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
+  * 这表示变量值应该是列表中的选项之一。 选项的元素也可以是 [nested]（嵌套的）随机表达式。 在这种情况下，随机选项仅会在条件满足时出现。
 
 * {"_type":"randint","_value":[upper]}
   
-  * Which means the variable value is a random integer in the range [0, upper). The semantics of this distribution is that there is no more correlation in the loss function between nearby integer values, as compared with more distant integer values. This is an appropriate distribution for describing random seeds for example. If the loss function is probably more correlated for nearby integer values, then you should probably use one of the "quantized" continuous distributions, such as either quniform, qloguniform, qnormal or qlognormal. Note that if you want to change lower bound, you can use `quniform` for now.
+  * 此变量为范围 [0, upper) 之间的随机整数。 这种分布的语义，在较远整数与附近整数之间的损失函数无太大关系， 这是用来描述随机种子的较好分布。 如果损失函数与较近的整数更相关，则应该使用某个"quantized"的连续分布，如quniform, qloguniform, qnormal 或 qlognormal。 注意，如果需要改动数字下限，可以使用 `quniform`。
 
 * {"_type":"uniform","_value":[low, high]}
   
-  * Which means the variable value is a value uniformly between low and high.
-  * When optimizing, this variable is constrained to a two-sided interval.
+  * 变量是 low 和 high 之间均匀分布的值。
+  * 当优化时，此变量值会在两侧区间内。
 
 * {"_type":"quniform","_value":[low, high, q]}
   
-  * Which means the variable value is a value like round(uniform(low, high) / q) * q
-  * Suitable for a discrete value with respect to which the objective is still somewhat "smooth", but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write `_value` like this: `[low, high, 1]`.
+  * 这表示变量值会类似于 round(uniform(low, high) / q) * q
+  * 适用于离散，同时反映了某种"平滑"的数值，但上下限都有限制。 如果需要从范围 [low, high] 中均匀选择整数，可以如下定义 `_value`：`[low, high, 1]`。
 
 * {"_type":"loguniform","_value":[low, high]}
   
-  * Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution like exp(uniform(log(low), log(high))), so that the logarithm of the return value is uniformly distributed.
-  * When optimizing, this variable is constrained to be positive.
+  * 变量值在范围 [low, high] 中是 loguniform 分布，如 exp(uniform(log(low), log(high)))，因此返回值是对数均匀分布的。
+  * 当优化时，此变量必须是正数。
 
 * {"_type":"qloguniform","_value":[low, high, q]}
   
-  * Which means the variable value is a value like round(loguniform(low, high)) / q) * q
-  * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
+  * 这表示变量值会类似于 round(loguniform(low, high)) / q) * q
+  * 适用于值是“平滑”的离散变量，但上下限均有限制。
 
 * {"_type":"normal","_value":[label, mu, sigma]}
   
-  * Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma. When optimizing, this is an unconstrained variable.
+  * 变量值为实数，且为正态分布，均值为 mu，标准方差为 sigma。 优化时，此变量不受约束。
 
 * {"_type":"qnormal","_value":[label, mu, sigma, q]}
   
-  * Which means the variable value is a value like round(normal(mu, sigma) / q) * q
-  * Suitable for a discrete variable that probably takes a value around mu, but is fundamentally unbounded.
+  * 这表示变量值会类似于 round(normal(mu, sigma) / q) * q
+  * 适用于在 mu 周围的离散变量，且没有上下限限制。
 
 * {"_type":"lognormal","_value":[label, mu, sigma]}
   
-  * Which means the variable value is a value drawn according to exp(normal(mu, sigma)) so that the logarithm of the return value is normally distributed. When optimizing, this variable is constrained to be positive.
+  * 变量值为 exp(normal(mu, sigma)) 分布，范围值是对数的正态分布。 当优化时，此变量必须是正数。
 
 * {"_type":"qlognormal","_value":[label, mu, sigma, q]}
   
-  * Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
-  * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
+  * 这表示变量值会类似于 round(exp(normal(mu, sigma)) / q) * q
+  * 适用于值是“平滑”的离散变量，但某一边有界。
 
-## Search Space Types Supported by Each Tuner
+## 每种 Tuner 支持的搜索空间类型
 
 |                     |  choice  | randint  | uniform  | quniform | loguniform | qloguniform |  normal  | qnormal  | lognormal | qlognormal |
 |:-------------------:|:--------:|:--------:|:--------:|:--------:|:----------:|:-----------:|:--------:|:--------:|:---------:|:----------:|
