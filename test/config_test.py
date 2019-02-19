@@ -96,8 +96,6 @@ def run(args):
 
     for config_file in config_files:
         try:
-            if args.ts == 'remote' and ('cifar10' in config_file or 'mnist-annotation' in config_file):
-                continue
             # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
             time.sleep(5)
             run_test(config_file, args.ts, args.local_gpu)
