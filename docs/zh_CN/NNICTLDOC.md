@@ -1,12 +1,12 @@
 # nnictl
 
-## Introduction
+## 介绍
 
-**nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc.
+**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。
 
-## Commands
+## 命令
 
-nnictl support commands:
+nnictl 支持的命令：
 
 * [nnictl create](#create)
 * [nnictl resume](#resume)
@@ -22,74 +22,74 @@ nnictl support commands:
 * [nnictl package](#package)
 * [nnictl --version](#version)
 
-### Manage an experiment
+### 管理 Experiment
 
 <a name="create"></a>
 
 * **nnictl create**
   
-  * Description
+  * 说明
     
-    You can use this command to create a new experiment, using the configuration specified in config file.
+    此命令使用参数中的配置文件，来创建新的 Experiment。
     
-    After this command is successfully done, the context will be set as this experiment, which means the following command you issued is associated with this experiment, unless you explicitly changes the context(not supported yet).
+    此命令成功完成后，上下文会被设置为此 Experiment。这意味着如果不显式改变上下文（暂不支持），输入的以下命令，都作用于此 Experiment。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl create [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                           |
-  | --------------- | -------- | ------- | ------------------------------------- |
-  | --config, -c    | True     |         | YAML configure file of the experiment |
-  | --port, -p      | False    |         | the port of restful server            |
+  | 参数及缩写        | 是否必需  | 默认值 | 说明                     |
+  | ------------ | ----- | --- | ---------------------- |
+  | --config, -c | True  |     | Experiment 的 YAML 配置文件 |
+  | --port, -p   | False |     | RESTful 服务的端口          |
 
 <a name="resume"></a>
 
 * **nnictl resume**
   
-  * Description
+  * 说明
     
-    You can use this command to resume a stopped experiment.
+    使用此命令恢复已停止的 Experiment。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl resume [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                    |
-  | --------------- | -------- | ------- | ---------------------------------------------- |
-  | id              | False    |         | The id of the experiment you want to resume    |
-  | --port, -p      | False    |         | Rest port of the experiment you want to resume |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                               |
+  | ---------- | ----- | --- | -------------------------------- |
+  | id         | False |     | 要恢复的 Experiment 标识               |
+  | --port, -p | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
 
 <a name="stop"></a>
 
 * **nnictl stop**
   
-  * Description
+  * 说明
     
-    You can use this command to stop a running experiment or multiple experiments.
+    使用此命令来停止正在运行的单个或多个 Experiment。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl stop [id]
     ```
   
-  * Detail
+  * 详细说明
     
-    1. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
-    2. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
-    3. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
-    4. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
-    5. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
-    6. Users could use 'nnictl stop all' to stop all experiments.
+    1. 如果指定了 id，并且此 id 匹配正在运行的 Experiment，nnictl 会停止相应的 Experiment，否则会输出错误信息。
+    2. 如果没有指定 id，并且当前有运行的 Experiment，则会停止该 Experiment，否则会输出错误信息。
+    3. 如果 id 以 * 结尾，nnictl 会停止所有匹配此通配符的 Experiment。
+    4. 如果 id 不存在，但匹配了某个Experiment 的 id 前缀，nnictl 会停止匹配的Experiment 。
+    5. 如果 id 不存在，但匹配了多个 Experiment id 的前缀，nnictl 会输出这些 id 的信息。
+    6. 可使用 'nnictl stop all' 来停止所有的 Experiment。
 
 <a name="update"></a>
 
@@ -97,22 +97,22 @@ nnictl support commands:
   
   * **nnictl update searchspace**
     
-    * Description
+    * 说明
       
-      You can use this command to update an experiment's search space.
+      可以用此命令来更新 Experiment 的搜索空间。
     
-    * Usage
+    * 用法
       
       ```bash
       nnictl update searchspace [OPTIONS]
       ```
     
-    * Options
+    * 选项
   
-  | Name, shorthand | Required | Default | Description                            |
-  | --------------- | -------- | ------- | -------------------------------------- |
-  | id              | False    |         | ID of the experiment you want to set   |
-  | --filename, -f  | True     |         | the file storing your new search space |
+  | 参数及缩写          | Required | Default | Description                            |
+  | -------------- | -------- | ------- | -------------------------------------- |
+  | id             | False    |         | ID of the experiment you want to set   |
+  | --filename, -f | True     |         | the file storing your new search space |
   
   * **nnictl update concurrency**
     
