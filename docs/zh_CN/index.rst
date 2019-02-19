@@ -1,9 +1,9 @@
 #########################################
-Neural Network Intelligence Documentation
+Neural Network Intelligence（NNI）文档
 #########################################
 
 ********
-Contents
+内容
 ********
 
 ..  toctree::
