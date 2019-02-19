@@ -1,14 +1,14 @@
-# Customize Assessor
+# 自定义 Assessor
 
-NNI supports to build an assessor by yourself for tuning demand.
+NNI 支持自定义 Assessor。
 
-If you want to implement a customized Assessor, there are three things to do:
+实现自定义的 Assessor，需要如下几步：
 
-1. Inherit the base Assessor class
-2. Implement assess_trial function
-3. Configure your customized Assessor in experiment YAML config file
+1. 继承 Assessor 基类
+2. 实现 assess_trial 函数
+3. 在 Experiment 的 YAML 文件中配置好自定义的 Assessor
 
-**1. Inherit the base Assessor class**
+**1. 继承 Assessor 基类**
 
 ```python
 from nni.assessor import Assessor
@@ -18,7 +18,7 @@ class CustomizedAssessor(Assessor):
         ...
 ```
 
-**2. Implement assess trial function**
+**2. 实现 assess_trial 函数**
 
 ```python
 from nni.assessor import Assessor, AssessResult
