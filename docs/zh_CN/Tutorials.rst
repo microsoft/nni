@@ -9,4 +9,4 @@
     Assessor<assessors>
     Web 界面<WebUI>
     训练平台<training_services>
-    advanced
+    高级功能<advanced>
