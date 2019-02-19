@@ -1,0 +1,15 @@
+jobs:
+- job: 'integration_test_pai'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    matrix:
+      Python36:
+        PYTHON_VERSION: '3.6'
+  steps:
+  - script: |
+      cd test
+      python3 generate_pai_config.py --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) \
+      --nni_docker_image $(nni_docker_image) --data_dir $(data_dir) --output_dir $(output_dir)
+      python3 config_test.py --ts pai
+    displayName: 'integration test'

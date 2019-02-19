@@ -2,23 +2,22 @@ local:
   trainingServicePlatform: local
 
 remote:
-  trainingServicePlatform: remote
   machineList:
-    - ip:
-      port:
-      username:
-      passwd:
+  - ip:
+    passwd:
+    port:
+    username:
+  trainingServicePlatform: remote
 
 pai:
-  trainingServicePlatform: pai
   paiConfig:
-    userName: 
-    passWord: 
-    host: 
+    host:
+    passWord:
+    userName:
+  trainingServicePlatform: pai
   trial:
-    gpuNum:
-    cpuNum:
-    memoryMB: 
-    image: msranni/latest
-    dataDir: 
-    outputDir: 
+    cpuNum: 1
+    dataDir:
+    image:
+    memoryMB: 8192
+    outputDir:
