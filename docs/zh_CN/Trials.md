@@ -79,15 +79,15 @@ searchSpacePath: /path/to/your/search_space.json
 
 同样以 MNIST 为例，只需要两步就能用 NNI Annotation 来实现 Trial 代码。
 
-### Step 1 - Update codes with annotations
+### 第一步：在代码中加入 Annotation
 
-The following is a tensorflow code snippet for NNI Annotation, where the highlighted four lines are annotations that help you to:
+下面是加入了 Annotation 的 TensorFlow 代码片段，高亮的 4 行 Annotation 用于：
 
-1. tune batch\_size and dropout\_rate
-2. report test\_acc every 100 steps
-3. at last report test\_acc as final result.
+1. 调优 batch\_size 和 dropout\_rate
+2. 每执行 100 步返回 test\_acc
+3. 最后返回 test\_acc 作为最终结果。
 
-What noteworthy is: as these newly added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.
+新添加的代码都是注释，不会影响以前的执行逻辑。因此这些代码仍然能在没有安装 NNI 的环境中运行。
 
 ```diff
 with tf.Session() as sess:
@@ -116,26 +116,26 @@ with tf.Session() as sess:
 +   """@nni.report_final_result(test_acc)"""
 ```
 
-**NOTE**:
+**注意**：
 
-* `@nni.variable` will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword `name` in `@nni.variable`.
-* `@nni.report_intermediate_result`/`@nni.report_final_result` will send the data to assessor/tuner at that line. 
+* `@nni.variable` 会对它的下面一行进行修改，左边被赋值变量必须在 `@nni.variable` 的 `name` 参数中指定。
+* `@nni.report_intermediate_result`/`@nni.report_final_result` 会将数据发送给 Assessor、Tuner。 
 
-For more information about annotation syntax and its usage, please refer to [Annotation](AnnotationSpec.md).
+Annotation 的语法和用法等，参考 [Annotation](AnnotationSpec.md)。
 
-### Step 2 - Enable NNI Annotation
+### 第二步：启用 Annotation
 
-In the YAML configure file, you need to set *useAnnotation* to true to enable NNI annotation:
+在 YAML 配置文件中设置 *useAnnotation* 为 true 来启用 Annotation：
 
     useAnnotation: true
     
 
 <a name="more-examples"></a>
 
-## More Trial Examples
+## 更多 Trial 的样例
 
-* [MNIST examples](mnist_examples.md)
-* [Finding out best optimizer for Cifar10 classification](cifar10_examples.md)
-* [How to tune Scikit-learn on NNI](sklearn_examples.md)
-* [Automatic Model Architecture Search for Reading Comprehension.](SQuAD_evolution_examples.md)
-* [Tuning GBDT on NNI](gbdt_example.md)
+* [MNIST 样例](mnist_examples.md)
+* [为 CIFAR 10 分类找到最佳的 optimizer](cifar10_examples.md)
+* [如何在 NNI 调优 SciKit-learn 的参数](sklearn_examples.md)
+* [在阅读理解上使用自动模型架构搜索。](SQuAD_evolution_examples.md)
+* [如何在 NNI 上调优 GBDT](gbdt_example.md)
