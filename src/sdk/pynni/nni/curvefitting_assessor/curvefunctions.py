@@ -25,7 +25,7 @@ curve_combination_models = ['vap', 'pow3', 'linear', 'logx_linear', 'dr_hill_zer
                             'exp4', 'ilog2', 'weibull', 'janoschek']
 
 def vap(x, a, b, c):
-    ''' Vapor pressure model '''
+    """Vapor pressure model"""
     return np.exp(a+b/x+c*np.log(x))
 
 all_models['vap'] = vap
@@ -77,10 +77,9 @@ model_para['pow4'] = [0.1, 200, 0., 0.8]
 model_para_num['pow4'] = 4
 
 def mmf(x, alpha, beta, kappa, delta):
-    '''
-    Morgan-Mercer-Flodin
+    """Morgan-Mercer-Flodin
     http://www.pisces-conservation.com/growthhelp/index.html?morgan_mercer_floden.htm
-    '''
+    """
     return alpha - (alpha - beta) / (1. + (kappa * x)**delta)
 
 all_models['mmf'] = mmf
@@ -102,10 +101,9 @@ model_para['ilog2'] = [0.78, 0.43]
 model_para_num['ilog2'] = 2
 
 def weibull(x, alpha, beta, kappa, delta):
-    '''
-    Weibull model
+    """Weibull model
     http://www.pisces-conservation.com/growthhelp/index.html?morgan_mercer_floden.htm
-    '''
+    """
     return alpha - (alpha - beta) * np.exp(-(kappa * x)**delta)
 
 all_models['weibull'] = weibull
@@ -113,7 +111,7 @@ model_para['weibull'] = [0.7, 0.1, 0.01, 1]
 model_para_num['weibull'] = 4
 
 def janoschek(x, a, beta, k, delta):
-    '''http://www.pisces-conservation.com/growthhelp/janoschek.htm'''
+    """http://www.pisces-conservation.com/growthhelp/janoschek.htm"""
     return a - (a - beta) * np.exp(-k*x**delta)
 
 all_models['janoschek'] = janoschek

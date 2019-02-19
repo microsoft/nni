@@ -17,9 +17,9 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
+"""
 smac_tuner.py
-'''
+"""
 
 from nni.tuner import Tuner
 
@@ -38,17 +38,13 @@ from smac.facade.epils_facade import EPILS
 
 @unique
 class OptimizeMode(Enum):
-    '''
-    Oprimize Mode class
-    '''
+    """Oprimize Mode class"""
     Minimize = 'minimize'
     Maximize = 'maximize'
 
 class SMACTuner(Tuner):
     def __init__(self, optimize_mode):
-        '''
-        Constructor
-        '''
+        """Constructor"""
         self.logger = logging.getLogger(
             self.__module__ + "." + self.__class__.__name__)
         self.optimize_mode = OptimizeMode(optimize_mode)
@@ -61,9 +57,7 @@ class SMACTuner(Tuner):
         self.categorical_dict = {}
 
     def _main_cli(self):
-        '''
-        Main function of SMAC for CLI interface
-        '''
+        """Main function of SMAC for CLI interface"""
         self.logger.info("SMAC call: %s" % (" ".join(sys.argv)))
 
         cmd_reader = CMDReader()
@@ -123,11 +117,10 @@ class SMACTuner(Tuner):
         return optimizer
 
     def update_search_space(self, search_space):
-        '''
-        TODO: this is urgly, we put all the initialization work in this method, 
-        because initialization relies on search space, also because update_search_space is called at the beginning.
+        """TODO: this is urgly, we put all the initialization work in this method, because initialization relies
+        on search space, also because update_search_space is called at the beginning.
         NOTE: updating search space is not supported.
-        '''
+        """
         if not self.update_ss_done:
             self.categorical_dict = generate_scenario(search_space)
             if self.categorical_dict is None:
@@ -140,9 +133,7 @@ class SMACTuner(Tuner):
             self.logger.warning('update search space is not supported.')
 
     def receive_trial_result(self, parameter_id, parameters, value):
-        '''
-        receive_trial_result
-        '''
+        """receive_trial_result"""
         reward = self.extract_scalar_reward(value)
         if self.optimize_mode is OptimizeMode.Maximize:
             reward = -reward
@@ -156,12 +147,11 @@ class SMACTuner(Tuner):
             self.smbo_solver.nni_smac_receive_runs(self.total_data[parameter_id], reward)
 
     def convert_loguniform_categorical(self, challenger_dict):
-        '''
-        Convert the values of type `loguniform` back to their initial range
+        """Convert the values of type `loguniform` back to their initial range
         Also, we convert categorical:
         categorical values in search space are changed to list of numbers before,
         those original values will be changed back in this function
-        '''
+        """
         for key, value in challenger_dict.items():
             # convert to loguniform
             if key in self.loguniform_key:
@@ -173,9 +163,7 @@ class SMACTuner(Tuner):
         return challenger_dict
 
     def generate_parameters(self, parameter_id):
-        '''
-        generate one instance of hyperparameters
-        '''
+        """generate one instance of hyperparameters"""
         if self.first_one:
             init_challenger = self.smbo_solver.nni_smac_start()
             self.total_data[parameter_id] = init_challenger
@@ -189,10 +177,7 @@ class SMACTuner(Tuner):
                 return self.convert_loguniform_categorical(challenger.get_dictionary())
 
     def generate_multiple_parameters(self, parameter_id_list):
-        '''
-        generate mutiple instances of hyperparameters
-        '''
-        
+        """generate mutiple instances of hyperparameters"""
 
         if self.first_one:
             params = []
