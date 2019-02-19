@@ -23,6 +23,13 @@ jobs:
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_139
+      sourceFolder: tools
+      targetFolder: /tmp/nnitest/$(Build.BuildId)/tools
+      overwrite: true
+    displayName: 'Copy tool files to remote machine'
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: remote_139
       sourceFolder: test
       targetFolder: /tmp/nnitest/$(Build.BuildId)/test
       overwrite: true
@@ -55,4 +62,6 @@ jobs:
       runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode stop --name $(Build.BuildId)
     displayName: 'Stop docker'
+
+
     
