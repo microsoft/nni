@@ -42,25 +42,25 @@
 
 以下是 NNI 在 MacOS 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
 
-|                | 最低配置                                               | 推荐配置                     |
-| -------------- | -------------------------------------------------- | ------------------------ |
-| **操作系统**       | macOS 10.14.1 (最新版本)                               | macOS 10.14.1 (最新版本)     |
-| **CPU**        | Intel® Core™ i5-760 或更高                            | Intel® Core™ i7-4770 或更高 |
-| **GPU**        | NVIDIA® GeForce® GT 750M 或 AMD Radeon™ R9 M290 或更高 | AMD Radeon™ R9 M395X 或更高 |
-| **内存**         | 4 GB                                               | 8 GB                     |
-| **存储**         | 70GB 可用空间及 7200 RPM 硬盘                             | 70GB 可用空间 SSD 硬盘         |
-| **Internet**   | Boardband internet connection                      |                          |
-| **Resolution** | 1024 x 768 minimum display resolution              |                          |
+|          | 最低配置                                               | 推荐配置                     |
+| -------- | -------------------------------------------------- | ------------------------ |
+| **操作系统** | macOS 10.14.1 (最新版本)                               | macOS 10.14.1 (最新版本)     |
+| **CPU**  | Intel® Core™ i5-760 或更高                            | Intel® Core™ i7-4770 或更高 |
+| **GPU**  | NVIDIA® GeForce® GT 750M 或 AMD Radeon™ R9 M290 或更高 | AMD Radeon™ R9 M395X 或更高 |
+| **内存**   | 4 GB                                               | 8 GB                     |
+| **存储**   | 70GB 可用空间及 7200 RPM 硬盘                             | 70GB 可用空间 SSD 硬盘         |
+| **网络**   | 宽带连接                                               |                          |
+| **分辨率**  | 1024 x 768 以上                                      |                          |
 
-## Further reading
+## 更多
 
-* [Overview](Overview.md)
-* [Use command line tool nnictl](NNICTLDOC.md)
-* [Use NNIBoard](WebUI.md)
-* [Define search space](SearchSpaceSpec.md)
-* [Config an experiment](ExperimentConfig.md)
-* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
-* [How to run an experiment on multiple machines?](RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PAIMode.md)
-* [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)
-* [How to run an experiment on Kubernetes through FrameworkController?](FrameworkControllerMode.md)
+* [概述](Overview.md)
+* [使用命令行工具 nnictl](NNICTLDOC.md)
+* [使用 NNIBoard](WebUI.md)
+* [定制搜索空间](SearchSpaceSpec.md)
+* [配置 Experiment](ExperimentConfig.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
+* [如何在多机上运行 Experiment？](RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
+* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](KubeflowMode.md)
+* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](FrameworkControllerMode.md)
