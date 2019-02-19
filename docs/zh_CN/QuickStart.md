@@ -202,31 +202,31 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 可�
 
 ![](../img/QuickStart4.png)
 
-Click the tab "Trial Duration" to see the bar graph.
+点击 "Trial Duration" 标签来查看柱状图。
 
 ![](../img/QuickStart5.png)
 
-Below is the status of the all trials. Specifically:
+下面是所有 Trial 的状态。 包括：
 
-* Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
-* If you run on the OpenPAI platform, you can also see the hdfsLogPath.
-* Kill: you can kill a job that status is running.
-* Support to search for a specific trial.
+* Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
+* 如果在 OpenPAI 平台上运行，还可以看到 hdfsLog。
+* Kill: 可终止正在运行的任务。
+* 支持搜索某个特定的 Trial。
 
 ![](../img/QuickStart6.png)
 
-* Intermediate Result Grap
+* 中间结果图
 
 ![](../img/QuickStart7.png)
 
-## Related Topic
+## 相关主题
 
-* [Try different Tuners](Builtin_Tuner.md)
-* [Try different Assessors](Builtin_Assessors.md)
-* [How to use command line tool nnictl](NNICTLDOC.md)
-* [How to write a trial](Trials.md)
-* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
-* [How to run an experiment on multiple machines?](RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PAIMode.md)
-* [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)
-* [How to run an experiment on Kubernetes through FrameworkController?](FrameworkControllerMode.md)
+* [尝试不同的 Tuner](Builtin_Tuner.md)
+* [尝试不同的 Assessor](Builtin_Assessors.md)
+* [使用命令行工具 nnictl](NNICTLDOC.md)
+* [如何编写 Trial 代码](Trials.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
+* [如何在多机上运行 Experiment？](RemoteMachineMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
+* [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](KubeflowMode.md)
+* [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](FrameworkControllerMode.md)
