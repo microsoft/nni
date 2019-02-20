@@ -1,11 +1,11 @@
 # Automatic Model Architecture Search for Reading Comprehension
 
-## Overview
+## 1.Overview
 This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension.
 
-## Experimental
+## 2.Experimental
 
-### Preparations
+### 2.1 Preparations
 Use downloading script to download data
 
 Execute the following command to download needed files
@@ -31,7 +31,7 @@ wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
 wget http://nlp.stanford.edu/data/glove.840B.300d.zip
 unzip glove.840B.300d.zip
 ```
-### Search Space
+### 2.2 Search Space
 
 Since attention and recurrent neural network (RNN) have been proven effective in Reading Comprehension.
 We conclude the search space as follow:
@@ -46,11 +46,11 @@ We conclude the search space as follow:
 
 ![](../examples/trials/ga_squad/ga_squad.png)
 
-### New version
+### 2.3 New version
 
 Also we have another version which time cost is less and performance is better. We will release soon.
 
-### Update configuration
+### 2.4 Update configuration
 On local:
 Modify `nni/examples/trials/ga_squad/config.yml`, here is the default configuration:
 
@@ -127,7 +127,7 @@ In the "trial" part, if you want to use GPU to perform the architecture search, 
 
 `trialConcurrency` is the number of trials running concurrently, which is the number of GPUs you want to use, if you are setting `gpuNum` to 1.
 
-### submit this job
+### 2.5 Submit this job
 on local:
 ```
 nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
@@ -136,14 +136,13 @@ on pai:
 ```
 nnictl create --config ~/nni/examples/trials/ga_squad/config_pai.yml
 ```
-### run on OpenPAI
 
-## Technical details about the trial
+## 3.Technical details about the trial
 
-###  How does it works
+###  3.1 How does it works
 The evolution-algorithm based architecture for question answering has two different parts just like any other examples: the trial and the tuner.
 
-###  The trial
+###  3.2 The trial
 
 The trial has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
 
@@ -203,7 +202,7 @@ for _, topo_i in enumerate(topology):
 
 performs actually conversion that maps each layer to a part in Tensorflow computation graph.
 
-### The tuner
+### 3.3 The tuner
 
 The tuner is much more simple than the trial. They actually share the same `graph.py`. Besides, the tuner has a `customer_tuner.py`, the most important class in which is `CustomerTuner`:
 
@@ -250,7 +249,7 @@ As we can see, the overloaded method `generate_parameters` implements a pretty n
 
 controls the mutation process. It will always take two random individuals in the population, only keeping and mutating the one with better result.
 
-### Model configuration format
+### 3.4 Model configuration format
 
 Here is an example of the model configuration, which is passed from the tuner to the trial in the architecture search procedure.
 
