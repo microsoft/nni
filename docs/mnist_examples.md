@@ -27,9 +27,12 @@ In this example, we have selected the following common aspects:
 * different tuners ："tpe", "batch-tune", "hyperband" <br>
 |type|item name|code directory|
 |---|---|---|
-|batch|[MNIST -- tuning with batch tuner](#mnist-batch)|[/examples/trials/mnist-batch-tune-keras](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-batch-tune-keras)|
-|hyperband|[MNIST -- tuning with hyperband](#mnist-hyperband)|[examples/trials/mnist-hyperband/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-hyperband)|
+|batch|[MNIST -- tuning with batch tuner](#mnist-batch)|[/examples/trials/mnist-batch-tune-keras(https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-batch-tune-keras)|
+|hyperband|[MNIST -- tuning with hyperband](#mnist-hyperband)|[examples/trials/mnist-hyperband/(https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-hyperband)|
 
+
+
+==
 |tpe|
 [MNIST with NNI API](#mnist)<br>
 [MNIST with NNI annotation](#mnist-annotation)<br>
