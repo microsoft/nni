@@ -17,7 +17,7 @@ jobs:
   - script: |
       cd deployment/pypi
       echo 'building prerelease package...'
-      make version_ts=true build
+      make build
       ls $(Build.SourcesDirectory)/deployment/pypi/dist/
     condition: eq( variables['build_docker_img'], 'true' )
     displayName: 'build nni bdsit_wheel'
@@ -42,14 +42,16 @@ jobs:
   - script: |
       if [ $(build_docker_img) = 'true' ]
       then
-        TEST_IMG=$(docker_img)
+        export TEST_IMG=$(docker_img)
       else
-        TEST_IMG=$(nni_docker_img)
+        export TEST_IMG=$(nni_docker_img)
       fi
-      echo $TEST_IMG
+      echo "TEST_IMG:$TEST_IMG"
       cd test
       python3 generate_pai_config.py --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) \
       --nni_docker_image $TEST_IMG --data_dir $(data_dir) --output_dir $(output_dir)
+
+      cat training_service.yml
 
       PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts pai
     displayName: 'integration test'
