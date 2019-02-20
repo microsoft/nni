@@ -76,5 +76,5 @@ A common example of this would be run the mnist example without installing tenso
 
 ![](img/trial_error.jpg)
 
-As it shows, every trial has a log path.
+As it shows, every trial has a log path, where you can find trial'log and stderr.
 
