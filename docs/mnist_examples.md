@@ -76,7 +76,19 @@ In this example, we have selected the following common aspects:
 
 This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer. We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc. It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an exmaple yaml file which enables assessor.
 
+As we stated in the target, we target to find out the best `optimizer` for training CIFAR-10 classification. When using different optimizers, we also need to adjust `learning rates` and `network structure` accordingly. so we chose these three parameters as hyperparameters and write the following search space.
+
+```json
+{
+    "lr":{"_type":"choice", "_value":[0.1, 0.01, 0.001, 0.0001]},
+    "optimizer":{"_type":"choice", "_value":["SGD", "Adadelta", "Adagrad", "Adam", "Adamax"]},
+    "model":{"_type":"choice", "_value":["vgg", "resnet18", "googlenet", "densenet121", "mobilenet", "dpn92", "senet18"]}
+}
+```
+
 `code directory: examples/trials/mnist/`
+
+`[examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)`
 
 <a name="mnist-annotation"></a>
 **MNIST with NNI annotation**
