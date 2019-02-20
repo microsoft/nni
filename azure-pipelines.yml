@@ -18,7 +18,11 @@ jobs:
       python3 -m pip install torchvision==0.2.1 --user
       python3 -m pip install keras==2.1.6 --user
       python3 -m pip install tensorflow-gpu==1.10.0 --user
-      apt-get install swig -y
+      wget http://prdownloads.sourceforge.net/swig/swig-3.0.12.tar.gz
+      tar -xzvf swig-3.0.12.tar.gz
+      cd swig-3.0.12 && ./configure --prefix=/home/$USER/swig-3.0.12
+      make
+      make install
       nnictl package install --name=SMAC
     displayName: 'Install dependencies for integration tests'
   - script: |
