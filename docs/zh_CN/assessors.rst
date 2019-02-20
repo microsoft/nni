@@ -1,5 +1,5 @@
 Assessor（评估器）
-================
+==================
 为了节省计算资源，在 NNI 中可通过创建 **Assessor**，来配置提前终止策略。
 
 Assessor 从 Trial 中接收中间结果，并通过指定的算法决定此 Trial 是否应该终止。 一旦 Trial 满足了提前终止策略（这表示 Assessor 认为最终结果不会太好），Assessor 会终止此 Trial，并将其状态标志为 `"EARLY_STOPPED"`。
