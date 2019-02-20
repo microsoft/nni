@@ -16,19 +16,12 @@ In this example, we have selected the following common aspects:
 <table>
 <tr>
     <td rowspan="2"> different search space modes：<br/>
-        [√] API<br/>
-        [√] annotation<br/>
-        [√] 正式发布 </td>
-    <td>文件标识：</td>
+    <td>annotation：</td>
     <td> </td>
 </tr>
 <tr>
     <td>API：</td>
     <td>2.7</td>
-</tr>
-<tr>
-    <td>annotation：</td>
-    <td></td>
 </tr>
 
 </table>
