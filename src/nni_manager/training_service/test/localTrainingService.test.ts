@@ -28,5 +28,10 @@ describe('Unit Test for LocalTrainingService', () => {
 
     beforeEach(async () => {
         trainingService = component.get(LocalTrainingService);
+        trainingService.run();
     })
+
+    afterEach(() => {
+        trainingService.cleanUp();
+    });
 });
