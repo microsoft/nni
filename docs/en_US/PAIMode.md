@@ -50,7 +50,7 @@ Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial con
     * Required key. Should be positive number based on your trial program's memory requirement
 * image
     * Required key. In pai mode, your trial program will be scheduled by OpenPAI to run in [Docker container](https://www.docker.com/). This key is used to specify the Docker image used to create the container in which your trial will run.
-    * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
+    * We already build a docker image [nnimsra/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile). You can either use this image directly in your config file, or build your own image based on it.
 * dataDir
     * Optional key. It specifies the HDFS data direcotry for trial to download data. The format should be something like hdfs://{your HDFS host}:9000/{your data directory}
 * outputDir 
@@ -62,20 +62,20 @@ nnictl create --config exp_pai.yml
 ```
 to start the experiment in pai mode. NNI will create OpenPAI job for each trial, and the job name format is something like `nni_exp_{experiment_id}_trial_{trial_id}`. 
 You can see jobs created by NNI in the OpenPAI cluster's web portal, like:
-![](./img/nni_pai_joblist.jpg)
+![](../img/nni_pai_joblist.jpg)
 
 Notice: In pai mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic. 
 
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information. 
 
 Expand a trial information in trial list view, click the logPath link like:
-![](./img/nni_webui_joblist.jpg)
+![](../img/nni_webui_joblist.jpg)
 
 And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS:
-![](./img/nni_trial_hdfs_output.jpg)
+![](../img/nni_trial_hdfs_output.jpg)
 
 You can see there're three fils in output folder: stderr, stdout, and trial.log
 
 If you also want to save trial's other output into HDFS, like model files, you can use environment variable `NNI_OUTPUT_DIR` in your trial code to save your own output files, and NNI SDK will copy all the files in `NNI_OUTPUT_DIR` from trial's container to HDFS. 
 
-Any problems when using NNI in pai mode, plesae create issues on [NNI github repo](https://github.com/Microsoft/nni).
+Any problems when using NNI in pai mode, please create issues on [NNI github repo](https://github.com/Microsoft/nni).
