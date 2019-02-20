@@ -26,24 +26,33 @@ In this example, we have selected the following common aspects:
 
 <tr><td rowspan="2"> <b>different training platforms</b><br/>
 <td>local, remote, pai</td><td><a href="#mnist-keras">MNIST in keras</a> 
-<a href="#mnist-batch">MNIST -- tuning with batch tuner</a>  <br>
-<a href="#mnist-hyperband">MNIST -- tuning with hyperband</a>  <br>
-<a href="mnist-nested">MNIST -- tuning within a nested search space</a> </td></tr>
-<tr><td>kubeflow</td><td><a href="#mnist">MNIST with NNI API</a>  <br>
-<a href="#mnist-annotation">MNIST with NNI annotation</a>  <br>
- <a href="#mnist-kubeflow-tf">distributed MNIST (tensorflow) using kubeflow</a>  <br>
-<a href="#mnist-kubeflow-pytorch">distributed MNIST (pytorch) using kubeflow</a> </td></tr>
+                              <a href="#mnist-batch">MNIST -- tuning with batch tuner</a>  <br>
+                              <a href="#mnist-hyperband">MNIST -- tuning with hyperband</a>  <br>
+                              <a href="mnist-nested">MNIST -- tuning within a nested search space</a> </td></tr>
+<tr><td>local, remote, pai, kubeflow</td><td><a href="#mnist">MNIST with NNI API</a>  <br>
+                              <a href="#mnist-annotation">MNIST with NNI annotation</a>  <br>
+                               <a href="#mnist-kubeflow-tf">distributed MNIST (tensorflow) using kubeflow</a>  <br>
+                              <a href="#mnist-kubeflow-pytorch">distributed MNIST (pytorch) using kubeflow</a> </td></tr>
 
 <tr><td rowspan="4"> <b>different tuners</b><br/>
-<td>tpe</td><td> </td></tr>
-<tr><td>batch-tune</td><td>2.7</td></tr>
-<tr><td>cascading</td><td>2.7</td></tr>
-<tr><td>hyperband</td><td>2.7</td></tr>
+<td>tpe</td><td><a href="#mnist">MNIST with NNI API</a>  <br>
+                <a href="#mnist-annotation">MNIST with NNI annotation</a>  <br>
+                <a href="#mnist-keras">MNIST in keras</a> <br>
+                <a href="#mnist-kubeflow-tf">distributed MNIST (tensorflow) using kubeflow</a>  <br>
+                <a href="#mnist-kubeflow-pytorch">distributed MNIST (pytorch) using kubeflow</a> </td></tr>
+<tr><td>batch-tune</td><td><a href="#mnist-batch">MNIST -- tuning with batch tuner</a> </td></tr>
+<tr><td>cascading</td><td><a href="mnist-nested">MNIST -- tuning within a nested search space</a> </td></tr>
+<tr><td>hyperband</td><td><a href="#mnist-hyperband">MNIST -- tuning with hyperband</a> </td></tr>
 
 <tr><td rowspan="3"><b> different deeplearning frameworks</b><br/>
-<td>keras</td><td> </td></tr>
-<tr><td>tensorflow</td><td>2.7</td></tr>
-<tr><td>pytorch</td><td>2.7</td></tr>
+<td>keras</td><td><a href="#mnist-keras">MNIST in keras</a> <br>
+                  <a href="#mnist-batch">MNIST -- tuning with batch tuner</a>  </td></tr>
+<tr><td>tensorflow</td><td><a href="#mnist">MNIST with NNI API</a> <br>
+                            <a href="#mnist-annotation">MNIST with NNI annotation</a> <br>
+                            <a href="#mnist-hyperband">MNIST -- tuning with hyperband</a> <br>
+                            <a href="mnist-nested">MNIST -- tuning within a nested search space</a> <br>
+                            <a href="#mnist-kubeflow-tf">distributed MNIST (tensorflow) using kubeflow</a> </td></tr>
+<tr><td>pytorch</td><td><a href="#mnist-kubeflow-pytorch">distributed MNIST (pytorch) using kubeflow</a> </td></tr>
 </table>
 
  The examples are listed below:
