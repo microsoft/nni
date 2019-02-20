@@ -18,14 +18,14 @@ In this example, we have selected the following common aspects:
 
 |item name|search space|platform|framework|tuner
 |---|---|---|---|---|
-|[MNIST with NNI API](#mnist)|json|local,pai,kubeflow|tensorflow| |
-|[MNIST with NNI annotation](#mnist-annotation)|annotation|local,remote,pai,kubeflow,gpu|tensorflow| |
-|[MNIST in keras](#mnist-keras)|json||keras| |
-|[MNIST -- tuning with batch tuner](#mnist-batch)|json| |keras| |
-|[MNIST -- tuning with hyperband](#mnist-hyperband)|json| |tensorflow| |
-|[MNIST -- tuning within a nested search space](#mnist-nested)|json| |tensorflow| |
-|[distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)|json|tensorflow| | |
-|[distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)|json|pytorch| | |
+|[MNIST with NNI API](#mnist)|json|local,pai,kubeflow|tensorflow|tpe|
+|[MNIST with NNI annotation](#mnist-annotation)|annotation|local,remote,pai,kubeflow,gpu|tensorflow|tpe|
+|[MNIST in keras](#mnist-keras)|json|local,remote,pai|keras|tpe|
+|[MNIST -- tuning with batch tuner](#mnist-batch)|json|local,pai,remote|keras|batch-tune|
+|[MNIST -- tuning with hyperband](#mnist-hyperband)|json|local,pai,remote|tensorflow|hyperband|
+|[MNIST -- tuning within a nested search space](#mnist-nested)|json|local,pai,remote|tensorflow|cascading|
+|[distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)|json|local,pai,remote|tensorflow|tpe|
+|[distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)|json|local,pai,remote|pytorch|tpe|
 
  - [MNIST with NNI API](#mnist)
  - [MNIST with NNI annotation](#mnist-annotation)
