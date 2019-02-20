@@ -58,22 +58,22 @@ In this example, we have selected the following common aspects:
  
 ## Experimental
 
-**Search Space**
+### Search Space
 
 As we stated in the target, we target to find out the best `optimizer` for training. When using different optimizers and different hyperparameters ,we write the choices into json file or in codes as annotation.
 
-**Trial**
+### Trial
 
 The code for CNN training of each hyperparameters set, paying particular attention to the following points are specific for NNI:
 * Use `nni.get_next_parameter()` to get next training hyperparameter set.
 * Use `nni.report_intermediate_result(acc)` to report the intermedian result after finish each epoch.
 * Use `nni.report_intermediate_result(acc)` to report the final result before the trial end.
 
-**Config**
+### Config
 
 Here are some examples of running this experiment on local,pai,remote or kubeflow.
 
-**Lauch the experiment**
+### Lauch the experiment
 
 We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
 
