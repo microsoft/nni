@@ -12,10 +12,10 @@ jobs:
 
   - script: |
       cd deployment/pypi
-      ls $(Build.StagingDirectory)/deployment
+      ls $(Build.SourcesDirectory)/deployment
       echo 'building prerelease package...'
       make version_ts=true build
-      ls $(Build.StagingDirectory)/deployment/pypi/dist/
+      ls $(Build.SourcesDirectory)/deployment/pypi/dist/
 
     displayName: 'build nni bdsit_wheel'
 
