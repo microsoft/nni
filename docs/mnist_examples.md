@@ -4,9 +4,9 @@
 CNN MNIST classifier for deep learning is similar to `hello world` for programming languages. The [MNIST](http://yann.lecun.com/exdb/mnist/) database of handwritten digits, available from this page, has a training set of 60,000 examples, and a test set of 10,000 examples.Thus, we use MNIST as example to introduce different features of NNI.
 ### **Goals**
 
-NNI offers a variety of features to support different search space modes, different training platforms, different tuner and different development environments. The goal of this tutorial is to The goal is to summarize the different features that make it easy for users to start the task that suits them.
+NNI offers a variety of features to support different search space modes, different training platforms, different tuner and different development environments. The goal of this tutorial is to summarize the different features that make it easy for users to start the task that suits them.
 
-In this example, we have selected the following common deep learning optimizer:
+In this example, we have selected the following common aspects:
 
 > "SGD", "Adadelta", "Adagrad", "Adam", "Adamax"
 
