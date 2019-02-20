@@ -26,7 +26,7 @@ In this example, we have selected the following common aspects:
         </tr>
         <tr>
             <th>
-                [MNIST with NNI API](#mnist)
+                [(MNIST with NNI API)](#mnist)
             </th>
             <th>/dev/stdin</th>
             <th>0</th>
