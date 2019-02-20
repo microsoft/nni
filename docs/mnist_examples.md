@@ -15,52 +15,52 @@ In this example, we have selected the following common aspects:
 
 <table>
 <tr>
-    <td rowspan="2"> different search space modes：<br/>
-    <td>annotation：</td>
+    <td rowspan="2"> different search space modes<br/>
+    <td>annotation</td>
     <td> </td>
 </tr>
 <tr>
-    <td>API：</td>
+    <td>API</td>
     <td>2.7</td>
 </tr>
 <tr>
-    <td rowspan="2"> different training platforms：<br/>
-    <td>"local", "remote", "pai"：</td>
+    <td rowspan="2"> different training platforms<br/>
+    <td>local, remote, pai</td>
     <td> </td>
 </tr>
 <tr>
-    <td>"kubeflow"：</td>
+    <td>kubeflow</td>
     <td>2.7</td>
 </tr>
 
 <tr>
-    <td rowspan="4"> different tuners：<br/>
-    <td>"tpe"：</td>
+    <td rowspan="4"> different tuners<br/>
+    <td>tpe</td>
     <td> </td>
 </tr>
 <tr>
-    <td>"batch-tune"：</td>
+    <td>batch-tune</td>
     <td>2.7</td>
 </tr>
 <tr>
-    <td>"cascading"：</td>
+    <td>cascading</td>
     <td>2.7</td>
 </tr>
 <tr>
-    <td>"hyperband"：</td>
+    <td>hyperband</td>
     <td>2.7</td>
 </tr>
 <tr>
-    <td rowspan="3"> different deeplearning frameworks：<br/>
-    <td>keras：</td>
+    <td rowspan="3"> different deeplearning frameworks<br/>
+    <td>keras</td>
     <td> </td>
 </tr>
 <tr>
-    <td>tensorflow：</td>
+    <td>tensorflow</td>
     <td>2.7</td>
 </tr>
 <tr>
-    <td>pytorch：</td>
+    <td>pytorch</td>
     <td>2.7</td>
 </tr>
 </table>
