@@ -15,6 +15,72 @@ In this example, we have selected the following common aspects:
  
  The examples are listed below:
 
+ 
+<table>
+        <tr>
+            <th>item name</th>
+            <th>framework</th>
+            <th>platform</th>
+            <th>searchspace</th>
+            <th>tuner</th>
+        </tr>
+        <tr>
+            <th> - [MNIST with NNI API](#mnist)</th>
+            <th>/dev/stdin</th>
+            <th>0</th>
+            <th>标准输入</th>
+            <th> </th>
+        </tr>
+        <tr>
+            <th> - [MNIST with NNI annotation](#mnist-annotation)</th>
+            <th>/dev/stdin</th>
+            <th>0</th>
+            <th>标准输入</th>
+            <th> </th>
+        </tr>
+         <tr>
+            <th> - [MNIST in keras](#mnist-keras)</th>
+            <th>/dev/stdin</th>
+            <th>0</th>
+            <th>标准输入</th>
+            <th> </th>
+        </tr>
+         <tr>
+            <th> - [MNIST -- tuning with batch tuner](#mnist-batch)</th>
+            <th>/dev/stdin</th>
+            <th>0</th>
+            <th>标准输入</th>
+            <th> </th>
+        </tr>
+         <tr>
+            <th> - [MNIST -- tuning with hyperband](#mnist-hyperband)</th>
+            <th>/dev/stdin</th>
+            <th>0</th>
+            <th>标准输入</th>
+            <th> </th>
+        </tr>
+         <tr>
+            <th> - [MNIST -- tuning with hyperband](#mnist-hyperband)</th>
+            <th>/dev/stdin</th>
+            <th>0</th>
+            <th>标准输入</th>
+            <th> </th>
+        </tr>
+         <tr>
+            <th> - [distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)</th>
+            <th>/dev/stdin</th>
+            <th>0</th>
+            <th>标准输入</th>
+            <th> </th>
+        </tr>
+         <tr>
+            <th> - [distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)</th>
+            <th>/dev/stdin</th>
+            <th>0</th>
+            <th>标准输入</th>
+            <th> </th>
+        </tr>
+</table>
  - [MNIST with NNI API](#mnist)
  - [MNIST with NNI annotation](#mnist-annotation)
  - [MNIST in keras](#mnist-keras)
