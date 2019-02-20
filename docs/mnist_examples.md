@@ -27,6 +27,9 @@ In this example, we have selected the following common aspects:
 * different tuners ："tpe", "batch-tune", "hyperband" <br>
 |type|item name|code directory|
 |---|---|---|
+|batch|[MNIST -- tuning with batch tuner](#mnist-batch)|[/examples/trials/mnist-batch-tune-keras](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-batch-tune-keras)|
+|hyperband|[MNIST -- tuning with hyperband](#mnist-hyperband)|[examples/trials/mnist-hyperband/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-hyperband)|
+
 |tpe|
 [MNIST with NNI API](#mnist)<br>
 [MNIST with NNI annotation](#mnist-annotation)<br>
@@ -38,8 +41,7 @@ In this example, we have selected the following common aspects:
 [examples/trials/mnist-annotation/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-annotation)<br>[examples/trials/mnist-keras/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-keras)<br>
 [examples/trials/mnist-cascading-search-space/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-cascading-search-space)<br>
 [examples/trials/mnist-distributed/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed)<br>[examples/trials/mnist-distributed-pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)|
-|batch|[MNIST -- tuning with batch tuner](#mnist-batch)|[/examples/trials/mnist-batch-tune-keras](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-batch-tune-keras)|
-|hyperband|[MNIST -- tuning with hyperband](#mnist-hyperband)|[examples/trials/mnist-hyperband/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-hyperband)|
+
 
 
 * different deeplearning frameworks ： "tensorflow", "pytorch", "keras" 
