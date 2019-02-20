@@ -63,7 +63,11 @@ It is easy to use nni in your sklearn code, there are only a few steps.
 * __step 3__  
   After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job.   
   You just need to use `nni.report_final_result(score)` to communitate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using `nni.report_intemediate_result(score)`. Note, you may not report intemediate result of your job, but you must report back your final result.
+
+
 **Lauch the experiment**
+
+
 After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
 ```
 nnictl create --config ./config.yml
