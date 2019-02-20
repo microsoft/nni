@@ -1,15 +1,7 @@
 local:
   trainingServicePlatform: local
-
-remote:
-  machineList:
-  - ip:
-    passwd:
-    port:
-    username:
-  trainingServicePlatform: remote
-
 pai:
+  maxExecDuration: 15m
   paiConfig:
     host:
     passWord:
@@ -21,3 +13,10 @@ pai:
     image:
     memoryMB: 8192
     outputDir:
+remote:
+  machineList:
+  - ip:
+    passwd:
+    port:
+    username:
+  trainingServicePlatform: remote
