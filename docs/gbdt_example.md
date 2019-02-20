@@ -1,12 +1,17 @@
 # GBDT in nni
+
+## Overview
 Gradient boosting is a machine learning technique for regression and classification problems, which produces a prediction model in the form of an ensemble of weak prediction models, typically decision trees. It builds the model in a stage-wise fashion as other boosting methods do, and it generalizes them by allowing optimization of an arbitrary differentiable loss function. 
 
 Gradient boosting decision tree has many popular implementations, such as [lightgbm](https://github.com/Microsoft/LightGBM), [xgboost](https://github.com/dmlc/xgboost), and [catboost](https://github.com/catboost/catboost), etc. GBDT is a great tool for solving the problem of traditional machine learning problem. Since GBDT is a robust algorithm, it could use in many domains. The better hyper-parameters for GBDT, the better performance you could achieve.
 
 NNI is a great platform for tuning hyper-parameters, you could try various builtin search algorithm in nni and run multiple trials concurrently. 
+## Goal
+Now we come back to our example "auto-gbdt" which run in lightgbm and nni. The data including [train data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train). 
+Given the features and label in train data, we train a GBDT regression model and use it to predict.
 
-
-## 1. Search Space in GBDT
+## Experiment
+### Prepare : Search Space in GBDT
 There are many hyper-parameters in GBDT, but what kind of parameters will affect the performance or speed? Based on some practical experience, some suggestion here(Take lightgbm as example):
 
 > * For better accuracy
@@ -40,13 +45,8 @@ Reference link:
 [lightgbm](https://lightgbm.readthedocs.io/en/latest/Parameters-Tuning.html) and 
 [autoxgoboost](https://github.com/ja-thomas/autoxgboost/blob/master/poster_2018.pdf)
 
-## 2. Task description
-Now we come back to our example "auto-gbdt" which run in lightgbm and nni. The data including [train data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train) and [test data](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/data/regression.train). 
-Given the features and label in train data, we train a GBDT regression model and use it to predict.
 
-## 3. How to run in nni
-
-### 3.1 Prepare your trial code
+### Step 1:Prepare your trial code
 You need to prepare a basic code as following:
 ``` python
 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.2 Prepare your search space.
+### Step 2:Prepare your search space.
 If you like to tune `num_leaves`, `learning_rate`, `bagging_fraction` and `bagging_freq`, 
 you could write a [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) as follow:
 ```
@@ -101,7 +101,7 @@ you could write a [search_space.json](https://github.com/Microsoft/nni/blob/mast
 
 More support variable type you could reference [here](https://github.com/Microsoft/nni/blob/master/docs/SearchSpaceSpec.md).
 
-### 3.3 Add SDK of nni into your code.
+### Step 3:Add SDK of nni into your code.
 ```diff
 +import nni
 ...
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### 3.4 Write a config file and run it.
+### Step 4:Write a config file and run it.
 In the config file, you could set some settings including:
 
 * Experiment setting: `trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, etc.
