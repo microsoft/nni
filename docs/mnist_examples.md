@@ -18,6 +18,8 @@ In this example, we have selected the following common aspects:
 
 
 * different training platforms ： "local", "remote", "pai", "kubeflow" <br>
+
+
 |type|item name|code directory|
 |---|---|---|
 |local,remote,pai,kubeflow|[MNIST with NNI API](#mnist)<br>[distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)<br>[distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)
