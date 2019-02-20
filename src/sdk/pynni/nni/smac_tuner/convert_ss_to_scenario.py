@@ -52,7 +52,7 @@ def generate_pcs(nni_search_space_content):
     
     Returns
     -------
-    Parameter Configuration Space (PCS): search_space
+    Parameter Configuration Space (PCS)
         the legal ranges of the parameters to be optimized and their default values
     """
     categorical_dict = {}

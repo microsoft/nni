@@ -194,7 +194,7 @@ class Bracket():
         
         Returns
         -------
-        hyperparameter_configurations: list
+        list
             a list of hyperparameter configurations. Format: [[key1, value1], [key2, value2], ...]
         """
         global _KEY # pylint: disable=global-statement
@@ -220,6 +220,13 @@ class Bracket():
         self.increase_i()
 
 def extract_scalar_reward(value, scalar_key='default'):
+    """
+    Raises
+    ------
+    RuntimeError
+        Incorrect final result: the final result should be float/int,
+        or a dict which has a key named "default" whose value is float/int.
+    """
     if isinstance(value, float) or isinstance(value, int):
         reward = value
     elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
@@ -362,6 +369,11 @@ class Hyperband(MsgDispatcherBase):
         ----------
         data: 
             it is an object which has keys 'parameter_id', 'value', 'trial_job_id', 'type', 'sequence'.
+        
+        Raises
+        ------
+        ValueError
+            Data type not supported
         """
         value = extract_scalar_reward(data['value'])
         bracket_id, i, _ = data['parameter_id'].split('_')

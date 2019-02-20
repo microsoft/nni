@@ -64,6 +64,11 @@ class CurvefittingAssessor(Assessor):
     def assess_trial(self, trial_job_id, trial_history):
         """assess whether a trial should be early stop by curve fitting algorithm
         return AssessResult.Good or AssessResult.Bad
+
+        Raises
+        ------
+        Exception
+            unrecognize exception in curvefitting_assessor
         """
         self.trial_history = trial_history
         curr_step = len(trial_history)
@@ -90,4 +95,4 @@ class CurvefittingAssessor(Assessor):
                 return AssessResult.Bad
 
         except Exception as exception:
-            logger.exception('unrecognize exception in curvefitting_asserssor', exception)
+            logger.exception('unrecognize exception in curvefitting_assessor', exception)
