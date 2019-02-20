@@ -10,7 +10,7 @@ In this example, we have selected the following common aspects:
 
 > different search space modes ： "API", "annotation" <br>
 > different training platforms ： "local", "remote", "pai", "kubeflow" <br>
-> different tuners ： "batch-tune", "cascading", "hyperband" <br>
+> different tuners ："tpe", "batch-tune", "cascading", "hyperband" <br>
 > different deeplearning frameworks ： "tensorflow", "pytorch", "keras" 
 
 <table>
@@ -23,10 +23,6 @@ In this example, we have selected the following common aspects:
     <td>API：</td>
     <td>2.7</td>
 </tr>
-
-
-
-
 <tr>
     <td rowspan="2"> different training platforms：<br/>
     <td>"local", "remote", "pai"：</td>
@@ -37,11 +33,39 @@ In this example, we have selected the following common aspects:
     <td>2.7</td>
 </tr>
 
-
-
-
+<tr>
+    <td rowspan="4"> different tuners：<br/>
+    <td>"tpe"：</td>
+    <td> </td>
+</tr>
+<tr>
+    <td>"batch-tune"：</td>
+    <td>2.7</td>
+</tr>
+<tr>
+    <td>"cascading"：</td>
+    <td>2.7</td>
+</tr>
+<tr>
+    <td>"hyperband"：</td>
+    <td>2.7</td>
+</tr>
+<tr>
+    <td rowspan="3"> different deeplearning frameworks：<br/>
+    <td>keras：</td>
+    <td> </td>
+</tr>
+<tr>
+    <td>tensorflow：</td>
+    <td>2.7</td>
+</tr>
+<tr>
+    <td>pytorch：</td>
+    <td>2.7</td>
+</tr>
+</table>
  The examples are listed below:
- 
+
 
 |item name|search space|platform|framework|tuner|code directory
 |---|---|---|---|---|---|
