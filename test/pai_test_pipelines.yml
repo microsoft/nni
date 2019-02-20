@@ -27,6 +27,7 @@ jobs:
       docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
 
       echo 'updating docker file for installing nni from local...'
+      # update Dockerfile to install NNI in docker image from whl file built in last step
       sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
       cat ../docker/Dockerfile
       echo $IMG_TAG
