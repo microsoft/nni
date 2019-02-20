@@ -27,15 +27,8 @@ In this example, we have selected the following common aspects:
 |[distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)|json|local,remote,pai,kubeflow|tensorflow|tpe|[examples/trials/mnist-distributed/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed)
 |[distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)|json|local,remote,pai,kubeflow|pytorch|tpe|[examples/trials/mnist-distributed-pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
- - [MNIST with NNI API](#mnist)
- - [MNIST with NNI annotation](#mnist-annotation)
- - [MNIST in keras](#mnist-keras)
- - [MNIST -- tuning with batch tuner](#mnist-batch)
- - [MNIST -- tuning with hyperband](#mnist-hyperband)
- - [MNIST -- tuning within a nested search space](#mnist-nested)
- - [distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)
- - [distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)
-
+### **Experimental**
+#### **different search space modes**
 <a name="mnist"></a>
 **MNIST with NNI API**
 
@@ -91,3 +84,14 @@ This example is to show how to run distributed training on kubeflow through NNI.
 Similar to the previous example, the difference is that this example is implemented in pytorch, thus, it uses kubeflow pytorch operator.
 
 `code directory: examples/trials/mnist-distributed-pytorch/`
+
+
+
+ - [MNIST with NNI API](#mnist)
+ - [MNIST with NNI annotation](#mnist-annotation)
+ - [MNIST in keras](#mnist-keras)
+ - [MNIST -- tuning with batch tuner](#mnist-batch)
+ - [MNIST -- tuning with hyperband](#mnist-hyperband)
+ - [MNIST -- tuning within a nested search space](#mnist-nested)
+ - [distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)
+ - [distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)
