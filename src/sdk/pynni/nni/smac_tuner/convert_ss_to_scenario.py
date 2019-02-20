@@ -134,7 +134,7 @@ def generate_scenario(ss_content):
 
     Parameters
     ----------
-    abort_on_first_run_crash: boolean
+    abort_on_first_run_crash: bool
         If true, SMAC will abort if the first run of the target algorithm crashes. Default: True, 
         because trials reported to nni tuner would always in success state
     algo: function
@@ -147,7 +147,7 @@ def generate_scenario(ss_content):
         Trials reported to nni tuner would always in success state
     cutoff_time:
         Maximum runtime, after which the target algorithm is cancelled. `Required if *run_obj* is runtime`
-    deterministic: boolean
+    deterministic: bool
         If true, the optimization process will be repeatable.
     execdir:
         Specifies the path to the execution-directory. Default: .
