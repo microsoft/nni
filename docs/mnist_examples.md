@@ -18,9 +18,9 @@ In this example, we have selected the following common aspects:
 
 |item name|search space|platform|framework|tuner
 |---|---|---|---|---|
-|[(MNIST with NNI API)](#mnist)| | | | |
-|[(MNIST with NNI annotation)](#mnist-annotation)| | | | |
-|[(MNIST in keras)](#mnist-keras)| | | | |
+|[MNIST with NNI API](#mnist)| | | | |
+|[MNIST with NNI annotation](#mnist-annotation)| | | | |
+|[MNIST in keras](#mnist-keras)| | | | |
 |[(MNIST -- tuning with batch tuner)](#mnist-batch)| | | | |
 |[(MNIST -- tuning with hyperband)](#mnist-hyperband)| | | | |
 |[(MNIST -- tuning within a nested search space)](#mnist-nested)| | | | |
