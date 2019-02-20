@@ -12,7 +12,7 @@ In this example, we have selected the following common aspects:
 > different training platforms ： "local", "remote", "pai", "kubeflow" <br>
 > different tuners ： "batch-tune", "cascading", "hyperband" <br>
 > different deeplearning frameworks ： "tensorflow", "pytorch", "keras" 
- 
+
 <table>
 <tr>
     <td rowspan="2"> different search space modes：<br/>
@@ -24,7 +24,21 @@ In this example, we have selected the following common aspects:
     <td>2.7</td>
 </tr>
 
-</table>
+
+
+
+<tr>
+    <td rowspan="2"> different training platforms：<br/>
+    <td>"local", "remote", "pai"：</td>
+    <td> </td>
+</tr>
+<tr>
+    <td>"kubeflow"：</td>
+    <td>2.7</td>
+</tr>
+
+
+
 
  The examples are listed below:
  
