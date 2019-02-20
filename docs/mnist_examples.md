@@ -80,15 +80,15 @@ As we stated in the target, we target to find out the best `optimizer` for train
 
 ```json
 {
-    "lr":{"_type":"choice", "_value":[0.1, 0.01, 0.001, 0.0001]},
-    "optimizer":{"_type":"choice", "_value":["SGD", "Adadelta", "Adagrad", "Adam", "Adamax"]},
-    "model":{"_type":"choice", "_value":["vgg", "resnet18", "googlenet", "densenet121", "mobilenet", "dpn92", "senet18"]}
+    "dropout_rate":{"_type":"uniform","_value":[0.5, 0.9]},
+    "conv_size":{"_type":"choice","_value":[2,3,5,7]},
+    "hidden_size":{"_type":"choice","_value":[124, 512, 1024]},
+    "batch_size": {"_type":"choice", "_value": [1, 4, 8, 16, 32]},
+    "learning_rate":{"_type":"choice","_value":[0.0001, 0.001, 0.01, 0.1]}
 }
 ```
 
 `code directory: examples/trials/mnist/`
-
-`[examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)`
 
 <a name="mnist-annotation"></a>
 **MNIST with NNI annotation**
