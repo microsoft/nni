@@ -53,9 +53,9 @@ assessor:
       * The default value of start_step is 6.
       start_step: 6
       # (optional) The threshold that we decide to early stop the worse performance curve.
-      # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the    history is 0.9, then we will stop the trial which predict value is lower than 0.95 *   0.9 = 0.855.
+      # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
       * The default value of threshold is 0.95.
-      # Kindly reminds that if you choose minimize mode, please adjust the value of            threshold >= 1.0 (e.g threshold=1.1)
+      # Kindly reminds that if you choose minimize mode, please adjust the value of threshold >= 1.0 (e.g threshold=1.1)
       threshold: 0.95
 ```
 
