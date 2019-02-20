@@ -8,15 +8,15 @@ NNI offers a variety of features to support different search space modes, differ
 
 In this example, we have selected the following common aspects:
 
-> different search space modes ： "API", "annotation" <br>
+> different search space modes ： "api", "annotation" <br>
 > different training platforms ： "local", "remote", "pai", "kubeflow" <br>
 > different tuners ："tpe", "batch-tune", "cascading", "hyperband" <br>
 > different deeplearning frameworks ： "tensorflow", "pytorch", "keras" 
 
 <table>
 <tr><td rowspan="2"> <b>different search space modes</b><br/>
-<td>annotation</td><td><a name= "#mnist" >MNIST with NNI API</a></td></tr>
-<tr><td>API</td><td>2.7</td></tr>
+<td>annotation</td><td><a name="#mnist">MNIST with NNI API</a></td></tr>
+<tr><td>api</td><td>2.7</td></tr>
 
 <tr><td rowspan="2"> <b>different training platforms</b><br/>
 <td>local, remote, pai</td><td> </td></tr>
