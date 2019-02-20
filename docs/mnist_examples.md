@@ -15,9 +15,9 @@ In this example, we have selected the following common aspects:
  
 <table>
 <tr>
-    <td rowspan="7"> 文件状态：<br/>
-        [√] 草稿<br/>
-        [√] 正在修改<br/>
+    <td rowspan="2"> different search space modes：<br/>
+        [√] API<br/>
+        [√] annotation<br/>
         [√] 正式发布 </td>
     <td>文件标识：</td>
     <td> </td>
