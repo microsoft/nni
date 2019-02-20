@@ -46,7 +46,7 @@ Reference link:
 [autoxgoboost](https://github.com/ja-thomas/autoxgboost/blob/master/poster_2018.pdf)
 
 
-### Step 1:Prepare your trial code
+### Step 1 : Prepare your trial code
 You need to prepare a basic code as following:
 ``` python
 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### Step 2:Prepare your search space.
+### Step 2 : Prepare your search space.
 If you like to tune `num_leaves`, `learning_rate`, `bagging_fraction` and `bagging_freq`, 
 you could write a [search_space.json](https://github.com/Microsoft/nni/blob/master/examples/trials/auto-gbdt/search_space.json) as follow:
 ```
@@ -101,7 +101,7 @@ you could write a [search_space.json](https://github.com/Microsoft/nni/blob/mast
 
 More support variable type you could reference [here](https://github.com/Microsoft/nni/blob/master/docs/SearchSpaceSpec.md).
 
-### Step 3:Add SDK of nni into your code.
+### Step 3 : Add SDK of nni into your code.
 ```diff
 +import nni
 ...
@@ -146,7 +146,7 @@ if __name__ == '__main__':
     run(lgb_train, lgb_eval, PARAMS, X_test, y_test)
 ```
 
-### Step 4:Write a config file and run it.
+### Step 4 : Write a config file and run it.
 In the config file, you could set some settings including:
 
 * Experiment setting: `trialConcurrency`, `maxExecDuration`, `maxTrialNum`, `trial gpuNum`, etc.
