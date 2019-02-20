@@ -10,7 +10,7 @@ In this example, we have selected the following common aspects:
 
 * different search space modes ： "api", "annotation" <br>
 
-|type|item name||code directory
+|type|item name|code directory|
 |---|---|---|
 |annotation|[MNIST with NNI annotation](#mnist-annotation)|[examples/trials/mnist-annotation/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-annotation)|
 |api|[MNIST with NNI API](#mnist) <br>[MNIST in keras](#mnist-keras)<br>[MNIST -- tuning with batch tuner](#mnist-batch)|..|
