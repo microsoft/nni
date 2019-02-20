@@ -115,15 +115,27 @@ This example is implemented in keras. It is also a network for MNIST dataset, wi
 <a name="mnist-batch"></a>
 **MNIST -- tuning with batch tuner**
 
-This example is to show how to use batch tuner. Users simply list all the configurations they want to try in the search space file. NNI will try all of them.
-
+This example is to show how to use batch tuner. Users simply list all the configurations they want to try in the search space file. NNI will try all of them.If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner.
+```yaml
+# config.yml
+tuner:
+  builtinTunerName: BatchTuner
+```
 `code directory: examples/trials/mnist-batch-tune-keras/`
 
 <a name="mnist-hyperband"></a>
 **MNIST -- tuning with hyperband**
 
 This example is to show how to use hyperband to tune the model. There is one more key `STEPS` in the received configuration for trials to control how long it can run (e.g., number of iterations).
-
+```yaml
+# config.yml
+advisor:
+  builtinAdvisorName: Hyperband
+  classArgs:
+    optimize_mode: maximize
+    R: 60
+    eta: 3
+```
 `code directory: examples/trials/mnist-hyperband/`
 
 <a name="mnist-nested"></a>
