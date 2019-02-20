@@ -8,7 +8,7 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   variables:
-    docker_img: msranni/nni:itlatest
+    docker_img: msranni/nni.it:latest
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user
