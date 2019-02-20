@@ -39,7 +39,7 @@ In this example, we have selected the following common aspects:
 
 |item name|search space|platform|framework|tuner|code directory
 |---|---|---|---|---|---|
-|[MNIST with NNI API](#mnist)|json|local,pai,kubeflow|tensorflow|tpe|[examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)
+|[MNIST with NNI API](#mnist)|json|local,remote,pai,kubeflow|tensorflow|tpe|[examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)
 |[MNIST with NNI annotation](#mnist-annotation)|annotation|local,remote,pai,kubeflow|tensorflow|tpe|[examples/trials/mnist-annotation/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-annotation)
 |[MNIST in keras](#mnist-keras)|json|local,remote,pai|keras|tpe|[examples/trials/mnist-keras/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-keras)
 |[MNIST -- tuning with batch tuner](#mnist-batch)|json|local,pai,remote|keras|batch|[examples/trials/mnist-batch-tune-keras/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-batch-tune-keras)
