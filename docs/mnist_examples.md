@@ -1,8 +1,6 @@
 # MNIST examples
 
 ## Overview
-
-[CIFAR-10][3] classification is a common benchmark problem in machine learning. The CIFAR-10 dataset is the collection of images. It is one of the most widely used datasets for machine learning research which contains 60,000 32x32 color images in 10 different classes. Thus, we use CIFAR-10 classification as an example to introduce NNI usage.
 CNN MNIST classifier for deep learning is similar to `hello world` for programming languages. The [MNIST](http://yann.lecun.com/exdb/mnist/) database of handwritten digits, available from this page, has a training set of 60,000 examples, and a test set of 10,000 examples.Thus, we use MNIST as example to introduce different features of NNI.
 ### **Goals**
 
