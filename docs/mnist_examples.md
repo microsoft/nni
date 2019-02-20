@@ -84,19 +84,9 @@ The code for CNN training of each hyperparameters set, paying particular attenti
 
 **Config**
 
-Here is the examples of running this experiment on local,pai,remote or kubeflow:
-<table>
-<td>local, remote, pai</td><td><a href="#mnist-keras">MNIST in keras</a> <br>
-                              <a href="#mnist-batch">MNIST -- tuning with batch tuner</a>  <br>
-                              <a href="#mnist-hyperband">MNIST -- tuning with hyperband</a>  <br>
-                              <a href="mnist-nested">MNIST -- tuning within a nested search space</a> </td></tr>
-<tr><td>local, remote, pai, kubeflow</td><td><a href="#mnist">MNIST with NNI API</a>  <br>
-                              <a href="#mnist-annotation">MNIST with NNI annotation</a>  <br>
-                               <a href="#mnist-kubeflow-tf">distributed MNIST (tensorflow) using kubeflow</a>  <br>
-                              <a href="#mnist-kubeflow-pytorch">distributed MNIST (pytorch) using kubeflow</a> </td></tr>
-</table>
+Here are some examples of running this experiment on local,pai,remote or kubeflow.
 
-#### Lauch the experiment
+**Lauch the experiment**
 
 We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
 
@@ -104,6 +94,7 @@ We are ready for the experiment, let's now **run the config.yml file from your c
     nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
 ```
 
+### **Examples**
 <a name ="mnist"></a>
 **MNIST with NNI API**
 
