@@ -93,8 +93,16 @@ As we stated in the target, we target to find out the best `optimizer` for train
 <a name="mnist-annotation"></a>
 **MNIST with NNI annotation**
 
-This example is similar to the example above, the only difference is that this example uses NNI annotation to specify search space and report results, while the example above uses NNI apis to receive configuration and report results.
-
+This example is similar to the example above, the only difference is that this example uses NNI annotation to specify search space and report results, while the example above uses NNI apis to receive configuration and report results.The annotation examples is as following.
+```python3
+"""@nni.variable(nni.choice(2, 3, 5, 7),name=self.conv_size)"""
+        self.conv_size = conv_size
+        """@nni.variable(nni.choice(124, 512, 1024), name=self.hidden_size)"""
+        self.hidden_size = hidden_size
+        self.pool_size = pool_size
+        """@nni.variable(nni.loguniform(0.0001, 0.1), name=self.learning_rate)"""
+        self.learning_rate = learning_rate
+```
 `code directory: examples/trials/mnist-annotation/`
 
 <a name="mnist-keras"></a>
