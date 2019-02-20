@@ -22,10 +22,10 @@ Tuner
 ..  autoclass:: nni.evolution_tuner.evolution_tuner.EvolutionTuner
     :members:
 
-..  autoclass:: nni.gridsearch_tuner.gridsearch_tuner.GridSearchTuner
+..  autoclass:: nni.smac_tuner.smac_tuner.SMACTuner
     :members:
 
-..  autoclass:: nni.smac_tuner.smac_tuner.SMACTuner
+..  autoclass:: nni.gridsearch_tuner.gridsearch_tuner.GridSearchTuner
     :members:
 
 Assessor
