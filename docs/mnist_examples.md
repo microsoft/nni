@@ -11,7 +11,7 @@ In this example, we have selected the following common aspects:
 > different search space modes ： "API", "annotation" <br>
 > different training platforms :  "local", "remote", "pai", "kubeflow" <br>
 > different tuners : "batch-tune", "cascading", "hyperband" <br>
-> different deeplearning frameworks : "tensorflow", "pytorch", "keras" <br>
+> different deeplearning frameworks : "tensorflow", "pytorch", "keras" 
  The examples are listed below:
 
  - [MNIST with NNI API](#mnist)
