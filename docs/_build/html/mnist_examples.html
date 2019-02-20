@@ -1,0 +1,286 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MNIST examples &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="CIFAR-10 examples" href="cifar10_examples.html" />
+    <link rel="prev" title="Write a Trial Run on NNI" href="Trials.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="Trials.html">Write Trial</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">MNIST examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cifar10_examples.html">Finding out best optimizer for Cifar10 classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sklearn_examples.html">How to tune Scikit-learn on NNI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SQuAD_evolution_examples.html">Automatic Model Architecture Search for Reading Comprehension.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gbdt_example.html">Tuning GBDT on NNI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tuners.html">Tuners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training_services.html">Training Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Advanced Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Overview.html">Overview</a> &raquo;</li>
+        
+          <li><a href="QuickStart.html">QuickStart</a> &raquo;</li>
+        
+          <li><a href="Trials.html">Write a Trial Run on NNI</a> &raquo;</li>
+        
+      <li>MNIST examples</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/mnist_examples.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="mnist-examples">
+<h1>MNIST examples<a class="headerlink" href="#mnist-examples" title="Permalink to this headline">¶</a></h1>
+<p>CNN MNIST classifier for deep learning is similar to <code class="docutils literal notranslate"><span class="pre">hello</span> <span class="pre">world</span></code> for programming languages. Thus, we use MNIST as example to introduce different features of NNI. The examples are listed below:</p>
+<ul class="simple">
+<li><a class="reference external" href="#mnist">MNIST with NNI API</a></li>
+<li><a class="reference external" href="#mnist-annotation">MNIST with NNI annotation</a></li>
+<li><a class="reference external" href="#mnist-keras">MNIST in keras</a></li>
+<li><a class="reference external" href="#mnist-batch">MNIST – tuning with batch tuner</a></li>
+<li><a class="reference external" href="#mnist-hyperband">MNIST – tuning with hyperband</a></li>
+<li><a class="reference external" href="#mnist-nested">MNIST – tuning within a nested search space</a></li>
+<li><a class="reference external" href="#mnist-kubeflow-tf">distributed MNIST (tensorflow) using kubeflow</a></li>
+<li><a class="reference external" href="#mnist-kubeflow-pytorch">distributed MNIST (pytorch) using kubeflow</a></li>
+</ul>
+<p><a name="mnist"></a>
+<strong>MNIST with NNI API</strong></p>
+<p>This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer. We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc. It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an exmaple YAML file which enables assessor.</p>
+<p><code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">directory:</span> <span class="pre">examples/trials/mnist/</span></code></p>
+<p><a name="mnist-annotation"></a>
+<strong>MNIST with NNI annotation</strong></p>
+<p>This example is similar to the example above, the only difference is that this example uses NNI annotation to specify search space and report results, while the example above uses NNI apis to receive configuration and report results.</p>
+<p><code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">directory:</span> <span class="pre">examples/trials/mnist-annotation/</span></code></p>
+<p><a name="mnist-keras"></a>
+<strong>MNIST in keras</strong></p>
+<p>This example is implemented in keras. It is also a network for MNIST dataset, with two convolution layers, one pooling layer, and two fully connected layers.</p>
+<p><code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">directory:</span> <span class="pre">examples/trials/mnist-keras/</span></code></p>
+<p><a name="mnist-batch"></a>
+<strong>MNIST – tuning with batch tuner</strong></p>
+<p>This example is to show how to use batch tuner. Users simply list all the configurations they want to try in the search space file. NNI will try all of them.</p>
+<p><code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">directory:</span> <span class="pre">examples/trials/mnist-batch-tune-keras/</span></code></p>
+<p><a name="mnist-hyperband"></a>
+<strong>MNIST – tuning with hyperband</strong></p>
+<p>This example is to show how to use hyperband to tune the model. There is one more key <code class="docutils literal notranslate"><span class="pre">STEPS</span></code> in the received configuration for trials to control how long it can run (e.g., number of iterations).</p>
+<p><code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">directory:</span> <span class="pre">examples/trials/mnist-hyperband/</span></code></p>
+<p><a name="mnist-nested"></a>
+<strong>MNIST – tuning within a nested search space</strong></p>
+<p>This example is to show that NNI also support nested search space. The search space file is an example of how to define nested search space.</p>
+<p><code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">directory:</span> <span class="pre">examples/trials/mnist-cascading-search-space/</span></code></p>
+<p><a name="mnist-kubeflow-tf"></a>
+<strong>distributed MNIST (tensorflow) using kubeflow</strong></p>
+<p>This example is to show how to run distributed training on kubeflow through NNI. Users can simply provide distributed training code and a configure file which specifies the kubeflow mode. For example, what is the command to run ps and what is the command to run worker, and how many resources they consume. This example is implemented in tensorflow, thus, uses kubeflow tensorflow operator.</p>
+<p><code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">directory:</span> <span class="pre">examples/trials/mnist-distributed/</span></code></p>
+<p><a name="mnist-kubeflow-pytorch"></a>
+<strong>distributed MNIST (pytorch) using kubeflow</strong></p>
+<p>Similar to the previous example, the difference is that this example is implemented in pytorch, thus, it uses kubeflow pytorch operator.</p>
+<p><code class="docutils literal notranslate"><span class="pre">code</span> <span class="pre">directory:</span> <span class="pre">examples/trials/mnist-distributed-pytorch/</span></code></p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="cifar10_examples.html" class="btn btn-neutral float-right" title="CIFAR-10 examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Trials.html" class="btn btn-neutral" title="Write a Trial Run on NNI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

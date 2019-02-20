@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Customize-Tuner &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Customize Assessor" href="Customize_Assessor.html" />
+    <link rel="prev" title="Run an Experiment on FrameworkController" href="FrameworkControllerMode.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Trials.html">Write Trial</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="tuners.html">Tuners</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="Builtin_Tuner.html">Builtin Tuners</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Customized Tuners</a><ul>
+<li class="toctree-l4"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/evolution_tuner">evolution-tuner</a></li>
+<li class="toctree-l4"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperopt_tuner">hyperopt-tuner</a></li>
+<li class="toctree-l4"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/examples/tuners/ga_customer_tuner">evolution-based-customized-tuner</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="Customize_Advisor.html">Customized Advisor</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training_services.html">Training Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Advanced Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Overview.html">Overview</a> &raquo;</li>
+        
+      <li>Customize-Tuner</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Customize_Tuner.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="customize-tuner">
+<h1>Customize-Tuner<a class="headerlink" href="#customize-tuner" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>Customize Tuner<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>NNI provides state-of-the-art tuning algorithm in builtin-tuners. NNI supports to build a tuner by yourself for tuning demand.</p>
+<p>If you want to implement your own tuning algorithm, you can implement a customized Tuner, there are three things to do:</p>
+<ol class="simple">
+<li>Inherit the base Tuner class</li>
+<li>Implement receive_trial_result and generate_parameter function</li>
+<li>Configure your customized tuner in experiment YAML config file</li>
+</ol>
+<p>Here is an example:</p>
+<p><strong>1. Inherit the base Tuner class</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">nni.tuner</span> <span class="kn">import</span> <span class="n">Tuner</span>
+
+<span class="k">class</span> <span class="nc">CustomizedTuner</span><span class="p">(</span><span class="n">Tuner</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+<p><strong>2. Implement receive_trial_result and generate_parameter function</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">nni.tuner</span> <span class="kn">import</span> <span class="n">Tuner</span>
+
+<span class="k">class</span> <span class="nc">CustomizedTuner</span><span class="p">(</span><span class="n">Tuner</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
+        <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">receive_trial_result</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_id</span><span class="p">,</span> <span class="n">parameters</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Receive trial&#39;s final result.</span>
+<span class="sd">    parameter_id: int</span>
+<span class="sd">    parameters: object created by &#39;generate_parameters()&#39;</span>
+<span class="sd">    value: final metrics of the trial, including default metric</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># your code implements here.</span>
+    <span class="o">...</span>
+
+    <span class="k">def</span> <span class="nf">generate_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_id</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns a set of trial (hyper-)parameters, as a serializable object</span>
+<span class="sd">    parameter_id: int</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># your code implements here.</span>
+    <span class="k">return</span> <span class="n">your_parameters</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">receive_trial_result</span></code> will receive the <code class="docutils literal notranslate"><span class="pre">parameter_id,</span> <span class="pre">parameters,</span> <span class="pre">value</span></code> as parameters input. Also, Tuner will receive the <code class="docutils literal notranslate"><span class="pre">value</span></code> object are exactly same value that Trial send.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">your_parameters</span></code> return from <code class="docutils literal notranslate"><span class="pre">generate_parameters</span></code> function, will be package as json object by NNI SDK. NNI SDK will unpack json object so the Trial will receive the exact same <code class="docutils literal notranslate"><span class="pre">your_parameters</span></code> from Tuner.</p>
+<p>For example:
+If the you implement the <code class="docutils literal notranslate"><span class="pre">generate_parameters</span></code> like this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">generate_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parameter_id</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns a set of trial (hyper-)parameters, as a serializable object</span>
+<span class="sd">    parameter_id: int</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># your code implements here.</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;dropout&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>It means your Tuner will always generate parameters <code class="docutils literal notranslate"><span class="pre">{&quot;dropout&quot;:</span> <span class="pre">0.3,</span> <span class="pre">&quot;learning_rate&quot;:</span> <span class="pre">0.4}</span></code>. Then Trial will receive <code class="docutils literal notranslate"><span class="pre">{&quot;dropout&quot;:</span> <span class="pre">0.3,</span> <span class="pre">&quot;learning_rate&quot;:</span> <span class="pre">0.4}</span></code> by calling API <code class="docutils literal notranslate"><span class="pre">nni.get_next_parameter()</span></code>. Once the trial ends with a result (normally some kind of metrics), it can send the result to Tuner by calling API <code class="docutils literal notranslate"><span class="pre">nni.report_final_result()</span></code>, for example <code class="docutils literal notranslate"><span class="pre">nni.report_final_result(0.93)</span></code>. Then your Tuner’s <code class="docutils literal notranslate"><span class="pre">receive_trial_result</span></code> function will receied the result like：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">parameter_id</span> <span class="o">=</span> <span class="mi">82347</span>
+<span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;dropout&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span> <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">}</span>
+<span class="n">value</span> <span class="o">=</span> <span class="mf">0.93</span>
+</pre></div>
+</div>
+<p><strong>Note that</strong> if you want to access a file (e.g., <code class="docutils literal notranslate"><span class="pre">data.txt</span></code>) in the directory of your own tuner, you cannot use <code class="docutils literal notranslate"><span class="pre">open('data.txt',</span> <span class="pre">'r')</span></code>. Instead, you should use the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">_pwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
+<span class="n">_fd</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">_pwd</span><span class="p">,</span> <span class="s1">&#39;data.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is because your tuner is not executed in the directory of your tuner (i.e., <code class="docutils literal notranslate"><span class="pre">pwd</span></code> is not the directory of your own tuner).</p>
+<p><strong>3. Configure your customized tuner in experiment YAML config file</strong></p>
+<p>NNI needs to locate your customized tuner class and instantiate the class, so you need to specify the location of the customized tuner class and pass literal values as parameters to the __init__ constructor.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">tuner</span><span class="p">:</span>
+  <span class="nt">codeDir</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/home/abc/mytuner</span>
+  <span class="nt">classFileName</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my_customized_tuner.py</span>
+  <span class="nt">className</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">CustomizedTuner</span>
+  <span class="c1"># Any parameter need to pass to your tuner class __init__ constructor</span>
+  <span class="c1"># can be specified in this optional classArgs field, for example </span>
+  <span class="nt">classArgs</span><span class="p">:</span>
+    <span class="nt">arg1</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">value1</span>
+</pre></div>
+</div>
+<p>More detail example you could see:</p>
+<blockquote>
+<div><div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/evolution_tuner">evolution-tuner</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperopt_tuner">hyperopt-tuner</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/Microsoft/nni/tree/master/examples/tuners/ga_customer_tuner">evolution-based-customized-tuner</a></li>
+</ul>
+</div>
+</div></blockquote>
+<div class="section" id="write-a-more-advanced-automl-algorithm">
+<h3>Write a more advanced automl algorithm<a class="headerlink" href="#write-a-more-advanced-automl-algorithm" title="Permalink to this headline">¶</a></h3>
+<p>The methods above are usually enough to write a general tuner. However, users may also want more methods, for example, intermediate results, trials’ state (e.g., the methods in assessor), in order to have a more powerful automl algorithm. Therefore, we have another concept called <code class="docutils literal notranslate"><span class="pre">advisor</span></code> which directly inherits from <code class="docutils literal notranslate"><span class="pre">MsgDispatcherBase</span></code> in <a class="reference external" href="https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/msg_dispatcher_base.py"><code class="docutils literal notranslate"><span class="pre">src/sdk/pynni/nni/msg_dispatcher_base.py</span></code></a>. Please refer to <a class="reference internal" href="Customize_Advisor.html"><span class="doc">here</span></a> for how to write a customized advisor.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Customize_Assessor.html" class="btn btn-neutral float-right" title="Customize Assessor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="FrameworkControllerMode.html" class="btn btn-neutral" title="Run an Experiment on FrameworkController" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

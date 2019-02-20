@@ -1,0 +1,445 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Search Space &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Experiment config reference" href="ExperimentConfig.html" />
+    <link rel="prev" title="WebUI" href="WebUI.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Reference.html">References</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="NNICTLDOC.html">Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="AnnotationSpec.html">Annotation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ExperimentConfig.html">Configuration</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Search Space</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Tutorials.html">Tutorials</a> &raquo;</li>
+        
+          <li><a href="Installation.html">Installation of NNI</a> &raquo;</li>
+        
+      <li>Search Space</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/SearchSpaceSpec.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="search-space">
+<h1>Search Space<a class="headerlink" href="#search-space" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>In NNI, tuner will sample parameters/architecture according to the search space, which is defined as a json file.</p>
+<p>To define a search space, users should define the name of variable, the type of sampling strategy and its parameters.</p>
+<ul class="simple">
+<li>A example of search space definition as follow:</li>
+</ul>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">{</span>
+    <span class="s">&quot;dropout_rate&quot;</span><span class="p p-Indicator">:{</span><span class="s">&quot;_type&quot;</span><span class="p p-Indicator">:</span><span class="s">&quot;uniform&quot;</span><span class="p p-Indicator">,</span><span class="s">&quot;_value&quot;</span><span class="p p-Indicator">:[</span><span class="nv">0.1</span><span class="p p-Indicator">,</span><span class="nv">0.5</span><span class="p p-Indicator">]},</span>
+    <span class="s">&quot;conv_size&quot;</span><span class="p p-Indicator">:{</span><span class="s">&quot;_type&quot;</span><span class="p p-Indicator">:</span><span class="s">&quot;choice&quot;</span><span class="p p-Indicator">,</span><span class="s">&quot;_value&quot;</span><span class="p p-Indicator">:[</span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="nv">5</span><span class="p p-Indicator">,</span><span class="nv">7</span><span class="p p-Indicator">]},</span>
+    <span class="s">&quot;hidden_size&quot;</span><span class="p p-Indicator">:{</span><span class="s">&quot;_type&quot;</span><span class="p p-Indicator">:</span><span class="s">&quot;choice&quot;</span><span class="p p-Indicator">,</span><span class="s">&quot;_value&quot;</span><span class="p p-Indicator">:[</span><span class="nv">124</span><span class="p p-Indicator">,</span> <span class="nv">512</span><span class="p p-Indicator">,</span> <span class="nv">1024</span><span class="p p-Indicator">]},</span>
+    <span class="s">&quot;batch_size&quot;</span><span class="p p-Indicator">:{</span><span class="s">&quot;_type&quot;</span><span class="p p-Indicator">:</span><span class="s">&quot;choice&quot;</span><span class="p p-Indicator">,</span><span class="s">&quot;_value&quot;</span><span class="p p-Indicator">:[</span><span class="nv">50</span><span class="p p-Indicator">,</span> <span class="nv">250</span><span class="p p-Indicator">,</span> <span class="nv">500</span><span class="p p-Indicator">]},</span>
+    <span class="s">&quot;learning_rate&quot;</span><span class="p p-Indicator">:{</span><span class="s">&quot;_type&quot;</span><span class="p p-Indicator">:</span><span class="s">&quot;uniform&quot;</span><span class="p p-Indicator">,</span><span class="s">&quot;_value&quot;</span><span class="p p-Indicator">:[</span><span class="nv">0.0001</span><span class="p p-Indicator">,</span> <span class="nv">0.1</span><span class="p p-Indicator">]}</span>
+<span class="p p-Indicator">}</span>
+</pre></div>
+</div>
+<p>Take the first line as an example. <code class="docutils literal notranslate"><span class="pre">dropout_rate</span></code> is defined as a variable whose priori distribution is a uniform distribution of a range from <code class="docutils literal notranslate"><span class="pre">0.1</span></code> and <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p>
+</div>
+<div class="section" id="types">
+<h2>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h2>
+<p>All types of sampling strategies and their parameter are listed here:</p>
+<ul class="simple">
+<li>{“_type”:”choice”,”_value”:options}<ul>
+<li>Which means the variable value is one of the options, which should be a list. The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.</li>
+</ul>
+</li>
+<li>{“_type”:”randint”,”_value”:[upper]}<ul>
+<li>Which means the variable value is a random integer in the range [0, upper). The semantics of this distribution is that there is no more correlation in the loss function between nearby integer values, as compared with more distant integer values. This is an appropriate distribution for describing random seeds for example. If the loss function is probably more correlated for nearby integer values, then you should probably use one of the “quantized” continuous distributions, such as either quniform, qloguniform, qnormal or qlognormal. Note that if you want to change lower bound, you can use <code class="docutils literal notranslate"><span class="pre">quniform</span></code> for now.</li>
+</ul>
+</li>
+<li>{“_type”:”uniform”,”_value”:[low, high]}<ul>
+<li>Which means the variable value is a value uniformly between low and high.</li>
+<li>When optimizing, this variable is constrained to a two-sided interval.</li>
+</ul>
+</li>
+<li>{“_type”:”quniform”,”_value”:[low, high, q]}<ul>
+<li>Which means the variable value is a value like round(uniform(low, high) / q) * q</li>
+<li>Suitable for a discrete value with respect to which the objective is still somewhat “smooth”, but which should be bounded both above and below. If you want to uniformly choose integer from a range [low, high], you can write <code class="docutils literal notranslate"><span class="pre">_value</span></code> like this: <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high,</span> <span class="pre">1]</span></code>.</li>
+</ul>
+</li>
+<li>{“_type”:”loguniform”,”_value”:[low, high]}<ul>
+<li>Which means the variable value is a value drawn from a range [low, high] according to a loguniform distribution like exp(uniform(log(low), log(high))), so that the logarithm of the return value is uniformly distributed.</li>
+<li>When optimizing, this variable is constrained to be positive.</li>
+</ul>
+</li>
+<li>{“_type”:”qloguniform”,”_value”:[low, high, q]}<ul>
+<li>Which means the variable value is a value like round(loguniform(low, high)) / q) * q</li>
+<li>Suitable for a discrete variable with respect to which the objective is “smooth” and gets smoother with the size of the value, but which should be bounded both above and below.</li>
+</ul>
+</li>
+<li>{“_type”:”normal”,”_value”:[label, mu, sigma]}<ul>
+<li>Which means the variable value is a real value that’s normally-distributed with mean mu and standard deviation sigma. When optimizing, this is an unconstrained variable.</li>
+</ul>
+</li>
+<li>{“_type”:”qnormal”,”_value”:[label, mu, sigma, q]}<ul>
+<li>Which means the variable value is a value like round(normal(mu, sigma) / q) * q</li>
+<li>Suitable for a discrete variable that probably takes a value around mu, but is fundamentally unbounded.</li>
+</ul>
+</li>
+<li>{“_type”:”lognormal”,”_value”:[label, mu, sigma]}<ul>
+<li>Which means the variable value is a value drawn according to exp(normal(mu, sigma)) so that the logarithm of the return value is normally distributed. When optimizing, this variable is constrained to be positive.</li>
+</ul>
+</li>
+<li>{“_type”:”qlognormal”,”_value”:[label, mu, sigma, q]}<ul>
+<li>Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q</li>
+<li>Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="search-space-types-supported-by-each-tuner">
+<h2>Search Space Types Supported by Each Tuner<a class="headerlink" href="#search-space-types-supported-by-each-tuner" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<thead>
+<tr>
+<th align="center"></th>
+<th align="center">choice</th>
+<th align="center">randint</th>
+<th align="center">uniform</th>
+<th align="center">quniform</th>
+<th align="center">loguniform</th>
+<th align="center">qloguniform</th>
+<th align="center">normal</th>
+<th align="center">qnormal</th>
+<th align="center">lognormal</th>
+<th align="center">qlognormal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">TPE Tuner</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+</tr>
+<tr>
+<td align="center">Random Search Tuner</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+</tr>
+<tr>
+<td align="center">Anneal Tuner</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+</tr>
+<tr>
+<td align="center">Evolution Tuner</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+</tr>
+<tr>
+<td align="center">SMAC Tuner</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">Batch Tuner</td>
+<td align="center">&#10003;</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">Grid Search Tuner</td>
+<td align="center">&#10003;</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center">&#10003;</td>
+<td align="center"></td>
+<td align="center">&#10003;</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">Hyperband Advisor</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+</tr>
+<tr>
+<td align="center">Metis Tuner</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center">&#10003;</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody>
+</table><p>Note that In Grid Search Tuner, for users’ convenience, the definition of <code class="docutils literal notranslate"><span class="pre">quniform</span></code> and <code class="docutils literal notranslate"><span class="pre">qloguniform</span></code> change, where q here specifies the number of values that will be sampled. Details about them are listed as follows</p>
+<ul class="simple">
+<li>Type ‘quniform’ will receive three values [low, high, q], where [low, high] specifies a range and ‘q’ specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is ‘low’, and each of the following values is (high-low)/q larger that the value in front of it.</li>
+<li>Type ‘qloguniform’ behaves like ‘quniform’ except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.</li>
+</ul>
+<p>Note that Metis Tuner only support numerical <code class="docutils literal notranslate"><span class="pre">choice</span></code> now</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ExperimentConfig.html" class="btn btn-neutral float-right" title="Experiment config reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="WebUI.html" class="btn btn-neutral" title="WebUI" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

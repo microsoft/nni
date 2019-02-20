@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Write a Trial Run on NNI &mdash; Neural Network Intelligence v0.5.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MNIST examples" href="mnist_examples.html" />
+    <link rel="prev" title="nnictl" href="NNICTLDOC.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/nni_logo_dark.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Table of Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickStart.html">QuickStart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Installation.html">Installation of NNI</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Write Trial</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mnist_examples.html">MNIST examples</a></li>
+<li class="toctree-l3"><a class="reference internal" href="cifar10_examples.html">Finding out best optimizer for Cifar10 classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sklearn_examples.html">How to tune Scikit-learn on NNI</a></li>
+<li class="toctree-l3"><a class="reference internal" href="SQuAD_evolution_examples.html">Automatic Model Architecture Search for Reading Comprehension.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gbdt_example.html">Tuning GBDT on NNI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tuners.html">Tuners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="assessors.html">Assessors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WebUI.html">WebUI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training_services.html">Training Platform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html">Advanced Features</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Reference.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FAQ.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Contribution.html">Contribute to NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="RELEASE.html">Changelog</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Neural Network Intelligence</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="Overview.html">Overview</a> &raquo;</li>
+        
+          <li><a href="QuickStart.html">QuickStart</a> &raquo;</li>
+        
+      <li>Write a Trial Run on NNI</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/Trials.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="write-a-trial-run-on-nni">
+<h1>Write a Trial Run on NNI<a class="headerlink" href="#write-a-trial-run-on-nni" title="Permalink to this headline">¶</a></h1>
+<p>A <strong>Trial</strong> in NNI is an individual attempt at applying a configuration (e.g., a set of hyper-parameters) on a model.</p>
+<p>To define an NNI trial, you need to firstly define the set of parameters (i.e., search space) and then update the model. NNI provide two approaches for you to define a trial: <a class="reference external" href="#nni-api">NNI API</a> and <a class="reference external" href="#nni-annotation">NNI Python annotation</a>. You could also refer to <a class="reference external" href="#more-examples">here</a> for more trial examples.</p>
+<p><a name="nni-api"></a></p>
+<div class="section" id="nni-api">
+<h2>NNI API<a class="headerlink" href="#nni-api" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="step-1-prepare-a-searchspace-parameters-file">
+<h3>Step 1 - Prepare a SearchSpace parameters file.<a class="headerlink" href="#step-1-prepare-a-searchspace-parameters-file" title="Permalink to this headline">¶</a></h3>
+<p>An example is shown below:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="nt">&quot;dropout_rate&quot;</span><span class="p">:{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.5</span><span class="p">]},</span>
+    <span class="nt">&quot;conv_size&quot;</span><span class="p">:{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">]},</span>
+    <span class="nt">&quot;hidden_size&quot;</span><span class="p">:{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;choice&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="mi">124</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">1024</span><span class="p">]},</span>
+    <span class="nt">&quot;learning_rate&quot;</span><span class="p">:{</span><span class="nt">&quot;_type&quot;</span><span class="p">:</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span><span class="nt">&quot;_value&quot;</span><span class="p">:[</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">]}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Refer to <a class="reference internal" href="SearchSpaceSpec.html"><span class="doc">SearchSpaceSpec.md</span></a> to learn more about search space. Tuner will generate configurations from this search space, that is, choosing a value for each hyperparameter from the range.</p>
+</div>
+<div class="section" id="step-2-update-model-codes">
+<h3>Step 2 - Update model codes<a class="headerlink" href="#step-2-update-model-codes" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p class="first">Import NNI</p>
+<p>Include <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">nni</span></code> in your trial code to use NNI APIs.</p>
+</li>
+<li><p class="first">Get configuration from Tuner</p>
+</li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">RECEIVED_PARAMS</span> <span class="o">=</span> <span class="n">nni</span><span class="o">.</span><span class="n">get_next_parameter</span><span class="p">()</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">RECEIVED_PARAMS</span></code> is an object, for example:
+<code class="docutils literal notranslate"><span class="pre">{&quot;conv_size&quot;:</span> <span class="pre">2,</span> <span class="pre">&quot;hidden_size&quot;:</span> <span class="pre">124,</span> <span class="pre">&quot;learning_rate&quot;:</span> <span class="pre">0.0307,</span> <span class="pre">&quot;dropout_rate&quot;:</span> <span class="pre">0.2029}</span></code>.</p>
+<ul class="simple">
+<li>Report metric data periodically (optional)</li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">nni</span><span class="o">.</span><span class="n">report_intermediate_result</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">metrics</span></code> could be any python object. If users use NNI built-in tuner/assessor, <code class="docutils literal notranslate"><span class="pre">metrics</span></code> can only have two formats: 1) a number e.g., float, int, 2) a dict object that has a key named <code class="docutils literal notranslate"><span class="pre">default</span></code> whose value is a number. This <code class="docutils literal notranslate"><span class="pre">metrics</span></code> is reported to <a class="reference internal" href="Builtin_Assessors.html"><span class="doc">assessor</span></a>. Usually, <code class="docutils literal notranslate"><span class="pre">metrics</span></code> could be periodically evaluated loss or accuracy.</p>
+<ul class="simple">
+<li>Report performance of the configuration</li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">nni</span><span class="o">.</span><span class="n">report_final_result</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">metrics</span></code> also could be any python object. If users use NNI built-in tuner/assessor, <code class="docutils literal notranslate"><span class="pre">metrics</span></code> follows the same format rule as that in <code class="docutils literal notranslate"><span class="pre">report_intermediate_result</span></code>, the number indicates the model’s performance, for example, the model’s accuracy, loss etc. This <code class="docutils literal notranslate"><span class="pre">metrics</span></code> is reported to <a class="reference internal" href="Builtin_Tuner.html"><span class="doc">tuner</span></a>.</p>
+</div>
+<div class="section" id="step-3-enable-nni-api">
+<h3>Step 3 - Enable NNI API<a class="headerlink" href="#step-3-enable-nni-api" title="Permalink to this headline">¶</a></h3>
+<p>To enable NNI API mode, you need to set useAnnotation to <em>false</em> and provide the path of SearchSpace file (you just defined in step 1):</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">useAnnotation</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">searchSpacePath</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">/path/to/your/search_space.json</span>
+</pre></div>
+</div>
+<p>You can refer to <a class="reference internal" href="ExperimentConfig.html"><span class="doc">here</span></a> for more information about how to set up experiment configurations.</p>
+<p>*Please refer to <a class="reference internal" href="sdk_reference.html"><span class="doc">here</span></a> for more APIs (e.g., <code class="docutils literal notranslate"><span class="pre">nni.get_sequence_id()</span></code>) provided by NNI.</p>
+<p><a name="nni-annotation"></a></p>
+</div>
+</div>
+<div class="section" id="nni-python-annotation">
+<h2>NNI Python Annotation<a class="headerlink" href="#nni-python-annotation" title="Permalink to this headline">¶</a></h2>
+<p>An alternative to writing a trial is to use NNI’s syntax for python. Simple as any annotation, NNI annotation is working like comments in your codes. You don’t have to make structure or any other big changes to your existing codes. With a few lines of NNI annotation, you will be able to:</p>
+<ul class="simple">
+<li>annotate the variables you want to tune</li>
+<li>specify in which range you want to tune the variables</li>
+<li>annotate which variable you want to report as intermediate result to <code class="docutils literal notranslate"><span class="pre">assessor</span></code></li>
+<li>annotate which variable you want to report as the final result (e.g. model accuracy) to <code class="docutils literal notranslate"><span class="pre">tuner</span></code>.</li>
+</ul>
+<p>Again, take MNIST as an example, it only requires 2 steps to write a trial with NNI Annotation.</p>
+<div class="section" id="step-1-update-codes-with-annotations">
+<h3>Step 1 - Update codes with annotations<a class="headerlink" href="#step-1-update-codes-with-annotations" title="Permalink to this headline">¶</a></h3>
+<p>The following is a tensorflow code snippet for NNI Annotation, where the highlighted four lines are annotations that help you to:</p>
+<ol class="simple">
+<li>tune batch_size and dropout_rate</li>
+<li>report test_acc every 100 steps</li>
+<li>at last report test_acc as final result.</li>
+</ol>
+<p>What noteworthy is: as these newly added codes are annotations, it does not actually change your previous codes logic, you can still run your code as usual in environments without NNI installed.</p>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span>with tf.Session() as sess:
+    sess.run(tf.global_variables_initializer())
+<span class="gi">+   &quot;&quot;&quot;@nni.variable(nni.choice(50, 250, 500), name=batch_size)&quot;&quot;&quot;</span>
+    batch_size = 128
+    for i in range(10000):
+        batch = mnist.train.next_batch(batch_size)
+<span class="gi">+       &quot;&quot;&quot;@nni.variable(nni.choice(1, 5), name=dropout_rate)&quot;&quot;&quot;</span>
+        dropout_rate = 0.5
+        mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
+                                                mnist_network.labels: batch[1],
+                                                mnist_network.keep_prob: dropout_rate})
+        if i % 100 == 0:
+            test_acc = mnist_network.accuracy.eval(
+                feed_dict={mnist_network.images: mnist.test.images,
+                            mnist_network.labels: mnist.test.labels,
+                            mnist_network.keep_prob: 1.0})
+<span class="gi">+           &quot;&quot;&quot;@nni.report_intermediate_result(test_acc)&quot;&quot;&quot;</span>
+
+    test_acc = mnist_network.accuracy.eval(
+        feed_dict={mnist_network.images: mnist.test.images,
+                    mnist_network.labels: mnist.test.labels,
+                    mnist_network.keep_prob: 1.0})
+<span class="gi">+   &quot;&quot;&quot;@nni.report_final_result(test_acc)&quot;&quot;&quot;</span>
+</pre></div>
+</div>
+<p><strong>NOTE</strong>:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">&#64;nni.variable</span></code> will take effect on its following line, which is an assignment statement whose leftvalue must be specified by the keyword <code class="docutils literal notranslate"><span class="pre">name</span></code> in <code class="docutils literal notranslate"><span class="pre">&#64;nni.variable</span></code>.</li>
+<li><code class="docutils literal notranslate"><span class="pre">&#64;nni.report_intermediate_result</span></code>/<code class="docutils literal notranslate"><span class="pre">&#64;nni.report_final_result</span></code> will send the data to assessor/tuner at that line.</li>
+</ul>
+<p>For more information about annotation syntax and its usage, please refer to <a class="reference internal" href="AnnotationSpec.html"><span class="doc">Annotation</span></a>.</p>
+</div>
+<div class="section" id="step-2-enable-nni-annotation">
+<h3>Step 2 - Enable NNI Annotation<a class="headerlink" href="#step-2-enable-nni-annotation" title="Permalink to this headline">¶</a></h3>
+<p>In the YAML configure file, you need to set <em>useAnnotation</em> to true to enable NNI annotation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">useAnnotation</span><span class="p">:</span> <span class="n">true</span>
+</pre></div>
+</div>
+<p><a name="more-examples"></a></p>
+</div>
+</div>
+<div class="section" id="more-trial-examples">
+<h2>More Trial Examples<a class="headerlink" href="#more-trial-examples" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="mnist_examples.html">MNIST examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cifar10_examples.html">Finding out best optimizer for Cifar10 classification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sklearn_examples.html">How to tune Scikit-learn on NNI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SQuAD_evolution_examples.html">Automatic Model Architecture Search for Reading Comprehension.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gbdt_example.html">Tuning GBDT on NNI</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="mnist_examples.html" class="btn btn-neutral float-right" title="MNIST examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="NNICTLDOC.html" class="btn btn-neutral" title="nnictl" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Microsoft
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
