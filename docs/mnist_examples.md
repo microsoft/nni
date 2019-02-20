@@ -25,7 +25,9 @@ In this example, we have selected the following common aspects:
             <th>tuner</th>
         </tr>
         <tr>
-            <th>[MNIST with NNI API](#mnist)</th>
+            <th>
+                [MNIST with NNI API](#mnist)
+            </th>
             <th>/dev/stdin</th>
             <th>0</th>
             <th>标准输入</th>
