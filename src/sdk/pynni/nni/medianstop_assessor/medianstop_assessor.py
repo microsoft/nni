@@ -27,8 +27,8 @@ class MedianstopAssessor(Assessor):
     
     Parameters
     ----------
-    optimize_mode: 'maximize' or 'minimize'
-        optimize mode
+    optimize_mode: str
+        optimize mode, 'maximize' or 'minimize'
     start_step: int
         only after receiving start_step number of reported intermediate results
     """
@@ -65,7 +65,7 @@ class MedianstopAssessor(Assessor):
         ----------
         trial_job_id: int
             trial job id
-        success: boolean
+        success: bool
             True if succssfully finish the experiment, False otherwise
         """
         if trial_job_id in self.running_history:
@@ -93,7 +93,7 @@ class MedianstopAssessor(Assessor):
 
         Returns
         -------
-        boolean
+        bool
             AssessResult.Good or AssessResult.Bad
 
         Raises

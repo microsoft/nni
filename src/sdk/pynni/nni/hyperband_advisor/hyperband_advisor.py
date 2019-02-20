@@ -133,8 +133,8 @@ class Bracket():
 		1/eta of them 'advances' to the next round.
     R:
         the budget associated with each stage
-    optimize_mode: 'maximize' or 'minimize'
-        optimize mode
+    optimize_mode: str
+        optimize mode, 'maximize' or 'minimize'
     """
     
     def __init__(self, s, s_max, eta, R, optimize_mode):
@@ -294,8 +294,8 @@ class Hyperband(MsgDispatcherBase):
         the maximum amount of resource that can be allocated to a single configuration
     eta: int
         the variable that controls the proportion of configurations discarded in each round of SuccessiveHalving
-    optimize_mode: 'maximize' or 'minimize'
-        optimize mode
+    optimize_mode: str
+        optimize mode, 'maximize' or 'minimize'
     """
     def __init__(self, R, eta=3, optimize_mode='maximize'):
         """B = (s_max + 1)R"""

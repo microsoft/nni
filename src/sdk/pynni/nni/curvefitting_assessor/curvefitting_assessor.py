@@ -30,8 +30,8 @@ class CurvefittingAssessor(Assessor):
     ----------
     epoch_num: int
         The total number of epoch
-    optimize_mode: 'maximize' or 'minimize'
-        optimize mode
+    optimize_mode: str
+        optimize mode, 'maximize' or 'minimize'
     start_step: int
         only after receiving start_step number of reported intermediate results
     threshold: float
@@ -67,7 +67,7 @@ class CurvefittingAssessor(Assessor):
         ----------
         trial_job_id: int
             trial job id
-        success: boolean
+        success: bool
             True if succssfully finish the experiment, False otherwise
         """
         if success:
@@ -92,7 +92,7 @@ class CurvefittingAssessor(Assessor):
 
         Returns
         -------
-        boolean
+        bool
             AssessResult.Good or AssessResult.Bad
 
         Raises
