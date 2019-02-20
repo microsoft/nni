@@ -4,7 +4,7 @@
 
 [CIFAR-10][3] classification is a common benchmark problem in machine learning. The CIFAR-10 dataset is the collection of images. It is one of the most widely used datasets for machine learning research which contains 60,000 32x32 color images in 10 different classes. Thus, we use CIFAR-10 classification as an example to introduce NNI usage.
 
-### **Goals**
+## Goals
 
 As we all know, the choice of model optimizer is directly affects the performance of the final matrix. The goal of this tutorial is to **tune a better performace optimizer** to train a relatively small convolutional neural network (CNN) for recognizing images.
 
@@ -12,9 +12,9 @@ In this example, we have selected the following common deep learning optimizer:
 
 > "SGD", "Adadelta", "Adagrad", "Adam", "Adamax"
 
-### **Experimental**
+## Experimental
 
-#### Preparations
+### Preparations
 
 This example requires pytorch. Pytorch install package should be chosen based on python version and cuda version.
 
@@ -25,7 +25,7 @@ python3 -m pip install http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp3
 python3 -m pip install torchvision
 ```
 
-#### CIFAR-10 with NNI
+### CIFAR-10 with NNI
 
 **Search Space**
 
@@ -65,7 +65,7 @@ code directory: [examples/trials/cifar10_pytorch/config_pai.yml][7]
 
 *The complete examples we have implemented: [examples/trials/cifar10_pytorch/][1]*
 
-#### Lauch the experiment
+**Lauch the experiment**
 
 We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
 
