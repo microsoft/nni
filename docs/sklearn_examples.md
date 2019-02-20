@@ -13,15 +13,13 @@ In this example, we use SVC as the model, and choose some parameters of this mod
 This example uses the Boston Housing Dataset, this dataset consists of price of houses in various places in Boston and the information such as Crime (CRIM), areas of non-retail business in the town (INDUS), the age of people who own the house (AGE) etc to predict the house price of boston.
 In this example, we tune different kinds of regression models including `"LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"` and some parameters like `"svr_kernel", "knr_weights"`. You could get more details about these models from [here](https://scikit-learn.org/stable/supervised_learning.html#supervised-learning).
 
-##Experiment
+## Experiment
+### Preparations
 To start using NNI, you should install the nni package, and use the command line tool `nnictl` to start an experiment. For more information about installation and preparing for the environment,  please [refer](GetStarted.md).
-After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
-```
-nnictl create --config ./config.yml
-```
-## 3. How to write sklearn code using nni
+### Sklearn code using nni
 It is easy to use nni in your sklearn code, there are only a few steps.
 * __step 1__  
+
   Prepare a search_space.json to storage your choose spaces. 
   For example, if you want to choose different models, you may try:
   ```
@@ -65,3 +63,8 @@ It is easy to use nni in your sklearn code, there are only a few steps.
 * __step 3__  
   After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job.   
   You just need to use `nni.report_final_result(score)` to communitate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using `nni.report_intemediate_result(score)`. Note, you may not report intemediate result of your job, but you must report back your final result.
+**Lauch the experiment**
+After you installed NNI, you could enter the corresponding folder and start the experiment using following commands:
+```
+nnictl create --config ./config.yml
+```
