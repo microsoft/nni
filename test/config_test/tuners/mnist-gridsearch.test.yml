@@ -3,7 +3,7 @@ experimentName: default_test
 maxExecDuration: 5m
 maxTrialNum: 2
 trialConcurrency: 1
-searchSpacePath: search_space_gridsearch.json
+searchSpacePath: search_space.json
 
 tuner:
   builtinTunerName: GridSearch
