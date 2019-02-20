@@ -76,7 +76,7 @@ In this example, we have selected the following common aspects:
 
 This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer. We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc. It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an exmaple yaml file which enables assessor.
 
-As we stated in the target, we target to find out the best `optimizer` for training CIFAR-10 classification. When using different optimizers, we also need to adjust `learning rates` and `network structure` accordingly. so we chose these three parameters as hyperparameters and write the following search space.
+As we stated in the target, we target to find out the best `optimizer` for training . When using different optimizers, we also need to adjust `dropout_rate` ,`conv_size`,`hidden_size`,`batch_size`and `learning_rate` accordingly. so we chose these three parameters as hyperparameters and write the following search space.
 
 ```json
 {
@@ -138,14 +138,3 @@ This example is to show how to run distributed training on kubeflow through NNI.
 Similar to the previous example, the difference is that this example is implemented in pytorch, thus, it uses kubeflow pytorch operator.
 
 `code directory: examples/trials/mnist-distributed-pytorch/`
-
-
-
- - [MNIST with NNI API](#mnist)
- - [MNIST with NNI annotation](#mnist-annotation)
- - [MNIST in keras](#mnist-keras)
- - [MNIST -- tuning with batch tuner](#mnist-batch)
- - [MNIST -- tuning with hyperband](#mnist-hyperband)
- - [MNIST -- tuning within a nested search space](#mnist-nested)
- - [distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)
- - [distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)
