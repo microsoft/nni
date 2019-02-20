@@ -21,7 +21,7 @@ In this example, we have selected the following common aspects:
 |[MNIST with NNI API](#mnist)|json|local,pai,kubeflow|tensorflow|tpe|examples/trials/mnist/
 |[MNIST with NNI annotation](#mnist-annotation)|annotation|local,remote,pai,kubeflow|tensorflow|tpe|examples/trials/mnist-annotation/
 |[MNIST in keras](#mnist-keras)|json|local,remote,pai|keras|tpe|examples/trials/mnist-keras/
-|[MNIST -- tuning with batch tuner](#mnist-batch)|json|local,pai,remote|keras|batch-tune|examples/trials/mnist-batch-tune-keras/
+|[MNIST -- tuning with batch tuner](#mnist-batch)|json|local,pai,remote|keras|batch|examples/trials/mnist-batch-tune-keras/
 |[MNIST -- tuning with hyperband](#mnist-hyperband)|json|local,pai,remote|tensorflow|hyperband|examples/trials/mnist-hyperband/
 |[MNIST -- tuning within a nested search space](#mnist-nested)|json|local,pai,remote|tensorflow|cascading|examples/trials/mnist-cascading-search-space/
 |[distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)|json|local,remote,pai,kubeflow|tensorflow|tpe|examples/trials/mnist-distributed/
