@@ -38,7 +38,7 @@ In this example, we have selected the following common aspects:
 
 |type|item name|code directory|
 |---|---|---|
-|tensorflow|
+|tensorflow|[MNIST with NNI API](#mnist)<br>[MNIST with NNI annotation](#mnist-annotation)<br>[MNIST -- tuning with hyperband](#mnist-hyperband)<br>[MNIST -- tuning within a nested search space](#mnist-nested)<br>[distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)|[examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)<br>[examples/trials/mnist-annotation/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-annotation)<br>[examples/trials/mnist-hyperband/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-hyperband)<br>[examples/trials/mnist-cascading-search-space/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-cascading-search-space)<br>[examples/trials/mnist-distributed/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed)
 |pytorch|[distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)|[examples/trials/mnist-distributed-pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)|
 |keras|[MNIST in keras](#mnist-keras)<br>[MNIST -- tuning with batch tuner](#mnist-batch)|[examples/trials/mnist-keras/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-keras)<br>
 
