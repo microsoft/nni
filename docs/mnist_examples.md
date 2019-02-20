@@ -70,7 +70,54 @@ In this example, we have selected the following common aspects:
 |[distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)|json|local,remote,pai,kubeflow|pytorch|tpe|[examples/trials/mnist-distributed-pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
 ### **Experimental**
-#### **different search space modes**
+**Search Space**
+
+As we stated in the target, we target to find out the best `optimizer` for training CIFAR-10 classification. When using different optimizers, we also need to adjust `learning rates` and `network structure` accordingly. so we chose these three parameters as hyperparameters and write the following search space.
+
+```json
+{
+    "lr":{"_type":"choice", "_value":[0.1, 0.01, 0.001, 0.0001]},
+    "optimizer":{"_type":"choice", "_value":["SGD", "Adadelta", "Adagrad", "Adam", "Adamax"]},
+    "model":{"_type":"choice", "_value":["vgg", "resnet18", "googlenet", "densenet121", "mobilenet", "dpn92", "senet18"]}
+}
+```
+
+*Implemented code directory: [search_space.json][8]*
+
+**Trial**
+
+The code for CNN training of each hyperparameters set, paying particular attention to the following points are specific for NNI:
+
+* Use `nni.get_next_parameter()` to get next training hyperparameter set.
+* Use `nni.report_intermediate_result(acc)` to report the intermedian result after finish each epoch.
+* Use `nni.report_intermediate_result(acc)` to report the final result before the trial end.
+
+*Implemented code directory: [main.py][9]*
+
+You can also use your previous code directly, refer to [How to define a trial][5] for modify.
+
+**Config**
+
+Here is the example of running this experiment on local(with multiple GPUs):
+<td>local, remote, pai</td><td><a href="#mnist-keras">MNIST in keras</a> 
+                              <a href="#mnist-batch">MNIST -- tuning with batch tuner</a>  <br>
+                              <a href="#mnist-hyperband">MNIST -- tuning with hyperband</a>  <br>
+                              <a href="mnist-nested">MNIST -- tuning within a nested search space</a> </td></tr>
+<tr><td>local, remote, pai, kubeflow</td><td><a href="#mnist">MNIST with NNI API</a>  <br>
+                              <a href="#mnist-annotation">MNIST with NNI annotation</a>  <br>
+                               <a href="#mnist-kubeflow-tf">distributed MNIST (tensorflow) using kubeflow</a>  <br>
+                              <a href="#mnist-kubeflow-pytorch">distributed MNIST (pytorch) using kubeflow</a> </td></tr>
+
+#### Lauch the experiment
+
+We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
+
+ ```bash
+    nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
+```
+
+
+
 <a name ="mnist"></a>
 **MNIST with NNI API**
 
