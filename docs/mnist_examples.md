@@ -12,16 +12,27 @@ In this example, we have selected the following common aspects:
 
 |type|item name|code directory|
 |---|---|---|
-|annotation|[MNIST with NNI annotation](#mnist-annotation)|[examples/trials/mnist-annotation/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-annotation)|
-|api|[MNIST with NNI API](#mnist)<br>[MNIST in keras](#mnist-keras)<br>[MNIST -- tuning with batch tuner](#mnist-batch)<br>[MNIST -- tuning with hyperband](#mnist-hyperband)<br>[MNIST -- tuning within a nested search space](#mnist-nested)<br>[distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)<br>[distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)|[examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)<br>[examples/trials/mnist-keras/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-keras)<br>[examples/trials/mnist-cascading-search-space](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-cascading-search-space)<br>[examples/trials/mnist-hyperband/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-hyperband)<br>[examples/trials/mnist-cascading-search-space/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-cascading-search-space)<br>[examples/trials/mnist-distributed/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed)<br>[examples/trials/mnist-distributed-pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
 * different training platforms ： "local", "remote", "pai", "kubeflow" <br>
 |type|item name|code directory|
 |---|---|---|
-|local,remote,pai|[MNIST with NNI annotation](#mnist-annotation)|[examples/trials/mnist-annotation/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-annotation)|
-|local,remote,pai,kubeflow|[MNIST with NNI API](#mnist)<br>[MNIST in keras](#mnist-keras)<br>[MNIST -- tuning with batch tuner](#mnist-batch)<br>[MNIST -- tuning with hyperband](#mnist-hyperband)<br>[MNIST -- tuning within a nested search space](#mnist-nested)<br>[distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)<br>[distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)|[examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)<br>[examples/trials/mnist-keras/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-keras)<br>[examples/trials/mnist-cascading-search-space](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-cascading-search-space)<br>[examples/trials/mnist-hyperband/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-hyperband)<br>[examples/trials/mnist-cascading-search-space/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-cascading-search-space)<br>[examples/trials/mnist-distributed/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed)<br>[examples/trials/mnist-distributed-pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
+|local,remote,pai|
+|local,remote,pai,kubeflow|
+
+
 * different tuners ："tpe", "batch-tune", "hyperband" <br>
+|type|item name|code directory|
+|---|---|---|
+|tpe|
+|batch|
+|hyperband|
+
 * different deeplearning frameworks ： "tensorflow", "pytorch", "keras" 
+|type|item name|code directory|
+|---|---|---|
+|tensorflow|
+|pytorch|[distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)|[examples/trials/mnist-distributed-pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)|
+|keras|[MNIST in keras](#mnist-keras)<br>[MNIST -- tuning with batch tuner](#mnist-batch)|[examples/trials/mnist-keras/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-keras)<br>
 
 
 ## Experimental
