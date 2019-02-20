@@ -15,7 +15,7 @@ In this example, we have selected the following common aspects:
 
 <table>
 <tr><td rowspan="2"> <b>different search space modes</b><br/>
-<td>annotation</td><td><a href="mnist">MNIST with NNI API</a></td></tr>
+<td>annotation</td><td><a href="#mnist">MNIST with NNI API</a></td></tr>
 <tr><td>api</td><td>2.7</td></tr>
 
 <tr><td rowspan="2"> <b>different training platforms</b><br/>
