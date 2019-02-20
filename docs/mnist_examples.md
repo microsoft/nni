@@ -23,29 +23,14 @@ In this example, we have selected the following common aspects:
     <td> </td>
 </tr>
 <tr>
-    <td>当前版本：</td>
+    <td>API：</td>
     <td>2.7</td>
 </tr>
 <tr>
-    <td>作    者：</td>
+    <td>annotation：</td>
     <td></td>
 </tr>
-<tr>
-    <td>创建日期：</td>
-    <td></td>
-</tr>
-<tr>
-    <td>最后更新：</td>
-    <td></td>
-</tr>
-<tr>
-    <td>密    级：</td>
-    <td></td>
-</tr>
-<tr>
-    <td>版权说明：</td>
-    <td></td>
-</tr>
+
 </table>
 
  The examples are listed below:
