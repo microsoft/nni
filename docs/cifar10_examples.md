@@ -25,9 +25,7 @@ python3 -m pip install http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp3
 python3 -m pip install torchvision
 ```
 
-### CIFAR-10 with NNI
-
-**Search Space**
+### Search Space
 
 As we stated in the target, we target to find out the best `optimizer` for training CIFAR-10 classification. When using different optimizers, we also need to adjust `learning rates` and `network structure` accordingly. so we chose these three parameters as hyperparameters and write the following search space.
 
@@ -41,7 +39,7 @@ As we stated in the target, we target to find out the best `optimizer` for train
 
 *Implemented code directory: [search_space.json][8]*
 
-**Trial**
+### Trial
 
 The code for CNN training of each hyperparameters set, paying particular attention to the following points are specific for NNI:
 
@@ -53,7 +51,7 @@ The code for CNN training of each hyperparameters set, paying particular attenti
 
 You can also use your previous code directly, refer to [How to define a trial][5] for modify.
 
-**Config**
+### Config
 
 Here is the example of running this experiment on local(with multiple GPUs):
 
@@ -65,7 +63,7 @@ code directory: [examples/trials/cifar10_pytorch/config_pai.yml][7]
 
 *The complete examples we have implemented: [examples/trials/cifar10_pytorch/][1]*
 
-**Lauch the experiment**
+### Lauch the experiment
 
 We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
 
