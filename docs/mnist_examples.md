@@ -15,12 +15,24 @@ In this example, we have selected the following common aspects:
 
 <table>
 <tr><td rowspan="2"> <b>different search space modes</b><br/>
-<td>annotation</td><td><a href="#mnist">MNIST with NNI API</a></td></tr>
-<tr><td>api</td><td>2.7</td></tr>
+<td>annotation</td><td><a href="#mnist-annotation">MNIST with NNI annotation</a></td></tr>
+<tr><td>api</td><td><a href="#mnist">MNIST with NNI API</a><br>
+                    <a href="#mnist-keras">MNIST in keras</a> <br>
+                    <a href="#mnist-batch">MNIST -- tuning with batch tuner</a> <br>
+                    <a href="#mnist-hyperband">MNIST -- tuning with hyperband</a> <br>
+                    <a href="mnist-nested">MNIST -- tuning within a nested search space</a> <br>
+                    <a href="#mnist-kubeflow-tf">distributed MNIST (tensorflow) using kubeflow</a> <br>
+                    <a href="#mnist-kubeflow-pytorch">distributed MNIST (pytorch) using kubeflow</a> </td></tr>
 
 <tr><td rowspan="2"> <b>different training platforms</b><br/>
-<td>local, remote, pai</td><td><a href="#mnist-annotation">MNIST with NNI API</a> </td></tr>
-<tr><td>kubeflow</td><td>2.7</td></tr>
+<td>local, remote, pai</td><td><a href="#mnist-keras">MNIST in keras</a> 
+<a href="#mnist-batch">MNIST -- tuning with batch tuner</a>  <br>
+<a href="#mnist-hyperband">MNIST -- tuning with hyperband</a>  <br>
+<a href="mnist-nested">MNIST -- tuning within a nested search space</a> </td></tr>
+<tr><td>kubeflow</td><td><a href="#mnist">MNIST with NNI API</a>  <br>
+<a href="#mnist-annotation">MNIST with NNI annotation</a>  <br>
+ <a href="#mnist-kubeflow-tf">distributed MNIST (tensorflow) using kubeflow</a>  <br>
+<a href="#mnist-kubeflow-pytorch">distributed MNIST (pytorch) using kubeflow</a> </td></tr>
 
 <tr><td rowspan="4"> <b>different tuners</b><br/>
 <td>tpe</td><td> </td></tr>
@@ -50,7 +62,7 @@ In this example, we have selected the following common aspects:
 
 ### **Experimental**
 #### **different search space modes**
-<a id ="mnist"></a>
+<a name ="mnist"></a>
 **MNIST with NNI API**
 
 This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer. We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc. It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an exmaple yaml file which enables assessor.
