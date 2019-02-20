@@ -46,13 +46,34 @@ class OptimizeMode(Enum):
     Maximize = 'maximize'
 
 def create_parameter_id():
-    """Create an id"""
+    """Create an id
+    
+    Returns
+    -------
+    int
+        parameter id
+    """
     global _next_parameter_id  # pylint: disable=global-statement
     _next_parameter_id += 1
     return _next_parameter_id - 1
 
 def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-1):
-    """Create a full id for a specific bracket's hyperparameter configuration"""
+    """Create a full id for a specific bracket's hyperparameter configuration
+    
+    Parameters
+    ----------
+    brackets_id: int
+        brackets id
+    brackets_curr_decay:
+        brackets curr decay
+    increased_id: int
+        increased id
+
+    Returns
+    -------
+    int
+        params id
+    """
     if increased_id == -1:
         increased_id = str(create_parameter_id())
     params_id = '_'.join([str(brackets_id),
@@ -98,7 +119,24 @@ def json2paramater(ss_spec, random_state):
     return chosen_params
 
 class Bracket():
-    """A bracket in Hyperband, all the information of a bracket is managed by an instance of this class"""
+    """A bracket in Hyperband, all the information of a bracket is managed by an instance of this class
+    
+    Parameters
+    ----------
+    s: int
+        The current SH iteration index.
+    s_max: int
+        total number of SH iterations
+    eta: float
+        In each iteration, a complete run of sequential halving is executed. In it,
+		after evaluating each configuration on the same subset size, only a fraction of
+		1/eta of them 'advances' to the next round.
+    R:
+        the budget associated with each stage
+    optimize_mode: 'maximize' or 'minimize'
+        optimize mode
+    """
+    
     def __init__(self, s, s_max, eta, R, optimize_mode):
         self.bracket_id = s
         self.s_max = s_max
@@ -155,6 +193,11 @@ class Bracket():
     def inform_trial_end(self, i):
         """If the trial is finished and the corresponding round (i.e., i) has all its trials finished,
         it will choose the top k trials for the next round (i.e., i+1)
+
+        Parameters
+        ----------
+        i: int
+            the ith round
         """
         global _KEY # pylint: disable=global-statement
         self.num_finished_configs[i] += 1
@@ -212,6 +255,11 @@ class Bracket():
         """after generating one round of hyperconfigs, this function records the generated hyperconfigs,
         creates a dict to record the performance when those hyperconifgs are running, set the number of finished configs
         in this round to be 0, and increase the round number.
+
+        Parameters
+        ----------
+        hyper_configs: list
+            the generated hyperconfigs
         """
         self.hyper_configs.append(hyper_configs)
         self.configs_perf.append(dict())
@@ -239,17 +287,18 @@ class Hyperband(MsgDispatcherBase):
     """Hyperband inherit from MsgDispatcherBase rather than Tuner, because it integrates both tuner's functions and assessor's functions.
     This is an implementation that could fully leverage available resources, i.e., high parallelism.
     A single execution of Hyperband takes a finite budget of (s_max + 1)B.
+
+    Parameters
+    ----------
+    R: int
+        the maximum amount of resource that can be allocated to a single configuration
+    eta: int
+        the variable that controls the proportion of configurations discarded in each round of SuccessiveHalving
+    optimize_mode: 'maximize' or 'minimize'
+        optimize mode
     """
     def __init__(self, R, eta=3, optimize_mode='maximize'):
-        """B = (s_max + 1)R
-
-        Parameters
-        ----------
-        R: int
-            the maximum amount of resource that can be allocated to a single configuration
-        eta: int
-            the variable that controls the proportion of configurations discarded in each round of SuccessiveHalving
-        """
+        """B = (s_max + 1)R"""
         super()
         self.R = R                        # pylint: disable=invalid-name
         self.eta = eta
@@ -274,7 +323,13 @@ class Hyperband(MsgDispatcherBase):
         pass
 
     def handle_initialize(self, data):
-        """data is search space"""
+        """data is search space
+
+        Parameters
+        ----------
+        data: int
+            number of trial jobs
+        """
         self.handle_update_search_space(data)
         send(CommandType.Initialized, '')
         return True
@@ -327,7 +382,13 @@ class Hyperband(MsgDispatcherBase):
         return True
 
     def handle_update_search_space(self, data):
-        """data: JSON object, which is search space"""
+        """data: JSON object, which is search space
+        
+        Parameters
+        ----------
+        data: int
+            number of trial jobs
+        """
         self.searchspace_json = data
         self.random_state = np.random.RandomState()
 

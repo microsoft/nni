@@ -23,7 +23,18 @@ import json
 import numpy as np
 
 def get_json_content(file_path):
-    """Load json file content"""
+    """Load json file content
+    
+    Parameters
+    ----------
+    file_path:
+        path to the file
+    
+    Raises
+    ------
+    TypeError
+        Error with the file path
+    """
     try:
         with open(file_path, 'r') as file:
             return json.load(file)
@@ -54,6 +65,11 @@ def generate_pcs(nni_search_space_content):
     -------
     Parameter Configuration Space (PCS)
         the legal ranges of the parameters to be optimized and their default values
+
+    Raises
+    ------
+    RuntimeError
+        unsupported type or value error or incorrect search space
     """
     categorical_dict = {}
     search_space = nni_search_space_content

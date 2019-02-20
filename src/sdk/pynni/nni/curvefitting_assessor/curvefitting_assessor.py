@@ -25,6 +25,17 @@ class CurvefittingAssessor(Assessor):
     """CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
     It stops a pending trial X at step S if the trial's forecast result at target step is convergence and lower than the
     best performance in the history.
+
+    Parameters
+    ----------
+    epoch_num: int
+        The total number of epoch
+    optimize_mode: 'maximize' or 'minimize'
+        optimize mode
+    start_step: int
+        only after receiving start_step number of reported intermediate results
+    threshold: float
+        The threshold that we decide to early stop the worse performance curve.
     """
     def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.95):
         if start_step <= 0:
@@ -50,7 +61,15 @@ class CurvefittingAssessor(Assessor):
         logger.info('Successfully initials the curvefitting assessor')
 
     def trial_end(self, trial_job_id, success):
-        """trial end: update the best performance of completed trial job"""
+        """update the best performance of completed trial job
+        
+        Parameters
+        ----------
+        trial_job_id: int
+            trial job id
+        success: boolean
+            True if succssfully finish the experiment, False otherwise
+        """
         if success:
             if self.set_best_performance:
                 self.completed_best_performance = max(self.completed_best_performance, self.trial_history[-1])
@@ -63,7 +82,18 @@ class CurvefittingAssessor(Assessor):
 
     def assess_trial(self, trial_job_id, trial_history):
         """assess whether a trial should be early stop by curve fitting algorithm
-        return AssessResult.Good or AssessResult.Bad
+
+        Parameters
+        ----------
+        trial_job_id: int
+            trial job id
+        trial_history: list
+            The history performance matrix of each trial
+
+        Returns
+        -------
+        boolean
+            AssessResult.Good or AssessResult.Bad
 
         Raises
         ------
