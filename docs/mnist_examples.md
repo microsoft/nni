@@ -20,14 +20,7 @@ In this example, we have selected the following common aspects:
      [MNIST -- tuning within a nested search space](#mnist-nested)<br>
      [distributed MNIST (tensorflow) using kubeflow](#mnist-kubeflow-tf)<br>
      [distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)
-    |[examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist) <br>
-     [examples/trials/mnist-keras/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-keras)<br>
-     [/examples/trials/mnist-cascading-search-space](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-cascading-search-space)<br>
-     [examples/trials/mnist-hyperband/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-hyperband)<br>
-     [examples/trials/mnist-cascading-search-space/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-cascading-search-space)<br>
-     [examples/trials/mnist-distributed/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed)
-<br>
-     [examples/trials/mnist-distributed-pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)|
+    |...|
 
 
 
