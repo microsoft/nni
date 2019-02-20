@@ -12,13 +12,24 @@ jobs:
 
   - script: |
       cd deployment/pypi
-      ls $(Build.SourcesDirectory)/deployment
       echo 'building prerelease package...'
       make version_ts=true build
       ls $(Build.SourcesDirectory)/deployment/pypi/dist/
 
     displayName: 'build nni bdsit_wheel'
 
+  - script: |
+      export IMG_TAG=itlatest
+      cd deployment/pypi
+      #docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
+
+      echo 'updating docker file for installing nni from local...'
+      sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
+      cat ../docker/Dockerfile
+      echo $IMG_TAG
+      docker build -f ../docker/Dockerfile -t msranni/nni:$IMG_TAG .
+      #docker push msranni/nni:$IMG_TAG
+    displayName: 'build and upload nni docker image'
   #- script: |
   #    source install.sh
   #  displayName: 'Install nni toolkit via source code'
