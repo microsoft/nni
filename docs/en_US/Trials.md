@@ -61,7 +61,7 @@ searchSpacePath: /path/to/your/search_space.json
 
 You can refer to [here](ExperimentConfig.md) for more information about how to set up experiment configurations.
 
-*Please refer to [here](sdk_reference.md) for more APIs (e.g., `nni.get_sequence_id()`) provided by NNI.
+*Please refer to [here](https://nni.readthedocs.io/en/latest/sdk_reference.html) for more APIs (e.g., `nni.get_sequence_id()`) provided by NNI.
 
 
 <a name="nni-annotation"></a>

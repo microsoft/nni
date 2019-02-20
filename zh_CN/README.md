@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://microsoft.github.io/nni/docs/img/nni_logo.png" width="300"/>
+<img src="https://github.com/Microsoft/nni/blob/master/docs/img/nni_logo.png" width="300"/>
 </p>
 
 * * *
@@ -13,7 +13,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 ### **NNI [v0.5.1](https://github.com/Microsoft/nni/releases) 已发布！**
 
 <p align="center">
-  <a href="#nni-v05-has-been-released"><img src="https://microsoft.github.io/nni/docs/img/overview.svg" /></a>
+  <a href="#nni-v05-has-been-released"><img src="https://github.com/Microsoft/nni/blob/master/docs/img/overview.svg" /></a>
 </p>
 
 <table>
@@ -21,15 +21,15 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
     <tr align="center" valign="bottom">
       <td>
         <b>支持的框架</b>
-        <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
+        <img src="https://github.com/Microsoft/nni/blob/master/docs/img/bar.png"/>
       </td>
       <td>
         <b>调优算法</b>
-        <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
+        <img src="https://github.com/Microsoft/nni/blob/master/docs/img/bar.png"/>
       </td>
       <td>
         <b>训练服务</b>
-        <img src="https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png"/>
+        <img src="https://github.com/Microsoft/nni/blob/master/docs/img/bar.png"/>
       </td>
     </tr>
     <tr/>
@@ -200,7 +200,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 * [尝试不同的 Tuner](docs/tuners.rst)
 * [尝试不同的 Assessor](docs/assessors.rst)
 * [实现自定义 Tuner](docs/Customize_Tuner.md)
-* [实现自定义 Assessor](examples/assessors/README.md)
+* [实现自定义 Assessor](docs/Customize_Assessor.md)
 * [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
 
 ## **贡献**

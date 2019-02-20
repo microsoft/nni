@@ -2,18 +2,20 @@
 
 NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tuner 的简单介绍：
 
-| Tuner                                                                                                            | 算法简介                                                                                                                                                                                |
-| ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **TPE** [(用法)](#TPE)                                                                                             | Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimization（SMBO，即基于序列模型优化）的方法。 SMBO 方法根据历史指标数据来按顺序构造模型，来估算超参的性能，随后基于此模型来选择新的超参。                                 |
-| **Random Search** [(用法)](#Random)                                                                                | 在超参优化时，随机搜索算法展示了其惊人的简单和效果。 建议当不清楚超参的先验分布时，采用随机搜索作为基准。                                                                                                                               |
-| **Anneal** [(用法)](#Anneal)                                                                                       | 这种简单的退火算法从先前的采样开始，会越来越靠近发现的最佳点取样。 此算法是随机搜索的简单变体，利用了反应曲面的平滑性。 退火率不是自适应的。                                                                                                             |
-| **Naive Evolution** [(用法)](#Evolution)                                                                           | 朴素进化算法来自于大规模图像分类进化。 它会基于搜索空间随机生成一个种群。 在每一代中，会选择较好的结果，并对其下一代进行一些变异（例如，改动一个超参，增加或减少一层）。 进化算法需要很多次 Trial 才能有效，但它也非常简单，也很容易扩展新功能。                                                       |
-| **SMAC** [(用法)](#SMAC)                                                                                           | SMAC 基于 Sequential Model-Based Optimization (SMBO，即序列的基于模型优化方法)。 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 SMAC 算法包装了 Github 的 SMAC3。 注意：SMAC 需要通过 `nnictl package` 命令来安装。 |
-| **Batch tuner** [(用法)](#Batch)                                                                                   | Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都执行完后，Experiment 即结束。 Batch Tuner 仅支持 choice 类型。                                                                                         |
-| **Grid Search** [(用法)](#GridSearch)                                                                              | 网格搜索会穷举定义在搜索空间文件中的所有超参组合。 网格搜索可以使用的类型有 choice, quniform, qloguniform。 quniform 和 qloguniform 中的数值 q 具有特别的含义（不同于搜索空间文档中的说明）。 它表示了在最高值与最低值之间采样的值的数量。                                  |
-| [Hyperband](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/hyperband_advisor) [(用法)](#Hyperband) | Hyperband 试图用有限的资源来探索尽可能多的组合，并发现最好的结果。 它的基本思路是生成大量的配置，并运行少量的步骤来找到有可能好的配置，然后继续训练找到其中更好的配置。                                                                                           |
-| [Network Morphism](../src/sdk/pynni/nni/networkmorphism_tuner/README.md) [(用法)](#NetworkMorphism)                | Network Morphism 提供了深度学习模型的自动架构搜索功能。 每个子网络都继承于父网络的知识和形态，并变换网络的不同形态，包括深度，宽度，跨层连接（skip-connection）。 然后使用历史的架构和指标，来估计子网络的值。 最后会选择最有希望的模型进行训练。                                          |
-| **Metis Tuner** [(用法)](#MetisTuner)                                                                              | 大多数调参工具仅仅预测最优配置，而 Metis 的优势在于有两个输出：(a) 最优配置的当前预测结果， 以及 (b) 下一次 Trial 的建议。 它不进行随机取样。 大多数工具假设训练集没有噪声数据，但 Metis 会知道是否需要对某个超参重新采样。                                                      |
+注意：点击 **Tuner 的名称**可跳转到算法的详细描述，点击**用法**可看到 Tuner 的安装要求、建议场景和使用样例等等。
+
+| Tuner                                                                                                                                             | 算法简介                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [TPE](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/hyperopt_tuner/README.md) [(用法)](#TPE)                                 | Tree-structured Parzen Estimator (TPE) 是一种 sequential model-based optimization（SMBO，即基于序列模型优化）的方法。 SMBO 方法根据历史指标数据来按顺序构造模型，来估算超参的性能，随后基于此模型来选择新的超参。 [参考论文](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)                                                  |
+| [Random Search](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/hyperopt_tuner/README.md) [(用法)](#Random)                    | 在超参优化时，随机搜索算法展示了其惊人的简单和效果。 建议当不清楚超参的先验分布时，采用随机搜索作为基准。 [参考论文](http://www.jmlr.org/papers/volume13/bergstra12a/bergstra12a.pdf)                                                                                                                                                                  |
+| [Anneal](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/hyperopt_tuner/README.md) [(用法)](#Anneal)                           | 这种简单的退火算法从先前的采样开始，会越来越靠近发现的最佳点取样。 此算法是随机搜索的简单变体，利用了反应曲面的平滑性。 退火率不是自适应的。                                                                                                                                                                                                                        |
+| [Naive Evolution](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/evolution_tuner/README.md) [(Usage)](#Evolution)           | 朴素进化算法来自于大规模图像分类进化。 它会基于搜索空间随机生成一个种群。 在每一代中，会选择较好的结果，并对其下一代进行一些变异（例如，改动一个超参，增加或减少一层）。 进化算法需要很多次 Trial 才能有效，但它也非常简单，也很容易扩展新功能。 [参考论文](https://arxiv.org/pdf/1703.01041.pdf)                                                                                                                     |
+| [SMAC](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/smac_tuner/README.md) [(用法)](#SMAC)                                   | SMAC 基于 Sequential Model-Based Optimization (SMBO，即序列的基于模型优化方法)。 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 SMAC 算法包装了 Github 的 SMAC3。 注意：SMAC 需要通过 `nnictl package` 命令来安装。 [参考论文，](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) [Github 代码库](https://github.com/automl/SMAC3) |
+| [Batch tuner](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/batch_tuner/README.md) [(用法)](#Batch)                          | Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都执行完后，Experiment 即结束。 Batch Tuner 仅支持 choice 类型。                                                                                                                                                                                                    |
+| [Grid Search](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/gridsearch_tuner/README.md) [(用法)](#GridSearch)                | 网格搜索会穷举定义在搜索空间文件中的所有超参组合。 网格搜索可以使用的类型有 choice, quniform, qloguniform。 quniform 和 qloguniform 中的数值 q 具有特别的含义（不同于搜索空间文档中的说明）。 它表示了在最高值与最低值之间采样的值的数量。                                                                                                                                             |
+| [Hyperband](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/hyperband_advisor/README.md) [(用法)](#Hyperband)                  | Hyperband 试图用有限的资源来探索尽可能多的组合，并发现最好的结果。 它的基本思路是生成大量的配置，并运行少量的步骤来找到有可能好的配置，然后继续训练找到其中更好的配置。 [参考论文](https://arxiv.org/pdf/1603.06560.pdf)                                                                                                                                                         |
+| [Network Morphism](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/networkmorphism_tuner/README.md) [(用法)](#NetworkMorphism) | Network Morphism 提供了深度学习模型的自动架构搜索功能。 每个子网络都继承于父网络的知识和形态，并变换网络的不同形态，包括深度，宽度，跨层连接（skip-connection）。 然后使用历史的架构和指标，来估计子网络的值。 最后会选择最有希望的模型进行训练。 [参考论文](https://arxiv.org/abs/1806.10282)                                                                                                            |
+| [Metis Tuner](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/metis_tuner/README.md) [(用法)](#MetisTuner)                     | 大多数调参工具仅仅预测最优配置，而 Metis 的优势在于有两个输出：(a) 最优配置的当前预测结果， 以及 (b) 下一次 Trial 的建议。 它不进行随机取样。 大多数工具假设训练集没有噪声数据，但 Metis 会知道是否需要对某个超参重新采样。 [参考论文](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/)                                                |
 
 <br />
 
@@ -109,7 +111,7 @@ tuner:
 
 **建议场景**
 
-此算法对计算资源的需求相对较高。 需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者利用了 Assessor，就非常适合此算法。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。
+此算法对计算资源的需求相对较高。 需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者使用了 Assessor，就非常适合此算法。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。
 
 **参数**
 
@@ -169,7 +171,7 @@ tuner:
 
 **建议场景**
 
-如果 Experiment 配置已确定，可通过 Batch Tuner 将它们罗列到搜索空间中运行即可。
+如果 Experiment 配置已确定，可通过 `choice` 将它们罗列到搜索空间文件中运行即可。
 
 **使用样例：**
 
