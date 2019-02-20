@@ -50,7 +50,7 @@ In this example, we have selected the following common aspects:
 
 ### **Experimental**
 #### **different search space modes**
-<a ="mnist"></a>
+<a id ="mnist"></a>
 **MNIST with NNI API**
 
 This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer. We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc. It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an exmaple yaml file which enables assessor.
