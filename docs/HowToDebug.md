@@ -51,7 +51,7 @@ Take the later situation as an example. If you write a customized tuner who's \_
 
 ![](img/dispatcher_error.jpg)
 
-Here we can see it is a dispatcher error. So we can check the dispatcher log, which might look like:
+Here we can see it is a dispatcher error. So we can check dispatcher's log, which might look like:
 
 ```
 [2019-02-19 19:36:45] DEBUG (nni.main/MainThread) START
@@ -72,5 +72,9 @@ In this situation, NNI can still run and dispatch trials.
 
 It means your trial code (which is run by NNI) fails. This kind of error is strongly related to your trial code. Please check trial's log to fix any possible errors shown there.
 
-A common example of this would be run the mnist example without installing tensorflow. Surely there is an Import Error in your trial code and thus every trial fails
+A common example of this would be run the mnist example without installing tensorflow. Surely there is an Import Error (that is, not installing tensorflow but trying to import it in your trial code) and thus every trial fails.
+
+![](img/trial_error.jpg)
+
+As it shows, every trial has a log path.
 
