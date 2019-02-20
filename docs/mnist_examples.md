@@ -19,7 +19,7 @@ In this example, we have selected the following common aspects:
 <tr><td>api</td><td>2.7</td></tr>
 
 <tr><td rowspan="2"> <b>different training platforms</b><br/>
-<td>local, remote, pai</td><td> </td></tr>
+<td>local, remote, pai</td><td><a href="#mnist-annotation">MNIST with NNI API</a> </td></tr>
 <tr><td>kubeflow</td><td>2.7</td></tr>
 
 <tr><td rowspan="4"> <b>different tuners</b><br/>
