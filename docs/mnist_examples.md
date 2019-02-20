@@ -70,10 +70,13 @@ In this example, we have selected the following common aspects:
 |[distributed MNIST (pytorch) using kubeflow](#mnist-kubeflow-pytorch)|json|local,remote,pai,kubeflow|pytorch|tpe|[examples/trials/mnist-distributed-pytorch/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
 ### **Experimental**
+
 **Search Space**
+
 As we stated in the target, we target to find out the best `optimizer` for training. When using different optimizers and different hyperparameters ,we write the choices into json file or in codes as annotation.
 
 **Trial**
+
 The code for CNN training of each hyperparameters set, paying particular attention to the following points are specific for NNI:
 * Use `nni.get_next_parameter()` to get next training hyperparameter set.
 * Use `nni.report_intermediate_result(acc)` to report the intermedian result after finish each epoch.
@@ -92,6 +95,7 @@ Here is the examples of running this experiment on local,pai,remote or kubeflow:
                                <a href="#mnist-kubeflow-tf">distributed MNIST (tensorflow) using kubeflow</a>  <br>
                               <a href="#mnist-kubeflow-pytorch">distributed MNIST (pytorch) using kubeflow</a> </td></tr>
 </table>
+
 #### Lauch the experiment
 
 We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
@@ -99,8 +103,6 @@ We are ready for the experiment, let's now **run the config.yml file from your c
  ```bash
     nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
 ```
-
-
 
 <a name ="mnist"></a>
 **MNIST with NNI API**
