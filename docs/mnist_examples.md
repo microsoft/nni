@@ -15,7 +15,7 @@ In this example, we have selected the following common aspects:
 
 <table>
 <tr>
-    <td rowspan="2"> different search space modes<br/>
+    <td rowspan="2"> <b>different search space modes</b><br/>
     <td>annotation</td>
     <td> </td>
 </tr>
@@ -24,7 +24,7 @@ In this example, we have selected the following common aspects:
     <td>2.7</td>
 </tr>
 <tr>
-    <td rowspan="2"> different training platforms<br/>
+    <td rowspan="2"> <b>different training platforms</b><br/>
     <td>local, remote, pai</td>
     <td> </td>
 </tr>
@@ -34,7 +34,7 @@ In this example, we have selected the following common aspects:
 </tr>
 
 <tr>
-    <td rowspan="4"> different tuners<br/>
+    <td rowspan="4"> <b>different tuners</b><br/>
     <td>tpe</td>
     <td> </td>
 </tr>
@@ -51,7 +51,7 @@ In this example, we have selected the following common aspects:
     <td>2.7</td>
 </tr>
 <tr>
-    <td rowspan="3"> different deeplearning frameworks<br/>
+    <td rowspan="3"><b> different deeplearning frameworks</b><br/>
     <td>keras</td>
     <td> </td>
 </tr>
