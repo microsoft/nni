@@ -302,7 +302,11 @@ class GeneralChild(Model):
           input_num: 1,
           input_aggregate: None,
           outputs: layer_3_out,
-        },
+        }
+      }"""
+      #layers = process_pooling_layer(x, "3", layers, out_filters, is_training)
+      """@nni.architecture
+      {
         layer_4: {
           layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out],
@@ -330,7 +334,11 @@ class GeneralChild(Model):
           input_num: 1,
           input_aggregate: None,
           outputs: layer_7_out,
-        },
+        }
+      }"""
+      #layers = process_pooling_layer(x, "7", layers, out_filters, is_training)
+      """@nni.architecture
+      {
         layer_8: {
           layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out],
@@ -366,7 +374,7 @@ class GeneralChild(Model):
       if is_training:
         x = tf.nn.dropout(x, self.keep_prob)
       with tf.variable_scope("fc"):
-        if self.data_format == "NWHC":
+        if self.data_format == "NHWC":
           inp_c = x.get_shape()[3].value
         elif self.data_format == "NCHW":
           inp_c = x.get_shape()[1].value
