@@ -257,10 +257,14 @@ describe('Unit test for nnimanager', function () {
         // get 3 trial jobs (init, addCustomizedTrialJob, cancelTrialJobByUser)
         return nniManager.getTrialJobStatistics().then(function (trialJobStatistics) {
             expect(trialJobStatistics.length).to.be.equal(2);
-            expect(trialJobStatistics[0].trialJobStatus).to.be.equal('WAITING');
-            expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);
-            expect(trialJobStatistics[1].trialJobStatus).to.be.equal('USER_CANCELED');
-            expect(trialJobStatistics[1].trialJobNumber).to.be.equal(1);
+            if (trialJobStatistics[0].trialJobStatus === 'WAITING') {
+                expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);
+                expect(trialJobStatistics[1].trialJobNumber).to.be.equal(1);
+            }
+            else {
+                expect(trialJobStatistics[1].trialJobNumber).to.be.equal(2);
+                expect(trialJobStatistics[0].trialJobNumber).to.be.equal(1);
+            }
         }).catch((error) => {
             assert.fail(error);
         })
@@ -270,8 +274,10 @@ describe('Unit test for nnimanager', function () {
         // test currSubmittedTrialNum reach maxTrialNum
         return nniManager.addCustomizedTrialJob('hyperParam').then(() => {
             nniManager.getTrialJobStatistics().then(function (trialJobStatistics) {
-                expect(trialJobStatistics[0].trialJobStatus).to.be.equal('WAITING');
-                expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);
+                if (trialJobStatistics[0].trialJobStatus === 'WAITING')
+                    expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);
+                else
+                    expect(trialJobStatistics[1].trialJobNumber).to.be.equal(2);
             })
         }).catch((error) => {
             assert.fail(error);
