@@ -52,7 +52,5 @@ jobs:
       python3 generate_pai_config.py --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) \
       --nni_docker_image $TEST_IMG --data_dir $(data_dir) --output_dir $(output_dir)
 
-      cat training_service.yml
-
       PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts pai
     displayName: 'integration test'
