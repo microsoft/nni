@@ -9,3 +9,5 @@ json_tricks
 numpy
 scipy
 coverage
+git+https://github.com/QuanluZhang/ConfigSpace.git
+git+https://github.com/QuanluZhang/SMAC3.git
