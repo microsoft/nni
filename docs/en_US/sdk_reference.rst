@@ -43,3 +43,4 @@ Assessor
 Advisor
 ------------------------
 ..  autoclass:: nni.hyperband_advisor.hyperband_advisor.Hyperband
+    :members:
