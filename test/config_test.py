@@ -20,7 +20,6 @@
 
 import os
 import argparse
-import collections
 import glob
 import subprocess
 import time
