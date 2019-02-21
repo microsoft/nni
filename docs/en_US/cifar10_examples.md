@@ -6,7 +6,7 @@
 
 ## Goals
 
-As we all know, the choice of model optimizer is directly affects the performance of the final matrix. The goal of this tutorial is to **tune a better performace optimizer** to train a relatively small convolutional neural network (CNN) for recognizing images.
+As we all know, the choice of model optimizer is directly affects the performance of the final metrics. The goal of this tutorial is to **tune a better performace optimizer** to train a relatively small convolutional neural network (CNN) for recognizing images.
 
 In this example, we have selected the following common deep learning optimizer:
 
