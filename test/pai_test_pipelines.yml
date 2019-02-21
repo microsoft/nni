@@ -8,7 +8,7 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   variables:
-    docker_img: msranni/nni.it:latest
+    new_docker_img: msranni/nni.it:latest
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user
@@ -31,8 +31,8 @@ jobs:
       sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
       cat ../docker/Dockerfile
       echo $IMG_TAG
-      docker build -f ../docker/Dockerfile -t $(docker_img) .
-      docker push $(docker_img)
+      docker build -f ../docker/Dockerfile -t $(new_docker_img) .
+      docker push $(new_docker_img)
     condition: eq( variables['build_docker_img'], 'true' )
     displayName: 'build and upload nni docker image'
 
@@ -43,9 +43,9 @@ jobs:
   - script: |
       if [ $(build_docker_img) = 'true' ]
       then
-        export TEST_IMG=$(docker_img)
+        export TEST_IMG=$(new_docker_img)
       else
-        export TEST_IMG=$(nni_docker_img)
+        export TEST_IMG=$(existing_docker_img)
       fi
       echo "TEST_IMG:$TEST_IMG"
       cd test
