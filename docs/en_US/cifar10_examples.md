@@ -45,7 +45,7 @@ The code for CNN training of each hyperparameters set, paying particular attenti
 
 * Use `nni.get_next_parameter()` to get next training hyperparameter set.
 * Use `nni.report_intermediate_result(acc)` to report the intermedian result after finish each epoch.
-* Use `nni.report_intermediate_result(acc)` to report the final result before the trial end.
+* Use `nni.report_final_result(acc)` to report the final result before the trial end.
 
 *Implemented code directory: [main.py][9]*
 
