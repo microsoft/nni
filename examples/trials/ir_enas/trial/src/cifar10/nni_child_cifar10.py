@@ -229,7 +229,7 @@ class ENASTrial(ENASBaseTrial):
         ]
 
         actual_step = None
-        epoch = None
+        #epoch = None
 
         #for step in range(0, child_totalsteps):
         loss, lr, gn, tr_acc, _ = self.sess.run(run_ops)
@@ -242,18 +242,17 @@ class ENASTrial(ENASBaseTrial):
         #     actual_step = global_step
 
         # epoch = actual_step // self.child_ops["num_train_batches"]
-        # if global_step % FLAGS.log_every == 0:
-        #     log_string = ""
-        #     log_string += "epoch={:<6d}".format(epoch)
-        #     log_string += "ch_step={:<6d}".format(global_step)
-        #     log_string += " loss={:<8.6f}".format(loss)
-        #     log_string += " lr={:<8.4f}".format(lr)
-        #     log_string += " |g|={:<8.4f}".format(gn)
-        #     log_string += " tr_acc={:<3d}/{:>3d}".format(
-        #         tr_acc, FLAGS.batch_size)
-        #     logger.debug(log_string)
+        log_string = ""
+        #log_string += "epoch={:<6d}".format(epoch)
+        log_string += "ch_step={:<6d}".format(global_step)
+        log_string += " loss={:<8.6f}".format(loss)
+        log_string += " lr={:<8.4f}".format(lr)
+        log_string += " |g|={:<8.4f}".format(gn)
+        log_string += " tr_acc={:<3d}/{:>3d}".format(
+            tr_acc, FLAGS.batch_size)
+        logger.debug(log_string)
 
-        return actual_step, epoch
+        return loss
 
 
     def start_eval_micro(self, first_arc):
@@ -336,8 +335,8 @@ def main(_):
 
         # valid_acc_arr = trial.get_csvaa(controller_total_steps, child_arc)
         # logger.debug("Get rewards Done!\n")
-        trial.run_child_one_macro()
-        '''nni.report_final_result(0.9999)'''
+        loss = trial.run_child_one_macro()
+        '''nni.report_final_result(loss)'''
 
         logger.debug("Send rewards Done\n")
 

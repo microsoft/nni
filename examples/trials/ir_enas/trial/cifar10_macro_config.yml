@@ -20,7 +20,7 @@ tuner:
 trial:
   command: sh ./script/macro_child.sh
   codeDir: ./
-  gpuNum: 1
+  gpuNum: 2
 
 # machineList:
 #   - ip: 10.150.144.121
