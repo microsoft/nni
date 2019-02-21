@@ -106,7 +106,7 @@ trial:
   gpuNum: 0
   cpuNum: 1
   memoryMB: 32869
-  #The docker image to run nni job on pai
+  #The docker image to run nni job on OpenPAI
   image: msranni/nni:latest
   #The hdfs directory to store data on pai, format 'hdfs://host:port/directory'
   dataDir: hdfs://10.10.10.10:9000/username/nni
