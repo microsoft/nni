@@ -4,17 +4,17 @@
 
 [CIFAR-10][3] classification is a common benchmark problem in machine learning. The CIFAR-10 dataset is the collection of images. It is one of the most widely used datasets for machine learning research which contains 60,000 32x32 color images in 10 different classes. Thus, we use CIFAR-10 classification as an example to introduce NNI usage.
 
-### **Goals**
+## Goals
 
-As we all know, the choice of model optimizer is directly affects the performance of the final metrics. The goal of this tutorial is to **tune a better performace optimizer** to train a relatively small convolutional neural network (CNN) for recognizing images.
+As we all know, the choice of model optimizer is directly affects the performance of the final matrix. The goal of this tutorial is to **tune a better performace optimizer** to train a relatively small convolutional neural network (CNN) for recognizing images.
 
 In this example, we have selected the following common deep learning optimizer:
 
 > "SGD", "Adadelta", "Adagrad", "Adam", "Adamax"
 
-### **Experimental**
+## Experimental
 
-#### Preparations
+### Preparations
 
 This example requires pytorch. Pytorch install package should be chosen based on python version and cuda version.
 
@@ -25,9 +25,7 @@ python3 -m pip install http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp3
 python3 -m pip install torchvision
 ```
 
-#### CIFAR-10 with NNI
-
-**Search Space**
+### Search Space
 
 As we stated in the target, we target to find out the best `optimizer` for training CIFAR-10 classification. When using different optimizers, we also need to adjust `learning rates` and `network structure` accordingly. so we chose these three parameters as hyperparameters and write the following search space.
 
@@ -41,19 +39,19 @@ As we stated in the target, we target to find out the best `optimizer` for train
 
 *Implemented code directory: [search_space.json][8]*
 
-**Trial**
+### Trial
 
 The code for CNN training of each hyperparameters set, paying particular attention to the following points are specific for NNI:
 
 * Use `nni.get_next_parameter()` to get next training hyperparameter set.
 * Use `nni.report_intermediate_result(acc)` to report the intermedian result after finish each epoch.
-* Use `nni.report_final_result(acc)` to report the final result before the trial end.
+* Use `nni.report_intermediate_result(acc)` to report the final result before the trial end.
 
 *Implemented code directory: [main.py][9]*
 
 You can also use your previous code directly, refer to [How to define a trial][5] for modify.
 
-**Config**
+### Config
 
 Here is the example of running this experiment on local(with multiple GPUs):
 
@@ -65,19 +63,19 @@ code directory: [examples/trials/cifar10_pytorch/config_pai.yml][7]
 
 *The complete examples we have implemented: [examples/trials/cifar10_pytorch/][1]*
 
-#### Launch the experiment
+### Lauch the experiment
 
 We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
 
-```bash
-nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
+ ```bash
+    nnictl create --config nni/examples/trials/cifar10_pytorch/config.yml
 ```
 
 [1]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
 [2]: https://pytorch.org/
 [3]: https://www.cs.toronto.edu/~kriz/cifar.html
 [4]: https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch
-[5]: Trials.md
+[5]: https://github.com/Microsoft/nni/blob/master/docs/howto_1_WriteTrial.md
 [6]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config.yml
 [7]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/config_pai.yml
 [8]: https://github.com/Microsoft/nni/blob/master/examples/trials/cifar10_pytorch/search_space.json
