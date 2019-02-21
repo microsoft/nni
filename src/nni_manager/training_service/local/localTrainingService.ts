@@ -255,7 +255,7 @@ class LocalTrainingService implements TrainingService {
         }
         if (trialJob.pid === undefined){
             this.setTrialJobStatus(trialJob, 'USER_CANCELED');
-            return;
+            return Promise.resolve();
         }
         if (trialJob.form.jobType === 'TRIAL') {
             await tkill(trialJob.pid, 'SIGKILL');
@@ -265,6 +265,7 @@ class LocalTrainingService implements TrainingService {
             throw new Error(`Job type not supported: ${trialJob.form.jobType}`);
         }
         this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
+        return Promise.resolve();
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {

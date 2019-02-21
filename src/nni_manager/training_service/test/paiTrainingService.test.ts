@@ -40,7 +40,7 @@ describe('Unit Test for PAITrainingService', () => {
     let paiTrialConfig : any;
     try {
         testPaiClusterInfo = JSON.parse(fs.readFileSync('../../.vscode/paiCluster.json', 'utf8'));
-        paiCluster = `{\"userName\":\"${testPaiClusterInfo.userName}\",\"passWord\":\"${testPaiClusterInfo.passWord}\",\"host\":\"${testPaiClusterInfo.host}\"}`;
+        paiCluster = `{\"userName\":\"openmindstudio\",\"passWord\":\"Passq1w2e3r4\",\"host\":\"10.151.40.179\"}`;
         paiTrialConfig = `{\"command\":\"echo hello && ls\",\"codeDir\":\"/tmp/nni/examples/trials/mnist",\"gpuNum\":\"1\",
 \"cpuNum\":\"1\",\"memoryMB\":\"8196\",\"image\":\"openpai/pai.example.tensorflow\",\"dataDir\":\"\",\"outputDir\":\"\"}`;
     } catch (err) {
