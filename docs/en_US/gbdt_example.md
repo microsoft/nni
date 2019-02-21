@@ -14,7 +14,7 @@ Given the features and label in train data, we train a GBDT regression model and
 ### Prepare : Search Space in GBDT
 There are many hyper-parameters in GBDT, but what kind of parameters will affect the performance or speed? Based on some practical experience, some suggestion here(Take lightgbm as example):
 
-** For better accuracy**
+**For better accuracy**
 
 * `learning_rate`. The range of `learning rate` could be [0.001, 0.9].
 
