@@ -14,7 +14,8 @@ Given the features and label in train data, we train a GBDT regression model and
 ### Prepare : Search Space in GBDT
 There are many hyper-parameters in GBDT, but what kind of parameters will affect the performance or speed? Based on some practical experience, some suggestion here(Take lightgbm as example):
 
-> * For better accuracy
+** For better accuracy**
+
 * `learning_rate`. The range of `learning rate` could be [0.001, 0.9].
 
 * `num_leaves`. `num_leaves` is related to `max_depth`, you don't have to tune both of them.
@@ -23,14 +24,14 @@ There are many hyper-parameters in GBDT, but what kind of parameters will affect
 
 * `num_iterations`. May larger if underfitting.
 
-> * For speed up
+**For speed up**
 * `bagging_fraction`. The range of `bagging_fraction` could be [0.7, 1.0].
 
 * `feature_fraction`. The range of `feature_fraction` could be [0.6, 1.0].
     
 * `max_bin`.
 
-> * To avoid overfitting
+**To avoid overfitting**
 * `min_data_in_leaf`. This depends on your dataset.
 
 * `min_sum_hessian_in_leaf`. This depend on your dataset.
