@@ -63,7 +63,7 @@ code directory: [examples/trials/cifar10_pytorch/config_pai.yml][7]
 
 *The complete examples we have implemented: [examples/trials/cifar10_pytorch/][1]*
 
-### Lauch the experiment
+### Launch the experiment
 
 We are ready for the experiment, let's now **run the config.yml file from your command line to start the experiment**.
 
