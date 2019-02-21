@@ -27,24 +27,11 @@ import time
 import traceback
 
 from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, \
-    parse_max_duration_time, get_succeeded_trial_num, print_stderr
+    parse_max_duration_time, get_succeeded_trial_num, print_stderr, deep_update
 from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL
 
-def deep_update(source, overrides):
-    """Update a nested dictionary or similar mapping.
-
-    Modify ``source`` in place.
-    """
-    for key, value in overrides.items():
-        if isinstance(value, collections.Mapping) and value:
-            returned = deep_update(source.get(key, {}), value)
-            source[key] = returned
-        else:
-            source[key] = overrides[key]
-    return source
-
 def gen_new_config(config_file, training_service='local'):
-    ''' 
+    '''
     Generates temporary config file for integration test, the file
     should be deleted after testing.
     '''
