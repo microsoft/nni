@@ -30,7 +30,7 @@ Under that directory, there is a directory named `log`, where `nnimanager.log` a
 
 Usually in webUI, you can click `+` in the left of every trial to expand it to see each trial's log path.
 
-Besides, there is another directory under experiment root directory, named `trials-local` for local mode (or `trials` for remote mode), which stores all the trials.
+Besides, there is another directory under experiment root directory, named `trials`, which stores all the trials.
 Every trial has a unique id as its directory name. In this directory, a file named `stderr` records trial error and another named `trial.log` records this trial's log. 
 
 ## Different kinds of errors
