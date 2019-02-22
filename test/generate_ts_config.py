@@ -44,6 +44,14 @@ def update_training_service_config(args):
             config[args.ts]['kubeflowConfig']['nfs']['server'] = args.nfs_server
         if args.nfs_path is not None:
             config[args.ts]['kubeflowConfig']['nfs']['path'] = args.nfs_path
+        if args.keyvault_vaultname is not None:
+            config[args.ts]['kubeflowConfig']['keyVault']['vaultName'] = args.keyvault_vaultname
+        if args.keyvault_name is not None:
+            config[args.ts]['kubeflowConfig']['keyVault']['name'] = args.keyvault_name
+        if args.azs_account is not None:
+            config[args.ts]['kubeflowConfig']['azureStorage']['accountName'] = args.azs_account
+        if args.azs_share is not None:
+            config[args.ts]['kubeflowConfig']['azureStorage']['azureShare'] = args.azs_share
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['worker']['image'] = args.nni_docker_image
 
@@ -62,6 +70,10 @@ if __name__ == '__main__':
     # args for kubeflow
     parser.add_argument("--nfs_server", type=str)
     parser.add_argument("--nfs_path", type=str)
+    parser.add_argument("--keyvault_vaultname", type=str)
+    parser.add_argument("--keyvault_name", type=str)
+    parser.add_argument("--azs_account", type=str)
+    parser.add_argument("--azs_share", type=str)
     args = parser.parse_args()
 
     update_training_service_config(args)

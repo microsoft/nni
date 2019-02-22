@@ -3,10 +3,13 @@ kubeflow:
   kubeflowConfig:
     operator: tf-operator
     apiVersion: v1alpha2
-    storage: nfs
-    nfs:
-      server:
-      path:
+    storage: azureStorage
+    keyVault:
+      vaultName:
+      name:
+    azureStorage:
+      accountName:
+      azureShare:
   trial:
     worker:
       replicas: 1
