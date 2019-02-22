@@ -44,20 +44,18 @@ assessor:
     builtinAssessorName: Curvefitting
     classArgs:
       # (required)The total number of epoch.
-      # We need to know the number of epoch to determine which point we need to predict.
+      #  We need to know the number of epoch to determine which point we need to predict.
       epoch_num: 20
       # (optional) choice: maximize, minimize
       * The default value of optimize_mode is maximize
       optimize_mode: maximize
-      # Kindly reminds that if you choose minimize mode, please adjust the value of threshold >= 1.0 (e.g threshold=1.1)
-      # (optional) A trial is determined to be stopped or not
-      # In order to save our computing resource, we start to predict when we have more than start_step(default=6) accuracy points.
-      # only after receiving start_step number of reported intermediate results.
+      # (optional) In order to save our computing resource, we start to predict when we have more than only after receiving start_step number of reported intermediate results.
       * The default value of start_step is 6.
       start_step: 6
       # (optional) The threshold that we decide to early stop the worse performance curve.
       # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
       * The default value of threshold is 0.95.
+      # Kindly reminds that if you choose minimize mode, please adjust the value of threshold >= 1.0 (e.g threshold=1.1)
       threshold: 0.95
 ```
 
