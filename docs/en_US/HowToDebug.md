@@ -5,7 +5,7 @@
 
 There are three parts that might have logs in NNI. They are nnimanager, dispatcher and trial. Here we will introduce them succinctly. More information please refer to [Overview](Overview.md).
 
-- **nnictl**: NNI controller is the nni command line tool that is used to started NNI.
+- **NNI controller**: NNI controller (nnictl) is the nni command-line tool that is used to manage experiments (e.g., start an experiment).
 - **nnimanager**: nnimanager is the core of NNI, whose log is important when the whole experiment fails (e.g., no webUI or training service fails)
 - **Dispatcher**: Dispatcher is the collective name of **Tuner** and **Assessor**. Logs of dispatcher are related to the tuner or assessor code.
     - **Tuner**: Tuner is an AutoML algorithm, which generates a new configuration for the next try. A new trial will run with this configuration.
@@ -14,7 +14,7 @@ There are three parts that might have logs in NNI. They are nnimanager, dispatch
 
 ## Where is the log
 
-### nnictl
+### NNI controller
 
 All possible errors that happen when launching NNI can be found here.
 
