@@ -45,7 +45,7 @@ jobs:
       echo "TEST_IMG:$TEST_IMG"
       cd test
       python3 generate_ts_config.py --ts kubeflow --keyvault_vaultname $(keyVault_vaultName) --keyvault_name $(keyVault_name) \
-      --azs_account $(azureStorage_accountName) --azs_share $(azureStorage_azureShare) --nni_docker_image $TEST_IMG
+      --azs_account $(azureStorage_accountName) --azs_share $(azureStorage_azureShare) --nni_docker_image $TEST_IMG --nni_manager_ip $(nni_manager_ip)
 
       cat training_service.yml
       PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts kubeflow
