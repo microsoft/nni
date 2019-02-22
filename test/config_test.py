@@ -94,8 +94,8 @@ def run(args):
 
     for config_file in config_files:
         try:
-            # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
-            time.sleep(5)
+            # sleep 10 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
+            time.sleep(10)
             run_test(config_file, args.ts, args.local_gpu)
             print(GREEN + 'Test %s: TEST PASS' % (config_file) + CLEAR)
         except Exception as error:
