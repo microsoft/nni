@@ -15,7 +15,7 @@ kubeflow:
       replicas: 1
       command:
       gpuNum: 1
-      cpuNum: 0
+      cpuNum: 1
       memoryMB: 4096
       image:
   trainingServicePlatform: kubeflow
