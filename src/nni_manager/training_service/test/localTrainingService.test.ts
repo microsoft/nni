@@ -72,8 +72,25 @@ describe('Unit Test for LocalTrainingService', () => {
             chai.expect(data).to.be.equals(trialConfig);
         });
     });
+
+    it('Submit job and Cancel job', async () => {
+        await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
+
+        // submit job
+        const form: TrialJobApplicationForm = {
+            jobType: 'TRIAL',
+            hyperParameters: {
+                value: 'mock hyperparameters',
+                index: 0
+            }
+        };
+        const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
+        chai.expect(jobDetail.status).to.be.equals('WAITING');
+        await localTrainingService.cancelTrialJob(jobDetail.id);
+        chai.expect(jobDetail.status).to.be.equals('USER_CANCELED');
+    }).timeout(20000);
     
-    it('Submit job, list job, read metrics, add listener, cancel job', async () => {
+    it('Read metrics, Add listener, and remove listener', async () => {
         // set meta data
         const trialConfig: string = `{\"command\":\"python3 mockedTrial.py\", \"codeDir\":\"${localCodeDir}\",\"gpuNum\":0}`
         await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
@@ -97,12 +114,9 @@ describe('Unit Test for LocalTrainingService', () => {
         }
         localTrainingService.addTrialJobMetricListener(listener1);
         // Wait to collect metric
-        await delay(10000);
+        await delay(1000);
 
-        localTrainingService.cancelTrialJob(jobDetail.id);
-        //wait to cancel job
-        // await delay(500);
-        // chai.expect(jobDetail.status).to.be.equals('USER_CANCELED');
+        await localTrainingService.cancelTrialJob(jobDetail.id);
         localTrainingService.removeTrialJobMetricListener(listener1);
     }).timeout(20000);
 
