@@ -1,5 +1,3 @@
-local:
-  trainingServicePlatform: local
 kubeflow:
   maxExecDuration: 15m
   kubeflowConfig:
@@ -7,8 +5,19 @@ kubeflow:
     apiVersion: v1alpha2
     storage: nfs
     nfs:
-      server: localhost
-      path: /home/nni/nfs
+      server:
+      path:
+  trial:
+    worker:
+      replicas: 1
+      command:
+      gpuNum: 1
+      cpuNum: 0
+      memoryMB: 4096
+      image:
+
+local:
+  trainingServicePlatform: local
 pai:
   maxExecDuration: 15m
   paiConfig:
