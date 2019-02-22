@@ -40,6 +40,14 @@ def gen_new_config(config_file, training_service='local'):
     ts = get_yml_content('training_service.yml')[training_service]
     print(config)
     print(ts)
+
+    # hack for kubeflow trial config
+    if training_service == 'kubeflow':
+        ts['trial']['worker']['command'] = config['trial']['command']
+        config['trial'].pop('command')
+        if 'gpuNum' in config['trial']:
+            config['trial'].pop('gpuNum')
+
     deep_update(config, ts)
     print(config)
     dump_yml_content(new_config_file, config)

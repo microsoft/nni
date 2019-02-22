@@ -15,6 +15,7 @@ kubeflow:
       cpuNum: 0
       memoryMB: 4096
       image:
+  trainingServicePlatform: kubeflow
 
 local:
   trainingServicePlatform: local
