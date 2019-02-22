@@ -68,7 +68,7 @@ def run_test(config_file, training_service, local_gpu=False):
         proc = subprocess.run(['nnictl', 'create', '--config', new_config_file])
         assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
-        max_duration, max_trial_num = get_max_values(config_file)
+        max_duration, max_trial_num = get_max_values(new_config_file)
         sleep_interval = 3
 
         for _ in range(0, max_duration+30, sleep_interval):

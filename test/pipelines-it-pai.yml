@@ -1,11 +1,6 @@
 jobs:
 - job: 'integration_test_pai'
-  pool:
-    vmImage: 'Ubuntu 16.04'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
+  pool: 'NNI CI PAI CLI'
 
   variables:
     new_docker_img: msranni/nni.it.pai:latest
