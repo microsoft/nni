@@ -34,6 +34,7 @@ from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger
 from .. import parameter_expressions
+from .config_generator import CG_BOHB
 
 _logger = logging.getLogger(__name__)
 
@@ -225,11 +226,37 @@ class BOHB(MsgDispatcherBase):
     This is an implementation that could fully leverage available resources, i.e., high parallelism.
     A single execution of BOHB takes a finite budget of (s_max + 1)B.
     '''
-    def __init__(self, R, eta=3, optimize_mode='maximize'):
+    def __init__(self, R,
+                eta=3,
+                optimize_mode='maximize',
+                min_points_in_model = None,
+                top_n_percent=15,
+				num_samples = 64,
+                random_fraction=1/3,
+                bandwidth_factor=3,
+				min_bandwidth=1e-3):
         '''
-        R: the maximum amount of resource that can be allocated to a single configuration
-        eta: the variable that controls the proportion of configurations discarded in each round of SuccessiveHalving
-        B = (s_max + 1)R
+        R: int
+            the maximum amount of resource that can be allocated to a single configuration
+        eta: int
+            the variable that controls the proportion of configurations discarded in each round of SuccessiveHalving
+            B = (s_max + 1)R
+        min_points_in_model: int
+			number of observations to start building a KDE. Default 'None' means
+			dim+1, the bare minimum.
+		top_n_percent: int
+			percentage ( between 1 and 99, default 15) of the observations that are considered good.
+		num_samples: int
+			number of samples to optimize EI (default 64)
+		random_fraction: float
+			fraction of purely random configurations that are sampled from the
+			prior without the model.
+		bandwidth_factor: float
+			to encourage diversity, the points proposed to optimize EI, are sampled
+			from a 'widened' KDE where the bandwidth is multiplied by this factor (default: 3)
+		min_bandwidth: float
+			to keep diversity, even when all (good) samples have the same value for one of the parameters,
+			a minimum bandwidth (Default: 1e-3) is used instead of zero.
         '''
         super()
         self.R = R                        # pylint: disable=invalid-name
@@ -243,6 +270,15 @@ class BOHB(MsgDispatcherBase):
         self.searchspace_json = None
         self.random_state = None
         self.optimize_mode = OptimizeMode(optimize_mode)
+
+        config_generator = CG_BOHB( search_space = self.searchspace_json,
+                                    min_points_in_model = min_points_in_model,
+                                    top_n_percent=top_n_percent,
+                                    num_samples = num_samples,
+                                    random_fraction=random_fraction,
+                                    bandwidth_factor=bandwidth_factor,
+                                    min_bandwidth = min_bandwidth
+                                    )
 
         # This is for the case that nnimanager requests trial config, but tuner cannot provide immediately.
         # In this case, tuner increases self.credit to issue a trial config sometime later.
