@@ -1,5 +1,14 @@
 local:
   trainingServicePlatform: local
+kubeflow:
+  maxExecDuration: 15m
+  kubeflowConfig:
+    operator: tf-operator
+    apiVersion: v1alpha2
+    storage: nfs
+    nfs:
+      server: localhost
+      path: /home/nni/nfs
 pai:
   maxExecDuration: 15m
   paiConfig:
