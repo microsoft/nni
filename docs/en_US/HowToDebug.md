@@ -7,7 +7,7 @@ There are three parts that might have logs in NNI. They are nnimanager, dispatch
 
 - **NNI controller**: NNI controller (nnictl) is the nni command-line tool that is used to manage experiments (e.g., start an experiment).
 - **nnimanager**: nnimanager is the core of NNI, whose log is important when the whole experiment fails (e.g., no webUI or training service fails)
-- **Dispatcher**: Dispatcher is the collective name of **Tuner** and **Assessor**. Logs of dispatcher are related to the tuner or assessor code.
+- **Dispatcher**: Dispatcher calls the methods of **Tuner** and **Assessor**. Logs of dispatcher are related to the tuner or assessor code.
     - **Tuner**: Tuner is an AutoML algorithm, which generates a new configuration for the next try. A new trial will run with this configuration.
     - **Assessor**: Assessor analyzes trial's intermediate results (e.g., periodically evaluated accuracy on test dataset) to tell whether this trial can be early stopped or not.
 - **Trial**: Trial code is the code you write to run your experiment, which is an individual attempt at applying a new configuration (e.g., a set of hyperparameter values, a specific nerual architecture).
@@ -16,19 +16,22 @@ There are three parts that might have logs in NNI. They are nnimanager, dispatch
 
 ### NNI controller
 
-All possible errors that happen when launching NNI can be found here.
+All possible errors that happen when launching an NNI experiment can be found here.
 
-You can use `nnictl log stderr` to find error information. Or find it in `~/nni/nnictl/log/stderr`.
+You can use `nnictl log stderr` to find error information.
 
 
 ### Experiment Root Directory
 Every experiment has a root folder, which is shown on the right-top corner of webUI. Or you could assemble it by replacing the `experiment_id` with your actual experiment_id in path `~/nni/experiment/experiment_id/` in case of webUI failure. `experiment_id` could be seen when you run `nnictl create ...` to create a new experiment.
 
-Under the root path, there is a directory named `log`, where `nnimanager.log` and `dispatcher.log` are there.
+Under that directory, there is a directory named `log`, where `nnimanager.log` and `dispatcher.log` are placed.
 
 ### Trial Root Directory
 
-Usually in webUI, you can click `+` in the left of every trial to expand it to see each trial's log path. Also there is another directory under experiment root directory, named `trials-local`, which stores all the trials run. Every trial has a unique id that is the name of its root directory. In this directory, a file named `stderr` records trial error and another named `trial.log` records this trial's log. 
+Usually in webUI, you can click `+` in the left of every trial to expand it to see each trial's log path.
+
+Besides, there is another directory under experiment root directory, named `trials-local` for local mode (or `trials` for remote mode), which stores all the trials.
+Every trial has a unique id as its directory name. In this directory, a file named `stderr` records trial error and another named `trial.log` records this trial's log. 
 
 ## Different kinds of errors
 
@@ -40,7 +43,7 @@ Generally, if webUI is started successfully, there is a `Status` in the `Overvie
 
 This is the most serious error. When this happens, the whole experiment fails and no trial will be run. Usually this might be related to some installation problem.
 
-When this happens, you should check `nnictl`'s error output file `stderr` and then the `nnimanager`'s log to find if there is any error.
+When this happens, you should check `nnictl`'s error output file `stderr` (i.e., nnictl log stderr) and then the `nnimanager`'s log to find if there is any error.
 
 
 ### **Dispatcher** Fails
