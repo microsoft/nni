@@ -189,7 +189,6 @@ epub_exclude_files = ['search.html']
 github_doc_root = 'https://github.com/Microsoft/nni/tree/master/doc/'
 def setup(app):
     app.add_config_value('recommonmark_config', {
-        'url_resolver': lambda url: github_doc_root + url if url.startswith('..') else url,
-        'enable_auto_toc_tree': False,
+        'enable_auto_toc_tree': True,
     }, True)
     app.add_transform(AutoStructify)
