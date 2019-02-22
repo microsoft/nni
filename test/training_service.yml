@@ -17,7 +17,7 @@ kubeflow:
       command:
       gpuNum: 1
       cpuNum: 1
-      memoryMB: 4096
+      memoryMB: 8192
       image:
   trainingServicePlatform: kubeflow
 
@@ -32,6 +32,7 @@ pai:
     userName:
   trainingServicePlatform: pai
   trial:
+    gpuNum: 1
     cpuNum: 1
     dataDir:
     image:
