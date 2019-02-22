@@ -28,6 +28,12 @@ Tuner
 ..  autoclass:: nni.gridsearch_tuner.gridsearch_tuner.GridSearchTuner
     :members:
 
+..  autoclass:: nni.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner
+    :members:
+
+..  autoclass:: nni.metis_tuner.metis_tuner.MetisTuner
+    :members:
+
 Assessor
 ------------------------
 ..  autoclass:: nni.assessor.Assessor
