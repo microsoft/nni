@@ -14,11 +14,13 @@ There are three parts that might have logs in NNI. They are nnimanager, dispatch
 
 ## Where is the log
 
+There are three kinds of log in NNI. Besides, when creating a new experiment, you can use `--debug` to specify log level.
+
 ### NNI controller
 
 All possible errors that happen when launching an NNI experiment can be found here.
 
-You can use `nnictl log stderr` to find error information.
+You can use `nnictl log stderr` to find error information. For more options please refer to [NNICTL](NNICTLDOC.md)
 
 
 ### Experiment Root Directory
@@ -71,7 +73,7 @@ TypeError: __init__() missing 1 required positional arguments: 'optimize_mode'.
 
 ### **Trial** Fails
 
-In this situation, NNI can still run and dispatch trials. 
+In this situation, NNI can still run and create new trials. 
 
 It means your trial code (which is run by NNI) fails. This kind of error is strongly related to your trial code. Please check trial's log to fix any possible errors shown there.
 
