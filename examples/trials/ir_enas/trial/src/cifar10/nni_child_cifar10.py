@@ -283,7 +283,7 @@ def main(_):
         shutil.rmtree(FLAGS.output_dir)
         os.makedirs(FLAGS.output_dir)
     logger.debug("-" * 80)
-
+    '''@nni.get_next_parameter()'''
     trial = ENASTrial()
     controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
     logger.debug("here is the num train batches")
@@ -329,14 +329,13 @@ def main(_):
 
         logger.debug("get paramters")
         #child_arc = nni.get_parameters()
-        '''nni.get_next_parameter()'''
         # actual_step, epoch = trial.run_child_one_macro(child_totalsteps, child_arc)
         # logger.debug("epoch:\t" + str(epoch))
 
         # valid_acc_arr = trial.get_csvaa(controller_total_steps, child_arc)
         # logger.debug("Get rewards Done!\n")
         loss = trial.run_child_one_macro()
-        '''nni.report_final_result(loss)'''
+        '''@nni.report_final_result(loss)'''
 
         logger.debug("Send rewards Done\n")
 

@@ -225,12 +225,12 @@ class ENASTuner(ENASBaseTuner):
         return
 
 
-    def receive_trial_result(self, parameter_id, parameters, reward, trial_job_id):
+    def receive_trial_result(self, parameter_id, parameters, reward):
         logger.debug("epoch:\t"+str(self.epoch))
         logger.debug(parameter_id)
         logger.debug(reward)
-        valid_acc_arr = reward
-        self.controller_one_step(self.epoch, valid_acc_arr)
+        # valid_acc_arr = reward
+        # self.controller_one_step(self.epoch, valid_acc_arr)
         return
 
 
