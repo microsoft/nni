@@ -22,10 +22,16 @@ Tuner（调参器）
 ..  autoclass:: nni.evolution_tuner.evolution_tuner.EvolutionTuner
     :members:
 
+..  autoclass:: nni.smac_tuner.smac_tuner.SMACTuner
+    :members:
+
 ..  autoclass:: nni.gridsearch_tuner.gridsearch_tuner.GridSearchTuner
     :members:
 
-..  autoclass:: nni.smac_tuner.smac_tuner.SMACTuner
+..  autoclass:: nni.networkmorphism_tuner.networkmorphism_tuner.NetworkMorphismTuner
+    :members:
+
+..  autoclass:: nni.metis_tuner.metis_tuner.MetisTuner
     :members:
 
 Assessor（评估器）
@@ -43,3 +49,4 @@ Assessor（评估器）
 Advisor
 ------------------------
 ..  autoclass:: nni.hyperband_advisor.hyperband_advisor.Hyperband
+    :members:
