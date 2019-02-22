@@ -97,6 +97,12 @@ def run(args):
         config_files = glob.glob('./config_test/**/*.test.yml')
     else:
         config_files = args.config.split(',')
+
+    if args.exclude is not None:
+        exclude_paths = args.exclude.split(',')
+        if exclude_paths:
+            for exclude_path in exclude_paths:
+                config_files = [x for x in config_files if exclude_path not in x]
     print(config_files)
 
     for config_file in config_files:
@@ -116,6 +122,7 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default=None)
+    parser.add_argument("--exclude", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai', 'kubeflow'], default='local')
     parser.add_argument("--local_gpu", action='store_true')
     parser.add_argument("--preinstall", action='store_true')
