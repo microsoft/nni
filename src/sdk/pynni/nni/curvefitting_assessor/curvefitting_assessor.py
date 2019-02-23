@@ -38,7 +38,7 @@ class CurvefittingAssessor(Assessor):
     threshold: float
         The threshold that we decide to early stop the worse performance curve.
     """
-    def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.95):
+    def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.95, gap=1):
         if start_step <= 0:
             logger.warning('It\'s recommended to set start_step to a positive number')
         # Record the target position we predict
@@ -105,13 +105,14 @@ class CurvefittingAssessor(Assessor):
         Exception
             unrecognize exception in curvefitting_assessor
         """
+        self.trial_job_id = trial_job_id
         self.trial_history = trial_history
         curr_step = len(trial_history)
         if curr_step < self.start_step:
             return AssessResult.Good
         if (curr_step - self.start_step) / self.gap < self.judgment_num:
             return AssessResult.Good
-        self.judgment_num = (curr_step - self.start_step) / self.gap
+        self.judgment_num = (curr_step - self.start_step) // self.gap
         if not self.set_best_performance:
             return AssessResult.Good
 
