@@ -60,7 +60,7 @@ assessor:
       # (optional) The gap interval between Assesor judgements.
       # For example: if gap = 2, start_step = 6, then we will assess the result when we get 6, 8, 10, 12...intermedian result.
       * The default value of gap is 1.
-      gap = 1
+      gap: 1
 ```
 
 ## 3. File Structure
