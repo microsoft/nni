@@ -61,10 +61,10 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="examples/tuners/enas_nni/README.md">ENAS</a></li>
           <li><a href="docs/Builtin_Tuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
         </ul> 
-          <a href="docs/Builtin_Tuner.md#assessor">Assessor（评估器）</a> 
+          <a href="docs/Builtin_Assessors.md#assessor">Assessor（评估器）</a> 
         <ul>
-          <li><a href="docs/Builtin_Tuner.md#Medianstop">Median Stop</a></li>
-          <li><a href="docs/Builtin_Tuner.md#Curvefitting">Curve Fitting</a></li>
+          <li><a href="docs/Builtin_Assessors.md#Medianstop">Median Stop</a></li>
+          <li><a href="docs/Builtin_Assessors.md#Curvefitting">Curve Fitting</a></li>
         </ul>
       </td>
       <td>
@@ -200,7 +200,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 * [尝试不同的 Tuner](docs/tuners.rst)
 * [尝试不同的 Assessor](docs/assessors.rst)
 * [实现自定义 Tuner](docs/Customize_Tuner.md)
-* [实现自定义 Assessor](examples/assessors/README.md)
+* [实现自定义 Assessor](docs/Customize_Assessor.md)
 * [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
 
 ## **贡献**

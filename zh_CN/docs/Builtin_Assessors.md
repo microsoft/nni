@@ -2,10 +2,12 @@
 
 NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Assessor 的介绍：
 
-| Assessor                                                                                   | 算法简介                                                                                                                                                                                             |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Medianstop** [(用法)](#MedianStop)                                                         | Medianstop 是一种简单的提前终止策略，可参考[论文](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf)。 如果 Trial X 的在步骤 S 的最好目标值比所有已完成 Trial 的步骤 S 的中位数值明显要低，就会停止运行 Trial X。 |
-| [Curvefitting](../src/sdk/pynni/nni/curvefitting_assessor/README.md) [(用法)](#Curvefitting) | Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的 Trial X 在 step S 比性能最好的 Trial要差，就会提前终止它。 此算法中采用了 12 种曲线来拟合精度。                                              |
+注意：点击 **Assessor 的名称**可跳转到算法的详细描述，点击**用法**可看到 Assessor 的安装要求、建议场景和使用样例等等。
+
+| Assessor                                                                                                                                   | 算法简介                                                                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Medianstop](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/medianstop_assessor/README.md) [(用法)](#MedianStop)       | Medianstop 是一个简单的提前终止算法。 如果 Trial X 的在步骤 S 的最好目标值比所有已完成 Trial 的步骤 S 的中位数值明显要低，就会停止运行 Trial X。 [参考论文](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf)                                                          |
+| [Curvefitting](https://github.com/Microsoft/nni/blob/master/zh_CN/src/sdk/pynni/nni/curvefitting_assessor/README.md) [(用法)](#Curvefitting) | Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学习、预测、评估) 的算法。 如果预测的 Trial X 在 step S 比性能最好的 Trial要差，就会提前终止它。 此算法中采用了 12 种曲线来拟合精度曲线。 [参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf) |
 
 ## 用法
 
@@ -49,7 +51,7 @@ assessor:
 
 **建议场景**
 
-适用于各种性能曲线，可用到各种场景中来加速优化过程。 更好的是，它能够处理并评估性能类似的曲线。
+适用于各种性能曲线，可用到各种场景中来加速优化过程。 更好的地方是，它能处理并评估性能类似的曲线。
 
 **参数**
 
