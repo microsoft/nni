@@ -26,10 +26,6 @@ class CurvefittingAssessor(Assessor):
     """CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
     It stops a pending trial X at step S if the trial's forecast result at target step is convergence and lower than the
     best performance in the history.
-<<<<<<< HEAD
-    '''
-    def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.95, gap=1):
-=======
 
     Parameters
     ----------
@@ -43,7 +39,6 @@ class CurvefittingAssessor(Assessor):
         The threshold that we decide to early stop the worse performance curve.
     """
     def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.95):
->>>>>>> b2cdc30d4e4c5df8063a97774c31942e8dd5fffc
         if start_step <= 0:
             logger.warning('It\'s recommended to set start_step to a positive number')
         # Record the target position we predict
@@ -91,13 +86,6 @@ class CurvefittingAssessor(Assessor):
             logger.info('No need to update, trial job id: ', trial_job_id)
 
     def assess_trial(self, trial_job_id, trial_history):
-<<<<<<< HEAD
-        '''
-        assess whether a trial should be early stop by curve fitting algorithm
-        return AssessResult.Good or AssessResult.Bad
-        '''
-        self.trial_job_id = trial_job_id
-=======
         """assess whether a trial should be early stop by curve fitting algorithm
 
         Parameters
@@ -117,7 +105,6 @@ class CurvefittingAssessor(Assessor):
         Exception
             unrecognize exception in curvefitting_assessor
         """
->>>>>>> b2cdc30d4e4c5df8063a97774c31942e8dd5fffc
         self.trial_history = trial_history
         curr_step = len(trial_history)
         if curr_step < self.start_step:
