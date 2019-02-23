@@ -96,9 +96,9 @@ def run(args):
 
     for config_file in config_files:
         try:
-
+            print(GREEN + 'test %s' % config_file)
             if args.ts == 'remote' and ('cifar10' in config_file or 'mnist' in config_file or 'multi_thread' in config_file):
-                print('skip %s' % config_file)
+                print(GREEN + 'skip %s' % config_file)
                 continue
             # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
             time.sleep(5)
