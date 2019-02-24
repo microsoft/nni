@@ -54,8 +54,7 @@ jobs:
   #   displayName: 'Get docker port'
   - script: |
       cd test
-      # cat port
-      # PATH=$HOME/.local/bin:$PATH  docker_port=$(cat port) docker_user=$(docker_user) docker_pwd=$(docker_pwd) python3 config_test.py --ts remote
+      # port=$(cat port)
       python3 generate_ts_config.py --ts remote --remote_user $(remote_user) --remote_host $(remote_host) \
       --remote_port 22 --remote_pwd $(remote_pwd) --nni_manager_ip $(nni_manager_ip)
       cat training_service.yml
