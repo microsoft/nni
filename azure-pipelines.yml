@@ -4,8 +4,7 @@ trigger:
 
 jobs:
 - job: 'Ubuntu_16_04'
-  pool:
-    vmImage: 'Ubuntu 16.04'
+  pool: 'NNI CI GPU'
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user
