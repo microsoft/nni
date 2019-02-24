@@ -4,7 +4,7 @@ local:
 remote:
   trainingServicePlatform: remote
   machineList:
-    - ip: 52.168.146.89
+    - ip: 
       port:
       username:
       passwd:

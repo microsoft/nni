@@ -4,7 +4,6 @@ maxExecDuration: 5m
 maxTrialNum: 4
 trialConcurrency: 2
 searchSpacePath: ./search_space.json
-nniManagerIp: 52.168.146.89
 
 tuner:
   codeDir: .

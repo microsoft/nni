@@ -23,22 +23,17 @@ import subprocess
 import sys
 import time
 import traceback
-import os
-import argparse
 
 from utils import is_experiment_done, fetch_nni_log_path, read_last_line, remove_files, setup_experiment
 from utils import GREEN, RED, CLEAR, EXPERIMENT_URL
 
-def run(mode='local'):
+def run():
     '''run naive integration test'''
-    assert mode == 'local' or mode == 'remote', '`mode` must be `local` or `remote`'
-    config_file = str(mode) + '.yml'
-
     to_remove = ['tuner_search_space.json', 'tuner_result.txt', 'assessor_result.txt']
-    to_remove = list(map(lambda file: os.path.join('naive_test', file), to_remove))
+    to_remove = list(map(lambda file: 'naive_test/' + file, to_remove))
     remove_files(to_remove)
 
-    proc = subprocess.run(['nnictl', 'create', '--config', os.path.join('naive_test', config_file)])
+    proc = subprocess.run(['nnictl', 'create', '--config', 'naive_test/local.yml'])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     print('Spawning trials...')
@@ -46,8 +41,9 @@ def run(mode='local'):
     nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
     current_trial = 0
 
-    for _ in range(180):
+    for _ in range(120):
         time.sleep(1)
+
         tuner_status = read_last_line('naive_test/tuner_result.txt')
         assessor_status = read_last_line('naive_test/assessor_result.txt')
         experiment_status = is_experiment_done(nnimanager_log_path)
@@ -67,7 +63,7 @@ def run(mode='local'):
                     current_trial = trial
                     print('Trial #%d done' % trial)
 
-    assert experiment_status, 'Failed to finish in 3 min'
+    assert experiment_status, 'Failed to finish in 2 min'
 
     ss1 = json.load(open('naive_test/search_space.json'))
     ss2 = json.load(open('naive_test/tuner_search_space.json'))
@@ -75,24 +71,19 @@ def run(mode='local'):
 
     tuner_result = set(open('naive_test/tuner_result.txt'))
     expected = set(open('naive_test/expected_tuner_result.txt'))
-
     # Trials may complete before NNI gets assessor's result,
     # so it is possible to have more final result than expected
     assert tuner_result.issuperset(expected), 'Bad tuner result'
 
     assessor_result = set(open('naive_test/assessor_result.txt'))
     expected = set(open('naive_test/expected_assessor_result.txt'))
-    
     assert assessor_result == expected, 'Bad assessor result'
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--preinstall', type=bool, default=True, dest='preinstall')
-    parser.add_argument('--mode', required=True, choices=['local', 'remote'], dest='mode')
-    args = parser.parse_args()
-    setup_experiment(args.preinstall)
+    installed = (sys.argv[-1] != '--preinstall')
+    setup_experiment(installed)
     try:
-        run(args.mode)
+        run()
         # TODO: check the output of rest server
         print(GREEN + 'PASS' + CLEAR)
     except Exception as error:

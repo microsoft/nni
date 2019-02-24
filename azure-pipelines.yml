@@ -1,6 +1,11 @@
+trigger:
+- master
+- dev-remote-ci
+
 jobs:
 - job: 'Ubuntu_16_04'
-  pool: 'NNI CI GPU'
+  pool:
+    vmImage: 'Ubuntu 16.04'
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user

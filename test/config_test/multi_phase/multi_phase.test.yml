@@ -1,10 +1,9 @@
 authorName: nni
 experimentName: default_test
-maxExecDuration: 10m
+maxExecDuration: 5m
 maxTrialNum: 16
 trialConcurrency: 8
 searchSpacePath: ./search_space.json
-nniManagerIp: 52.168.146.89
 
 tuner:
   codeDir: ../../../src/sdk/pynni/tests
