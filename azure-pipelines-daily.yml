@@ -1,6 +1,6 @@
 jobs:
 - job: 'Ubuntu_16_04_remote'
-  pool: 'NNI CI PAI CLI'
+  pool: 'NNI CI KUBE CLI'
   strategy:
     matrix:
       Python36:

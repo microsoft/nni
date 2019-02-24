@@ -4,7 +4,7 @@ maxExecDuration: 5m
 maxTrialNum: 4
 trialConcurrency: 2
 searchSpacePath: ../../../examples/trials/mnist-keras/search_space.json
-nniManagerIp: 10.151.41.70
+nniManagerIp: 52.168.146.89
 
 tuner:
   builtinTunerName: Random
