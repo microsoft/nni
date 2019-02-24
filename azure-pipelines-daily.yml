@@ -1,7 +1,6 @@
 jobs:
 - job: 'Ubuntu_16_04_remote'
-  pool:
-    vmImage: 'Ubuntu 16.04'
+  pool: 'NNI CI PAI CLI'
   strategy:
     matrix:
       Python36:
