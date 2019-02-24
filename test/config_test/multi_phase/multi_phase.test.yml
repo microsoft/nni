@@ -4,7 +4,7 @@ maxExecDuration: 10m
 maxTrialNum: 16
 trialConcurrency: 8
 searchSpacePath: ./search_space.json
-nniManagerIp: 172.17.0.1
+nniManagerIp: 10.151.41.70
 
 tuner:
   codeDir: ../../../src/sdk/pynni/tests

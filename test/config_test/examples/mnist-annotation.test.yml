@@ -3,7 +3,7 @@ experimentName: default_test
 maxExecDuration: 5m
 maxTrialNum: 2
 trialConcurrency: 1
-nniManagerIp: 172.17.0.1
+nniManagerIp: 10.151.41.70
 
 tuner:
   builtinTunerName: Random
