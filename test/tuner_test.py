@@ -22,8 +22,6 @@ import subprocess
 import sys
 import time
 import traceback
-import argparse
-import os
 
 from utils import get_yml_content, dump_yml_content, setup_experiment, fetch_nni_log_path, is_experiment_done
 
@@ -36,9 +34,9 @@ ASSESSOR_LIST = ['Medianstop']
 EXPERIMENT_URL = 'http://localhost:8080/api/v1/nni/experiment'
 
 
-def switch(dispatch_type, dispatch_name, mode='local'):
+def switch(dispatch_type, dispatch_name):
     '''Change dispatch in config.yml'''
-    config_path = os.path.join('tuner_test', str(mode) + '.yml')
+    config_path = 'tuner_test/local.yml'
     experiment_config = get_yml_content(config_path)
     if dispatch_name in ['GridSearch', 'BatchTuner']:
         experiment_config[dispatch_type.lower()] = {
@@ -53,13 +51,12 @@ def switch(dispatch_type, dispatch_name, mode='local'):
         }
     dump_yml_content(config_path, experiment_config)
 
-def test_builtin_dispatcher(dispatch_type, dispatch_name, mode='local'):
+def test_builtin_dispatcher(dispatch_type, dispatch_name):
     '''test a dispatcher whose type is dispatch_type and name is dispatch_name'''
     switch(dispatch_type, dispatch_name)
 
     print('Testing %s...' % dispatch_name)
-    config_file = str(mode) + '.yml'
-    proc = subprocess.run(['nnictl', 'create', '--config', os.path.join('tuner_test', config_file)])
+    proc = subprocess.run(['nnictl', 'create', '--config', 'tuner_test/local.yml'])
     assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
     nnimanager_log_path = fetch_nni_log_path(EXPERIMENT_URL)
@@ -73,7 +70,7 @@ def test_builtin_dispatcher(dispatch_type, dispatch_name, mode='local'):
 
     assert experiment_status, 'Failed to finish in 1 min'
 
-def run(dispatch_type, mode='local'):
+def run(dispatch_type):
     '''test all dispatchers whose type is dispatch_type'''
     assert dispatch_type in ['Tuner', 'Assessor'], 'Unsupported dispatcher type: %s' % (dispatch_type)
     dipsatcher_list = TUNER_LIST if dispatch_type == 'Tuner' else ASSESSOR_LIST
@@ -81,7 +78,7 @@ def run(dispatch_type, mode='local'):
         try:
             # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
             time.sleep(5)
-            test_builtin_dispatcher(dispatch_type, dispatcher_name, mode)
+            test_builtin_dispatcher(dispatch_type, dispatcher_name)
             print(GREEN + 'Test %s %s: TEST PASS' % (dispatcher_name, dispatch_type) + CLEAR)
         except Exception as error:
             print(RED + 'Test %s %s: TEST FAIL' % (dispatcher_name, dispatch_type) + CLEAR)
@@ -92,11 +89,8 @@ def run(dispatch_type, mode='local'):
             subprocess.run(['nnictl', 'stop'])
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--preinstall', type=bool, default=True, dest='preinstall')
-    parser.add_argument('--mode', required=True, choices=['local', 'remote'], dest='mode')
-    args = parser.parse_args()
-    setup_experiment(args.preinstall)
+    installed = (sys.argv[-1] != '--preinstall')
+    setup_experiment(installed)
 
-    run('Tuner', args.mode)
-    run('Assessor', args.mode)
+    run('Tuner')
+    run('Assessor')
