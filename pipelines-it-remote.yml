@@ -56,7 +56,7 @@ jobs:
       cd test
       # port=$(cat port)
       python3 generate_ts_config.py --ts remote --remote_user $(remote_user) --remote_host $(remote_host) \
-      --remote_port 22 --remote_pwd $(remote_pwd) --nni_manager_ip $(nni_manager_ip)
+      --remote_port 22 --remote_pwd $(remote_pwd)
       cat training_service.yml
       PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts remote --exclude multi_phase
     displayName: 'Built-in dispatcher tests'
