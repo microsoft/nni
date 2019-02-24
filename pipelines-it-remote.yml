@@ -57,7 +57,7 @@ jobs:
       python3 generate_ts_config.py --ts remote --remote_user $(remote_user) --remote_host $(remote_host) \
       --remote_port 22 --remote_pwd $(remote_pwd) --nni_manager_ip $(nni_manager_ip)
       cat training_service.yml
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts remote --exclude multi_phase
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts remote --exclude multi_phase,multi_thread
     displayName: 'Built-in dispatcher tests'
   # - task: SSH@0
   #   inputs:
