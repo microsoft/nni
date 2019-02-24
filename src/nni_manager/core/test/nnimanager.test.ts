@@ -53,7 +53,7 @@ describe('Unit test for nnimanager', function () {
     let experimentParams = {
         authorName: 'zql',
         experimentName: 'naive_experiment',
-        trialConcurrency: 2,
+        trialConcurrency: 3,
         maxExecDuration: 5,
         maxTrialNum: 3,
         trainingServicePlatform: 'local',
@@ -76,7 +76,7 @@ describe('Unit test for nnimanager', function () {
     let updateExperimentParams = {
         authorName: '',
         experimentName: 'another_experiment',
-        trialConcurrency: 3,
+        trialConcurrency: 2,
         maxExecDuration: 6,
         maxTrialNum: 2,
         trainingServicePlatform: 'local',
@@ -113,7 +113,7 @@ describe('Unit test for nnimanager', function () {
     })
 
     after(async () => {
-        await nniManager.stopExperiment();
+        await setTimeout(() => {nniManager.stopExperiment()},15000);
         cleanupUnitTest();
     })
 
@@ -193,7 +193,7 @@ describe('Unit test for nnimanager', function () {
     it('test updateExperimentProfile TRIAL_CONCURRENCY',  () => {
         return nniManager.updateExperimentProfile(experimentProfile, 'TRIAL_CONCURRENCY').then(() => {
             nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.trialConcurrency).to.be.equal(3);
+                expect(updateProfile.params.trialConcurrency).to.be.equal(2);
             });
         }).catch((error) => {
             assert.fail(error);
