@@ -64,6 +64,7 @@ def update_training_service_config(args):
             config[args.ts]['machineList'][0]['port'] = args.remote_port
         if args.remote_pwd is not None:
             config[args.ts]['machineList'][0]['passwd'] = args.remote_pwd
+
     dump_yml_content(TRAINING_SERVICE_FILE, config)
 
 if __name__ == '__main__':
