@@ -26,12 +26,11 @@ import time
 import traceback
 
 from utils import setup_experiment, get_experiment_status, get_yml_content, dump_yml_content, \
-    parse_max_duration_time, get_succeeded_trial_num, print_stderr
+    parse_max_duration_time, get_succeeded_trial_num, print_stderr, deep_update
 from utils import GREEN, RED, CLEAR, STATUS_URL, TRIAL_JOBS_URL
 
-
 def gen_new_config(config_file, training_service='local'):
-    ''' 
+    '''
     Generates temporary config file for integration test, the file
     should be deleted after testing.
     '''
@@ -39,11 +38,17 @@ def gen_new_config(config_file, training_service='local'):
     new_config_file = config_file + '.tmp'
 
     ts = get_yml_content('training_service.yml')[training_service]
-    if training_service == 'remote':
-        ts['machineList'][0]['port'] = int(os.environ['docker_port'])
-        ts['machineList'][0]['username'] = os.environ['docker_user']
-        ts['machineList'][0]['passwd'] = os.environ['docker_pwd']
-    config.update(ts)
+    print(config)
+    print(ts)
+
+    # hack for kubeflow trial config
+    if training_service == 'kubeflow':
+        ts['trial']['worker']['command'] = config['trial']['command']
+        config['trial'].pop('command')
+        if 'gpuNum' in config['trial']:
+            config['trial'].pop('gpuNum')
+
+    deep_update(config, ts)
     print(config)
     dump_yml_content(new_config_file, config)
 
@@ -63,7 +68,7 @@ def run_test(config_file, training_service, local_gpu=False):
         proc = subprocess.run(['nnictl', 'create', '--config', new_config_file])
         assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
-        max_duration, max_trial_num = get_max_values(config_file)
+        max_duration, max_trial_num = get_max_values(new_config_file)
         sleep_interval = 3
 
         for _ in range(0, max_duration+30, sleep_interval):
@@ -92,14 +97,16 @@ def run(args):
         config_files = glob.glob('./config_test/**/*.test.yml')
     else:
         config_files = args.config.split(',')
+
+    if args.exclude is not None:
+        exclude_paths = args.exclude.split(',')
+        if exclude_paths:
+            for exclude_path in exclude_paths:
+                config_files = [x for x in config_files if exclude_path not in x]
     print(config_files)
 
     for config_file in config_files:
         try:
-            print(GREEN + 'test %s' % config_file)
-            if args.ts == 'remote' and ('cifar10' in config_file or 'mnist' in config_file or 'multi_thread' in config_file):
-                print(GREEN + 'skip %s' % config_file)
-                continue
             # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
             time.sleep(5)
             run_test(config_file, args.ts, args.local_gpu)
@@ -115,7 +122,8 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default=None)
-    parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai'], default='local')
+    parser.add_argument("--exclude", type=str, default=None)
+    parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai', 'kubeflow'], default='local')
     parser.add_argument("--local_gpu", action='store_true')
     parser.add_argument("--preinstall", action='store_true')
     args = parser.parse_args()

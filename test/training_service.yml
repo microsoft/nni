@@ -2,6 +2,7 @@ local:
   trainingServicePlatform: local
 
 remote:
+  nniManagerIp:
   trainingServicePlatform: remote
   machineList:
     - ip: 
