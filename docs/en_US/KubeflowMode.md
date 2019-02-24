@@ -23,7 +23,7 @@ Now NNI supports running experiment on [Kubeflow](https://github.com/kubeflow/ku
 5. To access Azure storage service, NNI need the access key of the storage account, and NNI use [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) Service to protect your private key. Set up Azure Key Vault Service, add a secret to Key Vault to store the access key of Azure storage account. Follow this [guideline](https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli) to store the access key.
 
 ## Design 
-![](./img/kubeflow_training_design.png)
+![](../img/kubeflow_training_design.png)
 Kubeflow training service instantiates a kubernetes rest client to interact with your K8s cluster's API server. 
 
 For each trial, we will upload all the files in your local codeDir path (configured in nni_config.yml) together with NNI generated files like parameter.cfg into a storage volumn. Right now we support two kinds of storage volumns: [nfs](https://en.wikipedia.org/wiki/Network_File_System) and [azure file storage](https://azure.microsoft.com/en-us/services/storage/files/), you should configure the storage volumn in NNI config YAML file. After files are prepared, Kubeflow training service will call K8S rest API to create kubeflow jobs ([tf-operator](https://github.com/kubeflow/tf-operator) job or [pytorch-operator](https://github.com/kubeflow/pytorch-operator) job) in K8S, and mount your storage volumn into the job's pod. Output files of kubeflow job, like stdout, stderr, trial.log or model files, will also be copied back to the storage volumn. NNI will show the storage volumn's URL for each trial in WebUI, to allow user browse the log files and job's output files. 
@@ -179,7 +179,7 @@ Trial configuration in kubeflow mode have the following configuration keys:
     * gpuNum
     * image
         * Required key. In kubeflow mode, your trial program will be scheduled by Kubernetes to run in [Pod](https://kubernetes.io/docs/concepts/workloads/pods/pod/). This key is used to specify the Docker image used to create the pod where your trail program will run. 
-        * We already build a docker image [msranni/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/Dockerfile.build.base). You can either use this image directly in your config file, or build your own image based on it.
+        * We already build a docker image [msranni/nni](https://hub.docker.com/r/msranni/nni/) on [Docker Hub](https://hub.docker.com/). It contains NNI python packages, Node modules and javascript artifact files required to start experiment, and all of NNI dependencies. The docker file used to build this image can be found at [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/Dockerfile). You can either use this image directly in your config file, or build your own image based on it.
     * apiVersion
         * Required key. The API version of your kubeflow.
 * ps (optional). This config section is used to configure tensorflow parameter server role.
@@ -196,4 +196,4 @@ Notice: In kubeflow mode, NNIManager will start a rest server and listen on a po
 
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information. 
 
-Any problems when using NNI in kubeflow mode, plesae create issues on [NNI Github repo](https://github.com/Microsoft/nni).
+Any problems when using NNI in kubeflow mode, please create issues on [NNI Github repo](https://github.com/Microsoft/nni).

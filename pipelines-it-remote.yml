@@ -1,10 +1,6 @@
 jobs:
 - job: 'Ubuntu_16_04_remote'
-  pool: 'NNI CI PAI CLI'
-  strategy:
-    matrix:
-      Python36:
-        PYTHON_VERSION: '3.6'
+  pool: 'NNI CI KUBE CLI'
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools
@@ -12,31 +8,30 @@ jobs:
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
-    #debug for tempory, will remove annotation later
   # - task: CopyFilesOverSSH@0
   #   inputs:
-  #     sshEndpoint: remote_139
+  #     sshEndpoint: remote_nni-ci-gpu-01
   #     sourceFolder: src/sdk/pynni
   #     targetFolder: /tmp/nnitest/$(Build.BuildId)/pynni
   #     overwrite: true
   #   displayName: 'Copy sdk files to remote machine'
   # - task: CopyFilesOverSSH@0
   #   inputs:
-  #     sshEndpoint: remote_139
+  #     sshEndpoint: remote_nni-ci-gpu-01
   #     sourceFolder: tools
   #     targetFolder: /tmp/nnitest/$(Build.BuildId)/tools
   #     overwrite: true
   #   displayName: 'Copy tool files to remote machine'
   # - task: CopyFilesOverSSH@0
   #   inputs:
-  #     sshEndpoint: remote_139
+  #     sshEndpoint: remote_nni-ci-gpu-01
   #     sourceFolder: test
   #     targetFolder: /tmp/nnitest/$(Build.BuildId)/test
   #     overwrite: true
   #   displayName: 'Copy test files to remote machine'
   # - task: SSH@0
   #   inputs:
-  #     sshEndpoint: remote_139
+  #     sshEndpoint: remote_nni-ci-gpu-01
   #     runOptions: commands
   #     commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
   #   displayName: 'Start docker'
@@ -45,15 +40,15 @@ jobs:
   #     secureFile: remote_ci_private_key
   # - script: |
   #     mkdir ~/.ssh
-  #     ssh-keyscan 23.96.57.139 >> ~/.ssh/known_hosts
+  #     ssh-keyscan $(remote_host) >> ~/.ssh/known_hosts
   #     cp $(Agent.TempDirectory)/remote_ci_private_key test/id_rsa
   #     chmod 600 test/id_rsa
-  #     scp -i test/id_rsa nni@23.96.57.139:/tmp/nnitest/$(Build.BuildId)/port test/port
+  #     scp -i test/id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test/port
   #     cat test/port
   #   displayName: 'Get docker port'
   - script: |
       cd test
-      # port=$(cat port)
+      #$(cat port)
       python3 generate_ts_config.py --ts remote --remote_user $(remote_user) --remote_host $(remote_host) \
       --remote_port 22 --remote_pwd $(remote_pwd) --nni_manager_ip $(nni_manager_ip)
       cat training_service.yml
@@ -61,7 +56,7 @@ jobs:
     displayName: 'Built-in dispatcher tests'
   # - task: SSH@0
   #   inputs:
-  #     sshEndpoint: remote_139
+  #     sshEndpoint: remote_nni-ci-gpu-01
   #     runOptions: commands
   #     commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode stop --name $(Build.BuildId)
   #   displayName: 'Stop docker'
