@@ -61,6 +61,3 @@ jobs:
       runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode stop --name $(Build.BuildId)
     displayName: 'Stop docker'
-
-
-    
