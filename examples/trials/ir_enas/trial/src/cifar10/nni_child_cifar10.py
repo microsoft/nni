@@ -150,7 +150,7 @@ class ENASTrial(ENASBaseTrial):
             with open(file_path, 'rb') as fp:
                 vals = pickle.load(fp)
         with self.g.as_default():
-            logger.debug(tf.trainable_variables[:3])
+            logger.debug(tf.trainable_variables()[:3])
             for variable in tf.trainable_variables():
                 vals[variable.name] = self.sess.run(variable)
         with open(file_path, 'wb') as fp:
