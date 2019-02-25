@@ -128,7 +128,7 @@ class CurvefittingAssessor(Assessor):
             standard_performance = self.completed_best_performance * self.threshold
 
             end_time = datetime.datetime.now()
-            if (end_time - start_time).seconds > 3600:
+            if (end_time - start_time).seconds > 60:
                 logger.warning('Curve Fitting Assessor Runtime Exceeds 60s, Trial Id = ', self.trial_job_id, 'Trial History = ', self.trial_history)
 
             if self.higher_better:
