@@ -26,14 +26,9 @@ class ENASBaseTrial(object):
         return
 
 
-    def get_csvaa(self, controller_total_steps, child_arc):
-        valid_acc_arr = []
-        for idx in range(0, controller_total_steps):
-            cur_valid_acc = self.sess.run\
-                (self.child_model.cur_valid_acc,
-                 feed_dict={self.child_model.sample_arc: child_arc[idx]})
-            valid_acc_arr.append(cur_valid_acc)
-        return valid_acc_arr
+    def get_csvaa(self):
+        cur_valid_acc = self.sess.run(self.child_model.cur_valid_acc)
+        return cur_valid_acc
 
 
     def parset_child_arch(self, child_arc):

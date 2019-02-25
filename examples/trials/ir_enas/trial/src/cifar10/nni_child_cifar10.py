@@ -341,10 +341,16 @@ def main(_):
         # actual_step, epoch = trial.run_child_one_macro(child_totalsteps, child_arc)
         # logger.debug("epoch:\t" + str(epoch))
 
-        # valid_acc_arr = trial.get_csvaa(controller_total_steps, child_arc)
-        # logger.debug("Get rewards Done!\n")
-        loss = trial.run_child_one_macro()
-        '''@nni.report_final_result(loss)'''
+        
+        if entry == 'train':
+            loss = trial.run_child_one_macro()
+            '''@nni.report_final_result(loss)'''
+        elif entry == 'validate':
+            valid_acc_arr = trial.get_csvaa(controller_total_steps, child_arc)
+            '''@nni.report_final_result(valid_acc_arr)'''
+            logger.debug("Get rewards Done!\n")
+        else:
+            raise RuntimeError('No such entry: ' + entry)
 
         logger.debug("Send rewards Done\n")
         #trial.start_eval_macro(first_arc=first_arc)
