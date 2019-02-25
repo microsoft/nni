@@ -100,6 +100,9 @@ class ENASTrial(ENASBaseTrial):
         else:
             ChildClass = GeneralChild
 
+        self.output_dir = os.path.join(os.getenv('NNI_OUTPUT_DIR'),'../..')
+        self.file_name = 'trainable_variables.txt'
+
         g = tf.Graph()
         with g.as_default():
             self.child_model = BuildChild(images, labels, ChildClass)
@@ -121,34 +124,36 @@ class ENASTrial(ENASBaseTrial):
 
             self.sess = tf.train.SingularMonitoredSession(
                 config=config, hooks=hooks, checkpoint_dir=FLAGS.output_dir)
+
+            self.load(os.path.join(self.output_dir, self.file_name))
         logger.debug('initlize ENASTrial done.')
 
-    # def load(self, file_path):
-    #     '''{variable_name: value}'''
-    #     # first time, there's no file
-    #     if not os.path.exists(file_path):
-    #         return
-    #     # otherwise load variable
-    #     with open(file_path, 'r') as fp:
-    #         vals = pickle.load(fp)
+    def load(self, file_path):
+        '''{variable_name: value}'''
+        # first time, there's no file
+        if not os.path.exists(file_path):
+            return
+        # otherwise load variable
+        with open(file_path, 'rb') as fp:
+            vals = pickle.load(fp)
 
-    #     for variable in tf.trainable_variables():
-    #         name = variable.name
-    #         if name in vals:
-    #             variable.load(vals[name], self.sess)
+        for variable in tf.trainable_variables():
+            name = variable.name
+            if name in vals:
+                variable.load(vals[name], self.sess)
 
-    # def save(self, dir_path, filename):
-    #     if not os.path.exists(dir_path):
-    #         os.mkdirs(dir_path)
-    #     file_path = os.path.join(dir_path, filename)
-    #     vals = dict()
-    #     if os.path.exists(file_path):
-    #         with open(file_path, 'r') as fp:
-    #             vals = pickle.load(fp)
-    #     for variable in tf.trainable_variables():
-    #         vals[variable.name] = self.sess.run(variable)
-    #     with open(file_path, 'w') as fp:
-    #         pickle.dump(vals, fp)
+    def save(self, dir_path, filename):
+        if not os.path.exists(dir_path):
+            os.mkdirs(dir_path)
+        file_path = os.path.join(dir_path, filename)
+        vals = dict()
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as fp:
+                vals = pickle.load(fp)
+        for variable in tf.trainable_variables():
+            vals[variable.name] = self.sess.run(variable)
+        with open(file_path, 'wb') as fp:
+            pickle.dump(vals, fp)
 
     def get_child_arc_micro(self, controller_total_steps, normal_arc, reduce_arc):
         valid_acc_arr = []
@@ -252,6 +257,7 @@ class ENASTrial(ENASBaseTrial):
             tr_acc, FLAGS.batch_size)
         logger.debug(log_string)
 
+        self.save(self.output_dir, self.file_name)
         return loss
 
 
@@ -338,8 +344,7 @@ def main(_):
         '''@nni.report_final_result(loss)'''
 
         logger.debug("Send rewards Done\n")
-
-            #trial.start_eval_macro(first_arc=first_arc)
+        #trial.start_eval_macro(first_arc=first_arc)
 
 
 if __name__ == "__main__":
