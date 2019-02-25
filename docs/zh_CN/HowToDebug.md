@@ -21,19 +21,19 @@ NNI 中有三种日志。 在创建 Experiment 时，可增加命令行参数 `-
 
 通过 `nnictl log stderr` 命令来查看错误信息。 参考 [NNICTL](NNICTLDOC.md) 了解更多命令选项。
 
-### Experiment 目录
+### Experiment 根目录
 
-每个 Experiment 都有一个根目录，会显示在 Web 界面的右上角。 Or you could assemble it by replacing the `experiment_id` with your actual experiment_id in path `~/nni/experiment/experiment_id/` in case of webUI failure. `experiment_id` could be seen when you run `nnictl create ...` to create a new experiment.
+每个 Experiment 都有一个根目录，会显示在 Web 界面的右上角。 如果无法打开 Web 界面，可将 `~/nni/experiment/experiment_id/` 中的 `experiment_id` 替换为实际的 Experiment ID，来组合出根目录。 `experiment_id` 可以在运行 `nnictl create ...` 来创建新 Experiment 的输出中找到。
 
-> For flexibility, we also offer a `logDir` option in your configuration, which specifies the directory to store all experiments (defaults to `~/nni/experiment`). Please refer to [Configuration](ExperimentConfig.md) for more details.
+> 如有需要，可以在配置文件中修改 `logDir`，来指定存储 Experiment 的目录。（默认为 `~/nni/experiment`）。 参考[配置](ExperimentConfig.md)文档，了解更多信息。
 
-Under that directory, there is another directory named `log`, where `nnimanager.log` and `dispatcher.log` are placed.
+在此目录下，还会有另一个叫做 `log` 的目录，`nnimanager.log` 和 `dispatcher.log` 都在此目录中。
 
-### Trial Root Directory
+### Trial 根目录
 
-Usually in webUI, you can click `+` in the left of every trial to expand it to see each trial's log path.
+在 Web 界面中，可通过点击每个 Trial 左边的 `+` 来展开详情并看到它的日志路径。
 
-Besides, there is another directory under experiment root directory, named `trials`, which stores all the trials. Every trial has a unique id as its directory name. In this directory, a file named `stderr` records trial error and another named `trial.log` records this trial's log.
+在 Experiment 的根目录中，会有一个 `trials` 目录，这里存放了所有 Trial 的信息。 每个 Trial 都有一个用其 ID 命名的目录。 In this directory, a file named `stderr` records trial error and another named `trial.log` records this trial's log.
 
 ## Different kinds of errors
 
