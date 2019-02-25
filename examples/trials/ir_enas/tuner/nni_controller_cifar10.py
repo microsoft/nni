@@ -104,6 +104,7 @@ class ENASTuner(ENASBaseTuner):
 
         #self.controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
         self.child_train_steps = child_train_steps
+        self.controller_train_steps = controller_train_steps
         self.total_steps = max(self.child_train_steps, controller_train_steps)
         logger.debug("child steps:\t"+str(child_train_steps))
         logger.debug("controller step\t"+str(controller_train_steps))
@@ -133,33 +134,37 @@ class ENASTuner(ENASBaseTuner):
             config=config, hooks=hooks, checkpoint_dir=FLAGS.output_dir)
         logger.debug('initlize controller_model done.')
 
+        self.generate_one_epoch_parameters()
+        self.entry = 'train'
+        self.pos = 0
 
+    def generate_one_epoch_parameters(self):
         # Generate architectures in one epoch and 
         # store them to self.child_arc
+        self.pos = 1
+        self.entry = 'train'
         if self.Is_macro:
             self.child_arc = self.get_controller_arc_macro(self.total_steps)
-            #self.child_arc = self.parse_child_arch(self.child_arc)
             self.epoch = self.epoch + 1
         else:
             normal_arc,reduce_arc = self.get_controller_arc_micro(self.total_steps)
             self.result_arc = normal_arc
             self.result_arc.extend(reduce_arc)
-            self.epoch = self.epoch + 1
-    
-    def parse_child_arch(self, child_arc):
-        result_arc = []
-        print(child_arc[:1])
-        for i in range(0, len(child_arc)):
-            arc = child_arc[i]['__ndarray__']
-            result_arc.append(arc)
-        return result_arc
+            self.epoch = self.epoch + 1    
+
 
     def generate_parameters(self, parameter_id, trial_job_id=None):
+        self.pos += 1
+        if self.pos == self.child_train_steps + 1:
+            self.entry == 'validate'
+        elif self.pos > self.child_train_steps + self.controller_train_steps:
+            self.generate_one_epoch_parameters()
+
         if len(self.child_arc) <= 0:
             raise nni.NoMoreTrialError('no more parameters now.')
 
-        current_arc_code = self.child_arc.pop()
-        current_config = dict()
+        current_arc_code = self.child_arc[self.pos - (1 if self.entry=='train' else self.child_train_steps+1)]
+        current_config = {self.key: self.entry}
         start_idx = 0
         onehot2list = lambda l: [idx for idx, val in enumerate(l) if val==1]
         for layer_id, (layer_name, info) in enumerate(self.search_space.items()):
@@ -235,7 +240,10 @@ class ENASTuner(ENASBaseTuner):
 
 
     def update_search_space(self, data):
-        #useless? {} regardless of order?
+        # Extract choice
+        self.key = list(filter(lambda k: key.strip().endswith('choice'), list(data)))[0]
+        data.pop(self.key)
+        # Sort layers
         self.search_space = OrderedDict(sorted(data.items(), key=lambda tp:int(tp[0].split('_')[1])))
         logger.debug(self.search_space)
 

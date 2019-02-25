@@ -300,6 +300,8 @@ def main(_):
     logger.debug("child total \t"+str(child_totalsteps))
     epoch = 0
 
+    """@nni.variable(nni.choice('train', 'validate'), name=entry)"""
+    entry = 'trian'
     if is_micro:
         while True:
             if epoch >= FLAGS.num_epochs:
