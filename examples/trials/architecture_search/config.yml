@@ -1,0 +1,17 @@
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 2
+#choice: local, remote, pai
+trainingServicePlatform: local
+#choice: true, false
+useAnnotation: true
+tuner:
+  codeDir: .
+  classFileName: tuner.py
+  className: NaiveTuner
+trial:
+  command: python3 trial.py
+  codeDir: .
+  gpuNum: 0
