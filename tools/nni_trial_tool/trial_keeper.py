@@ -60,7 +60,7 @@ def main_loop(args):
     elif args.pai_hdfs_output_dir:
         hdfs_output_dir = args.pai_hdfs_output_dir
 
-    if hdfs_host is not None and args.hdfs_exp_dir is not None:
+    if hdfs_host is not None and args.nni_hdfs_exp_dir is not None:
         try:
             if args.webhdfs_path:
                 hdfs_client = HdfsClient(hosts='{0}:80'.format(hdfs_host), user_name=args.pai_user_name, webhdfs_path=args.webhdfs_path, timeout=5)
@@ -70,7 +70,7 @@ def main_loop(args):
         except Exception as e:
             nni_log(LogType.Error, 'Create HDFS client error: ' + str(e))
             raise e
-        copyHdfsDirectoryToLocal(args.hdfs_exp_dir, os.getcwd(), hdfs_client)
+        copyHdfsDirectoryToLocal(args.nni_hdfs_exp_dir, os.getcwd(), hdfs_client)
 
     # Notice: We don't appoint env, which means subprocess wil inherit current environment and that is expected behavior
     log_pipe_stdout = trial_syslogger_stdout.get_pipelog_reader()
