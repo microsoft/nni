@@ -40,8 +40,6 @@ describe('Unit Test for LocalTrainingService', () => {
 
     let localTrainingService: LocalTrainingServiceForGPU;
 
-    console.log(tmp.dirSync().name);
-
     before(() => {
         chai.should();
         chai.use(chaiAsPromised);
