@@ -47,11 +47,11 @@ NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 N
 
 先检查 `nnictl` 的错误输出文件 `stderr` (运行 nnictl log stderr)，然后检查 `nnimanager` 的日志来看看是否由任何错误。
 
-### **Dispatcher** Fails
+### **Dispatcher** 失败
 
-Dispatcher fails. Usually, for some new users of NNI, it means that tuner fails. You could check dispatcher's log to see what happens to your dispatcher. For built-in tuner, some common errors might be invalid search space (unsupported type of search space or inconsistence between initializing args in configuration file and actual tuner's *\_init*\_ function args).
+这通常是 Tuner 失败的情况。 可检查 Dispatcher 的日志来分析出现了什么问题。 对于内置的 Tuner，常见的错误可能是无效的搜索空间（不支持的搜索空间类型，或配置文件中的 Tuner 参数的错误）。
 
-Take the later situation as an example. If you write a customized tuner who's *\_init*\_ function has an argument called `optimize_mode`, which you do not provide in your configuration file, NNI will fail to run your tuner so the experiment fails. You can see errors in the webUI like:
+以后一种情况为例。 If you write a customized tuner who's *\_init*\_ function has an argument called `optimize_mode`, which you do not provide in your configuration file, NNI will fail to run your tuner so the experiment fails. You can see errors in the webUI like:
 
 ![](../img/dispatcher_error.jpg)
 
