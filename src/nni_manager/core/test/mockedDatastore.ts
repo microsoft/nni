@@ -99,7 +99,25 @@ class MockedDataStore implements DataStore {
     private dbTrialJobs: SimpleDb = new SimpleDb('trial_jobs', './trial_jobs.json');
     private dbMetrics: SimpleDb = new SimpleDb('metrics', './metrics.json');
 
+    trailJob1 = {
+        event: 'ADD_CUSTOMIZED',
+        timestamp: Date.now(),
+        trialJobId: "4321",
+        data: ''
+    }
+
+    metrics1 = {
+        timestamp: Date.now(),
+        trialJobId: '4321',
+        parameterId: 'param1',
+        type: 'CUSTOM',
+        sequence: 21,
+        data: ''
+    }
+
     init(): Promise<void> {
+        this.dbTrialJobs.saveData(this.trailJob1);
+        this.dbMetrics.saveData(this.metrics1);
         return Promise.resolve();
     }
 

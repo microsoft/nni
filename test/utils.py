@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import contextlib
+import collections
 import json
 import os
 import subprocess
@@ -118,3 +119,16 @@ def parse_max_duration_time(max_exec_duration):
     time = max_exec_duration[:-1]
     units_dict = {'s':1, 'm':60, 'h':3600, 'd':86400}
     return int(time) * units_dict[unit]
+
+def deep_update(source, overrides):
+    """Update a nested dictionary or similar mapping.
+
+    Modify ``source`` in place.
+    """
+    for key, value in overrides.items():
+        if isinstance(value, collections.Mapping) and value:
+            returned = deep_update(source.get(key, {}), value)
+            source[key] = returned
+        else:
+            source[key] = overrides[key]
+    return source
