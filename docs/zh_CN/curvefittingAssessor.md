@@ -59,8 +59,12 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
           # (可选) 决定是否提前终止的阈值。
           # 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
           * 阈值的默认值是 0.95。
-          # 注意：如果选择了 minimize 模式，要让 threshold >= 1.0 (如 threshold=1.1)
+          # Kindly reminds that if you choose minimize mode, please adjust the value of threshold >= 1.0 (e.g threshold=1.1)
           threshold: 0.95
+          # (optional) The gap interval between Assesor judgements.
+          # For example: if gap = 2, start_step = 6, then we will assess the result when we get 6, 8, 10, 12...intermedian result.
+          * The default value of gap is 1.
+          gap: 1
     
 
 ## 3. 文件结构
