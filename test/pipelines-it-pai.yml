@@ -1,5 +1,6 @@
 jobs:
 - job: 'integration_test_pai'
+  timeoutInMinutes: 0
   pool: 'NNI CI PAI CLI'
 
   variables:

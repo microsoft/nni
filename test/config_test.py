@@ -38,7 +38,6 @@ def gen_new_config(config_file, training_service='local'):
     new_config_file = config_file + '.tmp'
 
     ts = get_yml_content('training_service.yml')[training_service]
-    print(config)
     print(ts)
 
     # hack for kubeflow trial config
@@ -64,7 +63,6 @@ def run_test(config_file, training_service, local_gpu=False):
         return
 
     try:
-        print('Testing %s...' % config_file)
         proc = subprocess.run(['nnictl', 'create', '--config', new_config_file])
         assert proc.returncode == 0, '`nnictl create` failed with code %d' % proc.returncode
 
@@ -109,8 +107,10 @@ def run(args):
         try:
             # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
             time.sleep(5)
+            print(GREEN + 'Testing:' + config_file + CLEAR)
+            begin_time = time.time()
             run_test(config_file, args.ts, args.local_gpu)
-            print(GREEN + 'Test %s: TEST PASS' % (config_file) + CLEAR)
+            print(GREEN + 'Test %s: TEST PASS IN %d mins' % (config_file, (time.time() - begin_time)/60) + CLEAR)
         except Exception as error:
             print(RED + 'Test %s: TEST FAIL' % (config_file) + CLEAR)
             print('%r' % error)
