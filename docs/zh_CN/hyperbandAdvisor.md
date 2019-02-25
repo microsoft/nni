@@ -1,40 +1,40 @@
-# Hyperband on NNI
+# NNI 中使用 Hyperband
 
-## 1. Introduction
+## 1. 介绍
 
-[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) is a popular automl algorithm. The basic idea of Hyperband is that it creates several buckets, each bucket has `n` randomly generated hyperparameter configurations, each configuration uses `r` resource (e.g., epoch number, batch number). After the `n` configurations is finished, it chooses top `n/eta` configurations and runs them using increased `r*eta` resource. At last, it chooses the best configuration it has found so far.
+[Hyperband](https://arxiv.org/pdf/1603.06560.pdf) 是一种流行的自动机器学习算法。 Hyperband 的基本思想是对配置分组，每组有 `n` 个随机生成的超参配置，每个配置使用 `r` 次资源（如，epoch 数量，批处理数量等）。 当 `n` 个配置完成后，会选择最好的 `n/eta` 个配置，并增加 `r*eta` 次使用的资源。 最后，会选择出的最好配置。
 
-## 2. Implementation with fully parallelism
+## 2. 实现并行
 
-Frist, this is an example of how to write an automl algorithm based on MsgDispatcherBase, rather than Tuner and Assessor. Hyperband is implemented in this way because it integrates the functions of both Tuner and Assessor, thus, we call it advisor.
+首先，此样例是基于 MsgDispatcherBase 来实现的自动机器学习算法，而不是基于 Tuner 和Assessor。 这种实现方法下，Hyperband 集成了 Tuner 和 Assessor 两者的功能，因而将它叫做 Advisor。
 
-Second, this implementation fully leverages Hyperband's internal parallelism. More specifically, the next bucket is not started strictly after the current bucket, instead, it starts when there is available resource.
+其次，本实现完全利用了 Hyperband 内部的并行性。 具体来说，下一个分组不会严格的在当前分组结束后再运行，只要有资源，就可以开始运行新的分组。
 
-## 3. Usage
+## 3. 用法
 
-To use Hyperband, you should add the following spec in your experiment's yml config file:
+要使用 Hyperband，需要在 Experiment 的 YAML 配置文件进行如下改动。
 
     advisor:
-      #choice: Hyperband
+      #可选项: Hyperband
       builtinAdvisorName: Hyperband
       classArgs:
-        #R: the maximum STEPS
+        #R: 最大的步骤
         R: 100
-        #eta: proportion of discarded trials
+        #eta: 丢弃的 Trial 的比例
         eta: 3
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: maximize
     
 
-Note that once you use advisor, it is not allowed to add tuner and assessor spec in the config file any more. If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received by a trial, there is one more key called `STEPS` besides the hyperparameters defined by user. **By using this `STEPS`, the trial can control how long it runs**.
+注意，一旦使用了 Advisor，就不能在配置文件中添加 Tuner 和 Assessor。 使用 Hyperband 时，Trial 代码收到的超参（如键值对）中，除了用户定义的超参，会多一个 `STEPS`。 **使用 `STEPS`，Trial 能够控制其运行的时间。</p> 
 
-For `report_intermediate_result(metric)` and `report_final_result(metric)` in your trial code, **`metric` should be either a number or a dict which has a key `default` with a number as its value**. This number is the one you want to maximize or minimize, for example, accuracy or loss.
+对于 Trial 代码中 `report_intermediate_result(metric)` 和 `report_final_result(metric)` 的**`指标` 应该是数值，或者用一个 dict，并保证其中有键值为 default 的项目，其值也为数值型**。 这是需要进行最大化或者最小化优化的数值，如精度或者损失度。
 
-`R` and `eta` are the parameters of Hyperband that you can change. `R` means the maximum STEPS that can be allocated to a configuration. Here, STEPS could mean the number of epochs or mini-batches. This `STEPS` should be used by the trial to control how long it runs. Refer to the example under `examples/trials/mnist-hyperband/` for details.
+`R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` 表示可以分配给配置的最大步数（STEPS）。 这里，STEPS 可以代表 epoch 或 批处理数量。 `STEPS` 应该被 Trial 代码用来控制运行的次数。 参考样例 `examples/trials/mnist-hyperband/` ，了解详细信息。
 
-`eta` means `n/eta` configurations from `n` configurations will survive and rerun using more STEPS.
+`eta` 表示 `n` 个配置中的 `n/eta` 个配置会留存下来，并用更多的 STEPS 来运行。
 
-Here is a concrete example of `R=81` and `eta=3`:
+下面是 `R=81` 且 `eta=3` 时的样例：
 
 |   | s=4  | s=3  | s=2  | s=1  | s=0  |
 | - | ---- | ---- | ---- | ---- | ---- |
@@ -45,12 +45,12 @@ Here is a concrete example of `R=81` and `eta=3`:
 | 3 | 3 27 | 1 81 |      |      |      |
 | 4 | 1 81 |      |      |      |      |
 
-`s` means bucket, `n` means the number of configurations that are generated, the corresponding `r` means how many STEPS these configurations run. `i` means round, for example, bucket 4 has 5 rounds, bucket 3 has 4 rounds.
+`s` 表示分组， `n` 表示生成的配置数量，相应的 `r` 表示配置会运行多少 STEPS。 `i` 表示轮数，如分组 4 有 5 轮，分组 3 有 4 轮。
 
-About how to write trial code, please refer to the instructions under `examples/trials/mnist-hyperband/`.
+关于如何实现 Trial 代码，参考 `examples/trials/mnist-hyperband/` 中的说明。
 
-## 4. To be improved
+## 4. 待改进
 
-The current implementation of Hyperband can be further improved by supporting simple early stop algorithm, because it is possible that not all the configurations in the top `n/eta` perform good. The unpromising configurations can be stopped early.
+当前实现的 Hyperband 算法可以通过改进支持的提前终止算法来提高，原因是最好的 `n/eta` 个配置并不一定都表现很好。 不好的配置可以更早的终止。
 
-In the current implementation, configurations are generated randomly, which follows the design in the [paper](https://arxiv.org/pdf/1603.06560.pdf). To further improve, configurations could be generated more wisely by leveraging advanced algorithms.
+在当前实现中，遵循了[此论文](https://arxiv.org/pdf/1603.06560.pdf)的设计，配置都是随机生成的。 要进一步提升，配置生成过程可以利用更高级的算法。
