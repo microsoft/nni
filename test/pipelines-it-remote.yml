@@ -39,8 +39,6 @@ jobs:
     inputs:
       secureFile: remote_ci_private_key
   - script: |
-      mkdir ~/.ssh
-      ssh-keyscan $(remote_host) >> ~/.ssh/known_hosts
       cp $(Agent.TempDirectory)/remote_ci_private_key test/id_rsa
       chmod 600 test/id_rsa
       scp -i test/id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test/port
@@ -51,7 +49,7 @@ jobs:
       python3 generate_ts_config.py --ts remote --remote_user $(remote_user) --remote_host $(remote_host) \
       --remote_port $(cat port) --remote_pwd $(remote_pwd) --nni_manager_ip $(nni_manager_ip)
       cat training_service.yml
-      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts remote --exclude multi_phase,multi_thread,cifar10
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts remote --exclude multi_phase
     displayName: 'integration test'
   - task: SSH@0
     inputs:
