@@ -63,7 +63,7 @@ setuptools.setup(
         'psutil',
         'requests',
         'astor',
-        'pyhdfs',
+        'PythonWebHDFS',
         'hyperopt',
         'json_tricks',
         'numpy',

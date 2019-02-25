@@ -63,7 +63,7 @@ setup(
         'requests',
         'scipy',
         'schema',
-        'pyhdfs'
+        'PythonWebHDFS'
     ],
 
     cmdclass={
