@@ -175,8 +175,8 @@ def main(params):
     '''
     # Import data
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    print('Mnist download data down.')
-    logger.debug('Mnist download data down.')
+    print('Mnist download data done.')
+    logger.debug('Mnist download data done.')
 
     # Create the model
     # Build the graph for the deep net

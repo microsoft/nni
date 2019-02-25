@@ -80,6 +80,7 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     public form: JobApplicationForm;
     public sequenceId: number;
     public rmMeta?: RemoteMachineMeta;
+    public isEarlyStopped?: boolean;
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
                 workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
