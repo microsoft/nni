@@ -107,14 +107,14 @@ class CurvefittingAssessor(Assessor):
         """
         self.trial_job_id = trial_job_id
         self.trial_history = trial_history
+        if not self.set_best_performance:
+            return AssessResult.Good
         curr_step = len(trial_history)
         if curr_step < self.start_step:
             return AssessResult.Good
-        if (curr_step - self.start_step) // self.gap < self.judgment_num:
+        if (curr_step - self.start_step) // self.gap <= self.judgment_num:
             return AssessResult.Good
         self.judgment_num = (curr_step - self.start_step) // self.gap
-        if not self.set_best_performance:
-            return AssessResult.Good
 
         try:
             start_time = datetime.datetime.now()
