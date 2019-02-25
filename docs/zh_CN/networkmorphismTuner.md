@@ -1,83 +1,83 @@
-# Network Morphism Tuner on NNI
+# Network Morphism Tuner
 
-## 1. Introduction
+## 1. 介绍
 
-[Autokeras](https://arxiv.org/abs/1806.10282) is a popular automl tools using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression estimate its metric value from history trained results of network and metric value pair. Next, it chooses the the child which has best estimated performance and adds it to the training queue. Inspired by its work and referring to its [code](https://github.com/jhfjhfj1/autokeras), we implement our Network Morphism method in our NNI platform.
+[Autokeras](https://arxiv.org/abs/1806.10282) 是使用 Network Morphism 算法的流行的自动机器学习工具。 Autokeras 的基本理念是使用贝叶斯回归来预测神经网络架构的指标。 每次都会从父网络生成几个子网络。 然后使用朴素贝叶斯回归，从网络的历史训练结果来预测它的指标值。 接下来，会选择预测结果最好的子网络加入训练队列中。 在[此代码](https://github.com/jhfjhfj1/autokeras)的启发下，我们在 NNI 中实现了 Network Morphism 算法。
 
-If you want to know about network morphism trial usage, please check [Readme.md](https://github.com/Microsoft/nni/blob/master/examples/trials/network_morphism/README.md) of the trial to get more detail.
+要了解 Network Morphism Trial 的用法，参考 [Readme_zh_CN.md](https://github.com/Microsoft/nni/blob/master/examples/trials/network_morphism/README_zh_CN.md)，了解更多细节。
 
-## 2. Usage
+## 2. 用法
 
-To use Network Morphism, you should modify the following spec in your `config.yml` file:
+要使用 Network Morphism，需要如下配置 `config.yml` 文件：
 
 ```yaml
 tuner:
-  #choice: NetworkMorphism
+  #选择: NetworkMorphism
   builtinTunerName: NetworkMorphism
   classArgs:
-    #choice: maximize, minimize
+    #可选项: maximize, minimize
     optimize_mode: maximize
-    #for now, this tuner only supports cv domain
+    #当前仅支持 cv 领域
     task: cv
-    #modify to fit your input image width
+    #修改来支持实际图像宽度
     input_width: 32
-    #modify to fit your input image channel
+    #修改来支持实际图像通道
     input_channel: 3
-    #modify to fit your number of classes
+    #修改来支持实际的分类数量
     n_output_node: 10
 ```
 
-In the training procedure, it generate a JSON file which represent a Network Graph. Users can call "json\_to\_graph()" function to build a pytorch model or keras model from this JSON file.
+在训练过程中，会生成一个 JSON 文件来表示网络图。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。
 
 ```python
 import nni
 from nni.networkmorphism_tuner.graph import json_to_graph
 
 def build_graph_from_json(ir_model_json):
-    """build a pytorch model from json representation
+    """从 JSON 生成 Pytorch 模型
     """
     graph = json_to_graph(ir_model_json)
     model = graph.produce_torch_model()
     return model
 
-# trial get next parameter from network morphism tuner
+# 从网络形态 Tuner 中获得下一组参数
 RCV_CONFIG = nni.get_next_parameter()
-# call the function to build pytorch model or keras model
+# 调用函数来生成 Pytorch 或 Keras 模型
 net = build_graph_from_json(RCV_CONFIG)
 
-# training procedure
+# 训练过程
 # ....
 
-# report the final accuracy to NNI
+# 将最终精度返回给 NNI
 nni.report_final_result(best_acc)
 ```
 
-## 3. File Structure
+## 3. 文件结构
 
-The tuner has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
+Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
 
-- `networkmorphism_tuner.py` is a tuner which using network morphism techniques.
+- `networkmorphism_tuner.py` 是使用 network morphism 算法的 Tuner。
 
-- `bayesian.py` is Bayesian method to estimate the metric of unseen model based on the models we have already searched.
+- `bayesian.py` 是用来基于已经搜索道德模型来预测未知模型指标的贝叶斯算法。
 
-- `graph.py` is the meta graph data structure. Class Graph is representing the neural architecture graph of a model. 
-  - Graph extracts the neural architecture graph from a model. 
-  - Each node in the graph is a intermediate tensor between layers.
-  - Each layer is an edge in the graph.
-  - Notably, multiple edges may refer to the same layer.
+- `graph.py` 是元图数据结构。 类 Graph 表示了模型的神经网络图。 
+  - Graph 从模型中抽取神经网络。 
+  - 图中的每个节点都是层之间的中间张量。
+  - 在图中，边表示层。
+  - 注意，多条边可能会表示同一层。
 
-- `graph_transformer.py` includes some graph transformer to wider, deeper or add a skip-connection into the graph.
+- `graph_transformer.py` 包含了一些图转换，包括变宽，变深，或在图中增加跳跃连接。
 
-- `layers.py` includes all the layers we use in our model.
+- `layers.py` 包括模型中用到的所有层。
 
-- `layer_transformer.py` includes some layer transformer to wider, deeper or add a skip-connection into the layer.
-- `nn.py` includes the class to generate network class initially.
-- `metric.py` some metric classes including Accuracy and MSE.
-- `utils.py` is the example search network architectures in dataset `cifar10` by using Keras.
+- `layer_transformer.py` 包含了一些层转换，包括变宽，变深，或在层中增加跳跃连接。
+- `nn.py` 包含生成初始化网的类。
+- `metric.py` 包括了一些指标类，如 Accuracy 和 MSE。
+- `utils.py` 是使用 Keras 在数据集 `cifar10` 上搜索神经网络的样例。
 
-## 4. The Network Representation Json Example
+## 4. 网络表示的 JSON 样例
 
-Here is an example of the intermediate representation JSON file we defined, which is passed from the tuner to the trial in the architecture search procedure. Users can call "json\_to\_graph()" function in trial code to build a pytorch model or keras model from this JSON file. The example is as follows.
+这是样例定义的中间表示 JSON 文件，它会在架构搜索过程中从 Tuner 传到 Trial。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。 样例如下。
 
 ```json
 {
@@ -170,30 +170,30 @@ Here is an example of the intermediate representation JSON file we defined, whic
  }
 ```
 
-The definition of each model is a JSON object(also you can consider the model as a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)), where:
+每个模型的定义都是一个 JSON 对象 （也可以认为模型是一个 [有向无环图](https://en.wikipedia.org/wiki/Directed_acyclic_graph))：
 
-- `input_shape` is a list of integers, which does not include the batch axis.
-- `weighted` means whether the weights and biases in the neural network should be included in the graph.
-- `operation_history` is a list saving all the network morphism operations.
-- `layer_id_to_input_node_ids` is a dictionary instance mapping from layer identifiers to their input nodes identifiers.
-- `layer_id_to_output_node_ids` is a dictionary instance mapping from layer identifiers to their output nodes identifiers
-- `adj_list` is a two dimensional list. The adjacency list of the graph. The first dimension is identified by tensor identifiers. In each edge list, the elements are two-element tuples of (tensor identifier, layer identifier).
-- `reverse_adj_list` is a A reverse adjacent list in the same format as adj_list.
-- `node_list` is a list of integers. The indices of the list are the identifiers.
-- `layer_list` is a list of stub layers. The indices of the list are the identifiers.
+- `input_shape` 是整数的列表，不包括批量维度。
+- `weighted` 表示是否权重和偏移值应该包含在此神经网络图中。
+- `operation_history` 是保存了所有网络形态操作的列表。
+- `layer_id_to_input_node_ids` 是字典实例，将层的标识映射到输入节点标识。
+- `layer_id_to_output_node_ids` 是字典实例，将层的标识映射到输出节点标识。
+- `adj_list` 是二维列表。 是图的邻接列表。 第一维是张量标识。 在每条边的列表中，元素是两元组（张量标识，层标识）。
+- `reverse_adj_list` 是与 adj_list 格式一样的反向邻接列表。
+- `node_list` 是一个整数列表。 列表的索引是标识。
+- `layer_list` 是层的列表。 列表的索引是标识。
   
-  - For `StubConv (StubConv1d, StubConv2d, StubConv3d)`, the number follows is its node input id(or id list), node output id, input_channel, filters, kernel_size, stride and padding.
+  - 对于 `StubConv (StubConv1d, StubConv2d, StubConv3d)`，后面的数字表示节点的输入 id（或 id 列表），节点输出 id，input_channel，filters，kernel_size，stride 和 padding。
   
-  - For `StubDense`, the number follows is its node input id(or id list), node output id, input_units and units.
+  - 对于 `StubDense`，后面的数字表示节点的输入 id （或 id 列表），节点输出 id，input_units 和 units。
   
-  - For `StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)`, the number follows is its node input id(or id list), node output id and features numbers.
+  - 对于 `StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)`，后面的数字表示节点输入 id（或 id 列表），节点输出 id，和特征数量。
   
-  - For `StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)`, the number follows is its node input id(or id list), node output id and dropout rate.
+  - 对于 `StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)`，后面的数字表示节点的输入 id （或 id 列表），节点的输出 id 和 dropout 率。
   
-  - For `StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`, the number follows is its node input id(or id list), node output id, kernel_size, stride and padding.
+  - 对于 `StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`后面的数字表示节点的输入 id（或 id 列表），节点输出 id，kernel_size, stride 和 padding。
   
-  - For else layers, the number follows is its node input id(or id list) and node output id.
+  - 对于其它层，后面的数字表示节点的输入 id（或 id 列表）以及节点的输出 id。
 
 ## 5. TODO
 
-Next step, we will change the API from fixed network generator to more network operator generator. Besides, we will use ONNX instead of JSON later as the intermediate representation spec in the future.
+下一步，会将 API 从固定的网络生成方法改为更多的网络操作生成方法。 此外，还会使用 ONNX 格式来替代 JSON 作为中间表示结果。
