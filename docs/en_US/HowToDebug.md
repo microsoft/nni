@@ -27,7 +27,7 @@ You can use `nnictl log stderr` to find error information. For more options plea
 ### Experiment Root Directory
 Every experiment has a root folder, which is shown on the right-top corner of webUI. Or you could assemble it by replacing the `experiment_id` with your actual experiment_id in path `~/nni/experiment/experiment_id/` in case of webUI failure. `experiment_id` could be seen when you run `nnictl create ...` to create a new experiment.
 
-> For flexibility, we also offer a `logDir` option in your configuration, which specifies the directory to store all experiments (defaults to `~/nni/experiment`)
+> For flexibility, we also offer a `logDir` option in your configuration, which specifies the directory to store all experiments (defaults to `~/nni/experiment`). Please refer to [Configuration](ExperimentConfig.md) for more details.
 
 Under that directory, there is another directory named `log`, where `nnimanager.log` and `dispatcher.log` are placed.
 
