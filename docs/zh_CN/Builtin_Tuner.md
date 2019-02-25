@@ -78,7 +78,7 @@ tuner:
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -96,15 +96,15 @@ tuner:
 
 > 名称：**Anneal**
 
-**Suggested scenario**
+**建议场景**
 
-Anneal is suggested when each trial does not take too long, and you have enough computation resource(almost same with Random Search). Or the variables in search space could be sample from some prior distribution.
+当每个 Trial 的时间不长，并且有足够的计算资源时使用（与随机搜索基本相同）。 或者搜索空间的变量能从一些先验分布中采样。
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -122,15 +122,15 @@ tuner:
 
 > 名称：**Evolution**
 
-**Suggested scenario**
+**建议场景**
 
-Its requirement of computation resource is relatively high. Specifically, it requires large initial population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
+此算法对计算资源的需求相对较高。 需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者使用了 Assessor，就非常适合此算法。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -148,23 +148,23 @@ tuner:
 
 > 名称：**SMAC**
 
-**Installation**
+**安装**
 
-SMAC need to be installed by following command before first use.
+SMAC 在第一次使用前，必须用下面的命令先安装。
 
 ```bash
 nnictl package install --name=SMAC
 ```
 
-**Suggested scenario**
+**建议场景**
 
-Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.
+与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒 Tuner。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -182,11 +182,11 @@ tuner:
 
 > 名称：BatchTuner
 
-**Suggested scenario**
+**建议场景**
 
-If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner.
+如果 Experiment 配置已确定，可通过 `choice` 将它们罗列到搜索空间文件中运行即可。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -196,7 +196,7 @@ tuner:
 
 <br />
 
-Note that the search space that BatchTuner supported like:
+注意 Batch Tuner 支持的搜索空间文件如下例：
 
 ```json
 {
@@ -213,7 +213,7 @@ Note that the search space that BatchTuner supported like:
 }
 ```
 
-The search space file including the high-level key `combine_params`. The type of params in search space must be `choice` and the `values` including all the combined-params value.
+搜索空间文件使用了键 `combine_params`。 参数类型必须是 `choice` ，并且 `values` 要包含所有需要 Experiment 的参数组合。
 
 <a name="GridSearch"></a>
 
@@ -221,13 +221,13 @@ The search space file including the high-level key `combine_params`. The type of
 
 > 名称：**Grid Search**
 
-**Suggested scenario**
+**建议场景**
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](./SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
+注意，搜索空间仅支持 `choice`, `quniform`, `qloguniform`。 `quniform` 和 `qloguniform` 中的 **数字 `q` 有不同的含义（与[搜索空间](./SearchSpaceSpec.md)说明不同）。 这里的意义是在 `low` 和 `high` 之间均匀取值的数量。</p> 
 
-It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space.
+当搜索空间比较小，能够遍历整个搜索空间。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -243,17 +243,17 @@ tuner:
 
 > 名称：**Hyperband**
 
-**Suggested scenario**
+**建议场景**
 
-It is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.
+当搜索空间很大，但计算资源有限时建议使用。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
-* **R** (*int, optional, default = 60*) - the maximum STEPS (could be the number of mini-batches or epochs) can be allocated to a trial. Each trial should use STEPS to control how long it runs.
-* **eta** (*int, optional, default = 3*) - `(eta-1)/eta` is the proportion of discarded trials
+* **R** (*int, 可选, 默认为 60*) - 能分配给 Trial 的最大 STEPS (可以是 mini-batches 或 epochs 的数值)。 Trial 需要用 STEPS 来控制运行时间。
+* **eta** (*int, 可选, 默认为 3*) - `(eta-1)/eta` 是丢弃 Trial 的比例。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -273,23 +273,23 @@ advisor:
 
 > 名称：**NetworkMorphism**
 
-**Installation**
+**安装**
 
-NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so users should install it first.
+必须先安装 [pyTorch](https://pytorch.org/get-started/locally)。
 
-**Suggested scenario**
+**建议场景**
 
-It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain.
+需要将深度学习方法应用到自己的任务（自己的数据集）上，但不清楚该如何选择或设计网络。 可修改[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py)来适配自己的数据集和数据增强方法。 也可以修改批处理大小，学习率或优化器。 它可以为不同的任务找到好的网络架构。 当前，此 Tuner 仅支持视觉领域。
 
-**Requirement of classArg**
+**参数**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
-* **task** (*('cv'), optional, default = 'cv'*) - The domain of experiment, for now, this tuner only supports the computer vision(cv) domain.
-* **input_width** (*int, optional, default = 32*) - input image width
-* **input_channel** (*int, optional, default = 3*) - input image channel
-* **n_output_node** (*int, optional, default = 10*) - number of classes
+* **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
+* **task** (*('cv'), 可选, 默认为 'cv'*) - 实验的领域，当前仅支持视觉（cv）。
+* **input_width** (*int, 可选, 默认为 = 32*) - 输入图像的宽度
+* **input_channel** (*int, 可选, 默认为 3*) - 输入图像的通道数
+* **n_output_node** (*int, 可选, 默认为 10*) - 输出分类的数量
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -311,21 +311,21 @@ tuner:
 
 > 名称：**MetisTuner**
 
-Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
+注意，搜索空间仅支持 `choice`, `quniform`, `uniform` 和 `randint`。
 
-**Installation**
+**安装**
 
-Metis Tuner requires [sklearn](https://scikit-learn.org/), so users should install it first. User could use `pip3 install sklearn` to install it.
+Metis Tuner 需要先安装 [sklearn](https://scikit-learn.org/)。 可通过 `pip3 install sklearn` 命令来安装。
 
-**Suggested scenario**
+**建议场景**
 
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK.
+与 TPE 和 SMAC 类似，Metis 是黑盒 Tuner。 如果系统需要很长时间才能完成一次 Trial，Metis 就比随机搜索等其它方法要更合适。 此外，Metis 还为接下来的 Trial 提供了候选。 如何使用 Metis 的[样例](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json)。 通过调用 NNI 的 SDK，用户只需要发送 `精度` 这样的最终结果给 Tuner。
 
-**Requirement of classArg**
+**参数**
 
-* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
