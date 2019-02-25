@@ -75,8 +75,8 @@ NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 N
 
 这表示 Trial 代码中出现了失败。 这种错误与 Trial 代码相关。 需检查 Trial 的日志来修复错误。
 
-A common example of this would be run the mnist example without installing tensorflow. Surely there is an Import Error (that is, not installing tensorflow but trying to import it in your trial code) and thus every trial fails.
+如，其中常见的一种错误是在运行 MNIST 示例时没有安装 TensorFlow。 因为导入模块的错误（没有安装 Tensorflow，但在 Trial 代码中有 import tensorflow 的语句），每次 Trial 都会运行失败。
 
 ![](../img/trial_error.jpg)
 
-As it shows, every trial has a log path, where you can find trial'log and stderr.
+如图，每个 Trial 都有日志路径，可以从中找到 Trial 的日志和 stderr。
