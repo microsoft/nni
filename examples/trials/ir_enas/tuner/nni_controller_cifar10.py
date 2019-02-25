@@ -241,7 +241,7 @@ class ENASTuner(ENASBaseTuner):
 
     def update_search_space(self, data):
         # Extract choice
-        self.key = list(filter(lambda k: key.strip().endswith('choice'), list(data)))[0]
+        self.key = list(filter(lambda k: k.strip().endswith('choice'), list(data)))[0]
         data.pop(self.key)
         # Sort layers
         self.search_space = OrderedDict(sorted(data.items(), key=lambda tp:int(tp[0].split('_')[1])))
