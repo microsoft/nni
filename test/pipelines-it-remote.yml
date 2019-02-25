@@ -50,8 +50,8 @@ jobs:
       echo $(nni_manager_ip)
       echo nniManagerIp
       echo $(remote_host)
-      python3 generate_ts_config.py --ts remote --remote_user $(remote_user) --remote_host $(remote_host) \
-      --remote_port $(cat port) --remote_pwd $(remote_pwd) --nni_manager_ip $(nni_manager_ip)
+      python3 generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) \
+      --remote_port $(cat port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
       cat training_service.yml
       PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts remote --exclude multi_phase
     displayName: 'integration test'
