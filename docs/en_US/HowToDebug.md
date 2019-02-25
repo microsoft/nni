@@ -14,7 +14,8 @@ There are three parts that might have logs in NNI. They are nnimanager, dispatch
 
 ## Where is the log
 
-There are three kinds of log in NNI. Besides, when creating a new experiment, you can use `--debug` to specify log level.
+There are three kinds of log in NNI. When creating a new experiment, you can specify log level as debug by adding `--debug`. Besides, you can set more detailed log level in your configuration file using
+`logLevel` keyword. Available logLevel are: `trace`, `debug`, `info`, `warning`, `error`, `fatal`.
 
 ### NNI controller
 
@@ -25,6 +26,8 @@ You can use `nnictl log stderr` to find error information. For more options plea
 
 ### Experiment Root Directory
 Every experiment has a root folder, which is shown on the right-top corner of webUI. Or you could assemble it by replacing the `experiment_id` with your actual experiment_id in path `~/nni/experiment/experiment_id/` in case of webUI failure. `experiment_id` could be seen when you run `nnictl create ...` to create a new experiment.
+
+> For flexibility, we also offer a `logDir` option in your configuration, which specifies the directory to store all experiment (defaults to `~/nni/experiment`)
 
 Under that directory, there is a directory named `log`, where `nnimanager.log` and `dispatcher.log` are placed.
 
