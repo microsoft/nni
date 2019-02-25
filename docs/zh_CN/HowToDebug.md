@@ -55,7 +55,7 @@ NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 N
 
 ![](../img/dispatcher_error.jpg)
 
-Here we can see it is a dispatcher error. So we can check dispatcher's log, which might look like:
+可以看到这是一个 Dispatcher 的错误。 因此，检查 Dispatcher 的日志，可找到如下信息：
 
     [2019-02-19 19:36:45] DEBUG (nni.main/MainThread) START
     [2019-02-19 19:36:47] ERROR (nni.main/MainThread) __init__() missing 1 required positional arguments: 'optimize_mode'
@@ -69,11 +69,11 @@ Here we can see it is a dispatcher error. So we can check dispatcher's log, whic
     TypeError: __init__() missing 1 required positional arguments: 'optimize_mode'.
     
 
-### **Trial** Fails
+### **Trial** 失败
 
-In this situation, NNI can still run and create new trials.
+这种情况下，NNI 可以继续运行，并创建新的 Trial。
 
-It means your trial code (which is run by NNI) fails. This kind of error is strongly related to your trial code. Please check trial's log to fix any possible errors shown there.
+这表示 Trial 代码中出现了失败。 这种错误与 Trial 代码相关。 需检查 Trial 的日志来修复错误。
 
 A common example of this would be run the mnist example without installing tensorflow. Surely there is an Import Error (that is, not installing tensorflow but trying to import it in your trial code) and thus every trial fails.
 
