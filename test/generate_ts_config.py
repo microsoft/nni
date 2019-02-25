@@ -55,12 +55,21 @@ def update_training_service_config(args):
             config[args.ts]['kubeflowConfig']['azureStorage']['azureShare'] = args.azs_share
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['worker']['image'] = args.nni_docker_image
+    elif args.ts == 'remote':
+        if args.remote_user is not None:
+            config[args.ts]['machineList'][0]['username'] = args.remote_user
+        if args.remote_host is not None:
+            config[args.ts]['machineList'][0]['ip'] = args.remote_host
+        if args.remote_port is not None:
+            config[args.ts]['machineList'][0]['port'] = args.remote_port
+        if args.remote_pwd is not None:
+            config[args.ts]['machineList'][0]['passwd'] = args.remote_pwd
 
     dump_yml_content(TRAINING_SERVICE_FILE, config)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow'], default='pai')
+    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote'], default='pai')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
     # args for PAI
@@ -76,6 +85,11 @@ if __name__ == '__main__':
     parser.add_argument("--keyvault_name", type=str)
     parser.add_argument("--azs_account", type=str)
     parser.add_argument("--azs_share", type=str)
+    # args for remote
+    parser.add_argument("--remote_user", type=str)
+    parser.add_argument("--remote_pwd", type=str)
+    parser.add_argument("--remote_host", type=str)
+    parser.add_argument("--remote_port", type=int)
     args = parser.parse_args()
 
     update_training_service_config(args)
