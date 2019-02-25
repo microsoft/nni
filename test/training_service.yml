@@ -1,24 +1,47 @@
+kubeflow:
+  maxExecDuration: 15m
+  nniManagerIp:
+  kubeflowConfig:
+    operator: tf-operator
+    apiVersion: v1alpha2
+    storage: azureStorage
+    keyVault:
+      vaultName:
+      name:
+    azureStorage:
+      accountName:
+      azureShare:
+  trial:
+    worker:
+      replicas: 1
+      command:
+      gpuNum: 1
+      cpuNum: 1
+      memoryMB: 8192
+      image:
+  trainingServicePlatform: kubeflow
+
 local:
   trainingServicePlatform: local
-
-remote:
-  trainingServicePlatform: remote
-  machineList:
-    - ip:
-      port:
-      username:
-      passwd:
-
 pai:
-  trainingServicePlatform: pai
+  nniManagerIp:
+  maxExecDuration: 15m
   paiConfig:
-    userName: 
-    passWord: 
-    host: 
+    host:
+    passWord:
+    userName:
+  trainingServicePlatform: pai
   trial:
-    gpuNum:
-    cpuNum:
-    memoryMB: 
-    image: msranni/latest
-    dataDir: 
-    outputDir: 
+    gpuNum: 1
+    cpuNum: 1
+    dataDir:
+    image:
+    memoryMB: 8192
+    outputDir:
+remote:
+  machineList:
+  - ip:
+    passwd:
+    port:
+    username:
+  trainingServicePlatform: remote

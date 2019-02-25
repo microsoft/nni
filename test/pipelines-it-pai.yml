@@ -1,0 +1,52 @@
+jobs:
+- job: 'integration_test_pai'
+  timeoutInMinutes: 0
+  pool: 'NNI CI PAI CLI'
+
+  variables:
+    new_docker_img: msranni/nni.it.pai:latest
+
+  steps:
+  - script: python3 -m pip install --upgrade pip setuptools --user
+    displayName: 'Install python tools'
+
+  - script: |
+      cd deployment/pypi
+      echo 'building prerelease package...'
+      make build
+      ls $(Build.SourcesDirectory)/deployment/pypi/dist/
+    condition: eq( variables['build_docker_img'], 'true' )
+    displayName: 'build nni bdsit_wheel'
+
+  - script: |
+      cd deployment/pypi
+      docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
+
+      echo 'updating docker file for installing nni from local...'
+      # update Dockerfile to install NNI in docker image from whl file built in last step
+      sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
+      cat ../docker/Dockerfile
+      echo $IMG_TAG
+      docker build -f ../docker/Dockerfile -t $(new_docker_img) .
+      docker push $(new_docker_img)
+    condition: eq( variables['build_docker_img'], 'true' )
+    displayName: 'build and upload nni docker image'
+
+  - script: |
+      source install.sh
+    displayName: 'Install nni toolkit via source code'
+
+  - script: |
+      if [ $(build_docker_img) = 'true' ]
+      then
+        export TEST_IMG=$(new_docker_img)
+      else
+        export TEST_IMG=$(existing_docker_img)
+      fi
+      echo "TEST_IMG:$TEST_IMG"
+      cd test
+      python3 generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) \
+      --nni_docker_image $TEST_IMG --data_dir $(data_dir) --output_dir $(output_dir) --nni_manager_ip $(nni_manager_ip)
+
+      PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts pai --exclude multi_phase
+    displayName: 'integration test'
