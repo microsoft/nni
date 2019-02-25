@@ -100,8 +100,8 @@ class ENASTrial(ENASBaseTrial):
         else:
             ChildClass = GeneralChild
 
-        self.output_dir = os.path.join(os.getenv('NNI_OUTPUT_DIR'),'../..')
-        self.file_name = 'trainable_variables.txt'
+        self.output_dir = os.path.join(os.getenv('NNI_OUTPUT_DIR'), '../..')
+        self.file_path = os.path.join(self.output_dir, 'trainable_variable.txt')
 
         g = tf.Graph()
         with g.as_default():
@@ -125,7 +125,7 @@ class ENASTrial(ENASBaseTrial):
             self.sess = tf.train.SingularMonitoredSession(
                 config=config, hooks=hooks, checkpoint_dir=FLAGS.output_dir)
 
-            self.load(os.path.join(self.output_dir, self.file_name))
+            self.load(self.file_path)
         logger.debug('initlize ENASTrial done.')
 
     def load(self, file_path):
@@ -142,10 +142,9 @@ class ENASTrial(ENASBaseTrial):
             if name in vals:
                 variable.load(vals[name], self.sess)
 
-    def save(self, dir_path, filename):
+    def save(self, dir_path, file_path):
         if not os.path.exists(dir_path):
             os.mkdirs(dir_path)
-        file_path = os.path.join(dir_path, filename)
         vals = dict()
         if os.path.exists(file_path):
             with open(file_path, 'rb') as fp:
@@ -257,7 +256,7 @@ class ENASTrial(ENASBaseTrial):
             tr_acc, FLAGS.batch_size)
         logger.debug(log_string)
 
-        self.save(self.output_dir, self.file_name)
+        self.save(self.output_dir, self.file_path)
         return loss
 
 
