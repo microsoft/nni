@@ -33,19 +33,19 @@ NNI 中有三种日志。 在创建 Experiment 时，可增加命令行参数 `-
 
 在 Web 界面中，可通过点击每个 Trial 左边的 `+` 来展开详情并看到它的日志路径。
 
-在 Experiment 的根目录中，会有一个 `trials` 目录，这里存放了所有 Trial 的信息。 每个 Trial 都有一个用其 ID 命名的目录。 In this directory, a file named `stderr` records trial error and another named `trial.log` records this trial's log.
+在 Experiment 的根目录中，会有一个 `trials` 目录，这里存放了所有 Trial 的信息。 每个 Trial 都有一个用其 ID 命名的目录。 目录中会有一个 `stderr` 文件，是 Trial 的错误信息。另一个 `trial.log` 文件是 Trial 的日志。
 
-## Different kinds of errors
+## 不同类型的错误
 
-There are different kinds of errors. However, they can be divided into three categories based on their severity. So when nni fails, check each part sequentially.
+NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 NNI 中发生错误时，需要按顺序检查以下三种错误。
 
-Generally, if webUI is started successfully, there is a `Status` in the `Overview` tab, serving as a possible indicator of what kind of error happens. Otherwise you should check manually.
+一般情况下，打开 Web 界面，可以在 `Overview` 标签的 `Status` 上看到错误信息。 如果 Web 界面无法打开，可以通过命令行来检查。
 
-### **NNI** Fails
+### **NNI** 失败
 
-This is the most serious error. When this happens, the whole experiment fails and no trial will be run. Usually this might be related to some installation problem.
+这是最严重的错误。 发生这种错误时，整个 Experiment 都会失败，Trial 也不会运行。 这通常是由安装问题导致的。
 
-When this happens, you should check `nnictl`'s error output file `stderr` (i.e., nnictl log stderr) and then the `nnimanager`'s log to find if there is any error.
+先检查 `nnictl` 的错误输出文件 `stderr` (运行 nnictl log stderr)，然后检查 `nnimanager` 的日志来看看是否由任何错误。
 
 ### **Dispatcher** Fails
 
