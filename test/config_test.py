@@ -109,8 +109,9 @@ def run(args):
         try:
             # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
             time.sleep(5)
+            begin_time = time.time()
             run_test(config_file, args.ts, args.local_gpu)
-            print(GREEN + 'Test %s: TEST PASS' % (config_file) + CLEAR)
+            print(GREEN + 'Test %s: TEST PASS IN %d mins' % (config_file, (time.time() - begin_time)/60) + CLEAR)
         except Exception as error:
             print(RED + 'Test %s: TEST FAIL' % (config_file) + CLEAR)
             print('%r' % error)
