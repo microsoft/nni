@@ -48,18 +48,18 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
         builtinAssessorName: Curvefitting
         classArgs:
           # (必须) epoch 的总数。
-          #  We need to know the number of epoch to determine which point we need to predict.
+          # 需要此数据来决定需要预测的点。
           epoch_num: 20
-          # (optional) choice: maximize, minimize
-          * The default value of optimize_mode is maximize
+          # (可选) 选项: maximize, minimize
+          *  optimize_mode 的默认值是 maximize
           optimize_mode: maximize
-          # (optional) In order to save our computing resource, we start to predict when we have more than only after receiving start_step number of reported intermediate results.
-          * The default value of start_step is 6.
+          # (可选) 为了节约计算资源，在收到了 start_step 个中间结果后，才开始预测。
+          # start_step 的默认值是 6。
           start_step: 6
-          # (optional) The threshold that we decide to early stop the worse performance curve.
-          # For example: if threshold = 0.95, optimize_mode = maximize, best performance in the history is 0.9, then we will stop the trial which predict value is lower than 0.95 * 0.9 = 0.855.
-          * The default value of threshold is 0.95.
-          # Kindly reminds that if you choose minimize mode, please adjust the value of threshold >= 1.0 (e.g threshold=1.1)
+          # (可选) 决定是否提前终止的阈值。
+          # 例如，如果 threshold = 0.95, optimize_mode = maximize，最好的历史结果是 0.9，那么会在 Trial 的预测值低于 0.95 * 0.9 = 0.855 时停止。
+          * 阈值的默认值是 0.95。
+          # 注意：如果选择了 minimize 模式，要让 threshold >= 1.0 (如 threshold=1.1)
           threshold: 0.95
     
 
