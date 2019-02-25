@@ -11,19 +11,19 @@ NNI 中的日志分为三部分。 包括 NNI Manager， Dispatcher 以及 Trial
     - **Assessor**：Assessor 分析 Trial 的中间结果（例如，测试数据集上定期的精度），来确定 Trial 是否应该被提前终止。
 - **Trial**：Trial 的代码是用户编写的代码，每次 Trial 运行时会尝试一组新的配置（例如，一组新的超参值，或者某个神经网络结构）。
 
-## Where is the log
+## 日志的位置
 
-There are three kinds of log in NNI. When creating a new experiment, you can specify log level as debug by adding `--debug`. Besides, you can set more detailed log level in your configuration file by using `logLevel` keyword. Available logLevels are: `trace`, `debug`, `info`, `warning`, `error`, `fatal`.
+NNI 中有三种日志。 在创建 Experiment 时，可增加命令行参数 `--debug`，将日志级别设置为 debug 级别。 此外，还可以在配置文件中使用 `logLevel` 来设置日志级别。 可设置的日志级别包括：`trace`, `debug`, `info`, `warning`, `error`, `fatal`。
 
-### NNI controller
+### NNI Controller
 
-All possible errors that happen when launching an NNI experiment can be found here.
+在启动 NNI Experiment 时发生的错误，都可以在这里找到。
 
-You can use `nnictl log stderr` to find error information. For more options please refer to [NNICTL](NNICTLDOC.md)
+通过 `nnictl log stderr` 命令来查看错误信息。 参考 [NNICTL](NNICTLDOC.md) 了解更多命令选项。
 
-### Experiment Root Directory
+### Experiment 目录
 
-Every experiment has a root folder, which is shown on the right-top corner of webUI. Or you could assemble it by replacing the `experiment_id` with your actual experiment_id in path `~/nni/experiment/experiment_id/` in case of webUI failure. `experiment_id` could be seen when you run `nnictl create ...` to create a new experiment.
+每个 Experiment 都有一个根目录，会显示在 Web 界面的右上角。 Or you could assemble it by replacing the `experiment_id` with your actual experiment_id in path `~/nni/experiment/experiment_id/` in case of webUI failure. `experiment_id` could be seen when you run `nnictl create ...` to create a new experiment.
 
 > For flexibility, we also offer a `logDir` option in your configuration, which specifies the directory to store all experiments (defaults to `~/nni/experiment`). Please refer to [Configuration](ExperimentConfig.md) for more details.
 
