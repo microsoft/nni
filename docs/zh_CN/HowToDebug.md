@@ -51,7 +51,7 @@ NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 N
 
 这通常是 Tuner 失败的情况。 可检查 Dispatcher 的日志来分析出现了什么问题。 对于内置的 Tuner，常见的错误可能是无效的搜索空间（不支持的搜索空间类型，或配置文件中的 Tuner 参数的错误）。
 
-以后一种情况为例。 If you write a customized tuner who's *\_init*\_ function has an argument called `optimize_mode`, which you do not provide in your configuration file, NNI will fail to run your tuner so the experiment fails. You can see errors in the webUI like:
+以后一种情况为例。 某自定义的 Tuner，*\_init*\_ 函数有名为 `optimize_mode` 的参数，但配置文件中没有提供此参数。NNI 就会因为初始化 Tuner 失败而造成 Experiment 失败。 可在 Web 界面看到如下错误：
 
 ![](../img/dispatcher_error.jpg)
 
