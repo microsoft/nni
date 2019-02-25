@@ -22,7 +22,7 @@ def find_port():
     return port
 
 def start_container(image, name):
-    '''Start docker container'''
+    '''Start docker container, generate a port in /tmp/nnitest/{name}/port file'''
     port = find_port()
     source_dir = '/tmp/nnitest/' + name
     run_cmds = ['docker', 'run', '-d', '-p', str(port) + ':22', '--name', name, '--mount', 'type=bind,source=' + source_dir + ',target=/tmp/nni', image]

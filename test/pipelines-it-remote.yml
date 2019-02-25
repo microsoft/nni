@@ -1,5 +1,5 @@
 jobs:
-- job: 'Ubuntu_16_04_remote'
+- job: 'integration_test_remote'
   pool: 'NNI CI KUBE CLI'
 
   steps:
@@ -52,7 +52,7 @@ jobs:
       --remote_port $(cat port) --remote_pwd $(remote_pwd) --nni_manager_ip $(nni_manager_ip)
       cat training_service.yml
       PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts remote --exclude multi_phase,multi_thread,cifar10
-    displayName: 'Built-in dispatcher tests'
+    displayName: 'integration test'
   - task: SSH@0
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
