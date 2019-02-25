@@ -34,6 +34,7 @@ export class PAITrialJobDetail implements TrialJobDetail {
     public form: JobApplicationForm;
     public sequenceId: number;
     public hdfsLogPath: string;
+    public isEarlyStopped?: boolean;
 
     constructor(id: string, status: TrialJobStatus, paiJobName : string, 
             submitTime: number, workingDirectory: string, form: JobApplicationForm, sequenceId: number, hdfsLogPath: string) {

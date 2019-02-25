@@ -12,9 +12,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../../src/sdk/pynni'))
 
 from recommonmark.parser import CommonMarkParser
 from recommonmark.transform import AutoStructify
@@ -44,6 +44,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx_markdown_tables',
     'sphinxarg.ext',
+    'sphinx.ext.napoleon',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -107,7 +108,7 @@ html_theme_options = {
 #
 # html_sidebars = {}
 
-html_logo = './img/nni_logo_dark.png'
+html_logo = '../img/nni_logo_dark.png'
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
