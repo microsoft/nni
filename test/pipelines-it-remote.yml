@@ -1,6 +1,5 @@
 jobs:
 - job: 'integration_test_remote'
-  pool: 'NNI CI KUBE CLI'
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools
