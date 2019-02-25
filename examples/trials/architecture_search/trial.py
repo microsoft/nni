@@ -1,20 +1,5 @@
 import time
 
-<<<<<<< HEAD
-def add_one(x):
-    return x+1
-
-def add_two(x):
-    return x+2
-
-def add_three(x):
-    return x+3
-
-def add_four(x):
-    return x+4
-
-def add_five(x):
-=======
 def add_one(_, x):
     return x+1
 
@@ -28,16 +13,11 @@ def add_four(_, x):
     return x+4
 
 def add_five(_, x):
->>>>>>> b8ba7e962bc9e3ad1d8dd8114a58f7da0f3fcee4
     return x+5
 
 def main():
 
-<<<<<<< HEAD
-    images = 5
-=======
     images = 0
->>>>>>> b8ba7e962bc9e3ad1d8dd8114a58f7da0f3fcee4
 
     """@nni.architecture
     {

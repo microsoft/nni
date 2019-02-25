@@ -103,8 +103,8 @@ class ENASTrial(ENASBaseTrial):
         self.output_dir = os.path.join(os.getenv('NNI_OUTPUT_DIR'), '../..')
         self.file_path = os.path.join(self.output_dir, 'trainable_variable.txt')
 
-        g = tf.Graph()
-        with g.as_default():
+        self.g = tf.Graph()
+        with self.g.as_default():
             self.child_model = BuildChild(images, labels, ChildClass)
 
             self.total_data = {}
@@ -136,11 +136,11 @@ class ENASTrial(ENASBaseTrial):
         # otherwise load variable
         with open(file_path, 'rb') as fp:
             vals = pickle.load(fp)
-
-        for variable in tf.trainable_variables():
-            name = variable.name
-            if name in vals:
-                variable.load(vals[name], self.sess)
+        with self.g.as_default():
+            for variable in tf.trainable_variables():
+                name = variable.name
+                if name in vals:
+                    variable.load(vals[name], self.sess)
 
     def save(self, dir_path, file_path):
         if not os.path.exists(dir_path):
@@ -149,8 +149,10 @@ class ENASTrial(ENASBaseTrial):
         if os.path.exists(file_path):
             with open(file_path, 'rb') as fp:
                 vals = pickle.load(fp)
-        for variable in tf.trainable_variables():
-            vals[variable.name] = self.sess.run(variable)
+        with self.g.as_default():
+            logger.debug(tf.trainable_variables[:3])
+            for variable in tf.trainable_variables():
+                vals[variable.name] = self.sess.run(variable)
         with open(file_path, 'wb') as fp:
             pickle.dump(vals, fp)
 
