@@ -1,5 +1,6 @@
 jobs:
 - job: 'integration_test_kubeflow'
+  timeoutInMinutes: 0
   pool: 'NNI CI KUBE CLI'
 
   variables:
