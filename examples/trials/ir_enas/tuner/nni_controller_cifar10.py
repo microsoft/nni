@@ -136,12 +136,12 @@ class ENASTuner(ENASBaseTuner):
 
         self.generate_one_epoch_parameters()
         self.entry = 'train'
-        self.pos = 1
+        self.pos = 0
 
     def generate_one_epoch_parameters(self):
         # Generate architectures in one epoch and 
         # store them to self.child_arc
-        self.pos = 1
+        self.pos = 0
         self.entry = 'train'
         if self.Is_macro:
             self.child_arc = self.get_controller_arc_macro(self.total_steps)
@@ -155,6 +155,7 @@ class ENASTuner(ENASBaseTuner):
 
     def generate_parameters(self, parameter_id, trial_job_id=None):
         self.pos += 1
+        logger.info('current pos: ' + str(self.pos))
         if self.pos == self.child_train_steps + 1:
             self.entry == 'validate'
         elif self.pos > self.child_train_steps + self.controller_train_steps:
