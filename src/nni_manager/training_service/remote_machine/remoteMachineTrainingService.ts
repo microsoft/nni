@@ -48,7 +48,7 @@ import {
     GPU_COLLECTOR_FORMAT
 } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
-import { validateCodeDir} from '../common/util';
+import { validateCodeDir } from '../common/util';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { mkDirP } from '../../common/utils';
@@ -279,8 +279,9 @@ class RemoteMachineTrainingService implements TrainingService {
 
             const jobpidPath: string = this.getJobPidPath(trialJob.id);
             try {
+                // Mark the toEarlyStop tag here
+                trialJob.isEarlyStopped = isEarlyStopped;
                 await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, sshClient);
-                trialJob.status = getJobCancelStatus(isEarlyStopped);
             } catch (error) {
                 // Not handle the error since pkill failed will not impact trial job's current status
                 this.log.error(`remoteTrainingService.cancelTrialJob: ${error.message}`);
@@ -482,6 +483,11 @@ class RemoteMachineTrainingService implements TrainingService {
         if (trialJobDetail === undefined) {
             throw new NNIError(NNIErrorNames.INVALID_JOB_DETAIL, `Invalid job detail information for trial job ${trialJobId}`);
         }
+        // If job is not WATIING, Don't prepare and resolve true immediately
+        if (trialJobDetail.status !== 'WAITING') {
+            deferred.resolve(true);
+            return deferred.promise;
+        }
         // get an ssh client from scheduler
         const rmScheduleResult: RemoteMachineScheduleResult = this.gpuScheduler.scheduleMachine(this.trialConfig.gpuNum, trialJobId);
         if (rmScheduleResult.resultType === ScheduleResultType.REQUIRE_EXCEED_TOTAL) {
@@ -640,7 +646,12 @@ class RemoteMachineTrainingService implements TrainingService {
                     if (parseInt(code, 10) === 0) {
                         trialJob.status = 'SUCCEEDED';
                     } else {
-                        trialJob.status = 'FAILED';
+                        // isEarlyStopped is never set, mean it's not cancelled by NNI, so if the process's exit code >0, mark it as FAILED
+                        if (trialJob.isEarlyStopped === undefined) {
+                            trialJob.status = 'FAILED';
+                        } else {
+                            trialJob.status = getJobCancelStatus(trialJob.isEarlyStopped);
+                        }
                     }
                     trialJob.endTime = parseInt(timestamp, 10);
                 }
