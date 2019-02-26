@@ -26,7 +26,7 @@ jobs:
         echo 'building release package...'
         make build
       fi
-
+    condition: eq( variables['upload_package'], 'true' )
     displayName: 'build nni bdsit_wheel'
   - script: |
       cd deployment/pypi
@@ -88,7 +88,7 @@ jobs:
         echo 'building release package...'
         PATH=$HOME/Library/Python/3.7/bin:$PATH make build
       fi
-
+    condition: eq( variables['upload_package'], 'true' )
     displayName: 'build nni bdsit_wheel'
   - script: |
       cd deployment/pypi
