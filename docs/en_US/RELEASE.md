@@ -80,7 +80,7 @@
   * Support tf-operator
   * [Distributed trial example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
 * [Grid search tuner](gridsearchTuner.md) 
-* [Hyperband tuner](hyperbandTuner.md)
+* [Hyperband tuner](hyperbandAdvisor.md)
 * Support launch NNI experiment on MAC
 * WebUI
   * UI support for hyperband tuner
