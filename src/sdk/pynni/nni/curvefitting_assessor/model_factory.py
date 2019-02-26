@@ -22,8 +22,6 @@ from .curvefunctions import *
 
 # Number of curve functions we prepared, more details can be found in "curvefunctions.py"
 NUM_OF_FUNCTIONS = 12
-# Maximum number of iterations when fitting the curve optimal parameters
-MAXFEV = 1000000
 # Number of simulation time when we do MCMC sampling
 NUM_OF_SIMULATION_TIME = 20
 # Number of samples we select when we do MCMC sampling
@@ -65,17 +63,18 @@ class CurveModel(object):
         for i in range(NUM_OF_FUNCTIONS):
             model = curve_combination_models[i]
             try:
+                # The maximum number of iterations to fit is 100*(N+1), where N is the number of elements in `x0`.
                 if model_para_num[model] == 2:
-                    a, b = optimize.curve_fit(all_models[model], x, y, maxfev=MAXFEV)[0]
+                    a, b = optimize.curve_fit(all_models[model], x, y)[0]
                     model_para[model][0] = a
                     model_para[model][1] = b
                 elif model_para_num[model] == 3:
-                    a, b, c = optimize.curve_fit(all_models[model], x, y, maxfev=MAXFEV)[0]
+                    a, b, c = optimize.curve_fit(all_models[model], x, y)[0]
                     model_para[model][0] = a
                     model_para[model][1] = b
                     model_para[model][2] = c
                 elif model_para_num[model] == 4:
-                    a, b, c, d = optimize.curve_fit(all_models[model], x, y, maxfev=MAXFEV)[0]
+                    a, b, c, d = optimize.curve_fit(all_models[model], x, y)[0]
                     model_para[model][0] = a
                     model_para[model][1] = b
                     model_para[model][2] = c
@@ -110,7 +109,8 @@ class CurveModel(object):
         std = np.std(predict_data)
         for model in tmp_model:
             y = self.predict_y(model, self.target_pos)
-            if y < median + 3 * std and y > median - 3 * std:
+            epsilon = self.point_num / 10 * std
+            if y < median + epsilon and y > median - epsilon:
                 self.effective_model.append(model)
         self.effective_model_num = len(self.effective_model)
         logger.info('List of effective model: ', self.effective_model)

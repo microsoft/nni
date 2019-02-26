@@ -100,7 +100,8 @@ Optional('assessor'): Or({
         'epoch_num': And(int, lambda x: 0 <= x <= 9999),
         Optional('optimize_mode'): Or('maximize', 'minimize'),
         Optional('start_step'): And(int, lambda x: 0 <= x <= 9999),
-        Optional('threshold'): And(float, lambda x: 0.0 <= x <= 9999.0)
+        Optional('threshold'): And(float, lambda x: 0.0 <= x <= 9999.0),
+        Optional('gap'): And(int, lambda x: 1 <= x <= 9999)
     },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
 },{
