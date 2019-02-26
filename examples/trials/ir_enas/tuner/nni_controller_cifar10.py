@@ -164,7 +164,7 @@ class ENASTuner(ENASBaseTuner):
         if len(self.child_arc) <= 0:
             raise nni.NoMoreTrialError('no more parameters now.')
 
-        current_arc_code = self.child_arc[self.pos - (1 if self.entry=='train' else self.child_train_steps+1)]
+        current_arc_code = self.child_arc[self.pos - (1 if self.entry=='train' else (self.child_train_steps+1))]
         current_config = {self.key: self.entry}
         start_idx = 0
         onehot2list = lambda l: [idx for idx, val in enumerate(l) if val==1]
