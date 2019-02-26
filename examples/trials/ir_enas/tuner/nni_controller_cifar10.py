@@ -199,35 +199,32 @@ class ENASTuner(ENASBaseTuner):
         logger.debug("Epoch {}: Training controller".format(epoch))
 
         #for ct_step in range(FLAGS.controller_train_steps * FLAGS.controller_num_aggregate):
-        for ct_step in range(self.controller_total_steps):
-            run_ops = [
-                self.controller_ops["loss"],
-                self.controller_ops["entropy"],
-                self.controller_ops["lr"],
-                self.controller_ops["grad_norm"],
-                self.controller_ops["valid_acc"],
-                self.controller_ops["baseline"],
-                self.controller_ops["skip_rate"],
-                self.controller_ops["train_op"],
-            ]
+        run_ops = [
+            self.controller_ops["loss"],
+            self.controller_ops["entropy"],
+            self.controller_ops["lr"],
+            self.controller_ops["grad_norm"],
+            self.controller_ops["valid_acc"],
+            self.controller_ops["baseline"],
+            self.controller_ops["skip_rate"],
+            self.controller_ops["train_op"],
+        ]
 
-            loss, entropy, lr, gn, val_acc, bl, _, _ = self.sess.run(run_ops, feed_dict={
-                self.controller_model.valid_acc: valid_acc_arr[ct_step]})
+        loss, entropy, lr, gn, val_acc, bl, _, _ = self.sess.run(run_ops, feed_dict={
+            self.controller_model.valid_acc: valid_acc_arr})
 
-            controller_step = self.sess.run(self.controller_ops["train_step"])
+        controller_step = self.sess.run(self.controller_ops["train_step"])
 
-            if ct_step % FLAGS.log_every == 0:
-
-                log_string = ""
-                log_string += "ctrl_step={:<6d}".format(controller_step)
-                log_string += " loss={:<7.3f}".format(loss)
-                log_string += " ent={:<5.2f}".format(entropy)
-                log_string += " lr={:<6.4f}".format(lr)
-                log_string += " |g|={:<8.4f}".format(gn)
-                log_string += " acc={:<6.4f}".format(val_acc)
-                log_string += " bl={:<5.2f}".format(bl)
-                log_string += " child acc={:<5.2f}".format(valid_acc_arr[ct_step])
-                logger.debug(log_string)
+        log_string = ""
+        log_string += "ctrl_step={:<6d}".format(controller_step)
+        log_string += " loss={:<7.3f}".format(loss)
+        log_string += " ent={:<5.2f}".format(entropy)
+        log_string += " lr={:<6.4f}".format(lr)
+        log_string += " |g|={:<8.4f}".format(gn)
+        log_string += " acc={:<6.4f}".format(val_acc)
+        log_string += " bl={:<5.2f}".format(bl)
+        log_string += " child acc={:<5.2f}".format(valid_acc_arr)
+        logger.debug(log_string)
         return
 
 
@@ -235,8 +232,8 @@ class ENASTuner(ENASBaseTuner):
         logger.debug("epoch:\t"+str(self.epoch))
         logger.debug(parameter_id)
         logger.debug(reward)
-        # valid_acc_arr = reward
-        # self.controller_one_step(self.epoch, valid_acc_arr)
+        if self.entry == 'validate':
+            self.controller_one_step(self.epoch, reward)
         return
 
 
