@@ -2,8 +2,8 @@
 
 ## Release 0.5.1 - 1/31/2018
 ### Improvements
-* Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md) configurable
-* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md), making it easier for debugging 
+* Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md) configurable
+* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md), making it easier for debugging 
 
 ### Documentation
 * Reorganized documentation & New Homepage Released: https://nni.readthedocs.io/en/latest/
