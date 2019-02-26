@@ -105,7 +105,7 @@ class ENASTuner(ENASBaseTuner):
         #self.controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
         self.child_train_steps = child_train_steps
         self.controller_train_steps = controller_train_steps
-        self.total_steps = max(self.child_train_steps, controller_train_steps)
+        self.total_steps = max(self.child_train_steps, self.controller_train_steps)
         logger.debug("child steps:\t"+str(child_train_steps))
         logger.debug("controller step\t"+str(controller_train_steps))
 
@@ -136,7 +136,7 @@ class ENASTuner(ENASBaseTuner):
 
         self.generate_one_epoch_parameters()
         self.entry = 'train'
-        self.pos = 0
+        self.pos = 1
 
     def generate_one_epoch_parameters(self):
         # Generate architectures in one epoch and 

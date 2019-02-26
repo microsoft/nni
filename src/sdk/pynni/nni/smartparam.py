@@ -139,10 +139,10 @@ else:
         #   layer 1: the API function (caller of this function)
         #   layer 2: caller of the API function
         frame = inspect.stack(0)[2]
-        filename = frame.filename
+        frame_info = frame.frame
         lineno = frame.lineno  # NOTE: this is the lineno of caller's last argument
         del frame  # see official doc
-        module = inspect.getmodulename(filename)
+        module = inspect.getmodule(frame_info).__name__
         if name is None:
             name = '__line{:d}'.format(lineno)
         key = '{}/{}/{}'.format(module, name, func)
