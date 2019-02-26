@@ -6,7 +6,7 @@
 
 [![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/Microsoft.nni)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=6) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![Bug](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[English](README.md)
+[English](README_zh_CN.md)
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
@@ -186,7 +186,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 * [使用命令行工具 nnictl](docs/zh_CN/NNICTLDOC.md)
 * [使用 NNIBoard](docs/zh_CN/WebUI.md)
 * [如何定义搜索空间](docs/zh_CN/SearchSpaceSpec.md)
-* [如何定义一次 Trial](docs/zh_CN/Trials.md)
+* [如何编写 Trial 代码](docs/zh_CN/Trials.md)
 * [如何选择 Tuner、搜索算法](docs/zh_CN/Builtin_Tuner.md)
 * [配置 Experiment](docs/zh_CN/ExperimentConfig.md)
 * [如何使用 Annotation](docs/zh_CN/Trials.md#nni-python-annotation)
