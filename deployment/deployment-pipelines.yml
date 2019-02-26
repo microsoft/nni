@@ -47,16 +47,26 @@ jobs:
       if [ $(build_type) = 'prerelease' ]
       then
         docker login -u $(docker_hub_dev_user) -p $(docker_hub_dev_pwd)
-        export IMG_TAG=nnidev/nni-test:`git describe --tags --abbrev=0`.`date +%y%m%d%H%M`
+        export IMG_NAME=nnidev/nni-test
+        export IMG_TAG=`git describe --tags --abbrev=0`.`date +%y%m%d%H%M`
         echo 'updating docker file for testpyi...'
         sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/RUN python3 -m pip install --user --no-cache-dir --index-url https:\/\/test.pypi.org\/simple\/ --extra-index-url https:\/\/pypi.org\/simple nni/' Dockerfile
       else
         docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
-        export IMG_TAG=msranni/nni:`git describe --tags --abbrev=0`
+        export IMG_NAME=msranni/nni
+        export IMG_TAG=`git describe --tags --abbrev=0`
       fi
-      echo $IMG_TAG
-      docker build -f Dockerfile -t $IMG_TAG .
+      echo $IMG_NAME:$IMG_TAG
+      cat Dockerfile
+      docker build -f Dockerfile -t $IMG_NAME:$IMG_TAG .
       docker push $IMG_TAG
+
+      if [ $(update_latest_tag) = 'true' ]
+      then
+        docker tag $IMG_NAME:$IMG_TAG $IMG_NAME:latest
+        docker push $IMG_NAME:latest
+      fi
+
     condition: eq( variables['build_docker_img'], 'true' )
     displayName: 'build and upload nni docker image'
 
