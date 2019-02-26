@@ -106,8 +106,8 @@ class ENASTuner(ENASBaseTuner):
         self.child_train_steps = child_train_steps
         self.controller_train_steps = controller_train_steps
         self.total_steps = max(self.child_train_steps, self.controller_train_steps)
-        logger.debug("child steps:\t"+str(child_train_steps))
-        logger.debug("controller step\t"+str(controller_train_steps))
+        logger.debug("child steps:\t"+str(self.child_train_steps))
+        logger.debug("controller step\t"+str(self.controller_train_steps))
 
         self.epoch = 0
 
@@ -156,6 +156,9 @@ class ENASTuner(ENASBaseTuner):
     def generate_parameters(self, parameter_id, trial_job_id=None):
         self.pos += 1
         logger.info('current pos: ' + str(self.pos))
+        logger.info('len of childarc: ' + str(len(self.child_arc)))
+        logger.info('ans: ' + str(self.pos - (1 if self.entry=='train' else (self.child_train_steps+1))))
+        logger.info('child_train_steps: '+str(self.child_train_steps))
         if self.pos == self.child_train_steps + 1:
             self.entry == 'validate'
         elif self.pos > self.child_train_steps + self.controller_train_steps:
