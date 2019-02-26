@@ -157,18 +157,13 @@ class ENASTuner(ENASBaseTuner):
         self.pos += 1
         logger.info('current pos: ' + str(self.pos))
         if self.pos == self.child_train_steps + 1:
-            self.entry == 'validate'
+            self.entry = 'validate'
         elif self.pos > self.child_train_steps + self.controller_train_steps:
             self.generate_one_epoch_parameters()
 
         if len(self.child_arc) <= 0:
             raise nni.NoMoreTrialError('no more parameters now.')
 
-        logger.info('len of childarc: ' + str(len(self.child_arc)))
-        logger.info("self.entry"+str(self.entry))
-        logger.info("self.entry=='train'"+str(self.entry=='train'))
-        logger.info('ans: ' + str(self.pos - (1 if self.entry=='train' else (self.child_train_steps+1))))
-        logger.info('child_train_steps: '+str(self.child_train_steps))
         current_arc_code = self.child_arc[self.pos - (1 if self.entry=='train' else (self.child_train_steps+1))]
         current_config = {self.key: self.entry}
         start_idx = 0
