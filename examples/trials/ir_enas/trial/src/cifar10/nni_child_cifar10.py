@@ -346,7 +346,7 @@ def main(_):
             loss = trial.run_child_one_macro()
             '''@nni.report_final_result(loss)'''
         elif entry == 'validate':
-            valid_acc_arr = trial.get_csvaa(controller_total_steps, child_arc)
+            valid_acc_arr = trial.get_csvaa()
             '''@nni.report_final_result(valid_acc_arr)'''
             logger.debug("Get rewards Done!\n")
         else:
