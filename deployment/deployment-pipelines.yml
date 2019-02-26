@@ -59,7 +59,7 @@ jobs:
       echo $IMG_NAME:$IMG_TAG
       cat Dockerfile
       docker build -f Dockerfile -t $IMG_NAME:$IMG_TAG .
-      docker push $IMG_TAG
+      docker push $IMG_NAME:$IMG_TAG
 
       if [ $(update_latest_tag) = 'true' ]
       then
