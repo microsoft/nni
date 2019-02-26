@@ -50,7 +50,7 @@ jobs:
         export IMG_NAME=nnidev/nni-test
         export IMG_TAG=`git describe --tags --abbrev=0`.`date +%y%m%d%H%M`
         echo 'updating docker file for testpyi...'
-        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/RUN python3 -m pip install --user --no-cache-dir --index-url https:\/\/test.pypi.org\/simple\/ --extra-index-url https:\/\/pypi.org\/simple nni/' Dockerfile
+        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/RUN python3 -m pip install --user --no-cache-dir --index-url https:\/\/test.pypi.org\/simple nni/' Dockerfile
       else
         docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
         export IMG_NAME=msranni/nni
