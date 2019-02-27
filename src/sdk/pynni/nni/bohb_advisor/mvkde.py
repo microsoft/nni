@@ -3,7 +3,7 @@ import scipy.optimize as spo
 
 import ConfigSpace as CS
 
-from hpbandster.optimizers.kde.kernels import Gaussian, AitchisonAitken, WangRyzinOrdinal, WangRyzinInteger
+from .kernels import Gaussian, AitchisonAitken, WangRyzinOrdinal, WangRyzinInteger
 
 
 class MultivariateKDE(object):
