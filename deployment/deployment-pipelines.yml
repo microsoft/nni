@@ -47,6 +47,7 @@ jobs:
       else
         echo 'invalid'
       fi
+      echo $(valid_version)
     displayName: 'Validate version number'
 
   - script: |
