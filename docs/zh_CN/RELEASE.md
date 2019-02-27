@@ -4,8 +4,8 @@
 
 ### 改进
 
-* Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md) configurable
-* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md), making it easier for debugging 
+* [日志目录](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md)可配置。
+* 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md)，使其更易于调试。 
 
 ### 文档
 
@@ -23,9 +23,9 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* Support [Metis tuner](metisTuner.md) as a new NNI tuner. **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* 支持新的 [Metis Tuner](metisTuner.md)。 对于**在线**超参调优的场景，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
-* Support [Curve fitting assessor](curvefittingAssessor.md) for early stop policy using learning curve extrapolation.
+* 支持 [Curve fitting （曲线拟合）Assessor](curvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
 * 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
 
 #### 改进训练平台
@@ -48,7 +48,7 @@
 
 #### 支持新的 Tuner
 
-* Support [network morphism](networkmorphismTuner.md) as a new tuner
+* 支持新的 [network morphism](networkmorphismTuner.md) Tuner。
 
 #### 改进训练平台
 
@@ -166,7 +166,7 @@
 * 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练服务 (参考[这里](./PAIMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
   * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
   * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
-* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](smacTuner.md) for instructions about how to use SMAC tuner) 
+* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](smacTuner.md)，了解如何使用 SMAC Tuner) 
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
 * 支持将 NNI 安装在 [conda](https://conda.io/docs/index.html) 和 Python 虚拟环境中。
 * 其它 
