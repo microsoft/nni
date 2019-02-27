@@ -16,18 +16,29 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import logging
+import datetime
 from nni.assessor import Assessor, AssessResult
 from .model_factory import CurveModel
 
 logger = logging.getLogger('curvefitting_Assessor')
 
 class CurvefittingAssessor(Assessor):
-    '''
-    CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
+    """CurvefittingAssessor uses learning curve fitting algorithm to predict the learning curve performance in the future.
     It stops a pending trial X at step S if the trial's forecast result at target step is convergence and lower than the
     best performance in the history.
-    '''
-    def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.95):
+
+    Parameters
+    ----------
+    epoch_num: int
+        The total number of epoch
+    optimize_mode: str
+        optimize mode, 'maximize' or 'minimize'
+    start_step: int
+        only after receiving start_step number of reported intermediate results
+    threshold: float
+        The threshold that we decide to early stop the worse performance curve.
+    """
+    def __init__(self, epoch_num=20, optimize_mode='maximize', start_step=6, threshold=0.95, gap=1):
         if start_step <= 0:
             logger.warning('It\'s recommended to set start_step to a positive number')
         # Record the target position we predict
@@ -44,6 +55,10 @@ class CurvefittingAssessor(Assessor):
         self.start_step = start_step
         # Record the compared threshold
         self.threshold = threshold
+        # Record the number of gap
+        self.gap = gap
+        # Record the number of times of judgments
+        self.judgment_num = 0
         # Record the best performance
         self.set_best_performance = False
         self.completed_best_performance = None
@@ -51,9 +66,15 @@ class CurvefittingAssessor(Assessor):
         logger.info('Successfully initials the curvefitting assessor')
 
     def trial_end(self, trial_job_id, success):
-        '''
-        trial end: update the best performance of completed trial job
-        '''
+        """update the best performance of completed trial job
+        
+        Parameters
+        ----------
+        trial_job_id: int
+            trial job id
+        success: bool
+            True if succssfully finish the experiment, False otherwise
+        """
         if success:
             if self.set_best_performance:
                 self.completed_best_performance = max(self.completed_best_performance, self.trial_history[-1])
@@ -65,18 +86,39 @@ class CurvefittingAssessor(Assessor):
             logger.info('No need to update, trial job id: ', trial_job_id)
 
     def assess_trial(self, trial_job_id, trial_history):
-        '''
-        assess whether a trial should be early stop by curve fitting algorithm
-        return AssessResult.Good or AssessResult.Bad
-        '''
+        """assess whether a trial should be early stop by curve fitting algorithm
+
+        Parameters
+        ----------
+        trial_job_id: int
+            trial job id
+        trial_history: list
+            The history performance matrix of each trial
+
+        Returns
+        -------
+        bool
+            AssessResult.Good or AssessResult.Bad
+
+        Raises
+        ------
+        Exception
+            unrecognize exception in curvefitting_assessor
+        """
+        self.trial_job_id = trial_job_id
         self.trial_history = trial_history
+        if not self.set_best_performance:
+            return AssessResult.Good
         curr_step = len(trial_history)
         if curr_step < self.start_step:
             return AssessResult.Good
-        if not self.set_best_performance:
+        if (curr_step - self.start_step) // self.gap <= self.judgment_num:
             return AssessResult.Good
+        self.judgment_num = (curr_step - self.start_step) // self.gap
 
         try:
+            start_time = datetime.datetime.now()
+            # Predict the final result
             curvemodel = CurveModel(self.target_pos)
             predict_y = curvemodel.predict(trial_history)
             logger.info('Prediction done. Trial job id = ', trial_job_id, '. Predict value = ', predict_y)
@@ -84,6 +126,11 @@ class CurvefittingAssessor(Assessor):
                 logger.info('wait for more information to predict precisely')
                 return AssessResult.Good
             standard_performance = self.completed_best_performance * self.threshold
+
+            end_time = datetime.datetime.now()
+            if (end_time - start_time).seconds > 60:
+                logger.warning('Curve Fitting Assessor Runtime Exceeds 60s, Trial Id = ', self.trial_job_id, 'Trial History = ', self.trial_history)
+
             if self.higher_better:
                 if predict_y > standard_performance:
                     return AssessResult.Good
@@ -94,4 +141,4 @@ class CurvefittingAssessor(Assessor):
                 return AssessResult.Bad
 
         except Exception as exception:
-            logger.exception('unrecognize exception in curvefitting_asserssor', exception)
+            logger.exception('unrecognize exception in curvefitting_assessor', exception)
