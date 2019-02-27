@@ -42,16 +42,16 @@ jobs:
       echo $BRANCH_TAG
       if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]];
       then
-        #export valid_version='true'
         echo '##vso[task.setvariable variable=valid_version]true'
-        echo 'valid'
+        echo 'valid build version $(build_version)
       else
-        echo 'invalid'
+        echo 'invalid build version $(build_version)'
+        exit 1
       fi
-      echo $(valid_version)
     displayName: 'Validate version number'
 
   - script: |
+      echo valid_version is $(valid_version)
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install twine --user
     displayName: 'Install twine'
@@ -129,7 +129,14 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      [[ $BRANCH_TAG =~ "v[0-9](.[0-9])+" ]] && $(valid_version)='true'
+      if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]];
+      then
+        echo '##vso[task.setvariable variable=valid_version]true'
+        echo 'valid build version $(build_version)
+      else
+        echo 'invalid build version $(build_version)'
+        exit 1
+      fi
     displayName: 'Validate version number'
 
   - script: |
