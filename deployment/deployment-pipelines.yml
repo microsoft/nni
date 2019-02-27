@@ -31,24 +31,19 @@ jobs:
 
   steps:
   - script: |
-      # NNI build scripts (Makefile) uses branch tag as package version number
-      git tag $(build_version)
       echo $(build_version)
-    condition: eq( variables['build_type'], 'prerelease' )
-    displayName: 'Tagging local git branch for prerelease build process'
-
-  - script: |
-      export BRANCH_TAG=`git describe --tags --abbrev=0`
-      echo $BRANCH_TAG
-      if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]]; then
+      if [[ $(build_version) =~ v[0-9](.[0-9])+ ]]; then
         echo '##vso[task.setvariable variable=valid_version]true'
         echo 'valid build version $BRANCH_TAG'
+        # NNI build scripts (Makefile) uses branch tag as package version number
+        git tag $(build_version)
+        echo `git describe --tags --abbrev=0`
       else
         echo 'invalid build version $BRANCH_TAG'
         exit 1
       fi
     condition: eq( variables['build_type'], 'prerelease' )
-    displayName: 'Validate prerelease version number'
+    displayName: 'Validate prerelease version number and tag branch'
 
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
@@ -135,24 +130,19 @@ jobs:
     valid_version: 'false'
   steps:
   - script: |
-      # NNI build scripts (Makefile) uses branch tag as package version number
-      git tag $(build_version)
       echo $(build_version)
-    condition: eq( variables['build_type'], 'prerelease' )
-    displayName: 'Tagging local git branch for prerelease build process'
-
-  - script: |
-      export BRANCH_TAG=`git describe --tags --abbrev=0`
-      echo $BRANCH_TAG
-      if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]]; then
+      if [[ $(build_version) =~ v[0-9](.[0-9])+ ]]; then
         echo '##vso[task.setvariable variable=valid_version]true'
         echo 'valid build version $BRANCH_TAG'
+        # NNI build scripts (Makefile) uses branch tag as package version number
+        git tag $(build_version)
+        echo `git describe --tags --abbrev=0`
       else
         echo 'invalid build version $BRANCH_TAG'
         exit 1
       fi
     condition: eq( variables['build_type'], 'prerelease' )
-    displayName: 'Validate prerelease version number'
+    displayName: 'Validate prerelease version number and tag branch'
 
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
