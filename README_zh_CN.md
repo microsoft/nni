@@ -186,7 +186,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 * [使用命令行工具 nnictl](docs/zh_CN/NNICTLDOC.md)
 * [使用 NNIBoard](docs/zh_CN/WebUI.md)
 * [如何定义搜索空间](docs/zh_CN/SearchSpaceSpec.md)
-* [如何定义一次 Trial](docs/zh_CN/Trials.md)
+* [如何编写 Trial 代码](docs/zh_CN/Trials.md)
 * [如何选择 Tuner、搜索算法](docs/zh_CN/Builtin_Tuner.md)
 * [配置 Experiment](docs/zh_CN/ExperimentConfig.md)
 * [如何使用 Annotation](docs/zh_CN/Trials.md#nni-python-annotation)
