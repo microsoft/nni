@@ -40,8 +40,7 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]];
-      then
+      if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]]; then
         echo '##vso[task.setvariable variable=valid_version]true'
         echo 'valid build version $BRANCH_TAG'
       else
@@ -54,8 +53,7 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      if [[ $BRANCH_TAG = $(build_version) ]];
-      then
+      if [[ $BRANCH_TAG = $(build_version) && $BRANCH_TAG =~ v[0-9](.[0-9])+ ]]; then
         echo '##vso[task.setvariable variable=valid_version]true'
         echo 'Build version match branch tag'
       else
@@ -146,8 +144,7 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]];
-      then
+      if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]]; then
         echo '##vso[task.setvariable variable=valid_version]true'
         echo 'valid build version $BRANCH_TAG'
       else
@@ -160,8 +157,7 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      if [[ $BRANCH_TAG = $(build_version) ]];
-      then
+      if [[ $BRANCH_TAG = $(build_version) && $BRANCH_TAG =~ v[0-9](.[0-9])+ ]]; then
         echo '##vso[task.setvariable variable=valid_version]true'
         echo 'Build version match branch tag'
       else
