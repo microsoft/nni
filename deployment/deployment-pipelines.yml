@@ -31,13 +31,14 @@ jobs:
   - script: |
       # NNI build scripts (Makefile) uses branch tag as package version number
       git tag $(build_version)
+      echo $(build_version)
     condition: eq( variables['build_type'], 'prerelease' )
     displayName: 'Tagging local git branch for prerelease build process'
 
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
-      echo $(BRANCH_TAG)
-      [[ $(BRANCH_TAG) =~ "v[0-9](.[0-9])+" ]]
+      echo $BRANCH_TAG
+      [[ $BRANCH_TAG =~ "v[0-9](.[0-9])+" ]]
     displayName: 'Validate version number'
 
   - script: |
@@ -111,13 +112,14 @@ jobs:
   - script: |
       # NNI build scripts (Makefile) uses branch tag as package version number
       git tag $(build_version)
+      echo $(build_version)
     condition: eq( variables['build_type'], 'prerelease' )
     displayName: 'Tagging local git branch for prerelease build process'
 
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
-      echo $(BRANCH_TAG)
-      [[ $(BRANCH_TAG) =~ "v[0-9](.[0-9])+" ]]
+      echo $BRANCH_TAG
+      [[ $BRANCH_TAG =~ "v[0-9](.[0-9])+" ]]
     displayName: 'Validate version number'
 
   - script: |
