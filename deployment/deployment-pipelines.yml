@@ -43,12 +43,27 @@ jobs:
       if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]];
       then
         echo '##vso[task.setvariable variable=valid_version]true'
-        echo 'valid build version $(build_version)'
+        echo 'valid build version $BRANCH_TAG'
       else
-        echo 'invalid build version $(build_version)'
+        echo 'invalid build version $BRANCH_TAG'
         exit 1
       fi
-    displayName: 'Validate version number'
+    condition: eq( variables['build_type'], 'prerelease' )
+    displayName: 'Validate prerelease version number'
+
+  - script: |
+      export BRANCH_TAG=`git describe --tags --abbrev=0`
+      echo $BRANCH_TAG
+      if [[ $BRANCH_TAG = $(build_version) ]];
+      then
+        echo '##vso[task.setvariable variable=valid_version]true'
+        echo 'Build version match branch tag'
+      else
+        echo 'Build version does not match branch tag'
+        exit 1
+      fi
+    condition: eq( variables['build_type'], 'release' )
+    displayName: 'Validate release version number and branch tag'
 
   - script: |
       echo valid_version is $(valid_version)
@@ -118,6 +133,8 @@ jobs:
     matrix:
       Python36:
         PYTHON_VERSION: '3.6'
+  variables:
+    valid_version: 'false'
   steps:
   - script: |
       # NNI build scripts (Makefile) uses branch tag as package version number
@@ -132,12 +149,27 @@ jobs:
       if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]];
       then
         echo '##vso[task.setvariable variable=valid_version]true'
-        echo 'valid build version $(build_version)'
+        echo 'valid build version $BRANCH_TAG'
       else
-        echo 'invalid build version $(build_version)'
+        echo 'invalid build version $BRANCH_TAG'
         exit 1
       fi
-    displayName: 'Validate version number'
+    condition: eq( variables['build_type'], 'prerelease' )
+    displayName: 'Validate prerelease version number'
+
+  - script: |
+      export BRANCH_TAG=`git describe --tags --abbrev=0`
+      echo $BRANCH_TAG
+      if [[ $BRANCH_TAG = $(build_version) ]];
+      then
+        echo '##vso[task.setvariable variable=valid_version]true'
+        echo 'Build version match branch tag'
+      else
+        echo 'Build version does not match branch tag'
+        exit 1
+      fi
+    condition: eq( variables['build_type'], 'release' )
+    displayName: 'Validate release version number and branch tag'
 
   - script: |
       python3 -m pip install --upgrade pip setuptools --user
