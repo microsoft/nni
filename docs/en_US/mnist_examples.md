@@ -46,7 +46,7 @@ In this example, we have selected the following common aspects:
 |keras|[MNIST in keras](#mnist-keras)<br>[MNIST -- tuning with batch tuner](#mnist-batch)|[examples/trials/mnist-keras/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-keras)<br>
 
 
-## Experimental
+## Experiment
 
 ### Search Space
 
