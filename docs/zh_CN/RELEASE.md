@@ -4,8 +4,8 @@
 
 ### 改进
 
-* 可配置[日志目录](ExperimentConfig.md)。
-* 支持[不同级别的日志](ExperimentConfig.md)，使其更易于调试。 
+* Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md) configurable
+* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md), making it easier for debugging 
 
 ### 文档
 
@@ -23,9 +23,9 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持[Metis tuner](./Builtin_Tuner.md#MetisTuner) 作为 NNI 的 Tuner。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* Support [Metis tuner](metisTuner.md) as a new NNI tuner. **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
-* 支持 [Curve fitting （曲线拟合）Assessor](./Builtin_Tuner.md#Curvefitting)，通过曲线拟合的策略来实现提前终止 Trial。
+* Support [Curve fitting assessor](curvefittingAssessor.md) for early stop policy using learning curve extrapolation.
 * 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
 
 #### 改进训练平台
@@ -48,7 +48,7 @@
 
 #### 支持新的 Tuner
 
-* 支持新 Tuner [network morphism](./Builtin_Tuner.md#NetworkMorphism)
+* Support [network morphism](networkmorphismTuner.md) as a new tuner
 
 #### 改进训练平台
 
@@ -82,8 +82,8 @@
 * [Kubeflow 训练服务](./KubeflowMode.md) 
   * 支持 tf-operator
   * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索 Tuner](Builtin_Tuner.md#GridSearch) 
-* [Hyperband Tuner](Builtin_Tuner.md#Hyperband)
+* [网格搜索 Tuner](gridsearchTuner.md) 
+* [Hyperband Tuner](hyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
 * Web 界面 
   * 支持 hyperband Tuner
@@ -166,7 +166,7 @@
 * 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练服务 (参考[这里](./PAIMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
   * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
   * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
-* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](Builtin_Tuner.md)，了解如何使用 SMAC Tuner) 
+* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](smacTuner.md) for instructions about how to use SMAC tuner) 
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
 * 支持将 NNI 安装在 [conda](https://conda.io/docs/index.html) 和 Python 虚拟环境中。
 * 其它 
