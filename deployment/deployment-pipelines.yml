@@ -26,6 +26,8 @@ jobs:
     matrix:
       Python36:
         PYTHON_VERSION: '3.6'
+  variables:
+    valid_version: 'false'
 
   steps:
   - script: |
@@ -38,7 +40,7 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      [[ $BRANCH_TAG =~ "v[0-9](.[0-9])+" ]]
+      [[ $BRANCH_TAG =~ "v[0-9](.[0-9])+" ]] && $(valid_version)='true'
     displayName: 'Validate version number'
 
   - script: |
@@ -56,7 +58,7 @@ jobs:
         echo 'building release package...'
         make build
       fi
-    condition: eq( variables['upload_package'], 'true' )
+    condition: and(eq( variables['upload_package'], 'true'), eq(variables['valid_version'], 'true'))
     displayName: 'build nni bdsit_wheel'
 
   - script: |
@@ -69,7 +71,7 @@ jobs:
         echo 'uploading release package to pypi...'
         python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
       fi
-    condition: eq( variables['upload_package'], 'true' )
+    condition: and(eq( variables['upload_package'], 'true'), eq(variables['valid_version'], 'true'))
     displayName: 'upload nni package to pypi/testpypi'
 
   - script: |
@@ -98,7 +100,7 @@ jobs:
         docker push $IMG_NAME:latest
       fi
 
-    condition: eq( variables['build_docker_img'], 'true' )
+    condition: and(eq( variables['build_docker_img'], 'true' ), eq(variables['valid_version'], 'true'))
     displayName: 'build and upload nni docker image'
 
 - job: 'Build_upload_nni_macos'
@@ -119,7 +121,7 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      [[ $BRANCH_TAG =~ "v[0-9](.[0-9])+" ]]
+      [[ $BRANCH_TAG =~ "v[0-9](.[0-9])+" ]] && $(valid_version)='true'
     displayName: 'Validate version number'
 
   - script: |
@@ -141,7 +143,7 @@ jobs:
         echo 'building release package...'
         PATH=$HOME/Library/Python/3.7/bin:$PATH make build
       fi
-    condition: eq( variables['upload_package'], 'true' )
+    condition: and(eq( variables['upload_package'], 'true'), eq(variables['valid_version'], 'true'))
     displayName: 'build nni bdsit_wheel'
 
   - script: |
@@ -154,5 +156,5 @@ jobs:
         echo 'uploading release package to pypi...'
         python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
       fi
-    condition: eq( variables['upload_package'], 'true' )
+    condition: and(eq( variables['upload_package'], 'true'), eq(variables['valid_version'], 'true'))
     displayName: 'upload nni package to pypi/testpypi'
