@@ -3,6 +3,8 @@
 ######################
 
 ..  toctree::
+    :maxdepth: 2
+
     安装<Installation>
     实现 Trial<Trials>
     Tuner<tuners>
