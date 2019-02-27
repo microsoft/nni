@@ -39,7 +39,7 @@ jobs:
         git tag $(build_version)
         echo `git describe --tags --abbrev=0`
       else
-        echo 'invalid build version $BRANCH_TAG'
+        echo 'invalid build version $(build_version)'
         exit 1
       fi
     condition: eq( variables['build_type'], 'prerelease' )
@@ -138,7 +138,7 @@ jobs:
         git tag $(build_version)
         echo `git describe --tags --abbrev=0`
       else
-        echo 'invalid build version $BRANCH_TAG'
+        echo 'invalid build version $(build_version)'
         exit 1
       fi
     condition: eq( variables['build_type'], 'prerelease' )
