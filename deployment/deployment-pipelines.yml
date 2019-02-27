@@ -26,7 +26,7 @@ jobs:
         echo 'building release package...'
         make build
       fi
-
+    condition: eq( variables['upload_package'], 'true' )
     displayName: 'build nni bdsit_wheel'
   - script: |
       cd deployment/pypi
@@ -38,21 +38,36 @@ jobs:
         echo 'uploading release package to pypi...'
         python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
       fi
+    condition: eq( variables['upload_package'], 'true' )
     displayName: 'upload nni package to pypi/testpypi'
 
   - script: |
-      export IMG_TAG=`git describe --tags --abbrev=0`
       cd deployment/docker
-      docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
 
       if [ $(build_type) = 'prerelease' ]
       then
+        docker login -u $(docker_hub_dev_user) -p $(docker_hub_dev_pwd)
+        export IMG_NAME=$(dev_docker_img)
+        export IMG_TAG=`git describe --tags --abbrev=0`.`date +%y%m%d%H%M`
         echo 'updating docker file for testpyi...'
-        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/RUN python3 -m pip install --user --no-cache-dir --index-url https:\/\/test.pypi.org\/simple\/ --extra-index-url https:\/\/pypi.org\/simple nni/' Dockerfile
+        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/RUN python3 -m pip install --user --no-cache-dir --index-url https:\/\/test.pypi.org\/simple --extra-index-url https:\/\/pypi.org\/simple nni/' Dockerfile
+      else
+        docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
+        export IMG_NAME=msranni/nni
+        export IMG_TAG=`git describe --tags --abbrev=0`
       fi
-      echo $IMG_TAG
-      docker build -f Dockerfile -t msranni/nni:$IMG_TAG .
-      docker push msranni/nni:$IMG_TAG
+      echo $IMG_NAME:$IMG_TAG
+      cat Dockerfile
+      docker build -f Dockerfile -t $IMG_NAME:$IMG_TAG .
+      docker push $IMG_NAME:$IMG_TAG
+
+      if [ $(update_latest_tag) = 'true' ]
+      then
+        docker tag $IMG_NAME:$IMG_TAG $IMG_NAME:latest
+        docker push $IMG_NAME:latest
+      fi
+
+    condition: eq( variables['build_docker_img'], 'true' )
     displayName: 'build and upload nni docker image'
 
 - job: 'Build_upload_nni_macos'
@@ -83,7 +98,7 @@ jobs:
         echo 'building release package...'
         PATH=$HOME/Library/Python/3.7/bin:$PATH make build
       fi
-
+    condition: eq( variables['upload_package'], 'true' )
     displayName: 'build nni bdsit_wheel'
   - script: |
       cd deployment/pypi
@@ -95,4 +110,5 @@ jobs:
         echo 'uploading release package to pypi...'
         python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
       fi
+    condition: eq( variables['upload_package'], 'true' )
     displayName: 'upload nni package to pypi/testpypi'
