@@ -26,8 +26,8 @@ jobs:
     matrix:
       Python36:
         PYTHON_VERSION: '3.6'
-  variables:
-    valid_version: 'false'
+  #variables:
+  #  valid_version: 'false'
 
   steps:
   - script: |
@@ -42,12 +42,12 @@ jobs:
       echo $BRANCH_TAG
       if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]];
       then
-        variables['valid_version']='true'
+        export valid_version='true'
         echo 'valid'
       else
         echo 'invalid'
       fi
-      echo $(valid_version)
+      echo $valid_version
     displayName: 'Validate version number'
 
   - script: |
@@ -65,7 +65,7 @@ jobs:
         echo 'building release package...'
         make build
       fi
-    condition: and(eq( variables['upload_package'], 'true'), eq(variables['valid_version'], 'true'))
+    condition: and(eq( variables['upload_package'], 'true'), eq($valid_version, 'true'))
     displayName: 'build nni bdsit_wheel'
 
   - script: |
