@@ -1,3 +1,22 @@
+# Copyright (c) Microsoft Corporation
+# All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge,
+# to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and
+# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 jobs:
 - job: 'Build_upload_nni_ubuntu'
@@ -10,13 +29,23 @@ jobs:
 
   steps:
   - script: |
+      # NNI build scripts (Makefile) uses branch tag as package version number
+      git tag $(build_version)
+    condition: eq( variables['build_type'], 'prerelease' )
+    displayName: 'Tagging local git branch for prerelease build process'
+
+  - script: |
+      export BRANCH_TAG=`git describe --tags --abbrev=0`
+      echo $(BRANCH_TAG)
+      [[ $(BRANCH_TAG) =~ "v[0-9](.[0-9])+" ]]
+    displayName: 'Validate version number'
+
+  - script: |
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install twine --user
     displayName: 'Install twine'
+
   - script: |
-      # NNI build scripts (Makefile) uses branch tag as package version number
-      # To test this pipeline without impacting nni testpypi/pypi packages, uncomment following git tag command
-      # git tag v0.0.1
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
       then
@@ -28,6 +57,7 @@ jobs:
       fi
     condition: eq( variables['upload_package'], 'true' )
     displayName: 'build nni bdsit_wheel'
+
   - script: |
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
@@ -79,16 +109,27 @@ jobs:
         PYTHON_VERSION: '3.6'
   steps:
   - script: |
+      # NNI build scripts (Makefile) uses branch tag as package version number
+      git tag $(build_version)
+    condition: eq( variables['build_type'], 'prerelease' )
+    displayName: 'Tagging local git branch for prerelease build process'
+
+  - script: |
+      export BRANCH_TAG=`git describe --tags --abbrev=0`
+      echo $(BRANCH_TAG)
+      [[ $(BRANCH_TAG) =~ "v[0-9](.[0-9])+" ]]
+    displayName: 'Validate version number'
+
+  - script: |
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install twine --user
     displayName: 'Install twine'
+
   - script: |
       make install-dependencies
     displayName: 'Install nni dependencies'
+
   - script: |
-      # NNI build scripts (Makefile) uses branch tag as package version number
-      # To test this pipeline without impacting nni testpypi/pypi packages, uncomment following git tag command
-      # git tag v0.0.1
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
       then
@@ -100,6 +141,7 @@ jobs:
       fi
     condition: eq( variables['upload_package'], 'true' )
     displayName: 'build nni bdsit_wheel'
+
   - script: |
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
