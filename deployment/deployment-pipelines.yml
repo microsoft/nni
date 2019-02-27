@@ -40,7 +40,13 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      [[ $BRANCH_TAG =~ "v[0-9](.[0-9])+" ]] && $(valid_version)='true'
+      if [[ $BRANCH_TAG =~ "v[0-9](.[0-9])+" ]];
+      then
+        $(valid_version)='true'
+        echo 'valid'
+      else
+        echo 'invalid'
+      fi
     displayName: 'Validate version number'
 
   - script: |
