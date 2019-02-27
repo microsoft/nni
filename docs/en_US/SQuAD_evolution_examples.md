@@ -3,7 +3,7 @@
 ## Overview
 This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension.
 
-## Experimental
+## Experiment
 
 ### 1.Preparations
 Use downloading script to download data
