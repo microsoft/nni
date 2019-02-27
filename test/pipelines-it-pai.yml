@@ -1,8 +1,6 @@
 jobs:
 - job: 'integration_test_pai'
   timeoutInMinutes: 0
-  variables:
-    image_tag: ''
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user
@@ -17,32 +15,30 @@ jobs:
     displayName: 'build nni bdsit_wheel'
 
   - script: |
-      cd deployment/pypi
-      docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
-
-      echo 'updating docker file for installing nni from local...'
-      # update Dockerfile to install NNI in docker image from whl file built in last step
-      sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
-      cat ../docker/Dockerfile
-      export IMG_TAG=`date +%y%m%d%H%M`
-      echo '##vso[task.setvariable variable=image_tag]$IMG_TAG'
-      docker build -f ../docker/Dockerfile -t $(test_docker_img_name):$IMG_TAG .
-      docker push $(test_docker_img_name):$IMG_TAG
-    condition: eq( variables['build_docker_img'], 'true' )
-    displayName: 'build and upload nni docker image'
-
-  - script: |
-      echo $(image_tag)
       source install.sh
     displayName: 'Install nni toolkit via source code'
 
   - script: |
       if [ $(build_docker_img) = 'true' ]
       then
-        export TEST_IMG=$(test_docker_img_name):$(image_tag)
+        cd deployment/pypi
+        docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
+        echo 'updating docker file for installing nni from local...'
+        # update Dockerfile to install NNI in docker image from whl file built in last step
+        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
+        cat ../docker/Dockerfile
+        export IMG_TAG=`date +%y%m%d%H%M`
+
+        echo 'build and upload docker image'
+        docker build -f ../docker/Dockerfile -t $(test_docker_img_name):$IMG_TAG .
+        docker push $(test_docker_img_name):$IMG_TAG
+
+        export TEST_IMG=$(test_docker_img_name):$IMG_TAG
+        cd ../../
       else
         export TEST_IMG=$(existing_docker_img)
       fi
+
       echo "TEST_IMG:$TEST_IMG"
       cd test
       python3 generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) \
