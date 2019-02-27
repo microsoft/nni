@@ -43,7 +43,7 @@ jobs:
       if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]];
       then
         echo '##vso[task.setvariable variable=valid_version]true'
-        echo 'valid build version $(build_version)
+        echo 'valid build version $(build_version)'
       else
         echo 'invalid build version $(build_version)'
         exit 1
@@ -132,7 +132,7 @@ jobs:
       if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]];
       then
         echo '##vso[task.setvariable variable=valid_version]true'
-        echo 'valid build version $(build_version)
+        echo 'valid build version $(build_version)'
       else
         echo 'invalid build version $(build_version)'
         exit 1
