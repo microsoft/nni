@@ -10,25 +10,6 @@ import scipy.stats as sps
 import scipy.optimize as spo
 import statsmodels.api as sm
 
-class Datum(object):
-	def __init__(self, config, config_info, results=None, time_stamps=None, exceptions=None, status='QUEUED', budget=0):
-		self.config		= config
-		self.config_info= config_info
-		self.results	= results		if not results is None else {}
-		self.time_stamps= time_stamps	if not time_stamps is None else {}
-		self.exceptions	= exceptions	if not exceptions is None else {}
-		self.status		= status
-		self.budget		= budget
-
-	def __repr__(self):
-		return(\
-			"\nconfig:{}\n".format(self.config) + \
-			"config_info:\n{}\n"%self.config_info + \
-			"losses:\n"
-			'\t'.join(["{}: {}\t".format(k, v['loss']) for k,v in self.results.items()]) + \
-			"time stamps: {}".format(self.time_stamps)
-		)
-
 class CG_BOHB(object):
 	def __init__(self, configspace, min_points_in_model = None,
 				 top_n_percent=15, num_samples = 64, random_fraction=1/3,
