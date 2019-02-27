@@ -1,10 +1,6 @@
 jobs:
 - job: 'integration_test_kubeflow'
   timeoutInMinutes: 0
-  pool: 'NNI CI KUBE CLI'
-
-  variables:
-    new_docker_img: msranni/nni.it.kb:latest
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user
@@ -26,9 +22,9 @@ jobs:
       # update Dockerfile to install NNI in docker image from whl file built in last step
       sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
       cat ../docker/Dockerfile
-      echo $IMG_TAG
-      docker build -f ../docker/Dockerfile -t $(new_docker_img) .
-      docker push $(new_docker_img)
+      export IMG_TAG=`date +%y%m%d%H%M`
+      docker build -f ../docker/Dockerfile -t $(test_docker_img_name):$IMG_TAG .
+      docker push $(test_docker_img_name):$IMG_TAG
     condition: eq( variables['build_docker_img'], 'true' )
     displayName: 'build and upload nni docker image'
 
@@ -39,7 +35,7 @@ jobs:
   - script: |
       if [ $(build_docker_img) = 'true' ]
       then
-        export TEST_IMG=$(new_docker_img)
+        export TEST_IMG=$(test_docker_img_name):$IMG_TAG
       else
         export TEST_IMG=$(existing_docker_img)
       fi
