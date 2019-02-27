@@ -26,8 +26,8 @@ jobs:
     matrix:
       Python36:
         PYTHON_VERSION: '3.6'
-  #variables:
-  #  valid_version: 'false'
+  variables:
+    valid_version: 'false'
 
   steps:
   - script: |
