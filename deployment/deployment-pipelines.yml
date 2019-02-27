@@ -32,9 +32,9 @@ jobs:
   steps:
   - script: |
       echo $(build_version)
-      if [[ $(build_version) =~ v[0-9](.[0-9])+ ]]; then
+      if [[ $(build_version) =~ v[0-9](.[0-9]){1,3} ]]; then
         echo '##vso[task.setvariable variable=valid_version]true'
-        echo 'valid build version $BRANCH_TAG'
+        echo 'valid build version $(build_version)'
         # NNI build scripts (Makefile) uses branch tag as package version number
         git tag $(build_version)
         echo `git describe --tags --abbrev=0`
@@ -48,7 +48,7 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      if [[ $BRANCH_TAG = $(build_version) && $BRANCH_TAG =~ v[0-9](.[0-9])+ ]]; then
+      if [[ $BRANCH_TAG = $(build_version) && $BRANCH_TAG =~ v[0-9](.[0-9]){1,3} ]]; then
         echo '##vso[task.setvariable variable=valid_version]true'
         echo 'Build version match branch tag'
       else
@@ -131,9 +131,9 @@ jobs:
   steps:
   - script: |
       echo $(build_version)
-      if [[ $(build_version) =~ v[0-9](.[0-9])+ ]]; then
+      if [[ $(build_version) =~ v[0-9](.[0-9]){1,3} ]]; then
         echo '##vso[task.setvariable variable=valid_version]true'
-        echo 'valid build version $BRANCH_TAG'
+        echo 'valid build version $(build_version)'
         # NNI build scripts (Makefile) uses branch tag as package version number
         git tag $(build_version)
         echo `git describe --tags --abbrev=0`
@@ -147,7 +147,7 @@ jobs:
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
       echo $BRANCH_TAG
-      if [[ $BRANCH_TAG = $(build_version) && $BRANCH_TAG =~ v[0-9](.[0-9])+ ]]; then
+      if [[ $BRANCH_TAG = $(build_version) && $BRANCH_TAG =~ v[0-9](.[0-9]){1,3} ]]; then
         echo '##vso[task.setvariable variable=valid_version]true'
         echo 'Build version match branch tag'
       else
