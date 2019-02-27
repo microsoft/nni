@@ -4,7 +4,7 @@
 
 [CIFAR-10][3] classification is a common benchmark problem in machine learning. The CIFAR-10 dataset is the collection of images. It is one of the most widely used datasets for machine learning research which contains 60,000 32x32 color images in 10 different classes. Thus, we use CIFAR-10 classification as an example to introduce NNI usage.
 
-## Goals
+## Goal
 
 As we all know, the choice of model optimizer is directly affects the performance of the final metrics. The goal of this tutorial is to **tune a better performace optimizer** to train a relatively small convolutional neural network (CNN) for recognizing images.
 
@@ -12,9 +12,9 @@ In this example, we have selected the following common deep learning optimizer:
 
 > "SGD", "Adadelta", "Adagrad", "Adam", "Adamax"
 
-## Experimental
+## Experiment
 
-### Preparations
+### Preparation
 
 This example requires pytorch. Pytorch install package should be chosen based on python version and cuda version.
 
