@@ -42,7 +42,7 @@ jobs:
       echo $BRANCH_TAG
       if [[ $BRANCH_TAG =~ v[0-9](.[0-9])+ ]];
       then
-        $(valid_version)='true'
+        variables['valid_version']='true'
         echo 'valid'
       else
         echo 'invalid'
