@@ -63,7 +63,6 @@ def get_next_parameter():
             return None
         elif _param_index == 0:
             params_file_name = 'parameter.cfg'
-            raise AssertionError('OnPurposeErrorForTest2')
         else:
             raise AssertionError('_param_index value ({}) should >=0'.format(_param_index))
     
