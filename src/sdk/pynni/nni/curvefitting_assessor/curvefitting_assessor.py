@@ -57,8 +57,8 @@ class CurvefittingAssessor(Assessor):
         self.threshold = threshold
         # Record the number of gap
         self.gap = gap
-        # Record the number of times of judgments
-        self.judgment_num = 0
+        # Record the number of intermediate result in the lastest judgment
+        self.last_judgment_num = dict()
         # Record the best performance
         self.set_best_performance = False
         self.completed_best_performance = None
@@ -112,9 +112,10 @@ class CurvefittingAssessor(Assessor):
         curr_step = len(trial_history)
         if curr_step < self.start_step:
             return AssessResult.Good
-        if (curr_step - self.start_step) // self.gap <= self.judgment_num:
+        
+        if trial_job_id in self.last_judgment_num.keys() and curr_step - self.last_judgment_num[trial_job_id] < self.gap:
             return AssessResult.Good
-        self.judgment_num = (curr_step - self.start_step) // self.gap
+        self.last_judgment_num[trial_job_id] = curr_step
 
         try:
             start_time = datetime.datetime.now()
