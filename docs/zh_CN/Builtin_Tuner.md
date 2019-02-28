@@ -39,7 +39,7 @@ TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况�
 
 **参数**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 
 **使用样例：**
 
@@ -239,8 +239,8 @@ tuner:
 **参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
-* **R** (*int, optional, default = 60*) - the maximum STEPS (could be the number of mini-batches or epochs) can be allocated to a trial. Each trial should use STEPS to control how long it runs.
-* **eta** (*int, optional, default = 3*) - `(eta-1)/eta` is the proportion of discarded trials
+* **R** (*int, 可选, 默认为 60*) - 能分配给 Trial 的最大 STEPS (可以是 mini-batches 或 epochs 的数值)。 Trial 需要用 STEPS 来控制运行时间。
+* **eta** (*int, 可选, 默认为 3*) - `(eta-1)/eta` 是丢弃 Trial 的比例。
 
 **使用样例：**
 
@@ -273,10 +273,10 @@ advisor:
 **参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
-* **task** (*('cv'), optional, default = 'cv'*) - The domain of experiment, for now, this tuner only supports the computer vision(cv) domain.
-* **input_width** (*int, optional, default = 32*) - input image width
-* **input_channel** (*int, optional, default = 3*) - input image channel
-* **n_output_node** (*int, optional, default = 10*) - number of classes
+* **task** (*('cv'), 可选, 默认为 'cv'*) - 实验的领域，当前仅支持视觉（cv）。
+* **input_width** (*int, 可选, 默认为 = 32*) - 输入图像的宽度
+* **input_channel** (*int, 可选, 默认为 3*) - 输入图像的通道数
+* **n_output_node** (*int, 可选, 默认为 10*) - 输出分类的数量
 
 **使用样例：**
 
@@ -312,7 +312,7 @@ Metis Tuner 需要先安装 [sklearn](https://scikit-learn.org/)。 可通过 `p
 
 **参数**
 
-* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
+* **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 
 **使用样例：**
 
