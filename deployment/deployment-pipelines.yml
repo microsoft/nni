@@ -37,7 +37,7 @@ jobs:
         exit 1
       fi
     condition: eq( variables['build_type'], 'prerelease' )
-    displayName: 'Validate prerelease version number and tag branch'
+    displayName: 'Validate prerelease version number'
 
   - script: |
       export BRANCH_TAG=`git describe --tags --abbrev=0`
