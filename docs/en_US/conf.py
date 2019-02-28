@@ -189,5 +189,6 @@ epub_exclude_files = ['search.html']
 def setup(app):
     app.add_config_value('recommonmark_config', {
         'enable_eval_rst': True,
+        'enable_auto_toc_tree': False,
             }, True)
     app.add_transform(AutoStructify)
