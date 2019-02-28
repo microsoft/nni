@@ -19,7 +19,48 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 jobs:
+- job: 'version_number_validation'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    matrix:
+      Python36:
+        PYTHON_VERSION: '3.6'
+  variables:
+    valid_version: 'false'
+  steps:
+  - script: |
+      echo $(build_version)
+      if [[ $(build_version) =~ ^v[0-9](.[0-9]){1,3}$ ]]; then
+        echo '##vso[task.setvariable variable=valid_version]true'
+        echo 'valid build version $(build_version)'
+        # NNI build scripts (Makefile) uses branch tag as package version number
+        git tag $(build_version)
+        echo `git describe --tags --abbrev=0`
+      else
+        echo 'invalid build version $(build_version)'
+        exit 1
+      fi
+    condition: eq( variables['build_type'], 'prerelease' )
+    displayName: 'Validate prerelease version number and tag branch'
+
+  - script: |
+      export BRANCH_TAG=`git describe --tags --abbrev=0`
+      echo $BRANCH_TAG
+      if [[ $BRANCH_TAG = $(build_version) && $BRANCH_TAG =~ ^v[0-9](.[0-9]){1,3}$ ]]; then
+        echo '##vso[task.setvariable variable=valid_version]true'
+        echo 'Build version match branch tag'
+      else
+        echo 'Build version does not match branch tag'
+        exit 1
+      fi
+    condition: eq( variables['build_type'], 'release' )
+    displayName: 'Validate release version number and branch tag'
+
+
 - job: 'Build_upload_nni_ubuntu'
+  dependsOn: version_number_validation
+  condition: succeeded()
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -120,6 +161,8 @@ jobs:
     displayName: 'build and upload nni docker image'
 
 - job: 'Build_upload_nni_macos'
+  dependsOn: version_number_validation
+  condition: succeeded()
   pool:
     vmImage: 'macOS 10.13'
   strategy:
