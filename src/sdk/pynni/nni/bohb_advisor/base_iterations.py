@@ -95,7 +95,7 @@ class BaseIteration(object):
 		self.actual_num_configs = [0]*len(num_configs)
 		self.config_sampler = config_sampler
 		self.num_running = 0
-		self.logger=logger if not logger is None else logging.getLogger('hpbandster')
+		logger=logger if not logger is None else logging.getLogger('hpbandster')
 		self.result_logger = result_logger
 
 	def add_configuration(self, config = None, config_info={}):
@@ -260,7 +260,7 @@ class BaseIteration(object):
 
 		for i, a in enumerate(advance):
 			if a:
-				self.logger.debug('ITERATION: Advancing config %s to next budget %f'%(config_ids[i], self.budgets[self.stage]))
+				logger.debug('ITERATION: Advancing config %s to next budget %f'%(config_ids[i], self.budgets[self.stage]))
 
 		for i, cid in enumerate(config_ids):
 			if advance[i]:

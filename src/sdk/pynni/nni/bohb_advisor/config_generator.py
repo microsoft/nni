@@ -13,8 +13,7 @@ import statsmodels.api as sm
 class CG_BOHB(object):
 	def __init__(self, configspace, min_points_in_model = None,
 				 top_n_percent=15, num_samples = 64, random_fraction=1/3,
-				 bandwidth_factor=3, min_bandwidth=1e-3,
-				**kwargs):
+				 bandwidth_factor=3, min_bandwidth=1e-3):
 		"""
 			Fits for each given budget a kernel density estimator on the best N percent of the
 			evaluated configurations on this budget.
@@ -41,7 +40,6 @@ class CG_BOHB(object):
 				a minimum bandwidth (Default: 1e-3) is used instead of zero. 
 
 		"""
-		super().__init__(**kwargs)
 		self.top_n_percent=top_n_percent
 		self.configspace = configspace
 		self.bw_factor = bandwidth_factor
@@ -52,7 +50,7 @@ class CG_BOHB(object):
 			self.min_points_in_model = len(self.configspace.get_hyperparameters())+1
 		
 		if self.min_points_in_model < len(self.configspace.get_hyperparameters())+1:
-			self.logger.warning('Invalid min_points_in_model value. Setting it to %i'%(len(self.configspace.get_hyperparameters())+1))
+			logger.warning('Invalid min_points_in_model value. Setting it to %i'%(len(self.configspace.get_hyperparameters())+1))
 			self.min_points_in_model =len(self.configspace.get_hyperparameters())+1
 		
 		self.num_samples = num_samples
@@ -106,7 +104,7 @@ class CG_BOHB(object):
 
 		"""
 		
-		self.logger.debug('start sampling a new configuration.')
+		logger.debug('start sampling a new configuration.')
 		
 
 		sample = None
@@ -148,8 +146,8 @@ class CG_BOHB(object):
 							try:
 								vector.append(sps.truncnorm.rvs(-m/bw,(1-m)/bw, loc=m, scale=bw))
 							except:
-								self.logger.warning("Truncated Normal failed for:\ndatum=%s\nbandwidth=%s\nfor entry with value %s"%(datum, kde_good.bw, m))
-								self.logger.warning("data in the KDE:\n%s"%kde_good.data)
+								logger.warning("Truncated Normal failed for:\ndatum=%s\nbandwidth=%s\nfor entry with value %s"%(datum, kde_good.bw, m))
+								logger.warning("data in the KDE:\n%s"%kde_good.data)
 						else:
 							
 							if np.random.rand() < (1-bw):
@@ -159,11 +157,11 @@ class CG_BOHB(object):
 					val = minimize_me(vector)
 
 					if not np.isfinite(val):
-						self.logger.warning('sampled vector: %s has EI value %s'%(vector, val))
-						self.logger.warning("data in the KDEs:\n%s\n%s"%(kde_good.data, kde_bad.data))
-						self.logger.warning("bandwidth of the KDEs:\n%s\n%s"%(kde_good.bw, kde_bad.bw))
-						self.logger.warning("l(x) = %s"%(l(vector)))
-						self.logger.warning("g(x) = %s"%(g(vector)))
+						logger.warning('sampled vector: %s has EI value %s'%(vector, val))
+						logger.warning("data in the KDEs:\n%s\n%s"%(kde_good.data, kde_bad.data))
+						logger.warning("bandwidth of the KDEs:\n%s\n%s"%(kde_good.bw, kde_bad.bw))
+						logger.warning("l(x) = %s"%(l(vector)))
+						logger.warning("g(x) = %s"%(g(vector)))
 
 						# right now, this happens because a KDE does not contain all values for a categorical parameter
 						# this cannot be fixed with the statsmodels KDE, so for now, we are just going to evaluate this one
@@ -177,11 +175,11 @@ class CG_BOHB(object):
 						best_vector = vector
 
 				if best_vector is None:
-					self.logger.debug("Sampling based optimization with %i samples failed -> using random configuration"%self.num_samples)
+					logger.debug("Sampling based optimization with %i samples failed -> using random configuration"%self.num_samples)
 					sample = self.configspace.sample_configuration().get_dictionary()
 					info_dict['model_based_pick']  = False
 				else:
-					self.logger.debug('best_vector: {}, {}, {}, {}'.format(best_vector, best, l(best_vector), g(best_vector)))
+					logger.debug('best_vector: {}, {}, {}, {}'.format(best_vector, best, l(best_vector), g(best_vector)))
 					for i, hp_value in enumerate(best_vector):
 						if isinstance(
 							self.configspace.get_hyperparameter(
@@ -200,14 +198,14 @@ class CG_BOHB(object):
 						info_dict['model_based_pick'] = True
 
 					except Exception as e:
-						self.logger.warning(("="*50 + "\n")*3 +\
+						logger.warning(("="*50 + "\n")*3 +\
 								"Error converting configuration:\n%s"%sample+\
 								"\n here is a traceback:" +\
 								traceback.format_exc())
 						raise(e)
 
 			except:
-				self.logger.warning("Sampling based optimization with %i samples failed\n %s \nUsing random configuration"%(self.num_samples, traceback.format_exc()))
+				logger.warning("Sampling based optimization with %i samples failed\n %s \nUsing random configuration"%(self.num_samples, traceback.format_exc()))
 				sample = self.configspace.sample_configuration()
 				info_dict['model_based_pick']  = False
 
@@ -218,12 +216,12 @@ class CG_BOHB(object):
 				configuration=sample.get_dictionary()
 			).get_dictionary()
 		except Exception as e:
-			self.logger.warning("Error (%s) converting configuration: %s -> "
+			logger.warning("Error (%s) converting configuration: %s -> "
 								"using random configuration!",
 								e,
 								sample)
 			sample = self.configspace.sample_configuration().get_dictionary()
-		self.logger.debug('done sampling a new configuration.')
+		logger.debug('done sampling a new configuration.')
 		return sample, info_dict
 
 
@@ -302,7 +300,7 @@ class CG_BOHB(object):
 		# skip model building:
 		#		a) if not enough points are available
 		if len(self.configs[budget]) <= self.min_points_in_model-1:
-			self.logger.debug("Only %i run(s) for budget %f available, need more than %s -> can't build model!"%(len(self.configs[budget]), budget, self.min_points_in_model+1))
+			logger.debug("Only %i run(s) for budget %f available, need more than %s -> can't build model!"%(len(self.configs[budget]), budget, self.min_points_in_model+1))
 			return
 
 		#		b) during warnm starting when we feed previous results in and only update once
@@ -345,5 +343,5 @@ class CG_BOHB(object):
 		}
 
 		# update probs for the categorical parameters for later sampling
-		self.logger.debug('done building a new model for budget %f based on %i/%i split\nBest loss for this budget:%f\n\n\n\n\n'%(budget, n_good, n_bad, np.min(train_losses)))
+		logger.debug('done building a new model for budget %f based on %i/%i split\nBest loss for this budget:%f\n\n\n\n\n'%(budget, n_good, n_bad, np.min(train_losses)))
 
