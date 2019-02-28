@@ -75,6 +75,8 @@ class CurvefittingAssessor(Assessor):
         success: bool
             True if succssfully finish the experiment, False otherwise
         """
+        # initialize judgment number
+        self.judgment_num = 0
         if success:
             if self.set_best_performance:
                 self.completed_best_performance = max(self.completed_best_performance, self.trial_history[-1])
