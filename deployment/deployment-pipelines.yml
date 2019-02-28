@@ -31,8 +31,6 @@ jobs:
       echo $(build_version)
       if [[ $(build_version) =~ ^v[0-9](.[0-9]){1,3}$ ]]; then
         echo 'valid build version $(build_version)'
-        # NNI build scripts (Makefile) uses branch tag as package version number
-        git tag $(build_version)
         echo `git describe --tags --abbrev=0`
       else
         echo 'invalid build version $(build_version)'
