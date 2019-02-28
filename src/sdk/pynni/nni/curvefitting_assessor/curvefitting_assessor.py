@@ -57,7 +57,7 @@ class CurvefittingAssessor(Assessor):
         self.threshold = threshold
         # Record the number of gap
         self.gap = gap
-        # Record the number of times of judgments
+        # Record the number of history at lastest judgment
         self.last_judgment_num = dict()
         # Record the best performance
         self.set_best_performance = False
@@ -75,7 +75,6 @@ class CurvefittingAssessor(Assessor):
         success: bool
             True if succssfully finish the experiment, False otherwise
         """
-        # initialize judgment number
         if success:
             if self.set_best_performance:
                 self.completed_best_performance = max(self.completed_best_performance, self.trial_history[-1])
