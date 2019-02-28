@@ -113,7 +113,7 @@ class CurvefittingAssessor(Assessor):
         if curr_step < self.start_step:
             return AssessResult.Good
         
-        if trial_job_id in self.last_judgment_num.keys() and curr_step - self.last_judgment_num[trial_job_id] < gap:
+        if trial_job_id in self.last_judgment_num.keys() and curr_step - self.last_judgment_num[trial_job_id] < self.gap:
             return AssessResult.Good
         self.last_judgment_num[trial_job_id] = curr_step
 
