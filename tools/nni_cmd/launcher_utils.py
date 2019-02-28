@@ -209,12 +209,17 @@ def validate_annotation_content(experiment_config, spec_key, builtin_name):
                 exit(1)
             validate_search_space_content(experiment_config)
 
-def validate_machine_list(experiment_config):
-    '''Validate machine list'''
+def validate_remote_content(experiment_config):
+    '''Validate the content of remoteTrainingService'''
+    #node ssh client does not support large number of open channels for a connection, refer https://github.com/mscdex/ssh2/issues/219 
+    if experiment_config['trainingServicePlatform'] == 'remote' and experiment_config['trialConcurrency'] > 6:
+        print_error('Remote TrainingService does not support large number of trialConcurrency, please set a number smaller or equal to 6!')
+        exit(1)
+    
     if experiment_config.get('trainingServicePlatform') == 'remote' and experiment_config.get('machineList') is None:
         print_error('Please set machineList!')
         exit(1)
-
+    
 def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''
     parse_path(experiment_config, config_path)
@@ -229,3 +234,5 @@ def validate_all_content(experiment_config, config_path):
         parse_tuner_content(experiment_config)
         parse_assessor_content(experiment_config)
         validate_annotation_content(experiment_config, 'tuner', 'builtinTunerName')
+    validate_remote_content(experiment_config)
+    validate_kubeflow_operators(experiment_config)
