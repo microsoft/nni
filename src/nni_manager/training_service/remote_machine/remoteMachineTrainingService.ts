@@ -48,10 +48,10 @@ import {
     GPU_COLLECTOR_FORMAT
 } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
-import { validateCodeDir } from '../common/util';
+import { validateCodeDir, } from '../common/util';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { mkDirP } from '../../common/utils';
+import { mkDirP, getVersion } from '../../common/utils';
 
 /**
  * Training Service implementation for Remote Machine (Linux)
@@ -558,6 +558,7 @@ class RemoteMachineTrainingService implements TrainingService {
             const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
             this.remoteRestServerPort = restServer.clusterRestServerPort;
         }
+        const version = await getVersion();
         const runScriptTrialContent: string = String.Format(
             REMOTEMACHINE_TRIAL_COMMAND_FORMAT,
             trialWorkingFolder,
@@ -570,6 +571,7 @@ class RemoteMachineTrainingService implements TrainingService {
             command,
             nniManagerIp,
             this.remoteRestServerPort,
+            version,
             path.join(trialWorkingFolder, '.nni', 'code')
         )
 

@@ -39,7 +39,7 @@ import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { delay, generateParamFileName, 
-    getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
+    getExperimentRootDir, getIPV4Address, uniqueString, getVersion } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
@@ -211,6 +211,7 @@ class PAITrainingService implements TrainingService {
             hdfsLogPath);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
+        const version = await getVersion();
         const nniPaiTrialCommand : string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
             // PAI will copy job's codeDir into /root directory
@@ -225,7 +226,8 @@ class PAITrainingService implements TrainingService {
             hdfsOutputDir,
             this.hdfsOutputHost,
             this.paiClusterConfig.userName, 
-            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName)
+            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
+            version
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
