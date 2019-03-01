@@ -29,13 +29,14 @@ import math
 import pdb
 import copy
 import logging
+import json_tricks
 
 import numpy as np
 import ConfigSpace as CS
 import ConfigSpace.hyperparameters as CSH
 
-from nni.protocol import CommandType, send
-from nni.msg_dispatcher_base import MsgDispatcherBase
+# from nni.protocol import CommandType, send
+# from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger
 
 from config_generator import CG_BOHB
@@ -265,6 +266,8 @@ class BOHB(object):
 
         self.s_max = math.floor(math.log(self.max_budget / self.min_budget, self.eta))
         self.curr_s = self.s_max
+        
+        self.budget = dict()
 
     def load_checkpoint(self):
         pass
@@ -279,6 +282,7 @@ class BOHB(object):
         search_space: search space
             search space of this experiment
         """
+        print ('handle_initialize')
         self.handle_update_search_space(search_space)
         self.cg = CG_BOHB(configspace=self.search_space,
                           min_points_in_model = self.min_points_in_model,
@@ -297,7 +301,6 @@ class BOHB(object):
         data: int
             number of trial jobs that nni manager ask to generate
         """
-        print('kkkkkkkkkk handle_request_trial_jobs')
         for _ in range(data):
             self._request_one_trial_job()
 
@@ -315,7 +318,6 @@ class BOHB(object):
             1: 'parameter_source', 'algorithm'
             2: 'parameters', value of new hyperparameter
         """
-        print('PPPPPPPPP _request_one_trial_job')
         if not self.generated_hyper_configs:
             if self.curr_s < 0:
                 # have tried all configurations
@@ -332,7 +334,6 @@ class BOHB(object):
             logger.debug('new SuccessiveHalving iteration, next_n=%d, next_r=%d', next_n, next_r)
             # rewrite with TPE
             generated_hyper_configs = self.brackets[self.curr_s].get_hyperparameter_configurations(next_n, next_r, self.cg, self.search_space)
-            print('666666666 generated_hyper_configs')
             self.generated_hyper_configs = generated_hyper_configs.copy()
             self.curr_s -= 1
 
@@ -343,6 +344,9 @@ class BOHB(object):
             'parameter_source': 'algorithm',
             'parameters': params[1]
         }
+        print (params[0])
+        print (params[1])
+        self.budget[params[0]] = params[1][0][_KEY]
         print (ret)
         """send(CommandType.NewTrialJob, json_tricks.dumps(ret)) NameError: name 'json_tricks' is not defined"""
 
@@ -414,7 +418,7 @@ class BOHB(object):
                     'parameter_source': 'algorithm',
                     'parameters': params[1]
                 }
-                send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+                '''send(CommandType.NewTrialJob, json_tricks.dumps(ret))'''
                 self.credit -= 1
 
         return True
@@ -436,11 +440,14 @@ class BOHB(object):
         bracket_id, i, _ = results['parameter_id'].split('_')
         bracket_id = int(bracket_id)
 
-        # Use results to update BO 
-        self.cg.new_result(value, _KEY)
         if results['type'] == 'FINAL':
             # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
             # and PERIODICAL metric are independent, thus, not comparable.
+            # Use results to update BO
+            print (results['parameter_id'], self.budget[results['parameter_id']])
+            budget = self.budget[results['parameter_id']]
+            self.cg.new_result(value, _KEY)
+            print ('Successfully report the result to update BO')
             self.brackets[bracket_id].set_config_perf(int(i), results['parameter_id'], sys.maxsize, value)
             self.completed_hyper_configs.append(results)
         elif results['type'] == 'PERIODICAL':

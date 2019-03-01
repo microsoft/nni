@@ -131,6 +131,7 @@ class CG_BOHB(object):
         sample = None
         info_dict = {}
         
+        
         # If no model is available, sample from prior
         # also mix in a fraction of random configs
         if len(self.kde_models.keys()) == 0 or np.random.rand() < self.random_fraction:
@@ -243,6 +244,7 @@ class CG_BOHB(object):
                                 sample)
             sample = self.configspace.sample_configuration().get_dictionary()
         logger.debug('done sampling a new configuration.')
+        sample['STEPS'] = budget
         return sample, info_dict
 
 
