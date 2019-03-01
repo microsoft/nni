@@ -255,7 +255,7 @@ class CG_BOHB(object):
 			return_array[i,:] = datum
 		return(return_array)
 
-	def new_result(self, job, update_model=True):
+	def new_result(self, loss, budget, update_model=True):
 		"""
 			function to register finished runs
 
@@ -271,16 +271,10 @@ class CG_BOHB(object):
 				contains all the info about the run
 		"""
 
-		super().new_result(job)
-
-		if job.result is None:
+		if loss is None:
 			# One could skip crashed results, but we decided 
 			# assign a +inf loss and count them as bad configurations
 			loss = np.inf
-		else:
-			loss = job.result["loss"]
-
-		budget = job.kwargs["budget"]
 
 		if budget not in self.configs.keys():
 			self.configs[budget] = []

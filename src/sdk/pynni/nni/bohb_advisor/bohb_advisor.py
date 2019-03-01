@@ -36,8 +36,6 @@ from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger
 
-from .base_iterations import SuccessiveHalving
-from .base_iteration import WarmStartIteration
 from .config_generators import CG_BOHB
 
 @unique
@@ -136,7 +134,7 @@ class Bracket():
             return [[key, value] for key, value in hyper_configs.items()]
         return None
 
-    def get_hyperparameter_configurations(self, num, r, searchspace_json, random_state): # pylint: disable=invalid-name
+    def get_hyperparameter_configurations(self, num, r, config_generator, search_space):
         """Randomly generate num hyperparameter configurations from search space
         Parameters
         ----------
@@ -148,12 +146,12 @@ class Bracket():
         list
             a list of hyperparameter configurations. Format: [[key1, value1], [key2, value2], ...]
         """
-        global _KEY # pylint: disable=global-statement
+        global _KEY
         assert self.i == 0
         hyperparameter_configs = dict()
         for _ in range(num):
             params_id = create_bracket_parameter_id(self.bracket_id, self.i)
-            params = json2paramater(searchspace_json, random_state)
+            params = config_generator.get_config(r)
             params[_KEY] = r
             hyperparameter_configs[params_id] = params
         self._record_hyper_configs(hyperparameter_configs)
@@ -287,9 +285,7 @@ class BOHB(MsgDispatcherBase):
             next_n, next_r = self.brackets[self.curr_s].get_n_r()
             _logger.debug('new SuccessiveHalving iteration, next_n=%d, next_r=%d', next_n, next_r)
             # rewrite with TPE
-			generated_hyper_configs = self.brackets[self.curr_s].get_hyperparameter_configurations(next_n, next_r,
-                                                                                                   self.searchspace_json,
-                                                                                                   self.random_state)
+			generated_hyper_configs = self.brackets[self.curr_s].get_hyperparameter_configurations(next_n, next_r, self.cg, self.search_space)
             self.generated_hyper_configs = generated_hyper_configs.copy()
             self.curr_s -= 1
 
@@ -391,8 +387,8 @@ class BOHB(MsgDispatcherBase):
         value = extract_scalar_reward(results['value'])
         bracket_id, i, _ = results['parameter_id'].split('_')
         bracket_id = int(bracket_id)
-        # Use results to update BO
-        self.cg.new_result(results)
+        # Use results to update BO, loss, 
+        self.cg.new_result(value, _KEY)
         if results['type'] == 'FINAL':
             # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
             # and PERIODICAL metric are independent, thus, not comparable.
