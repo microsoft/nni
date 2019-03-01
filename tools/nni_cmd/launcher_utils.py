@@ -211,7 +211,7 @@ def validate_annotation_content(experiment_config, spec_key, builtin_name):
 
 def validate_remote_content(experiment_config):
     '''Validate the content of remoteTrainingService'''
-    #node ssh client does not support large number of open channels for a connection, refer https://github.com/mscdex/ssh2/issues/219 
+    #The maximum value of trialConcurrency for remote training service is 6
     if experiment_config['trainingServicePlatform'] == 'remote' and experiment_config['trialConcurrency'] > 6:
         print_error('Remote TrainingService does not support large number of trialConcurrency, please set a number smaller or equal to 6!')
         exit(1)
