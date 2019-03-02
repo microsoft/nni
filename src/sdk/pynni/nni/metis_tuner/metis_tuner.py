@@ -65,7 +65,7 @@ class MetisTuner(Tuner):
                  selection_num_starting_points=10, cold_start_num=10):
         '''
         optimize_mode: is a string that including two mode "maximize" and "minimize"
-        
+
         no_resampling: True or False. Should Metis consider re-sampling as part of the search strategy?
         If you are confident that the training dataset is noise-free, then you do not need re-sampling.
         
@@ -166,7 +166,7 @@ class MetisTuner(Tuner):
         metis will first random generate some parameters.
         Otherwise, metis will choose the parameters by the Gussian Process Model and the Gussian Mixture Model.
         '''
-        if self.samples_x or len(self.samples_x) < self.cold_start_num:
+        if len(self.samples_x) < self.cold_start_num:
             init_parameter = _rand_init(self.x_bounds, self.x_types, 1)[0]
             results = self._pack_output(init_parameter)
         else:
@@ -177,7 +177,8 @@ class MetisTuner(Tuner):
                                       minimize_starting_points=self.minimize_starting_points,
                                       minimize_constraints_fun=self.minimize_constraints_fun)
         
-        logger.info("Generate paramageters:\n", str(results))
+        logger.info("Generate paramageters:\n")
+        logger.info(str(results))
         return results
 
 
@@ -192,8 +193,8 @@ class MetisTuner(Tuner):
             value = -value
 
         logger.info("Received trial result.")
-        logger.info("value is :", str(value))
-        logger.info("parameter is : ", str(parameters))
+        logger.info("value is :" + str(value))
+        logger.info("parameter is : " + str(parameters))
 
         # parse parameter to sample_x
         sample_x = [0 for i in range(len(self.key_order))]
@@ -306,7 +307,7 @@ class MetisTuner(Tuner):
                 results_outliers = gp_outlier_detection.outlierDetection_threaded(samples_x, samples_y_aggregation)
 
                 if results_outliers is not None:
-                    temp = len(candidates)
+                    #temp = len(candidates)
 
                     for results_outlier in results_outliers:
                         if _num_past_samples(samples_x[results_outlier['samples_idx']], samples_x, samples_y) < max_resampling_per_x:
@@ -336,12 +337,12 @@ class MetisTuner(Tuner):
                         temp_improvement = threads_result['expected_lowest_mu'] - lm_current['expected_mu']
     
                         if next_improvement > temp_improvement:
-                            logger.infor("DEBUG: \"next_candidate\" changed: \
-                                            lowest mu might reduce from %f (%s) to %f (%s), %s\n" %\
-                                            lm_current['expected_mu'], str(lm_current['hyperparameter']),\
-                                            threads_result['expected_lowest_mu'],\
-                                            str(threads_result['candidate']['hyperparameter']),\
-                                            threads_result['candidate']['reason'])
+                            # logger.info("DEBUG: \"next_candidate\" changed: \
+                            #                 lowest mu might reduce from %f (%s) to %f (%s), %s\n" %\
+                            #                 lm_current['expected_mu'], str(lm_current['hyperparameter']),\
+                            #                 threads_result['expected_lowest_mu'],\
+                            #                 str(threads_result['candidate']['hyperparameter']),\
+                            #                 threads_result['candidate']['reason'])
 
                             next_improvement = temp_improvement
                             next_candidate = threads_result['candidate']
