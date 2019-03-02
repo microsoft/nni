@@ -61,9 +61,11 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         this.kubeflowJobInfoCollector = new KubeflowJobInfoCollector(this.trialJobsMap);
         this.experimentId = getExperimentId();      
         this.nextTrialSequenceId = -1;
+        this.log.info('Construct Kubeflow training service.');
     }
 
     public async run(): Promise<void> {
+        this.log.info('Run Kubeflow training service.');
         this.kubernetesJobRestServer = component.get(KubeflowJobRestServer);
         if(!this.kubernetesJobRestServer) {
             throw new Error('kubernetesJobRestServer not initialized!');
@@ -75,6 +77,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             await delay(3000);
             await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
         }
+        this.log.info('Kubeflow training service exit.');
     }
 
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {

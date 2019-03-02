@@ -129,8 +129,8 @@ def main(params):
     Main function, build mnist network, run and send result to NNI.
     """
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    print('Mnist download data down.')
-    logger.debug('Mnist download data down.')
+    print('Mnist download data done.')
+    logger.debug('Mnist download data done.')
     mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
         channel_2_num=params['channel_2_num'], conv_size=params['conv_size'
         ], hidden_size=params['hidden_size'], pool_size=params['pool_size'],

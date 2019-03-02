@@ -52,20 +52,35 @@ class NetworkMorphismTuner(Tuner):
             default_model_width=Constant.MODEL_WIDTH,
     ):
         """ initilizer of the NetworkMorphismTuner.
-        Keyword Arguments:
-            task {str} -- [task mode, such as "cv","common" etc.] (default: {"cv"})
-            input_width {int} -- [input sample shape] (default: {32})
-            input_channel {int} -- [input sample shape] (default: {3})
-            n_output_node {int} -- [output node number] (default: {10})
-            algorithm_name {str} -- [algorithm name used in the network morphism] (default: {"Bayesian"})
-            optimize_mode {str} -- [optimize mode "minimize" or "maximize"] (default: {"minimize"})
-            path {str} -- [default mode path to save the model file] (default: {"model_path"})
-            verbose {bool} -- [verbose to print the log] (default: {True})
-            beta {float} -- [The beta in acquisition function. (refer to our paper)] (default: {Constant.BETA})
-            t_min {float} -- [The minimum temperature for simulated annealing.] (default: {Constant.T_MIN})
-            max_model_size {int} -- [max model size to the graph] (default: {Constant.MAX_MODEL_SIZE})
-            default_model_len {int} -- [default model length] (default: {Constant.MODEL_LEN})
-            default_model_width {int} -- [default model width] (default: {Constant.MODEL_WIDTH})
+
+        Parameters
+        ----------
+        task : str
+            task mode, such as "cv","common" etc. (default: {"cv"})
+        input_width : int
+            input sample shape (default: {32})
+        input_channel : int
+            input sample shape (default: {3})
+        n_output_node : int
+            output node number (default: {10})
+        algorithm_name : str
+            algorithm name used in the network morphism (default: {"Bayesian"})
+        optimize_mode : str
+            optimize mode "minimize" or "maximize" (default: {"minimize"})
+        path : str
+            default mode path to save the model file (default: {"model_path"})  
+        verbose : bool
+            verbose to print the log (default: {True})
+        beta : float
+            The beta in acquisition function. (default: {Constant.BETA})
+        t_min : float
+            The minimum temperature for simulated annealing. (default: {Constant.T_MIN})
+        max_model_size : int
+            max model size to the graph (default: {Constant.MAX_MODEL_SIZE})
+        default_model_len : int
+            default model length (default: {Constant.MODEL_LEN})
+        default_model_width : int
+            default model width (default: {Constant.MODEL_WIDTH})
         """
 
         if not os.path.exists(path):
@@ -92,8 +107,6 @@ class NetworkMorphismTuner(Tuner):
 
         self.bo = BayesianOptimizer(self, self.t_min, self.optimize_mode, self.beta)
         self.training_queue = []
-        # self.x_queue = []
-        # self.y_queue = []
         self.descriptors = []
         self.history = []
 
@@ -112,6 +125,9 @@ class NetworkMorphismTuner(Tuner):
     def generate_parameters(self, parameter_id):
         """
         Returns a set of trial neural architecture, as a serializable object.
+
+        Parameters
+        ----------
         parameter_id : int
         """
         if not self.history:
@@ -137,14 +153,14 @@ class NetworkMorphismTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value):
         """ Record an observation of the objective function.
-        Arguments:
-            parameter_id : int
-            parameters : dict of parameters
-            value: final metrics of the trial, including reward
-        Raises:
-            RuntimeError -- Received parameter_id not in total_data.
+    
+        Parameters
+        ----------
+        parameter_id : int
+        parameters : dict
+        value : dict/float
+            if value is dict, it should have "default" key.
         """
-
         reward = self.extract_scalar_reward(value)
 
         if parameter_id not in self.total_data:
@@ -176,9 +192,13 @@ class NetworkMorphismTuner(Tuner):
 
     def generate(self):
         """Generate the next neural architecture.
-        Returns:
-            other_info: Anything to be saved in the training queue together with the architecture.
-            generated_graph: An instance of Graph.
+
+        Returns
+        -------
+        other_info: any object
+            Anything to be saved in the training queue together with the architecture.
+        generated_graph: Graph
+            An instance of Graph.
         """
         generated_graph, new_father_id = self.bo.generate(self.descriptors)
         if new_father_id is None:
@@ -191,11 +211,16 @@ class NetworkMorphismTuner(Tuner):
 
     def update(self, other_info, graph, metric_value, model_id):
         """ Update the controller with evaluation result of a neural architecture.
-        Args:
-            other_info: Anything. In our case it is the father ID in the search tree.
-            graph: An instance of Graph. The trained neural architecture.
-            metric_value: The final evaluated metric value.
-            model_id: An integer.
+
+        Parameters
+        ----------
+        other_info: any object
+            In our case it is the father ID in the search tree.
+        graph: Graph
+            An instance of Graph. The trained neural architecture.
+        metric_value: float
+            The final evaluated metric value.
+        model_id: int
         """
         father_id = other_info
         self.bo.fit([graph.extract_descriptor()], [metric_value])
@@ -204,15 +229,16 @@ class NetworkMorphismTuner(Tuner):
     def add_model(self, metric_value, model_id):
         """ Add model to the history, x_queue and y_queue
 
-        Arguments:
-            metric_value: int --metric_value
-            graph: dict -- graph
-            model_id: int -- model_id
+        Parameters
+        ----------
+        metric_value : float
+        graph : dict
+        model_id : int
 
-        Returns:
-            model dict
+        Returns
+        -------
+        model : dict
         """
-
         if self.verbose:
             logger.info("Saving model.")
 
@@ -223,16 +249,10 @@ class NetworkMorphismTuner(Tuner):
             file = open(os.path.join(self.path, "best_model.txt"), "w")
             file.write("best model: " + str(model_id))
             file.close()
-
-        # descriptor = graph.extract_descriptor()
-        # self.x_queue.append(descriptor)
-        # self.y_queue.append(metric_value)
         return ret
 
     def get_best_model_id(self):
         """ Get the best model_id from history using the metric value
-        Returns:
-            int -- the best model_id
         """
 
         if self.optimize_mode is OptimizeMode.Maximize:
@@ -241,10 +261,16 @@ class NetworkMorphismTuner(Tuner):
 
     def load_model_by_id(self, model_id):
         """Get the model by model_id
-        Arguments:
-            model_id {int} -- model index
-        Returns:
-            Graph -- the model graph representation
+
+        Parameters
+        ----------
+        model_id : int
+            model index
+        
+        Returns
+        -------
+        load_model : Graph
+            the model graph representation
         """
 
         with open(os.path.join(self.path, str(model_id) + ".json")) as fin:
@@ -255,17 +281,26 @@ class NetworkMorphismTuner(Tuner):
 
     def load_best_model(self):
         """ Get the best model by model id
-        Returns:
-            Graph -- the best model graph representation
+
+        Returns
+        -------
+        load_model : Graph
+            the model graph representation
         """
         return self.load_model_by_id(self.get_best_model_id())
 
     def get_metric_value_by_id(self, model_id):
         """ Get the model metric valud by its model_id
-        Arguments:
-            model_id {int} -- model index
-        Returns:
-            float -- the model metric
+
+        Parameters
+        ----------
+        model_id : int
+            model index
+        
+        Returns
+        -------
+        float
+             the model metric
         """
         for item in self.history:
             if item["model_id"] == model_id:

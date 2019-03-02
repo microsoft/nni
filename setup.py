@@ -48,7 +48,8 @@ setup(
         'nni': 'src/sdk/pynni/nni',
         'nni_annotation': 'tools/nni_annotation',
         'nni_cmd': 'tools/nni_cmd',
-        'nni_trial_tool':'tools/nni_trial_tool'
+        'nni_trial_tool':'tools/nni_trial_tool',
+        'nni_gpu_tool':'tools/nni_gpu_tool'
     },
     package_data = {'nni': ['**/requirements.txt']},
     python_requires = '>=3.5',
@@ -62,7 +63,7 @@ setup(
         'requests',
         'scipy',
         'schema',
-        'pyhdfs'
+        'PythonWebHDFS'
     ],
 
     cmdclass={

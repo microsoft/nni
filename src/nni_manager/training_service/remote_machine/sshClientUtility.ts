@@ -27,7 +27,7 @@ import { Client, ClientChannel, SFTPWrapper } from 'ssh2';
 import * as stream from 'stream';
 import { Deferred } from 'ts-deferred';
 import { NNIError, NNIErrorNames } from '../../common/errors';
-import { getLogger } from '../../common/log';
+import { getLogger, Logger } from '../../common/log';
 import { uniqueString, getRemoteTmpDir } from '../../common/utils';
 import { RemoteCommandResult } from './remoteMachineData';
 
@@ -69,11 +69,13 @@ export namespace SSHClientUtility {
      * @param sshClient SSH Client
      */
     export function copyFileToRemote(localFilePath : string, remoteFilePath : string, sshClient : Client) : Promise<boolean> {
+        const log: Logger = getLogger();
+        log.debug(`copyFileToRemote: localFilePath: ${localFilePath}, remoteFilePath: ${remoteFilePath}`);
         assert(sshClient !== undefined);
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         sshClient.sftp((err : Error, sftp : SFTPWrapper) => {
             if (err) {
-                getLogger().error(`copyFileToRemote: ${err.message}, ${localFilePath}, ${remoteFilePath}`);
+                log.error(`copyFileToRemote: ${err.message}, ${localFilePath}, ${remoteFilePath}`);
                 deferred.reject(err);
 
                 return;
@@ -98,6 +100,8 @@ export namespace SSHClientUtility {
      * @param client SSH Client
      */
     export function remoteExeCommand(command : string, client : Client): Promise<RemoteCommandResult> {
+        const log: Logger = getLogger();
+        log.debug(`remoteExeCommand: command: [${command}]`);
         const deferred : Deferred<RemoteCommandResult> = new Deferred<RemoteCommandResult>();
         let stdout: string = '';
         let stderr: string = '';
@@ -105,7 +109,7 @@ export namespace SSHClientUtility {
 
         client.exec(command, (err : Error, channel : ClientChannel) => {
             if (err) {
-                getLogger().error(`remoteExeCommand: ${err.message}`);
+                log.error(`remoteExeCommand: ${err.message}`);
                 deferred.reject(err);
 
                 return;

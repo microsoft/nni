@@ -1,0 +1,114 @@
+
+jobs:
+- job: 'Build_upload_nni_ubuntu'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    matrix:
+      Python36:
+        PYTHON_VERSION: '3.6'
+
+  steps:
+  - script: |
+      python3 -m pip install --upgrade pip setuptools --user
+      python3 -m pip install twine --user
+    displayName: 'Install twine'
+  - script: |
+      # NNI build scripts (Makefile) uses branch tag as package version number
+      # To test this pipeline without impacting nni testpypi/pypi packages, uncomment following git tag command
+      # git tag v0.0.1
+      cd deployment/pypi
+      if [ $(build_type) = 'prerelease' ]
+      then
+        echo 'building prerelease package...'
+        make version_ts=true build
+      else
+        echo 'building release package...'
+        make build
+      fi
+    condition: eq( variables['upload_package'], 'true' )
+    displayName: 'build nni bdsit_wheel'
+  - script: |
+      cd deployment/pypi
+      if [ $(build_type) = 'prerelease' ]
+      then
+        echo 'uploading prerelease package to testpypi...'
+        python3 -m twine upload -u $(testpypi_user) -p $(testpypi_pwd) --repository-url https://test.pypi.org/legacy/ dist/*
+      else
+        echo 'uploading release package to pypi...'
+        python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
+      fi
+    condition: eq( variables['upload_package'], 'true' )
+    displayName: 'upload nni package to pypi/testpypi'
+
+  - script: |
+      cd deployment/docker
+
+      if [ $(build_type) = 'prerelease' ]
+      then
+        docker login -u $(docker_hub_dev_user) -p $(docker_hub_dev_pwd)
+        export IMG_NAME=$(dev_docker_img)
+        export IMG_TAG=`git describe --tags --abbrev=0`.`date +%y%m%d%H%M`
+        echo 'updating docker file for testpyi...'
+        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/RUN python3 -m pip install --user --no-cache-dir --index-url https:\/\/test.pypi.org\/simple --extra-index-url https:\/\/pypi.org\/simple nni/' Dockerfile
+      else
+        docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
+        export IMG_NAME=msranni/nni
+        export IMG_TAG=`git describe --tags --abbrev=0`
+      fi
+      echo $IMG_NAME:$IMG_TAG
+      cat Dockerfile
+      docker build -f Dockerfile -t $IMG_NAME:$IMG_TAG .
+      docker push $IMG_NAME:$IMG_TAG
+
+      if [ $(update_latest_tag) = 'true' ]
+      then
+        docker tag $IMG_NAME:$IMG_TAG $IMG_NAME:latest
+        docker push $IMG_NAME:latest
+      fi
+
+    condition: eq( variables['build_docker_img'], 'true' )
+    displayName: 'build and upload nni docker image'
+
+- job: 'Build_upload_nni_macos'
+  pool:
+    vmImage: 'macOS 10.13'
+  strategy:
+    matrix:
+      Python36:
+        PYTHON_VERSION: '3.6'
+  steps:
+  - script: |
+      python3 -m pip install --upgrade pip setuptools --user
+      python3 -m pip install twine --user
+    displayName: 'Install twine'
+  - script: |
+      make install-dependencies
+    displayName: 'Install nni dependencies'
+  - script: |
+      # NNI build scripts (Makefile) uses branch tag as package version number
+      # To test this pipeline without impacting nni testpypi/pypi packages, uncomment following git tag command
+      # git tag v0.0.1
+      cd deployment/pypi
+      if [ $(build_type) = 'prerelease' ]
+      then
+        echo 'building prerelease package...'
+        PATH=$HOME/Library/Python/3.7/bin:$PATH make version_ts=true build
+      else
+        echo 'building release package...'
+        PATH=$HOME/Library/Python/3.7/bin:$PATH make build
+      fi
+    condition: eq( variables['upload_package'], 'true' )
+    displayName: 'build nni bdsit_wheel'
+  - script: |
+      cd deployment/pypi
+      if [ $(build_type) = 'prerelease' ]
+      then
+        echo 'uploading prerelease package to testpypi...'
+        python3 -m twine upload -u $(testpypi_user) -p $(testpypi_pwd) --repository-url https://test.pypi.org/legacy/ dist/*
+      else
+        echo 'uploading release package to pypi...'
+        python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
+      fi
+    condition: eq( variables['upload_package'], 'true' )
+    displayName: 'upload nni package to pypi/testpypi'

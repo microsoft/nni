@@ -182,6 +182,7 @@ class SlideBar extends React.Component<{}, SliderState> {
 
   render() {
     const { version, menuVisible } = this.state;
+    const feed = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
     const menu = (
       <Menu onClick={this.handleMenuClick}>
         <Menu.Item key="1">Experiment Parameters</Menu.Item>
@@ -221,12 +222,12 @@ class SlideBar extends React.Component<{}, SliderState> {
               Download <Icon type="down" />
             </a>
           </Dropdown>
-          <a href="https://github.com/Microsoft/nni/issues/new" target="_blank">
+          <a href={feed} target="_blank">
             <img
               src={require('../static/img/icon/issue.png')}
               alt="NNI github issue"
             />
-            FeedBack
+            Feedback
           </a>
           <span className="version">Version: {version}</span>
         </Col>

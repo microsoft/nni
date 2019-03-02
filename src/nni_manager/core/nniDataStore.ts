@@ -49,6 +49,7 @@ class NNIDataStore implements DataStore {
         if(isNewExperiment()) {
             mkDirP(databaseDir).then(() => {
                 this.db.init(true, databaseDir).then(() => {
+                    this.log.info('Datastore initialization done');
                     this.initTask.resolve();
                 }).catch((err: Error) => {
                     this.initTask.reject(err);
@@ -58,6 +59,7 @@ class NNIDataStore implements DataStore {
             });
         } else {
             this.db.init(false, databaseDir).then(() => {
+                this.log.info('Datastore initialization done');
                 this.initTask.resolve();
             }).catch((err: Error) => {
                 this.initTask.reject(err);

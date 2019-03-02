@@ -5,18 +5,7 @@ interface TableObj {
     id: string;
     duration: number;
     status: string;
-    acc?: number; // draw accuracy graph
-    description: Parameters;
-    color?: string;
-}
-
-interface TableObjFianl {
-    key: number;
-    sequenceId: number;
-    id: string;
-    duration: number;
-    status: string;
-    acc?: FinalType;
+    acc?: FinalType; // draw accuracy graph
     description: Parameters;
     color?: string;
 }
@@ -111,6 +100,5 @@ export {
     TableObj, Parameters, Experiment, 
     AccurPoint, TrialNumber, TrialJob,
     DetailAccurPoint, TooltipForAccuracy,
-    ParaObj, VisualMapValue, Dimobj, FinalResult,
-    TableObjFianl, FinalType
+    ParaObj, VisualMapValue, Dimobj, FinalResult, FinalType
 };

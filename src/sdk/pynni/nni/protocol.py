@@ -33,6 +33,7 @@ class CommandType(Enum):
     AddCustomizedTrialJob = b'AD'
     TrialEnd = b'EN'
     Terminate = b'TE'
+    Ping = b'PI'
 
     # out
     Initialized = b'ID'

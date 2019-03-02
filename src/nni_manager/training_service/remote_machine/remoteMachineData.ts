@@ -80,6 +80,7 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     public form: JobApplicationForm;
     public sequenceId: number;
     public rmMeta?: RemoteMachineMeta;
+    public isEarlyStopped?: boolean;
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
                 workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
@@ -108,15 +109,14 @@ export enum ScheduleResultType {
     REQUIRE_EXCEED_TOTAL
 }
 
-export const REMOTEMACHINE_RUN_SHELL_FORMAT: string =
+export const REMOTEMACHINE_TRIAL_COMMAND_FORMAT: string =
 `#!/bin/bash
-export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_TRIAL_JOB_ID={1} NNI_OUTPUT_DIR={0}
-export MULTI_PHASE={7}
-export NNI_TRIAL_SEQ_ID={8}
+export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={2} NNI_EXP_ID={3} NNI_TRIAL_SEQ_ID={4} export MULTI_PHASE={5}
 cd $NNI_SYS_DIR
-echo $$ >{2}
-eval {3}{4} 2>{5}
-echo $? \`date +%s%3N\` >{6}`;
+sh install_nni.sh
+echo $$ >{6}
+python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
+echo $? \`date +%s%3N\` >{10}`;
 
 export const HOST_JOB_SHELL_FORMAT: string =
 `#!/bin/bash
@@ -124,3 +124,11 @@ cd {0}
 echo $$ >{1}
 eval {2} >stdout 2>stderr
 echo $? \`date +%s%3N\` >{3}`;
+
+export const GPU_COLLECTOR_FORMAT: string = 
+`
+#!/bin/bash
+export METRIC_OUTPUT_DIR={0}
+echo $$ >{1}
+python3 -m nni_gpu_tool.gpu_metrics_collector
+`

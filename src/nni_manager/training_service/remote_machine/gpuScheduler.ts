@@ -163,4 +163,20 @@ export class GPUScheduler {
             }
         };
     }
+    
+    /**
+     * remove the job's gpu reversion
+     * @param trialJobId 
+     * @param rmMeta 
+     */
+    public removeGpuReservation(trialJobId: string, rmMeta?: RemoteMachineMeta): void{
+        // If remote machine has no GPU, gpuReservcation is not initialized, so check if it's undefined
+        if(rmMeta !== undefined && rmMeta.gpuReservation !== undefined) {
+            rmMeta.gpuReservation.forEach((reserveTrialJobId : string, gpuIndex : number) => {
+                if(reserveTrialJobId == trialJobId) {
+                    rmMeta.gpuReservation.delete(gpuIndex);
+                }
+            });
+        }
+    }
 }

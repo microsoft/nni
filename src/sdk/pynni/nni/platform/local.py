@@ -36,7 +36,7 @@ if not os.path.exists(_outputdir):
     os.makedirs(_outputdir)
 
 _nni_platform = os.environ['NNI_PLATFORM']
-if _nni_platform not in ['pai', 'kubeflow', 'frameworkcontroller']:
+if _nni_platform == 'local':
    _log_file_path = os.path.join(_outputdir, 'trial.log')
    init_logger(_log_file_path)
 
@@ -69,7 +69,7 @@ def get_next_parameter():
     params_filepath = os.path.join(_sysdir, params_file_name)
     if not os.path.isfile(params_filepath):
         request_next_parameter()
-    while not os.path.isfile(params_filepath):
+    while not (os.path.isfile(params_filepath) and os.path.getsize(params_filepath) > 0):
         time.sleep(3)
     params_file = open(params_filepath, 'r')
     params = json.load(params_file)
@@ -77,10 +77,10 @@ def get_next_parameter():
     return params
 
 def send_metric(string):
-    if _nni_platform in ['pai', 'kubeflow', 'frameworkcontroller']:
+    if _nni_platform != 'local':
         data = (string).encode('utf8')
         assert len(data) < 1000000, 'Metric too long'    
-        print('NNISDK_ME%s' % (data))
+        print('NNISDK_ME%s' % (data), flush=True)
     else:
         data = (string + '\n').encode('utf8')
         assert len(data) < 1000000, 'Metric too long'    
