@@ -126,15 +126,23 @@ def make_lambda(call):
     return ast.Lambda(args=empty_args, body=call)
 
 
-def test_variable_equal(var1, var2):
+def test_variable_equal(node1, node2):
     """Test whether two variables are the same."""
-    if type(var1) is not type(var2):
+    if type(node1) is not type(node2):
         return False
-    if type(var1) is ast.Name:
-        return var1.id == var2.id
-    if type(var1) is ast.Attribute:
-        return var1.attr == var2.attr and test_variable_equal(var1.value, var2.value)
-    return False
+    if isinstance(node1, ast.AST):
+        for k, v in vars(node1).items():
+            if k in ('lineno', 'col_offset', 'ctx'):
+                continue
+            if not test_variable_equal(v, getattr(node2, k)):
+                return False
+        return True
+    if isinstance(node1, list):
+        if len(node1) != len(node2):
+            return False
+        return all(test_variable_equal(n1, n2) for n1, n2 in zip(node1, node2))
+    
+    return node1 == node2
 
 
 def replace_variable_node(node, annotation):

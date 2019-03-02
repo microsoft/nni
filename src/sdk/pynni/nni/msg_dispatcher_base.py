@@ -83,7 +83,8 @@ class MsgDispatcherBase(Recoverable):
 
         _logger.debug('handle request: command: [{}], data: [{}]'.format(command, data))
 
-        data = json_tricks.loads(data)
+        if data:
+            data = json_tricks.loads(data)
 
         command_handlers = {
             # Tunner commands:
@@ -96,11 +97,15 @@ class MsgDispatcherBase(Recoverable):
             CommandType.ReportMetricData: self.handle_report_metric_data,
 
             CommandType.TrialEnd: self.handle_trial_end,
+            CommandType.Ping: self.handle_ping,
         }
         if command not in command_handlers:
             raise AssertionError('Unsupported command: {}'.format(command))
 
         return command_handlers[command](data)
+
+    def handle_ping(self, data):
+        pass
 
     def handle_initialize(self, data):
         raise NotImplementedError('handle_initialize not implemented')

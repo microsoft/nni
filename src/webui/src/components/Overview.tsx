@@ -6,7 +6,7 @@ import {
     Experiment, TableObj,
     Parameters, TrialNumber
 } from '../static/interface';
-import { getFinalResult } from '../static/function';
+import { getFinal } from '../static/function';
 import SuccessTable from './overview/SuccessTable';
 import Title1 from './overview/Title1';
 import Progressed from './overview/Progress';
@@ -62,17 +62,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 tuner: {},
                 trainingServicePlatform: ''
             },
-            tableData: [{
-                key: 0,
-                sequenceId: 0,
-                id: '',
-                duration: 0,
-                status: '',
-                acc: 0,
-                description: {
-                    parameters: {}
-                }
-            }],
+            tableData: [],
             option: {},
             noData: '',
             // accuracy
@@ -224,7 +214,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                     parameters: {}
                                 };
                                 const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
-                                const acc = getFinalResult(tableData[item].finalMetricData);
+                                const acc = getFinal(tableData[item].finalMetricData);
                                 // if hyperparameters is undefine, show error message, else, show parameters value
                                 if (tableData[item].hyperParameters) {
                                     const parameters = JSON.parse(tableData[item].hyperParameters[0]).parameters;
@@ -256,16 +246,16 @@ class Overview extends React.Component<{}, OverviewState> {
                     const { isTop10 } = this.state;
                     if (isTop10 === true) {
                         topTableData.sort((a: TableObj, b: TableObj) => {
-                            if (a.acc && b.acc) {
-                                return b.acc - a.acc;
+                            if (a.acc !== undefined && b.acc !== undefined) {
+                                return JSON.parse(b.acc.default) - JSON.parse(a.acc.default);
                             } else {
                                 return NaN;
                             }
                         });
                     } else {
                         topTableData.sort((a: TableObj, b: TableObj) => {
-                            if (a.acc && b.acc) {
-                                return a.acc - b.acc;
+                            if (a.acc !== undefined && b.acc !== undefined) {
+                                return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
                             } else {
                                 return NaN;
                             }
@@ -275,7 +265,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     let bestDefaultMetric = 0;
                     if (topTableData[0] !== undefined) {
                         if (topTableData[0].acc !== undefined) {
-                            bestDefaultMetric = topTableData[0].acc;
+                            bestDefaultMetric = JSON.parse(topTableData[0].acc.default);
                         }
                     }
                     if (this._isMounted) {
@@ -308,7 +298,7 @@ class Overview extends React.Component<{}, OverviewState> {
         const indexarr: Array<number> = [];
         Object.keys(sourcePoint).map(item => {
             const items = sourcePoint[item];
-            accarr.push(items.acc);
+            accarr.push(items.acc.default);
             indexarr.push(items.sequenceId);
         });
         const accOption = {

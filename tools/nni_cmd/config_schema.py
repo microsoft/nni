@@ -33,6 +33,8 @@ Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
+Optional('logDir'): os.path.isdir,
+Optional('logLevel'): Or('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
 'useAnnotation': bool,
 Optional('advisor'): Or({
     'builtinAdvisorName': Or('Hyperband'),
@@ -98,7 +100,8 @@ Optional('assessor'): Or({
         'epoch_num': And(int, lambda x: 0 <= x <= 9999),
         Optional('optimize_mode'): Or('maximize', 'minimize'),
         Optional('start_step'): And(int, lambda x: 0 <= x <= 9999),
-        Optional('threshold'): And(float, lambda x: 0.0 <= x <= 9999.0)
+        Optional('threshold'): And(float, lambda x: 0.0 <= x <= 9999.0),
+        Optional('gap'): And(int, lambda x: 1 <= x <= 9999)
     },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
 },{
@@ -216,12 +219,14 @@ frameworkcontroller_trial_schema = {
 frameworkcontroller_config_schema = {
     'frameworkcontrollerConfig':Or({
         Optional('storage'): Or('nfs', 'azureStorage'),
+        Optional('serviceAccountName'): str,
         'nfs': {
             'server': str,
             'path': str
         }
     },{
         Optional('storage'): Or('nfs', 'azureStorage'),
+        Optional('serviceAccountName'): str,
         'keyVault': {
             'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
             'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')

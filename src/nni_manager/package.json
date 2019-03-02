@@ -3,9 +3,9 @@
   "version": "999.0.0-developing",
   "main": "index.js",
   "scripts": {
-    "postbuild": "cp -rf scripts ./dist/ && cp -rf config ./dist/",
+    "postbuild": "cp -rf config ./dist/",
     "build": "tsc",
-    "test": "nyc mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --exclude core/test/nnimanager.test.ts --colors",
+    "test": "nyc mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
     "start": "node dist/main.js",
     "tslint": "tslint -p ."
   },

@@ -26,6 +26,7 @@ from .url_utils import experiment_url
 from .config_utils import Config
 from .common_utils import get_json_content
 from .nnictl_utils import check_experiment_id, get_experiment_port, get_config_filename
+from .launcher_utils import parse_time
 
 def validate_digit(value, start, end):
     '''validate if a digit is valid'''
@@ -92,7 +93,8 @@ def update_concurrency(args):
             print('ERROR: update %s failed!' % 'concurrency')
 
 def update_duration(args):
-    validate_digit(args.value, 1, 999999999)
+    #parse time, change time unit to seconds 
+    args.value = parse_time(args.value)
     args.port = get_experiment_port(args)
     if args.port is not None:
         if update_experiment_profile(args, 'maxExecDuration', int(args.value)):
