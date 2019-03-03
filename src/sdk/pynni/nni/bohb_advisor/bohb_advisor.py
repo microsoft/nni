@@ -98,13 +98,14 @@ class Bracket():
         self.optimize_mode = optimize_mode
 
         self.n = math.ceil((s_max + 1) * eta**s / (s + 1))
-        self.r = math.ceil(max_budget * eta**i)
+        self.r = math.ceil(max_budget / eta**s)
         self.i = 0
         self.hyper_configs = []         # [ {id: params}, {}, ... ]
         self.configs_perf = []          # [ {id: [seq, acc]}, {}, ... ]
         self.num_configs_to_run = []    # [ n, n, n, ... ]
         self.num_finished_configs = []  # [ n, n, n, ... ]
         self.no_more_trial = False
+        print ("New bracket", self.n, self.r)
 
     def is_completed(self):
         """check whether this bracket has sent out all the hyperparameter configurations"""
@@ -112,6 +113,7 @@ class Bracket():
 
     def get_n_r(self):
         """return the values of n and r for the next round"""
+        print("get_n_r", math.floor(self.n / self.eta**self.i), self.r * self.eta**self.i)
         return math.floor(self.n / self.eta**self.i), self.r * self.eta**self.i
 
     def increase_i(self):
@@ -152,6 +154,7 @@ class Bracket():
         i: int
             the ith round
         """
+        print("inform trial end")
         global _KEY # pylint: disable=global-statement
         self.num_finished_configs[i] += 1
         logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d', 
@@ -198,6 +201,7 @@ class Bracket():
         for _ in range(num):
             params_id = create_bracket_parameter_id(self.s, self.i)
             params = config_generator.get_config(r)
+            params[_KEY] = r
             hyperparameter_configs[params_id] = params
         self._record_hyper_configs(hyperparameter_configs)
         return [[key, value] for key, value in hyperparameter_configs.items()]
@@ -271,6 +275,8 @@ class BOHB(object):
         self.credit = 0
         self.brackets = dict()
         self.search_space = None
+        # [key, value] = [parameter_id, parameter]
+        self.parameters = dict()
 
     def load_checkpoint(self):
         pass
@@ -330,7 +336,6 @@ class BOHB(object):
         return True
 
     def _request_one_trial_job(self):
-        # (TODO:Shufan) slove the problem when get 75/81/+10 no more 4 trial
         """get one trial job, i.e., one hyperparameter configuration.
         
         Returns
@@ -341,7 +346,9 @@ class BOHB(object):
             1: 'parameter_source', 'algorithm'
             2: 'parameters', value of new hyperparameter
         """
+        # TODO: Add status for NoMoreTrial
         if not self.generated_hyper_configs:
+            """break"""
             ret = {
                 'parameter_id': '-1_0_0',
                 'parameter_source': 'algorithm',
@@ -350,7 +357,6 @@ class BOHB(object):
             print ('NoMoreTrialJobs', ret)
             '''send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))'''
             return True
-
         assert self.generated_hyper_configs
         params = self.generated_hyper_configs.pop()
         ret = {
@@ -358,8 +364,9 @@ class BOHB(object):
             'parameter_source': 'algorithm',
             'parameters': params[1]
         }
+        self.parameters[params[0]] = params[1]
         print ('NewTrialJob', ret)
-        """send(CommandType.NewTrialJob, json_tricks.dumps(ret))"""
+        '''send(CommandType.NewTrialJob, json_tricks.dumps(ret))'''
         self.credit -= 1
         return True
 
@@ -422,17 +429,7 @@ class BOHB(object):
             logger.debug('bracket %s next round %s, hyper_configs: %s', s, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
             for _ in range(self.credit):
-                if not self.generated_hyper_configs:
-                    break
-                params = self.generated_hyper_configs.pop()
-                ret = {
-                    'parameter_id': params[0],
-                    'parameter_source': 'algorithm',
-                    'parameters': params[1]
-                }
-                print ('NewTrialJob', ret)
-                '''send(CommandType.NewTrialJob, json_tricks.dumps(ret))'''
-                self.credit -= 1
+                _request_one_trial_job()
 
         # Finish this bracket and generate a new bracket
         if self.brackets[int(s)].no_more_trial:
@@ -460,10 +457,15 @@ class BOHB(object):
         if data['type'] == 'FINAL':
             # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
             # and PERIODICAL metric are independent, thus, not comparable.
-            self.brackets[s].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
+            self.brackets[s].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+            # (TODO) self.brackets[s].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
             self.completed_hyper_configs.append(data)
-            # update BO with loss and max_s budget
-            self.cg.new_result(value, sys.maxsize)
+            # update BO with loss, max_s budget, hyperparameters
+            
+            _parameters = self.parameters[data['parameter_id']]
+            _parameters.pop(_KEY)
+            self.cg.new_result(value, data['sequence'], _parameters)
+            # (TODO) self.cg.new_result(value, sys.maxsize)
         elif data['type'] == 'PERIODICAL':
             self.brackets[s].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
         else:

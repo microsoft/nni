@@ -278,7 +278,7 @@ class CG_BOHB(object):
             return_array[i,:] = datum
         return(return_array)
 
-    def new_result(self, loss, budget, update_model=True):
+    def new_result(self, loss, budget, parameters, update_model=True):
         """
             function to register finished runs
 
@@ -301,7 +301,7 @@ class CG_BOHB(object):
 
         # We want to get a numerical representation of the configuration in the original space
 
-        conf = ConfigSpace.Configuration(self.configspace, job.kwargs["config"])
+        conf = ConfigSpace.Configuration(self.configspace, parameters)
         self.configs[budget].append(conf.get_array())
         self.losses[budget].append(loss)
 
