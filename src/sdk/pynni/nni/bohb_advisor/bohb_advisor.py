@@ -144,7 +144,6 @@ class Bracket():
             self.configs_perf[i][parameter_id] = [seq, value]
 
     def inform_trial_end(self, i):
-        # (TODO: Shufan)Update value and TPE
         """If the trial is finished and the corresponding round (i.e., i) has all its trials finished,
         it will choose the top k trials for the next round (i.e., i+1)
 
@@ -179,7 +178,7 @@ class Bracket():
                 hyper_configs[new_id] = params
             self._record_hyper_configs(hyper_configs)
             return [[key, value] for key, value in hyper_configs.items()]
-    return None
+        return None
 
     def get_hyperparameter_configurations(self, num, r, config_generator):
         """Randomly generate num hyperparameter configurations from search space
@@ -232,6 +231,7 @@ def extract_scalar_reward(value, scalar_key='default'):
     else:
         raise RuntimeError('Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__)) 
     return reward
+
 '''
 class BOHB(MsgDispatcherBase):
 '''
@@ -270,6 +270,7 @@ class BOHB(object):
         # In this case, tuner increases self.credit to issue a trial config sometime later.
         self.credit = 0
         self.brackets = dict()
+        self.search_space = None
 
     def load_checkpoint(self):
         pass
@@ -287,21 +288,25 @@ class BOHB(object):
         print ('handle_initialize')
         # convert search space jason to ConfigSpace
         self.handle_update_search_space(search_space)
+
         # generate BOHB config_generator using BO
-        self.cg = CG_BOHB(configspace=self.search_space,
-                          min_points_in_model = self.min_points_in_model,
-                          top_n_percent=self.top_n_percent,
-                          num_samples = self.num_samples,
-                          random_fraction=self.random_fraction,
-                          bandwidth_factor=self.bandwidth_factor,
-                          min_bandwidth=self.min_bandwidth)
+        if not self.search_space is None:
+            self.cg = CG_BOHB(configspace=self.search_space,
+                            min_points_in_model = self.min_points_in_model,
+                            top_n_percent=self.top_n_percent,
+                            num_samples = self.num_samples,
+                            random_fraction=self.random_fraction,
+                            bandwidth_factor=self.bandwidth_factor,
+                            min_bandwidth=self.min_bandwidth)
+        else:
+            raise ValueError('Error: Search space is None')
         # generate first brackets
         self.generate_new_bracket(self.curr_s)
         '''send(CommandType.Initialized, '')'''
         return True
 
     def generate_new_bracket(self, curr_s):
-        logger.debug('create a new SuccessiveHalving iteration, self.curr_s=%d', self.curr_s)
+        logger.debug('start to create a new SuccessiveHalving iteration, self.curr_s=%d', self.curr_s)
         self.brackets[curr_s] = Bracket(s=self.curr_s, s_max=self.s_max, eta=self.eta, max_budget=self.max_budget, optimize_mode=self.optimize_mode)
         next_n, next_r = self.brackets[self.curr_s].get_n_r()
         logger.debug('new SuccessiveHalving iteration, next_n=%d, next_r=%d', next_n, next_r)
@@ -412,10 +417,7 @@ class BOHB(object):
         hyper_params = json_tricks.loads(data['hyper_params'])
         s, i, _ = hyper_params['parameter_id'].split('_')
         hyper_configs = self.brackets[int(s)].inform_trial_end(int(i))
-        if self.brackets[int(s)].no_more_trial:
-            self.curr_s -= 1
-            self.generate_new_bracket(self.curr_s)
-        
+
         if hyper_configs is not None:
             logger.debug('bracket %s next round %s, hyper_configs: %s', s, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
@@ -431,6 +433,12 @@ class BOHB(object):
                 print ('NewTrialJob', ret)
                 '''send(CommandType.NewTrialJob, json_tricks.dumps(ret))'''
                 self.credit -= 1
+
+        # Finish this bracket and generate a new bracket
+        if self.brackets[int(s)].no_more_trial:
+            self.curr_s -= 1
+            self.generate_new_bracket(self.curr_s)
+        
         return True
 
     def handle_report_metric_data(self, data):

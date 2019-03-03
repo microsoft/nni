@@ -245,7 +245,7 @@ class CG_BOHB(object):
             sample = self.configspace.sample_configuration().get_dictionary()
         logger.debug('done sampling a new configuration.')
         sample['STEPS'] = budget
-        return sample, info_dict
+        return sample
 
 
 
