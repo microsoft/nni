@@ -155,31 +155,31 @@ class Bracket():
         """
         global _KEY # pylint: disable=global-statement
         self.num_finished_configs[i] += 1
-        logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d', self.s, self.i, i, self.num_finished_configs[i], self.num_configs_to_run[i])
-        if self.num_finished_configs[i] >= self.num_configs_to_run[i] \
-            and self.no_more_trial is False:
-                # choose candidate configs from finished configs to run in the next round
-                assert self.i == i + 1
-                this_round_perf = self.configs_perf[i]
-                if self.optimize_mode is OptimizeMode.Maximize:
-                    sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1], reverse=True) # reverse
-                else:
-                    sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1])
-                logger.debug('bracket %s next round %s, sorted hyper configs: %s', self.s, self.i, sorted_perf)
-                next_n, next_r = self.get_n_r()
-                logger.debug('bracket %s next round %s, next_n=%d, next_r=%d', self.s, self.i, next_n, next_r)
-                hyper_configs = dict()
-                for k in range(next_n):
-                    params_id = sorted_perf[k][0]
-                    params = self.hyper_configs[i][params_id]
-                    params[_KEY] = next_r # modify r
-                    # generate new id
-                    increased_id = params_id.split('_')[-1]
-                    new_id = create_bracket_parameter_id(self.s, self.i, increased_id)
-                    hyper_configs[new_id] = params
-                self._record_hyper_configs(hyper_configs)
-                return [[key, value] for key, value in hyper_configs.items()]
-        return None
+        logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d', 
+                    self.s, self.i, i, self.num_finished_configs[i], self.num_configs_to_run[i])
+        if self.num_finished_configs[i] >= self.num_configs_to_run[i] and self.no_more_trial is False:
+            # choose candidate configs from finished configs to run in the next round
+            assert self.i == i + 1
+            this_round_perf = self.configs_perf[i]
+            if self.optimize_mode is OptimizeMode.Maximize:
+                sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1], reverse=True) # reverse
+            else:
+                sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1])
+            logger.debug('bracket %s next round %s, sorted hyper configs: %s', self.s, self.i, sorted_perf)
+            next_n, next_r = self.get_n_r()
+            logger.debug('bracket %s next round %s, next_n=%d, next_r=%d', self.s, self.i, next_n, next_r)
+            hyper_configs = dict()
+            for k in range(next_n):
+                params_id = sorted_perf[k][0]
+                params = self.hyper_configs[i][params_id]
+                params[_KEY] = next_r # modify r
+                # generate new id
+                increased_id = params_id.split('_')[-1]
+                new_id = create_bracket_parameter_id(self.s, self.i, increased_id)
+                hyper_configs[new_id] = params
+            self._record_hyper_configs(hyper_configs)
+            return [[key, value] for key, value in hyper_configs.items()]
+    return None
 
     def get_hyperparameter_configurations(self, num, r, config_generator):
         """Randomly generate num hyperparameter configurations from search space
