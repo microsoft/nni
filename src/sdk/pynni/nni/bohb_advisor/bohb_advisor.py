@@ -147,6 +147,7 @@ class Bracket():
         # (TODO: Shufan)Update value and TPE
         """If the trial is finished and the corresponding round (i.e., i) has all its trials finished,
         it will choose the top k trials for the next round (i.e., i+1)
+
         Parameters
         ----------
         i: int
@@ -157,27 +158,27 @@ class Bracket():
         logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d', self.s, self.i, i, self.num_finished_configs[i], self.num_configs_to_run[i])
         if self.num_finished_configs[i] >= self.num_configs_to_run[i] \
             and self.no_more_trial is False:
-            # choose candidate configs from finished configs to run in the next round
-            assert self.i == i + 1
-            this_round_perf = self.configs_perf[i]
-            if self.optimize_mode is OptimizeMode.Maximize:
-                sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1], reverse=True) # reverse
-            else:
-                sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1])
-            logger.debug('bracket %s next round %s, sorted hyper configs: %s', self.s, self.i, sorted_perf)
-            next_n, next_r = self.get_n_r()
-            logger.debug('bracket %s next round %s, next_n=%d, next_r=%d', self.s, self.i, next_n, next_r)
-            hyper_configs = dict()
-            for k in range(next_n):
-                params_id = sorted_perf[k][0]
-                params = self.hyper_configs[i][params_id]
-                params[_KEY] = next_r # modify r
-                # generate new id
-                increased_id = params_id.split('_')[-1]
-                new_id = create_bracket_parameter_id(self.s, self.i, increased_id)
-                hyper_configs[new_id] = params
-            self._record_hyper_configs(hyper_configs)
-            return [[key, value] for key, value in hyper_configs.items()]
+                # choose candidate configs from finished configs to run in the next round
+                assert self.i == i + 1
+                this_round_perf = self.configs_perf[i]
+                if self.optimize_mode is OptimizeMode.Maximize:
+                    sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1], reverse=True) # reverse
+                else:
+                    sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1])
+                logger.debug('bracket %s next round %s, sorted hyper configs: %s', self.s, self.i, sorted_perf)
+                next_n, next_r = self.get_n_r()
+                logger.debug('bracket %s next round %s, next_n=%d, next_r=%d', self.s, self.i, next_n, next_r)
+                hyper_configs = dict()
+                for k in range(next_n):
+                    params_id = sorted_perf[k][0]
+                    params = self.hyper_configs[i][params_id]
+                    params[_KEY] = next_r # modify r
+                    # generate new id
+                    increased_id = params_id.split('_')[-1]
+                    new_id = create_bracket_parameter_id(self.s, self.i, increased_id)
+                    hyper_configs[new_id] = params
+                self._record_hyper_configs(hyper_configs)
+                return [[key, value] for key, value in hyper_configs.items()]
         return None
 
     def get_hyperparameter_configurations(self, num, r, config_generator):
@@ -307,7 +308,6 @@ class BOHB(object):
         # rewrite with TPE
         generated_hyper_configs = self.brackets[self.curr_s].get_hyperparameter_configurations(next_n, next_r, self.cg)
         self.generated_hyper_configs = generated_hyper_configs.copy()
-        self.curr_s -= 1
 
     def handle_request_trial_jobs(self, data):
         """
@@ -342,7 +342,7 @@ class BOHB(object):
                 'parameter_source': 'algorithm',
                 'parameters': ''
             }
-            print (NoMoreTrialJobs, ret)
+            print ('NoMoreTrialJobs', ret)
             '''send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))'''
             return True
 
@@ -353,8 +353,9 @@ class BOHB(object):
             'parameter_source': 'algorithm',
             'parameters': params[1]
         }
-        print (NewTrialJob, ret)
+        print ('NewTrialJob', ret)
         """send(CommandType.NewTrialJob, json_tricks.dumps(ret))"""
+        self.credit -= 1
         return True
 
     def handle_update_search_space(self, search_space):
@@ -411,6 +412,10 @@ class BOHB(object):
         hyper_params = json_tricks.loads(data['hyper_params'])
         s, i, _ = hyper_params['parameter_id'].split('_')
         hyper_configs = self.brackets[int(s)].inform_trial_end(int(i))
+        if self.brackets[int(s)].no_more_trial:
+            self.curr_s -= 1
+            self.generate_new_bracket(self.curr_s)
+        
         if hyper_configs is not None:
             logger.debug('bracket %s next round %s, hyper_configs: %s', s, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
@@ -423,13 +428,13 @@ class BOHB(object):
                     'parameter_source': 'algorithm',
                     'parameters': params[1]
                 }
+                print ('NewTrialJob', ret)
                 '''send(CommandType.NewTrialJob, json_tricks.dumps(ret))'''
                 self.credit -= 1
-
         return True
 
     def handle_report_metric_data(self, data):
-        """
+        """reveice the metric data and update BO with final result
 
         Parameters
         ----------
@@ -444,15 +449,13 @@ class BOHB(object):
         value = extract_scalar_reward(data['value'])
         s, i, _ = data['parameter_id'].split('_')
         s = int(s)
-
         if data['type'] == 'FINAL':
             # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
             # and PERIODICAL metric are independent, thus, not comparable.
-            # Use data to update BO
-            self.cg.new_result(value, _KEY)
-            print ('Successfully report the result to update BO')
             self.brackets[s].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
             self.completed_hyper_configs.append(data)
+            # update BO with loss and max_s budget
+            self.cg.new_result(value, sys.maxsize)
         elif data['type'] == 'PERIODICAL':
             self.brackets[s].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
         else:
