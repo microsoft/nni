@@ -30,7 +30,20 @@ NNI 中，有 4 种类型的 Annotation；
 - **sampling_algo**: 指定搜索空间的采样算法。 可将其换成 NNI 支持的其它采样函数，函数要以 `nni.` 开头。例如，`choice` 或 `uniform`，详见 [SearchSpaceSpec](SearchSpaceSpec.md)。 
 - **name**: 将被赋值的变量名称。 注意，此参数应该与下面一行等号左边的值相同。
 
-例如：
+There are 10 types to express your search space as follows:
+
+- `@nni.variable(nni.choice(option1,option2,...,optionN),name=variable)` Which means the variable value is one of the options, which should be a list The elements of options can themselves be stochastic expressions
+- `@nni.variable(nni.randint(upper),name=variable)` Which means the variable value is a random integer in the range [0, upper).
+- `@nni.variable(nni.uniform(low, high),name=variable)` Which means the variable value is a value uniformly between low and high.
+- `@nni.variable(nni.quniform(low, high, q),name=variable)` Which means the variable value is a value like round(uniform(low, high) / q) * q
+- `@nni.variable(nni.loguniform(low, high),name=variable)` Which means the variable value is a value drawn according to exp(uniform(low, high)) so that the logarithm of the return value is uniformly distributed.
+- `@nni.variable(nni.qloguniform(low, high, q),name=variable)` Which means the variable value is a value like round(exp(uniform(low, high)) / q) * q
+- `@nni.variable(nni.normal(mu, sigma),name=variable)` Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma.
+- `@nni.variable(nni.qnormal(mu, sigma, q),name=variable)` Which means the variable value is a value like round(normal(mu, sigma) / q) * q
+- `@nni.variable(nni.lognormal(mu, sigma),name=variable)` Which means the variable value is a value drawn according to exp(normal(mu, sigma))
+- `@nni.variable(nni.qlognormal(mu, sigma, q),name=variable)` Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
+
+Below is an example:
 
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
@@ -41,14 +54,14 @@ learning_rate = 0.1
 
 `'''@nni.function_choice(*functions, name)'''`
 
-`@nni.function_choice` 可以从几个函数中选择一个来执行。
+`@nni.function_choice` is used to choose one from several functions.
 
-**参数**
+**Arguments**
 
-- **\*functions**: 可选择的函数。 注意，必须是包括参数的完整函数调用。 例如 `max_pool(hidden_layer, pool_size)`。
-- **name**: 将被替换的函数名称。
+- **functions**: Several functions that are waiting to be selected from. Note that it should be a complete function call with arguments. Such as `max_pool(hidden_layer, pool_size)`.
+- **name**: The name of the function that will be replaced in the following assignment statement.
 
-例如：
+An example here is:
 
 ```python
 """@nni.function_choice(max_pool(hidden_layer, pool_size), avg_pool(hidden_layer, pool_size), name=max_pool)"""
@@ -59,10 +72,10 @@ h_pooling = max_pool(hidden_layer, pool_size)
 
 `'''@nni.report_intermediate_result(metrics)'''`
 
-`@nni.report_intermediate_result` 用来返回中间结果，这和 <Trials.md> 中的 `nni.report_intermediate_result` 用法一样。
+`@nni.report_intermediate_result` is used to report intermediate result, whose usage is the same as `nni.report_intermediate_result` in <Trials.md>
 
 ### 4. 最终结果
 
 `'''@nni.report_final_result(metrics)'''`
 
-`@nni.report_final_result` 用来返回当前 Trial 的最终结果，这和 <Trials.md> 中的 `nni.report_final_result` 用法一样。
+`@nni.report_final_result` is used to report the final result of the current trial, whose usage is the same as `nni.report_final_result` in <Trials.md>
