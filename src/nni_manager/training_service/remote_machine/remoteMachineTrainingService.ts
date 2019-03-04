@@ -74,6 +74,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private remoteRestServerPort?: number;
     private readonly remoteOS: string;
     private nniManagerIpConfig?: NNIManagerIpConfig;
+    private versionCheck: boolean = true;
 
     constructor(@component.Inject timer: ObservableTimer) {
         this.remoteOS = 'linux';
@@ -334,6 +335,9 @@ class RemoteMachineTrainingService implements TrainingService {
             case TrialConfigMetadataKey.MULTI_PHASE:
                 this.isMultiPhase = (value === 'true' || value === 'True');
                 break;
+            case TrialConfigMetadataKey.VERSION_CHECK:
+                this.versionCheck = (value === 'true' || value === 'True');
+                break;
             default:
                 //Reject for unknown keys
                 throw new Error(`Uknown key: ${key}`);
@@ -558,7 +562,7 @@ class RemoteMachineTrainingService implements TrainingService {
             const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
             this.remoteRestServerPort = restServer.clusterRestServerPort;
         }
-        const version = await getVersion();
+        const version = this.versionCheck? await getVersion(): '';
         const runScriptTrialContent: string = String.Format(
             REMOTEMACHINE_TRIAL_COMMAND_FORMAT,
             trialWorkingFolder,

@@ -61,6 +61,7 @@ abstract class KubernetesTrainingService {
     protected kubernetesCRDClient?: KubernetesCRDClient;
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
+    protected versionCheck?: boolean = true;
     
     constructor() {
         this.log = getLogger();
@@ -189,7 +190,7 @@ abstract class KubernetesTrainingService {
             nvidia_script = `export CUDA_VISIBLE_DEVICES='0'`;
         }
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
-        const version = await getVersion();
+        const version = this.versionCheck? await getVersion(): '';
         const runScript: string = String.Format(
             KubernetesScriptFormat,
             platform,

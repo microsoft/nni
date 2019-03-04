@@ -75,6 +75,7 @@ class PAITrainingService implements TrainingService {
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
+    private versionCheck?: boolean = true;
 
     constructor() {
         this.log = getLogger();
@@ -211,7 +212,7 @@ class PAITrainingService implements TrainingService {
             hdfsLogPath);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
-        const version = await getVersion();
+        const version = this.versionCheck? await getVersion(): '';
         const nniPaiTrialCommand : string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
             // PAI will copy job's codeDir into /root directory
@@ -435,6 +436,9 @@ class PAITrainingService implements TrainingService {
                     this.hdfsClient);
 
                 deferred.resolve();
+                break;
+            case TrialConfigMetadataKey.VERSION_CHECK:
+                this.versionCheck = (value === 'true' || value === 'True');
                 break;
             default:
                 //Reject for unknown keys

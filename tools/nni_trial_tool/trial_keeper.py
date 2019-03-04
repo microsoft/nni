@@ -27,9 +27,11 @@ import shlex
 import re
 import sys
 import select
+print('----------------30---------------')
 from pyhdfs import HdfsClient
+print('----------------32---------------')
 import pkg_resources
-
+print('----------------33---------------')
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
 from .log_utils import LogType, nni_log, RemoteLogger, PipeLogReader, StdOutputType
@@ -120,15 +122,18 @@ def check_version(args):
     if trial_keeper_version is None:
         nni_log(LogType.Error, 'Exit trial keeper, does not find nni packages!')
         os._exit(1)
-    if args.version is None:
-        # backward compatibility
-        nni_log(LogType.Warning, 'You are using old version of nni, you could upgrade nni to the latest version!')
+    if not args.version:
+        # skip version check
+        nni_log(LogType.Warning, 'Skipping version check!')
     elif trial_keeper_version != args.version:
         nni_log(LogType.Error, 'Exit trial keeper, trial keeper version is {}, and trainingService version is {}, \
         versions does not match, please check your code and image versions!'.format(trial_keeper_version, args.version))
         os._exit(1)
+    else:
+        nni_log(LogType.Info,  'NNI version is {}'.format(args.version))
 
 if __name__ == '__main__':
+    print('----------------135---------------')
     '''NNI Trial Keeper main function'''
     PARSER = argparse.ArgumentParser()
     PARSER.set_defaults(func=trial_keeper_help_info)
@@ -144,9 +149,14 @@ if __name__ == '__main__':
     PARSER.add_argument('--webhdfs_path', type=str, help='the webhdfs path used in webhdfs URL')
     PARSER.add_argument('--version', type=str, help='the nni version transmitted from trainingService')
     args, unknown = PARSER.parse_known_args()
+    print('----------------151---------------')
     if args.trial_command is None:
         exit(1)
-
+    print('----------------154---------------')
+    print(args.version)
+    print('----------------156---------------')
+    check_version(args)
+    print('----------------157---------------')
     try:
         main_loop(args)
     except SystemExit as se:

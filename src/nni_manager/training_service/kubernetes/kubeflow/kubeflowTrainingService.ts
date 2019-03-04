@@ -317,6 +317,9 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                     return Promise.reject(new Error(error));                    
                 }
                 break;
+            case TrialConfigMetadataKey.VERSION_CHECK:
+                this.versionCheck = (value === 'true' || value === 'True');
+                break;
             default:
                 break;
         }
