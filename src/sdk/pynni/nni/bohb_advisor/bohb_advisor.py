@@ -236,10 +236,7 @@ def extract_scalar_reward(value, scalar_key='default'):
         raise RuntimeError('Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__)) 
     return reward
 
-'''
 class BOHB(MsgDispatcherBase):
-'''
-class BOHB(object):
     def __init__(self,
                 optimize_mode='maximize',
                 min_budget=1,
@@ -308,7 +305,7 @@ class BOHB(object):
             raise ValueError('Error: Search space is None')
         # generate first brackets
         self.generate_new_bracket(self.curr_s)
-        '''send(CommandType.Initialized, '')'''
+        send(CommandType.Initialized, '')
         return True
 
     def generate_new_bracket(self, curr_s):
@@ -355,7 +352,7 @@ class BOHB(object):
                 'parameters': ''
             }
             print ('NoMoreTrialJobs', ret)
-            '''send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))'''
+            send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
             return True
         assert self.generated_hyper_configs
         params = self.generated_hyper_configs.pop()
@@ -366,7 +363,7 @@ class BOHB(object):
         }
         self.parameters[params[0]] = params[1]
         print ('NewTrialJob', ret)
-        '''send(CommandType.NewTrialJob, json_tricks.dumps(ret))'''
+        send(CommandType.NewTrialJob, json_tricks.dumps(ret))
         self.credit -= 1
         return True
 
@@ -421,8 +418,8 @@ class BOHB(object):
             event: the job's state
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
-        """(TODO)hyper_params = json_tricks.loads(data['hyper_params'])"""
-        hyper_params = data['hyper_params']
+        hyper_params = json_tricks.loads(data['hyper_params'])
+        """(TODO)hyper_params = data['hyper_params']"""
         s, i, _ = hyper_params['parameter_id'].split('_')
         hyper_configs = self.brackets[int(s)].inform_trial_end(int(i))
 
@@ -458,15 +455,15 @@ class BOHB(object):
         if data['type'] == 'FINAL':
             # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
             # and PERIODICAL metric are independent, thus, not comparable.
-            self.brackets[s].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
-            # (TODO) self.brackets[s].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
+            # (TODO) self.brackets[s].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+            self.brackets[s].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
             self.completed_hyper_configs.append(data)
             # update BO with loss, max_s budget, hyperparameters
             
             _parameters = self.parameters[data['parameter_id']]
             _parameters.pop(_KEY)
-            self.cg.new_result(value, data['sequence'], _parameters)
-            # (TODO) self.cg.new_result(value, sys.maxsize)
+            # (TODO) self.cg.new_result(value, data['sequence'], _parameters)
+            self.cg.new_result(value, sys.maxsize)
         elif data['type'] == 'PERIODICAL':
             self.brackets[s].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
         else:

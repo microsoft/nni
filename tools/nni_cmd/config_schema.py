@@ -50,6 +50,27 @@ Optional('advisor'): Or({
     'className': str,
     Optional('classArgs'): dict,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'builtinAdvisorName': Or('BOHB'),
+    'classArgs': {
+        'optimize_mode': Or('maximize', 'minimize'),
+        Optional('min_budget'): int,
+        Optional('max_budget'): int,
+        Optional('eta'): int,
+        Optional('min_points_in_model'): int,
+        Optional('top_n_percent'): int,
+        Optional('num_samples'): int,
+        Optional('random_fraction'): float,
+        Optional('bandwidth_factor'): float,
+        Optional('min_bandwidth'): float
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'codeDir': os.path.exists,
+    'classFileName': str,
+    'className': str,
+    Optional('classArgs'): dict,
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 }),
 Optional('tuner'): Or({
     'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'SMAC', 'Evolution'),
