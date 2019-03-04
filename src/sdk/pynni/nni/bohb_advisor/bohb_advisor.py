@@ -421,7 +421,8 @@ class BOHB(object):
             event: the job's state
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
-        hyper_params = json_tricks.loads(data['hyper_params'])
+        """(TODO)hyper_params = json_tricks.loads(data['hyper_params'])"""
+        hyper_params = data['hyper_params']
         s, i, _ = hyper_params['parameter_id'].split('_')
         hyper_configs = self.brackets[int(s)].inform_trial_end(int(i))
 
@@ -429,7 +430,7 @@ class BOHB(object):
             logger.debug('bracket %s next round %s, hyper_configs: %s', s, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
             for _ in range(self.credit):
-                _request_one_trial_job()
+                self._request_one_trial_job()
 
         # Finish this bracket and generate a new bracket
         if self.brackets[int(s)].no_more_trial:
