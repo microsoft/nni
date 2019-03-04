@@ -61,8 +61,6 @@ Below is an example:
 learning_rate = 0.1
 ```
 
-The meaning of this example is that NNI will choose one of several values (0.1, 0.01, 0.001) to assign to the learning_rate variable. Specifically, this first line is an NNI annotation, which is a single string. Following is an assignment statement. What nni does here is to replace the right value of this assignment statement according to the information provided by the annotation line.
-
 ### 2. Annotate functions
 
    `'''@nni.function_choice(*functions, name)'''`
