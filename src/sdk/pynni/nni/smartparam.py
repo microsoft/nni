@@ -122,12 +122,14 @@ else:
         #   layer 2: caller of the API function
         frame = inspect.stack(0)[2]
         filename = frame.filename
+        module_name = inspect.getmodule(frame.frame).__name__
         lineno = frame.lineno  # NOTE: this is the lineno of caller's last argument
         del frame  # see official doc
-        module = inspect.getmodulename(filename)
+        if module_name == '__main__': # if it is in the main program, filename is used
+            module_name = inspect.getmodulename(filename)
         if name is None:
             name = '__line{:d}'.format(lineno)
-        key = '{}/{}/{}'.format(module, name, func)
+        key = '{}/{}/{}'.format(module_name, name, func)
         if trial._params is None:
             trial.get_next_parameter()
         return trial.get_current_parameter(key)
