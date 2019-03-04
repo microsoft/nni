@@ -196,7 +196,7 @@ class MetisTuner(Tuner):
         -------
         result : dict
         """
-        if self.samples_x or len(self.samples_x) < self.cold_start_num:
+        if len(self.samples_x) < self.cold_start_num:
             init_parameter = _rand_init(self.x_bounds, self.x_types, 1)[0]
             results = self._pack_output(init_parameter)
         else:
@@ -340,7 +340,7 @@ class MetisTuner(Tuner):
                 results_outliers = gp_outlier_detection.outlierDetection_threaded(samples_x, samples_y_aggregation)
 
                 if results_outliers is not None:
-                    temp = len(candidates)
+                    # temp = len(candidates)
 
                     for results_outlier in results_outliers:
                         if _num_past_samples(samples_x[results_outlier['samples_idx']], samples_x, samples_y) < max_resampling_per_x:
@@ -370,12 +370,12 @@ class MetisTuner(Tuner):
                         temp_improvement = threads_result['expected_lowest_mu'] - lm_current['expected_mu']
     
                         if next_improvement > temp_improvement:
-                            logger.infor("DEBUG: \"next_candidate\" changed: \
-                                            lowest mu might reduce from %f (%s) to %f (%s), %s\n" %\
-                                            lm_current['expected_mu'], str(lm_current['hyperparameter']),\
-                                            threads_result['expected_lowest_mu'],\
-                                            str(threads_result['candidate']['hyperparameter']),\
-                                            threads_result['candidate']['reason'])
+                            # logger.info("DEBUG: \"next_candidate\" changed: \
+                            #                 lowest mu might reduce from %f (%s) to %f (%s), %s\n" %\
+                            #                 lm_current['expected_mu'], str(lm_current['hyperparameter']),\
+                            #                 threads_result['expected_lowest_mu'],\
+                            #                 str(threads_result['candidate']['hyperparameter']),\
+                            #                 threads_result['candidate']['reason'])
 
                             next_improvement = temp_improvement
                             next_candidate = threads_result['candidate']
