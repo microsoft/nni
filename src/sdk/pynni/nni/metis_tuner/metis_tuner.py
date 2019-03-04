@@ -245,7 +245,7 @@ class MetisTuner(Tuner):
 
             # calculate y aggregation
             median = get_median(temp_y)
-            self.samples_y_aggregation[idx] = median
+            self.samples_y_aggregation[idx] = [median]
         else:
             self.samples_x.append(sample_x)
             self.samples_y.append([value])
