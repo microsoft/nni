@@ -42,14 +42,14 @@
 6. `@nni.variable(nni.qloguniform(low, high, q),name=variable)`  
     变量值会是 low 和 high 之间均匀分布的某个值，公式为：round(exp(uniform(low, high)) / q) * q
 
-7. `@nni.variable(nni.normal(mu, sigma),name=variable)`  
+7. `@nni.variable(nni.normal(label, mu, sigma),name=variable)`  
     变量值为正态分布的实数值，平均值为 mu，标准方差为 sigma。
 
-8. `@nni.variable(nni.qnormal(mu, sigma, q),name=variable)`  
+8. `@nni.variable(nni.qnormal(label, mu, sigma, q),name=variable)`  
     变量值分布的公式为： round(normal(mu, sigma) / q) * q
 
-9. `@nni.variable(nni.lognormal(mu, sigma),name=variable)`  
+9. `@nni.variable(nni.lognormal(label, mu, sigma),name=variable)`  
     变量值分布的公式为： exp(normal(mu, sigma))
 
-10. `@nni.variable(nni.qlognormal(mu, sigma, q),name=variable)`  
+10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
     变量值分布的公式为： round(exp(normal(mu, sigma)) / q) * q
