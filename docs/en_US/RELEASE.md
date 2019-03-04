@@ -11,7 +11,7 @@
 
 ### Bug Fixes and Other Changes
 * Fix a race condition bug that does not store trial job cancel status correctly.
-* Fix dispatcher error when using SMAC tuner.
+* Fix search space parsing error when using SMAC tuner.
 * Fix cifar10 example broken pipe issue.
 * Add unit test cases for nnimanager and local training service.
 * Add integration test azure pipelines for remote machine, PAI and kubeflow training services.
