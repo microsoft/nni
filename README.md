@@ -115,7 +115,7 @@ Note:
 * We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) in our current stage. 
 * Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
 ```bash	
-    git clone -b v0.5.1 https://github.com/Microsoft/nni.git
+    git clone -b v0.5.2 https://github.com/Microsoft/nni.git
     cd nni	
     source install.sh	
 ```
@@ -127,7 +127,7 @@ For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Ins
 The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.	
 * Download the examples via clone the source code.	
 ```bash	
-    git clone -b v0.5.1 https://github.com/Microsoft/nni.git
+    git clone -b v0.5.2 https://github.com/Microsoft/nni.git
 ```
 * Run the mnist example.
 ```bash
