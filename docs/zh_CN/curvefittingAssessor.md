@@ -6,21 +6,15 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 
 此算法中，使用了 12 条曲线来拟合学习曲线，从[参考论文](http://aad.informatik.uni-freiburg.de/papers/15-IJCAI-Extrapolation_of_Learning_Curves.pdf)中选择了大量的参数曲线模型。 学习曲线的形状与先验知识是一致的：都是典型的递增的、饱和的函数。
 
-<p align="center">
-<img src="./learning_curve.PNG" alt="drawing"/>
-</p>
+![](../img/curvefitting_learning_curve.PNG)
 
 所有学习曲线模型被合并到了单个，更强大的模型中。 合并的模型通过加权线性混合：
 
-<p align="center">
-<img src="./f_comb.gif" alt="drawing"/>
-</p>
+![](../img/curvefitting_f_comb.gif)
 
 合并后的参数向量
 
-<p align="center">
-<img src="./expression_xi.gif" alt="drawing"/>
-</p>
+![](../img/curvefitting_expression_xi.gif)
 
 假设增加一个高斯噪声，且噪声参数初始化为最大似然估计。
 
@@ -36,9 +30,7 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
 
 下图显示了此算法在 MNIST Trial 历史数据上结果。其中绿点表示 Assessor 获得的数据，蓝点表示将来，但未知的数据，红色线条是 Curve fitting Assessor 的预测曲线。
 
-<p align="center">
-<img src="./example_of_curve_fitting.PNG" alt="drawing"/>
-</p>
+![](../img/curvefitting_example.PNG)
 
 ## 2. 用法
 
@@ -61,6 +53,10 @@ Curve Fitting Assessor 是一个 LPA (learning, predicting, assessing，即学�
           * 阈值的默认值是 0.95。
           # 注意：如果选择了 minimize 模式，要让 threshold >= 1.0 (如 threshold=1.1)
           threshold: 0.95
+          # (可选) gap 是两次评估之间的间隔次数。
+          # 例如：如果 gap = 2, start_step = 6，就会评估第 6, 8, 10, 12... 个中间结果。
+          * gap 的默认值是 1。
+          gap: 1
     
 
 ## 3. 文件结构
