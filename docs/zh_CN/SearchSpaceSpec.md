@@ -53,20 +53,20 @@
   * 这表示变量值会类似于 round(loguniform(low, high)) / q) * q
   * 适用于值是“平滑”的离散变量，但上下限均有限制。
 
-* {"_type":"normal","_value":[label, mu, sigma]}
+* {"_type":"normal","_value":[mu, sigma]}
   
   * 变量值为实数，且为正态分布，均值为 mu，标准方差为 sigma。 优化时，此变量不受约束。
 
-* {"_type":"qnormal","_value":[label, mu, sigma, q]}
+* {"_type":"qnormal","_value":[mu, sigma, q]}
   
   * 这表示变量值会类似于 round(normal(mu, sigma) / q) * q
   * 适用于在 mu 周围的离散变量，且没有上下限限制。
 
-* {"_type":"lognormal","_value":[label, mu, sigma]}
+* {"_type":"lognormal","_value":[mu, sigma]}
   
   * 变量值为 exp(normal(mu, sigma)) 分布，范围值是对数的正态分布。 当优化时，此变量必须是正数。
 
-* {"_type":"qlognormal","_value":[label, mu, sigma, q]}
+* {"_type":"qlognormal","_value":[mu, sigma, q]}
   
   * 这表示变量值会类似于 round(exp(normal(mu, sigma)) / q) * q
   * 适用于值是“平滑”的离散变量，但某一边有界。
