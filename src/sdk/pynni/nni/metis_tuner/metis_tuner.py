@@ -197,7 +197,7 @@ class MetisTuner(Tuner):
         -------
         result : dict
         """
-        if self.samples_x or len(self.samples_x) < self.cold_start_num:
+        if len(self.samples_x) < self.cold_start_num:
             init_parameter = _rand_init(self.x_bounds, self.x_types, 1)[0]
             results = self._pack_output(init_parameter)
         else:
@@ -209,8 +209,8 @@ class MetisTuner(Tuner):
                                       no_candidates=self.no_candidates,
                                       minimize_starting_points=self.minimize_starting_points,
                                       minimize_constraints_fun=self.minimize_constraints_fun)
-
-        logger.info("Generate paramageters:\n%s", str(results))
+        
+        logger.info("Generate paramageters:\n" + str(results))
         return results
 
 
@@ -229,8 +229,8 @@ class MetisTuner(Tuner):
             value = -value
 
         logger.info("Received trial result.")
-        logger.info("value is :\t%f", value)
-        logger.info("parameter is :\t%s", str(parameters))
+        logger.info("value is :" + str(value))
+        logger.info("parameter is : " + str(parameters))
 
         # parse parameter to sample_x
         sample_x = [0 for i in range(len(self.key_order))]

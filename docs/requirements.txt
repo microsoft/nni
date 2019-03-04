@@ -9,3 +9,4 @@ json_tricks
 numpy
 scipy
 coverage
+sklearn
