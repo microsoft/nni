@@ -27,11 +27,9 @@ import shlex
 import re
 import sys
 import select
-print('----------------30---------------')
 from pyhdfs import HdfsClient
-print('----------------32---------------')
 import pkg_resources
-print('----------------33---------------')
+
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
 from .log_utils import LogType, nni_log, RemoteLogger, PipeLogReader, StdOutputType
@@ -133,7 +131,6 @@ def check_version(args):
         nni_log(LogType.Info,  'NNI version is {}'.format(args.version))
 
 if __name__ == '__main__':
-    print('----------------135---------------')
     '''NNI Trial Keeper main function'''
     PARSER = argparse.ArgumentParser()
     PARSER.set_defaults(func=trial_keeper_help_info)
@@ -149,14 +146,9 @@ if __name__ == '__main__':
     PARSER.add_argument('--webhdfs_path', type=str, help='the webhdfs path used in webhdfs URL')
     PARSER.add_argument('--version', type=str, help='the nni version transmitted from trainingService')
     args, unknown = PARSER.parse_known_args()
-    print('----------------151---------------')
     if args.trial_command is None:
         exit(1)
-    print('----------------154---------------')
-    print(args.version)
-    print('----------------156---------------')
     check_version(args)
-    print('----------------157---------------')
     try:
         main_loop(args)
     except SystemExit as se:
