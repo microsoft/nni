@@ -1,6 +1,5 @@
 # NNI Annotation 
 
-
 ## Overview
 
 To improve user experience and reduce user effort, we design an annotation grammar. Using NNI annotation, users can adapt their code to NNI just by adding some standalone annotating strings, which does not affect the execution of the original code. 
@@ -29,7 +28,7 @@ In NNI, there are mainly four types of annotation:
 
 **Arguments**
 
-- **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](SearchSpaceSpec.md) such as `choice` or `uniform`. 
+- **sampling_algo**: Sampling algorithm that specifies a search space. User should replace it with a built-in NNI sampling function whose name consists of an `nni.` identification and a search space type specified in [SearchSpaceSpec](https://nni.readthedocs.io/en/latest/SearchSpaceSpec.html) such as `choice` or `uniform`. 
 - **name**: The name of the variable that the selected value will be assigned to. Note that this argument should be the same as the left value of the following assignment statement.
 
 There are 10 types to express your search space as follows:
@@ -86,10 +85,10 @@ h_pooling = max_pool(hidden_layer, pool_size)
 
    `'''@nni.report_intermediate_result(metrics)'''`
 
-`@nni.report_intermediate_result` is used to report intermediate result, whose usage is the same as `nni.report_intermediate_result` in [Trials.md](Trials.md)
+`@nni.report_intermediate_result` is used to report intermediate result, whose usage is the same as `nni.report_intermediate_result` in [Trials.md](https://nni.readthedocs.io/en/latest/Trials.html)
 
 ### 4. Annotate final result
 
    `'''@nni.report_final_result(metrics)'''`
 
-`@nni.report_final_result` is used to report the final result of the current trial, whose usage is the same as `nni.report_final_result` in [Trials.md](Trials.md)
+`@nni.report_final_result` is used to report the final result of the current trial, whose usage is the same as `nni.report_final_result` in [Trials.md](https://nni.readthedocs.io/en/latest/Trials.html)
