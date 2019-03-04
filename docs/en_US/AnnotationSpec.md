@@ -47,7 +47,7 @@ learning_rate = 0.1
 
 **Arguments**
 
-- **\*functions**: Several functions that are waiting to be selected from. Note that it should be a complete function call with arguments. Such as `max_pool(hidden_layer, pool_size)`.
+- **functions**: Several functions that are waiting to be selected from. Note that it should be a complete function call with arguments. Such as `max_pool(hidden_layer, pool_size)`.
 - **name**: The name of the function that will be replaced in the following assignment statement.
 
 An example here is:
