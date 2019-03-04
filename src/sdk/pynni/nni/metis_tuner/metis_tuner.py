@@ -24,22 +24,20 @@ import os
 import random
 import statistics
 import sys
-
-import numpy as np
-
 from enum import Enum, unique
 from multiprocessing.dummy import Pool as ThreadPool
 
-from nni.tuner import Tuner
+import numpy as np
 
-import nni.metis_tuner.lib_data as lib_data
 import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
-import nni.metis_tuner.Regression_GP.CreateModel as gp_create_model
-import nni.metis_tuner.Regression_GP.Selection as gp_selection
-import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
-import nni.metis_tuner.Regression_GP.OutlierDetection as gp_outlier_detection
+import nni.metis_tuner.lib_data as lib_data
 import nni.metis_tuner.Regression_GMM.CreateModel as gmm_create_model
 import nni.metis_tuner.Regression_GMM.Selection as gmm_selection
+import nni.metis_tuner.Regression_GP.CreateModel as gp_create_model
+import nni.metis_tuner.Regression_GP.OutlierDetection as gp_outlier_detection
+import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
+import nni.metis_tuner.Regression_GP.Selection as gp_selection
+from nni.tuner import Tuner
 
 logger = logging.getLogger("Metis_Tuner_AutoML")
 
@@ -129,7 +127,7 @@ class MetisTuner(Tuner):
                 except Exception as ex:
                     logger.exception(ex)
                     raise RuntimeError("The format search space contains \
-                                        some key that didn't define in key_order."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            )
+                                        some key that didn't define in key_order."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
 
                 if key_type == 'quniform':
                     if key_range[2] == 1:
@@ -209,7 +207,7 @@ class MetisTuner(Tuner):
                                       no_candidates=self.no_candidates,
                                       minimize_starting_points=self.minimize_starting_points,
                                       minimize_constraints_fun=self.minimize_constraints_fun)
-        
+
         logger.info("Generate paramageters:\n" + str(results))
         return results
 
@@ -319,12 +317,13 @@ class MetisTuner(Tuner):
                 print("Getting candidates for exploitation...\n")
                 try:
                     gmm = gmm_create_model.create_model(samples_x, samples_y_aggregation)
-                    results_exploitation = gmm_selection.selection(x_bounds,
-                                                                              x_types,
-                                                                              gmm['clusteringmodel_good'],
-                                                                              gmm['clusteringmodel_bad'],
-                                                                              minimize_starting_points,
-                                                                              minimize_constraints_fun=minimize_constraints_fun)
+                    results_exploitation = gmm_selection.selection(
+                        x_bounds,
+                        x_types,
+                        gmm['clusteringmodel_good'],
+                        gmm['clusteringmodel_bad'],
+                        minimize_starting_points,
+                        minimize_constraints_fun=minimize_constraints_fun)
 
                     if results_exploitation is not None:
                         if _num_past_samples(results_exploitation['hyperparameter'], samples_x, samples_y) == 0:
@@ -384,7 +383,7 @@ class MetisTuner(Tuner):
 
                         if next_improvement > temp_improvement:
                             logger.infor("DEBUG: \"next_candidate\" changed: \
-                                            lowest mu might reduce from %f (%s) to %f (%s), %s\n"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       %\
+                                            lowest mu might reduce from %f (%s) to %f (%s), %s\n"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         %\
                                             lm_current['expected_mu'], str(lm_current['hyperparameter']),\
                                             threads_result['expected_lowest_mu'],\
                                             str(threads_result['candidate']['hyperparameter']),\
@@ -455,10 +454,14 @@ def _calculate_lowest_mu_threaded(inputs):
         # Aggregates multiple observation of the sample sampling points
         temp_y_aggregation = [statistics.median(temp_sample_y) for temp_sample_y in temp_samples_y]
         temp_gp = gp_create_model.create_model(temp_samples_x, temp_y_aggregation)
-        temp_results = gp_selection.selection("lm", temp_y_aggregation,
-                                                         x_bounds, x_types, temp_gp['model'],
-                                                         minimize_starting_points,
-                                                         minimize_constraints_fun=minimize_constraints_fun)
+        temp_results = gp_selection.selection(
+            "lm",
+            temp_y_aggregation,
+            x_bounds,
+            x_types,
+            temp_gp['model'],
+            minimize_starting_points,
+            minimize_constraints_fun=minimize_constraints_fun)
 
         if outputs["expected_lowest_mu"] is None or outputs["expected_lowest_mu"] > temp_results['expected_mu']:
             outputs["expected_lowest_mu"] = temp_results['expected_mu']
