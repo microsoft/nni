@@ -42,14 +42,14 @@ For `@nni.variable`, `nni.choice` is the type of search space and there are 10 t
  6. `@nni.variable(nni.qloguniform(low, high, q),name=variable)`  
     Which means the variable value is a value like round(exp(uniform(low, high)) / q) * q
 
- 7. `@nni.variable(nni.normal(label, mu, sigma),name=variable)`  
+ 7. `@nni.variable(nni.normal(mu, sigma),name=variable)`  
     Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma.
 
- 8. `@nni.variable(nni.qnormal(label, mu, sigma, q),name=variable)`  
+ 8. `@nni.variable(nni.qnormal(mu, sigma, q),name=variable)`  
     Which means the variable value is a value like round(normal(mu, sigma) / q) * q
 
- 9. `@nni.variable(nni.lognormal(label, mu, sigma),name=variable)`  
+ 9. `@nni.variable(nni.lognormal(mu, sigma),name=variable)`  
     Which means the variable value is a value drawn according to exp(normal(mu, sigma))
 
- 10. `@nni.variable(nni.qlognormal(label, mu, sigma, q),name=variable)`  
+ 10. `@nni.variable(nni.qlognormal(mu, sigma, q),name=variable)`  
     Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
