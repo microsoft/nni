@@ -382,7 +382,7 @@ class MetisTuner(Tuner):
                         temp_improvement = threads_result['expected_lowest_mu'] - lm_current['expected_mu']
 
                         if next_improvement > temp_improvement:
-                            logger.infor("DEBUG: \"next_candidate\" changed: \
+                            logger.info("DEBUG: \"next_candidate\" changed: \
                                             lowest mu might reduce from %f (%s) to %f (%s), %s\n"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         %\
                                             lm_current['expected_mu'], str(lm_current['hyperparameter']),\
                                             threads_result['expected_lowest_mu'],\
@@ -406,6 +406,7 @@ class MetisTuner(Tuner):
                                   'expected_mu': expected_mu, 'expected_sigma': expected_sigma}
 
         outputs = self._pack_output(lm_current['hyperparameter'])
+        # ===== STEP 7: If current optimal hyperparameter occurs in the history, take next config as exploration step =====
         if outputs in self.history_parameters:
             outputs = self._pack_output(next_candidate['hyperparameter'])
             self.history_parameters.add(outputs)
