@@ -107,7 +107,6 @@ class Bracket():
         self.num_configs_to_run = []    # [ n, n, n, ... ]
         self.num_finished_configs = []  # [ n, n, n, ... ]
         self.no_more_trial = False
-        print("New bracket", self.n, self.r)
 
     def is_completed(self):
         """check whether this bracket has sent out all the hyperparameter configurations"""
@@ -115,8 +114,6 @@ class Bracket():
 
     def get_n_r(self):
         """return the values of n and r for the next round"""
-        print("get_n_r", math.floor(self.n / self.eta**self.i),
-              self.r * self.eta**self.i)
         return math.floor(self.n / self.eta**self.i), self.r * self.eta**self.i
 
     def increase_i(self):
@@ -157,7 +154,6 @@ class Bracket():
         i: int
             the ith round
         """
-        print("inform trial end")
         global _KEY  # pylint: disable=global-statement
         self.num_finished_configs[i] += 1
         logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d',
@@ -287,6 +283,9 @@ class BOHB(MsgDispatcherBase):
         # [key, value] = [parameter_id, parameter]
         self.parameters = dict()
 
+        # config generator
+        self.cg = None
+
     def load_checkpoint(self):
         pass
 
@@ -300,7 +299,7 @@ class BOHB(MsgDispatcherBase):
         search_space: search space
             search space of this experiment
         """
-        print('handle_initialize')
+        logger.info('start to handle_initialize')
         # convert search space jason to ConfigSpace
         self.handle_update_search_space(search_space)
 
@@ -367,7 +366,6 @@ class BOHB(MsgDispatcherBase):
                 'parameter_source': 'algorithm',
                 'parameters': ''
             }
-            print('NoMoreTrialJobs', ret)
             send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
             return True
         assert self.generated_hyper_configs
@@ -378,7 +376,6 @@ class BOHB(MsgDispatcherBase):
             'parameters': params[1]
         }
         self.parameters[params[0]] = params[1]
-        print('NewTrialJob', ret)
         send(CommandType.NewTrialJob, json_tricks.dumps(ret))
         self.credit -= 1
         return True
@@ -399,7 +396,6 @@ class BOHB(MsgDispatcherBase):
         cs = CS.ConfigurationSpace()
         for var in search_space:
             _type = str(search_space[var]["_type"])
-            print("The type watched is {}".format(_type))
             if _type == 'choice':
                 cs.add_hyperparameter(CSH.CategoricalHyperparameter(
                     var, choices=search_space[var]["_value"]))
@@ -431,9 +427,6 @@ class BOHB(MsgDispatcherBase):
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
                     var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], q=search_space[var]["_value"][3], log=True))
             else:
-                print("TYPE1: ", _type, "TYPE2:", 'uniform')
-                print(_type == 'uniform')
-                # print (type(_type), type('uniform'))
                 raise ValueError(
                     'unrecognized type in search_space, type is {}'.format(_type))
 
@@ -450,6 +443,7 @@ class BOHB(MsgDispatcherBase):
             event: the job's state
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
+        print ('handle trial end = ', data, end='')
         hyper_params = json_tricks.loads(data['hyper_params'])
         """(TODO)hyper_params = data['hyper_params']"""
         s, i, _ = hyper_params['parameter_id'].split('_')
@@ -482,6 +476,7 @@ class BOHB(MsgDispatcherBase):
         ValueError
             Data type not supported
         """
+        print ('handle report metric data = ', data, end='')
         value = extract_scalar_reward(data['value'])
         s, i, _ = data['parameter_id'].split('_')
         s = int(s)
@@ -495,8 +490,7 @@ class BOHB(MsgDispatcherBase):
 
             _parameters = self.parameters[data['parameter_id']]
             _parameters.pop(_KEY)
-            # (TODO) self.cg.new_result(value, data['sequence'], _parameters)
-            self.cg.new_result(value, data['sequence'])
+            self.cg.new_result(loss=value, budget=data['sequence'], parameters=_parameters, update_model=True)
         elif data['type'] == 'PERIODICAL':
             self.brackets[s].set_config_perf(
                 int(i), data['parameter_id'], data['sequence'], value)
