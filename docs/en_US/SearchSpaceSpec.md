@@ -47,17 +47,17 @@ All types of sampling strategies and their parameter are listed here:
   * Which means the variable value is a value like round(loguniform(low, high)) / q) * q
   * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
 
-* {"_type":"normal","_value":[label, mu, sigma]}
+* {"_type":"normal","_value":[mu, sigma]}
   * Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma. When optimizing, this is an unconstrained variable.
 
-* {"_type":"qnormal","_value":[label, mu, sigma, q]}
+* {"_type":"qnormal","_value":[mu, sigma, q]}
   * Which means the variable value is a value like round(normal(mu, sigma) / q) * q
   * Suitable for a discrete variable that probably takes a value around mu, but is fundamentally unbounded.
 
-* {"_type":"lognormal","_value":[label, mu, sigma]}
+* {"_type":"lognormal","_value":[mu, sigma]}
   * Which means the variable value is a value drawn according to exp(normal(mu, sigma)) so that the logarithm of the return value is normally distributed. When optimizing, this variable is constrained to be positive.
 
-* {"_type":"qlognormal","_value":[label, mu, sigma, q]}
+* {"_type":"qlognormal","_value":[mu, sigma, q]}
   * Which means the variable value is a value like round(exp(normal(mu, sigma)) / q) * q
   * Suitable for a discrete variable with respect to which the objective is smooth and gets smoother with the size of the variable, which is bounded from one side.
 

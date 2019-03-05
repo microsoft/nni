@@ -15,7 +15,7 @@ Currently we only support installation on Linux & Mac.
 
   Prerequisite: `python >=3.5, git, wget`
   ```bash
-  git clone -b v0.5.1 https://github.com/Microsoft/nni.git
+  git clone -b v0.5.2 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
