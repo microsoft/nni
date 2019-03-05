@@ -35,11 +35,11 @@ import numpy as np
 import ConfigSpace as CS
 import ConfigSpace.hyperparameters as CSH
 
-# from nni.protocol import CommandType, send
-# from nni.msg_dispatcher_base import MsgDispatcherBase
+from nni.protocol import CommandType, send
+from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger
 
-from config_generator import CG_BOHB
+from .config_generator import CG_BOHB
 
 logger = logging.getLogger('BOHB_Advisor')
 
@@ -56,7 +56,7 @@ class OptimizeMode(Enum):
 
 def create_parameter_id():
     """Create an id
-    
+
     Returns
     -------
     int
@@ -66,9 +66,10 @@ def create_parameter_id():
     _next_parameter_id += 1
     return _next_parameter_id - 1
 
+
 def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-1):
     """Create a full id for a specific bracket's hyperparameter configuration
-    
+
     Parameters
     ----------
     brackets_id: int
@@ -89,6 +90,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
                           increased_id])
     return params_id
 
+
 class Bracket():
     def __init__(self, s, s_max, eta, max_budget, optimize_mode):
         self.s = s
@@ -105,7 +107,7 @@ class Bracket():
         self.num_configs_to_run = []    # [ n, n, n, ... ]
         self.num_finished_configs = []  # [ n, n, n, ... ]
         self.no_more_trial = False
-        print ("New bracket", self.n, self.r)
+        print("New bracket", self.n, self.r)
 
     def is_completed(self):
         """check whether this bracket has sent out all the hyperparameter configurations"""
@@ -113,7 +115,8 @@ class Bracket():
 
     def get_n_r(self):
         """return the values of n and r for the next round"""
-        print("get_n_r", math.floor(self.n / self.eta**self.i), self.r * self.eta**self.i)
+        print("get_n_r", math.floor(self.n / self.eta**self.i),
+              self.r * self.eta**self.i)
         return math.floor(self.n / self.eta**self.i), self.r * self.eta**self.i
 
     def increase_i(self):
@@ -155,29 +158,34 @@ class Bracket():
             the ith round
         """
         print("inform trial end")
-        global _KEY # pylint: disable=global-statement
+        global _KEY  # pylint: disable=global-statement
         self.num_finished_configs[i] += 1
-        logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d', 
-                    self.s, self.i, i, self.num_finished_configs[i], self.num_configs_to_run[i])
+        logger.debug('bracket id: %d, round: %d %d, finished: %d, all: %d',
+                     self.s, self.i, i, self.num_finished_configs[i], self.num_configs_to_run[i])
         if self.num_finished_configs[i] >= self.num_configs_to_run[i] and self.no_more_trial is False:
             # choose candidate configs from finished configs to run in the next round
             assert self.i == i + 1
             this_round_perf = self.configs_perf[i]
             if self.optimize_mode is OptimizeMode.Maximize:
-                sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1], reverse=True) # reverse
+                sorted_perf = sorted(this_round_perf.items(
+                ), key=lambda kv: kv[1][1], reverse=True)  # reverse
             else:
-                sorted_perf = sorted(this_round_perf.items(), key=lambda kv: kv[1][1])
-            logger.debug('bracket %s next round %s, sorted hyper configs: %s', self.s, self.i, sorted_perf)
+                sorted_perf = sorted(
+                    this_round_perf.items(), key=lambda kv: kv[1][1])
+            logger.debug(
+                'bracket %s next round %s, sorted hyper configs: %s', self.s, self.i, sorted_perf)
             next_n, next_r = self.get_n_r()
-            logger.debug('bracket %s next round %s, next_n=%d, next_r=%d', self.s, self.i, next_n, next_r)
+            logger.debug('bracket %s next round %s, next_n=%d, next_r=%d',
+                         self.s, self.i, next_n, next_r)
             hyper_configs = dict()
             for k in range(next_n):
                 params_id = sorted_perf[k][0]
                 params = self.hyper_configs[i][params_id]
-                params[_KEY] = next_r # modify r
+                params[_KEY] = next_r  # modify r
                 # generate new id
                 increased_id = params_id.split('_')[-1]
-                new_id = create_bracket_parameter_id(self.s, self.i, increased_id)
+                new_id = create_bracket_parameter_id(
+                    self.s, self.i, increased_id)
                 hyper_configs[new_id] = params
             self._record_hyper_configs(hyper_configs)
             return [[key, value] for key, value in hyper_configs.items()]
@@ -221,6 +229,7 @@ class Bracket():
         self.num_configs_to_run.append(len(hyper_configs))
         self.increase_i()
 
+
 def extract_scalar_reward(value, scalar_key='default'):
     """
     Raises
@@ -233,21 +242,23 @@ def extract_scalar_reward(value, scalar_key='default'):
     elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
         reward = value[scalar_key]
     else:
-        raise RuntimeError('Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__)) 
+        raise RuntimeError(
+            'Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__))
     return reward
+
 
 class BOHB(MsgDispatcherBase):
     def __init__(self,
-                optimize_mode='maximize',
-                min_budget=1,
-                max_budget=3,
-                eta=3,
-                min_points_in_model=None,
-                top_n_percent=15,
-                num_samples=64,
-                random_fraction=1/3,
-                bandwidth_factor=3,
-                min_bandwidth=1e-3):
+                 optimize_mode='maximize',
+                 min_budget=1,
+                 max_budget=3,
+                 eta=3,
+                 min_points_in_model=None,
+                 top_n_percent=15,
+                 num_samples=64,
+                 random_fraction=1/3,
+                 bandwidth_factor=3,
+                 min_bandwidth=1e-3):
         super()
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.min_budget = min_budget
@@ -265,7 +276,8 @@ class BOHB(MsgDispatcherBase):
         # all the completed configs
         self.completed_hyper_configs = []
 
-        self.s_max = math.floor(math.log(self.max_budget / self.min_budget, self.eta))
+        self.s_max = math.floor(
+            math.log(self.max_budget / self.min_budget, self.eta))
         # current bracket(s) number
         self.curr_s = self.s_max
         # In this case, tuner increases self.credit to issue a trial config sometime later.
@@ -288,19 +300,19 @@ class BOHB(MsgDispatcherBase):
         search_space: search space
             search space of this experiment
         """
-        print ('handle_initialize')
+        print('handle_initialize')
         # convert search space jason to ConfigSpace
         self.handle_update_search_space(search_space)
 
         # generate BOHB config_generator using BO
         if not self.search_space is None:
             self.cg = CG_BOHB(configspace=self.search_space,
-                            min_points_in_model = self.min_points_in_model,
-                            top_n_percent=self.top_n_percent,
-                            num_samples = self.num_samples,
-                            random_fraction=self.random_fraction,
-                            bandwidth_factor=self.bandwidth_factor,
-                            min_bandwidth=self.min_bandwidth)
+                              min_points_in_model=self.min_points_in_model,
+                              top_n_percent=self.top_n_percent,
+                              num_samples=self.num_samples,
+                              random_fraction=self.random_fraction,
+                              bandwidth_factor=self.bandwidth_factor,
+                              min_bandwidth=self.min_bandwidth)
         else:
             raise ValueError('Error: Search space is None')
         # generate first brackets
@@ -309,12 +321,16 @@ class BOHB(MsgDispatcherBase):
         return True
 
     def generate_new_bracket(self, curr_s):
-        logger.debug('start to create a new SuccessiveHalving iteration, self.curr_s=%d', self.curr_s)
-        self.brackets[curr_s] = Bracket(s=self.curr_s, s_max=self.s_max, eta=self.eta, max_budget=self.max_budget, optimize_mode=self.optimize_mode)
+        logger.debug(
+            'start to create a new SuccessiveHalving iteration, self.curr_s=%d', self.curr_s)
+        self.brackets[curr_s] = Bracket(s=self.curr_s, s_max=self.s_max, eta=self.eta,
+                                        max_budget=self.max_budget, optimize_mode=self.optimize_mode)
         next_n, next_r = self.brackets[self.curr_s].get_n_r()
-        logger.debug('new SuccessiveHalving iteration, next_n=%d, next_r=%d', next_n, next_r)
+        logger.debug(
+            'new SuccessiveHalving iteration, next_n=%d, next_r=%d', next_n, next_r)
         # rewrite with TPE
-        generated_hyper_configs = self.brackets[self.curr_s].get_hyperparameter_configurations(next_n, next_r, self.cg)
+        generated_hyper_configs = self.brackets[self.curr_s].get_hyperparameter_configurations(
+            next_n, next_r, self.cg)
         self.generated_hyper_configs = generated_hyper_configs.copy()
 
     def handle_request_trial_jobs(self, data):
@@ -334,7 +350,7 @@ class BOHB(MsgDispatcherBase):
 
     def _request_one_trial_job(self):
         """get one trial job, i.e., one hyperparameter configuration.
-        
+
         Returns
         -------
         dict:
@@ -351,7 +367,7 @@ class BOHB(MsgDispatcherBase):
                 'parameter_source': 'algorithm',
                 'parameters': ''
             }
-            print ('NoMoreTrialJobs', ret)
+            print('NoMoreTrialJobs', ret)
             send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
             return True
         assert self.generated_hyper_configs
@@ -362,7 +378,7 @@ class BOHB(MsgDispatcherBase):
             'parameters': params[1]
         }
         self.parameters[params[0]] = params[1]
-        print ('NewTrialJob', ret)
+        print('NewTrialJob', ret)
         send(CommandType.NewTrialJob, json_tricks.dumps(ret))
         self.credit -= 1
         return True
@@ -382,28 +398,44 @@ class BOHB(MsgDispatcherBase):
         """
         cs = CS.ConfigurationSpace()
         for var in search_space:
-            if search_space[var]["_type"] is "choice":
-                cs.add_hyperparameter(CSH.CategoricalHyperparameter(var, choices=search_space[var]["_value"]))
-            elif search_space[var]["_type"] is "randint":
-                cs.add_hyperparameter(CSH.UniformIntegerHyperparameter(var, lower=0, upper=search_space[var]["_value"][0]))
-            elif search_space[var]["_type"] is "uniform":
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))
-            elif search_space[var]["_type"] is "quniform":
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], q=search_space[var]["_value"][2]))
-            elif search_space[var]["_type"] is "loguniform":
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], log=True))
-            elif search_space[var]["_type"] is "qloguniform":
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], q=search_space[var]["_value"][2], log=True))
-            elif search_space[var]["_type"] is "normal":
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2]))
-            elif search_space[var]["_type"] is "qnormal":
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], q=search_space[var]["_value"][3]))
-            elif search_space[var]["_type"] is "lognormal":
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], log=True))
-            elif search_space[var]["_type"] is "qlognormal":
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], q=search_space[var]["_value"][3], log=True))
+            _type = str(search_space[var]["_type"])
+            print("The type watched is {}".format(_type))
+            if _type == 'choice':
+                cs.add_hyperparameter(CSH.CategoricalHyperparameter(
+                    var, choices=search_space[var]["_value"]))
+            elif _type == 'randint':
+                cs.add_hyperparameter(CSH.UniformIntegerHyperparameter(
+                    var, lower=0, upper=search_space[var]["_value"][0]))
+            elif _type == 'uniform':
+                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))
+            elif _type == 'quniform':
+                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], q=search_space[var]["_value"][2]))
+            elif _type == 'loguniform':
+                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], log=True))
+            elif _type == 'qloguniform':
+                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], q=search_space[var]["_value"][2], log=True))
+            elif _type == 'normal':
+                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2]))
+            elif _type == 'qnormal':
+                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], q=search_space[var]["_value"][3]))
+            elif _type == 'lognormal':
+                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], log=True))
+            elif _type == 'qlognormal':
+                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], q=search_space[var]["_value"][3], log=True))
             else:
-                raise ValueError('unrecognized type in search_space, type is %s", search_space[var]["_type"]')
+                print("TYPE1: ", _type, "TYPE2:", 'uniform')
+                print(_type == 'uniform')
+                # print (type(_type), type('uniform'))
+                raise ValueError(
+                    'unrecognized type in search_space, type is {}'.format(_type))
 
         self.search_space = cs
         return True
@@ -424,7 +456,8 @@ class BOHB(MsgDispatcherBase):
         hyper_configs = self.brackets[int(s)].inform_trial_end(int(i))
 
         if hyper_configs is not None:
-            logger.debug('bracket %s next round %s, hyper_configs: %s', s, i, hyper_configs)
+            logger.debug(
+                'bracket %s next round %s, hyper_configs: %s', s, i, hyper_configs)
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
             for _ in range(self.credit):
                 self._request_one_trial_job()
@@ -433,7 +466,7 @@ class BOHB(MsgDispatcherBase):
         if self.brackets[int(s)].no_more_trial:
             self.curr_s -= 1
             self.generate_new_bracket(self.curr_s)
-        
+
         return True
 
     def handle_report_metric_data(self, data):
@@ -443,7 +476,7 @@ class BOHB(MsgDispatcherBase):
         ----------
         data:
             it is an object which has keys 'parameter_id', 'value', 'trial_job_id', 'type', 'sequence'.
-        
+
         Raises
         ------
         ValueError
@@ -453,21 +486,23 @@ class BOHB(MsgDispatcherBase):
         s, i, _ = data['parameter_id'].split('_')
         s = int(s)
         if data['type'] == 'FINAL':
-            # sys.maxsize indicates this value is from FINAL metric data, because data['sequence'] from FINAL metric
             # and PERIODICAL metric are independent, thus, not comparable.
             # (TODO) self.brackets[s].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
-            self.brackets[s].set_config_perf(int(i), data['parameter_id'], sys.maxsize, value)
+            self.brackets[s].set_config_perf(
+                int(i), data['parameter_id'], data['sequence'], value)
             self.completed_hyper_configs.append(data)
             # update BO with loss, max_s budget, hyperparameters
-            
+
             _parameters = self.parameters[data['parameter_id']]
             _parameters.pop(_KEY)
             # (TODO) self.cg.new_result(value, data['sequence'], _parameters)
-            self.cg.new_result(value, sys.maxsize)
+            self.cg.new_result(value, data['sequence'])
         elif data['type'] == 'PERIODICAL':
-            self.brackets[s].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
+            self.brackets[s].set_config_perf(
+                int(i), data['parameter_id'], data['sequence'], value)
         else:
-            raise ValueError('Data type not supported: {}'.format(data['type']))
+            raise ValueError(
+                'Data type not supported: {}'.format(data['type']))
 
         return True
 
