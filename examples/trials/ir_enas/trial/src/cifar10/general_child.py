@@ -283,21 +283,21 @@ class GeneralChild(Model):
           outputs: layer_0_out,
         },
         layer_1: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
+          layer_choice: [avg_pool, max_pool],
           input_candidates: [layer_0_out],
           input_num: 1,
           input_aggregate: None,
           outputs: layer_1_out,
         },
         layer_2: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
+          layer_choice: [conv3_sep, conv5_sep],
           input_candidates: [layer_0_out, layer_1_out],
           input_num: 1,
           input_aggregate: None,
           outputs: layer_2_out,
         },
         layer_3: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
+          layer_choice: [conv3, conv5],
           input_candidates: [layer_0_out, layer_1_out, layer_2_out],
           input_num: 1,
           input_aggregate: None,
@@ -308,15 +308,15 @@ class GeneralChild(Model):
       """@nni.architecture
       {
         layer_4: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out],
+          layer_choice: [avg_pool, max_pool],
+          input_candidates: [layer_0_out, layer_2_out, layer_3_out],
           input_num: 1,
           input_aggregate: None,
           outputs: layer_4_out,
         },
         layer_5: {
           layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out],
+          input_candidates: [layer_0_out, layer_4_out],
           input_num: 1,
           input_aggregate: None,
           outputs: layer_5_out,
