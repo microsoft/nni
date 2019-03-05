@@ -4,8 +4,9 @@ import argparse
 import logging
 import math
 import tempfile
-import tensorflow as tf
+import time
 
+import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
 FLAGS = None
@@ -152,12 +153,21 @@ def bias_variable(shape):
     return tf.Variable(initial)
 
 
+def download_mnist_retry(data_dir, max_num_retries=20):
+    """Try to download mnist dataset and avoid errors"""
+    for _ in range(max_num_retries):
+        try:
+            return input_data.read_data_sets(data_dir, one_hot=True)
+        except tf.errors.AlreadyExistsError:
+            time.sleep(1)
+    raise Exception("Failed to download MNIST.")
+
 def main(params):
     '''
     Main function, build mnist network, run and send result to NNI.
     '''
     # Import data
-    mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
+    mnist = download_mnist_retry(params['data_dir'])
     print('Mnist download data done.')
     logger.debug('Mnist download data done.')
 
