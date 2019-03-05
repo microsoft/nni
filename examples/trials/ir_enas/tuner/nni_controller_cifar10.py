@@ -225,7 +225,7 @@ class ENASTuner(ENASBaseTuner):
         self.branches = dict()
         self.outputs = dict()
         self.hash_search_space = list()
-        for layer_id, (_, info) in enumerate(self.search_space):
+        for layer_id, (_, info) in enumerate(self.search_space.items()):
             hash_info = dict()
             # record branch_name <--> branch_id
             for branch_idx in range(len(info['layer_choice'])):
