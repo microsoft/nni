@@ -1,5 +1,23 @@
 # ChangeLog
 
+## Release 0.5.2 - 3/4/2019
+### Improvements
+* Curve fitting assessor performance improvement.
+
+### Documentation
+* Chinese version document: https://nni.readthedocs.io/zh/latest/
+* Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/HowToDebug.html
+* Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
+
+### Bug Fixes and Other Changes
+* Fix a race condition bug that does not store trial job cancel status correctly.
+* Fix search space parsing error when using SMAC tuner.
+* Fix cifar10 example broken pipe issue.
+* Add unit test cases for nnimanager and local training service.
+* Add integration test azure pipelines for remote machine, PAI and kubeflow training services.
+* Support Pylon in PAI webhdfs client.
+
+
 ## Release 0.5.1 - 1/31/2018
 ### Improvements
 * Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md) configurable
