@@ -31,35 +31,7 @@ def build_logger(log_name):
 logger = build_logger("nni_controller_cifar10")
 
 
-def BuildController(ControllerClass):
-    controller_model = ControllerClass(
-        search_for=FLAGS.search_for,
-        search_whole_channels=FLAGS.controller_search_whole_channels,
-        skip_target=FLAGS.controller_skip_target,
-        skip_weight=FLAGS.controller_skip_weight,
-        num_cells=FLAGS.child_num_cells,
-        num_layers=FLAGS.child_num_layers,
-        num_branches=FLAGS.child_num_branches,
-        out_filters=FLAGS.child_out_filters,
-        lstm_size=64,
-        lstm_num_layers=1,
-        lstm_keep_prob=1.0,
-        tanh_constant=FLAGS.controller_tanh_constant,
-        op_tanh_reduce=FLAGS.controller_op_tanh_reduce,
-        temperature=FLAGS.controller_temperature,
-        lr_init=FLAGS.controller_lr,
-        lr_dec_start=0,
-        lr_dec_every=1000000,  # never decrease learning rate
-        l2_reg=FLAGS.controller_l2_reg,
-        entropy_weight=FLAGS.controller_entropy_weight,
-        bl_dec=FLAGS.controller_bl_dec,
-        use_critic=FLAGS.controller_use_critic,
-        optim_algo="adam",
-        sync_replicas=FLAGS.controller_sync_replicas,
-        num_aggregate=FLAGS.controller_num_aggregate,
-        num_replicas=FLAGS.controller_num_replicas)
 
-    return controller_model
 
 
 def get_controller_ops(controller_model):
@@ -109,13 +81,15 @@ class ENASTuner(ENASBaseTuner):
         logger.debug("child steps:\t"+str(self.child_train_steps))
         logger.debug("controller step\t"+str(self.controller_train_steps))
 
-        self.epoch = 0
+        
 
+        
+    def init_controller(self):
         if FLAGS.search_for == "micro":
             ControllerClass = MicroController
         else:
             ControllerClass = GeneralController
-        self.controller_model = BuildController(ControllerClass)
+        self.controller_model = self.BuildController(ControllerClass)
 
         self.graph = tf.Graph()
 
@@ -137,6 +111,7 @@ class ENASTuner(ENASBaseTuner):
         self.generate_one_epoch_parameters()
         self.entry = 'train'
         self.pos = 0
+        self.epoch = 0
 
     def generate_one_epoch_parameters(self):
         # Generate architectures in one epoch and 
@@ -174,7 +149,8 @@ class ENASTuner(ENASBaseTuner):
                 input_start = start_idx + 1
             else:
                 input_start = start_idx
-            inputs_idxs = current_arc_code[input_start: input_start + layer_id]
+            num_input_candidates = len(info['input_candidates'])
+            inputs_idxs = current_arc_code[input_start: input_start + num_input_candidates]
             inputs_idxs = onehot2list(inputs_idxs)
             current_config[layer_name] = dict()
             current_config[layer_name]['layer_choice'] = info['layer_choice'][layer_choice_idx]
@@ -182,7 +158,6 @@ class ENASTuner(ENASBaseTuner):
             start_idx += 1 + layer_id
 
         return current_config 
-            
 
 
     def get_controller_arc_micro(self, child_totalsteps):
@@ -244,6 +219,62 @@ class ENASTuner(ENASBaseTuner):
         # Sort layers
         self.search_space = OrderedDict(sorted(data.items(), key=lambda tp:int(tp[0].split('_')[1])))
         logger.debug(self.search_space)
+        # Number each layer_choice and outputs and input_candidate
+        num_branches = 0
+        self.branches = dict()
+        self.outputs = dict()
+        self.hash_search_space = list()
+        for layer_id, (_, info) in enumerate(self.search_space):
+            hash_info = dict()
+            # record branch_name <--> branch_id
+            for branch_idx in range(len(info['layer_choice'])):
+                branch_name = info['layer_choice'][branch_idx]
+                if branch_name not in self.branches:
+                    self.branches[branch_name] = num_branches
+                    num_branches += 1
+                hash_info['layer_choice'][branch_idx] = num_branches - 1
+            assert info['outputs'] not in self.outputs, 'Output variables from different layers cannot be the same'
+            # record output_name <--> output_id
+            self.outputs[layer_id], self.outputs[info['outputs']] = info['outputs'], layer_id
+            # convert input_candidate to id
+            if layer_id != 0:
+                hash_info['input_candidates'] = list()
+                for candidate in info['input_candidates']:
+                    assert candidate in self.outputs, 'Subsequent layers must use the output of the previous layer as an input candidate'
+                    hash_info['input_candidates'].append(self.outputs[candidate])
+            self.hash_search_space.append(hash_info)
+        
+
+    def BuildController(self, ControllerClass):
+        controller_model = ControllerClass(
+            search_for=FLAGS.search_for,
+            search_whole_channels=FLAGS.controller_search_whole_channels,
+            skip_target=FLAGS.controller_skip_target,
+            skip_weight=FLAGS.controller_skip_weight,
+            num_cells=FLAGS.child_num_cells,
+            out_filters=FLAGS.child_out_filters,
+            lstm_size=64,
+            lstm_num_layers=1,
+            lstm_keep_prob=1.0,
+            tanh_constant=FLAGS.controller_tanh_constant,
+            op_tanh_reduce=FLAGS.controller_op_tanh_reduce,
+            temperature=FLAGS.controller_temperature,
+            lr_init=FLAGS.controller_lr,
+            lr_dec_start=0,
+            lr_dec_every=1000000,  # never decrease learning rate
+            l2_reg=FLAGS.controller_l2_reg,
+            entropy_weight=FLAGS.controller_entropy_weight,
+            bl_dec=FLAGS.controller_bl_dec,
+            use_critic=FLAGS.controller_use_critic,
+            optim_algo="adam",
+            sync_replicas=FLAGS.controller_sync_replicas,
+            num_aggregate=FLAGS.controller_num_aggregate,
+            num_replicas=FLAGS.controller_num_replicas,
+            num_layers=FLAGS.child_num_layers,
+            num_branches=len(self.branches),
+            search_space=self.hash_search_space)
+
+        return controller_model
 
 if __name__ == "__main__":
     tf.app.run()
