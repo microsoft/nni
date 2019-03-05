@@ -140,6 +140,7 @@ class ENASTuner(ENASBaseTuner):
             raise nni.NoMoreTrialError('no more parameters now.')
 
         current_arc_code = self.child_arc[self.pos - (1 if self.entry=='train' else (self.child_train_steps+1))]
+        logger.debug('current_arc_code: ' + str(current_arc_code))
         current_config = {self.key: self.entry}
         start_idx = 0
         onehot2list = lambda l: [idx for idx, val in enumerate(l) if val==1]
@@ -155,7 +156,7 @@ class ENASTuner(ENASBaseTuner):
             current_config[layer_name] = dict()
             current_config[layer_name]['layer_choice'] = info['layer_choice'][layer_choice_idx]
             current_config[layer_name]['input_candidates'] = [info['input_candidates'][ipi] for ipi in inputs_idxs]
-            start_idx += 1 + layer_id
+            start_idx += 1 + num_input_candidates
 
         return current_config 
 
