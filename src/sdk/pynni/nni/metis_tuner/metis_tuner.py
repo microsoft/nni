@@ -95,7 +95,7 @@ class MetisTuner(Tuner):
         self.samples_x = []
         self.samples_y = []
         self.samples_y_aggregation = []
-        self.history_parameters = set()
+        self.history_parameters = []
         self.space = None
         self.no_resampling = no_resampling
         self.no_candidates = no_candidates
@@ -131,7 +131,7 @@ class MetisTuner(Tuner):
                 except Exception as ex:
                     logger.exception(ex)
                     raise RuntimeError("The format search space contains \
-                                        some key that didn't define in key_order."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
+                                        some key that didn't define in key_order."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  )
 
                 if key_type == 'quniform':
                     if key_range[2] == 1:
@@ -387,7 +387,7 @@ class MetisTuner(Tuner):
 
                         if next_improvement > temp_improvement:
                             logger.info("DEBUG: \"next_candidate\" changed: \
-                                            lowest mu might reduce from %f (%s) to %f (%s), %s\n"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         %\
+                                            lowest mu might reduce from %f (%s) to %f (%s), %s\n"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          %\
                                             lm_current['expected_mu'], str(lm_current['hyperparameter']),\
                                             threads_result['expected_lowest_mu'],\
                                             str(threads_result['candidate']['hyperparameter']),\
@@ -413,8 +413,12 @@ class MetisTuner(Tuner):
         outputs = self._pack_output(lm_current['hyperparameter'])
         ap = random.uniform(0, 1)
         if outputs in self.history_parameters or ap<=self.exploration_probability:
-            outputs = self._pack_output(next_candidate['hyperparameter'])
-        self.history_parameters.add(outputs)
+            if next_candidate is not None:
+                outputs = self._pack_output(next_candidate['hyperparameter'])
+            else:
+                random_parameter = _rand_init(self.x_bounds, self.x_types, 1)[0]
+                outputs = self._pack_output(random_parameter)
+        self.history_parameters.append(outputs)
         return outputs
 
 
