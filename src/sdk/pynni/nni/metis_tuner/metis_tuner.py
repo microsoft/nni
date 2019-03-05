@@ -341,7 +341,6 @@ class MetisTuner(Tuner):
 
                 if results_outliers is not None:
                     #temp = len(candidates)
-
                     for results_outlier in results_outliers:
                         if _num_past_samples(samples_x[results_outlier['samples_idx']], samples_x, samples_y) < max_resampling_per_x:
                             candidates.append({'hyperparameter': samples_x[results_outlier['samples_idx']],\
@@ -370,13 +369,6 @@ class MetisTuner(Tuner):
                         temp_improvement = threads_result['expected_lowest_mu'] - lm_current['expected_mu']
     
                         if next_improvement > temp_improvement:
-                            # logger.info("DEBUG: \"next_candidate\" changed: \
-                            #                 lowest mu might reduce from %f (%s) to %f (%s), %s\n" %\
-                            #                 lm_current['expected_mu'], str(lm_current['hyperparameter']),\
-                            #                 threads_result['expected_lowest_mu'],\
-                            #                 str(threads_result['candidate']['hyperparameter']),\
-                            #                 threads_result['candidate']['reason'])
-
                             next_improvement = temp_improvement
                             next_candidate = threads_result['candidate']
             else:
