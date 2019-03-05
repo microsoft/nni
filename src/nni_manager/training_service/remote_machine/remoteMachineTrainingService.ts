@@ -48,7 +48,7 @@ import {
     GPU_COLLECTOR_FORMAT
 } from './remoteMachineData';
 import { SSHClientUtility } from './sshClientUtility';
-import { validateCodeDir, } from '../common/util';
+import { validateCodeDir } from '../common/util';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { mkDirP, getVersion } from '../../common/utils';
