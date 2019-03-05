@@ -65,7 +65,7 @@ class MetisTuner(Tuner):
     """
 
     def __init__(self, optimize_mode="maximize", no_resampling=True, no_candidates=True,
-                 selection_num_starting_points=600, cold_start_num=10):
+                 selection_num_starting_points=600, cold_start_num=10, exploration_probability=0.1):
         """
         Parameters
         ----------
@@ -87,6 +87,9 @@ class MetisTuner(Tuner):
         cold_start_num: int
             Metis need some trial result to get cold start. when the number of trial result is less than
         cold_start_num, Metis will randomly sample hyper-parameter for trial.
+
+        exploration_probability: float
+            The probability of Metis to select parameter from exploration instead of exploitation.
         """
 
         self.samples_x = []
@@ -100,6 +103,7 @@ class MetisTuner(Tuner):
         self.key_order = []
         self.cold_start_num = cold_start_num
         self.selection_num_starting_points = selection_num_starting_points
+        self.exploration_probability = exploration_probability
         self.minimize_constraints_fun = None
         self.minimize_starting_points = None
 
@@ -405,11 +409,12 @@ class MetisTuner(Tuner):
                 next_candidate = {'hyperparameter': next_candidate, 'reason': "random",
                                   'expected_mu': expected_mu, 'expected_sigma': expected_sigma}
 
+        # ===== STEP 7: If current optimal hyperparameter occurs in the history or exploration probability is less than the threshold, take next config as exploration step  =====
         outputs = self._pack_output(lm_current['hyperparameter'])
-        # ===== STEP 7: If current optimal hyperparameter occurs in the history, take next config as exploration step =====
-        if outputs in self.history_parameters:
+        ap = random.uniform(0, 1)
+        if outputs in self.history_parameters or ap<=self.exploration_probability:
             outputs = self._pack_output(next_candidate['hyperparameter'])
-            self.history_parameters.add(outputs)
+        self.history_parameters.add(outputs)
         return outputs
 
 
