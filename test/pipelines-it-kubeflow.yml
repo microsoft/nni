@@ -1,10 +1,26 @@
+# Copyright (c) Microsoft Corporation
+# All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge,
+# to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and
+# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 jobs:
 - job: 'integration_test_kubeflow'
   timeoutInMinutes: 0
-  pool: 'NNI CI KUBE CLI'
-
-  variables:
-    new_docker_img: msranni/nni.it.kb:latest
 
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user
@@ -19,27 +35,24 @@ jobs:
     displayName: 'build nni bdsit_wheel'
 
   - script: |
-      cd deployment/pypi
-      docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
-
-      echo 'updating docker file for installing nni from local...'
-      # update Dockerfile to install NNI in docker image from whl file built in last step
-      sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
-      cat ../docker/Dockerfile
-      echo $IMG_TAG
-      docker build -f ../docker/Dockerfile -t $(new_docker_img) .
-      docker push $(new_docker_img)
-    condition: eq( variables['build_docker_img'], 'true' )
-    displayName: 'build and upload nni docker image'
-
-  - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
 
   - script: |
       if [ $(build_docker_img) = 'true' ]
       then
-        export TEST_IMG=$(new_docker_img)
+        cd deployment/pypi
+        docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
+
+        echo 'updating docker file for installing nni from local...'
+        # update Dockerfile to install NNI in docker image from whl file built in last step
+        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
+        cat ../docker/Dockerfile
+        export IMG_TAG=`date -u +%y%m%d%H%M`
+        docker build -f ../docker/Dockerfile -t $(test_docker_img_name):$IMG_TAG .
+        docker push $(test_docker_img_name):$IMG_TAG
+        export TEST_IMG=$(test_docker_img_name):$IMG_TAG
+        cd ../../
       else
         export TEST_IMG=$(existing_docker_img)
       fi
