@@ -322,6 +322,9 @@ class BOHB(MsgDispatcherBase):
     def generate_new_bracket(self, curr_s):
         logger.debug(
             'start to create a new SuccessiveHalving iteration, self.curr_s=%d', self.curr_s)
+        if curr_s < 0:
+            logger.info("s < 0, Finish this round of Hyperband.")
+            return
         self.brackets[curr_s] = Bracket(s=self.curr_s, s_max=self.s_max, eta=self.eta,
                                         max_budget=self.max_budget, optimize_mode=self.optimize_mode)
         next_n, next_r = self.brackets[self.curr_s].get_n_r()
@@ -459,8 +462,8 @@ class BOHB(MsgDispatcherBase):
         # Finish this bracket and generate a new bracket
         if self.brackets[int(s)].no_more_trial:
             self.curr_s -= 1
-            self.generate_new_bracket(self.curr_s)
-
+            if self.curr_s >= 0:
+                self.generate_new_bracket(self.curr_s)
         return True
 
     def handle_report_metric_data(self, data):
@@ -477,7 +480,9 @@ class BOHB(MsgDispatcherBase):
             Data type not supported
         """
         print ('handle report metric data = ', data, end='')
-        value = extract_scalar_reward(data['value'])
+        result = extract_scalar_reward(data['value'])
+        value = result['default']
+        _loss = result['loss']
         s, i, _ = data['parameter_id'].split('_')
         s = int(s)
         if data['type'] == 'FINAL':
@@ -490,7 +495,7 @@ class BOHB(MsgDispatcherBase):
 
             _parameters = self.parameters[data['parameter_id']]
             _parameters.pop(_KEY)
-            self.cg.new_result(loss=value, budget=data['sequence'], parameters=_parameters, update_model=True)
+            self.cg.new_result(loss=_loss, budget=data['sequence'], parameters=_parameters, update_model=True)
         elif data['type'] == 'PERIODICAL':
             self.brackets[s].set_config_perf(
                 int(i), data['parameter_id'], data['sequence'], value)

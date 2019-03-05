@@ -42,6 +42,7 @@ class MnistNetwork(object):
 
         self.train_step = None
         self.accuracy = None
+        self.loss = None
 
     def build_network(self):
         '''
@@ -109,6 +110,7 @@ class MnistNetwork(object):
         with tf.name_scope('loss'):
             cross_entropy = tf.reduce_mean(
                 tf.nn.softmax_cross_entropy_with_logits(labels=self.labels, logits=y_conv))
+            self.loss = cross_entropy
         with tf.name_scope('adam_optimizer'):
             self.train_step = tf.train.AdamOptimizer(
                 self.learning_rate).minimize(cross_entropy)
@@ -180,22 +182,36 @@ def main(params):
                                         )
 
             if i % 10 == 0:
-                test_acc = mnist_network.accuracy.eval(
-                    feed_dict={mnist_network.images: mnist.test.images,
-                               mnist_network.labels: mnist.test.labels,
-                               mnist_network.keep_prob: 1.0})
+                test_acc, test_loss = sess.run(
+                    [mnist_network.accuracy, mnist_network.loss],
+                    feed_dict={
+                        mnist_network.images: mnist.test.images,
+                        mnist_network.labels: mnist.test.labels,
+                        mnist_network.keep_prob: 1.0
+                    })
+                test_result = {
+                    'default': test_acc,
+                    'loss': test_loss
+                }
 
-                nni.report_intermediate_result(test_acc)
-                logger.debug('test accuracy %g', test_acc)
+                nni.report_intermediate_result(test_result)
+                logger.debug('test result %g', test_result)
                 logger.debug('Pipe send intermediate result done.')
 
-        test_acc = mnist_network.accuracy.eval(
-            feed_dict={mnist_network.images: mnist.test.images,
-                       mnist_network.labels: mnist.test.labels,
-                       mnist_network.keep_prob: 1.0})
+        test_acc, test_loss = sess.run(
+            [mnist_network.accuracy, mnist_network.loss],
+            feed_dict={
+                mnist_network.images: mnist.test.images,
+                mnist_network.labels: mnist.test.labels,
+                mnist_network.keep_prob: 1.0
+            })
+        test_result = {
+            'default': test_acc,
+            'loss': test_loss
+        }
 
-        nni.report_final_result(test_acc)
-        logger.debug('Final result is %g', test_acc)
+        nni.report_final_result(test_result)
+        logger.debug('Final result is %g', test_result)
         logger.debug('Send final result done.')
 
 
