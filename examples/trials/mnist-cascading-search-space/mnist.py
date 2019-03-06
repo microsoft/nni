@@ -1,23 +1,17 @@
 '''
 mnist.py is an example to show: how to use iterative search space to tune architecture network for mnist.
 '''
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import argparse
-import codecs
-import json
 import logging
 import math
-import sys
 import tempfile
-import tensorflow as tf
+import time
 
+import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
 import nni
-
 
 logger = logging.getLogger('mnist_cascading_search_space')
 FLAGS = None
@@ -95,10 +89,19 @@ class MnistNetwork(object):
         child_accuracy = tf.equal(tf.argmax(output_layer, 1), tf.argmax(self.y, 1))
         self.accuracy = tf.reduce_mean(tf.cast(child_accuracy, "float"))  # add a reduce_mean
 
+def download_mnist_retry(data_dir, max_num_retries=20):
+    """Try to download mnist dataset and avoid errors"""
+    for _ in range(max_num_retries):
+        try:
+            return input_data.read_data_sets(data_dir, one_hot=True)
+        except tf.errors.AlreadyExistsError:
+            time.sleep(1)
+    raise Exception("Failed to download MNIST.")
+
 def main(params):
     # Import data
-    mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    
+    mnist = download_mnist_retry(params['data_dir'])
+
     # Create the model
     # Build the graph for the deep net
     mnist_network = MnistNetwork(params)
@@ -117,15 +120,15 @@ def main(params):
         for i in range(params['batch_num']):
             batch = mnist.train.next_batch(params['batch_size'])
             mnist_network.train_step.run(feed_dict={mnist_network.x: batch[0], mnist_network.y: batch[1]})
-        
+            
             if i % 100 == 0:
                 train_accuracy = mnist_network.accuracy.eval(feed_dict={
                     mnist_network.x: batch[0], mnist_network.y: batch[1]})
                 print('step %d, training accuracy %g' % (i, train_accuracy))
-        
+
         test_acc = mnist_network.accuracy.eval(feed_dict={
             mnist_network.x: mnist.test.images, mnist_network.y: mnist.test.labels})
-        
+
         nni.report_final_result(test_acc)
 
 def generate_defualt_params():
