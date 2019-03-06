@@ -159,8 +159,10 @@ class GeneralController(Controller):
         if self.tanh_constant is not None:
           logit = self.tanh_constant * tf.tanh(logit)
         if self.search_for == "macro" or self.search_for == "branch":
-          current_branch_indices = tf.constant(self.hash_search_space[layer_id]['layer_choice'])
+          print(logit.shape)
+          current_branch_indices = tf.constant(self.hash_search_space[layer_id]['layer_choice'], axis=-1)
           sample_logit = tf.gather(logit, current_branch_indices)
+          print(sample.shape)
           branch_id = tf.multinomial(sample_logit, 1)
           branch_id = tf.to_int32(branch_id)
           # branch_id = tf.reshape(branch_id, [])
@@ -235,7 +237,7 @@ class GeneralController(Controller):
         skip = tf.multinomial(logit, 1)
         skip = tf.to_int32(skip)
         skip = tf.reshape(skip, [layer_id])
-        current_skip =  tf.gather(skip, self.hash_search_space[layer_id]['input_candidates'])
+        current_skip =  tf.gather(skip, self.hash_search_space[layer_id]['input_candidates'], axis=-1)
 
         arc_seq.append(current_skip)
 
