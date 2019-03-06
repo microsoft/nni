@@ -36,7 +36,7 @@ def nni_info(*args):
     if args[0].version:
         try:
             print(pkg_resources.get_distribution('nni').version)
-        except Exception as exception:
+        except pkg_resources.ResolutionError as err:
             print_error('Get version failed, please use `pip3 list | grep nni` to check nni version!')
     else:
         print('please run "nnictl {positional argument} --help" to see nnictl guidance')

@@ -108,18 +108,15 @@ def check_version(args):
     trial_keeper_version = None
     try:
         trial_keeper_version = pkg_resources.get_distribution('nni').version
-    except Exception as exception:
-        #package nni does not exist
+    except pkg_resources.ResolutionError as err:
+        #package nni does not exist, try nni-tool package
         nni_log(LogType.Warning, 'Package nni does not exist!')
-    if trial_keeper_version is None:
         try:
             trial_keeper_version = pkg_resources.get_distribution('nni-tool').version
-        except Exception as exception:
+        except pkg_resources.ResolutionError as err:
             #package nni-tool does not exist
-            nni_log(LogType.Warning, 'Package nni-tool does not exist!')
-    if not trial_keeper_version:
-        nni_log(LogType.Error, 'Exit trial keeper, does not find nni packages!')
-        os._exit(1)
+            nni_log(LogType.Error, 'Package nni-tool does not exist!')
+            os._exit(1)
     if not args.version:
         # skip version check
         nni_log(LogType.Warning, 'Skipping version check!')
