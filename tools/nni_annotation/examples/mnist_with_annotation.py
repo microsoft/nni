@@ -21,8 +21,9 @@
 import logging
 import math
 import tempfile
-import tensorflow as tf
+import time
 
+import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
 FLAGS = None
