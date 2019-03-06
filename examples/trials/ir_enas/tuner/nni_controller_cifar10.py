@@ -226,7 +226,7 @@ class ENASTuner(ENASBaseTuner):
         self.outputs = dict()
         self.hash_search_space = list()
         for layer_id, (_, info) in enumerate(self.search_space.items()):
-            hash_info = {'layer_choice': []}
+            hash_info = {'layer_choice': [], 'input_candidates': []}
             # record branch_name <--> branch_id
             for branch_idx in range(len(info['layer_choice'])):
                 branch_name = info['layer_choice'][branch_idx]
@@ -241,7 +241,6 @@ class ENASTuner(ENASBaseTuner):
             self.outputs[layer_id], self.outputs[info['outputs']] = info['outputs'], layer_id
             # convert input_candidate to id
             if layer_id != 0:
-                hash_info['input_candidates'] = list()
                 for candidate in info['input_candidates']:
                     assert candidate in self.outputs, 'Subsequent layers must use the output of the previous layer as an input candidate'
                     hash_info['input_candidates'].append(self.outputs[candidate])
