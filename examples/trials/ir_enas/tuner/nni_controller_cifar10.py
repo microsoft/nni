@@ -246,7 +246,7 @@ class ENASTuner(ENASBaseTuner):
                     assert candidate in self.outputs, 'Subsequent layers must use the output of the previous layer as an input candidate'
                     hash_info['input_candidates'].append(self.outputs[candidate])
             self.hash_search_space.append(hash_info)
-        
+        logger.debug(self.hash_search_space)
         self.init_controller()
         
 
@@ -277,7 +277,7 @@ class ENASTuner(ENASBaseTuner):
             num_replicas=FLAGS.controller_num_replicas,
             num_layers=FLAGS.child_num_layers,
             num_branches=len(self.branches),
-            search_space=self.hash_search_space)
+            hash_search_space=self.hash_search_space)
 
         return controller_model
 
