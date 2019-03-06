@@ -1,125 +1,125 @@
 # 更改日志
 
-## Release 0.5.2 - 3/4/2019
+## 发布 0.5.2 - 3/4/2019
 
 ### 改进
 
-* Curve fitting assessor performance improvement.
+* 提升 Curve fitting Assessor 的性能。
 
 ### 文档
 
-* Chinese version document: https://nni.readthedocs.io/zh/latest/
-* Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/HowToDebug.html
-* Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
+* 发布中文文档网站：https://nni.readthedocs.io/zh/latest/
+* 调试和维护：https://nni.readthedocs.io/en/latest/HowToDebug.html
+* Tuner、Assessor 参考：https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
 
 ### Bug 修复和其它更新
 
-* Fix a race condition bug that does not store trial job cancel status correctly.
-* Fix search space parsing error when using SMAC tuner.
-* Fix cifar10 example broken pipe issue.
-* Add unit test cases for nnimanager and local training service.
-* Add integration test azure pipelines for remote machine, PAI and kubeflow training services.
-* Support Pylon in PAI webhdfs client.
+* 修复了在某些极端条件下，不能正确存储任务的取消状态。
+* 修复在使用 SMAC Tuner 时，解析搜索空间的错误。
+* 修复 CIFAR-10 样例中的 broken pipe 问题。
+* 为本地训练服务和 NNI 管理器添加单元测试。
+* 为远程服务器、OpenPAI 和 Kubeflow 训练平台在 Azure 中增加集成测试。
+* 在 OpenPAI 客户端中支持 Pylon 路径。
 
-## Release 0.5.1 - 1/31/2018
+## 发布 0.5.1 - 1/31/2018
 
-### Improvements
+### 改进
 
-* Making [log directory](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md) configurable
-* Support [different levels of logs](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md), making it easier for debugging 
+* [日志目录](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md)可配置。
+* 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md)，使其更易于调试。 
 
-### Documentation
+### 文档
 
-* Reorganized documentation & New Homepage Released: https://nni.readthedocs.io/en/latest/
+* 重新组织文档，新的主页位置：https://nni.readthedocs.io/en/latest/
 
-### Bug Fixes and Other Changes
+### Bug 修复和其它更新
 
-* Fix the bug of installation in python virtualenv, and refactor the installation logic
-* Fix the bug of HDFS access failure on PAI mode after PAI is upgraded. 
-* Fix the bug that sometimes in-place flushed stdout makes experiment crash
+* 修复了 Python 虚拟环境中安装的 Bug，并重构了安装逻辑。
+* 修复了在最新的 OpenPAI 下存取 HDFS 失败的问题。 
+* 修复了有时刷新 stdout 会造成 Experiment 崩溃的问题。
 
-## Release 0.5.0 - 01/14/2019
+## 发布 0.5.0 - 01/14/2019
 
 ### 主要功能
 
 #### 支持新的 Tuner 和 Assessor
 
-* Support [Metis tuner](metisTuner.md) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
-* Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
-* Support [Curve fitting assessor](curvefittingAssessor.md) for early stop policy using learning curve extrapolation.
-* Advanced Support of [Weight Sharing](./AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
+* 支持新的 [Metis Tuner](metisTuner.md)。 对于**在线**超参调优的场景，Metis 算法已经被证明非常有效。
+* 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
+* 支持 [Curve fitting （曲线拟合）Assessor](curvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
+* 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
 
 #### 改进训练平台
 
-* [FrameworkController Training service](./FrameworkControllerMode.md): Support run experiments using frameworkcontroller on kubernetes 
-  * FrameworkController is a Controller on kubernetes that is general enough to run (distributed) jobs with various machine learning frameworks, such as tensorflow, pytorch, MXNet.
-  * NNI provides unified and simple specification for job definition.
-  * MNIST example for how to use FrameworkController.
+* [FrameworkController 训练平台](./FrameworkControllerMode.md): 支持使用在 Kubernetes 上使用 FrameworkController。 
+  * FrameworkController 是 Kubernetes 上非常通用的控制器（Controller），能用来运行基于各种机器学习框架的分布式作业，如 TensorFlow，Pytorch， MXNet 等。
+  * NNI 为作业定义了统一而简单的规范。
+  * 如何使用 FrameworkController 的 MNIST 样例。
 
 #### 改进用户体验
 
-* A better trial logging support for NNI experiments in OpenPAI, Kubeflow and FrameworkController mode: 
-  * An improved logging architecture to send stdout/stderr of trials to NNI manager via Http post. NNI manager will store trial's stdout/stderr messages in local log file.
-  * Show the link for trial log file on WebUI.
-* Support to show final result's all key-value pairs.
+* 为 OpenPAI, Kubeflow 和 FrameworkController 模式提供更好的日志支持。 
+  * 改进后的日志架构能将尝试的 stdout/stderr 通过 HTTP POST 方式发送给 NNI 管理器。 NNI 管理器将 Trial 的 stdout/stderr 消息存储在本地日志文件中。
+  * 在 WEB 界面上显示 Trial 日志的链接。
+* 支持将最终结果显示为键值对。
 
-## Release 0.4.1 - 12/14/2018
+## 发布 0.4.1 - 12/14/2018
 
-### Major Features
+### 主要功能
 
 #### 支持新的 Tuner
 
-* Support [network morphism](networkmorphismTuner.md) as a new tuner
+* 支持新的 [network morphism](networkmorphismTuner.md) Tuner。
 
 #### 改进训练平台
 
-* Migrate [Kubeflow training service](KubeflowMode.md)'s dependency from kubectl CLI to [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) client
-* [Pytorch-operator](https://github.com/kubeflow/pytorch-operator) support for Kubeflow training service
-* Improvement on local code files uploading to OpenPAI HDFS
-* Fixed OpenPAI integration WebUI bug: WebUI doesn't show latest trial job status, which is caused by OpenPAI token expiration
+* 将[Kubeflow 训练平台](KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
+* Kubeflow 训练平台支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
+* 改进将本地代码文件上传到 OpenPAI HDFS 的性能。
+* 修复 OpenPAI 在 WEB 界面的 Bug：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
 
 #### 改进 NNICTL
 
-* Show version information both in nnictl and WebUI. You can run **nnictl -v** to show your current installed NNI version
+* 在 nnictl 和 WEB 界面中显示 NNI 的版本信息。 可使用 **nnictl -v** 来显示安装的 NNI 版本。
 
 #### 改进 WEB 界面
 
-* Enable modify concurrency number during experiment
-* Add feedback link to NNI github 'create issue' page
-* Enable customize top 10 trials regarding to metric numbers (largest or smallest)
-* Enable download logs for dispatcher & nnimanager
-* Enable automatic scaling of axes for metric number
-* Update annotation to support displaying real choice in searchspace
+* 在 Experiment 运行中可修改并发数量
+* 增加指向 NNI Github 的反馈链接，可直接创建问题
+* 可根据指标，定制选择（最大或最小）的前 10 个 Trial。
+* 为 dispatcher 和 nnimanager 提供下载日志的功能
+* 为指标数值图提供自动缩放的数轴
+* 改进 Annotation，支持在搜索空间中显示实际的选项
 
-### New examples
+### 新样例
 
-* [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism), work together with network morphism tuner
-* [Distributed MNIST example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch) written in PyTorch
+* [FashionMnist](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism)，使用 network morphism Tuner
+* 使用 PyTorch 的[分布式 MNIST 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed-pytorch)
 
-## Release 0.4 - 12/6/2018
+## 发布 0.4 - 12/6/2018
 
-### Major Features
+### 主要功能
 
-* [Kubeflow Training service](./KubeflowMode.md) 
-  * Support tf-operator
-  * [Distributed trial example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
-* [Grid search tuner](gridsearchTuner.md) 
-* [Hyperband tuner](hyperbandAdvisor.md)
-* Support launch NNI experiment on MAC
-* WebUI 
-  * UI support for hyperband tuner
-  * Remove tensorboard button
-  * Show experiment error message
-  * Show line numbers in search space and trial profile
-  * Support search a specific trial by trial number
-  * Show trial's hdfsLogPath
-  * Download experiment parameters
+* [Kubeflow 训练服务](./KubeflowMode.md) 
+  * 支持 tf-operator
+  * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
+* [网格搜索 Tuner](gridsearchTuner.md) 
+* [Hyperband Tuner](hyperbandAdvisor.md)
+* 支持在 MAC 上运行 NNI Experiment
+* Web 界面 
+  * 支持 hyperband Tuner
+  * 移除 tensorboard 按钮
+  * 显示 Experiment 的错误消息
+  * 显示搜索空间和 Trial 配置的行号
+  * 支持通过指定的 Trial id 来搜索
+  * 显示 Trial 的 hdfsLogPath
+  * 下载 Experiment 参数
 
-### Others
+### 其它
 
-* Asynchronous dispatcher
-* Docker file update, add pytorch library 
-* Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API. 
+* 异步调度
+* 更新 Docker 文件，增加 pytorch 库 
+* 重构 'nnictl stop' 过程，发送 SIGTERM 给 NNI 管理器进程，而不是调用停止 Restful API. 
 * OpenPAI training service bug fix 
   * Support NNI Manager IP configuration(nniManagerIp) in OpenPAI cluster config file, to fix the issue that user’s machine has no eth0 device 
   * File number in codeDir is capped to 1000 now, to avoid user mistakenly fill root dir for codeDir
