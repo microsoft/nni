@@ -105,7 +105,6 @@ def trial_keeper_help_info(*args):
     print('please run --help to see guidance')
 
 def check_version(args):
-    trial_keeper_version = None
     try:
         trial_keeper_version = pkg_resources.get_distribution('nni').version
     except pkg_resources.ResolutionError as err:
