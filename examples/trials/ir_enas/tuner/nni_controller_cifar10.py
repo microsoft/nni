@@ -226,14 +226,16 @@ class ENASTuner(ENASBaseTuner):
         self.outputs = dict()
         self.hash_search_space = list()
         for layer_id, (_, info) in enumerate(self.search_space.items()):
-            hash_info = dict()
+            hash_info = {'layer_choice': []}
             # record branch_name <--> branch_id
             for branch_idx in range(len(info['layer_choice'])):
                 branch_name = info['layer_choice'][branch_idx]
                 if branch_name not in self.branches:
                     self.branches[branch_name] = num_branches
+                    hash_info['layer_choice'].append(num_branches)
                     num_branches += 1
-                hash_info['layer_choice'][branch_idx] = num_branches - 1
+                else:
+                    hash_info['layer_choice'].append(self.branches[branch_name])
             assert info['outputs'] not in self.outputs, 'Output variables from different layers cannot be the same'
             # record output_name <--> output_id
             self.outputs[layer_id], self.outputs[info['outputs']] = info['outputs'], layer_id
