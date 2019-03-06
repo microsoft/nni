@@ -247,6 +247,8 @@ class ENASTuner(ENASBaseTuner):
                     hash_info['input_candidates'].append(self.outputs[candidate])
             self.hash_search_space.append(hash_info)
         
+        self.init_controller()
+        
 
     def BuildController(self, ControllerClass):
         controller_model = ControllerClass(
