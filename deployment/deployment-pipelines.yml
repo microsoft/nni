@@ -1,6 +1,60 @@
+# Copyright (c) Microsoft Corporation
+# All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge,
+# to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and
+# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 jobs:
+- job: 'version_number_validation'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    matrix:
+      Python36:
+        PYTHON_VERSION: '3.6'
+  steps:
+  - script: |
+      echo $(build_version)
+      if [[ $(build_version) =~ ^v[0-9](.[0-9]){1,3}$ ]]; then
+        echo 'valid build version $(build_version)'
+        echo `git describe --tags --abbrev=0`
+      else
+        echo 'invalid build version $(build_version)'
+        exit 1
+      fi
+    condition: eq( variables['build_type'], 'prerelease' )
+    displayName: 'Validate prerelease version number'
+
+  - script: |
+      export BRANCH_TAG=`git describe --tags --abbrev=0`
+      echo $BRANCH_TAG
+      if [[ $BRANCH_TAG = $(build_version) && $BRANCH_TAG =~ ^v[0-9](.[0-9]){1,3}$ ]]; then
+        echo 'Build version match branch tag'
+      else
+        echo 'Build version does not match branch tag'
+        exit 1
+      fi
+    condition: eq( variables['build_type'], 'release' )
+    displayName: 'Validate release version number and branch tag'
+
+
 - job: 'Build_upload_nni_ubuntu'
+  dependsOn: version_number_validation
+  condition: succeeded()
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -13,21 +67,22 @@ jobs:
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install twine --user
     displayName: 'Install twine'
+
   - script: |
-      # NNI build scripts (Makefile) uses branch tag as package version number
-      # To test this pipeline without impacting nni testpypi/pypi packages, uncomment following git tag command
-      # git tag v0.0.1
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
       then
+        # NNI build scripts (Makefile) uses branch tag as package version number
+        git tag $(build_version)
         echo 'building prerelease package...'
         make version_ts=true build
       else
         echo 'building release package...'
         make build
       fi
-    condition: eq( variables['upload_package'], 'true' )
+    condition: eq( variables['upload_package'], 'true')
     displayName: 'build nni bdsit_wheel'
+
   - script: |
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
@@ -38,7 +93,7 @@ jobs:
         echo 'uploading release package to pypi...'
         python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
       fi
-    condition: eq( variables['upload_package'], 'true' )
+    condition: eq( variables['upload_package'], 'true')
     displayName: 'upload nni package to pypi/testpypi'
 
   - script: |
@@ -48,7 +103,7 @@ jobs:
       then
         docker login -u $(docker_hub_dev_user) -p $(docker_hub_dev_pwd)
         export IMG_NAME=$(dev_docker_img)
-        export IMG_TAG=`git describe --tags --abbrev=0`.`date +%y%m%d%H%M`
+        export IMG_TAG=`git describe --tags --abbrev=0`.`date -u +%y%m%d%H%M`
         echo 'updating docker file for testpyi...'
         sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/RUN python3 -m pip install --user --no-cache-dir --index-url https:\/\/test.pypi.org\/simple --extra-index-url https:\/\/pypi.org\/simple nni/' Dockerfile
       else
@@ -67,10 +122,12 @@ jobs:
         docker push $IMG_NAME:latest
       fi
 
-    condition: eq( variables['build_docker_img'], 'true' )
+    condition: eq( variables['build_docker_img'], 'true')
     displayName: 'build and upload nni docker image'
 
 - job: 'Build_upload_nni_macos'
+  dependsOn: version_number_validation
+  condition: succeeded()
   pool:
     vmImage: 'macOS 10.13'
   strategy:
@@ -82,24 +139,26 @@ jobs:
       python3 -m pip install --upgrade pip setuptools --user
       python3 -m pip install twine --user
     displayName: 'Install twine'
+
   - script: |
       make install-dependencies
     displayName: 'Install nni dependencies'
+
   - script: |
-      # NNI build scripts (Makefile) uses branch tag as package version number
-      # To test this pipeline without impacting nni testpypi/pypi packages, uncomment following git tag command
-      # git tag v0.0.1
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
       then
+        # NNI build scripts (Makefile) uses branch tag as package version number
+        git tag $(build_version)
         echo 'building prerelease package...'
         PATH=$HOME/Library/Python/3.7/bin:$PATH make version_ts=true build
       else
         echo 'building release package...'
         PATH=$HOME/Library/Python/3.7/bin:$PATH make build
       fi
-    condition: eq( variables['upload_package'], 'true' )
+    condition: eq( variables['upload_package'], 'true')
     displayName: 'build nni bdsit_wheel'
+
   - script: |
       cd deployment/pypi
       if [ $(build_type) = 'prerelease' ]
@@ -110,5 +169,5 @@ jobs:
         echo 'uploading release package to pypi...'
         python3 -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
       fi
-    condition: eq( variables['upload_package'], 'true' )
+    condition: eq( variables['upload_package'], 'true')
     displayName: 'upload nni package to pypi/testpypi'
