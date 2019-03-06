@@ -12,9 +12,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../../src/sdk/pynni'))
 
 from recommonmark.parser import CommonMarkParser
 from recommonmark.transform import AutoStructify
@@ -186,10 +186,9 @@ epub_exclude_files = ['search.html']
 
 
 # -- Extension configuration -------------------------------------------------
-github_doc_root = 'https://github.com/Microsoft/nni/tree/master/doc/'
 def setup(app):
     app.add_config_value('recommonmark_config', {
-        'url_resolver': lambda url: github_doc_root + url if url.startswith('..') else url,
+        'enable_eval_rst': True,
         'enable_auto_toc_tree': False,
-    }, True)
+            }, True)
     app.add_transform(AutoStructify)

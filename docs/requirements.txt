@@ -4,4 +4,9 @@ sphinx-markdown-tables==0.0.9
 sphinx-rtd-theme==0.4.2
 sphinxcontrib-websupport==1.1.0
 recommonmark==0.5.0
-nni==0.5
+hyperopt
+json_tricks
+numpy
+scipy
+coverage
+sklearn
