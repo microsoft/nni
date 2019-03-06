@@ -186,9 +186,9 @@ epub_exclude_files = ['search.html']
 
 
 # -- Extension configuration -------------------------------------------------
-github_doc_root = 'https://github.com/Microsoft/nni/tree/master/doc/'
 def setup(app):
     app.add_config_value('recommonmark_config', {
-        'enable_auto_toc_tree': True,
-    }, True)
+        'enable_eval_rst': True,
+        'enable_auto_toc_tree': False,
+            }, True)
     app.add_transform(AutoStructify)
