@@ -162,7 +162,7 @@ class GeneralController(Controller):
           print(logit.shape)
           current_branch_indices = tf.constant(self.hash_search_space[layer_id]['layer_choice'])
           sample_logit = tf.gather(logit, current_branch_indices, axis=-1)
-          print(sample.shape)
+          print(sample_logit.shape)
           branch_id = tf.multinomial(sample_logit, 1)
           branch_id = tf.to_int32(branch_id)
           # branch_id = tf.reshape(branch_id, [])
