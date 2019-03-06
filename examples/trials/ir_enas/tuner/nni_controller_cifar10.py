@@ -108,10 +108,8 @@ class ENASTuner(ENASBaseTuner):
             config=config, hooks=hooks, checkpoint_dir=FLAGS.output_dir)
         logger.debug('initlize controller_model done.')
 
-        self.generate_one_epoch_parameters()
-        self.entry = 'train'
-        self.pos = 0
         self.epoch = 0
+        self.generate_one_epoch_parameters()
 
     def generate_one_epoch_parameters(self):
         # Generate architectures in one epoch and 
