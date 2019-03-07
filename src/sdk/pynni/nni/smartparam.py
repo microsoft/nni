@@ -82,54 +82,40 @@ if env_args.platform is None:
 
 else:
 
-    def choice(options, name=None):
-        return options[_get_param('choice', name)]
+    def choice(options, name=None, key=None):
+        return options[_get_param('choice', key)]
 
-    def randint(upper, name=None):
-        return _get_param('randint', name)
+    def randint(upper, name=None, key=None):
+        return _get_param('randint', key)
 
-    def uniform(low, high, name=None):
-        return _get_param('uniform', name)
+    def uniform(low, high, name=None, key=None):
+        return _get_param('uniform', key)
 
-    def quniform(low, high, q, name=None):
-        return _get_param('quniform', name)
+    def quniform(low, high, q, name=None, key=None):
+        return _get_param('quniform', key)
 
-    def loguniform(low, high, name=None):
-        return _get_param('loguniform', name)
+    def loguniform(low, high, name=None, key=None):
+        return _get_param('loguniform', key)
 
-    def qloguniform(low, high, q, name=None):
-        return _get_param('qloguniform', name)
+    def qloguniform(low, high, q, name=None, key=None):
+        return _get_param('qloguniform', key)
 
-    def normal(mu, sigma, name=None):
-        return _get_param('normal', name)
+    def normal(mu, sigma, name=None, key=None):
+        return _get_param('normal', key)
 
-    def qnormal(mu, sigma, q, name=None):
-        return _get_param('qnormal', name)
+    def qnormal(mu, sigma, q, name=None, key=None):
+        return _get_param('qnormal', key)
 
-    def lognormal(mu, sigma, name=None):
-        return _get_param('lognormal', name)
+    def lognormal(mu, sigma, name=None, key=None):
+        return _get_param('lognormal', key)
 
-    def qlognormal(mu, sigma, q, name=None):
-        return _get_param('qlognormal', name)
+    def qlognormal(mu, sigma, q, name=None, key=None):
+        return _get_param('qlognormal', key)
 
-    def function_choice(funcs, name=None):
-        return funcs[_get_param('function_choice', name)]()
+    def function_choice(funcs, name=None, key=None):
+        return funcs[_get_param('function_choice', key)]()
 
-    def _get_param(func, name):
-        # frames:
-        #   layer 0: this function
-        #   layer 1: the API function (caller of this function)
-        #   layer 2: caller of the API function
-        frame = inspect.stack(0)[2]
-        filename = frame.filename
-        module_name = inspect.getmodule(frame.frame).__name__
-        lineno = frame.lineno  # NOTE: this is the lineno of caller's last argument
-        del frame  # see official doc
-        if module_name == '__main__': # if it is in the main program, filename is used
-            module_name = inspect.getmodulename(filename)
-        if name is None:
-            name = '__line{:d}'.format(lineno)
-        key = '{}/{}/{}'.format(module_name, name, func)
+    def _get_param(func, key):
         if trial._params is None:
             trial.get_next_parameter()
         return trial.get_current_parameter(key)
