@@ -83,39 +83,39 @@ if env_args.platform is None:
 else:
 
     def choice(options, name=None, key=None):
-        return options[_get_param('choice', key)]
+        return options[_get_param(key)]
 
     def randint(upper, name=None, key=None):
-        return _get_param('randint', key)
+        return _get_param(key)
 
     def uniform(low, high, name=None, key=None):
-        return _get_param('uniform', key)
+        return _get_param(key)
 
     def quniform(low, high, q, name=None, key=None):
-        return _get_param('quniform', key)
+        return _get_param(key)
 
     def loguniform(low, high, name=None, key=None):
-        return _get_param('loguniform', key)
+        return _get_param(key)
 
     def qloguniform(low, high, q, name=None, key=None):
-        return _get_param('qloguniform', key)
+        return _get_param(key)
 
     def normal(mu, sigma, name=None, key=None):
-        return _get_param('normal', key)
+        return _get_param(key)
 
     def qnormal(mu, sigma, q, name=None, key=None):
-        return _get_param('qnormal', key)
+        return _get_param(key)
 
     def lognormal(mu, sigma, name=None, key=None):
-        return _get_param('lognormal', key)
+        return _get_param(key)
 
     def qlognormal(mu, sigma, q, name=None, key=None):
-        return _get_param('qlognormal', key)
+        return _get_param(key)
 
     def function_choice(funcs, name=None, key=None):
-        return funcs[_get_param('function_choice', key)]()
+        return funcs[_get_param(key)]()
 
-    def _get_param(func, key):
+    def _get_param(key):
         if trial._params is None:
             trial.get_next_parameter()
         return trial.get_current_parameter(key)
