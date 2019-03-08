@@ -54,7 +54,7 @@ Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial con
 * dataDir
     * Optional key. It specifies the HDFS data direcotry for trial to download data. The format should be something like hdfs://{your HDFS host}:9000/{your data directory}
 * outputDir 
-    * Optional key. It specifies the HDFS output direcotry for trial. Once the trial is completed (either succeed or fail), trial's stdout, stderr will be copied to this directory by NNI sdk automatically. The format should be something like hdfs://{your HDFS host}:9000/{your output directory}
+    * Optional key. It specifies the HDFS output directory for trial. Once the trial is completed (either succeed or fail), trial's stdout, stderr will be copied to this directory by NNI sdk automatically. The format should be something like hdfs://{your HDFS host}:9000/{your output directory}
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 ```
