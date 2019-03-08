@@ -44,6 +44,11 @@ function getLogDir(): string{
     return path.join(getExperimentRootDir(), 'log');
 }
 
+function getLogLevel(): string{
+    return getExperimentStartupInfo()
+    .getLogLevel();
+}
+
 function getDefaultDatabaseDir(): string {
     return path.join(getExperimentRootDir(), 'db');
 }
@@ -347,4 +352,4 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
 
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel };

@@ -33,12 +33,27 @@ def _load_env_args():
         'trial_job_id': os.environ.get('NNI_TRIAL_JOB_ID'),
         'log_dir': os.environ.get('NNI_LOG_DIRECTORY'),
         'role': os.environ.get('NNI_ROLE'),
+        'log_level': os.environ.get('NNI_LOG_LELVEL')
     }
     return namedtuple('EnvArgs', args.keys())(**args)
 
 env_args = _load_env_args()
 '''Arguments passed from environment'''
 
+FATAL = 1
+ERROR = 2
+WARNING = 3
+INFO = 4
+DEBUG = 5
+
+logLevelNameMap = {
+    'fatal': FATAL,
+    'error': ERROR,
+    'warning': WARNING,
+    'info': INFO,
+    'debug': DEBUG
+}
+log_level = logging.INFO #default log level is INFO
 
 _time_format = '%Y-%m-%d %H:%M:%S'
 class _LoggerFileWrapper(TextIOBase):
@@ -52,6 +67,20 @@ class _LoggerFileWrapper(TextIOBase):
             self.file.flush()
         return len(s)
 
+def get_log_level():
+    if env_args.log_level:
+        level_number = logLevelNameMap.get(env_args.log_level)
+        if level_number:
+            if level_number >= DEBUG:
+                log_level = logging.DEBUG
+            elif level_number >= INFO:
+                log_level = logging.INFO
+            elif level_number >= WARNING:
+                log_level = logging.WARNING
+            elif level_number >= ERROR:
+                log_level = logging.ERROR
+            elif level_number >= FATAL:
+                log_level = logging.FATAL
 
 def init_logger(logger_file_path):
     """Initialize root logger.
@@ -62,6 +91,7 @@ def init_logger(logger_file_path):
         logger_file_path = 'unittest.log'
     elif env_args.log_dir is not None:
         logger_file_path = os.path.join(env_args.log_dir, logger_file_path)
+    
     logger_file = open(logger_file_path, 'w')
     fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
     formatter = logging.Formatter(fmt, _time_format)
@@ -71,10 +101,10 @@ def init_logger(logger_file_path):
 
     root_logger = logging.getLogger()
     root_logger.addHandler(handler)
-    root_logger.setLevel(logging.DEBUG)
+    root_logger.setLevel(log_level)
 
     # these modules are too verbose
-    logging.getLogger('matplotlib').setLevel(logging.INFO)
+    logging.getLogger('matplotlib').setLevel(log_level)
 
     sys.stdout = _LoggerFileWrapper(logger_file)
 
