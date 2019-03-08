@@ -62,7 +62,7 @@ NNI's offical image msranni/nni does not support SSH server for the time being, 
 
 ### step2. Start docker container in remote machine
 
-SSH server need a port, you need to expose docker's SSH port to NNI as the connection port. For example, if you set your container's SSH port as **`A`**, you should map container's **`A`** port to your remote host machine's another port **`B`**, NNI will connect port **`B`** as SSH port, and your host machine will map the connection from port **`B`** to port **`A`**, and then NNI could connect to your docker container.
+SSH server need a port, you need to expose docker's SSH port to NNI as the connection port. For example, if you set your container's SSH port as **`A`**, you should map container's port **`A`** to your remote host machine's another port **`B`**, NNI will connect port **`B`** as SSH port, and your host machine will map the connection from port **`B`** to port **`A`**, then NNI could connect to your docker container.
 
 For example, you could start your docker container using following commands:
 ```
