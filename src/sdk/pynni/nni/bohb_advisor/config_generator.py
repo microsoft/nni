@@ -109,28 +109,25 @@ class CG_BOHB(object):
         return(max(self.kde_models.keys()))
 
     def get_config(self, budget):
-        """
-            Function to sample a new configuration
-
-            This function is called inside Hyperband to query a new configuration
+        """Function to sample a new configuration
+        This function is called inside BOHB to query a new configuration
 
 
-            Parameters:
-            -----------
-            budget: float
-                the budget for which this configuration is scheduled
+        Parameters:
+        -----------
+        budget: float
+            the budget for which this configuration is scheduled
 
-            returns: config
-                should return a valid configuration
-
+        Returns
+        -------
+        config
+            should return a valid configuration
         """
         
         logger.debug('start sampling a new configuration.')
         
-
         sample = None
         info_dict = {}
-        
         
         # If no model is available, sample from prior
         # also mix in a fraction of random configs
@@ -142,16 +139,15 @@ class CG_BOHB(object):
         best_vector = None
 
         if sample is None:
-            try:
-                
+            try:             
                 #sample from largest budget
                 budget = max(self.kde_models.keys())
 
                 l = self.kde_models[budget]['good'].pdf
                 g = self.kde_models[budget]['bad' ].pdf
-            
+
                 minimize_me = lambda x: max(1e-32, g(x))/max(l(x),1e-32)
-                
+
                 kde_good = self.kde_models[budget]['good']
                 kde_bad = self.kde_models[budget]['bad']
 
@@ -159,9 +155,9 @@ class CG_BOHB(object):
                     idx = np.random.randint(0, len(kde_good.data))
                     datum = kde_good.data[idx]
                     vector = []
-                    
+
                     for m,bw,t in zip(datum, kde_good.bw, self.vartypes):
-                        
+
                         bw = max(bw, self.min_bandwidth)
                         if t == 0:
                             bw = self.bw_factor*bw
@@ -171,7 +167,6 @@ class CG_BOHB(object):
                                 logger.warning("Truncated Normal failed for:\ndatum=%s\nbandwidth=%s\nfor entry with value %s"%(datum, kde_good.bw, m))
                                 logger.warning("data in the KDE:\n%s"%kde_good.data)
                         else:
-                            
                             if np.random.rand() < (1-bw):
                                 vector.append(int(m))
                             else:
@@ -225,12 +220,10 @@ class CG_BOHB(object):
                                 "\n here is a traceback:" +\
                                 traceback.format_exc())
                         raise(e)
-
             except:
                 logger.warning("Sampling based optimization with %i samples failed\n %s \nUsing random configuration"%(self.num_samples, traceback.format_exc()))
                 sample = self.configspace.sample_configuration()
                 info_dict['model_based_pick']  = False
-
 
         try:
             sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
@@ -248,24 +241,18 @@ class CG_BOHB(object):
         return sample
 
 
-
     def impute_conditional_data(self, array):
-
         return_array = np.empty_like(array)
-
         for i in range(array.shape[0]):
             datum = np.copy(array[i])
             nan_indices = np.argwhere(np.isnan(datum)).flatten()
-
             while (np.any(nan_indices)):
                 nan_idx = nan_indices[0]
                 valid_indices = np.argwhere(np.isfinite(array[:,nan_idx])).flatten()
-
                 if len(valid_indices) > 0:
                     # pick one of them at random and overwrite all NaN values
                     row_idx = np.random.choice(valid_indices)
                     datum[nan_indices] = array[row_idx, nan_indices]
-
                 else:
                     # no good point in the data has this value activated, so fill it with a valid but random value
                     t = self.vartypes[nan_idx]
@@ -273,19 +260,16 @@ class CG_BOHB(object):
                         datum[nan_idx] = np.random.rand()
                     else:
                         datum[nan_idx] = np.random.randint(t)
-
                 nan_indices = np.argwhere(np.isnan(datum)).flatten()
             return_array[i,:] = datum
         return(return_array)
 
     def new_result(self, loss, budget, parameters, update_model=True):
-        """
-            function to register finished runs
+        """function to register finished runs
 
-            Every time a run has finished, this function should be called
-            to register it with the result logger. 
+        Every time a run has finished, this function should be called
+        to register it with the loss.
         """
-
         if loss is None:
             # One could skip crashed results, but we decided 
             # assign a +inf loss and count them as bad configurations
@@ -336,7 +320,6 @@ class CG_BOHB(object):
         
         #more expensive crossvalidation method
         #bw_estimation = 'cv_ls'
-
         # quick rule of thumb
         bw_estimation = 'normal_reference'
 

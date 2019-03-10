@@ -92,6 +92,25 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
 
 
 class Bracket():
+    """A bracket in BOHB, all the information of a bracket is managed by an instance of this class
+    
+    Parameters
+    ----------
+    s: int
+        The current SH iteration index.
+    s_max: int
+        total number of SH iterations
+    eta: float
+        In each iteration, a complete run of sequential halving is executed. In it,
+		after evaluating each configuration on the same subset size, only a fraction of
+		1/eta of them 'advances' to the next round.
+	max_budget : float
+		The largest budget to consider. Needs to be larger than min_budget!
+		The budgets will be geometrically distributed
+        :math:`a^2 + b^2 = c^2 \sim \eta^k` for :math:`k\in [0, 1, ... , num\_subsets - 1]`.
+    optimize_mode: str
+        optimize mode, 'maximize' or 'minimize'
+    """
     def __init__(self, s, s_max, eta, max_budget, optimize_mode):
         self.s = s
         self.s_max = s_max
@@ -188,7 +207,8 @@ class Bracket():
         return None
 
     def get_hyperparameter_configurations(self, num, r, config_generator):
-        """Randomly generate num hyperparameter configurations from search space
+        """generate num hyperparameter configurations from search space using Bayesian optimization
+
         Parameters
         ----------
         num: int
@@ -214,6 +234,7 @@ class Bracket():
         """after generating one round of hyperconfigs, this function records the generated hyperconfigs,
         creates a dict to record the performance when those hyperconifgs are running, set the number of finished configs
         in this round to be 0, and increase the round number.
+
         Parameters
         ----------
         hyper_configs: list
@@ -239,11 +260,49 @@ def extract_scalar_reward(value, scalar_key='default'):
         reward = value[scalar_key]
     else:
         raise RuntimeError(
-            'Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__))
+            'Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(scalar_key))
     return reward
 
 
 class BOHB(MsgDispatcherBase):
+    """BOHB performs robust and efficient hyperparameter optimization
+    at scale by combining the speed of Hyperband searches with the
+    guidance and guarantees of convergence of Bayesian
+    Optimization. Instead of sampling new configurations at random,
+    BOHB uses kernel density estimators to select promising candidates.
+
+    Parameters
+    ----------
+    optimize_mode: str
+        optimize mode, 'maximize' or 'minimize'
+    min_budget: float
+		The smallest budget to consider. Needs to be positive!
+	max_budget: float
+		The largest budget to consider. Needs to be larger than min_budget!
+		The budgets will be geometrically distributed
+        :math:`a^2 + b^2 = c^2 \sim \eta^k` for :math:`k\in [0, 1, ... , num\_subsets - 1]`.
+    eta: float
+		In each iteration, a complete run of sequential halving is executed. In it,
+		after evaluating each configuration on the same subset size, only a fraction of
+		1/eta of them 'advances' to the next round.
+		Must be greater or equal to 2.
+    min_points_in_model: int
+		number of observations to start building a KDE. Default 'None' means
+		dim+1, the bare minimum.
+    top_n_percent: int
+		percentage ( between 1 and 99, default 15) of the observations that are considered good.
+	num_samples: int
+		number of samples to optimize EI (default 64)
+	random_fraction: float
+		fraction of purely random configurations that are sampled from the
+		prior without the model.
+	bandwidth_factor: float
+		to encourage diversity, the points proposed to optimize EI, are sampled
+		from a 'widened' KDE where the bandwidth is multiplied by this factor (default: 3)
+	min_bandwidth: float
+		to keep diversity, even when all (good) samples have the same value for one of the parameters,
+		a minimum bandwidth (Default: 1e-3) is used instead of zero.
+    """
     def __init__(self,
                  optimize_mode='maximize',
                  min_budget=1,
@@ -293,7 +352,9 @@ class BOHB(MsgDispatcherBase):
         pass
 
     def handle_initialize(self, search_space):
-        """
+        """Initialize Tuner, including creating Bayesian optimization-based parametric models 
+        and search space formations
+
         Parameters
         ----------
         search_space: search space
@@ -303,7 +364,7 @@ class BOHB(MsgDispatcherBase):
         # convert search space jason to ConfigSpace
         self.handle_update_search_space(search_space)
 
-        # generate BOHB config_generator using BO
+        # generate BOHB config_generator using Bayesian optimization
         if not self.search_space is None:
             self.cg = CG_BOHB(configspace=self.search_space,
                               min_points_in_model=self.min_points_in_model,
@@ -320,6 +381,7 @@ class BOHB(MsgDispatcherBase):
         return True
 
     def generate_new_bracket(self, curr_s):
+        """generate a new bracket"""
         logger.debug(
             'start to create a new SuccessiveHalving iteration, self.curr_s=%d', self.curr_s)
         if curr_s < 0:
@@ -336,7 +398,8 @@ class BOHB(MsgDispatcherBase):
         self.generated_hyper_configs = generated_hyper_configs.copy()
 
     def handle_request_trial_jobs(self, data):
-        """
+        """recerive the number of request and generate trials
+
         Parameters
         ----------
         data: int
@@ -361,9 +424,7 @@ class BOHB(MsgDispatcherBase):
             1: 'parameter_source', 'algorithm'
             2: 'parameters', value of new hyperparameter
         """
-        # TODO: Add status for NoMoreTrial
         if not self.generated_hyper_configs:
-            """break"""
             ret = {
                 'parameter_id': '-1_0_0',
                 'parameter_source': 'algorithm',
@@ -437,7 +498,8 @@ class BOHB(MsgDispatcherBase):
         return True
 
     def handle_trial_end(self, data):
-        """
+        """receive the information of trial end and generate next configuaration.
+
         Parameters
         ----------
         data: dict()
@@ -446,9 +508,9 @@ class BOHB(MsgDispatcherBase):
             event: the job's state
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
-        print ('handle trial end = ', data, end='')
+        logger.debug('Tuner handle trial end, result is %g' %data)
+
         hyper_params = json_tricks.loads(data['hyper_params'])
-        """(TODO)hyper_params = data['hyper_params']"""
         s, i, _ = hyper_params['parameter_id'].split('_')
         hyper_configs = self.brackets[int(s)].inform_trial_end(int(i))
 
@@ -467,7 +529,7 @@ class BOHB(MsgDispatcherBase):
         return True
 
     def handle_report_metric_data(self, data):
-        """reveice the metric data and update BO with final result
+        """reveice the metric data and update Bayesian optimization with final result
 
         Parameters
         ----------
@@ -479,22 +541,23 @@ class BOHB(MsgDispatcherBase):
         ValueError
             Data type not supported
         """
-        print ('handle report metric data = ', data, end='')
-        result = extract_scalar_reward(data['value'])
-        value = result['default']
-        _loss = result['loss']
+        logger.debug('handle report metric data = %g' %data)
+
+        value = extract_scalar_reward(data['value'])
+        _loss = data['value']['loss']
         s, i, _ = data['parameter_id'].split('_')
+
+        logger.debug('bracket id = %g, metrics value = %g, loss = %g, type = %g' %(s, value, _loss, data['type']))
         s = int(s)
         if data['type'] == 'FINAL':
             # and PERIODICAL metric are independent, thus, not comparable.
-            # (TODO) self.brackets[s].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
             self.brackets[s].set_config_perf(
                 int(i), data['parameter_id'], data['sequence'], value)
             self.completed_hyper_configs.append(data)
-            # update BO with loss, max_s budget, hyperparameters
-
+            
             _parameters = self.parameters[data['parameter_id']]
             _parameters.pop(_KEY)
+            # update BO with loss, max_s budget, hyperparameters
             self.cg.new_result(loss=_loss, budget=data['sequence'], parameters=_parameters, update_model=True)
         elif data['type'] == 'PERIODICAL':
             self.brackets[s].set_config_perf(
