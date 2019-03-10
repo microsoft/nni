@@ -281,7 +281,7 @@ class BOHB(MsgDispatcherBase):
 		The largest budget to consider. Needs to be larger than min_budget!
 		The budgets will be geometrically distributed
         :math:`a^2 + b^2 = c^2 \sim \eta^k` for :math:`k\in [0, 1, ... , num\_subsets - 1]`.
-    eta: float
+    eta: int
 		In each iteration, a complete run of sequential halving is executed. In it,
 		after evaluating each configuration on the same subset size, only a fraction of
 		1/eta of them 'advances' to the next round.
