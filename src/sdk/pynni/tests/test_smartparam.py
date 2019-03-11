@@ -59,7 +59,7 @@ class SmartParamTestCase(TestCase):
 
     def test_lambda_func(self):
         val = nni.function_choice({"lambda: 2*3": lambda: 2*3, "lambda: 3*4": lambda: 3*4}, name = 'lambda_func', key='test_smartparam/lambda_func/function_choice')
-        self.assertEqual(val, 6)
+        self.assertEqual(val, 4)
 
 
 def foo():
