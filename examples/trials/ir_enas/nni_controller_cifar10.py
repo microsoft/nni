@@ -59,9 +59,8 @@ def get_controller_ops(controller_model):
 
 class ENASTuner(ENASBaseTuner):
 
-    def __init__(self, child_train_steps, controller_train_steps, macro_str="macro"):
+    def __init__(self, child_train_steps, controller_train_steps):
         # branches defaults to 6, need to be modified according to ss
-        self.Is_macro = True
         macro_init()
 
         # self.child_totalsteps = (FLAGS.train_data_size + FLAGS.batch_size - 1) // FLAGS.batch_size
