@@ -112,6 +112,8 @@ class SearchSpaceGenerator(ast.NodeTransformer):
         update_dict = eval(astor.to_source(node.args[0]))
         self.search_space.update(update_dict)
 
+        return node
+
 
     def visit_Call(self, node):  # pylint: disable=invalid-name
         self.generic_visit(node)
