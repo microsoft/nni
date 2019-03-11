@@ -120,9 +120,9 @@ class SearchSpaceGenerator(ast.NodeTransformer):
         if type(node.func.value) is not ast.Name:
             return node
         if node.func.value.id == self.layer_dict_name:
-            self.architecture_search(node)
+            return self.architecture_search(node)
         elif node.func.value.id == 'nni':
-            self.general_annotation(node)
+            return self.general_annotation(node)
 
 
 
