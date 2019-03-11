@@ -16,7 +16,7 @@ from src.utils import Logger
 from src.cifar10.data_utils import read_data
 from src.cifar10.general_child import GeneralChild
 from src.nni_child import ENASBaseTrial
-from src.cifar10_flags import *
+from src.cifar10_flags import child_init
 import nni
 
 
@@ -89,7 +89,7 @@ def get_child_ops(child_model):
 class ENASTrial(ENASBaseTrial):
 
     def __init__(self):
-
+        child_init()
         if FLAGS.child_fixed_arc is None:
             images, labels = read_data(FLAGS.data_path)
         else:
