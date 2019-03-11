@@ -123,6 +123,8 @@ class SearchSpaceGenerator(ast.NodeTransformer):
             return self.architecture_search(node)
         elif node.func.value.id == 'nni':
             return self.general_annotation(node)
+        
+        return node
 
 
 
