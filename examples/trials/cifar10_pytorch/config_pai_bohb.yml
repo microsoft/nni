@@ -1,8 +1,8 @@
 authorName: default
-experimentName: example_mnist_BOHB
-maxExecDuration: 10h
-maxTrialNum: 10000
+experimentName: example_pytorch_cifar10
 trialConcurrency: 10
+maxExecDuration: 100h
+maxTrialNum: 1000
 #choice: local, remote, pai
 trainingServicePlatform: pai
 searchSpacePath: search_space.json
@@ -20,9 +20,9 @@ advisor:
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:
-  command: python3 mnist.py
+  command: python3 main_bohb.py
   codeDir: .
-  gpuNum: 0
+  gpuNum: 4
   cpuNum: 1
   memoryMB: 8196
   #The docker image to run nni job on pai
