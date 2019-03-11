@@ -58,8 +58,12 @@ import { mkDirP } from '../../common/utils';
  */
 @component.Singleton
 class RemoteMachineTrainingService implements TrainingService {
-    private machineSSHClientMap: Map<RemoteMachineMeta, Client>;
+    private machineSSHClientMap: Map<RemoteMachineMeta, Client>; //set cluster ssh client
+    private trialSSHClientMap: Map<string, Client>; //set trial ssh client
     private trialJobsMap: Map<string, RemoteMachineTrialJobDetail>;
+    private connectionNumberMap: Map<Client, number>; // set connection number for every ssh client
+    private connectionMetaMap: Map<Client, RemoteMachineMeta>; //set connection meta for every ssh client
+    private maxSSHTrialNumber: number; // every ssh client has a max connection number
     private expRootDir: string;
     private remoteExpRootDir: string;
     private trialConfig: TrialConfig | undefined;
@@ -79,7 +83,11 @@ class RemoteMachineTrainingService implements TrainingService {
         this.remoteOS = 'linux';
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
+        this.trialSSHClientMap = new Map<string, Client>();
+        this.connectionNumberMap = new Map<Client, number>();
+        this.connectionMetaMap = new Map<Client, RemoteMachineMeta>();
         this.machineSSHClientMap = new Map<RemoteMachineMeta, Client>();
+        this.maxSSHTrialNumber = 6; //set the max concurrency trial number in one SSH client
         this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
@@ -115,6 +123,65 @@ class RemoteMachineTrainingService implements TrainingService {
         }
         this.log.info('Remote machine training service exit.');
     }
+    
+    public async setTrialSSHConnection(trial: RemoteMachineTrialJobDetail): Promise<void> {
+        const deferred: Deferred<void> = new Deferred<void>();
+        for (const [conn, number] of this.connectionNumberMap) {
+            const rmMeta = this.connectionMetaMap.get(conn);
+            // use an old connection
+            if(trial.rmMeta === rmMeta && number < this.maxSSHTrialNumber) {
+                this.connectionNumberMap.set(conn, number + 1); // add a connection number
+                this.trialSSHClientMap.set(trial.id, conn);
+                deferred.resolve();
+                return deferred.promise;
+            }
+        };
+        //create a new connection
+        await this.createSSHClient(trial);
+        deferred.resolve();
+        return deferred.promise;
+    }
+
+    /**
+     * Create a new ssh connection client by trial job id
+     */
+    public async createSSHClient(trial: RemoteMachineTrialJobDetail): Promise<void> {
+        const deferred: Deferred<void> = new Deferred<void>();
+        const rmMeta = trial.rmMeta;
+        if (rmMeta === undefined) {
+            throw new Error(`rmMeta not set for ${trial.id}`);
+        }
+        const conn: Client = new Client();
+        let connectConfig: ConnectConfig = {
+            host: rmMeta.ip,
+            port: rmMeta.port,
+            username: rmMeta.username };
+        if (rmMeta.passwd) {
+            connectConfig.password = rmMeta.passwd;                
+        } else if(rmMeta.sshKeyPath) {
+            if(!fs.existsSync(rmMeta.sshKeyPath)) {
+                //SSh key path is not a valid file, reject
+                deferred.reject(new Error(`${rmMeta.sshKeyPath} does not exist.`));
+            }
+            const privateKey: string = fs.readFileSync(rmMeta.sshKeyPath, 'utf8');
+
+            connectConfig.privateKey = privateKey;
+            connectConfig.passphrase = rmMeta.passphrase;
+        } else {
+            deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
+        }
+        conn.on('ready', () => {
+            this.trialSSHClientMap.set(trial.id, conn);
+            this.connectionNumberMap.set(conn, 1); // init connection number to 1 for a new connection
+            this.connectionMetaMap.set(conn, rmMeta);
+            deferred.resolve();
+        }).on('error', (err: Error) => {
+            // SSH connection error, reject with error message
+            deferred.reject(new Error(err.message));
+        }).connect(connectConfig);
+      
+        return deferred.promise;
+    }
 
     /**
      * List submitted trial jobs
@@ -148,8 +215,8 @@ class RemoteMachineTrainingService implements TrainingService {
             if (trialJob.rmMeta === undefined) {
                 throw new Error(`rmMeta not set for submitted job ${trialJobId}`);
             }
-            const sshClient: Client | undefined = this.machineSSHClientMap.get(trialJob.rmMeta);
-            if (!sshClient) {
+            const sshClient = this.trialSSHClientMap.get(trialJob.id);
+            if (sshClient === undefined) {
                 throw new Error(`Invalid job id: ${trialJobId}, cannot find ssh client`);
             }
 
@@ -179,7 +246,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * Submit trial job
      * @param form trial job description form
      */
-    public submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
+    public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
         if (!this.trialConfig) {
             throw new Error('trial config is not initialized');
         }
@@ -271,7 +338,7 @@ class RemoteMachineTrainingService implements TrainingService {
         // Get ssh client where the job is running
         if (trialJob.rmMeta !== undefined) {
             // If the trial job is already scheduled, check its status and kill the trial process in remote machine
-            const sshClient: Client | undefined = this.machineSSHClientMap.get(trialJob.rmMeta);
+            const sshClient: Client | undefined = this.trialSSHClientMap.get(trialJob.id);
             if (!sshClient) {
                 deferred.reject();
                 throw new Error(`Invalid job id ${trialJobId}, cannot find ssh client`);
@@ -282,6 +349,11 @@ class RemoteMachineTrainingService implements TrainingService {
                 // Mark the toEarlyStop tag here
                 trialJob.isEarlyStopped = isEarlyStopped;
                 await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, sshClient);
+                let connectionNumber = this.connectionNumberMap.get(sshClient);
+                if(connectionNumber) {
+                    connectionNumber -= 1;
+                    this.connectionNumberMap.set(sshClient, connectionNumber);
+                }
             } catch (error) {
                 // Not handle the error since pkill failed will not impact trial job's current status
                 this.log.error(`remoteTrainingService.cancelTrialJob: ${error.message}`);
@@ -368,6 +440,11 @@ class RemoteMachineTrainingService implements TrainingService {
                 let jobpidPath: string = path.join(this.getRemoteScriptsPath(rmMeta.username), 'pid');
                 await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, client);
                 await SSHClientUtility.remoteExeCommand(`rm -rf ${this.getRemoteScriptsPath(rmMeta.username)}`, client);
+                client.end();
+            }
+            //close all ssh client
+            for (const [client, rmMeta] of this.connectionMetaMap.entries()) {
+                client.end();
             }
         }catch (error) {
             //ignore error, this function is called to cleanup remote connections when experiment is stopping
@@ -499,13 +576,18 @@ class RemoteMachineTrainingService implements TrainingService {
             && rmScheduleResult.scheduleInfo !== undefined) {
             const rmScheduleInfo : RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
             const trialWorkingFolder: string = path.join(this.remoteExpRootDir, 'trials', trialJobId);
+
+
+         
+            trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
+
+            await this.setTrialSSHConnection(trialJobDetail);
             await this.launchTrialOnScheduledMachine(
                 trialJobId, trialWorkingFolder, <TrialJobApplicationForm>trialJobDetail.form, rmScheduleInfo);
 
             trialJobDetail.status = 'RUNNING';
             trialJobDetail.url = `file://${rmScheduleInfo.rmMeta.ip}:${trialWorkingFolder}`;
             trialJobDetail.startTime = Date.now();
-            trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
 
             deferred.resolve(true);
         } else if (rmScheduleResult.resultType === ScheduleResultType.TMP_NO_AVAILABLE_GPU) {
@@ -524,7 +606,7 @@ class RemoteMachineTrainingService implements TrainingService {
             throw new Error('trial config is not initialized');
         }
         const cuda_visible_device: string = rmScheduleInfo.cuda_visible_device;
-        const sshClient: Client | undefined = this.machineSSHClientMap.get(rmScheduleInfo.rmMeta);
+        const sshClient: Client | undefined = this.trialSSHClientMap.get(trialJobId);
         if (sshClient === undefined) {
             assert(false, 'sshClient is undefined.');
 
@@ -654,6 +736,11 @@ class RemoteMachineTrainingService implements TrainingService {
                         }
                     }
                     trialJob.endTime = parseInt(timestamp, 10);
+                    let connectionNumber = this.connectionNumberMap.get(sshClient);
+                    if(connectionNumber) {
+                        connectionNumber -= 1;
+                        this.connectionNumberMap.set(sshClient, connectionNumber);
+                    }
                 }
                 this.log.debug(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
             }
