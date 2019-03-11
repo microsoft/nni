@@ -9,7 +9,7 @@ trainingServicePlatform: local
 useAnnotation: true
 multiPhase: false
 tuner:
-  codeDir: ../tuner
+  codeDir: src
   classFileName: nni_controller_cifar10.py
   className: ENASTuner
   classArgs:
