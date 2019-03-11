@@ -9,13 +9,13 @@ import time
 import logging
 import tensorflow as tf
 import fcntl
-import utils
-from utils import Logger
-from utils import DEFINE_boolean
-from utils import DEFINE_float
-from utils import DEFINE_integer
-from utils import DEFINE_string
-from cifar10.general_controller import GeneralController
+from src import utils
+from src.utils import Logger
+from src.utils import DEFINE_boolean
+from src.utils import DEFINE_float
+from src.utils import DEFINE_integer
+from src.utils import DEFINE_string
+from src.cifar10.general_controller import GeneralController
 import nni
 from nni.multi_phase.multi_phase_tuner import MultiPhaseTuner
 
