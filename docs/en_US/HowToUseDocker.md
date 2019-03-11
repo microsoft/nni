@@ -9,10 +9,10 @@ Users could start NNI experiments using docker, and NNI provides an offical dock
 
 ## Using docker in local machine
 
-### step 1. Installation of docker
+### Step 1: Installation of docker
 Before you start using docker to start NNI experiments, you should install a docker software in your local machine. [Refer](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 
-### step2. Start docker container
+### Step2: Start docker container
 If you have installed the docker package in your local machine, you could start a docker container instance to run NNI examples. You should notice that because NNI will start a web UI process in container and continue to listen to a port, you need to specify the port mapping between your host machine and docker container to give access to web UI outside the container. By visting the host ip address and port, you could redirect to the web UI process started in docker container, and visit web UI content.
 
 For example, you could start a new docker container from following command:
@@ -31,7 +31,7 @@ Note:
 ```
    NNI only support Ubuntu and MacOS system in local mode for the moment, please use correct docker image type.If you want to use gpu in docker container, please use nvidia-docker.
 ```
-### step3. Run NNI in docker container
+### Step3: Run NNI in docker container
 
 If you start a docker image using NNI's offical image `msranni/nni`, you could directly start NNI experiments by using `nnictl` command. Our offical image has NNI's running environment and basic python and deep learning frameworks environment. 
 
@@ -49,7 +49,7 @@ After you prepare NNI's environment, you could start a new experiment using `nni
 
 NNI support starting experiments in [remoteTrainingService](https://github.com/Microsoft/nni/blob/master/docs/en_US/RemoteMachineMode.md), and run trial jobs in remote machines. As docker could start an independent Ubuntu system as SSH server, docker container could be used ad the remote machine in NNI's remot mode.
 
-### step 1. Setting docker environment
+### Step 1: Setting docker environment
 
 You should install a docker software in your remote machine first, please [refer](https://docs.docker.com/install/linux/docker-ce/ubuntu/).
 
@@ -60,7 +60,7 @@ Note:
 NNI's offical image msranni/nni does not support SSH server for the time being, you should build your own docker image with SSH configuration or use other images as remote server.
 ```
 
-### step2. Start docker container in remote machine
+### Step2: Start docker container in remote machine
 
 SSH server need a port, you need to expose docker's SSH port to NNI as the connection port. For example, if you set your container's SSH port as **`A`**, you should map container's port **`A`** to your remote host machine's another port **`B`**, NNI will connect port **`B`** as SSH port, and your host machine will map the connection from port **`B`** to port **`A`**, then NNI could connect to your docker container.
 
@@ -76,7 +76,7 @@ Note:
 If you use your own docker image as remote server, please make sure that this image has basic python environment and NNI SDK runtime environment. If you want to use gpu in docker container, please use nvidia-docker.
 ```
 
-### step3. Run NNI experiments
+### Step3: Run NNI experiments
 
 You could set your config file as remote platform, and setting the `machineList` configuration to connect your docker SSH server, [refer](https://github.com/Microsoft/nni/blob/master/docs/en_US/RemoteMachineMode.md). Note that you should set correct `port`,`username` and `passwd` or `sshKeyPath` of your host machine.
 
