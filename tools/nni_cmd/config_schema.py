@@ -34,7 +34,7 @@ Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
 Optional('logDir'): os.path.isdir,
-Optional('versionCheck'): bool,
+Optional('debug'): bool,
 Optional('logLevel'): Or('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
 'useAnnotation': bool,
 Optional('advisor'): Or({

@@ -168,13 +168,18 @@ install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
 .PHONY: install-python-modules
 install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
+	cd src/sdk/pynni && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
+	
+	#$(_INFO) Installing nnictl $(_END)
+	cd tools && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
 
 .PHONY: dev-install-python-modules
 dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
-
+	cd src/sdk/pynni && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) -e .
+	
+	#$(_INFO) Installing nnictl $(_END)
+	cd tools && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) -e .
 
 .PHONY: install-node-modules
 install-node-modules:
