@@ -89,7 +89,6 @@ def get_child_ops(child_model):
 class ENASTrial(ENASBaseTrial):
 
     def __init__(self):
-        child_init()
         if FLAGS.child_fixed_arc is None:
             images, labels = read_data(FLAGS.data_path)
         else:
@@ -186,6 +185,7 @@ class ENASTrial(ENASBaseTrial):
 
 
 def main(_):
+    child_init()
     logger.debug("-" * 80)
 
     if not os.path.isdir(FLAGS.output_dir):
