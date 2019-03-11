@@ -45,7 +45,7 @@ logger = logging.getLogger('BOHB_Advisor')
 
 _next_parameter_id = 0
 _KEY = 'STEPS'
-
+_epsilon = 1e-6
 
 @unique
 class OptimizeMode(Enum):
@@ -332,7 +332,7 @@ class BOHB(MsgDispatcherBase):
         self.completed_hyper_configs = []
 
         self.s_max = math.floor(
-            math.log(self.max_budget / self.min_budget, self.eta))
+            math.log(self.max_budget / self.min_budget, self.eta) + _epsilon)
         # current bracket(s) number
         self.curr_s = self.s_max
         # In this case, tuner increases self.credit to issue a trial config sometime later.
