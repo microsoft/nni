@@ -102,7 +102,7 @@ class SearchSpaceGenerator(ast.NodeTransformer):
     def architecture_search(self, node):
         # if it is not a update function
         if node.func.attr != 'update':
-            return
+            return node
 
         self.last_line = node.lineno
 
@@ -116,9 +116,9 @@ class SearchSpaceGenerator(ast.NodeTransformer):
 
         # ignore if the function is not 'nni.*'
         if type(node.func) is not ast.Attribute:
-            return
+            return node
         if type(node.func.value) is not ast.Name:
-            return
+            return node
         if node.func.value.id == self.layer_dict_name:
             self.architecture_search(node)
         elif node.func.value.id == 'nni':
