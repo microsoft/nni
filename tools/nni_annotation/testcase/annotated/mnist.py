@@ -127,7 +127,7 @@ def bias_variable(shape):
 def main():
     data_dir = '/tmp/tensorflow/mnist/input_data'
     mnist = input_data.read_data_sets(data_dir, one_hot=True)
-    logger.debug('Mnist download data down.')
+    logger.debug('Mnist download data done.')
     mnist_network = MnistNetwork()
     mnist_network.build_network()
     logger.debug('Mnist build network done.')
