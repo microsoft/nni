@@ -1,11 +1,32 @@
 # 更改日志
 
+## 发布 0.5.2 - 3/4/2019
+
+### 改进
+
+* 提升 Curve fitting Assessor 的性能。
+
+### 文档
+
+* 发布中文文档网站：https://nni.readthedocs.io/zh/latest/
+* 调试和维护：https://nni.readthedocs.io/en/latest/HowToDebug.html
+* Tuner、Assessor 参考：https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
+
+### Bug 修复和其它更新
+
+* 修复了在某些极端条件下，不能正确存储任务的取消状态。
+* 修复在使用 SMAC Tuner 时，解析搜索空间的错误。
+* 修复 CIFAR-10 样例中的 broken pipe 问题。
+* 为本地训练服务和 NNI 管理器添加单元测试。
+* 为远程服务器、OpenPAI 和 Kubeflow 训练平台在 Azure 中增加集成测试。
+* 在 OpenPAI 客户端中支持 Pylon 路径。
+
 ## 发布 0.5.1 - 1/31/2018
 
 ### 改进
 
-* 可配置[日志目录](ExperimentConfig.md)。
-* 支持[不同级别的日志](ExperimentConfig.md)，使其更易于调试。 
+* [日志目录](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md)可配置。
+* 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md)，使其更易于调试。 
 
 ### 文档
 
@@ -23,14 +44,14 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持[Metis tuner](./Builtin_Tuner.md#MetisTuner) 作为 NNI 的 Tuner。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* 支持新的 [Metis Tuner](metisTuner.md)。 对于**在线**超参调优的场景，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
-* 支持 [Curve fitting （曲线拟合）Assessor](./Builtin_Tuner.md#Curvefitting)，通过曲线拟合的策略来实现提前终止 Trial。
+* 支持 [Curve fitting （曲线拟合）Assessor](curvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
 * 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
 
 #### 改进训练平台
 
-* [FrameworkController 训练服务](./FrameworkControllerMode.md): 支持使用在 Kubernetes 上使用 FrameworkController。 
+* [FrameworkController 训练平台](./FrameworkControllerMode.md): 支持使用在 Kubernetes 上使用 FrameworkController。 
   * FrameworkController 是 Kubernetes 上非常通用的控制器（Controller），能用来运行基于各种机器学习框架的分布式作业，如 TensorFlow，Pytorch， MXNet 等。
   * NNI 为作业定义了统一而简单的规范。
   * 如何使用 FrameworkController 的 MNIST 样例。
@@ -48,12 +69,12 @@
 
 #### 支持新的 Tuner
 
-* 支持新 Tuner [network morphism](./Builtin_Tuner.md#NetworkMorphism)
+* 支持新的 [network morphism](networkmorphismTuner.md) Tuner。
 
 #### 改进训练平台
 
-* 将[Kubeflow 训练服务](KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
-* Kubeflow 训练服务支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
+* 将[Kubeflow 训练平台](KubeflowMode.md)的依赖从 kubectl CLI 迁移到 [Kubernetes API](https://kubernetes.io/docs/concepts/overview/kubernetes-api/) 客户端。
+* Kubeflow 训练平台支持 [Pytorch-operator](https://github.com/kubeflow/pytorch-operator)。
 * 改进将本地代码文件上传到 OpenPAI HDFS 的性能。
 * 修复 OpenPAI 在 WEB 界面的 Bug：当 OpenPAI 认证过期后，Web 界面无法更新 Trial 作业的状态。
 
@@ -82,8 +103,8 @@
 * [Kubeflow 训练服务](./KubeflowMode.md) 
   * 支持 tf-operator
   * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索 Tuner](Builtin_Tuner.md#GridSearch) 
-* [Hyperband Tuner](Builtin_Tuner.md#Hyperband)
+* [网格搜索 Tuner](gridsearchTuner.md) 
+* [Hyperband Tuner](hyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
 * Web 界面 
   * 支持 hyperband Tuner
@@ -137,13 +158,13 @@
   * float
   * 包含有 'default' 键值的 dict，'default' 的值必须为 int 或 float。 dict 可以包含任何其它键值对。
 
-### 新的内置 Tuner
+### 支持新的 Tuner
 
 * **Batch Tuner（批处理调参器）** 会执行所有超参组合，可被用来批量提交 Trial 任务。
 
 ### 新样例
 
-* 公开的 NNI Docker 映像：
+* 公共的 NNI Docker 映像：
   
   ```bash
   docker pull msranni/nni:latest
@@ -166,7 +187,7 @@
 * 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练服务 (参考[这里](./PAIMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
   * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
   * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
-* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](Builtin_Tuner.md)，了解如何使用 SMAC Tuner) 
+* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](smacTuner.md)，了解如何使用 SMAC Tuner) 
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
 * 支持将 NNI 安装在 [conda](https://conda.io/docs/index.html) 和 Python 虚拟环境中。
 * 其它 

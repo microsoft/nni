@@ -92,7 +92,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             formatter: function (data: TooltipForAccuracy) {
                                 const result = '<div class="tooldetailAccuracy">' +
                                     '<div>Trial No: ' + data.data[0] + '</div>' +
-                                    '<div>Default Metrc: ' + data.data[1] + '</div>' +
+                                    '<div>Default Metric: ' + data.data[1] + '</div>' +
                                     '<div>Parameters: ' +
                                     '<pre>' + JSON.stringify(data.data[2], null, 4) + '</pre>' +
                                     '</div>' +
