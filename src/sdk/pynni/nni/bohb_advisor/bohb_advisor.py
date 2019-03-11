@@ -508,7 +508,7 @@ class BOHB(MsgDispatcherBase):
             event: the job's state
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
-        logger.debug('Tuner handle trial end, result is %g' %data)
+        logger.debug('Tuner handle trial end, result is %s', data)
 
         hyper_params = json_tricks.loads(data['hyper_params'])
         s, i, _ = hyper_params['parameter_id'].split('_')
@@ -541,13 +541,13 @@ class BOHB(MsgDispatcherBase):
         ValueError
             Data type not supported
         """
-        logger.debug('handle report metric data = %g' %data)
+        logger.debug('handle report metric data = %s', data)
 
         value = extract_scalar_reward(data['value'])
         _loss = data['value']['loss']
         s, i, _ = data['parameter_id'].split('_')
 
-        logger.debug('bracket id = %g, metrics value = %g, loss = %g, type = %g' %(s, value, _loss, data['type']))
+        logger.debug('bracket id = %s, metrics value = %s, loss = %s, type = %s', s, value, _loss, data['type'])
         s = int(s)
         if data['type'] == 'FINAL':
             # and PERIODICAL metric are independent, thus, not comparable.
