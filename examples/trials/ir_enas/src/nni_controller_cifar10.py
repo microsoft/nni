@@ -14,7 +14,6 @@ import src.utils
 import nni
 from src.utils import Logger
 from src.cifar10.general_controller import GeneralController
-from src.cifar10.micro_controller import MicroController
 from src.nni_controller import ENASBaseTuner
 from src.cifar10_flags import *
 from collections import OrderedDict
@@ -62,34 +61,23 @@ class ENASTuner(ENASBaseTuner):
 
     def __init__(self, child_train_steps, controller_train_steps, macro_str="macro"):
         # branches defaults to 6, need to be modified according to ss
-        if macro_str == "macro":
-            self.Is_macro = True
-            macro_init()
-        else:
-            self.Is_macro = False
-            micro_init()
-
-        logger.debug('Parse parameter done.')
-        logger.debug(macro_str)
+        self.Is_macro = True
+        macro_init()
 
         # self.child_totalsteps = (FLAGS.train_data_size + FLAGS.batch_size - 1) // FLAGS.batch_size
-
-        #self.controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
+        # self.controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
         self.child_train_steps = child_train_steps
         self.controller_train_steps = controller_train_steps
         self.total_steps = max(self.child_train_steps, self.controller_train_steps)
         logger.debug("child steps:\t"+str(self.child_train_steps))
         logger.debug("controller step\t"+str(self.controller_train_steps))
+        logger.debug('Parse parameter done.')
 
         
 
         
     def init_controller(self):
-        if FLAGS.search_for == "micro":
-            ControllerClass = MicroController
-        else:
-            ControllerClass = GeneralController
-        self.controller_model = self.BuildController(ControllerClass)
+        self.controller_model = self.BuildController(GeneralController)
 
         self.graph = tf.Graph()
 
@@ -116,14 +104,8 @@ class ENASTuner(ENASBaseTuner):
         # store them to self.child_arc
         self.pos = 0
         self.entry = 'train'
-        if self.Is_macro:
-            self.child_arc = self.get_controller_arc_macro(self.total_steps)
-            self.epoch = self.epoch + 1
-        else:
-            normal_arc,reduce_arc = self.get_controller_arc_micro(self.total_steps)
-            self.result_arc = normal_arc
-            self.result_arc.extend(reduce_arc)
-            self.epoch = self.epoch + 1    
+        self.child_arc = self.get_controller_arc_macro(self.total_steps)
+        self.epoch = self.epoch + 1
 
 
     def generate_parameters(self, parameter_id, trial_job_id=None):
@@ -156,17 +138,7 @@ class ENASTuner(ENASBaseTuner):
             current_config[layer_name]['input_candidates'] = [info['input_candidates'][ipi] for ipi in inputs_idxs]
             start_idx += 1 + num_input_candidates
 
-        return current_config 
-
-
-    def get_controller_arc_micro(self, child_totalsteps):
-        normal_arc = []
-        reduce_arc = []
-        for _ in range(0, child_totalsteps):
-            arc1, arc2 = self.sess.run(self.controller_model.sample_arc)
-            normal_arc.append(arc1)
-            reduce_arc.append(arc2)
-        return normal_arc,reduce_arc
+        return current_config
 
 
     def controller_one_step(self, epoch, valid_acc_arr):

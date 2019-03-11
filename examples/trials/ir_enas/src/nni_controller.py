@@ -16,7 +16,6 @@ from src.utils import DEFINE_float
 from src.utils import DEFINE_integer
 from src.utils import DEFINE_string
 from src.cifar10.general_controller import GeneralController
-from src.cifar10.micro_controller import MicroController
 import nni
 from nni.multi_phase.multi_phase_tuner import MultiPhaseTuner
 

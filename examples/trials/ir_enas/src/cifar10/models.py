@@ -146,7 +146,7 @@ class Model(object):
     self.images = images
     self.labels = labels
 
-  def eval_once(self, sess, eval_set,arc,child_model, feed_dict=None,SearchForMicro=None, verbose=False):
+  def eval_once(self, sess, eval_set,arc,child_model, feed_dict=None, verbose=False):
     """Expects self.acc and self.global_step to be defined.
 
     Args:
@@ -177,12 +177,8 @@ class Model(object):
     total_exp = 0
 
     for batch_id in range(num_batches):
-      if SearchForMicro:
-        normal_arc,reduce_arc = arc
-        acc = sess.run(acc_op, feed_dict={child_model.normal_arc:normal_arc,child_model.reduce_arc:reduce_arc})
-      else:
-        sample_arc = arc
-        acc = sess.run(acc_op, feed_dict={child_model.sample_arc: sample_arc})
+      sample_arc = arc
+      acc = sess.run(acc_op, feed_dict={child_model.sample_arc: sample_arc})
 
       total_acc += acc
       total_exp += self.eval_batch_size

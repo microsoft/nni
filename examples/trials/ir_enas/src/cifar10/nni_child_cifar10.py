@@ -15,7 +15,6 @@ import pickle
 from src.utils import Logger
 from src.cifar10.data_utils import read_data
 from src.cifar10.general_child import GeneralChild
-from src.cifar10.micro_child import MicroChild
 from src.nni_child import ENASBaseTrial
 from  src.cifar10_flags import *
 import nni
@@ -96,10 +95,7 @@ class ENASTrial(ENASBaseTrial):
         else:
             images, labels = read_data(FLAGS.data_path, num_valids=0)
 
-        if FLAGS.search_for == "micro":
-            ChildClass = MicroChild
-        else:
-            ChildClass = GeneralChild
+        ChildClass = GeneralChild
 
         self.output_dir = os.path.join(os.getenv('NNI_OUTPUT_DIR'), '../..')
         self.file_path = os.path.join(self.output_dir, 'trainable_variable.txt')
@@ -157,75 +153,6 @@ class ENASTrial(ENASBaseTrial):
         with open(file_path, 'wb') as fp:
             pickle.dump(vals, fp)
 
-    def get_child_arc_micro(self, controller_total_steps, normal_arc, reduce_arc):
-        valid_acc_arr = []
-        for idx in range(0, controller_total_steps):
-            cur_valid_acc = self.sess.run(self.child_model.cur_valid_acc,
-                                          feed_dict={self.child_model.normal_arc: normal_arc[idx],
-                                                     self.child_model.reduce_arc: reduce_arc[idx]})
-            valid_acc_arr.append(cur_valid_acc)
-        return valid_acc_arr
-
-
-    def parset_micro_arch(self,child_arc):
-
-        normal_arc = []
-        reduce_arc = []
-
-        number = len(child_arc)
-        half_number = number//2
-
-        logger.debug("get arc total number\t"+str(half_number))
-
-        for i in range(0,half_number):
-            arc = child_arc[i]['__ndarray__']
-            normal_arc.append(arc)
-
-        for i in range(half_number,number):
-            arc = child_arc[i]['__ndarray__']
-            reduce_arc.append(arc)
-
-        return normal_arc,reduce_arc
-
-
-    def run_cchild_one_micro(self, child_totalsteps, normal_arc, reduce_arc):
-        run_ops = [
-            self.child_ops["loss"],
-            self.child_ops["lr"],
-            self.child_ops["grad_norm"],
-            self.child_ops["train_acc"],
-            self.child_ops["train_op"],
-        ]
-
-        actual_step = None
-        epoch = None
-
-        for step in range(0, child_totalsteps):
-
-            loss, lr, gn, tr_acc, _ = self.sess.run\
-                (run_ops, feed_dict={self.child_model.normal_arc: normal_arc[step],
-                                     self.child_model.reduce_arc: reduce_arc[step]})
-
-            global_step = self.sess.run(self.child_ops["global_step"])
-            if FLAGS.child_sync_replicas:
-                actual_step = global_step * FLAGS.num_aggregate
-            else:
-                actual_step = global_step
-            epoch = actual_step // self.child_ops["num_train_batches"]
-            if global_step % FLAGS.log_every == 0:
-                log_string = ""
-                log_string += "epoch={:<6d}".format(epoch)
-                log_string += "ch_step={:<6d}".format(global_step)
-                log_string += " loss={:<8.6f}".format(loss)
-                log_string += " lr={:<8.4f}".format(lr)
-                log_string += " |g|={:<8.4f}".format(gn)
-                log_string += " tr_acc={:<3d}/{:>3d}".format(
-                    tr_acc, FLAGS.batch_size)
-                logger.debug(log_string)
-
-        return actual_step, epoch
-
-
     def run_child_one_macro(self):
         run_ops = [
             self.child_ops["loss"],
@@ -236,19 +163,8 @@ class ENASTrial(ENASBaseTrial):
         ]
 
         actual_step = None
-        #epoch = None
-
-        #for step in range(0, child_totalsteps):
         loss, lr, gn, tr_acc, _ = self.sess.run(run_ops)
-
         global_step = self.sess.run(self.child_ops["global_step"])
-
-        # if FLAGS.child_sync_replicas:
-        #     actual_step = global_step * FLAGS.num_aggregate
-        # else:
-        #     actual_step = global_step
-
-        # epoch = actual_step // self.child_ops["num_train_batches"]
         log_string = ""
         #log_string += "epoch={:<6d}".format(epoch)
         log_string += "ch_step={:<6d}".format(global_step)
@@ -262,25 +178,14 @@ class ENASTrial(ENASBaseTrial):
         self.save(self.output_dir, self.file_path)
         return loss
 
-
-    def start_eval_micro(self, first_arc):
-        self.child_ops["eval_func"]\
-            (self.sess, "valid", first_arc, self.child_model, SearchForMicro=True)
-        self.child_ops["eval_func"]\
-            (self.sess, "test", first_arc, self.child_model, SearchForMicro=True)
-
-
     def start_eval_macro(self, first_arc):
         self.child_ops["eval_func"]\
-            (self.sess, "valid", first_arc, self.child_model, SearchForMicro=False)
+            (self.sess, "valid", first_arc, self.child_model)
         self.child_ops["eval_func"]\
-            (self.sess, "test", first_arc, self.child_model, SearchForMicro=False)
+            (self.sess, "test", first_arc, self.child_model)
 
 
 def main(_):
-    is_micro = False
-    if FLAGS.search_for == "micro":
-        is_micro = True
     logger.debug("-" * 80)
 
     if not os.path.isdir(FLAGS.output_dir):
@@ -303,58 +208,21 @@ def main(_):
 
     """@nni.variable(nni.choice('train', 'validate'), name=entry)"""
     entry = 'trian'
-    if is_micro:
-        while True:
-            if epoch >= FLAGS.num_epochs:
-                break
 
-            logger.debug("get parameter")
-            #parameters =  nni.get_parameters()
-            parameters = nni.get_next_parameter()
-            logger.debug(parameters)
+    logger.debug("get paramters")
 
-            normal_arc,reduce_arc = trial.parset_micro_arch(parameters)
-            assert len(normal_arc) == len(reduce_arc)
-
-            logger.debug("parse arch finish!")
-
-            first_arc = (normal_arc[0], reduce_arc[0])
-            logger.debug("len\t" + str(len(normal_arc)))
-
-            actual_step, epoch = trial.run_cchild_one_micro(child_totalsteps, normal_arc, reduce_arc)
-
-            logger.debug("epoch:\t" + str(epoch)+"actual_step:\t"+str(actual_step))
-            valid_acc_arr = trial.get_child_arc_micro(controller_total_steps, normal_arc, reduce_arc)
-            logger.debug("Get rewards Done!\n")
-
-            nni.report_final_result(valid_acc_arr)
-            logger.debug("Send rewards Done\n")
-
-            trial.start_eval_micro(first_arc=first_arc)
-
+    if entry == 'train':
+        loss = trial.run_child_one_macro()
+        '''@nni.report_final_result(loss)'''
+    elif entry == 'validate':
+        valid_acc_arr = trial.get_csvaa()
+        '''@nni.report_final_result(valid_acc_arr)'''
+        logger.debug("Get rewards Done!\n")
     else:
-        # while True:
-        #     if epoch >= FLAGS.num_epochs:
-        #         break
+        raise RuntimeError('No such entry: ' + entry)
 
-        logger.debug("get paramters")
-        #child_arc = nni.get_parameters()
-        # actual_step, epoch = trial.run_child_one_macro(child_totalsteps, child_arc)
-        # logger.debug("epoch:\t" + str(epoch))
-
-        
-        if entry == 'train':
-            loss = trial.run_child_one_macro()
-            '''@nni.report_final_result(loss)'''
-        elif entry == 'validate':
-            valid_acc_arr = trial.get_csvaa()
-            '''@nni.report_final_result(valid_acc_arr)'''
-            logger.debug("Get rewards Done!\n")
-        else:
-            raise RuntimeError('No such entry: ' + entry)
-
-        logger.debug("Send rewards Done\n")
-        #trial.start_eval_macro(first_arc=first_arc)
+    logger.debug("Send rewards Done\n")
+    #trial.start_eval_macro(first_arc=first_arc)
 
 
 if __name__ == "__main__":

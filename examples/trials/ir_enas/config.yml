@@ -1,8 +1,8 @@
 authorName: Unknown
 experimentName: enas_macro
-trialConcurrency: 2
+trialConcurrency: 1
 maxExecDuration: 24h
-maxTrialNum: 4
+maxTrialNum: 6
 #choice: local, remote
 trainingServicePlatform: local
 #choice: true, false
@@ -13,14 +13,13 @@ tuner:
   classFileName: nni_controller_cifar10.py
   className: ENASTuner
   classArgs:
-    macro_str: "macro"
-    child_train_steps: 10
-    controller_train_steps: 10
+    child_train_steps: 2
+    controller_train_steps: 1
 
 trial:
-  command: sh ./script/macro_child.sh
+  command: sh ./macro_cifar10.sh
   codeDir: ./
-  gpuNum: 2
+  gpuNum: 1
 
 # machineList:
 #   - ip: 10.150.144.121
