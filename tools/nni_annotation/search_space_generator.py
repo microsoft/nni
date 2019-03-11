@@ -99,6 +99,8 @@ class SearchSpaceGenerator(ast.NodeTransformer):
 
         self.search_space[key] = value
 
+        return node
+
     def architecture_search(self, node):
         # if it is not a update function
         if node.func.attr != 'update':
