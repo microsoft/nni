@@ -46,7 +46,7 @@ jobs:
       python3 -m pip install tensorflow-gpu==1.10.0 --user
       sudo apt-get install swig -y
       nnictl package install --name=SMAC
-    displayName: 'Install dependencies for integration tests'
+    displayName: 'Install dependencies for integration tests in PAI mode'
 
   - script: |
       if [ $(build_docker_img) = 'true' ]
