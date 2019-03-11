@@ -16,7 +16,7 @@ from src.utils import Logger
 from src.cifar10.data_utils import read_data
 from src.cifar10.general_child import GeneralChild
 from src.nni_child import ENASBaseTrial
-from src.cifar10_flags import child_init
+from src.cifar10_flags import *
 import nni
 
 
