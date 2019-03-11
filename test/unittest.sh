@@ -18,7 +18,7 @@ export NNI_PLATFORM=unittest
 echo ""
 echo "===========================Testing: nni_sdk==========================="
 cd ${CWD}/../src/sdk/pynni/
-python3 -m unittest discover -fv tests
+python3 -m unittest discover -v tests
 
 
 
