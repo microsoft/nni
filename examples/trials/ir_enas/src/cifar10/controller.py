@@ -36,8 +36,8 @@ class ConvController(Controller):
                num_replicas=None,
                name="controller"):
 
-    print "-" * 80
-    print "Building ConvController"
+    print("-" * 80)
+    print("Building ConvController")
 
     self.num_branches = num_branches
     self.num_layers = num_layers
@@ -170,9 +170,9 @@ class ConvController(Controller):
     tf_variables = [var for var in tf.trainable_variables()
                     if var.name.startswith(self.name)
                       and "w_critic" not in var.name]
-    print "-" * 80
+    print("-" * 80)
     for var in tf_variables:
-      print var
+      print(var)
     self.train_op, self.lr, self.grad_norm, self.optimizer = get_train_ops(
       self.loss,
       tf_variables,
