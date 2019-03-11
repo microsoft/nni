@@ -12,10 +12,10 @@ import tensorflow as tf
 import fcntl
 import src.utils
 import nni
-from src.utils import Logger
-from src.cifar10.general_controller import GeneralController
-from src.nni_controller import ENASBaseTuner
-from src.cifar10_flags import *
+from utils import Logger
+from cifar10.general_controller import GeneralController
+from nni_controller import ENASBaseTuner
+from cifar10_flags import *
 from collections import OrderedDict
 
 def build_logger(log_name):
