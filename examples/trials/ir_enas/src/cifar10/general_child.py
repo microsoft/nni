@@ -206,7 +206,7 @@ class GeneralChild(Model):
       else:
         start_idx = self.num_branches
 
-      def process_pooling_layer(x, layer_id, layers, out_filters, is_training):
+      def process_pooling_layer(layer_id, layers, out_filters, is_training):
         if self.fixed_arc is not None:
           out_filters *= 2
         with tf.variable_scope("pool_at_{0}".format(layer_id)):
@@ -216,8 +216,7 @@ class GeneralChild(Model):
               x = self._factorized_reduction(
                 layer, out_filters, 2, is_training)
             pooled_layers.append(x)
-          layers = pooled_layers
-          return layers
+          return pooled_layers, out_filters
 
       def post_process_out(out, inputs, res_layers):
         if self.data_format == "NHWC":
@@ -283,40 +282,40 @@ class GeneralChild(Model):
           outputs: layer_0_out,
         },
         layer_1: {
-          layer_choice: [avg_pool, max_pool],
+          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [layer_0_out],
           input_num: 1,
           input_aggregate: None,
           outputs: layer_1_out,
         },
         layer_2: {
-          layer_choice: [conv3_sep, conv5_sep],
+          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [layer_0_out, layer_1_out],
           input_num: 1,
           input_aggregate: None,
           outputs: layer_2_out,
         },
         layer_3: {
-          layer_choice: [conv3, conv5],
+          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [layer_0_out, layer_1_out, layer_2_out],
           input_num: 1,
           input_aggregate: None,
           outputs: layer_3_out,
         }
       }"""
-      #layers = process_pooling_layer(x, "3", layers, out_filters, is_training)
+      layers, out_filters = process_pooling_layer("3", layers, out_filters, is_training)
       """@nni.architecture
       {
         layer_4: {
-          layer_choice: [avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_2_out, layer_3_out],
+          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
+          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out],
           input_num: 1,
           input_aggregate: None,
           outputs: layer_4_out,
         },
         layer_5: {
           layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_4_out],
+          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out],
           input_num: 1,
           input_aggregate: None,
           outputs: layer_5_out,
@@ -336,7 +335,7 @@ class GeneralChild(Model):
           outputs: layer_7_out,
         }
       }"""
-      #layers = process_pooling_layer(x, "7", layers, out_filters, is_training)
+      layers, out_filters = process_pooling_layer("7", layers, out_filters, is_training)
       """@nni.architecture
       {
         layer_8: {
