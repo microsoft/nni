@@ -21,6 +21,7 @@
 
 import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUSummary } from '../common/gpuData';
+import { Client } from 'ssh2';
 
 
 /**
@@ -91,6 +92,15 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
         this.form = form;
         this.sequenceId = sequenceId;
         this.tags = [];
+    }
+}
+
+export class RemoteSSHClient {
+    public client: Client;
+    public connectionNumber: number;
+    constructor(client: Client, connectionNumber: number) {
+        this.client = client;
+        this.connectionNumber = connectionNumber;
     }
 }
 
