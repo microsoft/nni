@@ -43,7 +43,7 @@ import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { GPUScheduler } from './gpuScheduler';
 import {
     HOST_JOB_SHELL_FORMAT, RemoteCommandResult, RemoteMachineMeta,
-    RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteSSHClient,
+    RemoteMachineScheduleInfo, RemoteMachineScheduleResult, SSHClient, SSHClientManager,
     RemoteMachineTrialJobDetail, ScheduleResultType, REMOTEMACHINE_TRIAL_COMMAND_FORMAT, 
     GPU_COLLECTOR_FORMAT
 } from './remoteMachineData';
@@ -58,7 +58,7 @@ import { mkDirP } from '../../common/utils';
  */
 @component.Singleton
 class RemoteMachineTrainingService implements TrainingService {
-    private machineSSHClientMap: Map<RemoteMachineMeta, RemoteSSHClient[]>; //machine ssh client map
+    private machineSSHClientMap: Map<RemoteMachineMeta, SSHClientManager>; //machine ssh client map
     private trialSSHClientMap: Map<string, Client>; //trial ssh client map
     private trialJobsMap: Map<string, RemoteMachineTrialJobDetail>;
     private readonly MAX_TRIAL_NUMBER_PER_SSHCONNECTION: number = 5 // every ssh client has a max trial concurrency number
@@ -82,7 +82,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.trialSSHClientMap = new Map<string, Client>();
-        this.machineSSHClientMap = new Map<RemoteMachineMeta, RemoteSSHClient[]>();
+        this.machineSSHClientMap = new Map<RemoteMachineMeta, SSHClientManager>();
         this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
@@ -124,22 +124,18 @@ class RemoteMachineTrainingService implements TrainingService {
         if(!trial.rmMeta) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
         }
-        let remoteSSHClientArray: RemoteSSHClient[] | undefined = this.machineSSHClientMap.get(trial.rmMeta);
-        if(!remoteSSHClientArray) {
+        let sshClientManager: SSHClientManager | undefined = this.machineSSHClientMap.get(trial.rmMeta);
+        if(!sshClientManager) {
             throw new Error(`remoteSSHClient not initialized`);
         }
-        for (const index in remoteSSHClientArray) {
-            let connectionNumber: number = remoteSSHClientArray[index].connectionNumber;
-            if(connectionNumber < this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION) {
-                this.trialSSHClientMap.set(trial.id, remoteSSHClientArray[index].client);
-                remoteSSHClientArray[index].connectionNumber = connectionNumber + 1; // add a connection number
-                this.machineSSHClientMap.set(trial.rmMeta, remoteSSHClientArray);
-                deferred.resolve();
-                return deferred.promise;
-            }
-        };
-        //create a new connection
-        await this.createSSHClient(trial);
+        let sshClient: Client | undefined = sshClientManager.getAvailableSSHClient();
+        if(!sshClient) {
+            //create a new connection
+            await this.createSSHClient(trial);
+        }else {
+            this.trialSSHClientMap.set(trial.id, sshClient);
+        }
+
         deferred.resolve();
         return deferred.promise;
     }
@@ -174,12 +170,12 @@ class RemoteMachineTrainingService implements TrainingService {
         }
         conn.on('ready', () => {
             this.trialSSHClientMap.set(trial.id, conn);
-            let remoteSSHClientArray: RemoteSSHClient[] | undefined= this.machineSSHClientMap.get(rmMeta);
-            if(!remoteSSHClientArray) {
-                throw new Error(`ssh client is not initialized!`);
+            let sshClientManager: SSHClientManager | undefined = this.machineSSHClientMap.get(rmMeta);
+            if(!sshClientManager) {
+                throw new Error(`ssh clientManager is not initialized in trial ${trial.id}!`);
             }
-            remoteSSHClientArray.push({client: conn, connectionNumber: 1});
-            this.machineSSHClientMap.set(rmMeta, remoteSSHClientArray)
+            sshClientManager.addNewSSHClient(conn);
+            this.machineSSHClientMap.set(rmMeta, sshClientManager);
             deferred.resolve();
         }).on('error', (err: Error) => {
             // SSH connection error, reject with error message
@@ -197,21 +193,16 @@ class RemoteMachineTrainingService implements TrainingService {
         if(!trial.rmMeta) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
         }
-        let remoteSSHClientArray: RemoteSSHClient[] | undefined = this.machineSSHClientMap.get(trial.rmMeta);
-        if(!remoteSSHClientArray) {
-            throw new Error(`remoteSSHClient not initialized`);
+        let sshClientManager: SSHClientManager | undefined = this.machineSSHClientMap.get(trial.rmMeta);
+        if(!sshClientManager) {
+            throw new Error(`sshClientManager not initialized`);
         }
         const conn: Client | undefined = this.trialSSHClientMap.get(trial.id);
         if(!conn) {
             throw new Error(`ssh client not set in trial ${trial.id}`);
         }
-        for (const index in remoteSSHClientArray) {
-            if(conn === remoteSSHClientArray[index].client) {
-                remoteSSHClientArray[index].connectionNumber -= 1;
-                this.machineSSHClientMap.set(trial.rmMeta, remoteSSHClientArray);
-                return ;
-            }
-        };
+        sshClientManager.minusUsedConnectionNumber(conn);
+        this.machineSSHClientMap.set(trial.rmMeta, sshClientManager);
     }
 
     /**
@@ -463,16 +454,14 @@ class RemoteMachineTrainingService implements TrainingService {
      */
     private async cleanupConnections(): Promise<void> {
         try{
-            for (const [rmMeta, remoteSSHClientArray] of this.machineSSHClientMap.entries()) {
+            for (const [rmMeta, sshClientManager] of this.machineSSHClientMap.entries()) {
                 let jobpidPath: string = path.join(this.getRemoteScriptsPath(rmMeta.username), 'pid');
-                let client: Client | undefined = remoteSSHClientArray[0].client;
+                let client: Client | undefined = sshClientManager.getFirstSSHClient();
                 if(client) {
                     await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, client);
                     await SSHClientUtility.remoteExeCommand(`rm -rf ${this.getRemoteScriptsPath(rmMeta.username)}`, client);
                 }
-                for (const remoteSSHClient of remoteSSHClientArray) {
-                    remoteSSHClient.client.end(); // close all of ssh client
-                }
+                sshClientManager.closeAllSSHClient();
             }
         }catch (error) {
             //ignore error, this function is called to cleanup remote connections when experiment is stopping
@@ -538,7 +527,7 @@ class RemoteMachineTrainingService implements TrainingService {
             
             conn.on('ready', async () => {
                 //Initialize connection, the first connection is used for gpu collector
-                this.machineSSHClientMap.set(rmMeta, [{client: conn, connectionNumber: 1}]);
+                this.machineSSHClientMap.set(rmMeta, new SSHClientManager([new SSHClient(conn, 1)], this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION));
                 await this.initRemoteMachineOnConnected(rmMeta, conn);
                 if (++connectedRMNum === rmMetaList.length) {
                     deferred.resolve();
@@ -701,11 +690,11 @@ class RemoteMachineTrainingService implements TrainingService {
 
     private async runHostJob(form: HostJobApplicationForm): Promise<TrialJobDetail> {
         const rmMeta: RemoteMachineMeta = this.getRmMetaByHost(form.host);
-        const remoteSSHClientArray: RemoteSSHClient[] | undefined = this.machineSSHClientMap.get(rmMeta);
-        if (remoteSSHClientArray === undefined) {
+        const sshClientManager: SSHClientManager | undefined = this.machineSSHClientMap.get(rmMeta);
+        if (sshClientManager === undefined) {
             throw new Error('sshClient not found.');
         }
-        let sshClient: Client = remoteSSHClientArray[0].client;
+        let sshClient: Client = sshClientManager.getFirstSSHClient();
         const jobId: string = uniqueString(5);
         const localDir: string = path.join(this.expRootDir, 'hostjobs-local', jobId);
         const remoteDir: string = this.getHostJobRemoteDir(jobId);

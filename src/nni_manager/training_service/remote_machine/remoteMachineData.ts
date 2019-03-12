@@ -98,14 +98,91 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
 /**
  * The remote machine ssh client used for trial and gpu detector
  */
-export class RemoteSSHClient {
-    public client: Client;
-    public connectionNumber: number; //count the connection number of every client
-    constructor(client: Client, connectionNumber: number) {
-        this.client = client;
-        this.connectionNumber = connectionNumber;
+export class SSHClient {
+    private readonly sshClient: Client;
+    private usedConnectionNumber: number; //count the connection number of every client
+    constructor(sshClient: Client, usedConnectionNumber: number) {
+        this.sshClient = sshClient;
+        this.usedConnectionNumber = usedConnectionNumber;
+    }
+    
+    public get getSSHClientInstance(): Client {
+        return this.sshClient;
+    }
+
+    public get getUsedConnectionNumber(): number {
+        return this.usedConnectionNumber;
+    }
+
+    public addUsedConnectionNumber() {
+        this.usedConnectionNumber += 1;
+    }
+
+    public minusUsedConnectionNumber() {
+        this.usedConnectionNumber -= 1;
     }
 }
+
+export class SSHClientManager {
+    private sshClientArray: SSHClient[];
+    private readonly maxTrialNumberPerConnection: number;
+    constructor(sshClientArray: SSHClient[], maxTrialNumberPerConnection: number) {
+        this.sshClientArray = sshClientArray;
+        this.maxTrialNumberPerConnection = maxTrialNumberPerConnection;
+    }
+    
+    /**
+     * find a available ssh client in ssh array, if no ssh client available, return undefined
+     */
+    public getAvailableSSHClient(): Client | undefined {
+        for (const index in this.sshClientArray) {
+            let connectionNumber: number = this.sshClientArray[index].getUsedConnectionNumber;
+            if(connectionNumber < this.maxTrialNumberPerConnection) {
+                this.sshClientArray[index].addUsedConnectionNumber();
+                return this.sshClientArray[index].getSSHClientInstance;
+            }
+        };
+        return undefined;
+    }
+    
+    /**
+     * add a new ssh client to sshClientArray
+     * @param sshClient
+     */
+    public addNewSSHClient(client: Client) {
+        this.sshClientArray.push(new SSHClient(client, 1));
+    }
+    
+    /**
+     * first ssh clilent instance is used for gpu collector and host job
+     */
+    public getFirstSSHClient() {
+        return this.sshClientArray[0].getSSHClientInstance;
+    }
+    
+    /**
+     * close all of ssh client
+     */
+    public closeAllSSHClient() {
+        for (let sshClient of this.sshClientArray) {
+            sshClient.getSSHClientInstance.end();
+        }
+    }
+    
+    /**
+     * retrieve resource, minus a number for given ssh client
+     * @param client
+     */
+    public minusUsedConnectionNumber(client: Client) {
+        for(let index in this.sshClientArray) {
+            if(this.sshClientArray[index].getSSHClientInstance === client) {
+                this.sshClientArray[index].minusUsedConnectionNumber();
+                break;
+            }
+        }
+    }
+} 
+
 
 export type RemoteMachineScheduleResult = { scheduleInfo : RemoteMachineScheduleInfo | undefined; resultType : ScheduleResultType};
 
