@@ -119,7 +119,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.log.info('Remote machine training service exit.');
     }
     
-    public async setTrialSSHConnection(trial: RemoteMachineTrialJobDetail): Promise<void> {
+    public async setTrialSSHClientMapValue(trial: RemoteMachineTrialJobDetail): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         if(!trial.rmMeta) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
@@ -131,7 +131,8 @@ class RemoteMachineTrainingService implements TrainingService {
         let sshClient: Client | undefined = sshClientManager.getAvailableSSHClient();
         if(!sshClient) {
             //create a new connection
-            await this.createSSHClient(trial);
+            let sshClient: Client = await sshClientManager.createSSHClient();
+            this.trialSSHClientMap.set(trial.id, sshClient);
         }else {
             this.trialSSHClientMap.set(trial.id, sshClient);
         }
@@ -139,57 +140,12 @@ class RemoteMachineTrainingService implements TrainingService {
         deferred.resolve();
         return deferred.promise;
     }
-
-    /**
-     * Create a new ssh connection client by trial job id
-     */
-    public async createSSHClient(trial: RemoteMachineTrialJobDetail): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-        const rmMeta = trial.rmMeta;
-        if (rmMeta === undefined) {
-            throw new Error(`rmMeta not set for ${trial.id}`);
-        }
-        const conn: Client = new Client();
-        let connectConfig: ConnectConfig = {
-            host: rmMeta.ip,
-            port: rmMeta.port,
-            username: rmMeta.username };
-        if (rmMeta.passwd) {
-            connectConfig.password = rmMeta.passwd;                
-        } else if(rmMeta.sshKeyPath) {
-            if(!fs.existsSync(rmMeta.sshKeyPath)) {
-                //SSh key path is not a valid file, reject
-                deferred.reject(new Error(`${rmMeta.sshKeyPath} does not exist.`));
-            }
-            const privateKey: string = fs.readFileSync(rmMeta.sshKeyPath, 'utf8');
-
-            connectConfig.privateKey = privateKey;
-            connectConfig.passphrase = rmMeta.passphrase;
-        } else {
-            deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
-        }
-        conn.on('ready', () => {
-            this.trialSSHClientMap.set(trial.id, conn);
-            let sshClientManager: SSHClientManager | undefined = this.machineSSHClientMap.get(rmMeta);
-            if(!sshClientManager) {
-                throw new Error(`ssh clientManager is not initialized in trial ${trial.id}!`);
-            }
-            sshClientManager.addNewSSHClient(conn);
-            this.machineSSHClientMap.set(rmMeta, sshClientManager);
-            deferred.resolve();
-        }).on('error', (err: Error) => {
-            // SSH connection error, reject with error message
-            deferred.reject(new Error(err.message));
-        }).connect(connectConfig);
-      
-        return deferred.promise;
-    }
     
     /**
-     * If a trial is finished, retrieve the connection resource
+     * If a trial is finished, release the connection resource connected to a ssh client
      * @param trial 
      */
-    public retrieveSSHClient(trial: RemoteMachineTrialJobDetail): void {
+    public releaseSSHClientConnectionNumber(trial: RemoteMachineTrialJobDetail): void {
         if(!trial.rmMeta) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
         }
@@ -371,7 +327,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 // Mark the toEarlyStop tag here
                 trialJob.isEarlyStopped = isEarlyStopped;
                 await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, sshClient);
-                this.retrieveSSHClient(trialJob);
+                this.releaseSSHClientConnectionNumber(trialJob);
             } catch (error) {
                 // Not handle the error since pkill failed will not impact trial job's current status
                 this.log.error(`remoteTrainingService.cancelTrialJob: ${error.message}`);
@@ -527,7 +483,7 @@ class RemoteMachineTrainingService implements TrainingService {
             
             conn.on('ready', async () => {
                 //Initialize connection, the first connection is used for gpu collector
-                this.machineSSHClientMap.set(rmMeta, new SSHClientManager([new SSHClient(conn, 1)], this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION));
+                this.machineSSHClientMap.set(rmMeta, new SSHClientManager([new SSHClient(conn, 1)], this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION, rmMeta));
                 await this.initRemoteMachineOnConnected(rmMeta, conn);
                 if (++connectedRMNum === rmMetaList.length) {
                     deferred.resolve();
@@ -597,7 +553,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
 
-            await this.setTrialSSHConnection(trialJobDetail);
+            await this.setTrialSSHClientMapValue(trialJobDetail);
             await this.launchTrialOnScheduledMachine(
                 trialJobId, trialWorkingFolder, <TrialJobApplicationForm>trialJobDetail.form, rmScheduleInfo);
 
@@ -753,7 +709,7 @@ class RemoteMachineTrainingService implements TrainingService {
                         }
                     }
                     trialJob.endTime = parseInt(timestamp, 10);
-                    this.retrieveSSHClient(trialJob);
+                    this.releaseSSHClientConnectionNumber(trialJob);
                 }
                 this.log.debug(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
             }

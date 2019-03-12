@@ -21,7 +21,9 @@
 
 import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUSummary } from '../common/gpuData';
-import { Client } from 'ssh2';
+import { Client, ConnectConfig } from 'ssh2';
+import { Deferred } from 'ts-deferred';
+import * as fs from 'fs';
 
 
 /**
@@ -126,9 +128,46 @@ export class SSHClient {
 export class SSHClientManager {
     private sshClientArray: SSHClient[];
     private readonly maxTrialNumberPerConnection: number;
-    constructor(sshClientArray: SSHClient[], maxTrialNumberPerConnection: number) {
+    private readonly rmMeta: RemoteMachineMeta;
+    constructor(sshClientArray: SSHClient[], maxTrialNumberPerConnection: number, rmMeta: RemoteMachineMeta) {
+        this.rmMeta = rmMeta;
         this.sshClientArray = sshClientArray;
         this.maxTrialNumberPerConnection = maxTrialNumberPerConnection;
+    }
+
+    /**
+     * Create a new ssh connection client by trial job id
+     */
+    public async initNewSSHClient(): Promise<Client> {
+        const deferred: Deferred<Client> = new Deferred<Client>();
+        const conn: Client = new Client();
+        let connectConfig: ConnectConfig = {
+            host: this.rmMeta.ip,
+            port: this.rmMeta.port,
+            username: this.rmMeta.username };
+        if (this.rmMeta.passwd) {
+            connectConfig.password = this.rmMeta.passwd;                
+        } else if(this.rmMeta.sshKeyPath) {
+            if(!fs.existsSync(this.rmMeta.sshKeyPath)) {
+                //SSh key path is not a valid file, reject
+                deferred.reject(new Error(`${this.rmMeta.sshKeyPath} does not exist.`));
+            }
+            const privateKey: string = fs.readFileSync(this.rmMeta.sshKeyPath, 'utf8');
+
+            connectConfig.privateKey = privateKey;
+            connectConfig.passphrase = this.rmMeta.passphrase;
+        } else {
+            deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
+        }
+        conn.on('ready', () => {
+            this.addNewSSHClient(conn);
+            deferred.resolve(conn);
+        }).on('error', (err: Error) => {
+            // SSH connection error, reject with error message
+            deferred.reject(new Error(err.message));
+        }).connect(connectConfig);
+      
+        return deferred.promise;
     }
     
     /**
