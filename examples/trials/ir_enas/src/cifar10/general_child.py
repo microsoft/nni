@@ -304,10 +304,7 @@ class GeneralChild(Model):
         }
       }"""
       layers, out_filters = add_fixed_pooling_layer(3, layers, out_filters, is_training)
-      for i in range(4):
-        exec('layer_{0}_out=layers[{0}]'.format(i))
-      print('interval', layers[-1].get_shape())
-      print('layer_1_out', layer_1_out.get_shape())
+      layer_0_out, layer_1_out, layer_2_out, layer_3_out = layers
       """@nni.architecture
       {
         layer_4: {
@@ -340,8 +337,7 @@ class GeneralChild(Model):
         }
       }"""
       layers, out_filters = add_fixed_pooling_layer(7, layers, out_filters, is_training)
-      for i in range(8):
-        exec('layer_{0}_out=layers[{0}]'.format(i))
+      layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out = layers
       """@nni.architecture
       {
         layer_8: {
