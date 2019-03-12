@@ -47,7 +47,6 @@ logLevelMap = {
     'info': logging.INFO,
     'debug': logging.DEBUG
 }
-log_level = logging.INFO #default log level is INFO
 
 _time_format = '%Y-%m-%d %H:%M:%S'
 class _LoggerFileWrapper(TextIOBase):
@@ -70,8 +69,11 @@ def init_logger(logger_file_path):
         logger_file_path = 'unittest.log'
     elif env_args.log_dir is not None:
         logger_file_path = os.path.join(env_args.log_dir, logger_file_path)
-    if env_args.log_level:
-        log_level = logLevelMap.get(env_args.log_level)
+    if env_args.log_level and logLevelMap.get(env_args.log_level):
+        log_level = logLevelMap[env_args.log_level]
+    else:
+        log_level = logging.INFO #default log level is INFO
+
     
     logger_file = open(logger_file_path, 'w')
     fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
