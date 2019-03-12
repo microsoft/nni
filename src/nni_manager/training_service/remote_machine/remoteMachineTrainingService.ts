@@ -135,11 +135,9 @@ class RemoteMachineTrainingService implements TrainingService {
         let sshClient: Client | undefined = sshClientManager.getAvailableSSHClient();
         if(!sshClient) {
             //create a new connection
-            let sshClient: Client = await sshClientManager.initNewSSHClient();
-            this.trialSSHClientMap.set(trial.id, sshClient);
-        }else {
-            this.trialSSHClientMap.set(trial.id, sshClient);
+            sshClient = await sshClientManager.initNewSSHClient();
         }
+        this.trialSSHClientMap.set(trial.id, sshClient);
 
         deferred.resolve();
         return deferred.promise;
