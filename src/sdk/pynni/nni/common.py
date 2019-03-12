@@ -40,18 +40,12 @@ def _load_env_args():
 env_args = _load_env_args()
 '''Arguments passed from environment'''
 
-FATAL = 1
-ERROR = 2
-WARNING = 3
-INFO = 4
-DEBUG = 5
-
-logLevelNameMap = {
-    'fatal': FATAL,
-    'error': ERROR,
-    'warning': WARNING,
-    'info': INFO,
-    'debug': DEBUG
+logLevelMap = {
+    'fatal': logging.FATAL,
+    'error': logging.ERROR,
+    'warning': logging.WARNING,
+    'info': logging.INFO,
+    'debug': logging.DEBUG
 }
 log_level = logging.INFO #default log level is INFO
 
@@ -67,21 +61,6 @@ class _LoggerFileWrapper(TextIOBase):
             self.file.flush()
         return len(s)
 
-def get_log_level():
-    if env_args.log_level:
-        level_number = logLevelNameMap.get(env_args.log_level)
-        if level_number:
-            if level_number >= DEBUG:
-                log_level = logging.DEBUG
-            elif level_number >= INFO:
-                log_level = logging.INFO
-            elif level_number >= WARNING:
-                log_level = logging.WARNING
-            elif level_number >= ERROR:
-                log_level = logging.ERROR
-            elif level_number >= FATAL:
-                log_level = logging.FATAL
-
 def init_logger(logger_file_path):
     """Initialize root logger.
     This will redirect anything from logging.getLogger() as well as stdout to specified file.
@@ -91,6 +70,8 @@ def init_logger(logger_file_path):
         logger_file_path = 'unittest.log'
     elif env_args.log_dir is not None:
         logger_file_path = os.path.join(env_args.log_dir, logger_file_path)
+    if env_args.log_level:
+        log_level = logLevelMap.get(env_args.log_level)
     
     logger_file = open(logger_file_path, 'w')
     fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
