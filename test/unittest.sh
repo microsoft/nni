@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 CWD=${PWD}
 
 # -------------For python unittest-------------
