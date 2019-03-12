@@ -206,7 +206,7 @@ class GeneralChild(Model):
       else:
         start_idx = self.num_branches
 
-      def process_pooling_layer(layer_id, layers, out_filters, is_training):
+      def add_fixed_pooling_layer(layer_id, layers, out_filters, is_training):
         if self.fixed_arc is not None:
           out_filters *= 2
         with tf.variable_scope("pool_at_{0}".format(layer_id)):
@@ -303,7 +303,9 @@ class GeneralChild(Model):
           outputs: layer_3_out,
         }
       }"""
-      layers, out_filters = process_pooling_layer("3", layers, out_filters, is_training)
+      layers, out_filters = add_fixed_pooling_layer(3, layers, out_filters, is_training)
+      for i in range(4):
+        exec('layer_{0}_out=layers[{0}]'.format(i))
       """@nni.architecture
       {
         layer_4: {
@@ -335,7 +337,9 @@ class GeneralChild(Model):
           outputs: layer_7_out,
         }
       }"""
-      layers, out_filters = process_pooling_layer("7", layers, out_filters, is_training)
+      layers, out_filters = add_fixed_pooling_layer(7, layers, out_filters, is_training)
+      for i in range(8):
+        exec('layer_{0}_out=layers[{0}]'.format(i))
       """@nni.architecture
       {
         layer_8: {
