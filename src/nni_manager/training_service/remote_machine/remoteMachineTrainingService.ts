@@ -87,7 +87,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.connectionNumberMap = new Map<Client, number>();
         this.connectionMetaMap = new Map<Client, RemoteMachineMeta>();
         this.machineSSHClientMap = new Map<RemoteMachineMeta, Client>();
-        this.maxSSHTrialNumber = 6; //set the max concurrency trial number in one SSH client
+        this.maxSSHTrialNumber = 5; //set the max concurrency trial number in one SSH client
         this.gpuScheduler = new GPUScheduler(this.machineSSHClientMap);
         this.jobQueue = [];
         this.expRootDir = getExperimentRootDir();
