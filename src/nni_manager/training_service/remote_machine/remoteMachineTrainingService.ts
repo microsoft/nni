@@ -188,6 +188,31 @@ class RemoteMachineTrainingService implements TrainingService {
       
         return deferred.promise;
     }
+    
+    /**
+     * If a trial is finished, retrieve the connection resource
+     * @param trial 
+     */
+    public retrieveSSHClient(trial: RemoteMachineTrialJobDetail): void {
+        if(!trial.rmMeta) {
+            throw new Error(`rmMeta not set in trial ${trial.id}`);
+        }
+        let remoteSSHClientArray: RemoteSSHClient[] | undefined = this.machineSSHClientMap.get(trial.rmMeta);
+        if(!remoteSSHClientArray) {
+            throw new Error(`remoteSSHClient not initialized`);
+        }
+        const conn: Client | undefined = this.trialSSHClientMap.get(trial.id);
+        if(!conn) {
+            throw new Error(`ssh client not set in trial ${trial.id}`);
+        }
+        for (const index in remoteSSHClientArray) {
+            if(conn === remoteSSHClientArray[index].client) {
+                remoteSSHClientArray[index].connectionNumber = remoteSSHClientArray[index].connectionNumber - 1;
+                this.machineSSHClientMap.set(trial.rmMeta, remoteSSHClientArray);
+                return ;
+            }
+        };
+    }
 
     /**
      * List submitted trial jobs
@@ -355,6 +380,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 // Mark the toEarlyStop tag here
                 trialJob.isEarlyStopped = isEarlyStopped;
                 await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, sshClient);
+                this.retrieveSSHClient(trialJob);
             } catch (error) {
                 // Not handle the error since pkill failed will not impact trial job's current status
                 this.log.error(`remoteTrainingService.cancelTrialJob: ${error.message}`);
@@ -738,6 +764,7 @@ class RemoteMachineTrainingService implements TrainingService {
                         }
                     }
                     trialJob.endTime = parseInt(timestamp, 10);
+                    this.retrieveSSHClient(trialJob);
                 }
                 this.log.debug(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
             }

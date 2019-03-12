@@ -95,9 +95,12 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     }
 }
 
+/**
+ * The remote machine ssh client used for trial and gpu detector
+ */
 export class RemoteSSHClient {
     public client: Client;
-    public connectionNumber: number;
+    public connectionNumber: number; //count the connection number of every client
     constructor(client: Client, connectionNumber: number) {
         this.client = client;
         this.connectionNumber = connectionNumber;
