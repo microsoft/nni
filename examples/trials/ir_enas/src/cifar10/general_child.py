@@ -304,7 +304,7 @@ class GeneralChild(Model):
         }
       }"""
       layers, out_filters = add_fixed_pooling_layer(3, layers, out_filters, is_training)
-      layer_0_out, layer_1_out, layer_2_out, layer_3_out = layers
+      layer_0_out, layer_1_out, layer_2_out, layer_3_out = layers[-4:]
       """@nni.architecture
       {
         layer_4: {
@@ -337,7 +337,7 @@ class GeneralChild(Model):
         }
       }"""
       layers, out_filters = add_fixed_pooling_layer(7, layers, out_filters, is_training)
-      layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out = layers
+      layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out = layers[-8:]
       """@nni.architecture
       {
         layer_8: {
