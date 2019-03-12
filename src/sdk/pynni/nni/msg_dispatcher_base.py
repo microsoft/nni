@@ -19,14 +19,13 @@
 # ==================================================================================================
 
 #import json_tricks
-import logging
 import os
-from queue import Queue
-import sys
-
+import threading
+import logging
 from multiprocessing.dummy import Pool as ThreadPool
-
+from queue import Queue, Empty
 import json_tricks
+
 from .common import init_logger, multi_thread_enabled
 from .recoverable import Recoverable
 from .protocol import CommandType, receive
@@ -39,6 +38,14 @@ class MsgDispatcherBase(Recoverable):
         if multi_thread_enabled():
             self.pool = ThreadPool()
             self.thread_results = []
+        else:
+            self.stopping = False
+            self.default_command_queue = Queue()
+            self.assessor_command_queue = Queue()
+            self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,))
+            self.assessor_worker = threading.Thread(target=self.command_queue_worker, args=(self.assessor_command_queue,))
+            self.default_worker.start()
+            self.assessor_worker.start()
 
     def run(self):
         """Run the tuner.
@@ -51,40 +58,73 @@ class MsgDispatcherBase(Recoverable):
         while True:
             _logger.debug('waiting receive_message')
             command, data = receive()
+            if data:
+                data = json_tricks.loads(data)
+
             if command is None or command is CommandType.Terminate:
                 break
             if multi_thread_enabled():
-                result = self.pool.map_async(self.handle_request_thread, [(command, data)])
+                result = self.pool.map_async(self.process_command_thread, [(command, data)])
                 self.thread_results.append(result)
                 if any([thread_result.ready() and not thread_result.successful() for thread_result in self.thread_results]):
                     _logger.debug('Caught thread exception')
                     break
             else:
-                self.handle_request((command, data))
+                if command == CommandType.ReportMetricData and data['type'] == 'PERIODICAL':
+                    self.enqueue_assessor_command(command, data)
+                else:
+                    self.enqueue_command(command, data)
 
+        self.stopping = True
         if multi_thread_enabled():
             self.pool.close()
             self.pool.join()
+        else:
+            self.default_worker.join()
+            self.assessor_worker.join()
 
         _logger.info('Terminated by NNI manager')
 
-    def handle_request_thread(self, request):
+    def command_queue_worker(self, command_queue):
+        '''
+        Process commands in command queues.
+        '''
+        while not self.stopping:
+            try:
+                # set timeout to ensure self.stopping is checked periodically
+                command, data = command_queue.get(timeout=5)
+                self.process_command(command, data)
+            except Empty:
+                pass
+
+    def enqueue_command(self, command, data):
+        '''
+        Enqueue command into default queue
+        '''
+        self.default_command_queue.put((command, data))
+
+    def enqueue_assessor_command(self, command, data):
+        '''
+        Enqueue command into a seperate command queue for assessor
+        '''
+        self.assessor_command_queue.put((command, data))
+
+    def process_command_thread(self, request):
+        '''
+        Worker thread to process a command.
+        '''
+        command, data = request
         if multi_thread_enabled():
             try:
-                self.handle_request(request)
+                self.process_command(command, data)
             except Exception as e:
                 _logger.exception(str(e))
                 raise
         else:
             pass
 
-    def handle_request(self, request):
-        command, data = request
-
-        _logger.debug('handle request: command: [{}], data: [{}]'.format(command, data))
-
-        if data:
-            data = json_tricks.loads(data)
+    def process_command(self, command, data):
+        _logger.debug('process_command: command: [{}], data: [{}]'.format(command, data))
 
         command_handlers = {
             # Tunner commands:

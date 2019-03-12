@@ -57,6 +57,7 @@ Optional('tuner'): Or({
     Optional('classArgs'): {
         'optimize_mode': Or('maximize', 'minimize')
     },
+    Optional('includeIntermeidateResults'): bool,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'builtinTunerName': Or('BatchTuner', 'GridSearch'),
