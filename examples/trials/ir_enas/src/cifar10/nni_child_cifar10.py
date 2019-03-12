@@ -17,6 +17,7 @@ from src.cifar10.data_utils import read_data
 from src.cifar10.general_child import GeneralChild
 from src.nni_child import ENASBaseTrial
 from src.cifar10_flags import *
+child_init()
 import nni
 
 
@@ -185,7 +186,6 @@ class ENASTrial(ENASBaseTrial):
 
 
 def main(_):
-    child_init()
     logger.debug("-" * 80)
 
     if not os.path.isdir(FLAGS.output_dir):

@@ -48,6 +48,7 @@ def child_init():
     DEFINE_integer("controller_num_aggregate", 1, "")
     DEFINE_integer("log_every", 50, "How many steps to log")
     DEFINE_integer("eval_every_epochs", 1, "How many epochs to eval")
+
 def macro_init():
     DEFINE_boolean("reset_output_dir", False, "Delete output_dir if exists.")
     DEFINE_string("output_dir", "", "")
