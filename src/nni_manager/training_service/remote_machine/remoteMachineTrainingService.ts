@@ -215,8 +215,8 @@ class RemoteMachineTrainingService implements TrainingService {
             if (trialJob.rmMeta === undefined) {
                 throw new Error(`rmMeta not set for submitted job ${trialJobId}`);
             }
-            const sshClient = this.trialSSHClientMap.get(trialJob.id);
-            if (sshClient === undefined) {
+            const sshClient: Client | undefined  = this.trialSSHClientMap.get(trialJob.id);
+            if (!sshClient) {
                 throw new Error(`Invalid job id: ${trialJobId}, cannot find ssh client`);
             }
 
