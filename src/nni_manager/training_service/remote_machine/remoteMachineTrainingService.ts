@@ -207,7 +207,7 @@ class RemoteMachineTrainingService implements TrainingService {
         }
         for (const index in remoteSSHClientArray) {
             if(conn === remoteSSHClientArray[index].client) {
-                remoteSSHClientArray[index].connectionNumber = remoteSSHClientArray[index].connectionNumber - 1;
+                remoteSSHClientArray[index].connectionNumber -= 1;
                 this.machineSSHClientMap.set(trial.rmMeta, remoteSSHClientArray);
                 return ;
             }
