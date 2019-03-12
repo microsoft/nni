@@ -33,7 +33,7 @@ def _load_env_args():
         'trial_job_id': os.environ.get('NNI_TRIAL_JOB_ID'),
         'log_dir': os.environ.get('NNI_LOG_DIRECTORY'),
         'role': os.environ.get('NNI_ROLE'),
-        'log_level': os.environ.get('NNI_LOG_LELVEL')
+        'log_level': os.environ.get('NNI_LOG_LEVEL')
     }
     return namedtuple('EnvArgs', args.keys())(**args)
 
