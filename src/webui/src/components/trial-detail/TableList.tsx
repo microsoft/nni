@@ -79,7 +79,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 if (res.status === 200) {
                     const intermediateArr: number[] = [];
                     Object.keys(res.data).map(item => {
-                        intermediateArr.push(parseFloat(res.data[item].data));
+                        const temp = JSON.parse(res.data[item].data);
+                        if (typeof temp === 'object') {
+                            intermediateArr.push(temp.default);
+                        } else {
+                            intermediateArr.push(temp);
+                        }
                     });
                     const intermediate = intermediateGraphOption(intermediateArr, id);
                     if (this._isMounted) {
