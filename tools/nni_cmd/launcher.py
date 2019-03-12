@@ -315,7 +315,6 @@ def set_experiment(experiment_config, mode, port, config_file_name):
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(config_file_name)
-
     # check packages for tuner
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
         tuner_name = experiment_config['tuner']['builtinTunerName']
@@ -442,6 +441,9 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
 
     # start a new experiment
     print_normal('Starting experiment...')
+    # set debug configuration
+    if args.debug is not None:
+        experiment_config['debug'] = args.debug
     response = set_experiment(experiment_config, mode, args.port, config_file_name)
     if response:
         if experiment_id is None:
