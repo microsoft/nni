@@ -136,7 +136,7 @@ export class SSHClientManager {
     }
 
     /**
-     * Create a new ssh connection client by trial job id
+     * Create a new ssh connection client and initialize it
      */
     public async initNewSSHClient(): Promise<Client> {
         const deferred: Deferred<Client> = new Deferred<Client>();

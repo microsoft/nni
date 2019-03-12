@@ -119,7 +119,11 @@ class RemoteMachineTrainingService implements TrainingService {
         this.log.info('Remote machine training service exit.');
     }
     
-    public async setTrialSSHClientMapValue(trial: RemoteMachineTrialJobDetail): Promise<void> {
+    /**
+     * give trial a ssh connection
+     * @param trial 
+     */
+    public async scheduleTrialSSHClient(trial: RemoteMachineTrialJobDetail): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         if(!trial.rmMeta) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
@@ -131,7 +135,7 @@ class RemoteMachineTrainingService implements TrainingService {
         let sshClient: Client | undefined = sshClientManager.getAvailableSSHClient();
         if(!sshClient) {
             //create a new connection
-            let sshClient: Client = await sshClientManager.createSSHClient();
+            let sshClient: Client = await sshClientManager.initNewSSHClient();
             this.trialSSHClientMap.set(trial.id, sshClient);
         }else {
             this.trialSSHClientMap.set(trial.id, sshClient);
@@ -142,10 +146,10 @@ class RemoteMachineTrainingService implements TrainingService {
     }
     
     /**
-     * If a trial is finished, release the connection resource connected to a ssh client
+     * If a trial is finished, release the connection resource
      * @param trial 
      */
-    public releaseSSHClientConnectionNumber(trial: RemoteMachineTrialJobDetail): void {
+    public releaseTrialSSHClient(trial: RemoteMachineTrialJobDetail): void {
         if(!trial.rmMeta) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
         }
@@ -327,7 +331,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 // Mark the toEarlyStop tag here
                 trialJob.isEarlyStopped = isEarlyStopped;
                 await SSHClientUtility.remoteExeCommand(`pkill -P \`cat ${jobpidPath}\``, sshClient);
-                this.releaseSSHClientConnectionNumber(trialJob);
+                this.releaseTrialSSHClient(trialJob);
             } catch (error) {
                 // Not handle the error since pkill failed will not impact trial job's current status
                 this.log.error(`remoteTrainingService.cancelTrialJob: ${error.message}`);
@@ -553,7 +557,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
 
-            await this.setTrialSSHClientMapValue(trialJobDetail);
+            await this.scheduleTrialSSHClient(trialJobDetail);
             await this.launchTrialOnScheduledMachine(
                 trialJobId, trialWorkingFolder, <TrialJobApplicationForm>trialJobDetail.form, rmScheduleInfo);
 
@@ -709,7 +713,7 @@ class RemoteMachineTrainingService implements TrainingService {
                         }
                     }
                     trialJob.endTime = parseInt(timestamp, 10);
-                    this.releaseSSHClientConnectionNumber(trialJob);
+                    this.releaseTrialSSHClient(trialJob);
                 }
                 this.log.debug(`trailJob status update: ${trialJob.id}, ${trialJob.status}`);
             }
