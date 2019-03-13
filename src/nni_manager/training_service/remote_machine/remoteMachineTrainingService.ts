@@ -123,7 +123,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * give trial a ssh connection
      * @param trial 
      */
-    public async scheduleTrialSSHClient(trial: RemoteMachineTrialJobDetail): Promise<void> {
+    public async allocateSSHClientForTrial(trial: RemoteMachineTrialJobDetail): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         if(!trial.rmMeta) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
@@ -132,13 +132,8 @@ class RemoteMachineTrainingService implements TrainingService {
         if(!sshClientManager) {
             throw new Error(`remoteSSHClient not initialized`);
         }
-        let sshClient: Client | undefined = sshClientManager.getAvailableSSHClient();
-        if(!sshClient) {
-            //create a new connection
-            sshClient = await sshClientManager.initNewSSHClient();
-        }
+        let sshClient: Client = await sshClientManager.getAvailableSSHClient();
         this.trialSSHClientMap.set(trial.id, sshClient);
-
         deferred.resolve();
         return deferred.promise;
     }
@@ -155,12 +150,7 @@ class RemoteMachineTrainingService implements TrainingService {
         if(!sshClientManager) {
             throw new Error(`sshClientManager not initialized`);
         }
-        const conn: Client | undefined = this.trialSSHClientMap.get(trial.id);
-        if(!conn) {
-            throw new Error(`ssh client not set in trial ${trial.id}`);
-        }
-        sshClientManager.minusUsedConnectionNumber(conn);
-        this.machineSSHClientMap.set(trial.rmMeta, sshClientManager);
+        sshClientManager.releaseConnection(this.trialSSHClientMap.get(trial.id));
     }
 
     /**
@@ -462,38 +452,14 @@ class RemoteMachineTrainingService implements TrainingService {
         const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
         let connectedRMNum: number = 0;
 
-        rmMetaList.forEach((rmMeta: RemoteMachineMeta) => {
-            const conn: Client = new Client();
-            let connectConfig: ConnectConfig = {
-                host: rmMeta.ip,
-                port: rmMeta.port,
-                username: rmMeta.username };
-            if (rmMeta.passwd) {
-                connectConfig.password = rmMeta.passwd;                
-            } else if(rmMeta.sshKeyPath) {
-                if(!fs.existsSync(rmMeta.sshKeyPath)) {
-                    //SSh key path is not a valid file, reject
-                    deferred.reject(new Error(`${rmMeta.sshKeyPath} does not exist.`));
-                }
-                const privateKey: string = fs.readFileSync(rmMeta.sshKeyPath, 'utf8');
-
-                connectConfig.privateKey = privateKey;
-                connectConfig.passphrase = rmMeta.passphrase;
-            } else {
-                deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
+        rmMetaList.forEach(async (rmMeta: RemoteMachineMeta) => {
+            let sshClientManager: SSHClientManager = new SSHClientManager([], this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION, rmMeta);
+            let sshClient: Client = await sshClientManager.getAvailableSSHClient();
+            this.machineSSHClientMap.set(rmMeta, sshClientManager);
+            await this.initRemoteMachineOnConnected(rmMeta, sshClient);
+            if (++connectedRMNum === rmMetaList.length) {
+                deferred.resolve();
             }
-            
-            conn.on('ready', async () => {
-                //Initialize connection, the first connection is used for gpu collector
-                this.machineSSHClientMap.set(rmMeta, new SSHClientManager([new SSHClient(conn, 1)], this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION, rmMeta));
-                await this.initRemoteMachineOnConnected(rmMeta, conn);
-                if (++connectedRMNum === rmMetaList.length) {
-                    deferred.resolve();
-                }
-            }).on('error', (err: Error) => {
-                // SSH connection error, reject with error message
-                deferred.reject(new Error(err.message));
-            }).connect(connectConfig);
         });
         return deferred.promise;
     }
@@ -555,7 +521,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
 
-            await this.scheduleTrialSSHClient(trialJobDetail);
+            await this.allocateSSHClientForTrial(trialJobDetail);
             await this.launchTrialOnScheduledMachine(
                 trialJobId, trialWorkingFolder, <TrialJobApplicationForm>trialJobDetail.form, rmScheduleInfo);
 

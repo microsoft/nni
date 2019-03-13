@@ -138,7 +138,7 @@ export class SSHClientManager {
     /**
      * Create a new ssh connection client and initialize it
      */
-    public async initNewSSHClient(): Promise<Client> {
+    private async initNewSSHClient(): Promise<Client> {
         const deferred: Deferred<Client> = new Deferred<Client>();
         const conn: Client = new Client();
         let connectConfig: ConnectConfig = {
@@ -173,15 +173,18 @@ export class SSHClientManager {
     /**
      * find a available ssh client in ssh array, if no ssh client available, return undefined
      */
-    public getAvailableSSHClient(): Client | undefined {
+    public async getAvailableSSHClient(): Promise<Client> {
+        const deferred: Deferred<Client> = new Deferred<Client>();
         for (const index in this.sshClientArray) {
             let connectionNumber: number = this.sshClientArray[index].getUsedConnectionNumber;
             if(connectionNumber < this.maxTrialNumberPerConnection) {
                 this.sshClientArray[index].addUsedConnectionNumber();
-                return this.sshClientArray[index].getSSHClientInstance;
+                deferred.resolve(this.sshClientArray[index].getSSHClientInstance);
+                return deferred.promise;
             }
         };
-        return undefined;
+        //init a new ssh client if could not get an available one
+        return await this.initNewSSHClient();
     }
     
     /**
@@ -212,7 +215,10 @@ export class SSHClientManager {
      * retrieve resource, minus a number for given ssh client
      * @param client
      */
-    public minusUsedConnectionNumber(client: Client) {
+    public releaseConnection(client: Client | undefined) {
+        if(!client) {
+            throw new Error(`could not release a undefined ssh client`);
+        }
         for(let index in this.sshClientArray) {
             if(this.sshClientArray[index].getSSHClientInstance === client) {
                 this.sshClientArray[index].minusUsedConnectionNumber();
