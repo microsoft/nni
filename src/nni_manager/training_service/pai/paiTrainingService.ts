@@ -239,7 +239,9 @@ class PAITrainingService implements TrainingService {
                                     // Task GPU number
                                     this.paiTrialConfig.gpuNum, 
                                     // Task command
-                                    nniPaiTrialCommand)];
+                                    nniPaiTrialCommand,
+                                    // Task shared memory
+                                    this.paiTrialConfig.shmMB)];
 
         const paiJobConfig : PAIJobConfig = new PAIJobConfig(
                                     // Job name

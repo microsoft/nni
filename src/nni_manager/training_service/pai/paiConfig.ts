@@ -34,6 +34,8 @@ export class PAITaskRole {
     public readonly gpuNumber: number;
     // Executable command for tasks in the task role, can not be empty
     public readonly command: string;
+    //Shared memory for one task in the task role
+    public readonly shmMB?: number;
     
     /**
      * Constructor
@@ -44,13 +46,14 @@ export class PAITaskRole {
      * @param gpuNumber GPU number for one task in the task role, no less than 0
      * @param command Executable command for tasks in the task role, can not be empty
      */
-    constructor(name : string, taskNumber : number, cpuNumber : number, memoryMB : number, gpuNumber : number, command : string) {
+    constructor(name : string, taskNumber : number, cpuNumber : number, memoryMB : number, gpuNumber : number, command : string, shmMB?: number) {
         this.name = name;
         this.taskNumber = taskNumber;
         this.cpuNumber = cpuNumber;
         this.memoryMB = memoryMB;
         this.gpuNumber = gpuNumber;
         this.command = command;    
+        this.shmMB = shmMB;
     }
 }
 
@@ -119,9 +122,11 @@ export class NNIPAITrialConfig extends TrialConfig{
 
     //The virtual cluster job runs on. If omitted, the job will run on default virtual cluster
     public virtualCluster?: string;
+    //Shared memory for one task in the task role
+    public shmMB?: number;
 
     constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number, 
-            image: string, dataDir: string, outputDir: string, virtualCluster?: string) {
+            image: string, dataDir: string, outputDir: string, virtualCluster?: string, shmMB?: number) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
@@ -129,6 +134,7 @@ export class NNIPAITrialConfig extends TrialConfig{
         this.dataDir = dataDir;
         this.outputDir = outputDir;
         this.virtualCluster = virtualCluster;
+        this.shmMB = shmMB;
     }
 }
 
