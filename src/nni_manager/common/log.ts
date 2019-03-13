@@ -137,7 +137,7 @@ class Logger {
 
     private log(level: string, param: any[]): void {
         const buffer: WritableStreamBuffer = new WritableStreamBuffer();
-        buffer.write(`[${(new Date()).toISOString()}] ${level} `);
+        buffer.write(`[${(new Date()).toLocaleString()}] ${level} `);
         buffer.write(format(param));
         buffer.write('\n');
         buffer.end();
