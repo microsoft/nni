@@ -13,5 +13,7 @@ Assessor 从 Trial 中接收中间结果，并通过指定的算法决定此 Tri
 与 Tuner 类似，可使用内置的 Assessor，也可以自定义 Assessor。 参考下列教程，获取详细信息：
 
 ..  toctree::
-    内置 Assessor<Builtin_Assessors>
+    :maxdepth: 2
+
+    内置 Assessor<builtinAssessor>
     自定义 Assessor<Customize_Assessor>

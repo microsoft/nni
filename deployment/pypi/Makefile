@@ -11,7 +11,7 @@ else
 	$(error platform $(UNAME_S) not supported)
 endif
 
-TIME_STAMP = $(shell date "+%y%m%d%H%M")
+TIME_STAMP = $(shell date -u "+%y%m%d%H%M")
 NNI_VERSION_VALUE = $(shell git describe --tags --abbrev=0)
 
 # To include time stamp in version value, run:
