@@ -35,7 +35,7 @@ Note:
 
 If you start a docker image using NNI's offical image `msranni/nni`, you could directly start NNI experiments by using `nnictl` command. Our offical image has NNI's running environment and basic python and deep learning frameworks environment. 
 
-If you start your own docker image, you may need to install NNI package first, please [refer](https://github.com/Microsoft/nni/blob/master/docs/en_US/Installation.md).
+If you start your own docker image, you may need to install NNI package first, please [refer](Installation.md).
 
 If you want to run NNI's offical examples, you may need to clone NNI repo in github using 
 ```
@@ -43,11 +43,11 @@ git clone https://github.com/Microsoft/nni.git
 ```
 then you could enter `nni/examples/trials` to start an experiment.
 
-After you prepare NNI's environment, you could start a new experiment using `nnictl` command, [refer](https://github.com/Microsoft/nni/blob/master/docs/en_US/QuickStart.md)
+After you prepare NNI's environment, you could start a new experiment using `nnictl` command, [refer](QuickStart.md)
 
 ## Using docker in remote platform
 
-NNI support starting experiments in [remoteTrainingService](https://github.com/Microsoft/nni/blob/master/docs/en_US/RemoteMachineMode.md), and run trial jobs in remote machines. As docker could start an independent Ubuntu system as SSH server, docker container could be used as the remote machine in NNI's remot mode.
+NNI support starting experiments in [remoteTrainingService](RemoteMachineMode.md), and run trial jobs in remote machines. As docker could start an independent Ubuntu system as SSH server, docker container could be used as the remote machine in NNI's remot mode.
 
 ### Step 1: Setting docker environment
 
@@ -78,7 +78,7 @@ If you use your own docker image as remote server, please make sure that this im
 
 ### Step3: Run NNI experiments
 
-You could set your config file as remote platform, and setting the `machineList` configuration to connect your docker SSH server, [refer](https://github.com/Microsoft/nni/blob/master/docs/en_US/RemoteMachineMode.md). Note that you should set correct `port`,`username` and `passwd` or `sshKeyPath` of your host machine.
+You could set your config file as remote platform, and setting the `machineList` configuration to connect your docker SSH server, [refer](RemoteMachineMode.md). Note that you should set correct `port`,`username` and `passwd` or `sshKeyPath` of your host machine.
 
 `port:` The host machine's port, mapping to docker's SSH port.
 
@@ -88,4 +88,4 @@ You could set your config file as remote platform, and setting the `machineList`
 
 `sshKeyPath:` The path of private key of docker container.
 
-After the configuration of config file, you could start an experiment, [refer](https://github.com/Microsoft/nni/blob/master/docs/en_US/QuickStart.md)
+After the configuration of config file, you could start an experiment, [refer](QuickStart.md)
