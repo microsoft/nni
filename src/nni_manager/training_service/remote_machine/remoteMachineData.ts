@@ -138,7 +138,7 @@ export class SSHClientManager {
     /**
      * Create a new ssh connection client and initialize it
      */
-    private async initNewSSHClient(): Promise<Client> {
+    private initNewSSHClient(): Promise<Client> {
         const deferred: Deferred<Client> = new Deferred<Client>();
         const conn: Client = new Client();
         let connectConfig: ConnectConfig = {
