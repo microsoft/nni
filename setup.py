@@ -68,5 +68,10 @@ setup(
 
     cmdclass={
         'install': CustomInstallCommand
+    },
+    entry_points = {
+        'console_scripts' : [
+            'nnictl = nni_cmd.nnictl:parse_args'
+        ]
     }
 )

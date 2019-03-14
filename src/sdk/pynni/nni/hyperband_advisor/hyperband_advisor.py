@@ -38,6 +38,7 @@ _logger = logging.getLogger(__name__)
 
 _next_parameter_id = 0
 _KEY = 'STEPS'
+_epsilon = 1e-6
 
 @unique
 class OptimizeMode(Enum):
@@ -141,8 +142,8 @@ class Bracket():
         self.bracket_id = s
         self.s_max = s_max
         self.eta = eta
-        self.n = math.ceil((s_max + 1) * (eta**s) / (s + 1)) # pylint: disable=invalid-name
-        self.r = math.ceil(R / eta**s)                       # pylint: disable=invalid-name
+        self.n = math.ceil((s_max + 1) * (eta**s) / (s + 1) - _epsilon) # pylint: disable=invalid-name
+        self.r = math.ceil(R / eta**s - _epsilon)                       # pylint: disable=invalid-name
         self.i = 0
         self.hyper_configs = []         # [ {id: params}, {}, ... ]
         self.configs_perf = []          # [ {id: [seq, acc]}, {}, ... ]
@@ -157,7 +158,7 @@ class Bracket():
 
     def get_n_r(self):
         """return the values of n and r for the next round"""
-        return math.floor(self.n / self.eta**self.i), self.r * self.eta**self.i
+        return math.floor(self.n / self.eta**self.i + _epsilon), self.r * self.eta**self.i
 
     def increase_i(self):
         """i means the ith round. Increase i by 1"""
@@ -305,7 +306,7 @@ class Hyperband(MsgDispatcherBase):
         self.brackets = dict()            # dict of Bracket
         self.generated_hyper_configs = [] # all the configs waiting for run
         self.completed_hyper_configs = [] # all the completed configs
-        self.s_max = math.floor(math.log(self.R, self.eta))
+        self.s_max = math.floor(math.log(self.R, self.eta) + _epsilon)
         self.curr_s = self.s_max
 
         self.searchspace_json = None
