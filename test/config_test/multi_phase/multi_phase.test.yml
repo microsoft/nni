@@ -1,8 +1,8 @@
 authorName: nni
 experimentName: default_test
 maxExecDuration: 5m
-maxTrialNum: 10
-trialConcurrency: 5
+maxTrialNum: 8
+trialConcurrency: 4
 searchSpacePath: ./search_space.json
 
 tuner:
