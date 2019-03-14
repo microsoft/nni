@@ -7,6 +7,9 @@ jobs:
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
+  - script: |
+      nnictl package install --name=SMAC
+    displayName: 'Install SMAC tuner'
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
