@@ -47,7 +47,7 @@ After you prepare NNI's environment, you could start a new experiment using `nni
 
 ## Using docker in remote platform
 
-NNI support starting experiments in [remoteTrainingService](https://github.com/Microsoft/nni/blob/master/docs/en_US/RemoteMachineMode.md), and run trial jobs in remote machines. As docker could start an independent Ubuntu system as SSH server, docker container could be used ad the remote machine in NNI's remot mode.
+NNI support starting experiments in [remoteTrainingService](https://github.com/Microsoft/nni/blob/master/docs/en_US/RemoteMachineMode.md), and run trial jobs in remote machines. As docker could start an independent Ubuntu system as SSH server, docker container could be used as the remote machine in NNI's remot mode.
 
 ### Step 1: Setting docker environment
 
