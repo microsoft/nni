@@ -11,4 +11,5 @@ Tutorials
     Assessors<assessors>
     WebUI
     Training Platform<training_services>
+    How to use docker<HowToUseDocker>
     advanced
