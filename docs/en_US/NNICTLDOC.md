@@ -49,7 +49,7 @@ nnictl support commands:
 
   Note:
   ```
-  Debug mode will close version check function in Trialkeeper.
+  Debug mode will disable version check function in Trialkeeper.
   ```
 
 <a name="resume"></a>
