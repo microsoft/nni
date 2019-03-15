@@ -7,8 +7,7 @@ TrainingService is a module related to platform management and job schedule in N
 ## System architecture
 ![](../img/NNIDesign.jpg)
 
-The brief system architecture of NNI is shown in the picture. NNIManager is the core management moudule of system, in charge of calling TrainingService to manage job and the connumication between job and algorithm module. Dispatcher is a message processing center responsible for message dispatch. TrainingService is a module to manage trial jobs, it communicate with nniManager module, and have different instance according to different training platform. For the time being, NNI supports local platfrom, [remote server platfrom](RemoteMachineMode.md), [PAI platfrom](PAIMode.md), [kubeflow platform](KubeflowMode.md) and [FrameworkController platfrom](FrameworkController.md). 
-
+The brief system architecture of NNI is shown in the picture. NNIManager is the core management moudule of system, in charge of calling TrainingService to manage job and the connumication between job and algorithm module. Dispatcher is a message processing center responsible for message dispatch. TrainingService is a module to manage trial jobs, it communicate with nniManager module, and have different instance according to different training platform. For the time being, NNI supports local platfrom, [remote server platfrom](RemoteMachineMode.md), [PAI platfrom](PAIMode.md), [kubeflow platform](KubeflowMode.md) and [FrameworkController platfrom](FrameworkController.md).   
 In this document, we introduce the brief design of TrainingService. If users want to add a new TrainingService instance, they just need to complete a child class to implement TrainingService, don't need to understand the code detail of NNIManager, Dispatcher or other modules.
 
 ## Folder structure of code
@@ -151,4 +150,9 @@ The running process of TrialKeeper is show as follow:
 
 ![](../img/trialkeeper.jpg)
 
-When users submit a trial job to cloud platform, they should wrap their trial command into TrialKeeper, and start a TrialKeeper process in cloud platform. 
+When users submit a trial job to cloud platform, they should wrap their trial command into TrialKeeper, and start a TrialKeeper process in cloud platform. Notice that TrialKeeper use restful server to communicate with TrainingService, users should start a restful server in local machine to receive metrics sent from TrialKeeper. The source code about restful server could be found in `nni/src/nni_manager/training_service/common/clusterJobRestServer.ts`. TrialKeeper could collect trial job metrics and log content, and send them back to Training Service.
+
+## Reference
+
+For more information about how to debug nni code, please [refer](HowToDebug.md).  
+The guide line of how to contribute, please [refer](CONTRIBUTING).
