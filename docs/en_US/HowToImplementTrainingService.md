@@ -90,13 +90,11 @@ export class RemoteMachineMeta {
 ```
 The metadata includes the host address, the username or other configuration related to the platform. Users need to definite their own Metadata format, and set the Matadata instance in this function. This function  is called before the experiment is started, users should set the prerequest configurations and check the healthy of the platform before starting an experiment.
 
-__getClusterMetadata(key: string)__ 
-
+__getClusterMetadata(key: string)__   
 This function will return the metadata value according to the values, it could be left empty if users don't need to use it.
 
-__submitTrialJob(form: JobApplicationForm)__
-
-SubmitTrialJob is a function to submit new Trial jobs, users should generate a job instance in TrialJobDetail type. TrialJobDetail is defined as follow:
+__submitTrialJob(form: JobApplicationForm)__  
+SubmitTrialJob is a function to submit new trial jobs, users should generate a job instance in TrialJobDetail type. TrialJobDetail is defined as follow:
 ```
 interface TrialJobDetail {
     readonly id: string;
@@ -112,7 +110,7 @@ interface TrialJobDetail {
     isEarlyStopped?: boolean;
 }
 ```
-According to different kind of implementation, users could put the job information into a job queue, and keep  fetching the job from queue and start preparing and running them. Or they could finish preparing and running process in this function, and return job information after the submit work.
+According to different kinds of implementation, users could put the job detail into a job queue, and keep  fetching the job from the queue and start preparing and running them. Or they could finish preparing and running process in this function, and return job detail after the submit work.
 
 __cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean)__  
 If this function is called, users should execute cancel command to kill a trial job according to trialJobId.
@@ -120,39 +118,32 @@ If this function is called, users should execute cancel command to kill a trial 
 __updateTrialJob(trialJobId: string, form: JobApplicationForm)__  
 This function is called to update the trial job's status, users should execute the corresponding commands to detect the status of a trial process, and change the trial job's status to `RUNNING`, `SUCCEED`, `FAILED` etc.
 
-__getTrialJob(trialJobId: string)__
-
+__getTrialJob(trialJobId: string)__  
 This function returns a trialJob detail instance according to trialJobId.
 
-__listTrialJobs()__
+__listTrialJobs()__  
 Users should put all of trial job detail information into a list, and return the list.
 
-__addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)__
-
+__addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)__  
 NNI will hold a EventEmitter to get job metrics, if there is new job metrics detected, the EventEmitter will be triggered. Users should start the EventEmitter in this function.
 
-__removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)__
-
+__removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)__  
 Close the EventEmitter.
 
-__run()__
-
+__run()__  
 The run() function is a main loop function in TrainingService, users could set a while loop to execute their logic code, and finish executing them when the experiment is stopped.
 
-__cleanUp()__
-
+__cleanUp()__  
 This function is called to clean up the environment when a experiment is stopped. Users should do the platform-related cleaning operation in this function. 
 
 ## TrialKeeper tool
 
-NNI offers a TrialKeeper tool to help maintaining trial jobs. Users can find the source code in `nni/tools/nni_trial_tool`. If users want to run trial jobs in cloud platform, this tool will be a fine choice to help keep trial running in the platform.
-The running process of TrialKeeper is show as follow:
-
-![](../img/trialkeeper.jpg)
-
-When users submit a trial job to cloud platform, they should wrap their trial command into TrialKeeper, and start a TrialKeeper process in cloud platform. Notice that TrialKeeper use restful server to communicate with TrainingService, users should start a restful server in local machine to receive metrics sent from TrialKeeper. The source code about restful server could be found in `nni/src/nni_manager/training_service/common/clusterJobRestServer.ts`. TrialKeeper could collect trial job metrics and log content, and send them back to Training Service.
+NNI offers a TrialKeeper tool to help maintaining trial jobs. Users can find the source code in `nni/tools/nni_trial_tool`. If users want to run trial jobs in cloud platform, this tool will be a fine choice to help keeping trial running in the platform.
+The running architecture of TrialKeeper is show as follow:  
+![](../img/trialkeeper.jpg)  
+When users submit a trial job to cloud platform, they should wrap their trial command into TrialKeeper, and start a TrialKeeper process in cloud platform. Notice that TrialKeeper use restful server to communicate with TrainingService, users should start a restful server in local machine to receive metrics sent from TrialKeeper. The source code about restful server could be found in `nni/src/nni_manager/training_service/common/clusterJobRestServer.ts`. 
 
 ## Reference
 
-For more information about how to debug nni code, please [refer](HowToDebug.md).  
+For more information about how to debug, please [refer](HowToDebug.md).  
 The guide line of how to contribute, please [refer](CONTRIBUTING).
