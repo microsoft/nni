@@ -45,6 +45,12 @@ nnictl support commands:
   |------|------|------|------|
   |--config, -c|  True| |YAML configure file of the experiment|
   |--port, -p|False| |the port of restful server|
+  |--debug, -d|False||set debug mode|
+
+  Note:
+  ```
+  Debug mode will disable version check function in Trialkeeper.
+  ```
 
 <a name="resume"></a>
 * __nnictl resume__
@@ -65,6 +71,7 @@ nnictl support commands:
   |------|------|------ |------|
   |id|  False| |The id of the experiment you want to resume|  
   |--port, -p|  False| |Rest port of the experiment you want to resume|
+  |--debug, -d|False||set debug mode|
 
 <a name="stop"></a>
 * __nnictl stop__
