@@ -51,7 +51,7 @@ import { SSHClientUtility } from './sshClientUtility';
 import { validateCodeDir } from '../common/util';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { mkDirP } from '../../common/utils';
+import { mkDirP, getVersion } from '../../common/utils';
 
 /**
  * Training Service implementation for Remote Machine (Linux)
@@ -76,6 +76,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private remoteRestServerPort?: number;
     private readonly remoteOS: string;
     private nniManagerIpConfig?: NNIManagerIpConfig;
+    private versionCheck: boolean = true;
 
     constructor(@component.Inject timer: ObservableTimer) {
         this.remoteOS = 'linux';
@@ -372,6 +373,9 @@ class RemoteMachineTrainingService implements TrainingService {
             case TrialConfigMetadataKey.MULTI_PHASE:
                 this.isMultiPhase = (value === 'true' || value === 'True');
                 break;
+            case TrialConfigMetadataKey.VERSION_CHECK:
+                this.versionCheck = (value === 'true' || value === 'True');
+                break;
             default:
                 //Reject for unknown keys
                 throw new Error(`Uknown key: ${key}`);
@@ -580,6 +584,7 @@ class RemoteMachineTrainingService implements TrainingService {
             const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
             this.remoteRestServerPort = restServer.clusterRestServerPort;
         }
+        const version = this.versionCheck? await getVersion(): '';
         const runScriptTrialContent: string = String.Format(
             REMOTEMACHINE_TRIAL_COMMAND_FORMAT,
             trialWorkingFolder,
@@ -592,6 +597,7 @@ class RemoteMachineTrainingService implements TrainingService {
             command,
             nniManagerIp,
             this.remoteRestServerPort,
+            version,
             path.join(trialWorkingFolder, '.nni', 'code')
         )
 
