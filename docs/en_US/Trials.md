@@ -92,7 +92,7 @@ with tf.Session() as sess:
     batch_size = 128
     for i in range(10000):
         batch = mnist.train.next_batch(batch_size)
-+       """@nni.variable(nni.choice(1, 5), name=dropout_rate)"""
++       """@nni.variable(nni.choice(0.1, 0.5), name=dropout_rate)"""
         dropout_rate = 0.5
         mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
                                                 mnist_network.labels: batch[1],
