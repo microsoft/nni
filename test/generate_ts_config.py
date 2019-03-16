@@ -40,6 +40,8 @@ def update_training_service_config(args):
             config[args.ts]['trial']['dataDir'] = args.data_dir
         if args.output_dir is not None:
             config[args.ts]['trial']['outputDir'] = args.output_dir
+        if args.vc is not None:
+            config[args.ts]['trial']['virtualCluster'] = args.vc
     elif args.ts == 'kubeflow':
         if args.nfs_server is not None:
             config[args.ts]['kubeflowConfig']['nfs']['server'] = args.nfs_server
@@ -78,6 +80,7 @@ if __name__ == '__main__':
     parser.add_argument("--pai_host", type=str)
     parser.add_argument("--data_dir", type=str)
     parser.add_argument("--output_dir", type=str)
+    parser.add_argument("--vc", type=str)
     # args for kubeflow
     parser.add_argument("--nfs_server", type=str)
     parser.add_argument("--nfs_path", type=str)
