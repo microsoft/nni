@@ -82,14 +82,14 @@ SSH容器需要一个端口，你需要把docker的SSH服务端口暴露给NNI�
 
 ### 步骤三：运行NNI实验
 
-你可以在你的配置文件中，设置训练平台为远程平台，然后设置`machineList`配置。[参考](RemoteMachineMode.md)。 Note that you should set correct `port`,`username` and `passwd` or `sshKeyPath` of your host machine.
+你可以在你的配置文件中，设置训练平台为远程平台，然后设置`machineList`配置。[参考](RemoteMachineMode.md)。 注意你应该设置正确的`port`，`username`, `passwd`或者`sshKeyPath`。
 
-`port:` The host machine's port, mapping to docker's SSH port.
+`port`: 主机的端口，映射到docker的SSH端口中。
 
-`username:` The username of docker container.
+`username`: docker容器的用户名。
 
-`passWd:` The password of docker container.
+`passWd: ` docker容器的密码。
 
-`sshKeyPath:` The path of private key of docker container.
+`sshKeyPath:` docker容器私钥的存储路径。
 
-After the configuration of config file, you could start an experiment, [refer](QuickStart.md)
+设置完配置文件，你就可以启动实验了，[参考](QuickStart.md)。
