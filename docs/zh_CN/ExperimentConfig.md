@@ -162,7 +162,7 @@ machineList:
   
   * 说明
     
-    **maxTrialNum** specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
+    **maxTrialNum** 定义了 Trial 任务的最大数量，成功和失败的都计算在内。
 
 * **trainingServicePlatform**
   
