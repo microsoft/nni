@@ -27,7 +27,10 @@ def check_environment():
     try:
         import paramiko
     except:
-        cmds = 'python3 -m pip install --user paramiko'
+        if sys.platform == "win32":
+            cmds = 'python -m pip install --user paramiko'
+        else:
+            cmds = 'python3 -m pip install --user paramiko'
         call(cmds, shell=True)
 
 def copy_remote_directory_to_local(sftp, remote_path, local_path):
