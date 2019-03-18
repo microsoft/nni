@@ -2,11 +2,15 @@ jobs:
 - job: 'integration_test_remote'
 
   steps:
-  - script: python3 -m pip install --upgrade pip setuptools
+  - script: python3 -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
+  - script: |
+      sudo apt-get install swig -y
+      PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
+    displayName: 'Install dependencies for integration tests in remote mode'
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
