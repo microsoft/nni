@@ -10,18 +10,18 @@
 
 ### 第一步：docker的安装
 
-Before you start using docker to start NNI experiments, you should install a docker software in your local machine. [Refer](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+在你开始使用docker进行NNI实验之前，你首先需要在本地机器上安装docker运行程序。 [Refer](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 
-### Step2: Start docker container
+### 第二步：启动docker容器
 
-If you have installed the docker package in your local machine, you could start a docker container instance to run NNI examples. You should notice that because NNI will start a web UI process in container and continue to listen to a port, you need to specify the port mapping between your host machine and docker container to give access to web UI outside the container. By visting the host ip address and port, you could redirect to the web UI process started in docker container, and visit web UI content.
+如果你已经在本地机器上安装了docker程序，你可以启动docker容器来运行NNI实验了。 因为NNI会在docker容器里面启动web UI进程，并且监听一个端口，因此你需要指定一个在主机和docker容器里面的端口映射，这个映射可以让你在容器外面访问docker容器里面的进程。 通过访问主机的ip和端口，你就可以访问容器里面的Web网页进程了。
 
-For example, you could start a new docker container from following command:
+例如，你可以通过如下命令来启动docker容器：
 
     docker run -i -t -p [hostPort]:[containerPort] [image]
     
 
-`-i:` Start a docker in an interactive mode.
+-i: 使用交互模式启动docker
 
 `-t:` Docker assign the container a input terminal.
 
