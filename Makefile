@@ -1,7 +1,5 @@
 # Setting variables
 SHELL := /bin/bash
-PIP_INSTALL := python3 -m pip install
-PIP_UNINSTALL := python3 -m pip uninstall
 
 ## Colorful output
 _INFO := $(shell echo -e '\033[1;36m')
@@ -108,15 +106,6 @@ dev-install: dev-install-node-modules
 dev-install: install-scripts
 dev-install:
 	#$(_INFO) Complete! You may want to add $(BIN_FOLDER) to your PATH environment $(_END)
-
-# Target for setup.py
-# Do not invoke this manually
-.PHONY: pip-install
-pip-install: install-dependencies
-pip-install: build
-pip-install: install-node-modules
-pip-install: install-scripts
-pip-install: update-bash-config
 
 .PHONY: uninstall
 uninstall:
