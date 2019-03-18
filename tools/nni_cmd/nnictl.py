@@ -34,7 +34,10 @@ if os.environ.get('COVERAGE_PROCESS_START'):
 
 def nni_info(*args):
     if args[0].version:
-        print(pkg_resources.get_distribution('nni').version)
+        try:
+            print(pkg_resources.get_distribution('nni').version)
+        except pkg_resources.ResolutionError as err:
+            print_error('Get version failed, please use `pip3 list | grep nni` to check nni version!')
     else:
         print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
@@ -51,14 +54,14 @@ def parse_args():
     parser_start = subparsers.add_parser('create', help='create a new experiment')
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
     parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
-    parser_start.add_argument('--debug', '-d', action='store_true', help=' set log level to debug')
+    parser_start.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_start.set_defaults(func=create_experiment)
 
     # parse resume command
     parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
     parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to resume')
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
-    parser_resume.add_argument('--debug', '-d', action='store_true', help=' set log level to debug')
+    parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse update command

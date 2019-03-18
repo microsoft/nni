@@ -191,7 +191,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
         for(let taskRole of this.fcTrialConfig.taskRoles) {
-            const runScriptContent: string = this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder, 
+            const runScriptContent: string = await this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder, 
             this.generateCommandScript(taskRole.command), curTrialSequenceId.toString(), taskRole.name, taskRole.gpuNum);
             await fs.promises.writeFile(path.join(trialLocalTempFolder, `run_${taskRole.name}.sh`), runScriptContent, { encoding: 'utf8' });
         }
@@ -266,6 +266,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     this.log.error(error);
                     return Promise.reject(new Error(error));                    
                 }
+                break;
+            case TrialConfigMetadataKey.VERSION_CHECK:
+                this.versionCheck = (value === 'true' || value === 'True');
                 break;
             default:
                 break;

@@ -25,6 +25,7 @@ from io import TextIOBase
 import logging
 import os
 import sys
+import time
 
 
 def _load_env_args():
@@ -48,7 +49,7 @@ logLevelMap = {
     'debug': logging.DEBUG
 }
 
-_time_format = '%Y-%m-%d %H:%M:%S'
+_time_format = '%m/%d/%Y, %I:%M:%S %P'
 class _LoggerFileWrapper(TextIOBase):
     def __init__(self, logger_file):
         self.file = logger_file
@@ -77,8 +78,8 @@ def init_logger(logger_file_path):
     
     logger_file = open(logger_file_path, 'w')
     fmt = '[%(asctime)s] %(levelname)s (%(name)s/%(threadName)s) %(message)s'
+    logging.Formatter.converter = time.localtime
     formatter = logging.Formatter(fmt, _time_format)
-
     handler = logging.StreamHandler(logger_file)
     handler.setFormatter(formatter)
 

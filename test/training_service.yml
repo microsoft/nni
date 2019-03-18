@@ -38,6 +38,7 @@ pai:
     image:
     memoryMB: 8192
     outputDir:
+    virtualCluster:
 remote:
   machineList:
   - ip:

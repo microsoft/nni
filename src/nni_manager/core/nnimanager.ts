@@ -127,7 +127,11 @@ class NNIManager implements Manager {
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
-
+        // Set up versionCheck config
+        if (expParams.versionCheck !== undefined) {
+            this.trainingService.setClusterMetadata('version_check', expParams.versionCheck.toString());
+        }
+        
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
             expParams.multiPhase, expParams.multiThread);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
@@ -160,6 +164,11 @@ class NNIManager implements Manager {
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
+        }
+
+        // Set up versionCheck config
+        if (expParams.versionCheck !== undefined) {
+            this.trainingService.setClusterMetadata('versionCheck', expParams.versionCheck.toString());
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
