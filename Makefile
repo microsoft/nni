@@ -1,5 +1,7 @@
 # Setting variables
 SHELL := /bin/bash
+PIP_INSTALL := python3 -m pip install
+PIP_UNINSTALL := python3 -m pip uninstall
 
 ## Colorful output
 _INFO := $(shell echo -e '\033[1;36m')
@@ -162,7 +164,7 @@ install-python-modules:
 .PHONY: dev-install-python-modules
 dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
+	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) -e .
 
 
 .PHONY: install-node-modules
