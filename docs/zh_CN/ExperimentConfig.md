@@ -156,7 +156,7 @@ machineList:
   
   * 说明
     
-    NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set debug be false.
+    NNI 会检查 remote, pai 和 Kubernetes 模式下管理器以及 trialKeeper 进程的版本。 If you want to disable version check, you could set debug be false.
 
 * **maxTrialNum**
   
