@@ -60,7 +60,31 @@ def get_layer_output(layer, layer_name):
     else:
         return layer['layer_choice'][layer_choice](layer_name, *input_candidate)
 
+def reload_tf_variable(tf, sess):
+    '''Get next parameter from tuner and load them into tf variable'''
+    global global_layer
+    param = trial.get_next_parameter()
+    for layer_name, info in global_layer.items():
+        mask = [1 if inp in param[layer_name]['input_candidates'] else 0 for inp in info['input_candidates']]
+        tf.get_variable(info['mask']).load(mask, sess)
+        choice_idx = info['layer_choice'].index(param[layer_name]['layer_choice'])
+        tf.get_variable(info['choice']).load(choice_idx, sess)
 
+def get_mask(layer, layer_name, tf):
+    '''Create a unique tf variable binary mask for input candidates'''
+    mask = tf.get_variable('{}_mask'.format(layer_name),[len(layer[layer_name]['input_candidates'])], dtype=tf.bool)
+    layer[layer_name]['mask'] = mask.name
+    global global_layer
+    global_layer.update(layer)
+    return mask
+
+def get_choice(layer, layer_name, tf):
+    '''Create a unique tf scalar variable for layer choice'''
+    choice = tf.get_variable('{}_choice'.format(layer_name),[],dtype=tf.int64)
+    layer[layer_name]['choice'] = choice.name
+    global global_layer
+    global_layer.update(layer)
+    return choice
 
 if env_args.platform is None:
     def choice(*options, name=None):

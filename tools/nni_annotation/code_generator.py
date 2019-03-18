@@ -349,10 +349,10 @@ class Transformer(ast.NodeTransformer):
         if string.startswith('@nni.get_next_parameter('):
             deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. Please remove this line in the trial code."
             print_warning(deprecated_message)
+            return parse_annotation("nni.reload_tf_variable(tf, self.sess)")
 
         if string.startswith('@nni.report_intermediate_result(')  \
-                or string.startswith('@nni.report_final_result(') \
-                or string.startswith('@nni.get_next_parameter('):
+                or string.startswith('@nni.report_final_result('):
             return parse_annotation(string[1:])  # expand annotation string to code
 
         if string.startswith('@nni.variable(') \

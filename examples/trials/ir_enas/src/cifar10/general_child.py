@@ -229,42 +229,44 @@ class GeneralChild(Model):
           inp_h = inputs.get_shape()[2].value
           inp_w = inputs.get_shape()[3].value
           out.set_shape([None, out_filters, inp_h, inp_w])
-        res_layers = list(res_layers)
-        res_layers.append(out)
+        # res_layers = list(res_layers)
+        # res_layers.append(out)
+        # out = tf.add_n(res_layers)
+        res_layers = [tf.reduce_sum(res_layers, axis=0), out]
         out = tf.add_n(res_layers)
         out = batch_norm(out, is_training, data_format=self.data_format)
         layers.append(out)
 
         return out
 
-      def conv3(layer_id, *res_layers):
+      def conv3(layer_id, res_layers):
         # res_layers is pre_layers that are chosen to form skip connection
         # layers[-1] is always the latest input
         with tf.variable_scope(layer_id):
           out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0)
           out = post_process_out(out, layers[-1], res_layers)
         return out
-      def conv3_sep(layer_id, *res_layers):
+      def conv3_sep(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0, separable=True)
           out = post_process_out(out, layers[-1], res_layers)
         return out
-      def conv5(layer_id, *res_layers):
+      def conv5(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0)
           out = post_process_out(out, layers[-1], res_layers)
         return out
-      def conv5_sep(layer_id, *res_layers):
+      def conv5_sep(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0, separable=True)
           out = post_process_out(out, layers[-1], res_layers)
         return out
-      def avg_pool(layer_id, *res_layers):
+      def avg_pool(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           out = self._pool_branch(layers[-1], is_training, out_filters, "avg", start_idx=0)
           out = post_process_out(out, layers[-1], res_layers)
         return out
-      def max_pool(layer_id, *res_layers):
+      def max_pool(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           out = self._pool_branch(layers[-1], is_training, out_filters, "max", start_idx=0)
           out = post_process_out(out, layers[-1], res_layers)

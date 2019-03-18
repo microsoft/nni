@@ -161,7 +161,7 @@ class ENASTrial(ENASBaseTrial):
             self.child_ops["train_acc"],
             self.child_ops["train_op"],
         ]
-
+        '''@nni.get_next_parameter()'''
         actual_step = None
         loss, lr, gn, tr_acc, _ = self.sess.run(run_ops)
         global_step = self.sess.run(self.child_ops["global_step"])
@@ -196,7 +196,6 @@ def main(_):
         shutil.rmtree(FLAGS.output_dir)
         os.makedirs(FLAGS.output_dir)
     logger.debug("-" * 80)
-    '''@nni.get_next_parameter()'''
     trial = ENASTrial()
     controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
     logger.debug("here is the num train batches")
