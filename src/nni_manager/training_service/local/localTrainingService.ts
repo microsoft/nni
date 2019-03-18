@@ -271,7 +271,9 @@ class LocalTrainingService implements TrainingService {
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (!this.initialized) {
             this.rootDir = getExperimentRootDir();
-            await cpp.exec(`mkdir -p ${this.rootDir}`);
+            if(!fs.existsSync(this.rootDir)){
+                await cpp.exec(`mkdir -p ${this.rootDir}`);
+            }
             this.initialized = true;
         }
         switch (key) {

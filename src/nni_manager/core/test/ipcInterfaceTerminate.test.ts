@@ -50,9 +50,14 @@ function startProcess(): void {
         // advisor
         undefined
     );
-
-    const proc: ChildProcess = spawn(dispatcherCmd, [], { stdio, cwd: 'core/test', shell: true });
-
+    let proc: ChildProcess;
+    if(process.platform==='win32'){
+        let cmd = dispatcherCmd.split(" ", 1)[0];
+        proc = spawn(cmd, dispatcherCmd.substr(cmd.length+1).split(" "), { stdio, cwd: 'core/test' });
+    }
+    else{
+        proc = spawn(dispatcherCmd, [], { stdio, cwd: 'core/test', shell: true });
+    }
     proc.on('error', (error: Error): void => {
         procExit = true;
         procError = true;
