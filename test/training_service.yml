@@ -1,7 +1,6 @@
 kubeflow:
   maxExecDuration: 15m
   nniManagerIp:
-  versionCheck: false
   kubeflowConfig:
     operator: tf-operator
     apiVersion: v1alpha2
