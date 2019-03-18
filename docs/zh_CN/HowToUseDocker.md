@@ -10,7 +10,7 @@
 
 ### 第一步：docker的安装
 
-在你开始使用docker进行NNI实验之前，你首先需要在本地机器上安装docker运行程序。 [Refer](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
+在你开始使用docker进行NNI实验之前，你首先需要在本地机器上安装docker运行程序。 [参考](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 
 ### 第二步：启动docker容器
 
@@ -23,20 +23,20 @@
 
 -i: 使用交互模式启动docker
 
-`-t:` Docker assign the container a input terminal.
+-t: Docker分配一个输入终端。
 
-`-p:` Port mapping, map host port to a container port.
+-p: 端口映射，映射主机端口和容器端口。
 
-For more information about docker command, please [refer](https://docs.docker.com/v17.09/edge/engine/reference/run/)
+可以参考[这里](https://docs.docker.com/v17.09/edge/engine/reference/run/)，获取更多的命令参考。
 
-Note:
+注意：
 
-       NNI only support Ubuntu and MacOS system in local mode for the moment, please use correct docker image type.If you want to use gpu in docker container, please use nvidia-docker.
+       NNI只支持Ubuntu和macOS操作系统，请指定正确的docker镜像。如果你希望在docker里面使用gpu，请使用nvidia-docker。
     
 
-### Step3: Run NNI in docker container
+### 步骤3：在docker容器里面运行NNI
 
-If you start a docker image using NNI's offical image `msranni/nni`, you could directly start NNI experiments by using `nnictl` command. Our offical image has NNI's running environment and basic python and deep learning frameworks environment.
+如果你直接使用NNI的官方镜像`msranni/nni`来启动实验，你可以直接使用`nnictl`命令。 NNI的官方镜像有最基础的python环境和深度学习框架。
 
 If you start your own docker image, you may need to install NNI package first, please [refer](Installation.md).
 
