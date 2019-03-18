@@ -46,6 +46,12 @@ nnictl 支持的命令：
   | ------------ | ----- | --- | ---------------------- |
   | --config, -c | True  |     | Experiment 的 YAML 配置文件 |
   | --port, -p   | False |     | RESTful 服务的端口          |
+  | --debug, -d  | False |     | set debug mode         |
+  
+  Note:
+  
+      Debug mode will disable version check function in Trialkeeper.
+      
 
 <a name="resume"></a>
 
@@ -63,10 +69,11 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写      | 是否必需  | 默认值 | 说明                               |
-  | ---------- | ----- | --- | -------------------------------- |
-  | id         | False |     | 要恢复的 Experiment 标识               |
-  | --port, -p | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                               |
+  | ----------- | ----- | --- | -------------------------------- |
+  | id          | False |     | 要恢复的 Experiment 标识               |
+  | --port, -p  | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
+  | --debug, -d | False |     | set debug mode                   |
 
 <a name="stop"></a>
 

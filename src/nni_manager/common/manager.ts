@@ -36,6 +36,7 @@ interface ExperimentParams {
     trainingServicePlatform: string;
     multiPhase?: boolean;
     multiThread?: boolean;
+    versionCheck?: boolean;
     tuner?: {
         className: string;
         builtinTunerName?: string;
