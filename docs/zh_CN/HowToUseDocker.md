@@ -1,6 +1,6 @@
-# **How to Use Docker in NNI**
+# **如何在 NNI 中使用 Docker**
 
-## Overview
+## 概述
 
 [Docker](https://www.docker.com/) is a tool to make it easier for users to deploy and run applications based on their own operating system by starting containers. Docker is not a virtual machine, it does not create a virtual operating system, bug it allows different applications to use the same OS kernel, and isolate different applications by container.
 
