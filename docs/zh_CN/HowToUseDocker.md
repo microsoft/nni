@@ -82,7 +82,7 @@ SSH容器需要一个端口，你需要把docker的SSH服务端口暴露给NNI�
 
 ### 步骤三：运行NNI实验
 
-You could set your config file as remote platform, and setting the `machineList` configuration to connect your docker SSH server, [refer](RemoteMachineMode.md). Note that you should set correct `port`,`username` and `passwd` or `sshKeyPath` of your host machine.
+你可以在你的配置文件中，设置训练平台为远程平台，然后设置`machineList`配置。[参考](RemoteMachineMode.md)。 Note that you should set correct `port`,`username` and `passwd` or `sshKeyPath` of your host machine.
 
 `port:` The host machine's port, mapping to docker's SSH port.
 
