@@ -2,13 +2,13 @@
 
 ## 概述
 
-[Docker](https://www.docker.com/) is a tool to make it easier for users to deploy and run applications based on their own operating system by starting containers. Docker is not a virtual machine, it does not create a virtual operating system, bug it allows different applications to use the same OS kernel, and isolate different applications by container.
+[Docker](https://www.docker.com/) 是一种工具, 可通过启动容器, 使用户能够更轻松地根据自己的操作系统部署和运行应用程序。 Docker 不是虚拟机, 它不创建虚拟操作系统, 但是它允许不同的应用程序使用相同的操作系统内核, 并通过容器隔离不同的应用程序。
 
-Users could start NNI experiments using docker, and NNI provides an offical docker image [msranni/nni](https://hub.docker.com/r/msranni/nni) in docker hub.
+用户可以使用docker进行 NNI 实验, NNI 在docker hub上提供了一个官方的镜像 [msranni/nni](https://hub.docker.com/r/msranni/nni)。
 
-## Using docker in local machine
+## 在本地模式使用docker
 
-### Step 1: Installation of docker
+### 第一步：docker的安装
 
 Before you start using docker to start NNI experiments, you should install a docker software in your local machine. [Refer](https://docs.docker.com/install/linux/docker-ce/ubuntu/)
 
