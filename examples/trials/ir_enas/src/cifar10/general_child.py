@@ -220,27 +220,29 @@ class GeneralChild(Model):
 
 
       global_res_layers = None
-      def post_process_out(out):
-        inputs = layers[-1]
-        if self.data_format == "NHWC":
-          inp_h = inputs.get_shape()[1].value
-          inp_w = inputs.get_shape()[2].value
-          inp_c = inputs.get_shape()[3].value
-          out.set_shape([None, inp_h, inp_w, out_filters])
-        elif self.data_format == "NCHW":
-          inp_c = inputs.get_shape()[1].value
-          inp_h = inputs.get_shape()[2].value
-          inp_w = inputs.get_shape()[3].value
-          out.set_shape([None, out_filters, inp_h, inp_w])
-        # res_layers = list(res_layers)
-        # res_layers.append(out)
-        # out = tf.add_n(res_layers)
-        try:
-          pout = tf.add_n([out, tf.reduce_sum(global_res_layers, axis=0)])
-        except Exception as e:
-          print(e)
-          pout = out
-        out = batch_norm(pout, is_training, data_format=self.data_format)
+      def post_process_out(out, layer_id):
+        with tf.variable_scope(layer_id):
+          with tf.variable_scope("skip"):
+            inputs = layers[-1]
+            if self.data_format == "NHWC":
+              inp_h = inputs.get_shape()[1].value
+              inp_w = inputs.get_shape()[2].value
+              inp_c = inputs.get_shape()[3].value
+              out.set_shape([None, inp_h, inp_w, out_filters])
+            elif self.data_format == "NCHW":
+              inp_c = inputs.get_shape()[1].value
+              inp_h = inputs.get_shape()[2].value
+              inp_w = inputs.get_shape()[3].value
+              out.set_shape([None, out_filters, inp_h, inp_w])
+            # res_layers = list(res_layers)
+            # res_layers.append(out)
+            # out = tf.add_n(res_layers)
+            try:
+              pout = tf.add_n([out, tf.reduce_sum(global_res_layers, axis=0)])
+            except Exception as e:
+              print(e)
+              pout = out
+            out = batch_norm(pout, is_training, data_format=self.data_format)
         layers.append(out)
 
         return out
