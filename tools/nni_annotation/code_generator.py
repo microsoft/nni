@@ -234,6 +234,7 @@ def make_nodes_for_each_layer(dict_node):
         layer_inputs = ast.Name(id=layer_name+'_inputs')
         layer_choice = ast.Name(id=layer_name+'_choice')
         layer_branches = ast.Name(id=layer_name+'_branches')
+        layer_y = ast.Name(id=layer_name+'_y')
         layer_name_node = ast.Str(s=layer_name)
         # get mask from nni API
         get_mask_call_node = make_attr_call('nni', 'get_mask', [ast.Name(id=layer_dict_name), layer_name_node, ast.Name(id='tf')])
@@ -252,10 +253,11 @@ def make_nodes_for_each_layer(dict_node):
         left_value = ast.Subscript(value=layer_branches, slice=ast.Index(value=condition))
         current_branch = ast.Subscript(value=make_layer_info_node(layer_name, 'layer_choice'), slice=ast.Name(id='idx'))
         current_branch_call_node = ast.Call(func=current_branch, args=[layer_name_node, layer_inputs], keywords=[])
-        assign_node_in_for = ast.Assign(targets=[left_value], value=make_lambda(current_branch_call_node))
-        for_node = ast.For(target=ast.Name(id='idx'), iter=iter_node, body=[assign_node_in_for], orelse=[])
+        assign_node_in_for_one = ast.Assign(targets=[layer_y], value=current_branch_call_node)
+        assign_node_in_for_two = ast.Assign(targets=[left_value], value=make_lambda(layer_y))
+        for_node = ast.For(target=ast.Name(id='idx'), iter=iter_node, body=[assign_node_in_for_one, assign_node_in_for_two], orelse=[])
         # Assign tf.case to layer output
-        tf_case_node = make_attr_call('tf', 'case', args=[layer_branches], keywords=[ast.keyword(arg='exclusive', value=ast.NameConstant(value=True))])
+        tf_case_node = make_attr_call('tf', 'case', args=[layer_branches], keywords=[ast.keyword(arg='exclusive', value=ast.NameConstant(value=True)), ast.keyword(arg='default', value=make_lambda(make_attr_call('tf', 'constant', [ast.Num(n=0.0)])))])
         layer_output_assign_node = ast.Assign(targets=[ast.Name(id=info['outputs'].s)], value=tf_case_node)
         #layer_3_out = tf.case(layer_3_branches, exclusive=True)
         core_nodes = [mask_assign_node, tf_mask_assign_node, choice_assign_node, initialize_dict_node, for_node, layer_output_assign_node]
