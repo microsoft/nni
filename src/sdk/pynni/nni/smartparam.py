@@ -77,7 +77,7 @@ def reload_tf_variable(tf, sess):
 
 def get_mask(layer, layer_name, tf):
     '''Create a unique tf variable binary mask for input candidates'''
-    mask = tf.get_variable('{}_mask'.format(layer_name),[len(layer[layer_name]['input_candidates'])], dtype=tf.bool)
+    mask = tf.get_variable('{}_mask'.format(layer_name),[len(layer[layer_name]['input_candidates'])], dtype=tf.bool, trainable=False)
     layer[layer_name]['mask'] = mask.name
     global global_layer
     global_layer.update(layer)
@@ -85,7 +85,7 @@ def get_mask(layer, layer_name, tf):
 
 def get_choice(layer, layer_name, tf):
     '''Create a unique tf scalar variable for layer choice'''
-    choice = tf.get_variable('{}_choice'.format(layer_name),[],dtype=tf.int64)
+    choice = tf.get_variable('{}_choice'.format(layer_name), [], dtype=tf.int64, trainable=False)
     layer[layer_name]['choice'] = choice.name
     global global_layer
     global_layer.update(layer)
