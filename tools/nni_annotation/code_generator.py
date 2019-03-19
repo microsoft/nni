@@ -264,7 +264,7 @@ def make_nodes_for_each_layer(dict_node):
         tf_case_node = make_attr_call('tf', 'case', args=[layer_branches], keywords=[ast.keyword(arg='exclusive', value=ast.NameConstant(value=True)), ast.keyword(arg='default', value=make_lambda(make_attr_call('tf', 'constant', [ast.Num(n=0.0)])))])
         layer_output_assign_node = ast.Assign(targets=[layer_output_node], value=tf_case_node)
         # post_process_output
-        post_process_output_node = ast.Assign(targets=[layer_output_node], value=make_call(info['post_process_outputs'].s, [layer_output_node, ast.Str(layer_name)]))
+        post_process_output_node = ast.Assign(targets=[layer_output_node], value=make_call(info['post_process_outputs'].s, [layer_name_node, layer_output_node, layer_choice]))
         core_nodes = [mask_assign_node, tf_mask_assign_node, choice_assign_node, initialize_dict_node,
                         for_node, layer_output_assign_node, post_process_output_node]
         return core_nodes

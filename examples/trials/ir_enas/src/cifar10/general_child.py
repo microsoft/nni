@@ -219,8 +219,7 @@ class GeneralChild(Model):
           return pooled_layers, out_filters
 
 
-      global_res_layers = None
-      def post_process_out(out, layer_id):
+      def post_process_out(layer_id, out, input_candidates):
         with tf.variable_scope(layer_id):
           with tf.variable_scope("skip"):
             inputs = layers[-1]
@@ -238,7 +237,7 @@ class GeneralChild(Model):
             # res_layers.append(out)
             # out = tf.add_n(res_layers)
             try:
-              pout = tf.add_n([out, tf.reduce_sum(global_res_layers, axis=0)])
+              pout = tf.add_n([out, tf.reduce_sum(input_candidates, axis=0)])
             except Exception as e:
               print(e)
               pout = out
@@ -254,42 +253,42 @@ class GeneralChild(Model):
           with tf.variable_scope('branch_0'):
             out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0)
             #out = post_process_out(out, layers[-1], res_layers)
-            global_res_layers = res_layers
+            # global_res_layers = res_layers
         return out
       def conv3_sep(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_1'):
             out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0, separable=True)
             # out = post_process_out(out, layers[-1], res_layers)
-            global_res_layers = res_layers
+            # global_res_layers = res_layers
         return out
       def conv5(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_2'):
             out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0)
             # out = post_process_out(out, layers[-1], res_layers)
-            global_res_layers = res_layers
+            # global_res_layers = res_layers
         return out
       def conv5_sep(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_3'):
             out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0, separable=True)
             # out = post_process_out(out, layers[-1], res_layers)
-            global_res_layers = res_layers
+            # global_res_layers = res_layers
         return out
       def avg_pool(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_4'):
             out = self._pool_branch(layers[-1], is_training, out_filters, "avg", start_idx=0)
             # out = post_process_out(out, layers[-1], res_layers)
-            global_res_layers = res_layers
+            # global_res_layers = res_layers
         return out
       def max_pool(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_5'):
             out = self._pool_branch(layers[-1], is_training, out_filters, "max", start_idx=0)
             # out = post_process_out(out, layers[-1], res_layers)
-            global_res_layers = res_layers
+            # global_res_layers = res_layers
         return out
       
       ############################# New added code beginning
