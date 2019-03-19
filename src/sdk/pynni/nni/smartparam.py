@@ -40,7 +40,10 @@ __all__ = [
     'lognormal',
     'qlognormal',
     'function_choice',
-    'get_layer_output'
+    'get_layer_output',
+    'get_choice',
+    'get_mask',
+    'reload_tf_variable'
 ]
 
 
