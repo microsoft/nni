@@ -174,8 +174,10 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
     if (!tuner && !advisor) {
         throw new Error('Error: specify neither tuner nor advisor is not allowed');
     }
-
     let command: string = `python3 -m nni`;
+    if(os.platform()==="win32"){
+        command = `python -m nni`;
+    }
     if (multiPhase) {
         command += ' --multi_phase';
     }
@@ -187,7 +189,12 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
     if (advisor) {
         command += ` --advisor_class_name ${advisor.className}`;
         if (advisor.classArgs !== undefined) {
-            command += ` --advisor_args ${JSON.stringify(JSON.stringify(advisor.classArgs))}`;
+            if(os.platform()==="win32"){
+                command += ` --advisor_args ${JSON.stringify(advisor.classArgs)}`;
+            }
+            else{
+                command += ` --advisor_args ${JSON.stringify(JSON.stringify(advisor.classArgs))}`;
+            }
         }
         if (advisor.codeDir !== undefined && advisor.codeDir.length > 1) {
             command += ` --advisor_directory ${advisor.codeDir}`;
@@ -198,7 +205,12 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
     } else {
         command += ` --tuner_class_name ${tuner.className}`;
         if (tuner.classArgs !== undefined) {
-            command += ` --tuner_args ${JSON.stringify(JSON.stringify(tuner.classArgs))}`;
+            if(os.platform()==="win32"){
+                command += ` --tuner_args ${JSON.stringify(tuner.classArgs)}`;
+            }
+            else{
+                command += ` --tuner_args ${JSON.stringify(JSON.stringify(tuner.classArgs))}`;
+            }
         }
         if (tuner.codeDir !== undefined && tuner.codeDir.length > 1) {
             command += ` --tuner_directory ${tuner.codeDir}`;
@@ -210,7 +222,12 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
         if (assessor !== undefined && assessor.className !== undefined) {
             command += ` --assessor_class_name ${assessor.className}`;
             if (assessor.classArgs !== undefined) {
-                command += ` --assessor_args ${JSON.stringify(JSON.stringify(assessor.classArgs))}`;
+                if(os.platform()==="win32"){
+                    command += ` --assessor_args ${JSON.stringify(assessor.classArgs)}`;
+                }
+                else{
+                    command += ` --assessor_args ${JSON.stringify(JSON.stringify(assessor.classArgs))}`;
+                }
             }
             if (assessor.codeDir !== undefined && assessor.codeDir.length > 1) {
                 command += ` --assessor_directory ${assessor.codeDir}`;

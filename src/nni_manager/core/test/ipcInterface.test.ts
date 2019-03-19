@@ -18,7 +18,7 @@
  */
 
 'use strict';
-
+import * as os from 'os';
 import * as assert from 'assert';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
@@ -39,15 +39,26 @@ function runProcess(): Promise<Error | null> {
 
     // create fake assessor process
     const stdio: StdioOptions = ['ignore', 'pipe', process.stderr, 'pipe', 'pipe'];
-    const proc: ChildProcess = spawn('python3 assessor.py', [], { stdio, cwd: 'core/test', shell: true });
-
+    let proc: ChildProcess;
+    if(os.platform()==="win32"){
+         proc = spawn('python', ['assessor.py'], { stdio, cwd: 'core/test'});
+    }
+    else{
+        proc = spawn('python3 assessor.py', [], { stdio, cwd: 'core/test', shell: true });
+    }
     // record its sent/received commands on exit
     proc.on('error', (error: Error): void => { deferred.resolve(error); });
     proc.on('exit', (code: number): void => {
         if (code !== 0) {
             deferred.resolve(new Error(`return code: ${code}`));
         } else {
-            sentCommands = proc.stdout.read().toString().split('\n');
+            let str = proc.stdout.read().toString();       
+            if(str.search("\r\n")!=-1){
+                sentCommands = str.split("\r\n");
+            }
+            else{ 
+                sentCommands = str.split('\n');
+            }
             deferred.resolve(null);
         }
     });

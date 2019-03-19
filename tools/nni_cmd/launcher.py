@@ -67,7 +67,10 @@ def get_nni_installation_path():
         Return None if nothing is found
         '''
         def _generate_installation_path(sitepackages_path):
-            python_dir = str(Path(sitepackages_path).parents[2])
+            if sys.platform == "win32":
+                python_dir = str(Path(sitepackages_path))
+            else:
+                python_dir = str(Path(sitepackages_path).parents[2])
             entry_file = os.path.join(python_dir, 'nni', 'main.js')
             if os.path.isfile(entry_file):
                 return python_dir

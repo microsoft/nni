@@ -41,7 +41,11 @@ env_args = _load_env_args()
 '''Arguments passed from environment'''
 
 
-_time_format = '%m/%d/%Y, %I:%M:%S %P'
+if sys.platform =='win32':
+    _time_format = '%m/%d/%Y, %I:%M:%S %p'
+else:
+    _time_format = '%m/%d/%Y, %I:%M:%S %P'
+    
 class _LoggerFileWrapper(TextIOBase):
     def __init__(self, logger_file):
         self.file = logger_file

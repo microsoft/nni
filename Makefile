@@ -66,6 +66,7 @@ NNI_VERSION_TEMPLATE = 999.0.0-developing
 build:
 	#$(_INFO) Building NNI Manager $(_END)
 	cd src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
+	cp -rf src/nni_manager/config src/nni_manager/dist/
 	#$(_INFO) Building WebUI $(_END)
 	cd src/webui && $(NNI_YARN) && $(NNI_YARN) build
 

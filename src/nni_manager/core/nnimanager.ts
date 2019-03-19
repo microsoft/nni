@@ -279,12 +279,23 @@ class NNIManager implements Manager {
             NNI_LOG_DIRECTORY: getLogDir()
         };
         let newEnv = Object.assign({}, process.env, nniEnv);
-        const tunerProc: ChildProcess = spawn(command, [], {
-            stdio,
-            cwd: newCwd,
-            env: newEnv,
-            shell: true
-        });
+        let tunerProc: ChildProcess;
+        if(process.platform === "win32"){
+            let cmd = command.split(" ", 1)[0];
+             tunerProc = spawn(cmd, command.substr(cmd.length+1).split(" "), {
+                stdio,
+                cwd: newCwd,
+                env: newEnv
+            });
+        }
+        else{
+              tunerProc = spawn(command, [], {
+                stdio,
+                cwd: newCwd,
+                env: newEnv,
+                shell: true
+            });
+        }
         this.dispatcherPid = tunerProc.pid;
         this.dispatcher = createDispatcherInterface(tunerProc);
 
