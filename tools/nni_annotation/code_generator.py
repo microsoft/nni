@@ -252,7 +252,7 @@ def make_nodes_for_each_layer(dict_node):
         left_value = ast.Subscript(value=layer_branches, slice=ast.Index(value=condition))
         current_branch = ast.Subscript(value=make_layer_info_node(layer_name, 'layer_choice'), slice=ast.Name(id='idx'))
         current_branch_call_node = ast.Call(func=current_branch, args=[layer_name_node, layer_inputs], keywords=[])
-        assign_node_in_for = ast.Assign(targets=[left_value], value=current_branch_call_node)
+        assign_node_in_for = ast.Assign(targets=[left_value], value=make_lambda(current_branch_call_node))
         for_node = ast.For(target=ast.Name(id='idx'), iter=iter_node, body=[assign_node_in_for], orelse=[])
         # Assign tf.case to layer output
         tf_case_node = make_attr_call('tf', 'case', args=[layer_branches], keywords=[ast.keyword(arg='exclusive', value=ast.NameConstant(value=True))])
