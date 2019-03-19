@@ -217,13 +217,16 @@ def make_layer_info_node(layer_name, key):
 
     return outer_dict
 
-def eval_items(layername, key, return_dict=False):
+def eval_items(layername, key, return_dict=False, is_list=True):
     '''eval all items in a list and return a ast node'''
     target = "{}['{}']['{}']".format(layer_dict_name, layername, key)
-    if return_dict:
-        template = "%s={item: _nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s}" % (target, target)
+    if is_list:
+        if return_dict:
+            template = "%s={item: _nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s}" % (target, target)
+        else:
+            template = "%s=[_nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s]" % (target, target)
     else:
-        template = "%s=[_nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s]" % (target, target)
+        template = "{0}=_nni_locals[{0}] if {0} in _nni_locals else _nni_globals[{0}]".format(target)
     
     return ast.parse(template).body[0]
 
@@ -235,6 +238,7 @@ def make_nodes_for_each_layer(dict_node):
         layer_choice = ast.Name(id=layer_name+'_choice')
         layer_branches = ast.Name(id=layer_name+'_branches')
         layer_y = ast.Name(id=layer_name+'_y')
+        layer_output_node = ast.Name(id=info['outputs'].s)
         layer_name_node = ast.Str(s=layer_name)
         # get mask from nni API
         get_mask_call_node = make_attr_call('nni', 'get_mask', [ast.Name(id=layer_dict_name), layer_name_node, ast.Name(id='tf')])
@@ -258,9 +262,11 @@ def make_nodes_for_each_layer(dict_node):
         for_node = ast.For(target=ast.Name(id='idx'), iter=iter_node, body=[assign_node_in_for_one, assign_node_in_for_two], orelse=[])
         # Assign tf.case to layer output
         tf_case_node = make_attr_call('tf', 'case', args=[layer_branches], keywords=[ast.keyword(arg='exclusive', value=ast.NameConstant(value=True)), ast.keyword(arg='default', value=make_lambda(make_attr_call('tf', 'constant', [ast.Num(n=0.0)])))])
-        layer_output_assign_node = ast.Assign(targets=[ast.Name(id=info['outputs'].s)], value=tf_case_node)
-        #layer_3_out = tf.case(layer_3_branches, exclusive=True)
-        core_nodes = [mask_assign_node, tf_mask_assign_node, choice_assign_node, initialize_dict_node, for_node, layer_output_assign_node]
+        layer_output_assign_node = ast.Assign(targets=[layer_output_node], value=tf_case_node)
+        # post_process_output
+        post_process_output_node = ast.Assign(targets=[layer_output_node], value=make_call(info['post_process_outputs'].s, [layer_output_node]))
+        core_nodes = [mask_assign_node, tf_mask_assign_node, choice_assign_node, initialize_dict_node,
+                        for_node, layer_output_assign_node, post_process_output_node]
         return core_nodes
     def other_node(layer_name, info):
         ## left value
@@ -280,6 +286,7 @@ def make_nodes_for_each_layer(dict_node):
         layer_nodes.append(ast.parse('locals()').body[0])
         layer_nodes.append(eval_items(layer_name, 'layer_choice'))
         layer_nodes.append(eval_items(layer_name, 'input_candidates'))
+        layer_nodes.append(eval_items(layer_name, 'post_process_outputs', is_list=False))
         # TO DO: Add a switcher for tensorflow
         #core_nodes = other_node(layer_name, info)
         core_nodes = tensorflow_node(layer_name, info)
