@@ -342,18 +342,18 @@ class LocalTrainingService implements TrainingService {
 
     private setTrialJobStatus(trialJob: LocalTrialJobDetail, newStatus: TrialJobStatus): void {
         if (trialJob.status !== newStatus) {
+            const oldStatus: TrialJobStatus = trialJob.status;
+            trialJob.status = newStatus;
+            this.onTrialJobStatusChanged(trialJob, oldStatus);
             //if job is not running, destory job stream
             if(['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'].includes(newStatus)) {
                 let stream: ts.Stream | undefined= this.jobStreamMap.get(trialJob.id);
                 if(!stream) {
                     throw new Error(`Could not find stream in trial ${trialJob.id}`);
                 }
-                this.jobStreamMap.delete(trialJob.id);
                 stream.destroy();
+                this.jobStreamMap.delete(trialJob.id);
             }
-            const oldStatus: TrialJobStatus = trialJob.status;
-            trialJob.status = newStatus;
-            this.onTrialJobStatusChanged(trialJob, oldStatus);
         }
     }
 
@@ -405,6 +405,7 @@ class LocalTrainingService implements TrainingService {
                 buffer = remain;
             }
         });
+        
         this.jobStreamMap.set(trialJobDetail.id, stream);
     }
 
