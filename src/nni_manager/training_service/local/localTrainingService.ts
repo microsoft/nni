@@ -353,7 +353,6 @@ class LocalTrainingService implements TrainingService {
                 }
                 stream.destroy();
                 this.jobStreamMap.delete(trialJob.id);
-                console.log(`----------------stream destroy of ${trialJob.id} ---------------`)
             }
         }
     }
