@@ -217,10 +217,13 @@ def make_layer_info_node(layer_name, key):
 
     return outer_dict
 
-def eval_items(layername, key):
+def eval_items(layername, key, return_dict=False):
     '''eval all items in a list and return a ast node'''
     target = "{}['{}']['{}']".format(layer_dict_name, layername, key)
-    template = "%s={item: _nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s}" % (target, target)
+    if return_dict:
+        template = "%s={item: _nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s}" % (target, target)
+    else:
+        template = "%s=[_nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s]" % (target, target)
     
     return ast.parse(template).body[0]
 

@@ -49,6 +49,8 @@ __all__ = [
 
 # pylint: disable=unused-argument
 
+global_layer = dict()
+
 def get_layer_output(layer, layer_name):
     if trial._params is None:
         trial.get_next_parameter()

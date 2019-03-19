@@ -232,9 +232,12 @@ class GeneralChild(Model):
         # res_layers = list(res_layers)
         # res_layers.append(out)
         # out = tf.add_n(res_layers)
-        res_layers = [tf.reduce_sum(res_layers, axis=0), out]
-        out = tf.add_n(res_layers)
-        out = batch_norm(out, is_training, data_format=self.data_format)
+        try:
+          pout = tf.add_n([out, tf.reduce_sum(res_layers, axis=0)])
+          pout = batch_norm(pout, is_training, data_format=self.data_format)
+        except Exception as e:
+          print(e)
+          out = batch_norm(out, is_training, data_format=self.data_format)
         layers.append(out)
 
         return out
