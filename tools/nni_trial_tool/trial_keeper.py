@@ -28,6 +28,7 @@ import re
 import sys
 import select
 from pyhdfs import HdfsClient
+import pkg_resources
 
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
@@ -103,6 +104,28 @@ def main_loop(args):
 def trial_keeper_help_info(*args):
     print('please run --help to see guidance')
 
+def check_version(args):
+    try:
+        trial_keeper_version = pkg_resources.get_distribution('nni').version
+    except pkg_resources.ResolutionError as err:
+        #package nni does not exist, try nni-tool package
+        nni_log(LogType.Warning, 'Package nni does not exist!')
+        try:
+            trial_keeper_version = pkg_resources.get_distribution('nni-tool').version
+        except pkg_resources.ResolutionError as err:
+            #package nni-tool does not exist
+            nni_log(LogType.Error, 'Package nni-tool does not exist!')
+            os._exit(1)
+    if not args.version:
+        # skip version check
+        nni_log(LogType.Warning, 'Skipping version check!')
+    elif trial_keeper_version != args.version:
+        nni_log(LogType.Error, 'Exit trial keeper, trial keeper version is {}, and trainingService version is {}, \
+        versions does not match, please check your code and image versions!'.format(trial_keeper_version, args.version))
+        os._exit(1)
+    else:
+        nni_log(LogType.Info,  'NNI version is {}'.format(args.version))
+
 if __name__ == '__main__':
     '''NNI Trial Keeper main function'''
     PARSER = argparse.ArgumentParser()
@@ -117,10 +140,11 @@ if __name__ == '__main__':
     PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
     PARSER.add_argument('--nni_hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
     PARSER.add_argument('--webhdfs_path', type=str, help='the webhdfs path used in webhdfs URL')
+    PARSER.add_argument('--version', type=str, help='the nni version transmitted from trainingService')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)
-
+    check_version(args)
     try:
         main_loop(args)
     except SystemExit as se:

@@ -34,6 +34,7 @@ Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
 Optional('logDir'): os.path.isdir,
+Optional('debug'): bool,
 Optional('logLevel'): Or('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
 'useAnnotation': bool,
 Optional('advisor'): Or({
@@ -129,6 +130,7 @@ pai_trial_schema = {
     'cpuNum': And(int, lambda x: 0 <= x <= 99999),
     'memoryMB': int,
     'image': str,
+    Optional('shmMB'): int,
     Optional('dataDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
     Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
     Optional('virtualCluster'): str

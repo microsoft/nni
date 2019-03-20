@@ -82,10 +82,10 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **使用场景**
 
-* 在本地 Trial 不同的自动机器学习算法来训练模型。
+* 在本机尝试使用不同的自动机器学习（AutoML）算法来训练模型。
 * 在分布式环境中加速自动机器学习（如：远程 GPU 工作站和云服务器）。
 * 定制自动机器学习算法，或比较不同的自动机器学习算法。
-* 在自己的机器学习平台中支持自动机器学习。
+* 在机器学习平台中支持自动机器学习。
 
 ## 相关项目
 
@@ -93,7 +93,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 * [OpenPAI](https://github.com/Microsoft/pai)：作为开源平台，提供了完整的 AI 模型训练和资源管理能力，能轻松扩展，并支持各种规模的私有部署、云和混合环境。
 * [FrameworkController](https://github.com/Microsoft/frameworkcontroller)：开源的通用 Kubernetes Pod 控制器，通过单个控制器来编排 Kubernetes 上所有类型的应用。
-* [MMdnn](https://github.com/Microsoft/MMdnn)：一个完成、跨框架的解决方案，能够转换、可视化、诊断深度神经网络模型。 MMdnn 中的 "MM" 表示model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。 我们鼓励研究人员和学生利用这些项目来加速 AI 开发和研究。
+* [MMdnn](https://github.com/Microsoft/MMdnn)：一个完整、跨框架的解决方案，能够转换、可视化、诊断深度神经网络模型。 MMdnn 中的 "MM" 表示model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。 我们鼓励研究人员和学生利用这些项目来加速 AI 开发和研究。
 
 ## **安装和验证**
 

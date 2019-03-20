@@ -188,7 +188,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
 
        // Write worker file content run_worker.sh to local tmp folders
        if(kubeflowTrialConfig.worker) {
-           const workerRunScriptContent: string = this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
+           const workerRunScriptContent: string = await this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
                    kubeflowTrialConfig.worker.command, curTrialSequenceId.toString(), 'worker', kubeflowTrialConfig.worker.gpuNum);
 
            await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_worker.sh'), workerRunScriptContent, { encoding: 'utf8' });
@@ -197,7 +197,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
        if(this.kubeflowClusterConfig.operator === 'tf-operator') {
            let tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
            if(tensorflowTrialConfig.ps){
-               const psRunScriptContent: string = this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
+               const psRunScriptContent: string = await this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
                    tensorflowTrialConfig.ps.command, curTrialSequenceId.toString(), 'ps', tensorflowTrialConfig.ps.gpuNum);
                await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_ps.sh'), psRunScriptContent, { encoding: 'utf8' });
            }
@@ -205,7 +205,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
        else if(this.kubeflowClusterConfig.operator === 'pytorch-operator') {
            let pytorchTrialConfig: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>this.kubeflowTrialConfig;
            if(pytorchTrialConfig.master){
-               const masterRunScriptContent: string = this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
+               const masterRunScriptContent: string = await this.generateRunScript('kubeflow', trialJobId, trialWorkingFolder, 
                    pytorchTrialConfig.master.command, curTrialSequenceId.toString(), 'master', pytorchTrialConfig.master.gpuNum);
                await fs.promises.writeFile(path.join(trialLocalTempFolder, 'run_master.sh'), masterRunScriptContent, { encoding: 'utf8' });
            }
@@ -316,6 +316,9 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                     this.log.error(error);
                     return Promise.reject(new Error(error));                    
                 }
+                break;
+            case TrialConfigMetadataKey.VERSION_CHECK:
+                this.versionCheck = (value === 'true' || value === 'True');
                 break;
             default:
                 break;

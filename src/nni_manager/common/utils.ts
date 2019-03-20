@@ -44,6 +44,11 @@ function getLogDir(): string{
     return path.join(getExperimentRootDir(), 'log');
 }
 
+function getLogLevel(): string{
+    return getExperimentStartupInfo()
+    .getLogLevel();
+}
+
 function getDefaultDatabaseDir(): string {
     return path.join(getExperimentRootDir(), 'db');
 }
@@ -345,6 +350,19 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     });
 }
 
+/**
+ * get the version of current package
+ */
+async function getVersion(): Promise<string> {
+    const deferred : Deferred<string> = new Deferred<string>();
+    import(path.join(__dirname, '..', 'package.json')).then((pkg)=>{
+        deferred.resolve(pkg.version);
+    }).catch((error)=>{
+        deferred.reject(error);
+    });
+    return deferred.promise;
+} 
+
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion };
