@@ -189,10 +189,10 @@ class ENASTrial(ENASBaseTrial):
             """@nni.variable(nni.choice('train', 'validate'), name=entry)"""
             entry = 'trian'
             if entry == 'train':
-                loss = trial.run_child_one_macro()
+                loss = self.run_child_one_macro()
                 '''@nni.report_final_result(loss)'''
             elif entry == 'validate':
-                valid_acc_arr = trial.get_csvaa()
+                valid_acc_arr = self.get_csvaa()
                 '''@nni.report_final_result(valid_acc_arr)'''
                 logger.debug("Get rewards Done!\n")
             else:
