@@ -122,7 +122,7 @@ class ENASTrial(ENASBaseTrial):
             self.sess = tf.train.SingularMonitoredSession(
                 config=config, hooks=hooks, checkpoint_dir=FLAGS.output_dir)
 
-            self.load(self.file_path)
+            #self.load(self.file_path)
         logger.debug('initlize ENASTrial done.')
 
     def load(self, file_path):
@@ -175,7 +175,7 @@ class ENASTrial(ENASBaseTrial):
             tr_acc, FLAGS.batch_size)
         logger.debug(log_string)
 
-        self.save(self.output_dir, self.file_path)
+        #self.save(self.output_dir, self.file_path)
         return loss
 
     def start_eval_macro(self, first_arc):
