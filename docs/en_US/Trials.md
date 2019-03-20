@@ -126,7 +126,7 @@ useAnnotation: true
 ```
 
 
-## Where is my trials?
+## Where are my trials?
 
 In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trials code, data and other possible log. In addition, each trial's log will be re-directed to a file name `trial.log` under that directory.
 
