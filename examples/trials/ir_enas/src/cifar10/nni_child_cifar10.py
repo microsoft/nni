@@ -161,7 +161,6 @@ class ENASTrial(ENASBaseTrial):
             self.child_ops["train_acc"],
             self.child_ops["train_op"],
         ]
-        '''@nni.get_next_parameter()'''
         actual_step = None
         loss, lr, gn, tr_acc, _ = self.sess.run(run_ops)
         global_step = self.sess.run(self.child_ops["global_step"])
@@ -184,6 +183,23 @@ class ENASTrial(ENASBaseTrial):
         self.child_ops["eval_func"]\
             (self.sess, "test", first_arc, self.child_model)
 
+    def run(self, num):
+        for _ in range(num):
+            '''@nni.get_next_parameter()'''
+            """@nni.variable(nni.choice('train', 'validate'), name=entry)"""
+            entry = 'trian'
+            if entry == 'train':
+                loss = trial.run_child_one_macro()
+                '''@nni.report_final_result(loss)'''
+            elif entry == 'validate':
+                valid_acc_arr = trial.get_csvaa()
+                '''@nni.report_final_result(valid_acc_arr)'''
+                logger.debug("Get rewards Done!\n")
+            else:
+                raise RuntimeError('No such entry: ' + entry)
+
+            logger.debug("Send rewards Done\n")
+            #trial.start_eval_macro(first_arc=first_arc)
 
 def main(_):
     logger.debug("-" * 80)
@@ -205,24 +221,7 @@ def main(_):
     logger.debug("child total \t"+str(child_totalsteps))
     epoch = 0
 
-    """@nni.variable(nni.choice('train', 'validate'), name=entry)"""
-    entry = 'trian'
-
-    logger.debug("get paramters")
-
-    if entry == 'train':
-        loss = trial.run_child_one_macro()
-        '''@nni.report_final_result(loss)'''
-    elif entry == 'validate':
-        valid_acc_arr = trial.get_csvaa()
-        '''@nni.report_final_result(valid_acc_arr)'''
-        logger.debug("Get rewards Done!\n")
-    else:
-        raise RuntimeError('No such entry: ' + entry)
-
-    logger.debug("Send rewards Done\n")
-    #trial.start_eval_macro(first_arc=first_arc)
-
+    trial.run(6)
 
 if __name__ == "__main__":
     tf.app.run()
