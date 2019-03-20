@@ -128,9 +128,22 @@ useAnnotation: true
 
 ## Where are my trials?
 
-In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trials code, data and other possible log. In addition, each trial's log will be re-directed to a file name `trial.log` under that directory.
+In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trials code, data and other possible log. In addition, each trial's log will be re-directed to a file name `trial.log` under that directory.
 
-Besides, trial's converted code is in another temporary directory if NNI Annotation is used. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line of this file will change directory to the actual directory where code is located.
+Besides, trial's converted code is in another temporary directory if NNI Annotation is used. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
+```shell
+#!/bin/bash
+cd /tmp/user_name/nni/annotation/tmpzj0h72x6 #This is the actual directory
+export NNI_PLATFORM=local
+export NNI_SYS_DIR=/home/user_name/nni/experiments/K1unkStq/trials/nrbb2
+export NNI_TRIAL_JOB_ID=nrbb2
+export NNI_OUTPUT_DIR=/home/user_name/nni/experiments/K1unkStq/trials/nrbb2
+export NNI_TRIAL_SEQ_ID=1
+export MULTI_PHASE=false
+export CUDA_VISIBLE_DEVICES=
+eval python3 mnist.py 2>/home/user_name/nni/experiments/K1unkStq/trials/nrbb2/stderr
+echo $? `date +%s000` >/home/user_name/nni/experiments/K1unkStq/trials/nrbb2/.nni/state
+```
 
 For more information, please refer to [HowToDebug](HowToDebug.md)
 
