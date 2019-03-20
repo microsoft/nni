@@ -2,12 +2,12 @@
 ===
 
 ## Overview
-TrainingService is a module related to platform management and job schedule in NNI. TrainingService is designed to be easily implemented, we define an abstract class TrainingService as the parent class of all kinds of TrainignService, users just need to  inherit the parent class and complete their own clild chass if they want to implement customized TrainingService.
+TrainingService is a module related to platform management and job schedule in NNI. TrainingService is designed to be easily implemented, we define an abstract class TrainingService as the parent class of all kinds of TrainignService, users just need to  inherit the parent class and complete their own clild class if they want to implement customized TrainingService.
 
 ## System architecture
 ![](../img/NNIDesign.jpg)
 
-The brief system architecture of NNI is shown in the picture. NNIManager is the core management moudule of system, in charge of calling TrainingService to manage job and the connumication between job and algorithm module. Dispatcher is a message processing center responsible for message dispatch. TrainingService is a module to manage trial jobs, it communicate with nniManager module, and have different instance according to different training platform. For the time being, NNI supports local platfrom, [remote server platfrom](RemoteMachineMode.md), [PAI platfrom](PAIMode.md), [kubeflow platform](KubeflowMode.md) and [FrameworkController platfrom](FrameworkController.md).   
+The brief system architecture of NNI is shown in the picture. NNIManager is the core management module of system, in charge of calling TrainingService to manage job and the communication between job and algorithm module. Dispatcher is a message processing center responsible for message dispatch. TrainingService is a module to manage trial jobs, it communicates with nniManager module, and has different instance according to different training platform. For the time being, NNI supports local platfrom, [remote server platfrom](RemoteMachineMode.md), [PAI platfrom](PAIMode.md), [kubeflow platform](KubeflowMode.md) and [FrameworkController platfrom](FrameworkController.md).   
 In this document, we introduce the brief design of TrainingService. If users want to add a new TrainingService instance, they just need to complete a child class to implement TrainingService, don't need to understand the code detail of NNIManager, Dispatcher or other modules.
 
 ## Folder structure of code
@@ -41,7 +41,7 @@ nni
   | |-nni_gpu_tool
   | |-nni_trial_tool
 ```
-`nni/src/` folder stores the mostly source code of system. The code in this folder is related to NNIManager, TrainingService, SDK, WebUI and other modules. Users could find the abstract class of TrainingService in `nni/src/nni_manager/common/trainingService.ts` file, and they should put their own implemented TrainingService in `nni/src/nni_manager/training_service` folder. If users have implemented their own TrainingService code, they should also supplement the unit test of the code, and place them in `nni/src/nni_manager/training_service/test` folder.
+`nni/src/` folder stores the most source code of system. The code in this folder is related to NNIManager, TrainingService, SDK, WebUI and other modules. Users could find the abstract class of TrainingService in `nni/src/nni_manager/common/trainingService.ts` file, and they should put their own implemented TrainingService in `nni/src/nni_manager/training_service` folder. If users have implemented their own TrainingService code, they should also supplement the unit test of the code, and place them in `nni/src/nni_manager/training_service/test` folder.
 
 ## Function annotation of TrainingService
 ```
@@ -88,7 +88,7 @@ export class RemoteMachineMeta {
     }
 }
 ```
-The metadata includes the host address, the username or other configuration related to the platform. Users need to definite their own Metadata format, and set the Matadata instance in this function. This function  is called before the experiment is started, users should set the prerequest configurations and check the healthy of the platform before starting an experiment.
+The metadata includes the host address, the username or other configuration related to the platform. Users need to define their own metadata format, and set the metadata instance in this function. This function is called before the experiment is started to set the configuration of remote machines.
 
 __getClusterMetadata(key: string)__   
 This function will return the metadata value according to the values, it could be left empty if users don't need to use it.
