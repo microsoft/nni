@@ -138,8 +138,6 @@ class Bracket():
     def increase_i(self):
         """i means the ith round. Increase i by 1"""
         self.i += 1
-        if self.i > self.s:
-            self.no_more_trial = True
 
     def set_config_perf(self, i, parameter_id, seq, value):
         """update trial's latest result with its sequence number, e.g., epoch number or batch number
@@ -180,6 +178,10 @@ class Bracket():
         if self.num_finished_configs[i] >= self.num_configs_to_run[i] and self.no_more_trial is False:
             # choose candidate configs from finished configs to run in the next round
             assert self.i == i + 1
+            # finish this bracket
+            if self.i > self.s:
+                self.no_more_trial = True
+                return None
             this_round_perf = self.configs_perf[i]
             if self.optimize_mode is OptimizeMode.Maximize:
                 sorted_perf = sorted(this_round_perf.items(
@@ -376,18 +378,18 @@ class BOHB(MsgDispatcherBase):
         else:
             raise ValueError('Error: Search space is None')
         # generate first brackets
-        self.generate_new_bracket(self.curr_s)
+        self.generate_new_bracket()
         send(CommandType.Initialized, '')
         return True
 
-    def generate_new_bracket(self, curr_s):
+    def generate_new_bracket(self):
         """generate a new bracket"""
         logger.debug(
             'start to create a new SuccessiveHalving iteration, self.curr_s=%d', self.curr_s)
-        if curr_s < 0:
-            logger.info("s < 0, Finish this round of Hyperband.")
-            return
-        self.brackets[curr_s] = Bracket(s=self.curr_s, s_max=self.s_max, eta=self.eta,
+        if self.curr_s < 0:
+            logger.info("s < 0, Finish this round of Hyperband. Generate new round")
+            self.curr_s = self.s_max
+        self.brackets[self.curr_s] = Bracket(s=self.curr_s, s_max=self.s_max, eta=self.eta,
                                         max_budget=self.max_budget, optimize_mode=self.optimize_mode)
         next_n, next_r = self.brackets[self.curr_s].get_n_r()
         logger.debug(
@@ -524,8 +526,7 @@ class BOHB(MsgDispatcherBase):
         # Finish this bracket and generate a new bracket
         if self.brackets[int(s)].no_more_trial:
             self.curr_s -= 1
-            if self.curr_s >= 0:
-                self.generate_new_bracket(self.curr_s)
+            self.generate_new_bracket()
         return True
 
     def handle_report_metric_data(self, data):
