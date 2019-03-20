@@ -41,7 +41,7 @@ nni
   | |-nni_gpu_tool
   | |-nni_trial_tool
 ```
-`nni/src/` folder stores the most source code of system. The code in this folder is related to NNIManager, TrainingService, SDK, WebUI and other modules. Users could find the abstract class of TrainingService in `nni/src/nni_manager/common/trainingService.ts` file, and they should put their own implemented TrainingService in `nni/src/nni_manager/training_service` folder. If users have implemented their own TrainingService code, they should also supplement the unit test of the code, and place them in `nni/src/nni_manager/training_service/test` folder.
+`nni/src/` folder stores the most source code of NNI. The code in this folder is related to NNIManager, TrainingService, SDK, WebUI and other modules. Users could find the abstract class of TrainingService in `nni/src/nni_manager/common/trainingService.ts` file, and they should put their own implemented TrainingService in `nni/src/nni_manager/training_service` folder. If users have implemented their own TrainingService code, they should also supplement the unit test of the code, and place them in `nni/src/nni_manager/training_service/test` folder.
 
 ## Function annotation of TrainingService
 ```
@@ -113,10 +113,10 @@ interface TrialJobDetail {
 According to different kinds of implementation, users could put the job detail into a job queue, and keep  fetching the job from the queue and start preparing and running them. Or they could finish preparing and running process in this function, and return job detail after the submit work.
 
 __cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean)__  
-If this function is called, users should execute cancel command to kill a trial job according to trialJobId.
+If this function is called, the trial started by the platform should be canceled. Different kind of platform has diffenent methods to calcel a running job, this function should be implemented according to specific platform.
 
 __updateTrialJob(trialJobId: string, form: JobApplicationForm)__  
-This function is called to update the trial job's status, users should execute the corresponding commands to detect the status of a trial process, and change the trial job's status to `RUNNING`, `SUCCEED`, `FAILED` etc.
+This function is called to update the trial job's status, trial job's status should be detected according to different platform, and be updated to `RUNNING`, `SUCCEED`, `FAILED` etc.
 
 __getTrialJob(trialJobId: string)__  
 This function returns a trialJob detail instance according to trialJobId.
