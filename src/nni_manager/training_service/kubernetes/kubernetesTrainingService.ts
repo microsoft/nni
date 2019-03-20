@@ -192,6 +192,7 @@ abstract class KubernetesTrainingService {
         }
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
         const version = this.versionCheck? await getVersion(): '';
+        const disableLog = this.disableLog? '--disable_log': '';
         const runScript: string = String.Format(
             KubernetesScriptFormat,
             platform,
@@ -205,7 +206,8 @@ abstract class KubernetesTrainingService {
             command,
             nniManagerIp,
             this.kubernetesRestServerPort,
-            version
+            version,
+            disableLog
         );
         return Promise.resolve(runScript);
     }

@@ -214,6 +214,7 @@ class PAITrainingService implements TrainingService {
         this.trialJobsMap.set(trialJobId, trialJobDetail);
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
         const version = this.versionCheck? await getVersion(): '';
+        const disableLog = this.disableLog? '--disable_log': '';
         const nniPaiTrialCommand : string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
             // PAI will copy job's codeDir into /root directory
@@ -229,7 +230,8 @@ class PAITrainingService implements TrainingService {
             this.hdfsOutputHost,
             this.paiClusterConfig.userName, 
             HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
-            version
+            version,
+            disableLog
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);

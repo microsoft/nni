@@ -589,6 +589,7 @@ class RemoteMachineTrainingService implements TrainingService {
             this.remoteRestServerPort = restServer.clusterRestServerPort;
         }
         const version = this.versionCheck? await getVersion(): '';
+        const disableLog = this.disableLog? '--disable_log': '';
         const runScriptTrialContent: string = String.Format(
             REMOTEMACHINE_TRIAL_COMMAND_FORMAT,
             trialWorkingFolder,
@@ -602,6 +603,7 @@ class RemoteMachineTrainingService implements TrainingService {
             nniManagerIp,
             this.remoteRestServerPort,
             version,
+            disableLog,
             path.join(trialWorkingFolder, '.nni', 'code')
         )
 
