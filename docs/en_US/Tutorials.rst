@@ -12,4 +12,5 @@ Tutorials
     WebUI
     Training Platform<training_services>
     How to use docker<HowToUseDocker>
+    Debug HowTo<HowToDebug>
     advanced
