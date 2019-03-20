@@ -261,7 +261,9 @@ def make_nodes_for_each_layer(dict_node):
         assign_node_in_for_two = ast.Assign(targets=[left_value], value=make_lambda(layer_y))
         for_node = ast.For(target=ast.Name(id='idx'), iter=iter_node, body=[assign_node_in_for_one, assign_node_in_for_two], orelse=[])
         # Assign tf.case to layer output
-        tf_case_node = make_attr_call('tf', 'case', args=[layer_branches], keywords=[ast.keyword(arg='exclusive', value=ast.NameConstant(value=True)), ast.keyword(arg='default', value=make_lambda(make_attr_call('tf', 'constant', [ast.Num(n=0.0)])))])
+        get_type_call = ast.Attribute(value=layer_y, attr='dtype')
+        get_shape_call = make_attr_call(layer_name+'_y', 'get_shape')
+        tf_case_node = make_attr_call('tf', 'case', args=[layer_branches], keywords=[ast.keyword(arg='exclusive', value=ast.NameConstant(value=True)), ast.keyword(arg='default', value=make_lambda(make_attr_call('tf', 'constant', [ast.Num(n=0), get_type_call, get_shape_call])))])
         layer_output_assign_node = ast.Assign(targets=[layer_output_node], value=tf_case_node)
         # post_process_output
         post_process_output_node = ast.Assign(targets=[layer_output_node], value=make_call(info['post_process_outputs'].s, [layer_name_node, layer_output_node, layer_inputs]))
