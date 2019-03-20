@@ -27,6 +27,7 @@ from nni_cmd.common_utils import print_warning
 
 layer_dict_name = 'nni_layer_info'
 
+
 def parse_annotation(code):
     """Parse an annotation string.
     Return an AST Expr node.
@@ -53,7 +54,8 @@ def parse_annotation_function(code, func_name):
     assert call.func.value.id == 'nni', 'Annotation is not a NNI function'
     assert call.func.attr == func_name, 'internal error #2'
 
-    assert len(call.keywords) == 1, 'Annotation function contains more than one keyword argument'
+    assert len(
+        call.keywords) == 1, 'Annotation function contains more than one keyword argument'
     assert call.keywords[0].arg == 'name', 'Annotation keyword argument is not "name"'
     name = call.keywords[0].value
 
@@ -70,8 +72,10 @@ def parse_nni_variable(code):
     assert len(call.args) == 1, 'nni.variable contains more than one arguments'
     arg = call.args[0]
     assert type(arg) is ast.Call, 'Value of nni.variable is not a function call'
-    assert type(arg.func) is ast.Attribute, 'nni.variable value is not a NNI function'
-    assert type(arg.func.value) is ast.Name, 'nni.variable value is not a NNI function'
+    assert type(
+        arg.func) is ast.Attribute, 'nni.variable value is not a NNI function'
+    assert type(
+        arg.func.value) is ast.Name, 'nni.variable value is not a NNI function'
     assert arg.func.value.id == 'nni', 'nni.variable value is not a NNI function'
 
     name_str = astor.to_source(name).strip()
@@ -107,7 +111,7 @@ def convert_args_to_dict(call, with_lambda=False):
         if type(arg) in [ast.Str, ast.Num]:
             arg_value = arg
         else:
-        # if arg is not a string or a number, we use its source code as the key
+            # if arg is not a string or a number, we use its source code as the key
             arg_value = astor.to_source(arg).strip('\n"')
             arg_value = ast.Str(str(arg_value))
         arg = make_lambda(arg) if with_lambda else arg
@@ -142,7 +146,7 @@ def test_variable_equal(node1, node2):
         if len(node1) != len(node2):
             return False
         return all(test_variable_equal(n1, n2) for n1, n2 in zip(node1, node2))
-    
+
     return node1 == node2
 
 
@@ -151,10 +155,13 @@ def replace_variable_node(node, annotation):
     node: the AST node to replace
     annotation: annotation string
     """
-    assert type(node) is ast.Assign, 'nni.variable is not annotating assignment expression'
-    assert len(node.targets) == 1, 'Annotated assignment has more than one left-hand value'
+    assert type(
+        node) is ast.Assign, 'nni.variable is not annotating assignment expression'
+    assert len(
+        node.targets) == 1, 'Annotated assignment has more than one left-hand value'
     name, expr = parse_nni_variable(annotation)
-    assert test_variable_equal(node.targets[0], name), 'Annotated variable has wrong name'
+    assert test_variable_equal(
+        node.targets[0], name), 'Annotated variable has wrong name'
     node.value = expr
     return node
 
@@ -170,6 +177,7 @@ def replace_function_node(node, annotation):
 
 # New code added
 
+
 def parse_architecture(string, layer_dict_initialized):
     return_node_list = list()
     # fix indentation
@@ -177,19 +185,21 @@ def parse_architecture(string, layer_dict_initialized):
     for char in string.split('\n')[0]:
         if char in [' ', '\t']:
             first_char_index += 1
-    string = '\n'.join([line[first_char_index:] for line in string.split('\n')])
+    string = '\n'.join([line[first_char_index:]
+                        for line in string.split('\n')])
     dict_node = ast.parse(string)
     dict_node = NameReplacer().visit(dict_node)
     dict_node = dict_node.body[0].value
     if not layer_dict_initialized:
         initialization = ast.parse(layer_dict_name+"=dict()").body[0]
         return_node_list.append(initialization)
+
     def get_update_dict_node(content):
         '''update nni_layer_info dict with the content node'''
         call_node = make_attr_call(layer_dict_name, 'update', [content])
         return ast.Expr(value=call_node)
     return_node_list.append(get_update_dict_node(dict_node))
-    #store locals and globals
+    # store locals and globals
     return_node_list.append(ast.parse('_nni_locals=locals()').body[0])
     return_node_list.append(ast.parse('_nni_globals=globals()').body[0])
     #layer_names = {layer_name.s: eval(layer_name.s) for layer_name in dict_node.keys}
@@ -197,38 +207,48 @@ def parse_architecture(string, layer_dict_initialized):
 
     return (*return_node_list,)
 
+
 def make_call(func, args=[], keywords=[]):
     '''generate an call with func:str, args:list, keywords:list'''
     return ast.Call(func=ast.Name(id=func), args=args, keywords=keywords)
+
 
 def make_attr_call(attr_name, attr_attr, args=[], keywords=[]):
     '''generate an attribute call with attr_name:str, attr_attr:str and args:list'''
     attribute = ast.Attribute(value=ast.Name(id=attr_name), attr=attr_attr)
     return ast.Call(func=attribute, args=args, keywords=keywords)
 
+
 def make_layer_info_node(layer_name, key):
     '''generate an dict node like nni_layer_info['layer_name'][key]'''
     inner_value = ast.Name(id=layer_dict_name, ctx=ast.Load())
     inner_slice = ast.Index(value=ast.Str(s=layer_name))
-    inner_dict = ast.Subscript(value=inner_value, slice=inner_slice, ctx=ast.Load())
-    
+    inner_dict = ast.Subscript(
+        value=inner_value, slice=inner_slice, ctx=ast.Load())
+
     outer_slice = ast.Index(value=ast.Str(s=key))
-    outer_dict = ast.Subscript(value=inner_dict, slice=outer_slice, ctx=ast.Store())
+    outer_dict = ast.Subscript(
+        value=inner_dict, slice=outer_slice, ctx=ast.Store())
 
     return outer_dict
+
 
 def eval_items(layername, key, return_dict=False, is_list=True):
     '''eval all items in a list and return a ast node'''
     target = "{}['{}']['{}']".format(layer_dict_name, layername, key)
     if is_list:
         if return_dict:
-            template = "%s={item: _nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s}" % (target, target)
+            template = "%s={item: _nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s}" % (
+                target, target)
         else:
-            template = "%s=[_nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s]" % (target, target)
+            template = "%s=[_nni_locals[item] if item in _nni_locals else _nni_globals[item] for item in %s]" % (
+                target, target)
     else:
-        template = "{0}=_nni_locals[{0}] if {0} in _nni_locals else _nni_globals[{0}]".format(target)
-    
+        template = "{0}=_nni_locals[{0}] if {0} in _nni_locals else _nni_globals[{0}]".format(
+            target)
+
     return ast.parse(template).body[0]
+
 
 def make_nodes_for_each_layer(dict_node):
     # call NNI API to get output
@@ -241,60 +261,81 @@ def make_nodes_for_each_layer(dict_node):
         layer_output_node = ast.Name(id=info['outputs'].s)
         layer_name_node = ast.Str(s=layer_name)
         # get mask from nni API
-        get_mask_call_node = make_attr_call('nni', 'get_mask', [ast.Name(id=layer_dict_name), layer_name_node, ast.Name(id='tf')])
-        mask_assign_node = ast.Assign(targets=[layer_mask], value=get_mask_call_node)
+        get_mask_call_node = make_attr_call('nni', 'get_mask', [ast.Name(
+            id=layer_dict_name), layer_name_node, ast.Name(id='tf')])
+        mask_assign_node = ast.Assign(
+            targets=[layer_mask], value=get_mask_call_node)
         # call tensorflow to mask inputs
-        tf_mask_call_node = make_attr_call('tf', 'boolean_mask', [make_layer_info_node(layer_name, 'input_candidates'), layer_mask])
-        tf_mask_assign_node = ast.Assign(targets=[layer_inputs], value=tf_mask_call_node)
+        tf_mask_call_node = make_attr_call('tf', 'boolean_mask', [
+                                           make_layer_info_node(layer_name, 'input_candidates'), layer_mask])
+        tf_mask_assign_node = ast.Assign(
+            targets=[layer_inputs], value=tf_mask_call_node)
         # get layer_choice from nni API
-        get_choice_call_node = make_attr_call('nni', 'get_choice', [ast.Name(id=layer_dict_name), layer_name_node, ast.Name(id='tf')])
-        choice_assign_node = ast.Assign(targets=[layer_choice], value=get_choice_call_node)
+        get_choice_call_node = make_attr_call('nni', 'get_choice', [ast.Name(
+            id=layer_dict_name), layer_name_node, ast.Name(id='tf')])
+        choice_assign_node = ast.Assign(
+            targets=[layer_choice], value=get_choice_call_node)
         # Initialize dict
-        initialize_dict_node = ast.Assign(targets=[layer_branches], value=ast.Dict(keys=[], values=[]))
+        initialize_dict_node = ast.Assign(
+            targets=[layer_branches], value=ast.Dict(keys=[], values=[]))
         # Add each branch
-        iter_node = make_call('range', args=[make_call('len', args=[make_layer_info_node(layer_name, 'layer_choice')])])
-        condition = make_attr_call('tf', 'equal', args=[layer_choice, ast.Name(id='idx')])
-        left_value = ast.Subscript(value=layer_branches, slice=ast.Index(value=condition))
-        current_branch = ast.Subscript(value=make_layer_info_node(layer_name, 'layer_choice'), slice=ast.Name(id='idx'))
-        current_branch_call_node = ast.Call(func=current_branch, args=[layer_name_node, layer_inputs], keywords=[])
-        assign_node_in_for_one = ast.Assign(targets=[layer_y], value=current_branch_call_node)
-        assign_node_in_for_two = ast.Assign(targets=[left_value], value=make_lambda(layer_y))
-        for_node = ast.For(target=ast.Name(id='idx'), iter=iter_node, body=[assign_node_in_for_one, assign_node_in_for_two], orelse=[])
+        iter_node = make_call('range', args=[make_call(
+            'len', args=[make_layer_info_node(layer_name, 'layer_choice')])])
+        condition = make_attr_call(
+            'tf', 'equal', args=[layer_choice, ast.Name(id='idx')])
+        left_value = ast.Subscript(
+            value=layer_branches, slice=ast.Index(value=condition))
+        current_branch = ast.Subscript(value=make_layer_info_node(
+            layer_name, 'layer_choice'), slice=ast.Name(id='idx'))
+        current_branch_call_node = ast.Call(func=current_branch, args=[
+                                            layer_name_node, layer_inputs], keywords=[])
+        assign_node_in_for_one = ast.Assign(
+            targets=[layer_y], value=current_branch_call_node)
+        assign_node_in_for_two = ast.Assign(
+            targets=[left_value], value=make_lambda(layer_y))
+        for_node = ast.For(target=ast.Name(id='idx'), iter=iter_node, body=[
+                           assign_node_in_for_one, assign_node_in_for_two], orelse=[])
         # Assign tf.case to layer output
-        get_type_call = ast.Attribute(value=layer_y, attr='dtype')
-        get_shape_call = make_attr_call(layer_name+'_y', 'get_shape')
-        tf_case_node = make_attr_call('tf', 'case', args=[layer_branches], keywords=[ast.keyword(arg='exclusive', value=ast.NameConstant(value=True)), ast.keyword(arg='default', value=make_lambda(make_attr_call('tf', 'constant', [ast.Num(n=0), get_type_call, get_shape_call])))])
-        layer_output_assign_node = ast.Assign(targets=[layer_output_node], value=tf_case_node)
+        # get_type_call = ast.Attribute(value=layer_y, attr='dtype')
+        # get_shape_call = make_attr_call(layer_name+'_y', 'get_shape')
+        tf_case_node = make_attr_call('tf', 'case', args=[layer_branches], keywords=[ast.keyword(arg='exclusive', value=ast.NameConstant(
+            value=True)), ast.keyword(arg='default', value=make_lambda(layer_y))])
+        layer_output_assign_node = ast.Assign(
+            targets=[layer_output_node], value=tf_case_node)
         # post_process_output
-        post_process_output_node = ast.Assign(targets=[layer_output_node], value=make_call(info['post_process_outputs'].s, [layer_name_node, layer_output_node, layer_inputs]))
+        post_process_output_node = ast.Assign(targets=[layer_output_node], value=make_call(
+            info['post_process_outputs'].s, [layer_name_node, layer_output_node, layer_inputs]))
         core_nodes = [mask_assign_node, tf_mask_assign_node, choice_assign_node, initialize_dict_node,
-                        for_node, layer_output_assign_node, post_process_output_node]
+                      for_node, layer_output_assign_node, post_process_output_node]
         return core_nodes
+
     def other_node(layer_name, info):
-        ## left value
+        # left value
         output_node = ast.Name(id=info['outputs'].s)
-        ## right value
+        # right value
         args = [ast.Name(id=layer_dict_name), ast.Str(layer_name)]
         value_node = make_attr_call('nni', 'get_layer_output', args)
-        ## assign statement
+        # assign statement
         assign_node = ast.Assign(targets=[output_node], value=value_node)
         return [assign_node]
     layer_nodes = list()
     for layer_name, info in zip(dict_node.keys, dict_node.values):
-        #transform info from ast node to dict
+        # transform info from ast node to dict
         info = {key.s: val for key, val in zip(info.keys, info.values)}
         layer_name = layer_name.s
         # evaluate all inputs and functions
         layer_nodes.append(ast.parse('locals()').body[0])
         layer_nodes.append(eval_items(layer_name, 'layer_choice'))
         layer_nodes.append(eval_items(layer_name, 'input_candidates'))
-        layer_nodes.append(eval_items(layer_name, 'post_process_outputs', is_list=False))
+        layer_nodes.append(eval_items(
+            layer_name, 'post_process_outputs', is_list=False))
         # TO DO: Add a switcher for tensorflow
         #core_nodes = other_node(layer_name, info)
         core_nodes = tensorflow_node(layer_name, info)
         layer_nodes.extend(core_nodes)
-        
+
     return layer_nodes
+
 
 class FuncReplacer(ast.NodeTransformer):
     """To replace target function call expressions in a node annotated by `nni.function_choice`"""
@@ -312,11 +353,14 @@ class FuncReplacer(ast.NodeTransformer):
             return self.target
         return node
 
+
 class NameReplacer(ast.NodeTransformer):
     '''To replace all ast.Name to ast.Str using ast.Name.id'''
+
     def visit_Name(self, node):
         self.generic_visit(node)
         return ast.Str(node.id)
+
 
 class Transformer(ast.NodeTransformer):
     """Transform original code to annotated code"""
@@ -352,7 +396,6 @@ class Transformer(ast.NodeTransformer):
 
         return self._visit_children(node)
 
-
     def _visit_string(self, node):
         string = node.value.s
         if string.startswith('@nni.'):
@@ -367,21 +410,23 @@ class Transformer(ast.NodeTransformer):
 
         if string.startswith('@nni.report_intermediate_result(')  \
                 or string.startswith('@nni.report_final_result('):
-            return parse_annotation(string[1:])  # expand annotation string to code
+            # expand annotation string to code
+            return parse_annotation(string[1:])
 
         if string.startswith('@nni.variable(') \
                 or string.startswith('@nni.function_choice('):
-            self.stack[-1] = string[1:]  # mark that the next expression is annotated
+            # mark that the next expression is annotated
+            self.stack[-1] = string[1:]
             return None
 
         if string.startswith('@nni.architecture'):
             assert string != '@nni.architecture', 'nni.architecture annotation should not be empty'
-            nodes = parse_architecture(string[len('@nni.architecture')+1:], self.layer_dict_initialized)
+            nodes = parse_architecture(
+                string[len('@nni.architecture')+1:], self.layer_dict_initialized)
             self.layer_dict_initialized = True
             return nodes
 
         raise AssertionError('Unexpected annotation function')
-
 
     def _visit_children(self, node):
         self.stack.append(None)
@@ -412,7 +457,8 @@ def parse(code):
 
     last_future_import = -1
     import_nni = ast.Import(names=[ast.alias(name='nni', asname=None)])
-    import_tensorflow = ast.Import(names=[ast.alias(name='tensorflow', asname='tf')])
+    import_tensorflow = ast.Import(
+        names=[ast.alias(name='tensorflow', asname='tf')])
     nodes = ast_tree.body
     for i, _ in enumerate(nodes):
         if type(nodes[i]) is ast.ImportFrom and nodes[i].module == '__future__':
