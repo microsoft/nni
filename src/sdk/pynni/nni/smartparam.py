@@ -72,12 +72,14 @@ def get_layer_output(layer, layer_name):
 def reload_tf_variable(tf, sess):
     '''Get next parameter from tuner and load them into tf variable'''
     global global_layer
-    param = trial.get_next_parameter()
+    if trial._params is None:
+        trial.get_next_parameter()
+    param = trial._params['parameters']
     for layer_name, info in global_layer.items():
         mask = [1 if inp in param[layer_name]['input_candidates']
-                else 0 for inp in info['input_candidates']]
+                else 0 for inp in info['input_candidates_str']]
         info['mask'].load(mask, sess)
-        choice_idx = info['layer_choice'].index(
+        choice_idx = info['layer_choice_str'].index(
             param[layer_name]['layer_choice'])
         info['choice'].load(choice_idx, sess)
 

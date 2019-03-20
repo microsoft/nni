@@ -325,6 +325,10 @@ def make_nodes_for_each_layer(dict_node):
         layer_name = layer_name.s
         # evaluate all inputs and functions
         layer_nodes.append(ast.parse('locals()').body[0])
+        layer_nodes.append(ast.Assign(targets=[make_layer_info_node(
+            layer_name, 'input_candidates_str')], value=make_layer_info_node(layer_name, 'input_candidates')))
+        layer_nodes.append(ast.Assign(targets=[make_layer_info_node(
+            layer_name, 'layer_choice_str')], value=make_layer_info_node(layer_name, 'layer_choice')))
         layer_nodes.append(eval_items(layer_name, 'layer_choice'))
         layer_nodes.append(eval_items(layer_name, 'input_candidates'))
         layer_nodes.append(eval_items(
