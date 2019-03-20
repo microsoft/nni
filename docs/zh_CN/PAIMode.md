@@ -45,7 +45,7 @@ paiConfig:
 
 注意：如果用 pai 模式运行，需要在 YAML 文件中设置 `trainingServicePlatform: pai`。
 
-与本机模式，以及[远程计算机模式](RemoteMachineMode.md)相比，pai 模式的 Trial 有额外的配置：
+Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have these additional keys:
 
 * cpuNum 
     * 必填。 Trial 程序的 CPU 需求，必须为正数。
@@ -58,6 +58,10 @@ paiConfig:
     * 可选。 指定了 Trial 用于下载数据的 HDFS 数据目录。 格式应为 hdfs://{your HDFS host}:9000/{数据目录}
 * outputDir 
     * 可选。 指定了 Trial 的 HDFS 输出目录。 Trial 在完成（成功或失败）后，Trial 的 stdout， stderr 会被 NNI 自动复制到此目录中。 格式应为 hdfs://{your HDFS host}:9000/{输出目录}
+* virturlCluster 
+    * Optional key. Set the virtualCluster of PAI. If omitted, the job will run on default virtual cluster.
+* shmMB 
+    * Optional key. Set the shmMB configuration of PAI, it set the shared memory for one task in the task role.
 
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
