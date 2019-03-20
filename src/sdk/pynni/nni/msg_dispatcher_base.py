@@ -33,6 +33,8 @@ from .protocol import CommandType, receive
 init_logger('dispatcher.log')
 _logger = logging.getLogger(__name__)
 
+QUEUE_LEN_WARNING_MARK = 20
+
 class MsgDispatcherBase(Recoverable):
     def __init__(self):
         if multi_thread_enabled():
@@ -103,11 +105,19 @@ class MsgDispatcherBase(Recoverable):
         '''
         self.default_command_queue.put((command, data))
 
+        qsize = self.default_command_queue.qsize()
+        if qsize >= QUEUE_LEN_WARNING_MARK:
+            _logger.warning('default queue length: %d', qsize)
+
     def enqueue_assessor_command(self, command, data):
         '''
         Enqueue command into a seperate command queue for assessor
         '''
         self.assessor_command_queue.put((command, data))
+
+        qsize = self.assessor_command_queue.qsize()
+        if qsize >= QUEUE_LEN_WARNING_MARK:
+            _logger.warning('assessor queue length: %d', qsize)
 
     def process_command_thread(self, request):
         '''
