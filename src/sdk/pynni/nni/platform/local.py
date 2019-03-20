@@ -86,7 +86,7 @@ def send_metric(string):
         assert len(data) < 1000000, 'Metric too long'    
         _metric_file.write(b'ME%06d%b' % (len(data), data))
         _metric_file.flush()
-        subprocess.run(['touch', _metric_file.name], check = True)
+        # subprocess.run(['touch', _metric_file.name], check = True)
 
 def get_sequence_id():
     return os.environ['NNI_TRIAL_SEQ_ID']

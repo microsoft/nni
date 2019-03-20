@@ -49,8 +49,12 @@ def print_log_content(config_file_name):
     '''print log information'''
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     print_normal(' Stdout:')
-    stdout_cmds = ['cat', stdout_full_path]
-    stdout_content = check_output(stdout_cmds)
+    if sys.platform == 'win32':
+        stdout_cmds = ['type', stdout_full_path]
+        stdout_content = check_output(stdout_cmds, shell=True)
+    else:
+        stdout_cmds = ['cat', stdout_full_path]
+        stdout_content = check_output(stdout_cmds)
     print(stdout_content.decode('utf-8'))
     print('\n\n')
     print_normal(' Stderr:')

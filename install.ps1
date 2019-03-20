@@ -1,6 +1,6 @@
 # activate / desactivate any install
-$install_node = $TRUE
-$install_yarn = $TRUE
+$install_node = $FALSE
+$install_yarn = $FALSE
 $install_py = $FALSE
 $install_pip = $FALSE
 $uninstall = $FALSE
@@ -153,7 +153,7 @@ if($install_pip){
 cd src\nni_manager
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
-Copy-Item config -Destination .\dist\ -Recurse  
+Copy-Item config -Destination .\dist\ -Recurse -Force
 # Building WebUI
 cd ..\webui
 cmd /c $NNI_YARN
@@ -181,17 +181,17 @@ if(!(Test-Path $NNI_PKG_FOLDER)){
 }
 cd ..
 Remove-Item $NNI_PKG_FOLDER -r -fo
-Copy-Item "src\nni_manager\dist" $NNI_PKG_FOLDER -Recurse
-Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER
+Copy-Item "src\nni_manager\dist" $NNI_PKG_FOLDER -Recurse -Force
+Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER -Force
 $PKG_JSON = $NNI_PKG_FOLDER+"\package.json"
 (Get-Content $PKG_JSON).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content $PKG_JSON
 cmd /c $NNI_YARN --prod --cwd $NNI_PKG_FOLDER
 $NNI_PKG_FOLDER_STATIC = $NNI_PKG_FOLDER+"\static"
-Copy-Item "src\webui\build" $NNI_PKG_FOLDER_STATIC -Recurse 
+Copy-Item "src\webui\build" $NNI_PKG_FOLDER_STATIC -Recurse -Force
 if(!(Test-Path $BASH_COMP_PREFIX)){
-    New-Item $BASH_COMP_PREFIX -ItemType Directory 
+    New-Item $BASH_COMP_PREFIX -ItemType Directory -Force
 }
-Copy-Item tools/bash-completion $BASH_COMP_SCRIPT
+Copy-Item tools/bash-completion $BASH_COMP_SCRIPT -Force
 
 if($uninstall)
 {

@@ -23,6 +23,7 @@ import psutil
 import json
 import datetime
 import time
+import sys
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
@@ -276,10 +277,10 @@ def experiment_status(args):
     else:
         print(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
 
-def get_log_content(file_name, cmds):
+def get_log_content(file_name, cmds, shell):
     '''use cmds to read config content'''
     if os.path.exists(file_name):
-        rest = check_output(cmds)
+        rest = check_output(cmds, shell = shell)
         print(rest.decode('utf-8'))
     else:
         print_normal('NULL!')
@@ -292,13 +293,22 @@ def log_internal(args, filetype):
     else:
         file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'stderr')
     if args.head:
-        get_log_content(file_full_path, ['head', '-' + str(args.head), file_full_path])
+        if sys.platform == 'win32':
+            get_log_content(file_full_path, ['type', file_full_path, '|', 'select', '-first', str(args.head)], True)
+        else:
+            get_log_content(file_full_path, ['head', '-' + str(args.head), file_full_path], False)
     elif args.tail:
-        get_log_content(file_full_path, ['tail', '-' + str(args.tail), file_full_path])
+        if sys.platform == 'win32':
+            get_log_content(file_full_path, ['type', file_full_path, '|', 'select', '-last', str(args.head)], True)
+        else:
+            get_log_content(file_full_path, ['tail', '-' + str(args.tail), file_full_path], False)
     elif args.path:
         print_normal('The path of stdout file is: ' + file_full_path)
     else:
-        get_log_content(file_full_path, ['cat', file_full_path])
+        if sys.platform == 'win32':
+            get_log_content(file_full_path, ['type', file_full_path], True)
+        else:
+            get_log_content(file_full_path, ['cat', file_full_path], False)
 
 def log_stdout(args):
     '''get stdout log'''
