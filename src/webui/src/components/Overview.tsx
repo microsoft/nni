@@ -2,10 +2,7 @@ import * as React from 'react';
 import axios from 'axios';
 import { Row, Col } from 'antd';
 import { MANAGER_IP } from '../static/const';
-import {
-    Experiment, TableObj,
-    Parameters, TrialNumber
-} from '../static/interface';
+import { Experiment, TableObj, Parameters, TrialNumber } from '../static/interface';
 import { getFinal } from '../static/function';
 import SuccessTable from './overview/SuccessTable';
 import Title1 from './overview/Title1';
@@ -117,7 +114,13 @@ class Overview extends React.Component<{}, OverviewState> {
                         clusterMetaData: clusterMetaData ? clusterMetaData : undefined
                     });
                     // search space format loguniform max and min
-                    const searchSpace = JSON.parse(sessionData.params.searchSpace);
+                    const temp = sessionData.params.searchSpace;
+                    const searchSpace = temp !== undefined
+                        ?
+                        JSON.parse(temp)
+                        :
+                        {}
+                        ;
                     Object.keys(searchSpace).map(item => {
                         const key = searchSpace[item]._type;
                         let value = searchSpace[item]._value;
