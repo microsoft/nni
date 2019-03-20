@@ -62,6 +62,7 @@ abstract class KubernetesTrainingService {
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
     protected versionCheck?: boolean = true;
+    protected disableLog?: boolean = false;
     
     constructor() {
         this.log = getLogger();

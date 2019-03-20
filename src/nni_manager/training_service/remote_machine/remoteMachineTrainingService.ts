@@ -77,6 +77,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private readonly remoteOS: string;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private versionCheck: boolean = true;
+    private disableLog: boolean = false;
 
     constructor(@component.Inject timer: ObservableTimer) {
         this.remoteOS = 'linux';
@@ -375,6 +376,9 @@ class RemoteMachineTrainingService implements TrainingService {
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
+                break;
+            case TrialConfigMetadataKey.DISABLE_LOG:
+                this.disableLog = (value === 'true' || value === 'True');
                 break;
             default:
                 //Reject for unknown keys

@@ -140,6 +140,7 @@ export namespace ValidationSchemas {
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
             versionCheck: joi.boolean(),
+            disableLog: joi.boolean(),
             advisor: joi.object({
                 builtinAdvisorName: joi.string().valid('Hyperband'),
                 codeDir: joi.string(),

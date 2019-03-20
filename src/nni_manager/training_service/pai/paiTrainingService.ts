@@ -76,6 +76,7 @@ class PAITrainingService implements TrainingService {
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
     private versionCheck?: boolean = true;
+    private disableLog?: boolean = true;
 
     constructor() {
         this.log = getLogger();
@@ -439,6 +440,9 @@ class PAITrainingService implements TrainingService {
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
+                break;
+            case TrialConfigMetadataKey.DISABLE_LOG:
+                this.disableLog = (value === 'true' || value === 'True');
                 break;
             default:
                 //Reject for unknown keys
