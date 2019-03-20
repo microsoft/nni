@@ -172,7 +172,8 @@ class ENASTrial(ENASBaseTrial):
         log_string += " |g|={:<8.4f}".format(gn)
         log_string += " tr_acc={:<3d}/{:>3d}".format(
             tr_acc, FLAGS.batch_size)
-        logger.debug(log_string)
+        if int(global_step) % 50 == 0:
+            logger.debug(log_string)
 
         #self.save(self.output_dir, self.file_path)
         return loss
@@ -194,7 +195,6 @@ class ENASTrial(ENASBaseTrial):
             elif entry == 'validate':
                 valid_acc_arr = self.get_csvaa()
                 '''@nni.report_final_result(valid_acc_arr)'''
-                logger.debug("Get rewards Done!\n")
             else:
                 raise RuntimeError('No such entry: ' + entry)
 
@@ -221,7 +221,7 @@ def main(_):
     logger.debug("child total \t"+str(child_totalsteps))
     epoch = 0
 
-    trial.run(6)
+    trial.run(132001)
 
 if __name__ == "__main__":
     tf.app.run()
