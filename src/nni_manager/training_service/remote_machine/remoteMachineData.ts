@@ -21,6 +21,9 @@
 
 import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 import { GPUSummary } from '../common/gpuData';
+import { Client, ConnectConfig } from 'ssh2';
+import { Deferred } from 'ts-deferred';
+import * as fs from 'fs';
 
 
 /**
@@ -94,6 +97,138 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     }
 }
 
+/**
+ * The remote machine ssh client used for trial and gpu detector
+ */
+export class SSHClient {
+    private readonly sshClient: Client;
+    private usedConnectionNumber: number; //count the connection number of every client
+    constructor(sshClient: Client, usedConnectionNumber: number) {
+        this.sshClient = sshClient;
+        this.usedConnectionNumber = usedConnectionNumber;
+    }
+    
+    public get getSSHClientInstance(): Client {
+        return this.sshClient;
+    }
+
+    public get getUsedConnectionNumber(): number {
+        return this.usedConnectionNumber;
+    }
+
+    public addUsedConnectionNumber() {
+        this.usedConnectionNumber += 1;
+    }
+
+    public minusUsedConnectionNumber() {
+        this.usedConnectionNumber -= 1;
+    }
+}
+
+export class SSHClientManager {
+    private sshClientArray: SSHClient[];
+    private readonly maxTrialNumberPerConnection: number;
+    private readonly rmMeta: RemoteMachineMeta;
+    constructor(sshClientArray: SSHClient[], maxTrialNumberPerConnection: number, rmMeta: RemoteMachineMeta) {
+        this.rmMeta = rmMeta;
+        this.sshClientArray = sshClientArray;
+        this.maxTrialNumberPerConnection = maxTrialNumberPerConnection;
+    }
+
+    /**
+     * Create a new ssh connection client and initialize it
+     */
+    private initNewSSHClient(): Promise<Client> {
+        const deferred: Deferred<Client> = new Deferred<Client>();
+        const conn: Client = new Client();
+        let connectConfig: ConnectConfig = {
+            host: this.rmMeta.ip,
+            port: this.rmMeta.port,
+            username: this.rmMeta.username };
+        if (this.rmMeta.passwd) {
+            connectConfig.password = this.rmMeta.passwd;                
+        } else if(this.rmMeta.sshKeyPath) {
+            if(!fs.existsSync(this.rmMeta.sshKeyPath)) {
+                //SSh key path is not a valid file, reject
+                deferred.reject(new Error(`${this.rmMeta.sshKeyPath} does not exist.`));
+            }
+            const privateKey: string = fs.readFileSync(this.rmMeta.sshKeyPath, 'utf8');
+
+            connectConfig.privateKey = privateKey;
+            connectConfig.passphrase = this.rmMeta.passphrase;
+        } else {
+            deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
+        }
+        conn.on('ready', () => {
+            this.addNewSSHClient(conn);
+            deferred.resolve(conn);
+        }).on('error', (err: Error) => {
+            // SSH connection error, reject with error message
+            deferred.reject(new Error(err.message));
+        }).connect(connectConfig);
+      
+        return deferred.promise;
+    }
+    
+    /**
+     * find a available ssh client in ssh array, if no ssh client available, return undefined
+     */
+    public async getAvailableSSHClient(): Promise<Client> {
+        const deferred: Deferred<Client> = new Deferred<Client>();
+        for (const index in this.sshClientArray) {
+            let connectionNumber: number = this.sshClientArray[index].getUsedConnectionNumber;
+            if(connectionNumber < this.maxTrialNumberPerConnection) {
+                this.sshClientArray[index].addUsedConnectionNumber();
+                deferred.resolve(this.sshClientArray[index].getSSHClientInstance);
+                return deferred.promise;
+            }
+        };
+        //init a new ssh client if could not get an available one
+        return await this.initNewSSHClient();
+    }
+    
+    /**
+     * add a new ssh client to sshClientArray
+     * @param sshClient
+     */
+    public addNewSSHClient(client: Client) {
+        this.sshClientArray.push(new SSHClient(client, 1));
+    }
+    
+    /**
+     * first ssh clilent instance is used for gpu collector and host job
+     */
+    public getFirstSSHClient() {
+        return this.sshClientArray[0].getSSHClientInstance;
+    }
+    
+    /**
+     * close all of ssh client
+     */
+    public closeAllSSHClient() {
+        for (let sshClient of this.sshClientArray) {
+            sshClient.getSSHClientInstance.end();
+        }
+    }
+    
+    /**
+     * retrieve resource, minus a number for given ssh client
+     * @param client
+     */
+    public releaseConnection(client: Client | undefined) {
+        if(!client) {
+            throw new Error(`could not release a undefined ssh client`);
+        }
+        for(let index in this.sshClientArray) {
+            if(this.sshClientArray[index].getSSHClientInstance === client) {
+                this.sshClientArray[index].minusUsedConnectionNumber();
+                break;
+            }
+        }
+    }
+} 
+
+
 export type RemoteMachineScheduleResult = { scheduleInfo : RemoteMachineScheduleInfo | undefined; resultType : ScheduleResultType};
 
 export type RemoteMachineScheduleInfo = { rmMeta : RemoteMachineMeta; cuda_visible_device : string};
@@ -115,8 +250,8 @@ export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={
 cd $NNI_SYS_DIR
 sh install_nni.sh
 echo $$ >{6}
-python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
-echo $? \`date +%s%3N\` >{10}`;
+python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' --version '{10}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
+echo $? \`date +%s%3N\` >{11}`;
 
 export const HOST_JOB_SHELL_FORMAT: string =
 `#!/bin/bash
