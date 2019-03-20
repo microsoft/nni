@@ -118,7 +118,7 @@ def train(epoch):
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
-
+     
         train_loss += loss.item()
         _, predicted = outputs.max(1)
         total += targets.size(0)
@@ -163,7 +163,7 @@ def test(epoch):
     if acc > best_acc:
         print('Saving..')
         state = {
-            'net': net.state_dict(),
+            'net': net.state_dict(), 
             'acc': acc,
             'epoch': epoch,
         }
@@ -183,7 +183,6 @@ if __name__ == '__main__':
         RCV_CONFIG = nni.get_next_parameter()
         #RCV_CONFIG = {'lr': 0.1, 'optimizer': 'Adam', 'model':'senet18'}
         _logger.debug(RCV_CONFIG)
-        
 
         prepare(RCV_CONFIG)
         acc = 0.0
