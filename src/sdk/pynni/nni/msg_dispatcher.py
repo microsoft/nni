@@ -71,7 +71,7 @@ def _pack_parameter(parameter_id, params, customized=False):
 
 class MsgDispatcher(MsgDispatcherBase):
     def __init__(self, tuner, assessor=None):
-        super().__init__()
+        super(MsgDispatcher, self).__init__()
         self.tuner = tuner
         self.assessor = assessor
         if assessor is None:
