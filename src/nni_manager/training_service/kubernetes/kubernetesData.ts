@@ -71,5 +71,5 @@ mkdir -p $NNI_OUTPUT_DIR
 cp -rT $NNI_CODE_DIR $NNI_SYS_DIR
 cd $NNI_SYS_DIR
 sh install_nni.sh
-python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' --nnimanager_ip {9} --nnimanager_port {10} `
+python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' --nnimanager_ip {9} --nnimanager_port {10} --version '{11}'`
 + `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`

@@ -149,6 +149,11 @@ machineList:
 
     Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
 
+* __debug__
+  * Description
+
+    NNI will check the version of nniManager process and the version of trialKeeper in remote, pai and kubernetes platform. If you want to disable version check, you could set debug be true.
+
 * __maxTrialNum__
   * Description
 

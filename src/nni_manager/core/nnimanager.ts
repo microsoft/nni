@@ -35,7 +35,7 @@ import {
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
-import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP } from '../common/utils';
+import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getLogLevel } from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
@@ -127,7 +127,11 @@ class NNIManager implements Manager {
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
         }
-
+        // Set up versionCheck config
+        if (expParams.versionCheck !== undefined) {
+            this.trainingService.setClusterMetadata('version_check', expParams.versionCheck.toString());
+        }
+        
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
             expParams.multiPhase, expParams.multiThread);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
@@ -160,6 +164,11 @@ class NNIManager implements Manager {
         // Set up multiphase config
         if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
             this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
+        }
+
+        // Set up versionCheck config
+        if (expParams.versionCheck !== undefined) {
+            this.trainingService.setClusterMetadata('versionCheck', expParams.versionCheck.toString());
         }
 
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
@@ -267,7 +276,8 @@ class NNIManager implements Manager {
         let nniEnv = {
             NNI_MODE: mode,
             NNI_CHECKPOINT_DIRECTORY: dataDirectory,
-            NNI_LOG_DIRECTORY: getLogDir()
+            NNI_LOG_DIRECTORY: getLogDir(),
+            NNI_LOG_LEVEL: getLogLevel()
         };
         let newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = spawn(command, [], {

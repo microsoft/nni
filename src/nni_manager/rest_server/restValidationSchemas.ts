@@ -42,6 +42,7 @@ export namespace ValidationSchemas {
                 gpuNum: joi.number().min(0),
                 command: joi.string().min(1),
                 virtualCluster: joi.string(),
+                shmMB: joi.number(),
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
@@ -76,6 +77,7 @@ export namespace ValidationSchemas {
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
+                    shmMB: joi.number(),
                     gpuNum: joi.number().min(0).required(),
                     command: joi.string().min(1).required(),
                     frameworkAttemptCompletionPolicy: joi.object({
@@ -139,6 +141,7 @@ export namespace ValidationSchemas {
             maxExecDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
+            versionCheck: joi.boolean(),
             advisor: joi.object({
                 builtinAdvisorName: joi.string().valid('Hyperband'),
                 codeDir: joi.string(),

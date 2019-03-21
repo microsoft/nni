@@ -43,9 +43,9 @@ jobs:
       python3 -m pip install torch==0.4.1 --user
       python3 -m pip install torchvision==0.2.1 --user
       python3 -m pip install keras==2.1.6 --user
-      python3 -m pip install tensorflow-gpu==1.10.0 --user
+      python3 -m pip install tensorflow-gpu==1.12.0 --user
       sudo apt-get install swig -y
-      nnictl package install --name=SMAC
+      PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
     displayName: 'Install dependencies for integration tests in PAI mode'
 
   - script: |
@@ -71,7 +71,7 @@ jobs:
 
       echo "TEST_IMG:$TEST_IMG"
       cd test
-      python3 generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) \
+      python3 generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) --vc $(pai_virtual_cluster) \
       --nni_docker_image $TEST_IMG --data_dir $(data_dir) --output_dir $(output_dir) --nni_manager_ip $(nni_manager_ip)
 
       PATH=$HOME/.local/bin:$PATH python3 config_test.py --ts pai --exclude multi_phase
