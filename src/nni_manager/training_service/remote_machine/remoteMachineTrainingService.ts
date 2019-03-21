@@ -92,7 +92,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.timer = timer;
         this.log = getLogger();
         this.trialSequenceId = -1;
-        this.remoteLoggingType = 'http';
+        this.remoteLoggingType = 'none';
         this.log.info('Construct remote machine training service.');
     }
 

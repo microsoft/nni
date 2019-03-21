@@ -171,13 +171,10 @@ class PipeLogReader(threading.Thread):
         """Run the thread, logging everything.
            If the logging_type set 'none' set True, the log content will not enqueue
         """
-        print('---------------174--------------')
-        print(self.logging_type)
         for line in iter(self.pipeReader.readline, ''):
             if self.logging_type == 'none':
                 # If not match metrics, do not put the line into queue
                 if not self.log_pattern.match(line):
-                    print('---------------skipping--------------')
                     continue
             self.queue.put(line)
             

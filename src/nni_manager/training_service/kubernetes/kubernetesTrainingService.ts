@@ -73,7 +73,7 @@ abstract class KubernetesTrainingService {
         this.nextTrialSequenceId = -1;
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.genericK8sClient = new GeneralK8sClient();
-        this.remoteLoggingType = 'http';
+        this.remoteLoggingType = 'none';
     }
 
     public generatePodResource(memory: number, cpuNum: number, gpuNum: number) {

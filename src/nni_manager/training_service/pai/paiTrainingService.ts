@@ -89,7 +89,7 @@ class PAITrainingService implements TrainingService {
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
         this.paiTokenUpdateInterval = 7200000; //2hours
-        this.remoteLoggingType = 'http';
+        this.remoteLoggingType = 'none';
         this.log.info('Construct OpenPAI training service.');
     }
 
