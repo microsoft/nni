@@ -73,10 +73,7 @@ class MsgDispatcherBase(Recoverable):
                     _logger.debug('Caught thread exception')
                     break
             else:
-                if command == CommandType.ReportMetricData and data['type'] == 'PERIODICAL':
-                    self.enqueue_assessor_command(command, data)
-                else:
-                    self.enqueue_command(command, data)
+                self.enqueue_command(command, data)
 
         _logger.info('Dispatcher exiting...')
         self.stopping = True
@@ -109,19 +106,16 @@ class MsgDispatcherBase(Recoverable):
 
     def enqueue_command(self, command, data):
         '''
-        Enqueue command into default queue
+        Enqueue command into command queues
         '''
-        self.default_command_queue.put((command, data))
+        if command == CommandType.TrialEnd or (command == CommandType.ReportMetricData and data['type'] == 'PERIODICAL'):
+            self.assessor_command_queue.put((command, data))
+        else:
+            self.default_command_queue.put((command, data))
 
         qsize = self.default_command_queue.qsize()
         if qsize >= QUEUE_LEN_WARNING_MARK:
             _logger.warning('default queue length: %d', qsize)
-
-    def enqueue_assessor_command(self, command, data):
-        '''
-        Enqueue command into a seperate command queue for assessor
-        '''
-        self.assessor_command_queue.put((command, data))
 
         qsize = self.assessor_command_queue.qsize()
         if qsize >= QUEUE_LEN_WARNING_MARK:
