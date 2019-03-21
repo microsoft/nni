@@ -23,6 +23,9 @@ import psutil
 import json
 import datetime
 import time
+
+import pandas as pd
+
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
@@ -433,3 +436,38 @@ def monitor_experiment(args):
         except Exception as exception:
             print_error(exception)
             exit(1)
+
+
+def parse_trial_data(trial_data):
+    """output: Dict"""
+    hparam = json.loads(trial_data['hyperParameters'][0])['parameters']
+    reward = json.loads(trial_data['finalMetricData'][0]['data'])
+    if isinstance(reward, float):
+        dict_ret = {**hparam, **{'reward': reward}}
+    elif isinstance(reward, dict):
+        dict_ret = {**hparam, **reward}
+    else:
+        raise ValueError("Invalid finalMetricsData format: {}".format(trial_data['finalMetricData'][0]['data']))
+    return dict_ret
+
+def export_experiment_2csv(args, csv_path: str):
+    """export experiment metadata to csv
+    :param: csv file path to export
+    """
+    nni_config = Config(get_config_filename(args))
+    rest_port = nni_config.get_config('restServerPort')
+    rest_pid = nni_config.get_config('restServerPid')
+    if not detect_process(rest_pid):
+        print_error('Experiment is not running...')
+        return
+    running, response = check_rest_server_quick(rest_port)
+    if running:
+        response = rest_get(trial_jobs_url(rest_port), 20)
+        if response is not None and check_response(response):
+            content = json.loads(response)
+            dframe = pd.DataFrame.from_records([parse_trial_data(t_data) for t_data in content])
+            dframe.to_csv(csv_path, sep='\t')
+        else:
+            print_error('Export failed...')
+    else:
+        print_error('Restful server is not Running')
