@@ -322,14 +322,14 @@ class NNIDataStore implements DataStore {
                 const newHParam: any = this.parseHyperParameter(record.data);
                 if (newHParam !== undefined) {
                     if (jobInfo.hyperParameters !== undefined) {
-                        let hParaIds: Set<number> | undefined = hParamIdMap.get(jobInfo.id);
-                        if (hParaIds === undefined) {
-                            hParaIds = new Set();
+                        let hParamIds: Set<number> | undefined = hParamIdMap.get(jobInfo.id);
+                        if (hParamIds === undefined) {
+                            hParamIds = new Set();
                         }
-                        if (!hParaIds.has(newHParam.parameter_index)) {
+                        if (!hParamIds.has(newHParam.parameter_index)) {
                             jobInfo.hyperParameters.push(JSON.stringify(newHParam));
-                            hParaIds.add(newHParam.parameter_index);
-                            hParamIdMap.set(jobInfo.id, hParaIds);
+                            hParamIds.add(newHParam.parameter_index);
+                            hParamIdMap.set(jobInfo.id, hParamIds);
                         }
                     } else {
                         assert(false, 'jobInfo.hyperParameters is undefined');
