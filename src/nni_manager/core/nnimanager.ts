@@ -630,7 +630,7 @@ class NNIManager implements Manager {
     }
 
     private async onTunerCommand(commandType: string, content: string): Promise<void> {
-        this.log.info(`NNIManaer received command from dispatcher: ${commandType}, ${content}`);
+        this.log.info(`NNIManager received command from dispatcher: ${commandType}, ${content}`);
         switch (commandType) {
             case INITIALIZED:
                 // Tuner is intialized, search space is set, request tuner to generate hyper parameters
