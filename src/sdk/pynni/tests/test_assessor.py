@@ -68,17 +68,12 @@ class AssessorTestCase(TestCase):
         send(CommandType.ReportMetricData, '{"trial_job_id":"A","type":"PERIODICAL","sequence":1,"value":3}')
         send(CommandType.TrialEnd, '{"trial_job_id":"A","event":"SYS_CANCELED"}')
         send(CommandType.TrialEnd, '{"trial_job_id":"B","event":"SUCCEEDED"}')
-        send(CommandType.NewTrialJob, 'null')
         _restore_io()
 
         assessor = NaiveAssessor()
         dispatcher = MsgDispatcher(None, assessor)
         nni.msg_dispatcher_base._worker_fast_exit_on_terminate = False
-        try:
-            dispatcher.run()
-        except Exception as e:
-            self.assertIs(type(e), AssertionError)
-            self.assertEqual(e.args[0], 'Unsupported command: CommandType.NewTrialJob')
+        dispatcher.run()
 
         self.assertEqual(_trials, ['A', 'B', 'A'])
         self.assertEqual(_end_trials, [('A', False), ('B', True)])
