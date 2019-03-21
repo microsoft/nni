@@ -97,7 +97,11 @@ class MsgDispatcherBase(Recoverable):
             try:
                 # set timeout to ensure self.stopping is checked periodically
                 command, data = command_queue.get(timeout=3)
-                self.process_command(command, data)
+                try:
+                    self.process_command(command, data)
+                except Exception as e:
+                    _logger.exception(e)
+                    raise
             except Empty:
                 pass
             if self.stopping and (_worker_fast_exit_on_terminate or command_queue.empty()):
