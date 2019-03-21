@@ -116,11 +116,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     // search space format loguniform max and min
                     const temp = sessionData.params.searchSpace;
                     const searchSpace = temp !== undefined
-                        ?
-                        JSON.parse(temp)
-                        :
-                        {}
-                        ;
+                        ? JSON.parse(temp) : {};
                     Object.keys(searchSpace).map(item => {
                         const key = searchSpace[item]._type;
                         let value = searchSpace[item]._value;
