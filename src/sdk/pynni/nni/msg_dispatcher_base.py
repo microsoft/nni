@@ -49,6 +49,7 @@ class MsgDispatcherBase(Recoverable):
             self.assessor_worker = threading.Thread(target=self.command_queue_worker, args=(self.assessor_command_queue,))
             self.default_worker.start()
             self.assessor_worker.start()
+            self.worker_exceptions = []
 
     def run(self):
         """Run the tuner.
@@ -98,7 +99,8 @@ class MsgDispatcherBase(Recoverable):
                     self.process_command(command, data)
                 except Exception as e:
                     _logger.exception(e)
-                    raise
+                    self.worker_exceptions.append(e)
+                    break
             except Empty:
                 pass
             if self.stopping and (_worker_fast_exit_on_terminate or command_queue.empty()):
