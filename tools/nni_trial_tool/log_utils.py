@@ -146,8 +146,7 @@ class PipeLogReader(threading.Thread):
                 try:
                     line = self.queue.get(True, 5)
                     try:
-                        self.orig_stdout.write(line.rstrip() + '\n')
-                        self.orig_stdout.flush()
+                        self.logger.log(self.log_level, line.rstrip())
                     except Exception as e:
                         pass
                 except Exception as e:
@@ -168,10 +167,11 @@ class PipeLogReader(threading.Thread):
 
     def run(self):
         """Run the thread, logging everything.
-           If the logging_type set 'none' set True, the log content will not enqueue
+           If the logging_type set 'none', the log content will not enqueue
         """
         for line in iter(self.pipeReader.readline, ''):
-            self.logger.log(self.log_level, line.rstrip())
+            self.orig_stdout.write(line.rstrip() + '\n')
+            self.orig_stdout.flush()
             if self.logging_type == 'none':
                 # If not match metrics, do not put the line into queue
                 if not self.log_pattern.match(line):
