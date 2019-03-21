@@ -77,7 +77,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private readonly remoteOS: string;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private versionCheck: boolean = true;
-    private disableLog: boolean = false;
+    private disableRemoteLog: boolean = false;
 
     constructor(@component.Inject timer: ObservableTimer) {
         this.remoteOS = 'linux';
@@ -377,8 +377,8 @@ class RemoteMachineTrainingService implements TrainingService {
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 break;
-            case TrialConfigMetadataKey.DISABLE_LOG:
-                this.disableLog = (value === 'true' || value === 'True');
+            case TrialConfigMetadataKey.DISABLE_REMOTE_LOG:
+                this.disableRemoteLog = (value === 'true' || value === 'True');
                 break;
             default:
                 //Reject for unknown keys
@@ -589,7 +589,7 @@ class RemoteMachineTrainingService implements TrainingService {
             this.remoteRestServerPort = restServer.clusterRestServerPort;
         }
         const version = this.versionCheck? await getVersion(): '';
-        const disableLog = this.disableLog? '--disable_log': '';
+        const disableRemoteLog = this.disableRemoteLog? '--disable_log': '';
         const runScriptTrialContent: string = String.Format(
             REMOTEMACHINE_TRIAL_COMMAND_FORMAT,
             trialWorkingFolder,
@@ -603,7 +603,7 @@ class RemoteMachineTrainingService implements TrainingService {
             nniManagerIp,
             this.remoteRestServerPort,
             version,
-            disableLog,
+            disableRemoteLog,
             path.join(trialWorkingFolder, '.nni', 'code')
         )
 

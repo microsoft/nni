@@ -36,7 +36,7 @@ Optional('nniManagerIp'): str,
 Optional('logDir'): os.path.isdir,
 Optional('debug'): bool,
 Optional('logLevel'): Or('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
-Optional('disableLog'): bool,
+Optional('disableRemoteLog'): bool,
 'useAnnotation': bool,
 Optional('advisor'): Or({
     'builtinAdvisorName': Or('Hyperband'),

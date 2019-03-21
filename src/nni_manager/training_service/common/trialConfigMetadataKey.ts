@@ -33,5 +33,5 @@ export enum TrialConfigMetadataKey {
     NNI_MANAGER_IP = 'nni_manager_ip',
     FRAMEWORKCONTROLLER_CLUSTER_CONFIG = 'frameworkcontroller_config',
     VERSION_CHECK = 'version_check',
-    DISABLE_LOG = 'disable_log'
+    DISABLE_REMOTE_LOG = 'disable_remote_log'
 }

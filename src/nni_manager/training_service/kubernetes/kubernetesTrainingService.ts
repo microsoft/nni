@@ -62,7 +62,7 @@ abstract class KubernetesTrainingService {
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
     protected versionCheck?: boolean = true;
-    protected disableLog?: boolean = false;
+    protected disableRemoteLog?: boolean = false;
     
     constructor() {
         this.log = getLogger();
@@ -192,7 +192,7 @@ abstract class KubernetesTrainingService {
         }
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
         const version = this.versionCheck? await getVersion(): '';
-        const disableLog = this.disableLog? '--disable_log': '';
+        const disableRemoteLog = this.disableRemoteLog? '--disable_log': '';
         const runScript: string = String.Format(
             KubernetesScriptFormat,
             platform,
@@ -207,7 +207,7 @@ abstract class KubernetesTrainingService {
             nniManagerIp,
             this.kubernetesRestServerPort,
             version,
-            disableLog
+            disableRemoteLog
         );
         return Promise.resolve(runScript);
     }

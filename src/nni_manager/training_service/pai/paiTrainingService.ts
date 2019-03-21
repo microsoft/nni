@@ -76,7 +76,7 @@ class PAITrainingService implements TrainingService {
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
     private versionCheck?: boolean = true;
-    private disableLog?: boolean = true;
+    private disableRemoteLog?: boolean = true;
 
     constructor() {
         this.log = getLogger();
@@ -214,7 +214,7 @@ class PAITrainingService implements TrainingService {
         this.trialJobsMap.set(trialJobId, trialJobDetail);
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
         const version = this.versionCheck? await getVersion(): '';
-        const disableLog = this.disableLog? '--disable_log': '';
+        const disableRemoteLog = this.disableRemoteLog? '--disable_log': '';
         const nniPaiTrialCommand : string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
             // PAI will copy job's codeDir into /root directory
@@ -231,7 +231,7 @@ class PAITrainingService implements TrainingService {
             this.paiClusterConfig.userName, 
             HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
             version,
-            disableLog
+            disableRemoteLog
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
@@ -443,8 +443,8 @@ class PAITrainingService implements TrainingService {
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 break;
-            case TrialConfigMetadataKey.DISABLE_LOG:
-                this.disableLog = (value === 'true' || value === 'True');
+            case TrialConfigMetadataKey.DISABLE_REMOTE_LOG:
+                this.disableRemoteLog = (value === 'true' || value === 'True');
                 break;
             default:
                 //Reject for unknown keys
