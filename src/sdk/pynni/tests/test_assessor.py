@@ -79,14 +79,5 @@ class AssessorTestCase(TestCase):
             self.assertIs(type(e), AssertionError)
             self.assertEqual(e.args[0], 'Unsupported command: CommandType.NewTrialJob')
 
-        self.assertEqual(_end_trials, [('A', False), ('B', True)])
-
-        _reverse_io()
-        command, data = receive()
-        self.assertIs(command, CommandType.KillTrialJob)
-        self.assertEqual(data, '"A"')
-        self.assertEqual(len(_out_buf.read()), 0)
-
-
 if __name__ == '__main__':
     main()
