@@ -95,7 +95,7 @@ class MsgDispatcherBase(Recoverable):
         while not self.stopping:
             try:
                 # set timeout to ensure self.stopping is checked periodically
-                command, data = command_queue.get(timeout=5)
+                command, data = command_queue.get(timeout=3)
                 self.process_command(command, data)
             except Empty:
                 pass
