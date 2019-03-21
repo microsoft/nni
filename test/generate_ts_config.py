@@ -42,7 +42,6 @@ def update_training_service_config(args):
             config[args.ts]['trial']['outputDir'] = args.output_dir
         if args.vc is not None:
             config[args.ts]['trial']['virtualCluster'] = args.vc
-        config[args.ts]['debug'] = True
     elif args.ts == 'kubeflow':
         if args.nfs_server is not None:
             config[args.ts]['kubeflowConfig']['nfs']['server'] = args.nfs_server
@@ -58,7 +57,6 @@ def update_training_service_config(args):
             config[args.ts]['kubeflowConfig']['azureStorage']['azureShare'] = args.azs_share
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['worker']['image'] = args.nni_docker_image
-        config[args.ts]['debug'] = True
     elif args.ts == 'remote':
         if args.remote_user is not None:
             config[args.ts]['machineList'][0]['username'] = args.remote_user
