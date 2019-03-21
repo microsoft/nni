@@ -82,7 +82,7 @@ class RemoteLogger(object):
     """
     NNI remote logger
     """
-    def __init__(self, syslog_host, syslog_port, tag, std_output_type, logging_type, log_level=logging.INFO):
+    def __init__(self, syslog_host, syslog_port, tag, std_output_type, log_collection, log_level=logging.INFO):
         '''
         constructor
         '''
@@ -95,13 +95,13 @@ class RemoteLogger(object):
             self.orig_stdout = sys.__stdout__
         else:
             self.orig_stdout = sys.__stderr__
-        self.logging_type = logging_type
+        self.log_collection = log_collection
 
     def get_pipelog_reader(self):
         '''
         Get pipe for remote logger
         '''
-        return PipeLogReader(self.logger, self.logging_type, logging.INFO)
+        return PipeLogReader(self.logger, self.log_collection, logging.INFO)
 
     def write(self, buf):
         '''
@@ -119,7 +119,7 @@ class PipeLogReader(threading.Thread):
     """
     The reader thread reads log data from pipe
     """
-    def __init__(self, logger, logging_type, log_level=logging.INFO):
+    def __init__(self, logger, log_collection, log_level=logging.INFO):
         """Setup the object with a logger and a loglevel
         and start the thread
         """
@@ -133,7 +133,7 @@ class PipeLogReader(threading.Thread):
         self.orig_stdout = sys.__stdout__
         self._is_read_completed = False
         self.process_exit = False
-        self.logging_type = logging_type
+        self.log_collection = log_collection
         self.log_pattern = re.compile(r'^NNISDK_MEb\'.*\'$')
 
         def _populateQueue(stream, queue):
@@ -167,12 +167,12 @@ class PipeLogReader(threading.Thread):
 
     def run(self):
         """Run the thread, logging everything.
-           If the logging_type set 'none', the log content will not enqueue
+           If the log_collection is 'none', the log content will not be enqueued
         """
         for line in iter(self.pipeReader.readline, ''):
             self.orig_stdout.write(line.rstrip() + '\n')
             self.orig_stdout.flush()
-            if self.logging_type == 'none':
+            if self.log_collection == 'none':
                 # If not match metrics, do not put the line into queue
                 if not self.log_pattern.match(line):
                     continue

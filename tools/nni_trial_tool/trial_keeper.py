@@ -44,9 +44,9 @@ def main_loop(args):
     
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
-    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout, args.logging_type)
+    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout, args.log_collection)
     # redirect trial keeper's stdout and stderr to syslog
-    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout, args.logging_type)
+    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout, args.log_collection)
     sys.stdout = sys.stderr = trial_keeper_syslogger
     # backward compatibility
     hdfs_host = None
@@ -140,7 +140,7 @@ if __name__ == '__main__':
     PARSER.add_argument('--nni_hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
     PARSER.add_argument('--webhdfs_path', type=str, help='the webhdfs path used in webhdfs URL')
     PARSER.add_argument('--version', type=str, help='the nni version transmitted from trainingService')
-    PARSER.add_argument('--logging_type', type=str, help='set the log type')
+    PARSER.add_argument('--log_collection', type=str, help='set the way to collect log in trialkeeper')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)

@@ -270,8 +270,8 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 break;
-            case TrialConfigMetadataKey.REMOTE_LOGGING_TYPE:
-                this.remoteLoggingType = value;
+            case TrialConfigMetadataKey.LOG_COLLECTION:
+                this.logCollection = value;
                 break;
             default:
                 break;

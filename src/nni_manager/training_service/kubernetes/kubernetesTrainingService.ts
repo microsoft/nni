@@ -62,7 +62,7 @@ abstract class KubernetesTrainingService {
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
     protected versionCheck?: boolean = true;
-    protected remoteLoggingType: string;
+    protected logCollection: string;
     
     constructor() {
         this.log = getLogger();
@@ -73,7 +73,7 @@ abstract class KubernetesTrainingService {
         this.nextTrialSequenceId = -1;
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.genericK8sClient = new GeneralK8sClient();
-        this.remoteLoggingType = 'none';
+        this.logCollection = 'none';
     }
 
     public generatePodResource(memory: number, cpuNum: number, gpuNum: number) {
@@ -207,7 +207,7 @@ abstract class KubernetesTrainingService {
             nniManagerIp,
             this.kubernetesRestServerPort,
             version,
-            this.remoteLoggingType
+            this.logCollection
         );
         return Promise.resolve(runScript);
     }

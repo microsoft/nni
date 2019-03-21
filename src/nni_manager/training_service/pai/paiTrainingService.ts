@@ -76,7 +76,7 @@ class PAITrainingService implements TrainingService {
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
     private versionCheck?: boolean = true;
-    private remoteLoggingType: string;
+    private logCollection: string;
 
     constructor() {
         this.log = getLogger();
@@ -89,7 +89,7 @@ class PAITrainingService implements TrainingService {
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
         this.paiTokenUpdateInterval = 7200000; //2hours
-        this.remoteLoggingType = 'none';
+        this.logCollection = 'none';
         this.log.info('Construct OpenPAI training service.');
     }
 
@@ -231,7 +231,7 @@ class PAITrainingService implements TrainingService {
             this.paiClusterConfig.userName, 
             HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
             version,
-            this.remoteLoggingType
+            this.logCollection
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
@@ -445,8 +445,8 @@ class PAITrainingService implements TrainingService {
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 break;
-            case TrialConfigMetadataKey.REMOTE_LOGGING_TYPE:
-                this.remoteLoggingType = value;
+            case TrialConfigMetadataKey.LOG_COLLECTION:
+                this.logCollection = value;
                 break;
             default:
                 //Reject for unknown keys
