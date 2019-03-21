@@ -46,9 +46,9 @@ def main_loop(args):
     stderr_file = open(STDERR_FULL_PATH, 'a+')
     print('----------------47------------')
     print(args.logging_type)
-    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', args.logging_type, StdOutputType.Stdout)
+    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout, args.logging_type)
     # redirect trial keeper's stdout and stderr to syslog
-    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', args.logging_type, StdOutputType.Stdout)
+    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout, args.logging_type)
     sys.stdout = sys.stderr = trial_keeper_syslogger
     # backward compatibility
     hdfs_host = None
