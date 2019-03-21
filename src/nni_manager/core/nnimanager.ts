@@ -131,9 +131,9 @@ class NNIManager implements Manager {
         if (expParams.versionCheck !== undefined) {
             this.trainingService.setClusterMetadata('version_check', expParams.versionCheck.toString());
         }
-        // Set up disableRemoteLog config
-        if (expParams.disableRemoteLog !== undefined) {
-            this.trainingService.setClusterMetadata('disable_remote_log', expParams.disableRemoteLog.toString());
+        // Set up remoteLoggingType config
+        if (expParams.remoteLoggingType !== undefined) {
+            this.trainingService.setClusterMetadata('remote_logging_type', expParams.remoteLoggingType.toString());
         }
         
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,

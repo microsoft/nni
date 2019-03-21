@@ -82,7 +82,7 @@ class RemoteLogger(object):
     """
     NNI remote logger
     """
-    def __init__(self, syslog_host, syslog_port, tag, std_output_type, disable_log, log_level=logging.INFO):
+    def __init__(self, syslog_host, syslog_port, tag, std_output_type, logging_type, log_level=logging.INFO):
         '''
         constructor
         '''
@@ -95,13 +95,13 @@ class RemoteLogger(object):
             self.orig_stdout = sys.__stdout__
         else:
             self.orig_stdout = sys.__stderr__
-        self.disable_log = disable_log
+        self.logging_type = logging_type
 
     def get_pipelog_reader(self):
         '''
         Get pipe for remote logger
         '''
-        return PipeLogReader(self.logger, self.disable_log, logging.INFO)
+        return PipeLogReader(self.logger, self.logging_type, logging.INFO)
 
     def write(self, buf):
         '''
@@ -119,7 +119,7 @@ class PipeLogReader(threading.Thread):
     """
     The reader thread reads log data from pipe
     """
-    def __init__(self, logger, disable_log, log_level=logging.INFO):
+    def __init__(self, logger, logging_type, log_level=logging.INFO):
         """Setup the object with a logger and a loglevel
         and start the thread
         """
@@ -133,7 +133,7 @@ class PipeLogReader(threading.Thread):
         self.orig_stdout = sys.__stdout__
         self._is_read_completed = False
         self.process_exit = False
-        self.disable_log = disable_log
+        self.logging_type = logging_type
         self.log_pattern = re.compile(r'^NNISDK_MEb\'.*\'$')
 
         def _populateQueue(stream, queue):
@@ -169,10 +169,10 @@ class PipeLogReader(threading.Thread):
 
     def run(self):
         """Run the thread, logging everything.
-           If disable_log set True, the log content will not enqueue
+           If the logging_type set 'none' set True, the log content will not enqueue
         """
         for line in iter(self.pipeReader.readline, ''):
-            if self.disable_log:
+            if self.logging_type == 'none':
                 # If not match metrics, do not put the line into queue
                 if not self.log_pattern.match(line):
                     continue

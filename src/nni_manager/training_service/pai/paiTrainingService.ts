@@ -76,7 +76,7 @@ class PAITrainingService implements TrainingService {
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
     private versionCheck?: boolean = true;
-    private disableRemoteLog?: boolean = true;
+    private remoteLoggingType: string;
 
     constructor() {
         this.log = getLogger();
@@ -89,6 +89,7 @@ class PAITrainingService implements TrainingService {
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
         this.paiTokenUpdateInterval = 7200000; //2hours
+        this.remoteLoggingType = 'http';
         this.log.info('Construct OpenPAI training service.');
     }
 
@@ -214,7 +215,6 @@ class PAITrainingService implements TrainingService {
         this.trialJobsMap.set(trialJobId, trialJobDetail);
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
         const version = this.versionCheck? await getVersion(): '';
-        const disableRemoteLog = this.disableRemoteLog? '--disable_log': '';
         const nniPaiTrialCommand : string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
             // PAI will copy job's codeDir into /root directory
@@ -231,7 +231,7 @@ class PAITrainingService implements TrainingService {
             this.paiClusterConfig.userName, 
             HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
             version,
-            disableRemoteLog
+            this.remoteLoggingType
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
@@ -443,8 +443,8 @@ class PAITrainingService implements TrainingService {
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 break;
-            case TrialConfigMetadataKey.DISABLE_REMOTE_LOG:
-                this.disableRemoteLog = (value === 'true' || value === 'True');
+            case TrialConfigMetadataKey.REMOTE_LOGGING_TYPE:
+                this.remoteLoggingType = value;
                 break;
             default:
                 //Reject for unknown keys

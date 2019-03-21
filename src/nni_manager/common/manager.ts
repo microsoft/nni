@@ -37,7 +37,7 @@ interface ExperimentParams {
     multiPhase?: boolean;
     multiThread?: boolean;
     versionCheck?: boolean;
-    disableRemoteLog?: boolean;
+    remoteLoggingType?: string;
     tuner?: {
         className: string;
         builtinTunerName?: string;
