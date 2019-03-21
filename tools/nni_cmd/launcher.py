@@ -443,7 +443,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     # start a new experiment
     print_normal('Starting experiment...')
     # set debug configuration
-    if args.debug is not None:
+    if experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
     response = set_experiment(experiment_config, mode, args.port, config_file_name)
     if response:
