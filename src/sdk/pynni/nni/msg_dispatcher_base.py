@@ -53,12 +53,12 @@ class MsgDispatcherBase(Recoverable):
         """Run the tuner.
         This function will never return unless raise.
         """
+        _logger.info('Start dispatcher')
         mode = os.getenv('NNI_MODE')
         if mode == 'resume':
             self.load_checkpoint()
 
         while True:
-            _logger.debug('waiting receive_message')
             command, data = receive()
             if data:
                 data = json_tricks.loads(data)
@@ -77,6 +77,7 @@ class MsgDispatcherBase(Recoverable):
                 else:
                     self.enqueue_command(command, data)
 
+        _logger.info('Dispatcher exiting...')
         self.stopping = True
         if multi_thread_enabled():
             self.pool.close()
