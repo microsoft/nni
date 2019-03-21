@@ -250,8 +250,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                 precision: 3,
                 min: barColorMin,
                 max: barColorMax,
-                color: ['#CA0000', '#FFC400', '#90EE90'],
-                calculable: true
+                color: ['#CA0000', '#FFC400', '#90EE90']
             };
         }
         let optionown = {
