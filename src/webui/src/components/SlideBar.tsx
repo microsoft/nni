@@ -41,9 +41,8 @@ class SlideBar extends React.Component<{}, SliderState> {
             res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
           }
           const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-          const interResultList = res2.data;
-          const contentOfExperiment = JSON.stringify(res.data, null, 2);
           let trialMessagesArr = res1.data;
+          const interResultList = res2.data;
           Object.keys(trialMessagesArr).map(item => {
             // transform hyperparameters as object to show elegantly
             trialMessagesArr[item].hyperParameters = JSON.parse(trialMessagesArr[item].hyperParameters);
@@ -57,9 +56,12 @@ class SlideBar extends React.Component<{}, SliderState> {
               }
             });
           });
-          const trialMessages = JSON.stringify(trialMessagesArr, null, 2);
+          const result = {
+            experimentParameters: res.data,
+            trialMessage: trialMessagesArr
+          };
           const aTag = document.createElement('a');
-          const file = new Blob([contentOfExperiment, trialMessages], { type: 'application/json' });
+          const file = new Blob([JSON.stringify(result, null, 4)], { type: 'application/json' });
           aTag.download = 'experiment.json';
           aTag.href = URL.createObjectURL(file);
           aTag.click();
