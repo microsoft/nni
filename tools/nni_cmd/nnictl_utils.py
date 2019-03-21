@@ -450,7 +450,7 @@ def parse_trial_data(trial_data):
         raise ValueError("Invalid finalMetricsData format: {}".format(trial_data['finalMetricData'][0]['data']))
     return dict_ret
 
-def export_experiment_2csv(args, csv_path: str):
+def export_experiment_2csv(args):
     """export experiment metadata to csv
     :param: csv file path to export
     """
@@ -466,7 +466,7 @@ def export_experiment_2csv(args, csv_path: str):
         if response is not None and check_response(response):
             content = json.loads(response)
             dframe = pd.DataFrame.from_records([parse_trial_data(t_data) for t_data in content])
-            dframe.to_csv(csv_path, sep='\t')
+            dframe.to_csv(args.csv_path, sep='\t')
         else:
             print_error('Export failed...')
     else:

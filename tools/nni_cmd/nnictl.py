@@ -101,6 +101,10 @@ def parse_args():
     parser_trial_kill.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_kill.add_argument('--trialid', '-t', required=True, dest='trialid', help='the id of trial to be killed')
     parser_trial_kill.set_defaults(func=trial_kill)
+    parser_trial_export = parser_trial_subparsers.add_parser('export', help='export trial job results to csv')
+    parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_export.add_argument('--file', '-f', required=True, dest='csv_path', help='target csv file path')
+    parser_trial_export.set_defaults(func=export_experiment_2csv)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
