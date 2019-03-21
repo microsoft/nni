@@ -347,7 +347,8 @@ nnictl support commands:
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id| False| |the id of trial|
+  |id|  False| |ID of the experiment you want to set. Required if there are multiple experiments running.|
+  |--trialid, -T|  False| |the id of trial|
 
 <a name="webui"></a>
 ### Manage webui

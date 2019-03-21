@@ -328,13 +328,18 @@ def log_trial(args):
         print_error('Restful server is not running...')
         exit(1)
     if args.id:
-        if trial_id_path_dict.get(args.id):
-            print('id:' + args.id + ' path:' + trial_id_path_dict[args.id])
+        if args.trialid:
+            if trial_id_path_dict.get(args.trialid):
+                print('id:' + args.trialid + ' path:' + trial_id_path_dict[args.trialid])
+            else:
+                print_error('trial id is not valid!')
+                exit(1)
         else:
-            print_error('trial id is not valid!')
+            print_error('please specific the trial id!')
+            print_error("trial id list in this experiment: " + str(list(trial_id_path_dict.keys())))
             exit(1)
     else:
-        for key in trial_id_path_dict.keys():
+        for key in trial_id_path_dict:
             print('id:' + key + ' path:' + trial_id_path_dict[key])
 
 def get_config(args):
