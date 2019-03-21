@@ -73,11 +73,22 @@ class AssessorTestCase(TestCase):
 
         assessor = NaiveAssessor()
         dispatcher = MsgDispatcher(None, assessor)
+        nni.msg_dispatcher_base._worker_fast_exit_on_terminate = False
         try:
             dispatcher.run()
         except Exception as e:
             self.assertIs(type(e), AssertionError)
             self.assertEqual(e.args[0], 'Unsupported command: CommandType.NewTrialJob')
+
+        self.assertEqual(_trials, ['A', 'B', 'A'])
+        self.assertEqual(_end_trials, [('A', False), ('B', True)])
+
+        _reverse_io()
+        command, data = receive()
+        self.assertIs(command, CommandType.KillTrialJob)
+        self.assertEqual(data, '"A"')
+        self.assertEqual(len(_out_buf.read()), 0)
+
 
 if __name__ == '__main__':
     main()

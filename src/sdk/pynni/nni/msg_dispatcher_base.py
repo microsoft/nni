@@ -34,6 +34,7 @@ init_logger('dispatcher.log')
 _logger = logging.getLogger(__name__)
 
 QUEUE_LEN_WARNING_MARK = 20
+_worker_fast_exit_on_terminate = True
 
 class MsgDispatcherBase(Recoverable):
     def __init__(self):
@@ -92,13 +93,15 @@ class MsgDispatcherBase(Recoverable):
         '''
         Process commands in command queues.
         '''
-        while not self.stopping:
+        while True:
             try:
                 # set timeout to ensure self.stopping is checked periodically
                 command, data = command_queue.get(timeout=3)
                 self.process_command(command, data)
             except Empty:
                 pass
+            if self.stopping and (_worker_fast_exit_on_terminate or command_queue.empty()):
+                break
 
     def enqueue_command(self, command, data):
         '''

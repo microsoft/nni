@@ -88,6 +88,7 @@ class TunerTestCase(TestCase):
 
         tuner = NaiveTuner()
         dispatcher = MsgDispatcher(tuner)
+        nni.msg_dispatcher_base._worker_fast_exit_on_terminate = False
         try:
             dispatcher.run()
         except Exception as e:
