@@ -58,7 +58,8 @@ NNI_YARN := PATH=$(BIN_FOLDER):$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 
 ## Version number
 NNI_VERSION_VALUE = $(shell git describe --tags --abbrev=0)
-NNI_VERSION_VALUE = $(NNI_VERSION_VALUE#*v) #remove prefix 'v' in version
+NNI_VERSION_VALUE_WITH_PREFIX = $(shell git describe --tags --abbrev=0)
+NNI_VERSION_VALUE = $(NNI_VERSION_VALUE_WITH_PREFIX:v%=%) #remove prefix 'v' in version
 NNI_VERSION_TEMPLATE = 999.0.0-developing
 
 # Main targets
