@@ -88,9 +88,8 @@ class MsgDispatcher(MsgDispatcherBase):
             self.assessor.save_checkpoint()
 
     def handle_initialize(self, data):
-        '''
-        data is search space
-        '''
+        """Data is search space
+        """
         self.tuner.update_search_space(data)
         send(CommandType.Initialized, '')
         return True
@@ -154,9 +153,8 @@ class MsgDispatcher(MsgDispatcherBase):
         return True
 
     def _handle_final_metric_data(self, data):
-        '''
-        Call tuner to process final results
-        '''
+        """Call tuner to process final results
+        """
         id_ = data['parameter_id']
         value = data['value']
         if id_ in _customized_parameter_ids:
@@ -165,9 +163,8 @@ class MsgDispatcher(MsgDispatcherBase):
             self.tuner.receive_trial_result(id_, _trial_params[id_], value)
 
     def _handle_intermediate_metric_data(self, data):
-        '''
-        Call assessor to process intermediate results
-        '''
+        """Call assessor to process intermediate results
+        """
         if data['type'] != 'PERIODICAL':
             return True
         if self.assessor is None:
@@ -205,10 +202,9 @@ class MsgDispatcher(MsgDispatcherBase):
             _logger.debug('GOOD')
 
     def _earlystop_notify_tuner(self, data):
-        '''
-        Send last intermediate result as final result to tuner in case the
+        """Send last intermediate result as final result to tuner in case the
         trial is early stopped.
-        '''
+        """
         _logger.debug('Early stop notify tuner data: [%s]', data)
         data['type'] = 'FINAL'
         if multi_thread_enabled():

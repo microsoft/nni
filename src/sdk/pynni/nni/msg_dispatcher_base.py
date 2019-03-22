@@ -88,9 +88,8 @@ class MsgDispatcherBase(Recoverable):
         _logger.info('Terminated by NNI manager')
 
     def command_queue_worker(self, command_queue):
-        '''
-        Process commands in command queues.
-        '''
+        """Process commands in command queues.
+        """
         while True:
             try:
                 # set timeout to ensure self.stopping is checked periodically
@@ -107,9 +106,8 @@ class MsgDispatcherBase(Recoverable):
                 break
 
     def enqueue_command(self, command, data):
-        '''
-        Enqueue command into command queues
-        '''
+        """Enqueue command into command queues
+        """
         if command == CommandType.TrialEnd or (command == CommandType.ReportMetricData and data['type'] == 'PERIODICAL'):
             self.assessor_command_queue.put((command, data))
         else:
@@ -124,9 +122,8 @@ class MsgDispatcherBase(Recoverable):
             _logger.warning('assessor queue length: %d', qsize)
 
     def process_command_thread(self, request):
-        '''
-        Worker thread to process a command.
-        '''
+        """Worker thread to process a command.
+        """
         command, data = request
         if multi_thread_enabled():
             try:
