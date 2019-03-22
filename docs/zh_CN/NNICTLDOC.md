@@ -360,8 +360,7 @@ nnictl 支持的命令：
   
   | 参数及缩写 | 是否必需  | 默认值 | 说明         |
   | ----- | ----- | --- | ---------- |
-  | id         | False |     | 需要设置的 Experiment 的 id. 当有多个 Experiments 时，需要填写该参数 |
-  | --trialid, -T    | False |     | Trial 的 id |
+  | id    | False |     | Trial 的 id |
 
 <a name="webui"></a>
 
