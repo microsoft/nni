@@ -320,6 +320,9 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 break;
+            case TrialConfigMetadataKey.LOG_COLLECTION:
+                this.logCollection = value;
+                break;
             default:
                 break;
         }

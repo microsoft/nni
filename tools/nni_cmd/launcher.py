@@ -274,6 +274,8 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     #debug mode should disable version check
     if experiment_config.get('debug') is not None:
         request_data['versionCheck'] = not experiment_config.get('debug')
+    if experiment_config.get('logCollection'):
+        request_data['logCollection'] = experiment_config.get('logCollection')
 
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
