@@ -115,7 +115,7 @@ def check_version(args):
         # skip version check
         nni_log(LogType.Warning, 'Skipping version check!')
     else:
-        regular = re.compile('v?(?P<version>[0-9](.[0-9]){0,2}).*')
+        regular = re.compile('v?(?P<version>[0-9](\.[0-9]){0,2}).*')
         try:
             trial_keeper_version = regular.search(trial_keeper_version).group('version')
             nni_log(LogType.Info, 'trial_keeper_version is {0}'.format(trial_keeper_version))
