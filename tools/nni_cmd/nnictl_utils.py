@@ -193,7 +193,7 @@ def stop_experiment(args):
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
                 if sys.platform =='win32':
-                    stop_rest_cmds = ['taskkill /pid', str(rest_pid),'/F']
+                    stop_rest_cmds = ['taskkill', '/pid', str(rest_pid),'/F']
                 else:
                     stop_rest_cmds = ['kill', str(rest_pid)]
                 call(stop_rest_cmds)
