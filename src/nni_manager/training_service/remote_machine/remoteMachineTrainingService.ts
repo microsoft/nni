@@ -77,6 +77,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private readonly remoteOS: string;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private versionCheck: boolean = true;
+    private logCollection: string;
 
     constructor(@component.Inject timer: ObservableTimer) {
         this.remoteOS = 'linux';
@@ -91,6 +92,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.timer = timer;
         this.log = getLogger();
         this.trialSequenceId = -1;
+        this.logCollection = 'none';
         this.log.info('Construct remote machine training service.');
     }
 
@@ -376,6 +378,9 @@ class RemoteMachineTrainingService implements TrainingService {
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
                 break;
+            case TrialConfigMetadataKey.LOG_COLLECTION:
+                this.logCollection = value;
+                break;
             default:
                 //Reject for unknown keys
                 throw new Error(`Uknown key: ${key}`);
@@ -598,6 +603,7 @@ class RemoteMachineTrainingService implements TrainingService {
             nniManagerIp,
             this.remoteRestServerPort,
             version,
+            this.logCollection,
             path.join(trialWorkingFolder, '.nni', 'code')
         )
 
