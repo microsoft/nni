@@ -131,6 +131,10 @@ class NNIManager implements Manager {
         if (expParams.versionCheck !== undefined) {
             this.trainingService.setClusterMetadata('version_check', expParams.versionCheck.toString());
         }
+        // Set up logCollection config
+        if (expParams.logCollection !== undefined) {
+            this.trainingService.setClusterMetadata('log_collection', expParams.logCollection.toString());
+        }
         
         const dispatcherCommand: string = getMsgDispatcherCommand(expParams.tuner, expParams.assessor, expParams.advisor,
             expParams.multiPhase, expParams.multiThread);
@@ -273,11 +277,17 @@ class NNIManager implements Manager {
             newCwd = cwd;
         }
         // TO DO: add CUDA_VISIBLE_DEVICES
+        let includeIntermediateResultsEnv: boolean | undefined = false;
+        if (this.experimentProfile.params.tuner !== undefined) {
+            includeIntermediateResultsEnv = this.experimentProfile.params.tuner.includeIntermediateResults;
+        }
+
         let nniEnv = {
             NNI_MODE: mode,
             NNI_CHECKPOINT_DIRECTORY: dataDirectory,
             NNI_LOG_DIRECTORY: getLogDir(),
-            NNI_LOG_LEVEL: getLogLevel()
+            NNI_LOG_LEVEL: getLogLevel(),
+            NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv
         };
         let newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = spawn(command, [], {
@@ -630,7 +640,7 @@ class NNIManager implements Manager {
     }
 
     private async onTunerCommand(commandType: string, content: string): Promise<void> {
-        this.log.info(`NNIManaer received command from dispatcher: ${commandType}, ${content}`);
+        this.log.info(`NNIManager received command from dispatcher: ${commandType}, ${content}`);
         switch (commandType) {
             case INITIALIZED:
                 // Tuner is intialized, search space is set, request tuner to generate hyper parameters

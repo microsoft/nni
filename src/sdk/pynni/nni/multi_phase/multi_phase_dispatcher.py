@@ -75,7 +75,7 @@ def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, p
 
 class MultiPhaseMsgDispatcher(MsgDispatcherBase):
     def __init__(self, tuner, assessor=None):
-        super()
+        super(MultiPhaseMsgDispatcher, self).__init__()
         self.tuner = tuner
         self.assessor = assessor
         if assessor is None:
