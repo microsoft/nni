@@ -119,7 +119,7 @@ def check_version(args):
     if not args.version:
         # skip version check
         nni_log(LogType.Warning, 'Skipping version check!')
-    elif trial_keeper_version != args.version:
+    elif trial_keeper_version.strip() != args.version.strip():
         nni_log(LogType.Error, 'Exit trial keeper, trial keeper version is {}, and trainingService version is {}, \
         versions does not match, please check your code and image versions!'.format(trial_keeper_version, args.version))
         os._exit(1)
