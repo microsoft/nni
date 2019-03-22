@@ -336,7 +336,10 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
-        path = os.path.join(tempfile.gettempdir(), os.environ['USER'], 'nni', 'annotation')
+        if sys.platform == "win32":
+            path = os.path.join(tempfile.gettempdir(), os.path.expanduser('~').split("\\")[-1], 'nni', 'annotation')
+        else:
+            path = os.path.join(tempfile.gettempdir(), os.environ['USER'], 'nni', 'annotation')
         if not os.path.isdir(path):
             os.makedirs(path)
         path = tempfile.mkdtemp(dir=path)

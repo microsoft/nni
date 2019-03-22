@@ -18,7 +18,7 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import os
+import os,sys
 import psutil
 import json
 import datetime
@@ -192,7 +192,10 @@ def stop_experiment(args):
             rest_port = nni_config.get_config('restServerPort')
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
-                stop_rest_cmds = ['kill', str(rest_pid)]
+                if sys.platform =='win32':
+                    stop_rest_cmds = ['taskkill /pid', str(rest_pid),'/F']
+                else:
+                    stop_rest_cmds = ['kill', str(rest_pid)]
                 call(stop_rest_cmds)
                 tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
                 if tensorboard_pid_list:

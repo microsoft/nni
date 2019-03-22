@@ -65,7 +65,7 @@ def dump_yml_content(file_path, content):
 def setup_experiment(installed=True):
     '''setup the experiment if nni is not installed'''
     if not installed:
-        os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
+        os.environ['PATH'] = os.environ['PATH'] + ':' + os.getcwd()
         sdk_path = os.path.abspath('../src/sdk/pynni')
         cmd_path = os.path.abspath('../tools')
         pypath = os.environ.get('PYTHONPATH')
@@ -88,7 +88,7 @@ def is_experiment_done(nnimanager_log_path):
     '''check if the experiment is done successfully'''
     assert os.path.exists(nnimanager_log_path), 'Experiment starts failed'
     if sys.platform == "win32":
-        cmds = ['type', nnimanager_log_path, '|', 'findstr', EXPERIMENT_DONE_SIGNAL]
+        cmds = ['type', nnimanager_log_path, '|', 'find', EXPERIMENT_DONE_SIGNAL]
     else:
         cmds = ['cat', nnimanager_log_path, '|', 'grep', EXPERIMENT_DONE_SIGNAL]
     completed_process = subprocess.run(' '.join(cmds), shell=True)

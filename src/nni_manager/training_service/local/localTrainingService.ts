@@ -18,7 +18,7 @@
  */
 
 'use strict';
-
+import * as os from 'os';
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
@@ -160,11 +160,19 @@ class LocalTrainingService implements TrainingService {
         }
         if (trialJob.status === 'RUNNING') {
             let alive: boolean = false;
-            try {
-                await cpp.exec(`kill -0 ${trialJob.pid}`);
-                alive = true;
-            } catch (error) {
-                //ignore
+            if(os.platform()==='win32'){
+                const str = cp.execSync(`tasklist /FI ${'"PID eq '+trialJob.pid +'"'}`).toString();
+                if(!str.includes("No tasks")){
+                    alive = true;
+                }
+            }
+            else{
+                try {
+                    await cpp.exec(`kill -0 ${trialJob.pid}`);
+                    alive = true;
+                } catch (error) {
+                    //ignore
+                }
             }
 
             if (!alive) {
@@ -359,22 +367,41 @@ class LocalTrainingService implements TrainingService {
         if (!this.localTrailConfig) {
             throw new Error('trial config is not initialized');
         }
-        runScriptLines.push(
-            '#!/bin/bash',
-            `cd ${this.localTrailConfig.codeDir}`);
-        for (const variable of variables) {
-            runScriptLines.push(`export ${variable.key}=${variable.value}`);
+        let process;
+        if (os.platform() === "win32") {
+            runScriptLines.push(`cd ${this.localTrailConfig.codeDir}`);
+            for (const variable of variables) {
+                runScriptLines.push(`$env:${variable.key}="${variable.value}"`);
+            }
+            runScriptLines.push(
+            `Invoke-Expression "${this.localTrailConfig.command}" 2>${path.join(trialJobDetail.workingDirectory, 'stderr')}`,
+            `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
+            `$NOW_DATE = "$NOW_DATE" + "000"`,
+            `$state = 0`,
+            `if($?){$state = 0}`,
+            `else{$state = 2}`,
+            `Write $state " " $NOW_DATE  | Out-File ${path.join(trialJobDetail.workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`
+            );
+            await cpp.exec(`mkdir ${trialJobDetail.workingDirectory}`);
+            await cpp.exec(`mkdir ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
+            await cpp.exec(`copy NUL ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
+            await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.ps1'), runScriptLines.join('\r\n'), { encoding: 'utf8', mode: 0o777 });
+            await this.writeParameterFile(trialJobDetail.workingDirectory, trialJobDetail.form.hyperParameters);
+            process = cp.exec(`powershell ${path.join(trialJobDetail.workingDirectory, 'run.ps1')}`);
         }
-        runScriptLines.push(
-            `eval ${this.localTrailConfig.command} 2>${path.join(trialJobDetail.workingDirectory, 'stderr')}`,
-            `echo $? \`date +%s000\` >${path.join(trialJobDetail.workingDirectory, '.nni', 'state')}`);
-
-        await cpp.exec(`mkdir -p ${trialJobDetail.workingDirectory}`);
-        await cpp.exec(`mkdir -p ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
-        await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
-        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
-        await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
-        const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
+        else {
+            runScriptLines.push('#!/bin/bash', `cd ${this.localTrailConfig.codeDir}`);
+            for (const variable of variables) {
+                runScriptLines.push(`export ${variable.key}=${variable.value}`);
+            }
+            runScriptLines.push(`eval ${this.localTrailConfig.command} 2>${path.join(trialJobDetail.workingDirectory, 'stderr')}`, `echo $? \`date +%s000\` >${path.join(trialJobDetail.workingDirectory, '.nni', 'state')}`);
+            await cpp.exec(`mkdir -p ${trialJobDetail.workingDirectory}`);
+            await cpp.exec(`mkdir -p ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
+            await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
+            await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
+            await this.writeParameterFile(trialJobDetail.workingDirectory, trialJobDetail.form.hyperParameters);
+            process = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
+        }
 
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
         trialJobDetail.startTime = Date.now();
