@@ -231,11 +231,16 @@ machineList:
     * __classArgs__
 
       __classArgs__ specifies the arguments of tuner algorithm.
-    * __gpuNum__
+
+  * __gpuNum__
 
       __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
 
       Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
+
+  * __includeIntermediateResults__
+
+      If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of __includeIntermediateResults__ is false.
 
 * __assessor__
 
