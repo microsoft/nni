@@ -122,7 +122,7 @@ def check_version(args):
             training_service_version = regular.search(args.version).group('version')
             nni_log(LogType.Info, 'training_service_version is {0}'.format(training_service_version))
             if trial_keeper_version != training_service_version:
-                nni_log(LogType.Error, 'Version does match!')
+                nni_log(LogType.Error, 'Version does not match!')
                 os._exit(1)
             else:
                 nni_log(LogType.Info, 'Version match!')
