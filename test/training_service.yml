@@ -15,7 +15,7 @@ kubeflow:
     worker:
       replicas: 1
       command:
-      gpuNum: 1
+      gpuNum: 0
       cpuNum: 1
       memoryMB: 8192
       image:
