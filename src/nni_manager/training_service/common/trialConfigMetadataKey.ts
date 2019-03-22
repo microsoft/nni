@@ -32,5 +32,6 @@ export enum TrialConfigMetadataKey {
     KUBEFLOW_CLUSTER_CONFIG = 'kubeflow_config',
     NNI_MANAGER_IP = 'nni_manager_ip',
     FRAMEWORKCONTROLLER_CLUSTER_CONFIG = 'frameworkcontroller_config',
-    VERSION_CHECK = 'version_check'
+    VERSION_CHECK = 'version_check',
+    LOG_COLLECTION = 'log_collection'
 }
