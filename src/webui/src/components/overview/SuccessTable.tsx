@@ -1,6 +1,6 @@
 import * as React from 'react';
 import axios from 'axios';
-import { Modal, Input, Table } from 'antd';
+import { Modal, Input, Table, Button } from 'antd';
 const { TextArea } = Input;
 import OpenRow from '../public-child/OpenRow';
 import DefaultMetric from '../public-child/DefaultMetrc';
@@ -63,6 +63,22 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }
     }
 
+    copyParams = (record: TableObj) => {
+        var params = JSON.stringify(record.description.parameters);
+        // alert(params);
+        var einput = document.createElement('input');
+        document.body.appendChild(einput);
+        einput.setAttribute('value', params);
+        einput.select();
+        var res = document.execCommand('copy');
+        if (res) {
+            alert('Copied to Clipboard !');
+        } else {
+            alert('Copy Failed !');
+        }
+        document.body.removeChild(einput);
+    }
+
     hideLogModalOverview = () => {
         if (this._isMounted) {
             this.setState({
@@ -100,13 +116,13 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             title: 'Trial No.',
             dataIndex: 'sequenceId',
             key: 'sequenceId',
-            width: 140,
+            width: 80,
             className: 'tableHead'
         }, {
             title: 'Id',
             dataIndex: 'id',
             key: 'id',
-            width: 60,
+            width: 80,
             className: 'tableHead idtitle',
             render: (text: string, record: TableObj) => {
                 return (
@@ -117,7 +133,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             title: 'Duration',
             dataIndex: 'duration',
             key: 'duration',
-            width: 140,
+            width: 100,
             sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
             render: (text: string, record: TableObj) => {
                 let duration;
@@ -132,7 +148,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             title: 'Status',
             dataIndex: 'status',
             key: 'status',
-            width: 150,
+            width: 100,
             className: 'tableStatus',
             render: (text: string, record: TableObj) => {
                 bgColor = record.status;
@@ -140,6 +156,19 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                     <div className={`${bgColor} commonStyle`}>
                         {record.status}
                     </div>
+                );
+            }
+        }, {
+            title: 'Operation',
+            render: (text: string, record: TableObj) => {
+                return (
+                    <Button
+                        type="primary"
+                        className="tableButton editStyle"
+                        onClick={this.copyParams.bind(this, record)}
+                    >
+                        Copy Params
+                    </Button>
                 );
             }
         }, {
