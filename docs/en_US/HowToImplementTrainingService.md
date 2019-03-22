@@ -7,7 +7,7 @@ TrainingService is a module related to platform management and job schedule in N
 ## System architecture
 ![](../img/NNIDesign.jpg)
 
-The brief system architecture of NNI is shown in the picture. NNIManager is the core management module of system, in charge of calling TrainingService to manage job and the communication between job and algorithm module. Dispatcher is a message processing center responsible for message dispatch. TrainingService is a module to manage trial jobs, it communicates with nniManager module, and has different instance according to different training platform. For the time being, NNI supports local platfrom, [remote server platfrom](RemoteMachineMode.md), [PAI platfrom](PAIMode.md), [kubeflow platform](KubeflowMode.md) and [FrameworkController platfrom](FrameworkController.md).   
+The brief system architecture of NNI is shown in the picture. NNIManager is the core management module of system, in charge of calling TrainingService to manage trial jobs and the communication between different modules. Dispatcher is a message processing center responsible for message dispatch. TrainingService is a module to manage trial jobs, it communicates with nniManager module, and has different instance according to different training platform. For the time being, NNI supports local platfrom, [remote platfrom](RemoteMachineMode.md), [PAI platfrom](PAIMode.md), [kubeflow platform](KubeflowMode.md) and [FrameworkController platfrom](FrameworkController.md).   
 In this document, we introduce the brief design of TrainingService. If users want to add a new TrainingService instance, they just need to complete a child class to implement TrainingService, don't need to understand the code detail of NNIManager, Dispatcher or other modules.
 
 ## Folder structure of code
@@ -125,7 +125,7 @@ __listTrialJobs()__
 Users should put all of trial job detail information into a list, and return the list.
 
 __addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)__  
-NNI will hold a EventEmitter to get job metrics, if there is new job metrics detected, the EventEmitter will be triggered. Users should start the EventEmitter in this function.
+NNI will hold an EventEmitter to get job metrics, if there is new job metrics detected, the EventEmitter will be triggered. Users should start the EventEmitter in this function.
 
 __removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)__  
 Close the EventEmitter.
