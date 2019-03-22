@@ -159,7 +159,7 @@ export namespace ValidationSchemas {
                 classArgs: joi.any(),
                 gpuNum: joi.number().min(0),
                 checkpointDir: joi.string().allow(''),
-                includeIntermeidateResults: joi.boolean()
+                includeIntermediateResults: joi.boolean()
             }),
             assessor: joi.object({
                 builtinAssessorName: joi.string().valid('Medianstop', 'Curvefitting'),

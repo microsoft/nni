@@ -45,7 +45,7 @@ interface ExperimentParams {
         classFileName?: string;
         checkpointDir: string;
         gpuNum?: number;
-        includeIntermeidateResults?: boolean;
+        includeIntermediateResults?: boolean;
     };
     assessor?: {
         className: string;

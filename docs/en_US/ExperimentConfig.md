@@ -234,9 +234,9 @@ machineList:
 
       Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
 
-  * __includeIntermeidateResults__
+  * __includeIntermediateResults__
 
-      If __includeIntermeidateResults__ is true, the last intermediate results of the trials early stopped by assessor are sent to tuner as final results. The default value of __includeIntermeidateResults__ is false.
+      If __includeIntermediateResults__ is true, the last intermediate results of the trials early stopped by assessor are sent to tuner as final results. The default value of __includeIntermediateResults__ is false.
 
 * __assessor__
 

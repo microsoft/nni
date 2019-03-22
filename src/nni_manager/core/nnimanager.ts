@@ -273,9 +273,9 @@ class NNIManager implements Manager {
             newCwd = cwd;
         }
         // TO DO: add CUDA_VISIBLE_DEVICES
-        let includeIntermeidateResultsEnv: boolean | undefined = false;
+        let includeIntermediateResultsEnv: boolean | undefined = false;
         if (this.experimentProfile.params.tuner !== undefined) {
-            includeIntermeidateResultsEnv = this.experimentProfile.params.tuner.includeIntermeidateResults;
+            includeIntermediateResultsEnv = this.experimentProfile.params.tuner.includeIntermediateResults;
         }
 
         let nniEnv = {
@@ -283,7 +283,7 @@ class NNIManager implements Manager {
             NNI_CHECKPOINT_DIRECTORY: dataDirectory,
             NNI_LOG_DIRECTORY: getLogDir(),
             NNI_LOG_LEVEL: getLogLevel(),
-            NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermeidateResultsEnv
+            NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv
         };
         let newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = spawn(command, [], {
