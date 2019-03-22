@@ -464,7 +464,7 @@ def export_experiment_2csv(args):
     if running:
         response = rest_get(trial_jobs_url(rest_port), 20)
         if response is not None and check_response(response):
-            content = json.loads(response)
+            content = json.loads(response.text)
             dframe = pd.DataFrame.from_records([parse_trial_data(t_data) for t_data in content])
             dframe.to_csv(args.csv_path, sep='\t')
         else:
