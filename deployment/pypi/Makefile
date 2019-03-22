@@ -13,6 +13,7 @@ endif
 
 TIME_STAMP = $(shell date -u "+%y%m%d%H%M")
 NNI_VERSION_VALUE = $(shell git describe --tags --abbrev=0)
+NNI_VERSION_VALUE = $(NNI_VERSION_VALUE#*v) #remove prefix 'v' in version
 
 # To include time stamp in version value, run:
 # make version_ts=true build
