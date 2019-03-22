@@ -6,7 +6,7 @@
 
 用户可以使用docker进行 NNI 实验, NNI 在docker hub上提供了一个官方的镜像 [msranni/nni](https://hub.docker.com/r/msranni/nni)。
 
-## 在本地模式使用docker
+## 在本机使用docker
 
 ### 第一步：docker的安装
 
