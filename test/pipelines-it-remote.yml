@@ -20,7 +20,7 @@ jobs:
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
-      sourceFolder: src/sdk/pynni/dist/
+      sourceFolder: /deployment/pypi/dist/
       targetFolder: /tmp/nnitest/$(Build.BuildId)/dist
       overwrite: true
     displayName: 'Copy dist files to remote machine'
