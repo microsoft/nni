@@ -141,6 +141,7 @@ class SlideBar extends React.Component<{}, SliderState> {
         }
       });
   }
+
   getNNIversion = () => {
     axios(`${MANAGER_IP}/version`, {
       method: 'GET'
@@ -233,7 +234,6 @@ class SlideBar extends React.Component<{}, SliderState> {
           </a>
           <span className="version">Version: {version}</span>
         </Col>
-
       </Row>
     );
   }
