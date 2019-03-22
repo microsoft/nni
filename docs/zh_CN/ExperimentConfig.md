@@ -214,9 +214,13 @@ machineList:
     
     **logLevel** sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
 
+* **logCollection**
+  
+  * Description **logCollection** set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+
 * **tuner**
   
-  * 说明
+  * Description
     
     **tuner** specifies the tuner algorithm in the experiment, there are two kinds of ways to set tuner. One way is to use tuner provided by NNI sdk, need to set **builtinTunerName** and **classArgs**. Another way is to use users' own tuner file, and need to set **codeDirectory**, **classFileName**, **className** and **classArgs**.
   
@@ -230,7 +234,7 @@ machineList:
       
       **classArgs** specifies the arguments of tuner algorithm. If the **builtinTunerName** is in {**TPE**, **Random**, **Anneal**, **Evolution**}, user should set **optimize_mode**.
   
-  * **codeDir**, **classFileName**, **className** 和 **classArgs**
+  * **codeDir**, **classFileName**, **className** and **classArgs**
     
     * **codeDir**
       
@@ -298,7 +302,7 @@ machineList:
   
   * **command**
     
-    **command** 指定了运行 Trial 进程的命令行。
+    **command** specifies the command to run trial process.
   
   * **codeDir**
     
@@ -306,7 +310,7 @@ machineList:
   
   * **gpuNum**
     
-    **gpuNum** 指定了运行 Trial 进程的 GPU 数量。 默认值为 0。
+    **gpuNum** specifies the num of gpu to run the trial process. Default value is 0.
 
 * **trial(pai)**
   
