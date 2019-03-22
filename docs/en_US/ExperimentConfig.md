@@ -236,7 +236,7 @@ machineList:
 
   * __includeIntermediateResults__
 
-      If __includeIntermediateResults__ is true, the last intermediate results of the trials early stopped by assessor are sent to tuner as final results. The default value of __includeIntermediateResults__ is false.
+      If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of __includeIntermediateResults__ is false.
 
 * __assessor__
 
