@@ -13,7 +13,6 @@ $titleBgcolor: #b3b3b3;
         height: 22px;
         margin-top: -8px;
         padding-left: 14px;
-        padding-right: 14px;
     }
 
     span{
@@ -22,9 +21,22 @@ $titleBgcolor: #b3b3b3;
         font-family: 'Segoe';
         color: #333;
         line-height: 38px;
+        margin-left: 14px;
+    }
+
+    i{
+        font-size: 24px;
+        margin-left: 14px;
+        color: #545454;
+        position: relative;
+        top: 2px;
     }
 }
 
+/* antd icon margin intermediate result style*/
+#tabsty .anticon{
+    margin-right: 0;
+}
 
 .top10bg{
     background-color: $titleBgcolor;

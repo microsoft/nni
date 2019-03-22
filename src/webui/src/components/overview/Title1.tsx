@@ -2,7 +2,7 @@ import * as React from 'react';
 
 interface Title1Props {
     text: string;
-    icon: string;
+    icon?: string;
     bgcolor?: string;
 }
 
