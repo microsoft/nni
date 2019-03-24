@@ -351,15 +351,7 @@ class Hyperband(MsgDispatcherBase):
         """get one trial job, i.e., one hyperparameter configuration."""
         if not self.generated_hyper_configs:
             if self.curr_s < 0:
-                # have tried all configurations
-                ret = {
-                    'parameter_id': '-1_0_0',
-                    'parameter_source': 'algorithm',
-                    'parameters': ''
-                }
-                send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
-                self.credit += 1
-                return True
+                self.curr_s = self.s_max
             _logger.debug('create a new bracket, self.curr_s=%d', self.curr_s)
             self.brackets[self.curr_s] = Bracket(self.curr_s, self.s_max, self.eta, self.R, self.optimize_mode)
             next_n, next_r = self.brackets[self.curr_s].get_n_r()
