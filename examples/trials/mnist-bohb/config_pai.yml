@@ -2,10 +2,10 @@ authorName: default
 experimentName: example_mnist_BOHB
 maxExecDuration: 10h
 maxTrialNum: 10000
-trialConcurrency: 10
+trialConcurrency: 15
 #choice: local, remote, pai
 trainingServicePlatform: pai
-searchSpacePath: search_space.json
+searchSpacePath: specific.json
 #choice: true, false
 useAnnotation: false
 nniManagerIp: 10.150.144.59
@@ -13,7 +13,7 @@ advisor:
   #choice: Hyperband
   builtinAdvisorName: BOHB
   classArgs:
-    max_budget: 243
+    max_budget: 27
     min_budget: 1
     #eta: proportion of discarded trials
     eta: 3
@@ -36,6 +36,6 @@ paiConfig:
   #The username to login pai
   userName: quzha
   #The password to login pai
-  passWord: 
+  passWord: quzha123
   #The host of restful server of pai
   host: 10.151.40.179

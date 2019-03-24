@@ -1,17 +1,17 @@
 authorName: default
 experimentName: example_mnist
 trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 10
+maxExecDuration: 10h
+maxTrialNum: 10000
 #choice: local, remote, pai
 trainingServicePlatform: local
-searchSpacePath: search_space.json
+searchSpacePath: search_space_paper.json
 #choice: true, false
 useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner
   #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: TPE
+  builtinTunerName: Random
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize

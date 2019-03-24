@@ -1,10 +1,12 @@
 """A deep MNIST classifier using convolutional layers."""
 
+import argparse
 import logging
 import math
 import tempfile
-import tensorflow as tf
+import time
 
+import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
 import nni
@@ -16,7 +18,7 @@ logger = logging.getLogger('mnist_AutoML')
 
 class MnistNetwork(object):
     '''
-    MnistNetwork is for initlizing and building basic network for mnist.
+    MnistNetwork is for initializing and building basic network for mnist.
     '''
     def __init__(self,
                  channel_1_num,
@@ -111,6 +113,7 @@ class MnistNetwork(object):
             cross_entropy = tf.reduce_mean(
                 tf.nn.softmax_cross_entropy_with_logits(labels=self.labels, logits=y_conv))
             self.loss = cross_entropy
+
         with tf.name_scope('adam_optimizer'):
             self.train_step = tf.train.AdamOptimizer(
                 self.learning_rate).minimize(cross_entropy)
@@ -144,13 +147,21 @@ def bias_variable(shape):
     initial = tf.constant(0.1, shape=shape)
     return tf.Variable(initial)
 
+def download_mnist_retry(data_dir, max_num_retries=20):
+    """Try to download mnist dataset and avoid errors"""
+    for _ in range(max_num_retries):
+        try:
+            return input_data.read_data_sets(data_dir, one_hot=True)
+        except tf.errors.AlreadyExistsError:
+            time.sleep(1)
+    raise Exception("Failed to download MNIST.")
 
 def main(params):
     '''
     Main function, build mnist network, run and send result to NNI.
     '''
     # Import data
-    mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
+    mnist = download_mnist_retry(params['data_dir'])
     print('Mnist download data done.')
     logger.debug('Mnist download data done.')
 
@@ -175,77 +186,64 @@ def main(params):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         for i in range(params['batch_num']):
-            batch = mnist.train.next_batch(params['batch_size'])
+            batch = mnist.train.next_batch(int(params['batch_size']))
             mnist_network.train_step.run(feed_dict={mnist_network.images: batch[0],
                                                     mnist_network.labels: batch[1],
                                                     mnist_network.keep_prob: 1 - params['dropout_rate']}
                                         )
 
-            if i % 10 == 0:
+            if i % 100 == 0:
                 test_acc, test_loss = sess.run(
                     [mnist_network.accuracy, mnist_network.loss],
-                    feed_dict={
-                        mnist_network.images: mnist.test.images,
-                        mnist_network.labels: mnist.test.labels,
-                        mnist_network.keep_prob: 1.0
-                    })
+                    feed_dict={mnist_network.images: mnist.test.images,
+                               mnist_network.labels: mnist.test.labels,
+                               mnist_network.keep_prob: 1.0})
                 test_result = {
-                    'default': test_acc,
-                    'loss': test_loss
+                    "default": test_acc,
+                    "loss": test_loss
                 }
-
                 nni.report_intermediate_result(test_result)
-                logger.debug('test result %g', test_result)
+                logger.debug('test accuracy %g test loss %g', test_result["default"], test_result["loss"])
                 logger.debug('Pipe send intermediate result done.')
 
         test_acc, test_loss = sess.run(
             [mnist_network.accuracy, mnist_network.loss],
-            feed_dict={
-                mnist_network.images: mnist.test.images,
-                mnist_network.labels: mnist.test.labels,
-                mnist_network.keep_prob: 1.0
-            })
+            feed_dict={mnist_network.images: mnist.test.images,
+                        mnist_network.labels: mnist.test.labels,
+                        mnist_network.keep_prob: 1.0})
         test_result = {
-            'default': test_acc,
-            'loss': test_loss
+            "default": test_acc,
+            "loss": test_loss
         }
-
         nni.report_final_result(test_result)
-        logger.debug('Final result is %g', test_result)
+        logger.debug('Final result is %g test loss %g', test_result["default"], test_result["loss"])
         logger.debug('Send final result done.')
 
+def get_params():
+    ''' Get parameters from command line '''
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_dir", type=str, default='/tmp/tensorflow/mnist/input_data', help="data directory")
+    parser.add_argument("--dropout_rate", type=float, default=0.5, help="dropout rate")
+    parser.add_argument("--channel_1_num", type=int, default=32)
+    parser.add_argument("--channel_2_num", type=int, default=64)
+    parser.add_argument("--conv_size", type=int, default=5)
+    parser.add_argument("--pool_size", type=int, default=2)
+    parser.add_argument("--hidden_size", type=int, default=1024)
+    parser.add_argument("--learning_rate", type=float, default=1e-4)
+    parser.add_argument("--batch_num", type=int, default=2700)
+    parser.add_argument("--batch_size", type=int, default=32)
 
-def generate_default_params():
-    '''
-    Generate default parameters for mnist network.
-    '''
-    params = {
-        'data_dir': '/tmp/tensorflow/mnist/input_data',
-        'dropout_rate': 0.5,
-        'channel_1_num': 32,
-        'channel_2_num': 64,
-        'conv_size': 5,
-        'pool_size': 2,
-        'hidden_size': 1024,
-        'learning_rate': 1e-4,
-        'batch_size': 32}
-    return params
-
+    args, _ = parser.parse_known_args()
+    return args
 
 if __name__ == '__main__':
     try:
         # get parameters form tuner
-        RCV_PARAMS = nni.get_next_parameter()
-        logger.debug(RCV_PARAMS)
-        # run
-        params = generate_default_params()
-        params.update(RCV_PARAMS)
-        '''
-        If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received by a trial, 
-        there is one more key called `STEPS` besides the hyperparameters defined by user. 
-        By using this `STEPS`, the trial can control how long it runs.
-        '''
-        params['batch_num'] = RCV_PARAMS['STEPS'] * 10
+        tuner_params = nni.get_next_parameter()
+        logger.debug(tuner_params)
+        tuner_params['batch_num'] = tuner_params['STEPS'] * 100
+        params = vars(get_params())
+        params.update(tuner_params)
         main(params)
     except Exception as exception:
         logger.exception(exception)

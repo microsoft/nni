@@ -17,6 +17,7 @@ import logging
 from models import *
 from utils import progress_bar
 
+import nni
 
 _logger = logging.getLogger("cifar10_pytorch_automl")
 
@@ -51,10 +52,10 @@ def prepare(args):
     ])
 
     trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-    trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(args['batch_size']), shuffle=True, num_workers=2)
 
     testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
-    testloader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False, num_workers=2)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=int(args['batch_size']), shuffle=False, num_workers=2)
 
     #classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
@@ -85,17 +86,7 @@ def prepare(args):
     criterion = nn.CrossEntropyLoss()
     #optimizer = optim.SGD(net.parameters(), lr=args['lr'], momentum=0.9, weight_decay=5e-4)
 
-    if args['optimizer'] == 'SGD':
-        optimizer = optim.SGD(net.parameters(), lr=args['lr'], momentum=0.9, weight_decay=5e-4)
-    if args['optimizer'] == 'Adadelta':
-        optimizer = optim.Adadelta(net.parameters(), lr=args['lr'])
-    if args['optimizer'] == 'Adagrad':
-        optimizer = optim.Adagrad(net.parameters(), lr=args['lr'])
-    if args['optimizer'] == 'Adam':
-        optimizer = optim.Adam(net.parameters(), lr=args['lr'])
-    if args['optimizer'] == 'Adamax':
-        optimizer = optim.Adam(net.parameters(), lr=args['lr'])       
-
+    optimizer = optim.SGD(net.parameters(), lr=args['lr'], momentum=args['momentum'], weight_decay=args['weight_decay'])
 
 # Training
 def train(epoch):
@@ -107,33 +98,21 @@ def train(epoch):
 
     print('\nEpoch: %d' % epoch)
     net.train()
-    print('go to 0')
     train_loss = 0
     correct = 0
     total = 0
     for batch_idx, (inputs, targets) in enumerate(trainloader):
-        print('go to 1')
         inputs, targets = inputs.to(device), targets.to(device)
-        print('go to 2')
         optimizer.zero_grad()
-        print('go to 3')
         outputs = net(inputs)
-        print('go to 4')
         loss = criterion(outputs, targets)
-        print('go to 5')
         loss.backward()
-        print('go to 6')
         optimizer.step()
-        print('go to 7')
-        
+
         train_loss += loss.item()
-        print('go to 8')
         _, predicted = outputs.max(1)
-        print('go to 9')
         total += targets.size(0)
-        print('go to 10')
         correct += predicted.eq(targets).sum().item()
-        print('go to 11')
 
         acc = 100.*correct/total
 
@@ -190,7 +169,8 @@ if __name__ == '__main__':
     args, _ = parser.parse_known_args()
 
     try:
-        RCV_CONFIG = {'lr': 0.1, 'optimizer': 'SGD', 'model':'mobilenet'}
+        RCV_CONFIG = nni.get_next_parameter()
+        #RCV_CONFIG = {'lr': 0.1, 'optimizer': 'Adam', 'model':'senet18'}
         _logger.debug(RCV_CONFIG)
 
         prepare(RCV_CONFIG)
@@ -199,7 +179,10 @@ if __name__ == '__main__':
         for epoch in range(start_epoch, start_epoch+args.epochs):
             train(epoch)
             acc, best_acc = test(epoch)
+            print ("intermediate result: ", acc)
+            nni.report_intermediate_result(acc)
 
+        nni.report_final_result(best_acc)
     except Exception as exception:
         _logger.exception(exception)
         raise
