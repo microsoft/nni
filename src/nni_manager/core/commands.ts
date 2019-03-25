@@ -25,6 +25,7 @@ const UPDATE_SEARCH_SPACE = 'SS';
 const ADD_CUSTOMIZED_TRIAL_JOB = 'AD';
 const TRIAL_END = 'EN';
 const TERMINATE = 'TE';
+const PING = 'PI';
 
 const INITIALIZED = 'ID';
 const NEW_TRIAL_JOB = 'TR';
@@ -39,6 +40,7 @@ const TUNER_COMMANDS: Set<string> = new Set([
     UPDATE_SEARCH_SPACE,
     ADD_CUSTOMIZED_TRIAL_JOB,
     TERMINATE,
+    PING,
 
     INITIALIZED,
     NEW_TRIAL_JOB,
@@ -63,6 +65,7 @@ export {
     ADD_CUSTOMIZED_TRIAL_JOB,
     TRIAL_END,
     TERMINATE,
+    PING,
     INITIALIZED,
     NEW_TRIAL_JOB,
     NO_MORE_TRIAL_JOBS,

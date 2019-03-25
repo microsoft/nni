@@ -58,8 +58,47 @@ def print_log_content(config_file_name):
     stderr_content = check_output(stderr_cmds)
     print(stderr_content.decode('utf-8'))
 
+def get_nni_installation_path():
+    ''' Find nni lib from the following locations in order
+    Return nni root directory if it exists
+    '''
+    def try_installation_path_sequentially(*sitepackages):
+        '''Try different installation path sequentially util nni is found.
+        Return None if nothing is found
+        '''
+        def _generate_installation_path(sitepackages_path):
+            python_dir = str(Path(sitepackages_path).parents[2])
+            entry_file = os.path.join(python_dir, 'nni', 'main.js')
+            if os.path.isfile(entry_file):
+                return python_dir
+            return None
 
-def start_rest_server(port, platform, mode, config_file_name, experiment_id=None):
+        for sitepackage in sitepackages:
+            python_dir = _generate_installation_path(sitepackage)
+            if python_dir:
+                return python_dir
+        return None
+
+    if os.getenv('VIRTUAL_ENV'):
+        # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
+        # Note that conda venv will not have VIRTUAL_ENV
+        python_dir = os.getenv('VIRTUAL_ENV')
+    else:
+        python_sitepackage = site.getsitepackages()[0]
+        # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given that nni exists there
+        if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
+            python_dir = try_installation_path_sequentially(site.getusersitepackages(), site.getsitepackages()[0])
+        else:
+            python_dir = try_installation_path_sequentially(site.getsitepackages()[0], site.getusersitepackages())
+
+    if python_dir:
+        entry_file = os.path.join(python_dir, 'nni', 'main.js')
+        if os.path.isfile(entry_file):
+            return os.path.join(python_dir, 'nni')
+    print_error('Fail to find nni under python library')
+    exit(1)
+
+def start_rest_server(port, platform, mode, config_file_name, experiment_id=None, log_dir=None, log_level=None):
     '''Run nni manager process'''
     nni_config = Config(config_file_name)
     if detect_port(port):
@@ -67,34 +106,22 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         'You could use \'nnictl create --help\' to get help information' % port)
         exit(1)
     
-    if (platform == 'pai' or platform == 'kubeflow') and detect_port(int(port) + 1):
+    if (platform != 'local') and detect_port(int(port) + 1):
         print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
         'You could set another port to start experiment!\n' \
         'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
         exit(1)
 
     print_normal('Starting restful server...')
-    # Find nni lib from the following locations in order
-    sys_wide_python = True
-    python_sitepackage = site.getsitepackages()[0]
-    # If system-wide python is used, we will give priority to using user-sitepackage given that nni exists there
-    if python_sitepackage.startswith('/usr') or python_sitepackage.startswith('/Library'):
-        local_python_dir = str(Path(site.getusersitepackages()).parents[2])
-        entry_file = os.path.join(local_python_dir, 'nni', 'main.js')
-        entry_dir = os.path.join(local_python_dir, 'nni')
-    else:
-        # If this python is not system-wide python, we will use its site-package directly
-        sys_wide_python = False
-
-    if not sys_wide_python or not os.path.isfile(entry_file):
-        python_dir = str(Path(python_sitepackage).parents[2])
-        entry_file = os.path.join(python_dir, 'nni', 'main.js')
-        entry_dir = os.path.join(python_dir, 'nni')
-        # Nothing is found
-        if not os.path.isfile(entry_file):
-            raise Exception('Fail to find nni under both "%s" and "%s"' % (local_python_dir, python_dir))
+    
+    entry_dir = get_nni_installation_path()
+    entry_file = os.path.join(entry_dir, 'main.js')
 
     cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
+    if log_dir is not None:
+        cmds += ['--log_dir', log_dir]
+    if log_level is not None:
+        cmds += ['--log_level', log_level]
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
@@ -141,7 +168,9 @@ def set_remote_config(experiment_config, port, config_file_name):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
-
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
@@ -242,6 +271,11 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['tuner'] = experiment_config['tuner']
         if 'assessor' in experiment_config:
             request_data['assessor'] = experiment_config['assessor']
+    #debug mode should disable version check
+    if experiment_config.get('debug') is not None:
+        request_data['versionCheck'] = not experiment_config.get('debug')
+    if experiment_config.get('logCollection'):
+        request_data['logCollection'] = experiment_config.get('logCollection')
 
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
@@ -284,7 +318,6 @@ def set_experiment(experiment_config, mode, port, config_file_name):
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(config_file_name)
-
     # check packages for tuner
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
         tuner_name = experiment_config['tuner']['builtinTunerName']
@@ -294,9 +327,12 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         except ModuleNotFoundError as e:
             print_error('The tuner %s should be installed through nnictl'%(tuner_name))
             exit(1)
-
+    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
+    log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
+    if log_level not in ['trace', 'debug'] and args.debug:
+        log_level = 'debug'
     # start rest server
-    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id)
+    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id, log_dir, log_level)
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
@@ -310,8 +346,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         experiment_config['searchSpace'] = json.dumps(search_space)
         assert search_space, ERROR_INFO % 'Generated search space is empty'
     elif experiment_config.get('searchSpacePath'):
-            search_space = get_json_content(experiment_config.get('searchSpacePath'))
-            experiment_config['searchSpace'] = json.dumps(search_space)
+        search_space = get_json_content(experiment_config.get('searchSpacePath'))
+        experiment_config['searchSpace'] = json.dumps(search_space)
     else:
         experiment_config['searchSpace'] = json.dumps('')
 
@@ -408,6 +444,9 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
 
     # start a new experiment
     print_normal('Starting experiment...')
+    # set debug configuration
+    if experiment_config.get('debug') is None:
+        experiment_config['debug'] = args.debug
     response = set_experiment(experiment_config, mode, args.port, config_file_name)
     if response:
         if experiment_id is None:

@@ -5,20 +5,14 @@ interface TableObj {
     id: string;
     duration: number;
     status: string;
-    acc?: number; // draw accuracy graph
+    acc?: FinalType; // draw accuracy graph
     description: Parameters;
     color?: string;
 }
 
-interface TableObjFianl {
-    key: number;
-    sequenceId: number;
-    id: string;
-    duration: number;
-    status: string;
-    acc?: FinalType;
-    description: Parameters;
-    color?: string;
+interface SearchSpace {
+    _value: Array<number | string>;
+    _type: string;
 }
 
 interface FinalType {
@@ -32,6 +26,7 @@ interface ErrorParameter {
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
+    intermediate?: Array<number>;
 }
 
 interface Experiment {
@@ -65,6 +60,12 @@ interface DetailAccurPoint {
     searchSpace: string;
 }
 
+interface TooltipForIntermediate {
+    data: string;
+    seriesName: string;
+    dataIndex: number;
+}
+
 interface TooltipForAccuracy {
     data: Array<number | object>;
 }
@@ -91,16 +92,15 @@ interface Dimobj {
     min?: number;
     type?: string;
     data?: string[];
+    boundaryGap?: boolean;
+    axisTick?: object;
+    axisLabel?: object;
+    axisLine?: object;
 }
 
 interface ParaObj {
     data: number[][];
     parallelAxis: Array<Dimobj>;
-}
-
-interface VisualMapValue {
-    maxAccuracy: number;
-    minAccuracy: number;
 }
 
 interface FinalResult {
@@ -111,6 +111,6 @@ export {
     TableObj, Parameters, Experiment, 
     AccurPoint, TrialNumber, TrialJob,
     DetailAccurPoint, TooltipForAccuracy,
-    ParaObj, VisualMapValue, Dimobj, FinalResult,
-    TableObjFianl, FinalType
+    ParaObj, Dimobj, FinalResult, FinalType,
+    TooltipForIntermediate, SearchSpace
 };

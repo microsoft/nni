@@ -33,6 +33,10 @@ Optional('searchSpacePath'): os.path.exists,
 Optional('multiPhase'): bool,
 Optional('multiThread'): bool,
 Optional('nniManagerIp'): str,
+Optional('logDir'): os.path.isdir,
+Optional('debug'): bool,
+Optional('logLevel'): Or('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
+Optional('logCollection'): Or('http', 'none'),
 'useAnnotation': bool,
 Optional('advisor'): Or({
     'builtinAdvisorName': Or('Hyperband'),
@@ -54,6 +58,7 @@ Optional('tuner'): Or({
     Optional('classArgs'): {
         'optimize_mode': Or('maximize', 'minimize')
     },
+    Optional('includeIntermediateResults'): bool,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'builtinTunerName': Or('BatchTuner', 'GridSearch'),
@@ -98,7 +103,8 @@ Optional('assessor'): Or({
         'epoch_num': And(int, lambda x: 0 <= x <= 9999),
         Optional('optimize_mode'): Or('maximize', 'minimize'),
         Optional('start_step'): And(int, lambda x: 0 <= x <= 9999),
-        Optional('threshold'): And(float, lambda x: 0.0 <= x <= 9999.0)
+        Optional('threshold'): And(float, lambda x: 0.0 <= x <= 9999.0),
+        Optional('gap'): And(int, lambda x: 1 <= x <= 9999)
     },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
 },{
@@ -126,6 +132,7 @@ pai_trial_schema = {
     'cpuNum': And(int, lambda x: 0 <= x <= 99999),
     'memoryMB': int,
     'image': str,
+    Optional('shmMB'): int,
     Optional('dataDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
     Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
     Optional('virtualCluster'): str
@@ -216,12 +223,14 @@ frameworkcontroller_trial_schema = {
 frameworkcontroller_config_schema = {
     'frameworkcontrollerConfig':Or({
         Optional('storage'): Or('nfs', 'azureStorage'),
+        Optional('serviceAccountName'): str,
         'nfs': {
             'server': str,
             'path': str
         }
     },{
         Optional('storage'): Or('nfs', 'azureStorage'),
+        Optional('serviceAccountName'): str,
         'keyVault': {
             'vaultName': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
             'name': Regex('([0-9]|[a-z]|[A-Z]|-){1,127}')

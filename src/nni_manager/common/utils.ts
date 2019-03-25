@@ -30,17 +30,23 @@ import { Container } from 'typescript-ioc';
 import * as util from 'util';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
+import { ExperimentStartupInfo, getExperimentId, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { getLogger } from './log';
 
 function getExperimentRootDir(): string {
-    return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
+    return getExperimentStartupInfo()
+            .getLogDir();
 }
 
 function getLogDir(): string{
     return path.join(getExperimentRootDir(), 'log');
+}
+
+function getLogLevel(): string{
+    return getExperimentStartupInfo()
+    .getLogLevel();
 }
 
 function getDefaultDatabaseDir(): string {
@@ -344,6 +350,19 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     });
 }
 
+/**
+ * get the version of current package
+ */
+async function getVersion(): Promise<string> {
+    const deferred : Deferred<string> = new Deferred<string>();
+    import(path.join(__dirname, '..', 'package.json')).then((pkg)=>{
+        deferred.resolve(pkg.version);
+    }).catch((error)=>{
+        deferred.reject(error);
+    });
+    return deferred.promise;
+} 
+
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion };

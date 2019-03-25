@@ -24,21 +24,21 @@ import { Client } from 'ssh2';
 import { getLogger, Logger } from '../../common/log';
 import { randomSelect } from '../../common/utils';
 import { GPUInfo } from '../common/gpuData';
-import { RemoteMachineMeta, RemoteMachineScheduleResult, ScheduleResultType } from './remoteMachineData';
+import { RemoteMachineMeta, RemoteMachineScheduleResult, ScheduleResultType, SSHClientManager } from './remoteMachineData';
 
 /**
  * A simple GPU scheduler implementation
  */
 export class GPUScheduler {
 
-    private readonly machineSSHClientMap : Map<RemoteMachineMeta, Client>;
+    private readonly machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>;
     private log: Logger = getLogger();
 
     /**
      * Constructor
      * @param machineSSHClientMap map from remote machine to sshClient
      */
-    constructor(machineSSHClientMap : Map<RemoteMachineMeta, Client>) {
+    constructor(machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>) {
         this.machineSSHClientMap = machineSSHClientMap;
     }
 
@@ -113,7 +113,7 @@ export class GPUScheduler {
      */
     private gpuResourceDetection() : Map<RemoteMachineMeta, GPUInfo[]> {
         const totalResourceMap : Map<RemoteMachineMeta, GPUInfo[]> = new Map<RemoteMachineMeta, GPUInfo[]>();
-        this.machineSSHClientMap.forEach((client: Client, rmMeta: RemoteMachineMeta) => {
+        this.machineSSHClientMap.forEach((sshClientManager: SSHClientManager, rmMeta: RemoteMachineMeta) => {
             // Assgin totoal GPU count as init available GPU number
             if (rmMeta.gpuSummary !== undefined) {
                 const availableGPUs: GPUInfo[] = [];
@@ -162,5 +162,21 @@ export class GPUScheduler {
                 cuda_visible_device: allocatedGPUs.map((gpuInfo: GPUInfo) => { return gpuInfo.index; }).join(',')
             }
         };
+    }
+    
+    /**
+     * remove the job's gpu reversion
+     * @param trialJobId 
+     * @param rmMeta 
+     */
+    public removeGpuReservation(trialJobId: string, rmMeta?: RemoteMachineMeta): void{
+        // If remote machine has no GPU, gpuReservcation is not initialized, so check if it's undefined
+        if(rmMeta !== undefined && rmMeta.gpuReservation !== undefined) {
+            rmMeta.gpuReservation.forEach((reserveTrialJobId : string, gpuIndex : number) => {
+                if(reserveTrialJobId == trialJobId) {
+                    rmMeta.gpuReservation.delete(gpuIndex);
+                }
+            });
+        }
     }
 }

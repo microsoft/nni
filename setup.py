@@ -21,17 +21,9 @@
 
 import os
 from setuptools import setup, find_packages
-from setuptools.command.install import install
-import subprocess
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
-
-class CustomInstallCommand(install):
-    '''a customized install class in pip module'''
-    def run(self):
-        super().run()
-        subprocess.run(['make', 'pip-install'], check=True)
 
 setup(
     name = 'nni',
@@ -48,7 +40,8 @@ setup(
         'nni': 'src/sdk/pynni/nni',
         'nni_annotation': 'tools/nni_annotation',
         'nni_cmd': 'tools/nni_cmd',
-        'nni_trial_tool':'tools/nni_trial_tool'
+        'nni_trial_tool':'tools/nni_trial_tool',
+        'nni_gpu_tool':'tools/nni_gpu_tool'
     },
     package_data = {'nni': ['**/requirements.txt']},
     python_requires = '>=3.5',
@@ -62,10 +55,12 @@ setup(
         'requests',
         'scipy',
         'schema',
-        'pyhdfs'
+        'PythonWebHDFS'
     ],
 
-    cmdclass={
-        'install': CustomInstallCommand
+    entry_points = {
+        'console_scripts' : [
+            'nnictl = nni_cmd.nnictl:parse_args'
+        ]
     }
 )

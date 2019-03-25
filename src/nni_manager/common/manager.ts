@@ -23,6 +23,7 @@ import { MetricDataRecord, MetricType, TrialJobInfo } from './datastore';
 import { TrialJobStatus } from './trainingService';
 
 type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
+type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL';
 
 interface ExperimentParams {
     authorName: string;
@@ -35,6 +36,8 @@ interface ExperimentParams {
     trainingServicePlatform: string;
     multiPhase?: boolean;
     multiThread?: boolean;
+    versionCheck?: boolean;
+    logCollection?: string;
     tuner?: {
         className: string;
         builtinTunerName?: string;
@@ -43,6 +46,7 @@ interface ExperimentParams {
         classFileName?: string;
         checkpointDir: string;
         gpuNum?: number;
+        includeIntermediateResults?: boolean;
     };
     assessor?: {
         className: string;
@@ -85,7 +89,7 @@ interface TrialJobStatistics {
 }
 
 interface NNIManagerStatus {
-    status: 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL';
+    status: ExperimentStatus;
     errors: string[];
 }
 
@@ -109,4 +113,4 @@ abstract class Manager {
     public abstract getStatus(): NNIManagerStatus;
 }
 
-export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus };
+export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus };

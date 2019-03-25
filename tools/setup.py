@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name = 'nnictl',
+    name = 'nni-tool',
     version = '999.0.0-developing',
     packages = setuptools.find_packages(exclude=['*test*']),
 
@@ -12,7 +12,7 @@ setuptools.setup(
         'psutil',
         'astor',
         'schema',
-        'pyhdfs'
+        'PythonWebHDFS'
     ],
 
     author = 'Microsoft NNI Team',

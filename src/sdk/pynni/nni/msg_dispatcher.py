@@ -18,14 +18,15 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
+import os
 import logging
 from collections import defaultdict
 import json_tricks
-import threading
 
 from .protocol import CommandType, send
 from .msg_dispatcher_base import MsgDispatcherBase
 from .assessor import AssessResult
+from .common import multi_thread_enabled
 
 _logger = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ def _pack_parameter(parameter_id, params, customized=False):
 
 class MsgDispatcher(MsgDispatcherBase):
     def __init__(self, tuner, assessor=None):
-        super().__init__()
+        super(MsgDispatcher, self).__init__()
         self.tuner = tuner
         self.assessor = assessor
         if assessor is None:
@@ -87,9 +88,8 @@ class MsgDispatcher(MsgDispatcherBase):
             self.assessor.save_checkpoint()
 
     def handle_initialize(self, data):
-        '''
-        data is search space
-        '''
+        """Data is search space
+        """
         self.tuner.update_search_space(data)
         send(CommandType.Initialized, '')
         return True
@@ -126,12 +126,7 @@ class MsgDispatcher(MsgDispatcherBase):
                     - 'type': report type, support {'FINAL', 'PERIODICAL'}
         """
         if data['type'] == 'FINAL':
-            id_ = data['parameter_id']
-            value = data['value']
-            if id_ in _customized_parameter_ids:
-                self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value)
-            else:
-                self.tuner.receive_trial_result(id_, _trial_params[id_], value)
+            self._handle_final_metric_data(data)
         elif data['type'] == 'PERIODICAL':
             if self.assessor is not None:
                 self._handle_intermediate_metric_data(data)
@@ -157,7 +152,19 @@ class MsgDispatcher(MsgDispatcherBase):
                 self.assessor.trial_end(trial_job_id, data['event'] == 'SUCCEEDED')
         return True
 
+    def _handle_final_metric_data(self, data):
+        """Call tuner to process final results
+        """
+        id_ = data['parameter_id']
+        value = data['value']
+        if id_ in _customized_parameter_ids:
+            self.tuner.receive_customized_trial_result(id_, _trial_params[id_], value)
+        else:
+            self.tuner.receive_trial_result(id_, _trial_params[id_], value)
+
     def _handle_intermediate_metric_data(self, data):
+        """Call assessor to process intermediate results
+        """
         if data['type'] != 'PERIODICAL':
             return True
         if self.assessor is None:
@@ -187,5 +194,20 @@ class MsgDispatcher(MsgDispatcherBase):
         if result is AssessResult.Bad:
             _logger.debug('BAD, kill %s', trial_job_id)
             send(CommandType.KillTrialJob, json_tricks.dumps(trial_job_id))
+            # notify tuner
+            _logger.debug('env var: NNI_INCLUDE_INTERMEDIATE_RESULTS: [%s]', os.environ.get('NNI_INCLUDE_INTERMEDIATE_RESULTS'))
+            if os.environ.get('NNI_INCLUDE_INTERMEDIATE_RESULTS') == 'true':
+                self._earlystop_notify_tuner(data)
         else:
             _logger.debug('GOOD')
+
+    def _earlystop_notify_tuner(self, data):
+        """Send last intermediate result as final result to tuner in case the
+        trial is early stopped.
+        """
+        _logger.debug('Early stop notify tuner data: [%s]', data)
+        data['type'] = 'FINAL'
+        if multi_thread_enabled():
+            self._handle_final_metric_data(data)
+        else:
+            self.enqueue_command(CommandType.ReportMetricData, data)

@@ -1,3 +1,8 @@
+import axios from 'axios';
+import {
+    message
+} from 'antd';
+import { MANAGER_IP } from './const';
 import { FinalResult, FinalType } from './interface';
 
 const convertTime = (num: number) => {
@@ -61,7 +66,71 @@ const getFinal = (final: FinalResult) => {
     }
 };
 
+// detail page table intermediate button
+const intermediateGraphOption = (intermediateArr: number[], id: string) => {
+    const sequence: number[] = [];
+    const lengthInter = intermediateArr.length;
+    for (let i = 1; i <= lengthInter; i++) {
+        sequence.push(i);
+    }
+    return {
+        title: {
+            text: id,
+            left: 'center',
+            textStyle: {
+                fontSize: 16,
+                color: '#333',
+            }
+        },
+        tooltip: {
+            trigger: 'item'
+        },
+        xAxis: {
+            name: 'Trial',
+            data: sequence
+        },
+        yAxis: {
+            name: 'Default Metric',
+            type: 'value',
+            data: intermediateArr
+        },
+        series: [{
+            symbolSize: 6,
+            type: 'scatter',
+            data: intermediateArr
+        }]
+    };
+};
+
+// kill job
+const killJob = (key: number, id: string, status: string, updateList: Function) => {
+    axios(`${MANAGER_IP}/trial-jobs/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+        }
+    })
+        .then(res => {
+            if (res.status === 200) {
+                message.success('Cancel the job successfully');
+                // render the table
+                updateList();
+            } else {
+                message.error('fail to cancel the job');
+            }
+        })
+        .catch(error => {
+            if (error.response.status === 500) {
+                if (error.response.data.error) {
+                    message.error(error.response.data.error);
+                } else {
+                    message.error('500 error, fail to cancel the job');
+                }
+            }
+        });
+};
+
 export {
     convertTime, convertDuration, getFinalResult,
-    getFinal
+    getFinal, intermediateGraphOption, killJob
 };

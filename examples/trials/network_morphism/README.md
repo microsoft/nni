@@ -18,7 +18,7 @@ pip install -r requirements.txt
 
 ### 3. Update configuration
 
-Modify `examples/trials/network_morphism/cifar10/config.yaml` to fit your own task, note that searchSpacePath is not required in our configuration. Here is the default configuration:
+Modify `examples/trials/network_morphism/cifar10/config.yml` to fit your own task, note that searchSpacePath is not required in our configuration. Here is the default configuration:
 
 ```yaml
 authorName: default
@@ -79,16 +79,16 @@ net = build_graph_from_json(RCV_CONFIG)
 # training procedure
 # ....
 
-# report the final accuracy to nni
+# report the final accuracy to NNI
 nni.report_final_result(best_acc)
 ```
 
 ### 5. Submit this job 
 
 ```bash
-# You can use nni command tool "nnictl" to create the a job which submit to the nni
-# finally you successfully commit a Network Morphism Job to nni
-nnictl create --config config.yaml
+# You can use NNI command tool "nnictl" to create the a job which submit to the NNI
+# finally you successfully commit a Network Morphism Job to NNI
+nnictl create --config config.yml
 ```
 
 ## Trial Examples
@@ -99,10 +99,10 @@ The trial has some examples which can guide you which located in `examples/trial
 
 `Fashion-MNIST` is a dataset of [Zalando](https://jobs.zalando.com/tech/)'s article images—consisting of a training set of 60,000 examples and a test set of 10,000 examples. Each example is a 28x28 grayscale image, associated with a label from 10 classes. It is a modern image classification dataset widely used to replacing MNIST as a baseline dataset, because the dataset MNIST is too easy and overused.
 
-There are two examples, [FashionMNIST-keras.py](./FashionMNIST/FashionMNIST_keras.py) and [FashionMNIST-pytorch.py](./FashionMNIST/FashionMNIST_pytorch.py). Attention, you should change the `input_width` to 28 and `input_channel` to 1 in `config.yaml ` for this dataset.
+There are two examples, [FashionMNIST-keras.py](./FashionMNIST/FashionMNIST_keras.py) and [FashionMNIST-pytorch.py](./FashionMNIST/FashionMNIST_pytorch.py). Attention, you should change the `input_width` to 28 and `input_channel` to 1 in `config.yml` for this dataset.
 
 ### Cifar10
 
 The `CIFAR-10` dataset [Canadian Institute For Advanced Research](https://www.cifar.ca/) is a collection of images that are commonly used to train machine learning and computer vision algorithms. It is one of the most widely used datasets for machine learning research. The CIFAR-10 dataset contains 60,000 32x32 color images in 10 different classes.
 
-There are two examples, [cifar10-keras.py](./cifar10/cifar10_keras.py) and [cifar10-pytorch.py](./cifar10/cifar10_pytorch.py). The value `input_width` is 32 and the value `input_channel` is 3 in `config.yaml ` for this dataset.
+There are two examples, [cifar10-keras.py](./cifar10/cifar10_keras.py) and [cifar10-pytorch.py](./cifar10/cifar10_pytorch.py). The value `input_width` is 32 and the value `input_channel` is 3 in `config.yml` for this dataset.

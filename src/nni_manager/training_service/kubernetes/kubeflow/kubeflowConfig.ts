@@ -32,8 +32,8 @@ export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
 
 export class KubeflowClusterConfig extends KubernetesClusterConfig {
     public readonly operator: KubeflowOperator;
-    constructor(codeDir: string, operator: KubeflowOperator) {
-        super(codeDir);
+    constructor(apiVersion: string, operator: KubeflowOperator) {
+        super(apiVersion);
         this.operator = operator;
     }
 }
