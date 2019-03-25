@@ -763,6 +763,11 @@ class RemoteMachineTrainingService implements TrainingService {
 
         return this.trialSequenceId++;
     }
+
+    public throwErrorMessage(errorMessage: any): void {
+        this.log.error(errorMessage);
+        throw new Error(errorMessage);
+    }
 }
 
 export { RemoteMachineTrainingService };

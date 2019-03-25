@@ -546,6 +546,10 @@ class PAITrainingService implements TrainingService {
 
         return Promise.race([timeoutDelay, deferred.promise]).finally(() => clearTimeout(timeoutId));
     }
+
+    public throwErrorMessage(errorMessage: any): void {
+        throw new Error(errorMessage);
+    }
 }
 
 export { PAITrainingService }

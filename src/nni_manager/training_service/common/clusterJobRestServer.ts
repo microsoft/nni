@@ -29,6 +29,7 @@ import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo
 import { RestServer } from '../../common/restServer'
 import { getLogDir } from '../../common/utils';
 import { Writable } from 'stream';
+import { NNIError } from '../../common/errors';
 
 /**
  * Cluster Job Training service Rest server, provides rest API to support Cluster job metrics update
@@ -78,9 +79,7 @@ export abstract class ClusterJobRestServer extends RestServer{
         });
 
         router.post(`/error/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            this.log.error(`${req.body.msg}`);
-            throw new Error(`${req.body.msg}`);
-            res.send();
+            this.handleErrorMessage(req.params.trialId, req.body.msg);
         });
 
         router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
@@ -136,4 +135,7 @@ export abstract class ClusterJobRestServer extends RestServer{
 
     /** Abstract method to handle trial metrics data */
     protected abstract handleTrialMetrics(jobId : string, trialMetrics : any[]) : void;
+
+    /** Abstract method to handle error message*/
+    protected abstract handleErrorMessage(jobId : string, errorMessage : any) : void; 
 }

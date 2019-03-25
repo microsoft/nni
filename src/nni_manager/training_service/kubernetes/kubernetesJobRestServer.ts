@@ -54,4 +54,16 @@ export class KubernetesJobRestServer extends ClusterJobRestServer{
             });
         }
     }   
+
+    /**
+     * throw a error in trainingService
+     * @param jobId 
+     * @param errorMessage 
+     */
+    protected handleErrorMessage(jobId : string, errorMessage : any) : void {
+        if(!this.kubernetesTrainingService) {
+            throw Error('kubernetesTrainingService not initialized!');
+        }
+        this.kubernetesTrainingService.throwErrorMessage(errorMessage);
+    }
 }
