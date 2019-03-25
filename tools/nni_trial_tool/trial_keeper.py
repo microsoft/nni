@@ -27,8 +27,11 @@ import shlex
 import re
 import sys
 import select
+import json
 from pyhdfs import HdfsClient
 import pkg_resources
+from .rest_utils import rest_post
+from .url_utils import gen_send_stdout_url
 
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
@@ -122,6 +125,10 @@ def check_version(args):
             nni_log(LogType.Info, 'training_service_version is {0}'.format(training_service_version))
             if trial_keeper_version != training_service_version:
                 nni_log(LogType.Error, 'Version does not match!')
+                error_message = 'NNISDK_MEb\'TrainingService version is {0}, TrialKeeper version is {1}, NNI version does not match!\''.format(training_service_version, trial_keeper_version)
+                log_entry = {}
+                log_entry['msg'] = error_message
+                rest_post(gen_send_stdout_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10, True)
                 os._exit(1)
             else:
                 nni_log(LogType.Info, 'Version match!')
