@@ -156,7 +156,7 @@ machineList:
   
   * 说明
     
-    NNI 会检查 remote, pai 和 Kubernetes 模式下管理器以及 trialKeeper 进程的版本。 If you want to disable version check, you could set debug be true.
+    NNI 会检查 remote, pai 和 Kubernetes 模式下管理器以及 trialKeeper 进程的版本。 如果需要禁用版本检查，debug 应设置为 true。
 
 * **maxTrialNum**
   
@@ -168,21 +168,21 @@ machineList:
   
   * 说明
     
-    **trainingServicePlatform** specifies the platform to run the experiment, including {**local**, **remote**, **pai**, **kubeflow**}.
+    **trainingServicePlatform** 定义运行 Experiment 的平台，包括：{**local**, **remote**, **pai**, **kubeflow**}.
     
-    * **local** run an experiment on local ubuntu machine.
+    * **local** 在本机的 ubuntu 上运行 Experiment。
     
-    * **remote** submit trial jobs to remote ubuntu machines, and **machineList** field should be filed in order to set up SSH connection to remote machine.
+    * **remote** 将任务提交到远程的 Ubuntu 上，必须用 **machineList** 来指定远程的 SSH 连接信息。
     
-    * **pai** submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
+    * **pai** 提交任务到微软开源的 [OpenPAI](https://github.com/Microsoft/pai) 上。 更多 OpenPAI 配置，参考 [pai 模式](./PAIMode.md)。
     
-    * **kubeflow** submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
+    * **kubeflow** 提交任务至 [Kubeflow](https://www.kubeflow.org/docs/about/kubeflow/)。 NNI 支持基于 Kubeflow 的 Kubenetes，以及[Azure Kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/)。
 
 * **searchSpacePath**
   
   * 说明
     
-    **searchSpacePath** specifies the path of search space file, which should be a valid path in the local linux machine.
+    **searchSpacePath** 定义搜索空间文件的路径，此文件必须在运行 nnictl 的本机。
     
     注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
@@ -190,29 +190,29 @@ machineList:
   
   * 说明
     
-    **useAnnotation** use annotation to analysis trial code and generate search space.
+    **useAnnotation** 定义使用标记来分析代码并生成搜索空间。
     
-    Note: if set useAnnotation=True, the searchSpacePath field should be removed.
+    注意: 如果设置了 useAnnotation=True，searchSpacePath 字段必须被删除。
 
 * **nniManagerIp**
   
   * 说明
     
-    **nniManagerIp** set the IP address of the machine on which NNI manager process runs. This field is optional, and if it's not set, eth0 device IP will be used instead.
+    **nniManagerIp** 设置 NNI 管理器运行的 IP 地址。 此字段为可选项，如果没有设置，则会使用 eth0 的 IP 地址。
     
-    Note: run ifconfig on NNI manager's machine to check if eth0 device exists. If not, we recommend to set nnimanagerIp explicitly.
+    注意: 可在 NNI 管理器机器上运行 ifconfig 来检查 eth0 是否存在。 如果不存在，推荐显式设置 nnimanagerIp。
 
 * **logDir**
   
   * 说明
     
-    **logDir** configures the directory to store logs and data of the experiment. The default value is `<user home directory>/nni/experiment`
+    **logDir** 配置存储日志和数据的目录。 默认值是 `<user home directory>/nni/experiment`
 
 * **logLevel**
   
   * 说明
     
-    **logLevel** sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
+    **logLevel** 为 Experiment 设置日志级别，支持的日志级别有：`trace, debug, info, warning, error, fatal`。 默认值是 `info`。
 
 * **logCollection**
   
