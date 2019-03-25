@@ -3,6 +3,7 @@ import argparse
 from subprocess import check_output, check_call
 import socket
 import random
+import re
 
 def detect_port(port):
     '''Detect if the port is used, return True if the port is used'''
@@ -28,7 +29,9 @@ def start_container(image, name):
     run_cmds = ['docker', 'run', '-d', '-p', str(port) + ':22', '--name', name, '--mount', 'type=bind,source=' + source_dir + ',target=/tmp/nni', image]
     output = check_output(run_cmds)
     commit_id = output.decode('utf-8')
-    sdk_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '/tmp/nni/dist/nni-0.1-py3-none-manylinux1_x86_64.whl']
+    regular = re.compile('v?(?P<version>[0-9](\.[0-9]){0,2}).*')
+    version = regular.search(args.tag).group('version')
+    sdk_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '/tmp/nni/dist/nni-{0}-py3-none-manylinux1_x86_64.whl'.format(version)]
     check_call(sdk_cmds)
     with open(source_dir + '/port', 'w') as file:
         file.write(str(port))
@@ -44,7 +47,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', required=True, choices=['start', 'stop'], dest='mode', help='start or stop a container')
     parser.add_argument('--name', required=True, dest='name', help='the name of container to be used')
-    parser.add_argument('--image', dest='image', help='the image to be used')
+    parser.add_argument('--image', required=True, dest='image', help='the image to be used')
+    parser.add_argument('--tag', required=True, help='the tag of branch, used in wheel name')
     args = parser.parse_args()
     if args.mode == 'start':
         start_container(args.image, args.name)

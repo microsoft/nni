@@ -35,7 +35,7 @@ jobs:
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
       runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni --tag $(git describe --tags --abbrev=0)
     displayName: 'Start docker'
   - task: DownloadSecureFile@1
     inputs:
