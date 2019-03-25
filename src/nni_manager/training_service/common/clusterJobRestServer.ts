@@ -77,6 +77,12 @@ export abstract class ClusterJobRestServer extends RestServer{
             next();
         });
 
+        router.post(`/error/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            this.log.error(`${res.body.msg}`);
+            throw new Error(`${res.body.msg}`);
+            res.send();
+        });
+
         router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
                 this.log.info(`Get update-metrics request, trial job id is ${req.params.trialId}`);
