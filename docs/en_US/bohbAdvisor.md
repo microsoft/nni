@@ -32,7 +32,7 @@ This procedure is summarized by the pseudocode below.
 
 ## 2. Usage
 
-To use BOHB Advisor, you **must report the loss** as one of the final result to update Bayesian Optimization. If your metrics is not loss, you can return a **dict** type variable. For example:
+To use BOHB Advisor, you **must report the loss** as one of the final result to update Bayesian Optimization. So you should return a **dict** type variable with metrics in key "default" and loss in key "loss". For example:
 
 ```python
 test_result =
@@ -82,7 +82,6 @@ The advisor has a lot of different files, functions and classes. Here we will on
 
 ## 4. Experiment
 
-
 ### MNIST with BOHB
 
 code implementation: [examples/trials/mnist_bohb](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist_bohb)
@@ -90,3 +89,5 @@ code implementation: [examples/trials/mnist_bohb](https://github.com/Microsoft/n
 We chose BOHB to build CNN on the MNIST dataset. The following is our experimental final results:
 
 ![](../img/bohb_5.png)
+
+More experimental result can be found in the [reference paper](https://arxiv.org/abs/1807.01774), we can see that BOHB makes good use of previous results, and has a balance trade-off in exploration and exploitation.
