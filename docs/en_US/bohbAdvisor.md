@@ -82,20 +82,11 @@ The advisor has a lot of different files, functions and classes. Here we will on
 
 ## 4. Experiment
 
-We give two examples of the use of BOHB on NNI.
 
-1. MNIST with BOHB
+### MNIST with BOHB
+
 code implementation: [examples/trials/mnist_bohb](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist_bohb)
 
 We chose BOHB to build CNN on the MNIST dataset. The following is our experimental final results:
 
 ![](../img/bohb_5.png)
-
-2. CIFAR10 with BOHB
-code implementation: [examples/trials/cifar10_pytorch](https://github.com/Microsoft/nni/tree/master/examples/trials/cifar10_pytorch)
-
-We chose BOHB to build CNN on the CIFAR-10 dataset. The following is our experimental final results:
-
-![](../img/bohb_6.png)
-
-More experimental result can be found in the [reference paper](https://arxiv.org/abs/1807.01774), we can see that BOHB makes good use of previous results, and has a balance trade-off in exploration and exploitation.
