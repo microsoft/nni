@@ -9,4 +9,4 @@
     Annotation<AnnotationSpec>
     配置<ExperimentConfig>
     搜索空间<SearchSpaceSpec>
-    TrainingService <HowToImplementTrainingService>
+    实现训练平台<HowToImplementTrainingService>
