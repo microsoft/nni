@@ -3,7 +3,6 @@ import argparse
 from subprocess import check_output, check_call
 import socket
 import random
-import re
 
 def detect_port(port):
     '''Detect if the port is used, return True if the port is used'''
