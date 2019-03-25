@@ -36,6 +36,7 @@ Optional('nniManagerIp'): str,
 Optional('logDir'): os.path.isdir,
 Optional('debug'): bool,
 Optional('logLevel'): Or('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
+Optional('logCollection'): Or('http', 'none'),
 'useAnnotation': bool,
 Optional('advisor'): Or({
     'builtinAdvisorName': Or('Hyperband'),
@@ -57,6 +58,7 @@ Optional('tuner'): Or({
     Optional('classArgs'): {
         'optimize_mode': Or('maximize', 'minimize')
     },
+    Optional('includeIntermediateResults'): bool,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'builtinTunerName': Or('BatchTuner', 'GridSearch'),

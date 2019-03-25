@@ -19,14 +19,13 @@
 # ==================================================================================================
 
 #import json_tricks
-import logging
 import os
-from queue import Queue
-import sys
-
+import threading
+import logging
 from multiprocessing.dummy import Pool as ThreadPool
-
+from queue import Queue, Empty
 import json_tricks
+
 from .common import init_logger, multi_thread_enabled
 from .recoverable import Recoverable
 from .protocol import CommandType, receive
@@ -34,57 +33,109 @@ from .protocol import CommandType, receive
 init_logger('dispatcher.log')
 _logger = logging.getLogger(__name__)
 
+QUEUE_LEN_WARNING_MARK = 20
+_worker_fast_exit_on_terminate = True
+
 class MsgDispatcherBase(Recoverable):
     def __init__(self):
         if multi_thread_enabled():
             self.pool = ThreadPool()
             self.thread_results = []
+        else:
+            self.stopping = False
+            self.default_command_queue = Queue()
+            self.assessor_command_queue = Queue()
+            self.default_worker = threading.Thread(target=self.command_queue_worker, args=(self.default_command_queue,))
+            self.assessor_worker = threading.Thread(target=self.command_queue_worker, args=(self.assessor_command_queue,))
+            self.default_worker.start()
+            self.assessor_worker.start()
+            self.worker_exceptions = []
 
     def run(self):
         """Run the tuner.
         This function will never return unless raise.
         """
+        _logger.info('Start dispatcher')
         mode = os.getenv('NNI_MODE')
         if mode == 'resume':
             self.load_checkpoint()
 
         while True:
-            _logger.debug('waiting receive_message')
             command, data = receive()
+            if data:
+                data = json_tricks.loads(data)
+
             if command is None or command is CommandType.Terminate:
                 break
             if multi_thread_enabled():
-                result = self.pool.map_async(self.handle_request_thread, [(command, data)])
+                result = self.pool.map_async(self.process_command_thread, [(command, data)])
                 self.thread_results.append(result)
                 if any([thread_result.ready() and not thread_result.successful() for thread_result in self.thread_results]):
                     _logger.debug('Caught thread exception')
                     break
             else:
-                self.handle_request((command, data))
+                self.enqueue_command(command, data)
 
+        _logger.info('Dispatcher exiting...')
+        self.stopping = True
         if multi_thread_enabled():
             self.pool.close()
             self.pool.join()
+        else:
+            self.default_worker.join()
+            self.assessor_worker.join()
 
         _logger.info('Terminated by NNI manager')
 
-    def handle_request_thread(self, request):
+    def command_queue_worker(self, command_queue):
+        """Process commands in command queues.
+        """
+        while True:
+            try:
+                # set timeout to ensure self.stopping is checked periodically
+                command, data = command_queue.get(timeout=3)
+                try:
+                    self.process_command(command, data)
+                except Exception as e:
+                    _logger.exception(e)
+                    self.worker_exceptions.append(e)
+                    break
+            except Empty:
+                pass
+            if self.stopping and (_worker_fast_exit_on_terminate or command_queue.empty()):
+                break
+
+    def enqueue_command(self, command, data):
+        """Enqueue command into command queues
+        """
+        if command == CommandType.TrialEnd or (command == CommandType.ReportMetricData and data['type'] == 'PERIODICAL'):
+            self.assessor_command_queue.put((command, data))
+        else:
+            self.default_command_queue.put((command, data))
+
+        qsize = self.default_command_queue.qsize()
+        if qsize >= QUEUE_LEN_WARNING_MARK:
+            _logger.warning('default queue length: %d', qsize)
+
+        qsize = self.assessor_command_queue.qsize()
+        if qsize >= QUEUE_LEN_WARNING_MARK:
+            _logger.warning('assessor queue length: %d', qsize)
+
+    def process_command_thread(self, request):
+        """Worker thread to process a command.
+        """
+        command, data = request
         if multi_thread_enabled():
             try:
-                self.handle_request(request)
+                self.process_command(command, data)
             except Exception as e:
                 _logger.exception(str(e))
                 raise
         else:
             pass
 
-    def handle_request(self, request):
-        command, data = request
-
-        _logger.debug('handle request: command: [{}], data: [{}]'.format(command, data))
-
-        if data:
-            data = json_tricks.loads(data)
+    def process_command(self, command, data):
+        _logger.debug('process_command: command: [{}], data: [{}]'.format(command, data))
 
         command_handlers = {
             # Tunner commands:
