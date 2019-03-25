@@ -16,10 +16,10 @@ class IntermediateVal extends React.Component<IntermediateValProps, {}> {
         const { record } = this.props;
         const interArr = record.description.intermediate;
         let lastVal;
+        let wei = 0;
         if (interArr !== undefined) {
             lastVal = interArr[interArr.length - 1];
         }
-        let wei = 0;
         if (lastVal !== undefined) {
             if (lastVal.toString().indexOf('.') !== -1) {
                 wei = lastVal.toString().length - lastVal.toString().indexOf('.') - 1;
