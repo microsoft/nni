@@ -1,6 +1,7 @@
 import * as React from 'react';
 import axios from 'axios';
 import { Modal, Input, Table, Button } from 'antd';
+import * as copy from 'copy-to-clipboard';
 const { TextArea } = Input;
 import OpenRow from '../public-child/OpenRow';
 import DefaultMetric from '../public-child/DefaultMetrc';
@@ -64,19 +65,9 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
     }
 
     copyParams = (record: TableObj) => {
-        var params = JSON.stringify(record.description.parameters);
-        // alert(params);
-        var einput = document.createElement('input');
-        document.body.appendChild(einput);
-        einput.setAttribute('value', params);
-        einput.select();
-        var res = document.execCommand('copy');
-        if (res) {
-            alert('Copied to Clipboard !');
-        } else {
-            alert('Copy Failed !');
-        }
-        document.body.removeChild(einput);
+        let params = JSON.stringify(record.description.parameters);
+        copy(params);
+        alert('Copied to Clipboard !');
     }
 
     hideLogModalOverview = () => {
@@ -160,6 +151,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             }
         }, {
             title: 'Operation',
+            width: 100,
             render: (text: string, record: TableObj) => {
                 return (
                     <Button
