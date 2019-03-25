@@ -3,6 +3,7 @@ import argparse
 from subprocess import check_output, check_call
 import socket
 import random
+import re
 
 def detect_port(port):
     '''Detect if the port is used, return True if the port is used'''
@@ -23,8 +24,9 @@ def find_port():
 
 def find_wheel_package(dir):
     '''Find the wheel package uploaded to this machine'''
+    regular = re.compile('^nni-.*\.whl$')
     for file_name in os.listdir(dir):
-        if file_name.endswith('.whl'):
+        if regular.search(file_name):
             return file_name
     return None
 
