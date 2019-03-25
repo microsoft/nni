@@ -207,8 +207,8 @@ nnictl support commands:
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id|  False| |ID of the experiment you want to set|
-  |--trialid, -t|  True| |ID of the trial you want to kill.|
+  |id|  False| |ID of the trial to be killed|
+  |--experiment, -E|  True| |Experiment id of the trial|
 
 <a name="top"></a>
 * __nnictl top__
@@ -354,8 +354,8 @@ nnictl support commands:
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id|  False| |ID of the experiment you want to set. Required if there are multiple experiments running.|
-  |--trialid, -T|  False| |the id of trial|
+  |id|  False| |ID of the trial to be found the log path|
+  |--experiment, -E|  False| |Experiment ID of the trial|
 
 <a name="webui"></a>
 ### Manage webui
