@@ -10,6 +10,7 @@ import { convertDuration, intermediateGraphOption, killJob } from '../../static/
 import { TableObj, TrialJob } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
 import DefaultMetric from '../public-child/DefaultMetrc';
+import IntermediateVal from '../public-child/IntermediateVal';
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
@@ -182,6 +183,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'Id':
                 case 'Duration':
                 case 'Status':
+                case 'Intermediate':
                 case 'Operation':
                 case 'Default':
                 case 'Intermediate Result':
@@ -243,7 +245,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     render() {
 
         const { entries, tableSource, updateList } = this.props;
-        const { intermediateOption, modalVisible, isShowColumn, columnSelected} = this.state;
+        const { intermediateOption, modalVisible, isShowColumn, columnSelected } = this.state;
         let showTitle = COLUMN;
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
@@ -343,12 +345,25 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         sorter: (a: TableObj, b: TableObj): number => a.status.localeCompare(b.status)
                     });
                     break;
+                case 'Intermediate':
+                    showColumn.push({
+                        title: 'Intermediate',
+                        dataIndex: 'Intermediate',
+                        key: 'Intermediate',
+                        width: 100,
+                        render: (text: string, record: TableObj) => {
+                            return(
+                                <IntermediateVal record={record}/>
+                            );
+                        }
+                    });
+                    break;
                 case 'Default':
                     showColumn.push({
                         title: 'Default Metric',
                         dataIndex: 'acc',
                         key: 'acc',
-                        width: 200,
+                        width: 160,
                         sorter: (a: TableObj, b: TableObj) => {
                             if (a.acc !== undefined && b.acc !== undefined) {
                                 return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
@@ -358,7 +373,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         },
                         render: (text: string, record: TableObj) => {
                             return (
-                                <DefaultMetric record={record}/>
+                                <DefaultMetric record={record} />
                             );
                         }
                     });
