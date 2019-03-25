@@ -1,5 +1,5 @@
 authorName: default
-experimentName: example_bohb
+experimentName: example_mnist_bohb_pai
 trialConcurrency: 10
 maxExecDuration: 100h
 maxTrialNum: 1000

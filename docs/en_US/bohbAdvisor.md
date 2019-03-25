@@ -4,23 +4,25 @@ BOHB Advisor on NNI
 ## 1. Introduction
 BOHB is a robust and efficient hyperparameter tuning algorithm mentioned in [reference paper](https://arxiv.org/abs/1807.01774). BO is the abbreviation of Bayesian optimization and HB is the abbreviation of Hyperband.
 
-BOHB relies on HB(Hyperband) to determine how many configurations to evaluate with which budget, but it **replaces the random selection of configurations at the beginning of each HB iteration by a model-based search(Byesian Optimization)**. Once the desired number of configurations for the iteration is reached, the standard successive halving procedure is carried out using these configurations. We keep track of the performance of all function evaluations g(x, b) + \epsilon of configurations x on all budgets b to use as a basis for our models in later iterations.
+BOHB relies on HB(Hyperband) to determine how many configurations to evaluate with which budget, but it **replaces the random selection of configurations at the beginning of each HB iteration by a model-based search(Byesian Optimization)**. Once the desired number of configurations for the iteration is reached, the standard successive halving procedure is carried out using these configurations. We keep track of the performance of all function evaluations g(x, b) of configurations x on all budgets b to use as a basis for our models in later iterations.
 
-Below we are divided into two parts to introduce the BOHB process:
+Below we divide introduction of the BOHB process into two parts:
 
-* (1) HB(Hyperband):
+### HB (Hyperband)
+
 We follow Hyperband’s way of choosing the budgets and continue to use SuccessiveHalving, for more details, you can refer to the [Hyperband in NNI](hyperbandAdvisor.md) and [reference paper of Hyperband](https://arxiv.org/abs/1603.06560). This procedure is summarized by the pseudocode below.
 
 ![](../img/bohb_1.png)
 
-* (2) BO(Bayesian Optimization):
+### BO (Bayesian Optimization)
+
 The BO part of BOHB closely resembles TPE, with one major difference: we opted for a single multidimensional KDE compared to the hierarchy of one-dimensional KDEs used in TPE in order to better handle interaction effects in the input space.
 
 Tree Parzen Estimator(TPE): uses a KDE(kernel density estimator) to model the densities.
 
 ![](../img/bohb_2.png)
 
-To fit useful KDEs, we require a minimum number of data points Nmin; this is set to d + 1 for our experiments, where d is the number of hyperparameters. To build a model as early as possible, we do not wait until Nb = |Db|, the number of observations for budget b, is large enough to satisfy q · Nb ≥ Nmin. Instead, after initializing with Nmin + 2 random configurations (line 3), we choose the
+To fit useful KDEs, we require a minimum number of data points Nmin; this is set to d + 1 for our experiments, where d is the number of hyperparameters. To build a model as early as possible, we do not wait until Nb = |Db|, the number of observations for budget b, is large enough to satisfy q · Nb ≥ Nmin. Instead, after initializing with Nmin + 2 random configurations, we choose the
 
 ![](../img/bohb_3.png)
 
@@ -72,7 +74,7 @@ advisor:
 * **num_samples**(*int, optional, default = 64*): number of samples to optimize EI (default 64)
 * **random_fraction**(*float, optional, default = 1/3*): fraction of purely random configurations that are sampled from the prior without the model.
 * **bandwidth_factor**(*float, optional, default = 3*): to encourage diversity, the points proposed to optimize EI, are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor
-* **min_bandwidth**(*float, optional, default = 1e-3*): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (Default: 1e-3) is used instead of zero.
+* **min_bandwidth**(*float, optional, default = 1e-3*): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (default: 1e-3) is used instead of zero.
 
 ## 3. File Structure
 The advisor has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
