@@ -37,7 +37,7 @@ from .config_generator import CG_BOHB
 logger = logging.getLogger('BOHB_Advisor')
 
 _next_parameter_id = 0
-_KEY = 'budget'
+_KEY = 'TRIAL_BUDGET'
 _epsilon = 1e-6
 
 @unique

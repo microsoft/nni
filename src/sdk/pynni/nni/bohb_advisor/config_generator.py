@@ -234,7 +234,7 @@ class CG_BOHB(object):
                         "using random configuration!", e, sample)
             sample = self.configspace.sample_configuration().get_dictionary()
         logger.debug('done sampling a new configuration.')
-        sample['budget'] = budget
+        sample['TRIAL_BUDGET'] = budget
         return sample
 
     def impute_conditional_data(self, array):

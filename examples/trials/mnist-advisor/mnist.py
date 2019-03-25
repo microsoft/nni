@@ -233,12 +233,8 @@ if __name__ == '__main__':
         # run
         params = generate_default_params()
         params.update(RCV_PARAMS)
-        '''
-        If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received by a trial, 
-        there is one more key called `STEPS` besides the hyperparameters defined by user. 
-        By using this `STEPS`, the trial can control how long it runs.
-        '''
-        params['batch_num'] = RCV_PARAMS['STEPS'] * 10
+
+        params['batch_num'] = RCV_PARAMS['TRIAL_BUDGET'] * 10
         main(params)
     except Exception as exception:
         logger.exception(exception)

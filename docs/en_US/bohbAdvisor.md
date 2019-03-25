@@ -28,6 +28,8 @@ To fit useful KDEs, we require a minimum number of data points Nmin; this is set
 
 best and worst configurations, respectively, to model the two densities.
 
+Note that we alse sample a constant fraction named **random fraction** of the configurations uniformly at random.
+
 This procedure is summarized by the pseudocode below.
 
 ![](../img/bohb_4.png)
@@ -75,7 +77,7 @@ The advisor has a lot of different files, functions and classes. Here we will on
 
 ### MNIST with BOHB
 
-code implementation: [examples/trials/mnist_bohb](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist_bohb)
+code implementation: [examples/trials/mnist-advisor](https://github.com/Microsoft/nni/tree/master/examples/trials/)
 
 We chose BOHB to build CNN on the MNIST dataset. The following is our experimental final results:
 
