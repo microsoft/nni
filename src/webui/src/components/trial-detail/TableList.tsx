@@ -2,9 +2,8 @@ import * as React from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
-    Row, Input, Table, Button, Popconfirm, Modal, Checkbox
+    Row, Table, Button, Popconfirm, Modal, Checkbox
 } from 'antd';
-const { TextArea } = Input;
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
 import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
@@ -29,9 +28,7 @@ echarts.registerTheme('my_theme', {
 interface TableListProps {
     entries: number;
     tableSource: Array<TableObj>;
-    searchResult: Array<TableObj>;
     updateList: Function;
-    isHasSearch: boolean;
     platform: string;
 }
 
@@ -78,6 +75,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             .then(res => {
                 if (res.status === 200) {
                     const intermediateArr: number[] = [];
+                    // support intermediate result is dict
                     Object.keys(res.data).map(item => {
                         const temp = JSON.parse(res.data[item].data);
                         if (typeof temp === 'object') {
@@ -244,10 +242,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     render() {
 
-        const { entries, tableSource, searchResult, isHasSearch, updateList } = this.props;
-        const { intermediateOption, modalVisible, isShowColumn, columnSelected,
-            logMessage, logModal
-        } = this.state;
+        const { entries, tableSource, updateList } = this.props;
+        const { intermediateOption, modalVisible, isShowColumn, columnSelected} = this.state;
         let showTitle = COLUMN;
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
@@ -340,7 +336,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             );
                         },
                         filters: trialJob,
-                        onFilter: (value: string, record: TableObj) => record.status.indexOf(value) === 0,
+                        onFilter: (value: string, record: TableObj) => {
+                            return record.status.indexOf(value) === 0;
+                        },
+                        // onFilter: (value: string, record: TableObj) => record.status.indexOf(value) === 0,
                         sorter: (a: TableObj, b: TableObj): number => a.status.localeCompare(b.status)
                     });
                     break;
@@ -453,7 +452,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     <Table
                         columns={showColumn}
                         expandedRowRender={this.openRow}
-                        dataSource={isHasSearch ? searchResult : tableSource}
+                        dataSource={tableSource}
                         className="commonTableStyle"
                         pagination={{ pageSize: entries }}
                     />
@@ -474,24 +473,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             }}
                             theme="my_theme"
                         />
-                    </Modal>
-
-                    {/* trial log modal */}
-                    <Modal
-                        title="trial log"
-                        visible={logModal}
-                        onCancel={this.hideLogModal}
-                        footer={null}
-                        destroyOnClose={true}
-                        width="80%"
-                    >
-                        <div id="trialLogContent" style={{ height: window.innerHeight * 0.6 }}>
-                            <TextArea
-                                value={logMessage}
-                                disabled={true}
-                                className="logcontent"
-                            />
-                        </div>
                     </Modal>
                 </div>
                 {/* Add Column Modal */}

@@ -203,6 +203,10 @@ machineList:
 
     __logLevel__ sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
 
+* __logCollection__
+  * Description
+    __logCollection__ set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+
 * __tuner__
   * Description
 
@@ -227,11 +231,16 @@ machineList:
     * __classArgs__
 
       __classArgs__ specifies the arguments of tuner algorithm.
-    * __gpuNum__
+
+  * __gpuNum__
 
       __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
 
       Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
+
+  * __includeIntermediateResults__
+
+      If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of __includeIntermediateResults__ is false.
 
 * __assessor__
 
