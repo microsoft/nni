@@ -9,7 +9,7 @@ searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 advisor:
-  #choice: Hyperband
+  #choice: Hyperband, BOHB
   builtinAdvisorName: Hyperband
   classArgs:
     #R: the maximum STEPS
