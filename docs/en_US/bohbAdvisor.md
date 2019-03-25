@@ -1,4 +1,4 @@
-BOHB(Bayesian Optimization add Hyperband) Advisor on NNI
+BOHB Advisor on NNI
 ===
 
 ## 1. Introduction

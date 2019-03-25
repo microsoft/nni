@@ -22,22 +22,15 @@ bohb_advisor.py
 '''
 
 from enum import Enum, unique
-import os
-import threading
-import time
 import math
-import pdb
-import copy
 import logging
 import json_tricks
 
-import numpy as np
 import ConfigSpace as CS
 import ConfigSpace.hyperparameters as CSH
 
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.common import init_logger
 
 from .config_generator import CG_BOHB
 
@@ -92,8 +85,10 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
 
 
 class Bracket():
-    """A bracket in BOHB, all the information of a bracket is managed by an instance of this class
-    
+    """
+    A bracket in BOHB, all the information of a bracket is managed by 
+    an instance of this class.
+
     Parameters
     ----------
     s: int
@@ -263,16 +258,19 @@ def extract_scalar_reward(value, scalar_key='default'):
         reward = value[scalar_key]
     else:
         raise RuntimeError(
-            'Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(scalar_key))
+            'Incorrect final result: the final result for %s should be float/int, \
+            or a dict which has a key named "default" whose value is float/int.' 
+            % str(scalar_key))
     return reward
 
 
 class BOHB(MsgDispatcherBase):
-    """BOHB performs robust and efficient hyperparameter optimization
+    """
+    BOHB performs robust and efficient hyperparameter optimization
     at scale by combining the speed of Hyperband searches with the
-    guidance and guarantees of convergence of Bayesian
-    Optimization. Instead of sampling new configurations at random,
-    BOHB uses kernel density estimators to select promising candidates.
+    guidance and guarantees of convergence of Bayesian Optimization.
+    Instead of sampling new configurations at random, BOHB uses 
+    kernel density estimators to select promising candidates.
 
     Parameters
     ----------
@@ -354,18 +352,18 @@ class BOHB(MsgDispatcherBase):
     def save_checkpont(self):
         pass
 
-    def handle_initialize(self, search_space):
+    def handle_initialize(self, data):
         """Initialize Tuner, including creating Bayesian optimization-based parametric models 
         and search space formations
 
         Parameters
         ----------
-        search_space: search space
+        data: search space
             search space of this experiment
         """
         logger.info('start to handle_initialize')
         # convert search space jason to ConfigSpace
-        self.handle_update_search_space(search_space)
+        self.handle_update_search_space(data)
 
         # generate BOHB config_generator using Bayesian optimization
         if not self.search_space is None:
@@ -388,10 +386,10 @@ class BOHB(MsgDispatcherBase):
         logger.debug(
             'start to create a new SuccessiveHalving iteration, self.curr_s=%d', self.curr_s)
         if self.curr_s < 0:
-            logger.info("s < 0, Finish this round of Hyperband. Generate new round")
+            logger.info("s < 0, Finish this round of Hyperband in BOHB. Generate new round")
             self.curr_s = self.s_max
         self.brackets[self.curr_s] = Bracket(s=self.curr_s, s_max=self.s_max, eta=self.eta,
-                                        max_budget=self.max_budget, optimize_mode=self.optimize_mode)
+                                    max_budget=self.max_budget, optimize_mode=self.optimize_mode)
         next_n, next_r = self.brackets[self.curr_s].get_n_r()
         logger.debug(
             'new SuccessiveHalving iteration, next_n=%d, next_r=%d', next_n, next_r)
@@ -447,12 +445,12 @@ class BOHB(MsgDispatcherBase):
         self.credit -= 1
         return True
 
-    def handle_update_search_space(self, search_space):
+    def handle_update_search_space(self, data):
         """change json format to ConfigSpace format dict<dict> -> configspace
 
         Parameters
         ----------
-        search_space: JSON object
+        data: JSON object
             search space of this experiment
 
         Returns
@@ -460,6 +458,7 @@ class BOHB(MsgDispatcherBase):
         ConfigSpace:
             search space in ConfigSpace format
         """
+        search_space = data
         cs = CS.ConfigurationSpace()
         for var in search_space:
             _type = str(search_space[var]["_type"])
@@ -474,25 +473,31 @@ class BOHB(MsgDispatcherBase):
                     var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))
             elif _type == 'quniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], q=search_space[var]["_value"][2]))
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], 
+                    q=search_space[var]["_value"][2]))
             elif _type == 'loguniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], log=True))
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], 
+                    log=True))
             elif _type == 'qloguniform':
                 cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], q=search_space[var]["_value"][2], log=True))
+                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1], 
+                    q=search_space[var]["_value"][2], log=True))
             elif _type == 'normal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
                     var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2]))
             elif _type == 'qnormal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], q=search_space[var]["_value"][3]))
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], 
+                    q=search_space[var]["_value"][3]))
             elif _type == 'lognormal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], log=True))
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], 
+                    log=True))
             elif _type == 'qlognormal':
                 cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], q=search_space[var]["_value"][3], log=True))
+                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2], 
+                    q=search_space[var]["_value"][3], log=True))
             else:
                 raise ValueError(
                     'unrecognized type in search_space, type is {}'.format(_type))

@@ -17,8 +17,8 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 import logging
-from copy import deepcopy
 import traceback
 
 import ConfigSpace
@@ -26,7 +26,6 @@ import ConfigSpace.hyperparameters
 import ConfigSpace.util
 import numpy as np
 import scipy.stats as sps
-import scipy.optimize as spo
 import statsmodels.api as sm
 
 logger = logging.getLogger('BOHB_Advisor')
@@ -57,7 +56,7 @@ class CG_BOHB(object):
             widens the bandwidth for contiuous parameters for proposed points to optimize EI
         min_bandwidth: float
             to keep diversity, even when all (good) samples have the same value for one of the parameters,
-            a minimum bandwidth (Default: 1e-3) is used instead of zero. 
+            a minimum bandwidth (Default: 1e-3) is used instead of zero.
 
         """
         self.top_n_percent = top_n_percent
@@ -68,11 +67,11 @@ class CG_BOHB(object):
         self.min_points_in_model = min_points_in_model
         if min_points_in_model is None:
             self.min_points_in_model = len(self.configspace.get_hyperparameters())+1
-        
+
         if self.min_points_in_model < len(self.configspace.get_hyperparameters())+1:
             logger.warning('Invalid min_points_in_model value. Setting it to %i'%(len(self.configspace.get_hyperparameters())+1))
             self.min_points_in_model =len(self.configspace.get_hyperparameters())+1
-        
+
         self.num_samples = num_samples
         self.random_fraction = random_fraction
 
@@ -88,7 +87,7 @@ class CG_BOHB(object):
             else:
                 self.kde_vartypes += 'c'
                 self.vartypes += [0]
-        
+
         self.vartypes = np.array(self.vartypes, dtype=int)
 
         # store precomputed probs for the categorical parameters
@@ -118,28 +117,28 @@ class CG_BOHB(object):
         config
             should return a valid configuration
         """
-        logger.debug('start sampling a new configuration.') 
+        logger.debug('start sampling a new configuration.')
         sample = None
         info_dict = {}
-   
+
         # If no model is available, sample from prior
         # also mix in a fraction of random configs
         if len(self.kde_models.keys()) == 0 or np.random.rand() < self.random_fraction:
-            sample =  self.configspace.sample_configuration()
+            sample = self.configspace.sample_configuration()
             info_dict['model_based_pick'] = False
 
         best = np.inf
         best_vector = None
 
         if sample is None:
-            try:             
+            try:
                 # sample from largest budget
                 budget = max(self.kde_models.keys())
 
                 l = self.kde_models[budget]['good'].pdf
-                g = self.kde_models[budget]['bad' ].pdf
+                g = self.kde_models[budget]['bad'].pdf
 
-                minimize_me = lambda x: max(1e-32, g(x))/max(l(x),1e-32)
+                minimize_me = lambda x: max(1e-32, g(x))/max(l(x), 1e-32)
 
                 kde_good = self.kde_models[budget]['good']
                 kde_bad = self.kde_models[budget]['bad']
@@ -155,7 +154,7 @@ class CG_BOHB(object):
                         if t == 0:
                             bw = self.bw_factor*bw
                             try:
-                                vector.append(sps.truncnorm.rvs(-m/bw,(1-m)/bw, loc=m, scale=bw))
+                                vector.append(sps.truncnorm.rvs(-m/bw, (1-m)/bw, loc=m, scale=bw))
                             except:
                                 logger.warning("Truncated Normal failed")
                                 logger.warning("data in the KDE:\n%s"%kde_good.data)
@@ -175,7 +174,8 @@ class CG_BOHB(object):
 
                         # right now, this happens because a KDE does not contain all values for a categorical parameter
                         # this cannot be fixed with the statsmodels KDE, so for now, we are just going to evaluate this one
-                        # if the good_kde has a finite value, i.e. there is no config with that value in the bad kde, so it shouldn't be terrible.
+                        # if the good_kde has a finite value, i.e. there is no config with that value in the bad kde,
+                        # so it shouldn't be terrible.
                         if np.isfinite(l(vector)):
                             best_vector = vector
                             break
@@ -199,12 +199,11 @@ class CG_BOHB(object):
                         ):
                             best_vector[i] = int(np.rint(best_vector[i]))
                     sample = ConfigSpace.Configuration(self.configspace, vector=best_vector).get_dictionary()
-                    
+
                     try:
                         sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
-                                    configuration_space=self.configspace,
-                                    configuration=sample
-                                    )
+                            configuration_space=self.configspace,
+                            configuration=sample)
                         info_dict['model_based_pick'] = True
 
                     except Exception as e:
@@ -214,7 +213,8 @@ class CG_BOHB(object):
                                 traceback.format_exc())
                         raise(e)
             except:
-                logger.warning("Sampling based optimization with %i samples failed\n %s \nUsing random configuration"%(self.num_samples, traceback.format_exc()))
+                logger.warning("Sampling based optimization with %i samples failed\n %s \n \
+                Using random configuration"%(self.num_samples, traceback.format_exc()))
                 sample = self.configspace.sample_configuration()
                 info_dict['model_based_pick'] = False
 
@@ -225,7 +225,7 @@ class CG_BOHB(object):
             ).get_dictionary()
         except Exception as e:
             logger.warning("Error (%s) converting configuration: %s -> "
-                                "using random configuration!", e, sample)
+                        "using random configuration!", e, sample)
             sample = self.configspace.sample_configuration().get_dictionary()
         logger.debug('done sampling a new configuration.')
         sample['STEPS'] = budget
@@ -236,7 +236,7 @@ class CG_BOHB(object):
         for i in range(array.shape[0]):
             datum = np.copy(array[i])
             nan_indices = np.argwhere(np.isnan(datum)).flatten()
-            while (np.any(nan_indices)):
+            while(np.any(nan_indices)):
                 nan_idx = nan_indices[0]
                 valid_indices = np.argwhere(np.isfinite(array[:,nan_idx])).flatten()
                 if len(valid_indices) > 0:
@@ -281,7 +281,8 @@ class CG_BOHB(object):
         # skip model building:
         # a) if not enough points are available
         if len(self.configs[budget]) <= self.min_points_in_model-1:
-            logger.debug("Only %i run(s) for budget %f available, need more than %s -> can't build model!"%(len(self.configs[budget]), budget, self.min_points_in_model+1))
+            logger.debug("Only %i run(s) for budget %f available, need more than %s \
+            -> can't build model!"%(len(self.configs[budget]), budget, self.min_points_in_model+1))
             return
         # b) during warnm starting when we feed previous results in and only update once
         if not update_model:
@@ -304,7 +305,7 @@ class CG_BOHB(object):
             return
         if train_data_bad.shape[0] <= train_data_bad.shape[1]:
             return
-        
+
         #more expensive crossvalidation method
         #bw_estimation = 'cv_ls'
         # quick rule of thumb
@@ -317,8 +318,8 @@ class CG_BOHB(object):
         good_kde.bw = np.clip(good_kde.bw, self.min_bandwidth, None)
 
         self.kde_models[budget] = {
-                'good': good_kde,
-                'bad' : bad_kde
+            'good': good_kde,
+            'bad' : bad_kde
         }
 
         # update probs for the categorical parameters for later sampling

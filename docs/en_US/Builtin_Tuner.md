@@ -337,7 +337,7 @@ tuner:
 
 BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace), so users should install it first. User could use `pip3 install ConfigSpace` to install it.
 
-To use BOHB Advisor, you **must report the loss** as one of the final result to update Bayesian Optimization. If your metrics is not loss, you can return a **dict** type variable. For example:
+To use BOHB Advisor, you **must report the loss** as one of the final result to update Bayesian Optimization. So you should return a **dict** type variable with metrics in key "default" and loss in key "loss". For example:
 
 ```python
 test_result =
