@@ -34,18 +34,7 @@ This procedure is summarized by the pseudocode below.
 
 ## 2. Usage
 
-To use BOHB Advisor, you **must report the loss** as one of the final result to update Bayesian Optimization. So you should return a **dict** type variable with metrics in key "default" and loss in key "loss". For example:
-
-```python
-test_result =
-{
-  "default": acc,
-  "loss": loss
-}
-nni.report_final_result(test_result)
-```
-
-Next, you should add the following spec in your experiment's YAML config file:
+To use BOHB, you should add the following spec in your experiment's YAML config file:
 
 ```yml
 advisor:

@@ -18,7 +18,7 @@ Currently we support the following algorithms:
 |[__Hyperband__](#Hyperband)|Hyperband tries to use the limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for the small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.[Reference Paper](https://arxiv.org/pdf/1603.06560.pdf)|
 |[__Network Morphism__](#NetworkMorphism)|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train. [Reference Paper](https://arxiv.org/abs/1806.10282)|
 |[__Metis Tuner__](#MetisTuner)|Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter. [Reference Paper](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/)|
-|[__BOHB Tuner__](#BOHBTuner)|BOHB relies on HB(Hyperband) to determine how many configurations to evaluate with which budget, but it replaces the random selection of configurations at the beginning of each HB iteration by a model-based search(Byesian Optimization). [Reference Paper](https://arxiv.org/abs/1603.06560)|
+|[__BOHB Tuner__](#BOHBTuner)|BOHB relies on HB(Hyperband) to determine how many configurations to evaluate with which budget, but it replaces the random selection of configurations at the beginning of each HB iteration by a model-based search(Byesian Optimization). [Reference Paper](https://arxiv.org/abs/1807.01774)|
 
 <br>
 
@@ -336,17 +336,6 @@ tuner:
 **Installation**
 
 BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace), so users should install it first. User could use `pip3 install ConfigSpace` to install it.
-
-To use BOHB Advisor, you **must report the loss** as one of the final result to update Bayesian Optimization. So you should return a **dict** type variable with metrics in key "default" and loss in key "loss". For example:
-
-```python
-test_result =
-{
-  "default": acc,
-  "loss": loss
-}
-nni.report_final_result(test_result)
-```
 
 **Suggested scenario**
 

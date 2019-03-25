@@ -103,6 +103,91 @@ class CG_BOHB(object):
             return(-float('inf'))
         return(max(self.kde_models.keys()))
 
+    def sample_from_largest_budget(self, info_dict):
+        """sample from largest budget"""
+
+        budget = max(self.kde_models.keys())
+
+        l = self.kde_models[budget]['good'].pdf
+        g = self.kde_models[budget]['bad'].pdf
+
+        minimize_me = lambda x: max(1e-32, g(x))/max(l(x), 1e-32)
+
+        kde_good = self.kde_models[budget]['good']
+        kde_bad = self.kde_models[budget]['bad']
+
+        for i in range(self.num_samples):
+            idx = np.random.randint(0, len(kde_good.data))
+            datum = kde_good.data[idx]
+            vector = []
+
+            for m, bw, t in zip(datum, kde_good.bw, self.vartypes):
+
+                bw = max(bw, self.min_bandwidth)
+                if t == 0:
+                    bw = self.bw_factor*bw
+                    try:
+                        vector.append(sps.truncnorm.rvs(-m/bw, (1-m)/bw, loc=m, scale=bw))
+                    except:
+                        logger.warning("Truncated Normal failed")
+                        logger.warning("data in the KDE:\n%s"%kde_good.data)
+                else:
+                    if np.random.rand() < (1-bw):
+                        vector.append(int(m))
+                    else:
+                        vector.append(np.random.randint(t))
+            val = minimize_me(vector)
+
+            if not np.isfinite(val):
+                logger.warning('sampled vector: %s has EI value %s'%(vector, val))
+                logger.warning("data in the KDEs:\n%s\n%s"%(kde_good.data, kde_bad.data))
+                logger.warning("bandwidth of the KDEs:\n%s\n%s"%(kde_good.bw, kde_bad.bw))
+                logger.warning("l(x) = %s"%(l(vector)))
+                logger.warning("g(x) = %s"%(g(vector)))
+
+                # right now, this happens because a KDE does not contain all values for a categorical parameter
+                # this cannot be fixed with the statsmodels KDE, so for now, we are just going to evaluate this one
+                # if the good_kde has a finite value, i.e. there is no config with that value in the bad kde,
+                # so it shouldn't be terrible.
+                if np.isfinite(l(vector)):
+                    best_vector = vector
+                    break
+
+            if val < best:
+                best = val
+                best_vector = vector
+
+        if best_vector is None:
+            logger.debug("Sampling based optimization with %i samples failed -> using random configuration"%self.num_samples)
+            sample = self.configspace.sample_configuration().get_dictionary()
+            info_dict['model_based_pick'] = False
+
+        else:
+            logger.debug('best_vector: {}, {}, {}, {}'.format(best_vector, best, l(best_vector), g(best_vector)))
+            for i, hp_value in enumerate(best_vector):
+                if isinstance(
+                    self.configspace.get_hyperparameter(
+                        self.configspace.get_hyperparameter_by_idx(i)
+                    ),
+                    ConfigSpace.hyperparameters.CategoricalHyperparameter
+                ):
+                    best_vector[i] = int(np.rint(best_vector[i]))
+            sample = ConfigSpace.Configuration(self.configspace, vector=best_vector).get_dictionary()
+
+            try:
+                sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
+                    configuration_space=self.configspace,
+                    configuration=sample)
+                info_dict['model_based_pick'] = True
+
+            except Exception as e:
+                logger.warning(("="*50 + "\n")*3 +\
+                        "Error converting configuration:\n%s"%sample+\
+                        "\n here is a traceback:" +\
+                        traceback.format_exc())
+                raise(e)
+        return sample, info_dict
+
     def get_config(self, budget):
         """Function to sample a new configuration
         This function is called inside BOHB to query a new configuration
@@ -115,7 +200,7 @@ class CG_BOHB(object):
         Returns
         -------
         config
-            should return a valid configuration
+            return a valid configuration with parameters and budget
         """
         logger.debug('start sampling a new configuration.')
         sample = None
@@ -132,86 +217,7 @@ class CG_BOHB(object):
 
         if sample is None:
             try:
-                # sample from largest budget
-                budget = max(self.kde_models.keys())
-
-                l = self.kde_models[budget]['good'].pdf
-                g = self.kde_models[budget]['bad'].pdf
-
-                minimize_me = lambda x: max(1e-32, g(x))/max(l(x), 1e-32)
-
-                kde_good = self.kde_models[budget]['good']
-                kde_bad = self.kde_models[budget]['bad']
-
-                for i in range(self.num_samples):
-                    idx = np.random.randint(0, len(kde_good.data))
-                    datum = kde_good.data[idx]
-                    vector = []
-
-                    for m, bw, t in zip(datum, kde_good.bw, self.vartypes):
-
-                        bw = max(bw, self.min_bandwidth)
-                        if t == 0:
-                            bw = self.bw_factor*bw
-                            try:
-                                vector.append(sps.truncnorm.rvs(-m/bw, (1-m)/bw, loc=m, scale=bw))
-                            except:
-                                logger.warning("Truncated Normal failed")
-                                logger.warning("data in the KDE:\n%s"%kde_good.data)
-                        else:
-                            if np.random.rand() < (1-bw):
-                                vector.append(int(m))
-                            else:
-                                vector.append(np.random.randint(t))
-                    val = minimize_me(vector)
-
-                    if not np.isfinite(val):
-                        logger.warning('sampled vector: %s has EI value %s'%(vector, val))
-                        logger.warning("data in the KDEs:\n%s\n%s"%(kde_good.data, kde_bad.data))
-                        logger.warning("bandwidth of the KDEs:\n%s\n%s"%(kde_good.bw, kde_bad.bw))
-                        logger.warning("l(x) = %s"%(l(vector)))
-                        logger.warning("g(x) = %s"%(g(vector)))
-
-                        # right now, this happens because a KDE does not contain all values for a categorical parameter
-                        # this cannot be fixed with the statsmodels KDE, so for now, we are just going to evaluate this one
-                        # if the good_kde has a finite value, i.e. there is no config with that value in the bad kde,
-                        # so it shouldn't be terrible.
-                        if np.isfinite(l(vector)):
-                            best_vector = vector
-                            break
-
-                    if val < best:
-                        best = val
-                        best_vector = vector
-
-                if best_vector is None:
-                    logger.debug("Sampling based optimization with %i samples failed -> using random configuration"%self.num_samples)
-                    sample = self.configspace.sample_configuration().get_dictionary()
-                    info_dict['model_based_pick'] = False
-                else:
-                    logger.debug('best_vector: {}, {}, {}, {}'.format(best_vector, best, l(best_vector), g(best_vector)))
-                    for i, hp_value in enumerate(best_vector):
-                        if isinstance(
-                            self.configspace.get_hyperparameter(
-                                self.configspace.get_hyperparameter_by_idx(i)
-                            ),
-                            ConfigSpace.hyperparameters.CategoricalHyperparameter
-                        ):
-                            best_vector[i] = int(np.rint(best_vector[i]))
-                    sample = ConfigSpace.Configuration(self.configspace, vector=best_vector).get_dictionary()
-
-                    try:
-                        sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
-                            configuration_space=self.configspace,
-                            configuration=sample)
-                        info_dict['model_based_pick'] = True
-
-                    except Exception as e:
-                        logger.warning(("="*50 + "\n")*3 +\
-                                "Error converting configuration:\n%s"%sample+\
-                                "\n here is a traceback:" +\
-                                traceback.format_exc())
-                        raise(e)
+                sample, info_dict = sample_from_largest_budget(info_dict)
             except:
                 logger.warning("Sampling based optimization with %i samples failed\n %s \n \
                 Using random configuration"%(self.num_samples, traceback.format_exc()))
@@ -228,7 +234,7 @@ class CG_BOHB(object):
                         "using random configuration!", e, sample)
             sample = self.configspace.sample_configuration().get_dictionary()
         logger.debug('done sampling a new configuration.')
-        sample['STEPS'] = budget
+        sample['budget'] = budget
         return sample
 
     def impute_conditional_data(self, array):
@@ -255,10 +261,24 @@ class CG_BOHB(object):
         return(return_array)
 
     def new_result(self, loss, budget, parameters, update_model=True):
-        """function to register finished runs
-
-        Every time a run has finished, this function should be called
+        """
+        Function to register finished runs. Every time a run has finished, this function should be called
         to register it with the loss.
+
+        Parameters:
+        -----------
+        loss: float
+            the loss of the parameters
+        budget: float
+            the budget of the parameters
+        parameters: dict
+            the parameters of this trial
+        update_model: bool
+            whether use this parameter to update BP model
+
+        Returns
+        -------
+        None
         """
         if loss is None:
             # One could skip crashed results, but we decided
@@ -280,7 +300,7 @@ class CG_BOHB(object):
 
         # skip model building:
         # a) if not enough points are available
-        if len(self.configs[budget]) <= self.min_points_in_model-1:
+        if len(self.configs[budget]) <= self.min_points_in_model - 1:
             logger.debug("Only %i run(s) for budget %f available, need more than %s \
             -> can't build model!"%(len(self.configs[budget]), budget, self.min_points_in_model+1))
             return

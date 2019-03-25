@@ -37,7 +37,7 @@ from .config_generator import CG_BOHB
 logger = logging.getLogger('BOHB_Advisor')
 
 _next_parameter_id = 0
-_KEY = 'STEPS'
+_KEY = 'budget'
 _epsilon = 1e-6
 
 @unique
@@ -550,22 +550,30 @@ class BOHB(MsgDispatcherBase):
         """
         logger.debug('handle report metric data = %s', data)
 
+        assert 'value' in data
         value = extract_scalar_reward(data['value'])
-        _loss = data['value']['loss']
+        if self.optimize_mode is OptimizeMode.Maximize:
+            reward = -value
+        else:
+            reward = value
+        assert 'parameter_id' in data
         s, i, _ = data['parameter_id'].split('_')
 
-        logger.debug('bracket id = %s, metrics value = %s, loss = %s, type = %s', s, value, _loss, data['type'])
+        logger.debug('bracket id = %s, metrics value = %s, type = %s', s, value, data['type'])
         s = int(s)
+
+        assert 'type' in data
         if data['type'] == 'FINAL':
             # and PERIODICAL metric are independent, thus, not comparable.
+            assert 'sequence' in data
             self.brackets[s].set_config_perf(
                 int(i), data['parameter_id'], data['sequence'], value)
             self.completed_hyper_configs.append(data)
-            
+       
             _parameters = self.parameters[data['parameter_id']]
             _parameters.pop(_KEY)
             # update BO with loss, max_s budget, hyperparameters
-            self.cg.new_result(loss=_loss, budget=data['sequence'], parameters=_parameters, update_model=True)
+            self.cg.new_result(loss=reward, budget=data['sequence'], parameters=_parameters, update_model=True)
         elif data['type'] == 'PERIODICAL':
             self.brackets[s].set_config_perf(
                 int(i), data['parameter_id'], data['sequence'], value)
