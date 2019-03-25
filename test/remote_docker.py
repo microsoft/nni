@@ -55,7 +55,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', required=True, choices=['start', 'stop'], dest='mode', help='start or stop a container')
     parser.add_argument('--name', required=True, dest='name', help='the name of container to be used')
-    parser.add_argument('--image', required=True, dest='image', help='the image to be used')
+    parser.add_argument('--image', dest='image', help='the image to be used')
     args = parser.parse_args()
     if args.mode == 'start':
         start_container(args.image, args.name)
