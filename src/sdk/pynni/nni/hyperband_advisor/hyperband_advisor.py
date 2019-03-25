@@ -300,7 +300,7 @@ class Hyperband(MsgDispatcherBase):
     """
     def __init__(self, R, eta=3, optimize_mode='maximize'):
         """B = (s_max + 1)R"""
-        super()
+        super(Hyperband, self).__init__()
         self.R = R                        # pylint: disable=invalid-name
         self.eta = eta
         self.brackets = dict()            # dict of Bracket
