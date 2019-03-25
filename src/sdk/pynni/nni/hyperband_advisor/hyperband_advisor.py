@@ -300,7 +300,7 @@ class Hyperband(MsgDispatcherBase):
     """
     def __init__(self, R, eta=3, optimize_mode='maximize'):
         """B = (s_max + 1)R"""
-        super()
+        super(Hyperband, self).__init__()
         self.R = R                        # pylint: disable=invalid-name
         self.eta = eta
         self.brackets = dict()            # dict of Bracket
@@ -351,7 +351,15 @@ class Hyperband(MsgDispatcherBase):
         """get one trial job, i.e., one hyperparameter configuration."""
         if not self.generated_hyper_configs:
             if self.curr_s < 0:
-                self.curr_s = self.s_max
+                # have tried all configurations
+                ret = {
+                    'parameter_id': '-1_0_0',
+                    'parameter_source': 'algorithm',
+                    'parameters': ''
+                }
+                send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
+                self.credit += 1
+                return True
             _logger.debug('create a new bracket, self.curr_s=%d', self.curr_s)
             self.brackets[self.curr_s] = Bracket(self.curr_s, self.s_max, self.eta, self.R, self.optimize_mode)
             next_n, next_r = self.brackets[self.curr_s].get_n_r()

@@ -9,7 +9,7 @@ searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 advisor:
-  #choice: Hyperband, BOHB
+  #choice: Hyperband
   builtinAdvisorName: Hyperband
   classArgs:
     #R: the maximum STEPS (could be the number of mini-batches or epochs) can be
