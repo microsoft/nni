@@ -32,36 +32,35 @@ import statsmodels.api as sm
 logger = logging.getLogger('BOHB_Advisor')
 
 class CG_BOHB(object):
-    def __init__(self, configspace, min_points_in_model = None,
-                 top_n_percent=15, num_samples = 64, random_fraction=1/3,
+    def __init__(self, configspace, min_points_in_model=None,
+                 top_n_percent=15, num_samples=64, random_fraction=1/3,
                  bandwidth_factor=3, min_bandwidth=1e-3):
+        """Fits for each given budget a kernel density estimator on the best N percent of the
+        evaluated configurations on this budget.
+
+
+        Parameters:
+        -----------
+        configspace: ConfigSpace
+            Configuration space object
+        top_n_percent: int
+            Determines the percentile of configurations that will be used as training data
+            for the kernel density estimator, e.g if set to 10 the 10% best configurations will be considered
+            for training.
+        min_points_in_model: int
+            minimum number of datapoints needed to fit a model
+        num_samples: int
+            number of samples drawn to optimize EI via sampling
+        random_fraction: float
+            fraction of random configurations returned
+        bandwidth_factor: float
+            widens the bandwidth for contiuous parameters for proposed points to optimize EI
+        min_bandwidth: float
+            to keep diversity, even when all (good) samples have the same value for one of the parameters,
+            a minimum bandwidth (Default: 1e-3) is used instead of zero. 
+
         """
-            Fits for each given budget a kernel density estimator on the best N percent of the
-            evaluated configurations on this budget.
-
-
-            Parameters:
-            -----------
-            configspace: ConfigSpace
-                Configuration space object
-            top_n_percent: int
-                Determines the percentile of configurations that will be used as training data
-                for the kernel density estimator, e.g if set to 10 the 10% best configurations will be considered
-                for training.
-            min_points_in_model: int
-                minimum number of datapoints needed to fit a model
-            num_samples: int
-                number of samples drawn to optimize EI via sampling
-            random_fraction: float
-                fraction of random configurations returned
-            bandwidth_factor: float
-                widens the bandwidth for contiuous parameters for proposed points to optimize EI
-            min_bandwidth: float
-                to keep diversity, even when all (good) samples have the same value for one of the parameters,
-                a minimum bandwidth (Default: 1e-3) is used instead of zero. 
-
-        """
-        self.top_n_percent=top_n_percent
+        self.top_n_percent = top_n_percent
         self.configspace = configspace
         self.bw_factor = bandwidth_factor
         self.min_bandwidth = min_bandwidth
@@ -82,7 +81,6 @@ class CG_BOHB(object):
         self.kde_vartypes = ""
         self.vartypes = []
 
-
         for h in hps:
             if hasattr(h, 'choices'):
                 self.kde_vartypes += 'u'
@@ -95,13 +93,11 @@ class CG_BOHB(object):
 
         # store precomputed probs for the categorical parameters
         self.cat_probs = []
-        
 
         self.configs = dict()
         self.losses = dict()
         self.good_config_rankings = dict()
         self.kde_models = dict()
-
 
     def largest_budget_with_model(self):
         if len(self.kde_models) == 0:
@@ -111,7 +107,6 @@ class CG_BOHB(object):
     def get_config(self, budget):
         """Function to sample a new configuration
         This function is called inside BOHB to query a new configuration
-
 
         Parameters:
         -----------
@@ -123,12 +118,10 @@ class CG_BOHB(object):
         config
             should return a valid configuration
         """
-        
-        logger.debug('start sampling a new configuration.')
-        
+        logger.debug('start sampling a new configuration.') 
         sample = None
         info_dict = {}
-        
+   
         # If no model is available, sample from prior
         # also mix in a fraction of random configs
         if len(self.kde_models.keys()) == 0 or np.random.rand() < self.random_fraction:
@@ -140,7 +133,7 @@ class CG_BOHB(object):
 
         if sample is None:
             try:             
-                #sample from largest budget
+                # sample from largest budget
                 budget = max(self.kde_models.keys())
 
                 l = self.kde_models[budget]['good'].pdf
@@ -156,7 +149,7 @@ class CG_BOHB(object):
                     datum = kde_good.data[idx]
                     vector = []
 
-                    for m,bw,t in zip(datum, kde_good.bw, self.vartypes):
+                    for m, bw, t in zip(datum, kde_good.bw, self.vartypes):
 
                         bw = max(bw, self.min_bandwidth)
                         if t == 0:
@@ -164,7 +157,7 @@ class CG_BOHB(object):
                             try:
                                 vector.append(sps.truncnorm.rvs(-m/bw,(1-m)/bw, loc=m, scale=bw))
                             except:
-                                logger.warning("Truncated Normal failed for:\ndatum=%s\nbandwidth=%s\nfor entry with value %s"%(datum, kde_good.bw, m))
+                                logger.warning("Truncated Normal failed")
                                 logger.warning("data in the KDE:\n%s"%kde_good.data)
                         else:
                             if np.random.rand() < (1-bw):
@@ -194,7 +187,7 @@ class CG_BOHB(object):
                 if best_vector is None:
                     logger.debug("Sampling based optimization with %i samples failed -> using random configuration"%self.num_samples)
                     sample = self.configspace.sample_configuration().get_dictionary()
-                    info_dict['model_based_pick']  = False
+                    info_dict['model_based_pick'] = False
                 else:
                     logger.debug('best_vector: {}, {}, {}, {}'.format(best_vector, best, l(best_vector), g(best_vector)))
                     for i, hp_value in enumerate(best_vector):
@@ -223,7 +216,7 @@ class CG_BOHB(object):
             except:
                 logger.warning("Sampling based optimization with %i samples failed\n %s \nUsing random configuration"%(self.num_samples, traceback.format_exc()))
                 sample = self.configspace.sample_configuration()
-                info_dict['model_based_pick']  = False
+                info_dict['model_based_pick'] = False
 
         try:
             sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
@@ -232,14 +225,11 @@ class CG_BOHB(object):
             ).get_dictionary()
         except Exception as e:
             logger.warning("Error (%s) converting configuration: %s -> "
-                                "using random configuration!",
-                                e,
-                                sample)
+                                "using random configuration!", e, sample)
             sample = self.configspace.sample_configuration().get_dictionary()
         logger.debug('done sampling a new configuration.')
         sample['STEPS'] = budget
         return sample
-
 
     def impute_conditional_data(self, array):
         return_array = np.empty_like(array)
@@ -271,7 +261,7 @@ class CG_BOHB(object):
         to register it with the loss.
         """
         if loss is None:
-            # One could skip crashed results, but we decided 
+            # One could skip crashed results, but we decided
             # assign a +inf loss and count them as bad configurations
             loss = np.inf
 
@@ -284,26 +274,23 @@ class CG_BOHB(object):
             return
 
         # We want to get a numerical representation of the configuration in the original space
-
         conf = ConfigSpace.Configuration(self.configspace, parameters)
         self.configs[budget].append(conf.get_array())
         self.losses[budget].append(loss)
 
-        
         # skip model building:
-        #		a) if not enough points are available
+        # a) if not enough points are available
         if len(self.configs[budget]) <= self.min_points_in_model-1:
             logger.debug("Only %i run(s) for budget %f available, need more than %s -> can't build model!"%(len(self.configs[budget]), budget, self.min_points_in_model+1))
             return
-
-        #		b) during warnm starting when we feed previous results in and only update once
+        # b) during warnm starting when we feed previous results in and only update once
         if not update_model:
             return
 
         train_configs = np.array(self.configs[budget])
-        train_losses =  np.array(self.losses[budget])
+        train_losses = np.array(self.losses[budget])
 
-        n_good= max(self.min_points_in_model, (self.top_n_percent * train_configs.shape[0])//100 )
+        n_good = max(self.min_points_in_model, (self.top_n_percent * train_configs.shape[0])//100)
         #n_bad = min(max(self.min_points_in_model, ((100-self.top_n_percent)*train_configs.shape[0])//100), 10)
         n_bad = max(self.min_points_in_model, ((100-self.top_n_percent)*train_configs.shape[0])//100)
 
@@ -311,7 +298,7 @@ class CG_BOHB(object):
         idx = np.argsort(train_losses)
 
         train_data_good = self.impute_conditional_data(train_configs[idx[:n_good]])
-        train_data_bad  = self.impute_conditional_data(train_configs[idx[n_good:n_good+n_bad]])
+        train_data_bad = self.impute_conditional_data(train_configs[idx[n_good:n_good+n_bad]])
 
         if train_data_good.shape[0] <= train_data_good.shape[1]:
             return
@@ -323,11 +310,11 @@ class CG_BOHB(object):
         # quick rule of thumb
         bw_estimation = 'normal_reference'
 
-        bad_kde = sm.nonparametric.KDEMultivariate(data=train_data_bad,  var_type=self.kde_vartypes, bw=bw_estimation)
+        bad_kde = sm.nonparametric.KDEMultivariate(data=train_data_bad, var_type=self.kde_vartypes, bw=bw_estimation)
         good_kde = sm.nonparametric.KDEMultivariate(data=train_data_good, var_type=self.kde_vartypes, bw=bw_estimation)
 
-        bad_kde.bw = np.clip(bad_kde.bw, self.min_bandwidth,None)
-        good_kde.bw = np.clip(good_kde.bw, self.min_bandwidth,None)
+        bad_kde.bw = np.clip(bad_kde.bw, self.min_bandwidth, None)
+        good_kde.bw = np.clip(good_kde.bw, self.min_bandwidth, None)
 
         self.kde_models[budget] = {
                 'good': good_kde,
@@ -336,4 +323,3 @@ class CG_BOHB(object):
 
         # update probs for the categorical parameters for later sampling
         logger.debug('done building a new model for budget %f based on %i/%i split\nBest loss for this budget:%f\n\n\n\n\n'%(budget, n_good, n_bad, np.min(train_losses)))
-

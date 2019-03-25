@@ -253,6 +253,7 @@ def extract_scalar_reward(value, scalar_key='default'):
     """
     Raises
     ------
+    RuntimeError
         Incorrect final result: the final result should be float/int,
         or a dict which has a key named "default" whose value is float/int.
     """
