@@ -45,7 +45,7 @@ nni.report_final_result(test_result)
 
 Next, you should add the following spec in your experiment's YAML config file:
 
-```
+```yml
 advisor:
   builtinAdvisorName: BOHB
   classArgs:

@@ -18,6 +18,7 @@ Currently we support the following algorithms:
 |[__Hyperband__](#Hyperband)|Hyperband tries to use the limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for the small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.[Reference Paper](https://arxiv.org/pdf/1603.06560.pdf)|
 |[__Network Morphism__](#NetworkMorphism)|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train. [Reference Paper](https://arxiv.org/abs/1806.10282)|
 |[__Metis Tuner__](#MetisTuner)|Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter. [Reference Paper](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/)|
+|[__BOHB Tuner__](#BOHBTuner)|BOHB relies on HB(Hyperband) to determine how many configurations to evaluate with which budget, but it replaces the random selection of configurations at the beginning of each HB iteration by a model-based search(Byesian Optimization). [Reference Paper](https://arxiv.org/abs/1603.06560)|
 
 <br>
 
@@ -322,4 +323,62 @@ tuner:
   builtinTunerName: MetisTuner
   classArgs:
     optimize_mode: maximize
+```
+
+<br>
+
+<a name="BOHBTuner"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Advisor`
+
+> Builtin Tuner Name: **BOHB**
+
+**Installation**
+
+BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace), so users should install it first. User could use `pip3 install ConfigSpace` to install it.
+
+To use BOHB Advisor, you **must report the loss** as one of the final result to update Bayesian Optimization. If your metrics is not loss, you can return a **dict** type variable. For example:
+
+```python
+test_result =
+{
+  "default": acc,
+  "loss": loss
+}
+nni.report_final_result(test_result)
+```
+
+**Suggested scenario**
+
+Similar to Hyperband, it is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent. Besides that, it may converges to a better configuration due to Bayesian optimization usage.
+
+**Requirement of classArg**
+
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **min_budget** (*int, optional, default = 1*) - The smallest budget to consider. Needs to be positive.
+* **max_budget** (*int, optional, default = 3*) - The largest budget to consider. Needs to be larger than min_budget.
+* **eta** (*int, optional, default = 3*) - In each iteration, a complete run of sequential halving is executed. In it, after evaluating each configuration on the same subset size, only a fraction of 1/eta of them 'advances' to the next round. Must be greater or equal to 2.
+* **min_points_in_model**(*int, optional, default = None*): number of observations to start building a KDE. Default 'None' means dim+1, the bare minimum.
+* **top_n_percent**(*int, optional, default = 15*): percentage (between 1 and 99, default 15) of the observations that are considered good.
+* **num_samples**(*int, optional, default = 64*): number of samples to optimize EI (default 64)
+* **random_fraction**(*float, optional, default = 1/3*): fraction of purely random configurations that are sampled from the prior without the model.
+* **bandwidth_factor**(*float, optional, default = 3*): to encourage diversity, the points proposed to optimize EI, are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor
+* **min_bandwidth**(*float, optional, default = 1e-3*): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (Default: 1e-3) is used instead of zero.
+
+**Usage example**
+
+```yml
+advisor:
+  builtinAdvisorName: BOHB
+  classArgs:
+    optimize_mode: maximize
+    min_budget: 1
+    max_budget: 3
+    eta: 3
+    min_points_in_model: None
+    top_n_percent: 15
+    num_samples: 64
+    random_fraction: 1/3
+    bandwidth_factor: 3
+    min_bandwidth: 1e-3
 ```
