@@ -512,6 +512,7 @@ def create_experiment(args):
         exit(1)
     experiment_config = get_yml_content(config_path)
     validate_all_content(experiment_config, config_path)
+    
     nni_config.set_config('experimentConfig', experiment_config)
     launch_experiment(args, experiment_config, 'new', config_file_name)
     nni_config.set_config('restServerPort', args.port)
