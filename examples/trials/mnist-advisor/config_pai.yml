@@ -12,7 +12,7 @@ advisor:
   #choice: Hyperband, BOHB
   builtinAdvisorName: Hyperband
   classArgs:
-    #R: the maximum STEPS
+    #R: the maximum trial budget
     R: 100
     #eta: proportion of discarded trials
     eta: 3

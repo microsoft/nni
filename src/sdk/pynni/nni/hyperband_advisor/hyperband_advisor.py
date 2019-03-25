@@ -37,7 +37,7 @@ from .. import parameter_expressions
 _logger = logging.getLogger(__name__)
 
 _next_parameter_id = 0
-_KEY = 'STEPS'
+_KEY = 'TRIAL_BUDGET'
 _epsilon = 1e-6
 
 @unique

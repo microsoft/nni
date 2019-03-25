@@ -230,7 +230,7 @@ if __name__ == '__main__':
         # get parameters form tuner
         tuner_params = nni.get_next_parameter()
         logger.debug(tuner_params)
-        tuner_params['batch_num'] = tuner_params['STEPS'] * 100
+        tuner_params['batch_num'] = tuner_params['TRIAL_BUDGET'] * 100
         params = vars(get_params())
         params.update(tuner_params)
         main(params)
