@@ -35,7 +35,7 @@ import {
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
-import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP } from '../common/utils';
+import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc } from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
@@ -279,23 +279,7 @@ class NNIManager implements Manager {
             NNI_LOG_DIRECTORY: getLogDir()
         };
         let newEnv = Object.assign({}, process.env, nniEnv);
-        let tunerProc: ChildProcess;
-        if(process.platform === "win32"){
-            let cmd = command.split(" ", 1)[0];
-             tunerProc = spawn(cmd, command.substr(cmd.length+1).split(" "), {
-                stdio,
-                cwd: newCwd,
-                env: newEnv
-            });
-        }
-        else{
-              tunerProc = spawn(command, [], {
-                stdio,
-                cwd: newCwd,
-                env: newEnv,
-                shell: true
-            });
-        }
+        const tunerProc: ChildProcess = getTunerProc(command,stdio,newCwd,newEnv);
         this.dispatcherPid = tunerProc.pid;
         this.dispatcher = createDispatcherInterface(tunerProc);
 

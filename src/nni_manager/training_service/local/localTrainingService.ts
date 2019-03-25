@@ -386,7 +386,7 @@ class LocalTrainingService implements TrainingService {
             await cpp.exec(`mkdir ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
             await cpp.exec(`copy NUL ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
             await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.ps1'), runScriptLines.join('\r\n'), { encoding: 'utf8', mode: 0o777 });
-            await this.writeParameterFile(trialJobDetail.workingDirectory, trialJobDetail.form.hyperParameters);
+            await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
             process = cp.exec(`powershell ${path.join(trialJobDetail.workingDirectory, 'run.ps1')}`);
         }
         else {
@@ -399,7 +399,7 @@ class LocalTrainingService implements TrainingService {
             await cpp.exec(`mkdir -p ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
             await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
             await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
-            await this.writeParameterFile(trialJobDetail.workingDirectory, trialJobDetail.form.hyperParameters);
+            await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
             process = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
         }
 

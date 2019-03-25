@@ -22,6 +22,7 @@
 import * as assert from 'assert';
 import { randomBytes } from 'crypto';
 import * as cpp from 'child-process-promise';
+import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -375,6 +376,28 @@ async function getVersion(): Promise<string> {
     return deferred.promise;
 } 
 
+function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any):ChildProcess{
+    if(process.platform === "win32"){
+        command = command.split('python3').join('python');
+        let cmd = command.split(" ", 1)[0];
+        const tunerProc: ChildProcess = spawn(cmd, command.substr(cmd.length+1).split(" "), {
+            stdio,
+            cwd: newCwd,
+            env: newEnv
+        });
+        return tunerProc;
+    }
+    else{
+        const tunerProc: ChildProcess = spawn(command, [], {
+            stdio,
+            cwd: newCwd,
+            env: newEnv,
+            shell: true
+        });
+        return tunerProc;
+    }
+}
+
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getVersion };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getVersion, getTunerProc };
