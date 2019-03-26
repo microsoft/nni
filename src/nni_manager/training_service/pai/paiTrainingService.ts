@@ -97,7 +97,7 @@ class PAITrainingService implements TrainingService {
         this.log.info('Run PAI training service.');
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         await restServer.start();
-        restServer.openVersionCheck = this.versionCheck;
+        restServer.setOpenVersionCheck = this.versionCheck;
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
             await this.updatePaiToken();

@@ -102,7 +102,7 @@ class RemoteMachineTrainingService implements TrainingService {
     public async run(): Promise<void> {
         const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
         await restServer.start();
-        restServer.openVersionCheck = this.versionCheck;
+        restServer.setOpenVersionCheck = this.versionCheck;
         this.log.info('Run remote machine training service.');
         while (!this.stopping) {
             while (this.jobQueue.length > 0) {

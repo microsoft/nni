@@ -29,7 +29,6 @@ import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo
 import { RestServer } from '../../common/restServer'
 import { getLogDir } from '../../common/utils';
 import { Writable } from 'stream';
-import { NNIError } from '../../common/errors';
 
 /**
  * Cluster Job Training service Rest server, provides rest API to support Cluster job metrics update
@@ -42,7 +41,7 @@ export abstract class ClusterJobRestServer extends RestServer{
 
     private readonly expId: string = getExperimentId();
 
-    public openVersionCheck: boolean = true;
+    private openVersionCheck: boolean = true; //switch to open version check
     private versionCheckSuccess: boolean = false;
     private errorMessage?: string;
 
