@@ -54,15 +54,15 @@ Optional('advisor'): Or({
     'builtinAdvisorName': Or('BOHB'),
     'classArgs': {
         'optimize_mode': Or('maximize', 'minimize'),
-        Optional('min_budget'): int,
-        Optional('max_budget'): int,
-        Optional('eta'): int,
-        Optional('min_points_in_model'): int,
-        Optional('top_n_percent'): int,
-        Optional('num_samples'): int,
-        Optional('random_fraction'): float,
-        Optional('bandwidth_factor'): float,
-        Optional('min_bandwidth'): float
+        Optional('min_budget'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('max_budget'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('eta'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('min_points_in_model'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('top_n_percent'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('num_samples'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('random_fraction'): And(float, lambda x: 0.0 <= x <= 9999.0),
+        Optional('bandwidth_factor'): And(float, lambda x: 0.0 <= x <= 9999.0),
+        Optional('min_bandwidth'): And(float, lambda x: 0.0 <= x <= 9999.0)
     },
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
