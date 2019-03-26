@@ -213,10 +213,10 @@ nnictl 支持的命令：
     
     * 选项
   
-  | 参数及缩写         | 是否必需  | 默认值 | 说明                    |
-  | ------------- | ----- | --- | --------------------- |
-  | id            | False |     | 需要设置的 Experiment 的 id |
-  | --trialid, -t | True  |     | 需要终止的 Trial 的 id。     |
+  | 参数及缩写            | 是否必需  | 默认值 | 说明                           |
+  | ---------------- | ----- | --- | ---------------------------- |
+  | id               | False |     | ID of the trial to be killed |
+  | --experiment, -E | True  |     | Experiment id of the trial   |
 
 <a name="top"></a>
 
@@ -365,9 +365,10 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写 | 是否必需  | 默认值 | 说明         |
-  | ----- | ----- | --- | ---------- |
-  | id    | False |     | Trial 的 id |
+  | 参数及缩写            | 是否必需  | 默认值 | 说明                                                         |
+  | ---------------- | ----- | --- | ---------------------------------------------------------- |
+  | id               | False |     | ID of the trial to be found the log path                   |
+  | --experiment, -E | False |     | Experiment ID of the trial, required when id is not empty. |
 
 <a name="webui"></a>
 
