@@ -50,13 +50,10 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                                                 eachLogpath={logStr.split(',')[0]}
                                                 logName="trial stdout:"
                                             />
-                                            <a 
-                                                target="_blank" 
-                                                href={logStr.split(',')[1]}
-                                                style={{marginLeft: 10}}
-                                            >
-                                                hdfsLog
-                                            </a>
+                                            <LogPathChild
+                                                eachLogpath={logStr.split(',')[1]}
+                                                logName="hdfsLog:"
+                                            />
                                         </Row>
                                 }
                             </Row>

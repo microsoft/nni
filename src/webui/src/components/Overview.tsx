@@ -120,7 +120,8 @@ class Overview extends React.Component<{}, OverviewState> {
                         tuner: sessionData.params.tuner,
                         assessor: assessor ? assessor : undefined,
                         advisor: advisor ? advisor : undefined,
-                        clusterMetaData: clusterMetaData ? clusterMetaData : undefined
+                        clusterMetaData: clusterMetaData ? clusterMetaData : undefined,
+                        logCollection: logCollection
                     });
                     // search space format loguniform max and min
                     const temp = sessionData.params.searchSpace;
@@ -420,7 +421,7 @@ class Overview extends React.Component<{}, OverviewState> {
                         </Row>
                     </Col>
                     <Col span={8} className="overviewBoder">
-                        <Title1 text="Trial Profile" icon="4.png" />
+                        <Title1 text="Profile" icon="4.png" />
                         <Row className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
                             <div className="experiment searchSpace">
