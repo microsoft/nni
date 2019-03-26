@@ -278,8 +278,11 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['tuner'] = experiment_config['tuner']
         if 'assessor' in experiment_config:
             request_data['assessor'] = experiment_config['assessor']
+    #debug mode should disable version check
     if experiment_config.get('debug') is not None:
-        request_data['versionCheck'] = experiment_config.get('debug')
+        request_data['versionCheck'] = not experiment_config.get('debug')
+    if experiment_config.get('logCollection'):
+        request_data['logCollection'] = experiment_config.get('logCollection')
 
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
@@ -449,7 +452,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     # start a new experiment
     print_normal('Starting experiment...')
     # set debug configuration
-    if args.debug is not None:
+    if experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
     response = set_experiment(experiment_config, mode, args.port, config_file_name)
     if response:

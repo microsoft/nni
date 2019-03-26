@@ -215,10 +215,19 @@ def validate_machine_list(experiment_config):
         print_error('Please set machineList!')
         exit(1)
 
+def validate_pai_trial_conifg(experiment_config):
+    '''validate the trial config in pai platform'''
+    if experiment_config.get('trainingServicePlatform') == 'pai':
+        if experiment_config.get('trial').get('shmMB') and \
+        experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
+            print_error('shmMB should be no more than memoryMB!')
+            exit(1)
+
 def validate_all_content(experiment_config, config_path):
     '''Validate whether experiment_config is valid'''
     parse_path(experiment_config, config_path)
     validate_common_content(experiment_config)
+    validate_pai_trial_conifg(experiment_config)
     experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])
     if experiment_config.get('advisor'):
         parse_advisor_content(experiment_config)
