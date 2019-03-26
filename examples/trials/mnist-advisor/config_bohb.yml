@@ -2,7 +2,7 @@ authorName: default
 experimentName: example_mnist_bohb
 trialConcurrency: 1
 maxExecDuration: 10h
-maxTrialNum: 10000
+maxTrialNum: 1000
 #choice: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: search_space.json

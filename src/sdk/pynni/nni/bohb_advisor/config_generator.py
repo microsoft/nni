@@ -328,4 +328,5 @@ class CG_BOHB(object):
         }
 
         # update probs for the categorical parameters for later sampling
-        logger.debug('done building a new model for budget %f based on %i/%i split\nBest loss for this budget:%f\n\n\n\n\n'%(budget, n_good, n_bad, np.min(train_losses)))
+        logger.debug('done building a new model for budget %f based on %i/%i split\nBest loss for this budget:%f\n'
+                     %(budget, n_good, n_bad, np.min(train_losses)))

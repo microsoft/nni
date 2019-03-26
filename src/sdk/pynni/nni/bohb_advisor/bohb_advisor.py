@@ -67,7 +67,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
     ----------
     brackets_id: int
         brackets id
-    brackets_curr_decay:
+    brackets_curr_decay: int
         brackets curr decay
     increased_id: int
         increased id
@@ -147,6 +147,7 @@ class Bracket():
             sequence number, e.g., epoch number or batch number
         value: int
             latest result with sequence number seq
+
         Returns
         -------
         None
@@ -165,6 +166,12 @@ class Bracket():
         ----------
         i: int
             the ith round
+
+        Returns
+        -------
+        new trial or None:
+            If we have generated new trials after this trial end, we will return a new trial parameters.
+            Otherwise, we will return None.
         """
         global _KEY  # pylint: disable=global-statement
         self.num_finished_configs[i] += 1
