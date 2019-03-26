@@ -350,9 +350,11 @@ Similar to Hyperband, it is suggested when you have limited computation resource
 * **min_points_in_model**(*int, optional, default = None*): number of observations to start building a KDE. Default 'None' means dim+1, the bare minimum, reset value must be positive.
 * **top_n_percent**(*int, optional, default = 15*): percentage (between 1 and 99, default 15) of the observations that are considered good.
 * **num_samples**(*int, optional, default = 64*): number of samples to optimize EI (default 64)
-* **random_fraction**(*float, optional, default = 1/3*): fraction of purely random configurations that are sampled from the prior without the model.
-* **bandwidth_factor**(*float, optional, default = 3*): to encourage diversity, the points proposed to optimize EI, are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor
-* **min_bandwidth**(*float, optional, default = 1e-3*): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (Default: 1e-3) is used instead of zero.
+* **random_fraction**(*float, optional, default = 0.333*): fraction of purely random configurations that are sampled from the prior without the model.
+* **bandwidth_factor**(*float, optional, default = 3.0*): to encourage diversity, the points proposed to optimize EI, are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor
+* **min_bandwidth**(*float, optional, default = 0.001*): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (Default: 1e-3) is used instead of zero.
+
+*Please note that currently float type only support decimal representation, you have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*
 
 **Usage example**
 
