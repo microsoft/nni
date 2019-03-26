@@ -71,6 +71,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             throw new Error('kubernetesJobRestServer not initialized!');
         }
         await this.kubernetesJobRestServer.start();
+        this.kubernetesJobRestServer.openVersionCheck = this.versionCheck;
         this.log.info(`Kubeflow Training service rest server listening on: ${this.kubernetesJobRestServer.endPoint}`);
         while (!this.stopping) {
             // collect metrics for Kubeflow jobs by interacting with Kubernetes API server  
@@ -78,6 +79,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
             if(this.kubernetesJobRestServer.getErrorMessage) {
                 throw new Error(this.kubernetesJobRestServer.getErrorMessage);
+                this.stopping = true;
             }
         }
         this.log.info('Kubeflow training service exit.');

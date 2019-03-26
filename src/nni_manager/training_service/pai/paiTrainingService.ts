@@ -104,6 +104,7 @@ class PAITrainingService implements TrainingService {
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
             if (restServer.getErrorMessage) {
                 throw new Error(restServer.getErrorMessage)
+                this.stopping = true;
             }
             await delay(3000);
         }

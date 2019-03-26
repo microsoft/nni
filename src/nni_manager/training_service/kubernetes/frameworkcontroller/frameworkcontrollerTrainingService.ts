@@ -74,6 +74,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             await this.fcJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
             if(this.kubernetesJobRestServer.getErrorMessage) {
                 throw new Error(this.kubernetesJobRestServer.getErrorMessage);
+                this.stopping = true;
             }
         }
     }

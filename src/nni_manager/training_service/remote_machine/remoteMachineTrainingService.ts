@@ -120,6 +120,7 @@ class RemoteMachineTrainingService implements TrainingService {
             }
             if(restServer.getErrorMessage) {
                 throw new Error(restServer.getErrorMessage);
+                this.stopping = true;
             }
             await delay(3000);
         }

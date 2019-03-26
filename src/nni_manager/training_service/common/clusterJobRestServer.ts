@@ -128,7 +128,7 @@ export abstract class ClusterJobRestServer extends RestServer{
 
         router.post(`/stdout/${this.expId}/:trialId`, (req: Request, res: Response) => {
             if(this.openVersionCheck && !this.versionCheckSuccess && !this.errorMessage) {
-                this.errorMessage = `Version check failed, didn't version response from trialKeeper, please check your NNI version in `
+                this.errorMessage = `Version check failed, didn't get version check response from trialKeeper, please check your NNI version in `
                  + `NNIManager and TrialKeeper!`
             }
             const trialLogPath: string = path.join(getLogDir(), `trial_${req.params.trialId}.log`);
