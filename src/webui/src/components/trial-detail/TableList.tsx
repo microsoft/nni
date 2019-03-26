@@ -5,11 +5,11 @@ import {
     Row, Table, Button, Popconfirm, Modal, Checkbox
 } from 'antd';
 const CheckboxGroup = Checkbox.Group;
-import { MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
+import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
 import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
-import DefaultMetric from '../public-child/DefaultMetrc';
+// import DefaultMetric from '../public-child/DefaultMetrc';
 import IntermediateVal from '../public-child/IntermediateVal';
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
@@ -31,6 +31,7 @@ interface TableListProps {
     tableSource: Array<TableObj>;
     updateList: Function;
     platform: string;
+    logCollection: boolean;
 }
 
 interface TableListState {
@@ -39,8 +40,6 @@ interface TableListState {
     isObjFinal: boolean;
     isShowColumn: boolean;
     columnSelected: Array<string>; // user select columnKeys
-    logModal: boolean;
-    logMessage: string;
 }
 
 interface ColumnIndex {
@@ -62,9 +61,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             modalVisible: false,
             isObjFinal: false,
             isShowColumn: false,
-            logModal: false,
-            columnSelected: COLUMN,
-            logMessage: ''
+            columnSelected: COLUMN
         };
     }
 
@@ -108,51 +105,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
     }
 
-    updateTrialLogMessage = (id: string) => {
-        this._trialId = id;
-        axios(`${DOWNLOAD_IP}/trial_${this._trialId}.log`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    if (this._isMounted) {
-                        this.setState(() => ({
-                            logMessage: res.data
-                        }));
-                    }
-                }
-            })
-            .catch(error => {
-                if (error.response.status === 500) {
-                    if (this._isMounted) {
-                        this.setState(() => ({
-                            logMessage: 'failed to get log message'
-                        }));
-                    }
-                }
-            });
-    }
-
-    showLogModal = (id: string) => {
-        this.updateTrialLogMessage(id);
-        this.intervalTrialLog = window.setInterval(this.updateTrialLogMessage.bind(this, this._trialId), 10000);
-        if (this._isMounted) {
-            this.setState({
-                logModal: true
-            });
-        }
-    }
-
-    hideLogModal = () => {
-        window.clearInterval(this.intervalTrialLog);
-        if (this._isMounted) {
-            this.setState({
-                logModal: false,
-                logMessage: ''
-            });
-        }
-    }
-
     hideShowColumnModal = () => {
         if (this._isMounted) {
             this.setState({
@@ -183,7 +135,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 case 'Id':
                 case 'Duration':
                 case 'Status':
-                case 'Intermediate':
                 case 'Operation':
                 case 'Default':
                 case 'Intermediate Result':
@@ -224,12 +175,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     openRow = (record: TableObj) => {
-        const { platform } = this.props;
+        const { platform, logCollection } = this.props;
         return (
             <OpenRow
-                showLogModalOverview={this.showLogModal}
                 trainingPlatform={platform}
                 record={record}
+                logCollection={logCollection}
             />
         );
     }
@@ -345,19 +296,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         sorter: (a: TableObj, b: TableObj): number => a.status.localeCompare(b.status)
                     });
                     break;
-                case 'Intermediate':
-                    showColumn.push({
-                        title: 'Intermediate',
-                        dataIndex: 'Intermediate',
-                        key: 'Intermediate',
-                        width: 100,
-                        render: (text: string, record: TableObj) => {
-                            return(
-                                <IntermediateVal record={record}/>
-                            );
-                        }
-                    });
-                    break;
                 case 'Default':
                     showColumn.push({
                         title: 'Default Metric',
@@ -365,15 +303,17 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         key: 'acc',
                         width: 160,
                         sorter: (a: TableObj, b: TableObj) => {
-                            if (a.acc !== undefined && b.acc !== undefined) {
-                                return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
+                            const aa = a.description.intermediate;
+                            const bb = b.description.intermediate;
+                            if (aa !== undefined && bb !== undefined) {
+                                return aa[aa.length - 1] - bb[bb.length - 1];
                             } else {
                                 return NaN;
                             }
                         },
                         render: (text: string, record: TableObj) => {
                             return (
-                                <DefaultMetric record={record} />
+                                <IntermediateVal record={record} />
                             );
                         }
                     });

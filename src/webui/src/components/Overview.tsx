@@ -33,6 +33,8 @@ interface OverviewState {
     isTop10: boolean;
     titleMaxbgcolor: string;
     titleMinbgcolor?: string;
+    // trial stdout is content(false) or link(true)
+    isLogCollection: boolean;
 }
 
 class Overview extends React.Component<{}, OverviewState> {
@@ -76,7 +78,8 @@ class Overview extends React.Component<{}, OverviewState> {
                 totalCurrentTrial: 0
             },
             isTop10: true,
-            titleMaxbgcolor: '#999'
+            titleMaxbgcolor: '#999',
+            isLogCollection: false
         };
     }
 
@@ -95,6 +98,12 @@ class Overview extends React.Component<{}, OverviewState> {
                     const endTimenum = sessionData.endTime;
                     const assessor = sessionData.params.assessor;
                     const advisor = sessionData.params.advisor;
+                     // default logCollection is true
+                    const logCollection = res.data.params.logCollection;
+                    let expLogCollection: boolean = false;
+                    if (logCollection !== undefined && logCollection !== 'none') {
+                        expLogCollection = true;
+                    }
                     trialPro.push({
                         id: sessionData.id,
                         author: sessionData.params.authorName,
@@ -134,7 +143,8 @@ class Overview extends React.Component<{}, OverviewState> {
                     if (this._isMounted) {
                         this.setState({
                             trialProfile: trialPro[0],
-                            searchSpace: searchSpace
+                            searchSpace: searchSpace,
+                            isLogCollection: expLogCollection
                         });
                     }
                 }
@@ -379,7 +389,7 @@ class Overview extends React.Component<{}, OverviewState> {
         const {
             trialProfile, searchSpace, tableData, accuracyData,
             accNodata, status, errorStr, trialNumber, bestAccuracy,
-            titleMaxbgcolor, titleMinbgcolor
+            titleMaxbgcolor, titleMinbgcolor, isLogCollection
         } = this.state;
 
         return (
@@ -453,6 +463,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     <Col span={16} id="succeTable">
                         <SuccessTable
                             tableSource={tableData}
+                            logCollection={isLogCollection}
                             trainingPlatform={trialProfile.trainingServicePlatform}
                         />
                     </Col>
