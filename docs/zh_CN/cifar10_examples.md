@@ -16,9 +16,9 @@
 
 #### 准备
 
-此样例需要安装 PyTorch。 PyTorch 安装包需要选择所基于的 Python 和 CUDA 版本。
+This example requires PyTorch. PyTorch install package should be chosen based on python version and cuda version.
 
-这是环境 python==3.5 且 cuda == 8.0 的样例，然后用下列命令来安装 [ PyTorch](https://pytorch.org/)：
+Here is an example of the environment python==3.5 and cuda == 8.0, then using the following commands to install [PyTorch](https://pytorch.org/):
 
 ```bash
 python3 -m pip install http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp35m-linux_x86_64.whl
