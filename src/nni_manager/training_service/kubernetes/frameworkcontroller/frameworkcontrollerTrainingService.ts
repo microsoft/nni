@@ -66,6 +66,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             throw new Error('kubernetesJobRestServer not initialized!');
         }
         await this.kubernetesJobRestServer.start();
+        this.kubernetesJobRestServer.openVersionCheck = this.versionCheck;
         this.log.info(`frameworkcontroller Training service rest server listening on: ${this.kubernetesJobRestServer.endPoint}`);
         while (!this.stopping) {
             // collect metrics for frameworkcontroller jobs by interacting with Kubernetes API server  

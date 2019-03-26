@@ -31,7 +31,7 @@ import json
 from pyhdfs import HdfsClient
 import pkg_resources
 from .rest_utils import rest_post
-from .url_utils import gen_send_stdout_url, gen_send_error_url
+from .url_utils import gen_send_stdout_url, gen_send_version_url
 
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
@@ -121,17 +121,20 @@ def check_version(args):
         try:
             trial_keeper_version = regular.search(trial_keeper_version).group('version')
             nni_log(LogType.Info, 'trial_keeper_version is {0}'.format(trial_keeper_version))
-            training_service_version = regular.search(args.version).group('version')
-            nni_log(LogType.Info, 'training_service_version is {0}'.format(training_service_version))
-            if trial_keeper_version != training_service_version:
+            nni_manager_version = regular.search(args.version).group('version')
+            nni_log(LogType.Info, 'nni_manager_version is {0}'.format(nni_manager_version))
+            log_entry = {}
+            if trial_keeper_version != nni_manager_version:
                 nni_log(LogType.Error, 'Version does not match!')
-                error_message = 'TrainingService version is {0}, TrialKeeper version is {1}, NNI version does not match!\''.format(training_service_version, trial_keeper_version)
-                log_entry = {}
+                error_message = 'NNIManager version is {0}, TrialKeeper version is {1}, NNI version does not match!'.format(nni_manager_version, trial_keeper_version)
+                log_entry['tag'] = 'fail'
                 log_entry['msg'] = error_message
-                rest_post(gen_send_error_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10, False)
+                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10, False)
                 os._exit(1)
             else:
                 nni_log(LogType.Info, 'Version match!')
+                log_entry['tag'] = 'success'
+                rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10, False)
         except AttributeError as err:
             nni_log(LogType.Error, err)
 

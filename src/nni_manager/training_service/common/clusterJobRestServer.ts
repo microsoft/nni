@@ -42,6 +42,8 @@ export abstract class ClusterJobRestServer extends RestServer{
 
     private readonly expId: string = getExperimentId();
 
+    public openVersionCheck: boolean = true;
+    private versionCheckSuccess: boolean = false;
     private errorMessage?: string;
 
     /**
@@ -65,6 +67,10 @@ export abstract class ClusterJobRestServer extends RestServer{
     public get getErrorMessage(): string | undefined{
         return this.errorMessage;
     }
+    
+    public set setOpenVersionCheck(versionCheck: boolean) {
+        this.openVersionCheck = versionCheck;
+    }
 
     /**
      * NNIRestServer's own router registration
@@ -84,8 +90,24 @@ export abstract class ClusterJobRestServer extends RestServer{
             next();
         });
 
-        router.post(`/error/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            this.errorMessage = req.body.msg;
+        router.post(`/version/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            if (this.openVersionCheck) {
+                try {
+                    if (req.body.tag === 'success') {
+                        this.log.info(`Version check in trialKeeper success!`);
+                        this.versionCheckSuccess = true;
+                    } else {
+                        this.errorMessage = req.body.msg;
+                    }
+                } catch(err) {
+                    this.log.error(`json parse metrics error: ${err}`);
+                    res.status(500);
+                    res.send(err.message);
+                }
+            } else {
+                this.log.info(`Skipping version check!`);
+            }
+            res.send();
         });
 
         router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
@@ -105,6 +127,10 @@ export abstract class ClusterJobRestServer extends RestServer{
         });
 
         router.post(`/stdout/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            if(this.openVersionCheck && !this.versionCheckSuccess && !this.errorMessage) {
+                this.errorMessage = `Version check failed, didn't version response from trialKeeper, please check your NNI version in `
+                 + `NNIManager and TrialKeeper!`
+            }
             const trialLogPath: string = path.join(getLogDir(), `trial_${req.params.trialId}.log`);
             try {
                 let skipLogging: boolean = false;

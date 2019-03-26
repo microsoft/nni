@@ -61,7 +61,7 @@ abstract class KubernetesTrainingService {
     protected kubernetesCRDClient?: KubernetesCRDClient;
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
-    protected versionCheck?: boolean = true;
+    protected versionCheck: boolean = true;
     protected logCollection: string;
     
     constructor() {
