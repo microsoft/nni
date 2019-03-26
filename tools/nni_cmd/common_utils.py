@@ -18,7 +18,7 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import sys
+import os,sys
 import json
 import yaml
 import psutil
@@ -79,3 +79,9 @@ def kill_command(pid):
         return ['taskkill','/PID', str(pid),'/F']
     else:
         return ['kill', '-9', str(pid)]
+
+def get_user():
+    if sys.platform =='win32':
+        return os.environ['USERNAME']
+    else:
+        return os.environ['USER']

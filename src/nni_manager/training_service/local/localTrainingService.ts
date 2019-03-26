@@ -18,7 +18,6 @@
  */
 
 'use strict';
-import * as os from 'os';
 import * as assert from 'assert';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
