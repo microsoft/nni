@@ -113,7 +113,7 @@ class Bracket():
         self.max_budget = max_budget
         self.optimize_mode = optimize_mode
 
-        self.n = math.ceil((s_max + 1) * eta**s / (s + 1) + _epsilon)
+        self.n = math.ceil((s_max + 1) * eta**s / (s + 1) - _epsilon)
         self.r = max_budget / eta**s
         self.i = 0
         self.hyper_configs = []         # [ {id: params}, {}, ... ]
