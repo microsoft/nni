@@ -479,21 +479,21 @@ machineList:
   
   - **azureStorage**
     
-    If users use azure kubernetes service, they should set azure storage account to store code files.
+    如果用户使用了 Azure Kubernetes Service，需要设置 Azure 存储账户来存放代码文件。
     
     - **accountName**
       
-      **accountName** is the name of azure storage account.
+      **accountName** 是 Azure 存储账户的名称。
     
     - **azureShare**
       
-      **azureShare** is the share of the azure file storage.
+      **azureShare** 是 Azure 文件存储的共享参数。
 
 - **paiConfig**
   
   - **userName**
     
-    **userName** is the user name of your pai account.
+    **userName** 是 OpenPAI 的用户名。
   
   - **password**
     
