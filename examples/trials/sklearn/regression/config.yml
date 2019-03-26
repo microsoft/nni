@@ -9,7 +9,7 @@ searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
   builtinTunerName: TPE
   classArgs:
     #choice: maximize, minimize
