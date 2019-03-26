@@ -78,6 +78,17 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
     }
 
     protected onTrialJobStatusChanged(trialJob: LocalTrialJobDetailForGPU, oldStatus: TrialJobStatus): void {
+        //if job is not running, destory job stream
+        if(['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'].includes(trialJob.status)) {
+            if(this.jobStreamMap.has(trialJob.id)) {
+                const stream = this.jobStreamMap.get(trialJob.id);
+                if(!stream) {
+                    throw new Error(`Could not find stream in trial ${trialJob.id}`);
+                }
+                stream.destroy();
+                this.jobStreamMap.delete(trialJob.id);
+            }
+        }
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length !== 0 && this.gpuScheduler !== undefined) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
                 for (const index of trialJob.gpuIndices) {

@@ -103,7 +103,7 @@ class LocalTrainingService implements TrainingService {
     protected log: Logger;
     protected localTrailConfig?: TrialConfig;
     private isMultiPhase: boolean = false;
-    private jobStreamMap: Map<string, ts.Stream>;
+    protected jobStreamMap: Map<string, ts.Stream>;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -345,17 +345,6 @@ class LocalTrainingService implements TrainingService {
             const oldStatus: TrialJobStatus = trialJob.status;
             trialJob.status = newStatus;
             this.onTrialJobStatusChanged(trialJob, oldStatus);
-            //if job is not running, destory job stream
-            if(['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'].includes(newStatus)) {
-                if(this.jobStreamMap.has(trialJob.id)) {
-                    const stream = this.jobStreamMap.get(trialJob.id);
-                    if(!stream) {
-                        throw new Error(`Could not find stream in trial ${trialJob.id}`);
-                    }
-                    stream.destroy();
-                    this.jobStreamMap.delete(trialJob.id);
-                }
-            }
         }
     }
 
