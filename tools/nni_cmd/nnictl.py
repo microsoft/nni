@@ -150,7 +150,7 @@ def parse_args():
     parser_log_stderr.set_defaults(func=log_stderr)
     parser_log_trial = parser_log_subparsers.add_parser('trial', help='get trial log path')
     parser_log_trial.add_argument('id', nargs='?', help='id of the trial to be found the log path')
-    parser_log_trial.add_argument('--experiment', '-E', dest='experiment', help='experiment id of the trial')
+    parser_log_trial.add_argument('--experiment', '-E', dest='experiment', help='experiment id of the trial, xperiment ID of the trial, required when id is not empty.')
     parser_log_trial.set_defaults(func=log_trial)
 
     #parse package command

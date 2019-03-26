@@ -355,7 +355,7 @@ nnictl support commands:
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
   |id|  False| |ID of the trial to be found the log path|
-  |--experiment, -E|  False| |Experiment ID of the trial|
+  |--experiment, -E|  False| |Experiment ID of the trial, required when id is not empty.|
 
 <a name="webui"></a>
 ### Manage webui
