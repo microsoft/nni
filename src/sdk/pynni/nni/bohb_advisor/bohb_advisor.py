@@ -113,8 +113,8 @@ class Bracket():
         self.max_budget = max_budget
         self.optimize_mode = optimize_mode
 
-        self.n = math.ceil((s_max + 1) * eta**s / (s + 1))
-        self.r = math.ceil(max_budget / eta**s)
+        self.n = math.ceil((s_max + 1) * eta**s / (s + 1) + _epsilon)
+        self.r = max_budget / eta**s
         self.i = 0
         self.hyper_configs = []         # [ {id: params}, {}, ... ]
         self.configs_perf = []          # [ {id: [seq, acc]}, {}, ... ]
@@ -128,7 +128,7 @@ class Bracket():
 
     def get_n_r(self):
         """return the values of n and r for the next round"""
-        return math.floor(self.n / self.eta**self.i), self.r * self.eta**self.i
+        return math.floor(self.n / self.eta**self.i + _epsilon), math.floor(self.r * self.eta**self.i +_epsilon)
 
     def increase_i(self):
         """i means the ith round. Increase i by 1"""
