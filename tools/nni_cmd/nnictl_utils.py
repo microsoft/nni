@@ -76,11 +76,14 @@ def check_experiment_id(args):
             return None
         else:
             return running_experiment_list[0]
-    if experiment_dict.get(args.id):
-        return args.id
-    else:
-        print_error('Id not correct!')
-        return None
+    if hasattr(args, "experiment"):
+        if experiment_dict.get(args.experiment):
+            return args.experiment
+    elif hasattr(args, "id"):
+        if experiment_dict.get(args.id):
+            return args.id
+    print_error('Id not correct!')
+    return None
 
 def parse_ids(args):
     '''Parse the arguments for nnictl stop
@@ -221,7 +224,7 @@ def trial_ls(args):
         response = rest_get(trial_jobs_url(rest_port), 20)
         if response and check_response(response):
             content = json.loads(response.text)
-            for index, value in enumerate(content):               
+            for index, value in enumerate(content):
                 content[index] = convert_time_stamp_to_date(value)
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
         else:
@@ -239,7 +242,7 @@ def trial_kill(args):
         return
     running, _ = check_rest_server_quick(rest_port)
     if running:
-        response = rest_delete(trial_job_id_url(rest_port, args.trialid), 20)
+        response = rest_delete(trial_job_id_url(rest_port, args.id), 20)
         if response and check_response(response):
             print(response.text)
         else:
@@ -327,14 +330,19 @@ def log_trial(args):
     else:
         print_error('Restful server is not running...')
         exit(1)
-    if args.id:
-        if trial_id_path_dict.get(args.id):
-            print('id:' + args.id + ' path:' + trial_id_path_dict[args.id])
+    if args.experiment:
+        if args.id:
+            if trial_id_path_dict.get(args.id):
+                print('id:' + args.id + ' path:' + trial_id_path_dict[args.id])
+            else:
+                print_error('trial id is not valid!')
+                exit(1)
         else:
-            print_error('trial id is not valid!')
+            print_error('please specific the trial id!')
+            print_error("trial id list in this experiment: " + str(list(trial_id_path_dict.keys())))
             exit(1)
     else:
-        for key in trial_id_path_dict.keys():
+        for key in trial_id_path_dict:
             print('id:' + key + ' path:' + trial_id_path_dict[key])
 
 def get_config(args):
@@ -412,7 +420,7 @@ def show_experiment_info():
             response = rest_get(trial_jobs_url(experiment_dict[key]['port']), 20)
             if response and check_response(response):
                 content = json.loads(response.text)
-                for index, value in enumerate(content):               
+                for index, value in enumerate(content):
                     content[index] = convert_time_stamp_to_date(value)
                     print(TRIAL_MONITOR_CONTENT % (content[index].get('id'), content[index].get('startTime'), content[index].get('endTime'), content[index].get('status')))
         print(TRIAL_MONITOR_TAIL)

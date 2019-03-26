@@ -21,17 +21,9 @@
 
 import os
 from setuptools import setup, find_packages
-from setuptools.command.install import install
-import subprocess
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
-
-class CustomInstallCommand(install):
-    '''a customized install class in pip module'''
-    def run(self):
-        super().run()
-        subprocess.run(['make', 'pip-install'], check=True)
 
 setup(
     name = 'nni',
@@ -66,9 +58,6 @@ setup(
         'PythonWebHDFS'
     ],
 
-    cmdclass={
-        'install': CustomInstallCommand
-    },
     entry_points = {
         'console_scripts' : [
             'nnictl = nni_cmd.nnictl:parse_args'

@@ -47,6 +47,11 @@ function getLogDir(): string{
     return path.join(getExperimentRootDir(), 'log');
 }
 
+function getLogLevel(): string{
+    return getExperimentStartupInfo()
+    .getLogLevel();
+}
+
 function getDefaultDatabaseDir(): string {
     return path.join(getExperimentRootDir(), 'db');
 }
@@ -466,4 +471,4 @@ async function runScript(localTrailConfig: TrialConfig, workingDirectory: string
 
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getVersion, getTunerProc, isAlive, killPid, runScript };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getTunerProc, isAlive, killPid, runScript };
