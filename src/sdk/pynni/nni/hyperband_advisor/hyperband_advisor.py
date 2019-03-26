@@ -320,7 +320,7 @@ class Hyperband(MsgDispatcherBase):
     def load_checkpoint(self):
         pass
 
-    def save_checkpont(self):
+    def save_checkpoint(self):
         pass
 
     def handle_initialize(self, data):
