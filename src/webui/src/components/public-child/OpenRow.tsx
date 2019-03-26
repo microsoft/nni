@@ -8,8 +8,8 @@ const TabPane = Tabs.TabPane;
 
 interface OpenRowProps {
     trainingPlatform: string;
-    showLogModalOverview: Function;
     record: TableObj;
+    logCollection: boolean;
 }
 
 class OpenRow extends React.Component<OpenRowProps, {}> {
@@ -20,7 +20,7 @@ class OpenRow extends React.Component<OpenRowProps, {}> {
     }
 
     render() {
-        const { trainingPlatform, record, showLogModalOverview } = this.props;
+        const { trainingPlatform, record, logCollection } = this.props;
 
         let isHasParameters = true;
         if (record.description.parameters.error) {
@@ -62,7 +62,7 @@ class OpenRow extends React.Component<OpenRowProps, {}> {
                                     <PaiTrialLog
                                         logStr={logPathRow}
                                         id={record.id}
-                                        showLogModal={showLogModalOverview}
+                                        logCollection={logCollection}
                                     />
                                     :
                                     <TrialLog logStr={logPathRow} id={record.id} />
