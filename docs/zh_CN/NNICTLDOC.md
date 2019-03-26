@@ -213,10 +213,10 @@ nnictl 支持的命令：
     
     * 选项
   
-  | 参数及缩写            | 是否必需  | 默认值 | 说明                           |
-  | ---------------- | ----- | --- | ---------------------------- |
-  | id               | False |     | ID of the trial to be killed |
-  | --experiment, -E | True  |     | Experiment id of the trial   |
+  | 参数及缩写            | 是否必需  | 默认值 | 说明                    |
+  | ---------------- | ----- | --- | --------------------- |
+  | id               | False |     | 要终止的 Trial 的 id       |
+  | --experiment, -E | True  |     | Trial 的 Experiment id |
 
 <a name="top"></a>
 
@@ -365,10 +365,10 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写            | 是否必需  | 默认值 | 说明                                                         |
-  | ---------------- | ----- | --- | ---------------------------------------------------------- |
-  | id               | False |     | ID of the trial to be found the log path                   |
-  | --experiment, -E | False |     | Experiment ID of the trial, required when id is not empty. |
+  | 参数及缩写            | 是否必需  | 默认值 | 说明                            |
+  | ---------------- | ----- | --- | ----------------------------- |
+  | id               | False |     | 需要显示日志路径的 Trial id            |
+  | --experiment, -E | False |     | 如果 id 为空，则需要添加 Experiment id。 |
 
 <a name="webui"></a>
 
