@@ -3,21 +3,19 @@ $install_node = $TRUE
 $install_yarn = $TRUE
 $install_py = $FALSE
 $install_pip = $FALSE
-$uninstall = $FALSE
 
 ### CONFIGURATION
 $PIP_INSTALL = "python -m pip install ."
-$PIP_UNINSTALL = "python -m pip uninstall ."
 
 # nodejs
 $version = "10.15.1"
-$pyVersion ="37"
+$pyVersion ="36"
 $nodeUrl = "https://nodejs.org/dist/v10.15.1/node-v10.15.1-win-x64.zip"
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
-$pyUrl= "https://www.python.org/ftp/python/3.7.2/python-3.7.2.post1-embed-amd64.zip"
+$pyUrl= "https://www.python.org/ftp/python/3.6.4/python-3.6.4.post1-embed-amd64.zip"
 $pipUrl = "https://bootstrap.pypa.io/get-pip.py"
 $unzipNodeDir = "node-v$version-win-x64"
-$unzipPythonDir = "python-3.7.2.post1-embed-amd64"
+$unzipPythonDir = "python-3.6.4.post1-embed-amd64"
 
 
 ##$NNI_DEPENDENCY_FOLDER = "$env:temp\$env:USERNAME"
@@ -109,7 +107,7 @@ if($install_py)
     Write-Host "Downloading Python3..."
     (New-Object Net.WebClient).DownloadFile($pyUrl, $NNI_PYTHON3_ZIP)
     Expand-Archive $NNI_PYTHON3_ZIP -DestinationPath $NNI_PYTHON_FOLDER
-    $deleteFile = $NNI_PYTHON_FOLDER + "\python37._pth"
+    $deleteFile = $NNI_PYTHON_FOLDER + "\python36._pth"
     if(Test-Path $deleteFile){
         Remove-Item $deleteFile -r -fo
     }
@@ -193,25 +191,3 @@ if(!(Test-Path $BASH_COMP_PREFIX)){
 }
 Copy-Item tools/bash-completion $BASH_COMP_SCRIPT
 
-if($uninstall)
-{
-    # uninstall
-    cmd /c $PIP_UNINSTALL -y nni
-    cmd /c $PIP_UNINSTALL -y nnictl
-    Remove-Item NNI_PKG_FOLDER -r -fo
-    Remove-Item "$BIN_FOLDER/node" -r -fo
-    Remove-Item "$BIN_FOLDER/nnictl" -r -fo
-    Remove-Item $BASH_COMP_SCRIPT -r -fo
-
-    # clean
-    Remove-Item "tools/build" -r -fo
-    Remove-Item "tools/nnictl.egg-info" -r -fo
-    Remove-Item "src/nni_manager/dist" -r -fo
-    Remove-Item "src/nni_manager/node_modules" -r -fo
-    Remove-Item "src/sdk/pynni/build" -r -fo
-    Remove-Item "src/sdk/pynni/nni_sdk.egg-info" -r -fo
-    Remove-Item "src/webui/build" -r -fo
-    Remove-Item "src/webui/node_modules" -r -fo
-    Remove-Item $NNI_YARN_FOLDER -r -fo
-    Remove-Item $NNI_NODE_FOLDER -r -fo
-}
