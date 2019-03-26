@@ -497,11 +497,11 @@ machineList:
   
   - **password**
     
-    **password** is the password of the pai account.
+    **password** 是 OpenPAI 用户的密码。
   
   - **host**
     
-    **host** is the host of pai.
+    **host** 是 OpenPAI 的主机地址。
 
 <a name="Examples"></a>
 
@@ -604,7 +604,7 @@ machineList:
 
 - **远程模式**
   
-  If run trial jobs in remote machine, users could specify the remote machine information as following format:
+  如果要在远程服务器上运行 Trial 任务，需要增加服务器信息：
   
   ```yaml
   authorName: test
