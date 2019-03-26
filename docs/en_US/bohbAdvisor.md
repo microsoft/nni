@@ -36,6 +36,8 @@ This procedure is summarized by the pseudocode below.
 
 ## 2. Usage
 
+BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace), user could use `pip3 install ConfigSpace==0.4.7` to install it.
+
 To use BOHB, you should add the following spec in your experiment's YAML config file:
 
 ```yml
@@ -44,9 +46,9 @@ advisor:
   classArgs:
     optimize_mode: maximize
     min_budget: 1
-    max_budget: 3
+    max_budget: 27
     eta: 3
-    min_points_in_model: None
+    min_points_in_model: 7
     top_n_percent: 15
     num_samples: 64
     random_fraction: 1/3
@@ -60,7 +62,7 @@ advisor:
 * **min_budget** (*int, optional, default = 1*) - The smallest budget to consider. Needs to be positive.
 * **max_budget** (*int, optional, default = 3*) - The largest budget to consider. Needs to be larger than min_budget.
 * **eta** (*int, optional, default = 3*) - In each iteration, a complete run of sequential halving is executed. In it, after evaluating each configuration on the same subset size, only a fraction of 1/eta of them 'advances' to the next round. Must be greater or equal to 2.
-* **min_points_in_model**(*int, optional, default = None*): number of observations to start building a KDE. Default 'None' means dim+1, the bare minimum.
+* **min_points_in_model**(*int, optional, default = None*): number of observations to start building a KDE. Default 'None' means dim+1, the bare minimum, reset value must be positive.
 * **top_n_percent**(*int, optional, default = 15*): percentage (between 1 and 99, default 15) of the observations that are considered good.
 * **num_samples**(*int, optional, default = 64*): number of samples to optimize EI (default 64)
 * **random_fraction**(*float, optional, default = 1/3*): fraction of purely random configurations that are sampled from the prior without the model.

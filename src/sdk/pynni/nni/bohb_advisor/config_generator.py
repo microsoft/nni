@@ -126,11 +126,7 @@ class CG_BOHB(object):
                 bw = max(bw, self.min_bandwidth)
                 if t == 0:
                     bw = self.bw_factor*bw
-                    try:
-                        vector.append(sps.truncnorm.rvs(-m/bw, (1-m)/bw, loc=m, scale=bw))
-                    except:
-                        logger.warning("Truncated Normal failed")
-                        logger.warning("data in the KDE:\n%s"%kde_good.data)
+                    vector.append(sps.truncnorm.rvs(-m/bw, (1-m)/bw, loc=m, scale=bw))
                 else:
                     if np.random.rand() < (1-bw):
                         vector.append(int(m))
@@ -174,18 +170,11 @@ class CG_BOHB(object):
                     best_vector[i] = int(np.rint(best_vector[i]))
             sample = ConfigSpace.Configuration(self.configspace, vector=best_vector).get_dictionary()
 
-            try:
-                sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
-                    configuration_space=self.configspace,
-                    configuration=sample)
-                info_dict['model_based_pick'] = True
+            sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
+                configuration_space=self.configspace,
+                configuration=sample)
+            info_dict['model_based_pick'] = True
 
-            except Exception as e:
-                logger.warning(("="*50 + "\n")*3 +\
-                        "Error converting configuration:\n%s"%sample+\
-                        "\n here is a traceback:" +\
-                        traceback.format_exc())
-                raise(e)
         return sample, info_dict
 
     def get_config(self, budget):
@@ -224,15 +213,11 @@ class CG_BOHB(object):
                 sample = self.configspace.sample_configuration()
                 info_dict['model_based_pick'] = False
 
-        try:
-            sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
-                configuration_space=self.configspace,
-                configuration=sample.get_dictionary()
-            ).get_dictionary()
-        except Exception as e:
-            logger.warning("Error (%s) converting configuration: %s -> "
-                        "using random configuration!", e, sample)
-            sample = self.configspace.sample_configuration().get_dictionary()
+        sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
+            configuration_space=self.configspace,
+            configuration=sample.get_dictionary()
+        ).get_dictionary()
+
         logger.debug('done sampling a new configuration.')
         sample['TRIAL_BUDGET'] = budget
         return sample

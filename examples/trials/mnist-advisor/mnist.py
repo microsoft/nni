@@ -234,7 +234,7 @@ if __name__ == '__main__':
         params = generate_default_params()
         params.update(RCV_PARAMS)
 
-        params['batch_num'] = RCV_PARAMS['TRIAL_BUDGET'] * 10
+        params['batch_num'] = RCV_PARAMS['STEPS'] * 10
         main(params)
     except Exception as exception:
         logger.exception(exception)
