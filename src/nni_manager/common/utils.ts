@@ -178,9 +178,6 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
         throw new Error('Error: specify neither tuner nor advisor is not allowed');
     }
     let command: string = `python3 -m nni`;
-    if(os.platform()==="win32"){
-        command = `python -m nni`;
-    }
     if (multiPhase) {
         command += ' --multi_phase';
     }
@@ -421,6 +418,16 @@ async function isAlive(pid:any):Promise<boolean>{
     return deferred.promise;
 }
 
+async function killPid(pid:any):Promise<void>{
+    let deferred : Deferred<void> = new Deferred<void>();
+    try {
+        await cpp.exec(`kill ${pid}`);
+    } catch (error) {
+        // pid does not exist, do nothing here
+    }
+    return deferred.promise;
+}
+
 async function runScript(localTrailConfig: TrialConfig, workingDirectory: string, variables: { key: string; value: string }[]):Promise<string[]>{
     let deferred : Deferred<string[]> = new Deferred<string[]>();
     let cmdParameter: string[] = [];
@@ -465,4 +472,4 @@ async function runScript(localTrailConfig: TrialConfig, workingDirectory: string
 
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getVersion, getTunerProc, isAlive, runScript };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getVersion, getTunerProc, isAlive, killPid, runScript };

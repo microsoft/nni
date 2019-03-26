@@ -265,7 +265,7 @@ class LocalTrainingService implements TrainingService {
         if (!this.initialized) {
             this.rootDir = getExperimentRootDir();
             if(!fs.existsSync(this.rootDir)){
-                await cpp.exec(`mkdir -p ${this.rootDir}`);
+                await cpp.exec(`mkdir ${this.rootDir}`);
             }
             this.initialized = true;
         }
@@ -346,8 +346,6 @@ class LocalTrainingService implements TrainingService {
     private async runTrialJob(trialJobId: string, resource: {}): Promise<void> {
         const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
         const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource);
-
-        const runScriptLines: string[] = [];
 
         if (!this.localTrailConfig) {
             throw new Error('trial config is not initialized');

@@ -29,7 +29,7 @@ from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL
-from .common_utils import print_normal, print_error, print_warning, detect_process
+from .common_utils import print_normal, print_error, print_warning, detect_process, kill_command
 
 def update_experiment_status():
     '''Update the experiment status in config file'''
@@ -192,16 +192,13 @@ def stop_experiment(args):
             rest_port = nni_config.get_config('restServerPort')
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
-                if sys.platform =='win32':
-                    stop_rest_cmds = ['taskkill', '/pid', str(rest_pid),'/F']
-                else:
-                    stop_rest_cmds = ['kill', str(rest_pid)]
+                stop_rest_cmds = kill_command(rest_pid)
                 call(stop_rest_cmds)
                 tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
                 if tensorboard_pid_list:
                     for tensorboard_pid in tensorboard_pid_list:
                         try:
-                            cmds = ['kill', '-9', str(tensorboard_pid)]
+                            cmds = kill_command(tensorboard_pid)
                             call(cmds)
                         except Exception as exception:
                             print_error(exception)

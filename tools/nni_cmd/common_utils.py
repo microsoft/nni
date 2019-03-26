@@ -18,6 +18,7 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import sys
 import json
 import yaml
 import psutil
@@ -71,3 +72,10 @@ def detect_port(port):
         return True
     except:
         return False
+
+def kill_command(pid):
+    '''Kill process'''
+    if sys.platform =='win32':
+        return ['taskkill','/PID', str(pid),'/F']
+    else:
+        return ['kill', '-9', str(pid)]

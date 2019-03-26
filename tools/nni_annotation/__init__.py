@@ -36,26 +36,21 @@ def generate_search_space(code_dir):
     """
     search_space = {}
     if sys.platform == "win32":
-        if code_dir.endswith('\\'):
-            code_dir = code_dir[:-1]
+        slash = '\\'
     else:
-        if code_dir.endswith('/'):
-            code_dir = code_dir[:-1]
+        slash = '/'
+    
+    if code_dir.endswith(slash):
+        code_dir = code_dir[:-1]
 
     for subdir, _, files in os.walk(code_dir):
         # generate module name from path
         if subdir == code_dir:
             package = ''
         else:
-            if sys.platform == "win32":
-                assert subdir.startswith(code_dir + '\\'), subdir
-            else:
-                assert subdir.startswith(code_dir + '/'), subdir
+            assert subdir.startswith(code_dir + slash), subdir
             prefix_len = len(code_dir) + 1
-            if sys.platform == "win32":
-                package = subdir[prefix_len:].replace('\\', '.') + '.'
-            else:
-                package = subdir[prefix_len:].replace('/', '.') + '.'
+            package = subdir[prefix_len:].replace(slash, '.') + '.'
 
         for file_name in files:
             if file_name.endswith('.py'):
@@ -85,18 +80,11 @@ def expand_annotations(src_dir, dst_dir):
     src_dir: directory path of user code (str)
     dst_dir: directory to place generated files (str)
     """
-    if sys.platform == "win32":
-        if src_dir[-1] == '\\':
-            src_dir = src_dir[:-1]
-    else:
-        if src_dir[-1] == '/':
-            src_dir = src_dir[:-1]
-    if sys.platform == "win32":
-        if dst_dir[-1] == '\\':
-            dst_dir = dst_dir[:-1]
-    else:
-        if dst_dir[-1] == '/':
-            dst_dir = dst_dir[:-1]
+    if src_dir[-1] == slash:
+        src_dir = src_dir[:-1]
+    
+    if dst_dir[-1] == slash:
+        dst_dir = dst_dir[:-1]
 
     annotated = False
 

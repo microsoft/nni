@@ -18,7 +18,6 @@
  */
 
 'use strict';
-import * as os from 'os';
 import * as assert from 'assert';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
