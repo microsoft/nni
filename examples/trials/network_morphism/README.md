@@ -5,7 +5,7 @@ The Network Morphism is a build-in Tuner using network morphism techniques to se
 
 ### 1. Training framework support
 
-The network morphism now is framework-based, and we have not implemented the framework-free methods. The training frameworks which we have supported yet are Pytorch and Keras. If you get familiar with the intermediate JSON format, you can build your own model in your own training framework. In the future, we will change to intermediate format from JSON to ONNX in order to get a [standard intermediate representation spec](https://github.com/onnx/onnx/blob/master/docs/IR.md).
+The network morphism now is framework-based, and we have not implemented the framework-free methods. The training frameworks which we have supported yet are PyTorch and Keras. If you get familiar with the intermediate JSON format, you can build your own model in your own training framework. In the future, we will change to intermediate format from JSON to ONNX in order to get a [standard intermediate representation spec](https://github.com/onnx/onnx/blob/master/docs/IR.md).
 
 
 ### 2. Install the requirements 

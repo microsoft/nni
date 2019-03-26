@@ -14,8 +14,8 @@
 * Fix search space parsing error when using SMAC tuner.
 * Fix cifar10 example broken pipe issue.
 * Add unit test cases for nnimanager and local training service.
-* Add integration test azure pipelines for remote machine, PAI and kubeflow training services.
-* Support Pylon in PAI webhdfs client.
+* Add integration test azure pipelines for remote machine, OpenPAI and kubeflow training services.
+* Support Pylon in OpenPAI webhdfs client.
 
 
 ## Release 0.5.1 - 1/31/2018
@@ -28,7 +28,7 @@
 
 ### Bug Fixes and Other Changes
 * Fix the bug of installation in python virtualenv, and refactor the installation logic
-* Fix the bug of HDFS access failure on PAI mode after PAI is upgraded. 
+* Fix the bug of HDFS access failure on OpenPAI mode after OpenPAI is upgraded. 
 * Fix the bug that sometimes in-place flushed stdout makes experiment crash
 
 
