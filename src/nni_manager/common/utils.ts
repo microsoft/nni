@@ -22,6 +22,7 @@
 import * as assert from 'assert';
 import { randomBytes } from 'crypto';
 import * as cpp from 'child-process-promise';
+import * as cp from 'child_process';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -33,6 +34,7 @@ import * as util from 'util';
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentId, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
+import { TrialConfig } from '../training_service/common/trialConfig';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { getLogger } from './log';
 
@@ -398,6 +400,69 @@ function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newE
     }
 }
 
+async function isAlive(pid:any):Promise<boolean>{
+    let deferred : Deferred<boolean> = new Deferred<boolean>();
+    let alive: boolean = false;
+    if(process.platform ==='win32'){
+        const str = cp.execSync(`tasklist /FI ${'"PID eq '+pid +'"'}`).toString();
+        if(!str.includes("No tasks")){
+            alive = true;
+        }
+    }
+    else{
+        try {
+            await cpp.exec(`kill -0 ${pid}`);
+            alive = true;
+        } catch (error) {
+            //ignore
+        }
+    }
+    deferred.resolve(alive);
+    return deferred.promise;
+}
+
+async function runScript(localTrailConfig: TrialConfig, workingDirectory: string, variables: { key: string; value: string }[]):Promise<string[]>{
+    let deferred : Deferred<string[]> = new Deferred<string[]>();
+    let cmdParameter: string[] = [];
+    const runScriptLines: string[] = [];
+    if (process.platform === "win32") {
+        runScriptLines.push(`cd ${localTrailConfig.codeDir}`);
+        for (const variable of variables) {
+            runScriptLines.push(`$env:${variable.key}="${variable.value}"`);
+        }
+        runScriptLines.push(
+        `Invoke-Expression "${localTrailConfig.command}" 2>${path.join(workingDirectory, 'stderr')}`,
+        `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
+        `$NOW_DATE = "$NOW_DATE" + "000"`,
+        `$state = 0`,
+        `if($?){$state = 0}`,
+        `else{$state = 2}`,
+        `Write $state " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`
+        );
+        await cpp.exec(`mkdir ${workingDirectory}`);
+        await cpp.exec(`mkdir ${path.join(workingDirectory, '.nni')}`);
+        await cpp.exec(`copy NUL ${path.join(workingDirectory, '.nni', 'metrics')}`);
+        await fs.promises.writeFile(path.join(workingDirectory, 'run.ps1'), runScriptLines.join('\r\n'), { encoding: 'utf8', mode: 0o777 });
+        cmdParameter.push("powershell");
+        cmdParameter.push("run.ps1");
+    }
+    else{
+        runScriptLines.push('#!/bin/bash', `cd ${localTrailConfig.codeDir}`);
+            for (const variable of variables) {
+                runScriptLines.push(`export ${variable.key}=${variable.value}`);
+            }
+            runScriptLines.push(`eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`, `echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`);
+            await cpp.exec(`mkdir -p ${workingDirectory}`);
+            await cpp.exec(`mkdir -p ${path.join(workingDirectory, '.nni')}`);
+            await cpp.exec(`touch ${path.join(workingDirectory, '.nni', 'metrics')}`);
+            await fs.promises.writeFile(path.join(workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
+            cmdParameter.push("bash");
+            cmdParameter.push("run.sh");
+    }
+    deferred.resolve(cmdParameter);
+    return deferred.promise;
+}
+
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getVersion, getTunerProc };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getVersion, getTunerProc, isAlive, runScript };
