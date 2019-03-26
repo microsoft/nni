@@ -59,9 +59,9 @@ paiConfig:
 * outputDir 
     * 可选。 指定了 Trial 的 HDFS 输出目录。 Trial 在完成（成功或失败）后，Trial 的 stdout， stderr 会被 NNI 自动复制到此目录中。 格式应为 hdfs://{your HDFS host}:9000/{输出目录}
 * virturlCluster 
-    * 可选。 设置 OpenPAI 的 virtualCluster，即虚拟集群。 如果未设置此参数，将使用默认的虚拟集群。
+    * 可选。 Set the virtualCluster of OpenPAI. 如果未设置此参数，将使用默认的虚拟集群。
 * shmMB 
-    * 可选。 设置 OpenPAI 的 shmMB，即 Docker 中的共享内存。
+    * 可选。 Set the shmMB configuration of OpenPAI, it set the shared memory for one task in the task role.
 
 完成并保存 NNI Experiment 配置文件后（例如可保存为：exp_pai.yml），运行以下命令：
 
