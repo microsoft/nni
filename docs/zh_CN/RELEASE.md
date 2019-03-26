@@ -18,8 +18,8 @@
 * 修复在使用 SMAC Tuner 时，解析搜索空间的错误。
 * 修复 CIFAR-10 样例中的 broken pipe 问题。
 * 为本地训练服务和 NNI 管理器添加单元测试。
-* Add integration test azure pipelines for remote machine, OpenPAI and kubeflow training services.
-* Support Pylon in OpenPAI webhdfs client.
+* 为远程服务器、OpenPAI 和 Kubeflow 训练平台在 Azure 中增加集成测试。
+* 在 OpenPAI 客户端中支持 Pylon 路径。
 
 ## 发布 0.5.1 - 1/31/2018
 
@@ -35,7 +35,7 @@
 ### Bug 修复和其它更新
 
 * 修复了 Python 虚拟环境中安装的 Bug，并重构了安装逻辑。
-* Fix the bug of HDFS access failure on OpenPAI mode after OpenPAI is upgraded. 
+* 修复了在最新的 OpenPAI 下存取 HDFS 失败的问题。 
 * 修复了有时刷新 stdout 会造成 Experiment 崩溃的问题。
 
 ## 发布 0.5.0 - 01/14/2019
