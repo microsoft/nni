@@ -42,6 +42,8 @@ export abstract class ClusterJobRestServer extends RestServer{
 
     private readonly expId: string = getExperimentId();
 
+    private errorMessage?: string;
+
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
@@ -58,6 +60,10 @@ export abstract class ClusterJobRestServer extends RestServer{
             throw new Error('PAI Rest server port is undefined');
         }
         return this.port;
+    }
+    
+    public get getErrorMessage(): string | undefined{
+        return this.errorMessage;
     }
 
     /**
@@ -79,7 +85,7 @@ export abstract class ClusterJobRestServer extends RestServer{
         });
 
         router.post(`/error/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            this.handleErrorMessage(req.params.trialId, req.body.msg);
+            this.errorMessage = req.body.msg;
         });
 
         router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
@@ -135,7 +141,4 @@ export abstract class ClusterJobRestServer extends RestServer{
 
     /** Abstract method to handle trial metrics data */
     protected abstract handleTrialMetrics(jobId : string, trialMetrics : any[]) : void;
-
-    /** Abstract method to handle error message*/
-    protected abstract handleErrorMessage(jobId : string, errorMessage : any) : void; 
 }

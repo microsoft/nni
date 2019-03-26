@@ -102,6 +102,9 @@ class PAITrainingService implements TrainingService {
         while (!this.stopping) {
             await this.updatePaiToken();
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
+            if (restServer.getErrorMessage) {
+                throw new Error(restServer.getErrorMessage)
+            }
             await delay(3000);
         }
         this.log.info('PAI training service exit.');

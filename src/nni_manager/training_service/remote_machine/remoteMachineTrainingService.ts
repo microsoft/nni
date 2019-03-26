@@ -116,6 +116,9 @@ class RemoteMachineTrainingService implements TrainingService {
                     // Wait to schedule job in next time iteration
                     break;
                 }
+                if(restServer.getErrorMessage) {
+                    throw new Error(restServer.getErrorMessage);
+                }
             }
             await delay(3000);
         }
@@ -762,11 +765,6 @@ class RemoteMachineTrainingService implements TrainingService {
         }
 
         return this.trialSequenceId++;
-    }
-
-    public throwErrorMessage(errorMessage: any): void {
-        this.log.error(errorMessage);
-        throw new Error(errorMessage);
     }
 }
 

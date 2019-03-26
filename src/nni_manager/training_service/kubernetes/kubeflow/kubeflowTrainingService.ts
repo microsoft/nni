@@ -76,6 +76,9 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             // collect metrics for Kubeflow jobs by interacting with Kubernetes API server  
             await delay(3000);
             await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
+            if(this.kubernetesJobRestServer.getErrorMessage) {
+                throw new Error(this.kubernetesJobRestServer.getErrorMessage);
+            }
         }
         this.log.info('Kubeflow training service exit.');
     }

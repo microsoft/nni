@@ -125,10 +125,10 @@ def check_version(args):
             nni_log(LogType.Info, 'training_service_version is {0}'.format(training_service_version))
             if trial_keeper_version != training_service_version:
                 nni_log(LogType.Error, 'Version does not match!')
-                error_message = 'NNISDK_MEb\'TrainingService version is {0}, TrialKeeper version is {1}, NNI version does not match!\''.format(training_service_version, trial_keeper_version)
+                error_message = 'TrainingService version is {0}, TrialKeeper version is {1}, NNI version does not match!\''.format(training_service_version, trial_keeper_version)
                 log_entry = {}
                 log_entry['msg'] = error_message
-                rest_post(gen_send_error_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10, True)
+                rest_post(gen_send_error_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10, False)
                 os._exit(1)
             else:
                 nni_log(LogType.Info, 'Version match!')

@@ -71,6 +71,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             // collect metrics for frameworkcontroller jobs by interacting with Kubernetes API server  
             await delay(3000);
             await this.fcJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
+            if(this.kubernetesJobRestServer.getErrorMessage) {
+                throw new Error(this.kubernetesJobRestServer.getErrorMessage);
+            }
         }
     }
 
