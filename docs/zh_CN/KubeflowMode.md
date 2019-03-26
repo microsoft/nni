@@ -74,7 +74,7 @@ NFS 存储配置如下：
 
 ## 运行 Experiment
 
-以 `examples/trials/mnist` 为例。 这是一个 TensorFlow 作业，使用了 Kubeflow 的 tf-operator。 NNI 的 YAML 配置文件如下：
+以 `examples/trials/mnist` 为例。 这是一个 TensorFlow 作业，使用了 Kubeflow 的 tf-operator。 The NNI config YAML file's content is like:
 
     authorName: default
     experimentName: example_mnist
@@ -124,9 +124,9 @@ NFS 存储配置如下：
         path: {your_nfs_server_export_path}
     
 
-注意：如果用 Kubeflow 模式运行，需要在 YAML 文件中显式设置 `trainingServicePlatform: kubeflow`。
+Note: You should explicitly set `trainingServicePlatform: kubeflow` in NNI config YAML file if you want to start experiment in kubeflow mode.
 
-如果要运行 Pytorch 作业，需要如下配置：
+If you want to run PyTorch jobs, you could set your config files as follow:
 
     authorName: default
     experimentName: example_mnist_distributed_pytorch
