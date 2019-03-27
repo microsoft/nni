@@ -38,6 +38,7 @@ import random
 import site
 import time
 from pathlib import Path
+from .command_utils import check_output_command, kill_command
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -49,18 +50,10 @@ def print_log_content(config_file_name):
     '''print log information'''
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     print_normal(' Stdout:')
-    if sys.platform == 'win32':
-        stdout_cmds = ['type', stdout_full_path]
-        stdout_content = check_output(stdout_cmds, shell=True)
-    else:
-        stdout_cmds = ['cat', stdout_full_path]
-        stdout_content = check_output(stdout_cmds)
-    print(stdout_content.decode('utf-8'))
+    print(check_output_command(stdout_full_path))
     print('\n\n')
     print_normal(' Stderr:')
-    stderr_cmds = ['cat', stderr_full_path]
-    stderr_content = check_output(stderr_cmds)
-    print(stderr_content.decode('utf-8'))
+    print(check_output_command(stderr_full_path))
 
 def get_nni_installation_path():
     ''' Find nni lib from the following locations in order
@@ -366,8 +359,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         print_error('Restful server start failed!')
         print_log_content(config_file_name)
         try:
-            cmds = ['kill', str(rest_process.pid)]
-            call(cmds)
+            kill_command(rest_process.pid)
         except Exception:
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(1)
@@ -381,8 +373,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         else:
             print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['kill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
             exit(1)
@@ -395,8 +386,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         else:
             print_error('Set local config failed!')
             try:
-                cmds = ['kill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
             exit(1)
@@ -411,8 +401,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['kill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
@@ -427,8 +416,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['pkill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
@@ -443,8 +431,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['pkill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
@@ -463,8 +450,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         print_error('Start experiment failed!')
         print_log_content(config_file_name)
         try:
-            cmds = ['kill', str(rest_process.pid)]
-            call(cmds)
+            kill_command(rest_process.pid)
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)

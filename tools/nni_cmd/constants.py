@@ -19,6 +19,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import os
+from colorama import Fore
+from colorama import init
+init(autoreset=True)
 
 NNICTL_HOME_DIR = os.path.join(os.path.expanduser('~'), '.local',  'nnictl')
 
@@ -30,7 +33,7 @@ WARNING_INFO = 'WARNING: %s'
 
 DEFAULT_REST_PORT = 8080
 
-EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0m' \
+EXPERIMENT_SUCCESS_INFO = Fore.GREEN + 'Successfully started experiment!\n' + Fore.RESET + \
                           '-----------------------------------------------------------------------\n' \
                           'The experiment id is %s\n'\
                           'The Web UI urls are: %s\n' \
@@ -77,8 +80,8 @@ PACKAGE_REQUIREMENTS = {
     'SMAC': 'smac_tuner'
 }
 
-COLOR_RED_FORMAT = '\033[1;31;31m%s\033[0m'
+COLOR_RED_FORMAT = Fore.RED + '%s'
 
-COLOR_GREEN_FORMAT = '\033[1;32;32m%s\033[0m'
+COLOR_GREEN_FORMAT = Fore.GREEN + '%s'
 
-COLOR_YELLOW_FORMAT = '\033[1;33;33m%s\033[0m'
+COLOR_YELLOW_FORMAT = Fore.YELLOW + '%s'
