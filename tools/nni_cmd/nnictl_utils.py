@@ -197,22 +197,12 @@ def stop_experiment(args):
             rest_port = nni_config.get_config('restServerPort')
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
-<<<<<<< HEAD
                 kill_command(rest_pid)
-=======
-                stop_rest_cmds = kill_command(rest_pid)
-                call(stop_rest_cmds)
->>>>>>> 44f99026935a0e27ac8b597b723dfc2da3190c1f
                 tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
                 if tensorboard_pid_list:
                     for tensorboard_pid in tensorboard_pid_list:
                         try:
-<<<<<<< HEAD
                             kill_command(tensorboard_pid)
-=======
-                            cmds = kill_command(tensorboard_pid)
-                            call(cmds)
->>>>>>> 44f99026935a0e27ac8b597b723dfc2da3190c1f
                         except Exception as exception:
                             print_error(exception)
                     nni_config.set_config('tensorboardPidList', [])

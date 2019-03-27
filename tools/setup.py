@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name = 'nni-tool',
-    version = 'v0.1-521-gf803acb',
+    version = '999.0.0-developing',
     packages = setuptools.find_packages(exclude=['*test*']),
 
     python_requires = '>=3.5',
