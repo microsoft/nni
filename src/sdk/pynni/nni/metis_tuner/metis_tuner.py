@@ -271,7 +271,6 @@ class MetisTuner(Tuner):
         samples_size_unique = len(samples_y)
 
         # ===== STEP 1: Compute the current optimum =====
-        #sys.stderr.write("[%s] Predicting the optimal configuration from the current training dataset...\n" % (os.path.basename(__file__)))
         gp_model = gp_create_model.create_model(samples_x, samples_y_aggregation)
         lm_current = gp_selection.selection(
             "lm",
@@ -291,8 +290,6 @@ class MetisTuner(Tuner):
                                'reason': "exploitation_gp"})
 
             # ===== STEP 2: Get recommended configurations for exploration =====
-            #sys.stderr.write("[%s] Getting candidates for exploration...\n"
-            #% \(os.path.basename(__file__)))
             results_exploration = gp_selection.selection(
                 "lc",
                 samples_y_aggregation,
@@ -309,15 +306,11 @@ class MetisTuner(Tuner):
                                        'expected_sigma': results_exploration['expected_sigma'],
                                        'reason': "exploration"})
                     logger.info("DEBUG: 1 exploration candidate selected\n")
-                    #sys.stderr.write("[%s] DEBUG: 1 exploration candidate selected\n" % (os.path.basename(__file__)))
             else:
                 logger.info("DEBUG: No suitable exploration candidates were")
-                # sys.stderr.write("[%s] DEBUG: No suitable exploration candidates were \
-                #                                 found\n" % (os.path.basename(__file__)))
 
             # ===== STEP 3: Get recommended configurations for exploitation =====
             if samples_size_all >= threshold_samplessize_exploitation:
-                #sys.stderr.write("[%s] Getting candidates for exploitation...\n" % (os.path.basename(__file__)))
                 print("Getting candidates for exploitation...\n")
                 try:
                     gmm = gmm_create_model.create_model(samples_x, samples_y_aggregation)
@@ -385,13 +378,6 @@ class MetisTuner(Tuner):
                         temp_improvement = threads_result['expected_lowest_mu'] - lm_current['expected_mu']
 
                         if next_improvement > temp_improvement:
-                            logger.info("DEBUG: \"next_candidate\" changed: \
-                                            lowest mu might reduce from %f (%s) to %f (%s), %s\n"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          %\
-                                            lm_current['expected_mu'], str(lm_current['hyperparameter']),\
-                                            threads_result['expected_lowest_mu'],\
-                                            str(threads_result['candidate']['hyperparameter']),\
-                                            threads_result['candidate']['reason'])
-
                             next_improvement = temp_improvement
                             next_candidate = threads_result['candidate']
             else:
@@ -443,8 +429,6 @@ def _rand_with_constraints(x_bounds, x_types):
 def _calculate_lowest_mu_threaded(inputs):
     [candidate, samples_x, samples_y, x_bounds, x_types, minimize_constraints_fun, minimize_starting_points] = inputs
 
-    sys.stderr.write("[%s] Evaluating information gain of %s (%s)...\n" % \
-                        (os.path.basename(__file__), candidate['hyperparameter'], candidate['reason']))
     outputs = {"candidate": candidate, "expected_lowest_mu": None}
 
     for expected_mu in [candidate['expected_mu'] + 1.96 * candidate['expected_sigma'],
