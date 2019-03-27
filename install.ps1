@@ -71,7 +71,6 @@ if(!(Test-Path $NNI_YARN_TARBALL)){
 }
 
 if ($install_node) {
-
     ### nodejs install
     if(Test-Path $NNI_NODE_FOLDER){
         Remove-Item $NNI_NODE_FOLDER -r -fo
@@ -85,12 +84,9 @@ if ($install_node) {
     }
     New-Item $NNI_YARN_FOLDER -ItemType Directory
 	cmd /c tar -xf $NNI_YARN_TARBALL -C $NNI_YARN_FOLDER --strip-components 1
-    
 }
 
-
-if($install_py)
-{
+if($install_py){
     if(!(Test-Path $NNI_PYTHON_FOLDER)){
         New-Item $NNI_PYTHON_FOLDER -ItemType Directory
     }
@@ -110,8 +106,7 @@ if($install_py)
     }
 }
 
-if($install_pip)
-{
+if($install_pip){
     Write-Host "Downloading pip..."
     (New-Object Net.WebClient).DownloadFile($pipUrl, $GET_PIP)
     cmd /c "$NNI_PYTHON_FOLDER\python $GET_PIP"
@@ -132,7 +127,6 @@ function Add2Path {
         [System.Environment]::SetEnvironmentVariable("Path",$PathVariable,"Machine")
     }
 }
-
 
 Add2Path -fileName $NNI_NODE_FOLDER
 Add2Path -fileName "$NNI_YARN_FOLDER\bin"
@@ -166,17 +160,7 @@ cmd /c $NNI_YARN build
 
 ## install-python-modules:
 ### Installing Python SDK
-cd ..\sdk\pynni 
-(Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
-if($install_py){
-    cmd /c "$NNI_PYTHON_FOLDER\$PIP_INSTALL" 
-}
-else {
-    cmd /c "$NNI_PYTHON3\$PIP_INSTALL" 
-}
-
-## Installing nnictl
-cd ..\..\..\tools 
+cd ..\..
 (Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
 cmd /c $PIP_INSTALL 
 
@@ -184,7 +168,7 @@ cmd /c $PIP_INSTALL
 if(!(Test-Path $NNI_PKG_FOLDER)){
     New-Item $NNI_PKG_FOLDER -ItemType Directory
 }
-cd ..
+
 Remove-Item $NNI_PKG_FOLDER -r -fo
 Copy-Item "src\nni_manager\dist" $NNI_PKG_FOLDER -Recurse
 Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER
