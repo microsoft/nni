@@ -41,7 +41,7 @@ export abstract class ClusterJobRestServer extends RestServer{
 
     private readonly expId: string = getExperimentId();
 
-    private openVersionCheck: boolean = true; //switch to open version check
+    private enableVersionCheck: boolean = true; //switch to enable version check
     private versionCheckSuccess: boolean = false;
     private errorMessage?: string;
 
@@ -68,7 +68,7 @@ export abstract class ClusterJobRestServer extends RestServer{
     }
     
     public set setOpenVersionCheck(versionCheck: boolean) {
-        this.openVersionCheck = versionCheck;
+        this.enableVersionCheck = versionCheck;
     }
 
     /**
@@ -90,9 +90,9 @@ export abstract class ClusterJobRestServer extends RestServer{
         });
 
         router.post(`/version/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            if (this.openVersionCheck) {
+            if (this.enableVersionCheck) {
                 try {
-                    if (req.body.tag === 'success') {
+                    if (req.body.tag === 'VCSuccess') {
                         this.log.info(`Version check in trialKeeper success!`);
                         this.versionCheckSuccess = true;
                     } else {
@@ -126,7 +126,7 @@ export abstract class ClusterJobRestServer extends RestServer{
         });
 
         router.post(`/stdout/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            if(this.openVersionCheck && !this.versionCheckSuccess && !this.errorMessage) {
+            if(this.enableVersionCheck && !this.versionCheckSuccess && !this.errorMessage) {
                 this.errorMessage = `Version check failed, didn't get version check response from trialKeeper, please check your NNI version in `
                  + `NNIManager and TrialKeeper!`
             }
