@@ -67,7 +67,7 @@ export abstract class ClusterJobRestServer extends RestServer{
         return this.errorMessage;
     }
     
-    public set setOpenVersionCheck(versionCheck: boolean) {
+    public set setEnableVersionCheck(versionCheck: boolean) {
         this.enableVersionCheck = versionCheck;
     }
 

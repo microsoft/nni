@@ -71,7 +71,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             throw new Error('kubernetesJobRestServer not initialized!');
         }
         await this.kubernetesJobRestServer.start();
-        this.kubernetesJobRestServer.setOpenVersionCheck = this.versionCheck;
+        this.kubernetesJobRestServer.setEnableVersionCheck = this.versionCheck;
         this.log.info(`Kubeflow Training service rest server listening on: ${this.kubernetesJobRestServer.endPoint}`);
         while (!this.stopping) {
             // collect metrics for Kubeflow jobs by interacting with Kubernetes API server  
