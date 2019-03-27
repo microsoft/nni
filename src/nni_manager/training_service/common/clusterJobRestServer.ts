@@ -96,8 +96,7 @@ export abstract class ClusterJobRestServer extends RestServer{
                     if (this.versionCheckSuccess !== undefined && this.versionCheckSuccess !== checkResultSuccess) {
                         this.errorMessage = 'Version check error, version check result is inconsistent!';
                         this.log.error(this.errorMessage);
-                    }
-                    else if (checkResultSuccess) {
+                    } else if (checkResultSuccess) {
                         this.log.info(`Version check in trialKeeper success!`);
                         this.versionCheckSuccess = true;
                     } else {
