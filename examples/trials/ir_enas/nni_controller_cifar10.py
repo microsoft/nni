@@ -12,6 +12,7 @@ import tensorflow as tf
 import fcntl
 import src.utils
 import nni
+from nni.multi_phase.multi_phase_tuner import MultiPhaseTuner
 from src.utils import Logger
 from src.cifar10.general_controller import GeneralController
 from src.cifar10_flags import *
@@ -84,7 +85,7 @@ def get_controller_ops(controller_model):
     return controller_ops
 
 
-class ENASTuner():
+class ENASTuner(MultiPhaseTuner):
 
     def __init__(self, child_train_steps, controller_train_steps):
         # branches defaults to 6, need to be modified according to ss
