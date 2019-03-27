@@ -4,7 +4,7 @@ import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
 import { TableObj } from '../../static/interface';
 import { Row, Tabs, Button, message } from 'antd';
-import ReactJson from 'react-json-view';
+import JSONTree from 'react-json-tree';
 const TabPane = Tabs.TabPane;
 
 interface OpenRowProps {
@@ -53,12 +53,11 @@ class OpenRow extends React.Component<OpenRowProps, {}> {
                                 isHasParameters
                                     ?
                                     <div>
-                                        <ReactJson
-                                            src={openRowDataSource.parameters}
-                                            name={false}
-                                            displayDataTypes={false}
-                                            displayObjectSize={false}
-                                            enableClipboard={false}
+                                        <JSONTree
+                                            hideRoot={true}
+                                            shouldExpandNode={() => true}  // default expandNode
+                                            getItemString={() => (<span />)}  // remove the {} items
+                                            data={openRowDataSource.parameters}
                                         />
                                         <Button
                                             onClick={this.copyParams.bind(this, record)}
