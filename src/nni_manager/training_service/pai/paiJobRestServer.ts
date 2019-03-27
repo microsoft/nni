@@ -51,13 +51,4 @@ export class PAIJobRestServer extends ClusterJobRestServer{
             });
         }
     }
-
-    /**
-     * throw a error in trainingService
-     * @param jobId 
-     * @param errorMessage 
-     */
-    protected handleErrorMessage(jobId : string, errorMessage : any) : void {
-        this.paiTrainingService.throwErrorMessage(errorMessage);
-    }
 }

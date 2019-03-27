@@ -304,11 +304,6 @@ abstract class KubernetesTrainingService {
 
         return Promise.resolve();
     }
-
-    public throwErrorMessage(errorMessage: any): void {
-        this.log.error(errorMessage);
-        throw new Error(errorMessage);
-    }
 }
 
 export { KubernetesTrainingService }
