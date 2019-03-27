@@ -21,8 +21,9 @@ interface TrialDetailState {
     searchResultSource: Array<TableObj>;
     isHasSearch: boolean;
     experimentStatus: string;
-    entriesTable: number;
     experimentPlatform: string;
+    experimentLogCollection: boolean;
+    entriesTable: number;
     searchSpace: string;
     defaultMetric?: Array<number>;
 }
@@ -49,7 +50,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     );
 
     private titleOfIntermediate = (
-        // <Title1 text="Intermediate Result" icon="intermediate.png" />
         <div className="panelTitle">
             <Icon type="line-chart" />
             <span>Intermediate Result</span>
@@ -65,9 +65,10 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             tableListSource: [],
             searchResultSource: [],
             experimentStatus: '',
+            experimentPlatform: '',
+            experimentLogCollection: false,
             entriesTable: 20,
             isHasSearch: false,
-            experimentPlatform: '',
             searchSpace: '',
             defaultMetric: [0, 1]
         };
@@ -279,6 +280,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         alert('TableList component was not properly initialized.');
     }
 
+    // get and set logCollection val
     checkExperimentPlatform = () => {
         axios(`${MANAGER_IP}/experiment`, {
             method: 'GET'
@@ -290,10 +292,17 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         res.data.params.trainingServicePlatform
                         :
                         '';
+                    // default logCollection is true
+                    const logCollection = res.data.params.logCollection;
+                    let expLogCollection: boolean = false;
+                    if (logCollection !== undefined && logCollection !== 'none') {
+                        expLogCollection = true;
+                    }
                     if (this._isMounted) {
                         this.setState({
                             experimentPlatform: trainingPlatform,
-                            searchSpace: res.data.params.searchSpace
+                            searchSpace: res.data.params.searchSpace,
+                            experimentLogCollection: expLogCollection
                         });
                     }
                 }
@@ -318,7 +327,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         const {
             tableListSource, searchResultSource, isHasSearch,
             entriesTable, experimentPlatform, searchSpace,
-            defaultMetric
+            defaultMetric, experimentLogCollection
         } = this.state;
         const source = isHasSearch ? searchResultSource : tableListSource;
         return (
@@ -392,8 +401,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 <TableList
                     entries={entriesTable}
                     tableSource={source}
-                    updateList={this.getDetailSource}
                     platform={experimentPlatform}
+                    updateList={this.getDetailSource}
+                    logCollection={experimentLogCollection}
                     ref={(tabList) => this.tableList = tabList}
                 />
             </div>

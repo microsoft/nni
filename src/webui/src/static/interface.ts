@@ -46,6 +46,7 @@ interface Experiment {
     assessor?: object;
     advisor?: object;
     clusterMetaData?: object;
+    logCollection?: string;
 }
 
 // trial accuracy
