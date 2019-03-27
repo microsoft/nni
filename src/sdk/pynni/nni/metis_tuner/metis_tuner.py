@@ -126,12 +126,7 @@ class MetisTuner(Tuner):
             for key in search_space:
                 key_type = search_space[key]['_type']
                 key_range = search_space[key]['_value']
-                try:
-                    idx = self.key_order.index(key)
-                except Exception as ex:
-                    logger.exception(ex)
-                    raise RuntimeError("The format search space contains \
-                                        some key that didn't define in key_order."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  )
+                idx = self.key_order.index(key)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               )
 
                 if key_type == 'quniform':
                     if key_range[2] == 1:
