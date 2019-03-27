@@ -12,10 +12,10 @@ $version = "10.15.1"
 $pyVersion ="36"
 $nodeUrl = "https://nodejs.org/dist/v10.15.1/node-v10.15.1-win-x64.zip"
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
-$pyUrl= "https://www.python.org/ftp/python/3.6.4/python-3.6.4.post1-embed-amd64.zip"
+$pyUrl= "https://www.python.org/ftp/python/3.6.4/python-3.6.4-embed-amd64.zip"
 $pipUrl = "https://bootstrap.pypa.io/get-pip.py"
 $unzipNodeDir = "node-v$version-win-x64"
-$unzipPythonDir = "python-3.6.4.post1-embed-amd64"
+$unzipPythonDir = "python-3.6.4-embed-amd64"
 
 
 ##$NNI_DEPENDENCY_FOLDER = "$env:temp\$env:USERNAME"
@@ -107,6 +107,13 @@ if($install_py)
     Write-Host "Downloading Python3..."
     (New-Object Net.WebClient).DownloadFile($pyUrl, $NNI_PYTHON3_ZIP)
     Expand-Archive $NNI_PYTHON3_ZIP -DestinationPath $NNI_PYTHON_FOLDER
+    # fix read zip error
+    $PYTHON3_INNER_ZIP = "$NNI_PYTHON_FOLDER\python$pyVersion"+".zip"
+    Expand-Archive $PYTHON3_INNER_ZIP -DestinationPath $PYTHON3_INNER_ZIP.Split('.')[0]
+    $Rename_INNER_ZIP = "$NNI_PYTHON_FOLDER\python$pyVersion"+".zipp"
+    Rename-Item $PYTHON3_INNER_ZIP $Rename_INNER_ZIP
+    Rename-Item $PYTHON3_INNER_ZIP.Split('.')[0] $PYTHON3_INNER_ZIP
+    # fix import local file error
     $deleteFile = $NNI_PYTHON_FOLDER + "\python36._pth"
     if(Test-Path $deleteFile){
         Remove-Item $deleteFile -r -fo
@@ -121,7 +128,6 @@ if($install_pip)
 }
 
 ### add to PATH
-
 function Add2Path {
     param ($fileName)
     $PathVariable = [System.Environment]::GetEnvironmentVariable("Path","Machine")
@@ -146,6 +152,17 @@ if($install_py){
 if($install_pip){
     Add2Path -fileName $NNI_PIP_FOLDER
 }
+
+# Refresh Path environment in this session
+foreach($level in "Machine","User") {
+    [Environment]::GetEnvironmentVariables($level).GetEnumerator() | % {
+       # For Path variables, append the new values, if they're not already in there
+       if($_.Name -match 'Path$') { 
+          $_.Value = ($((Get-Content "Env:$($_.Name)") + ";$($_.Value)") -split ';' | Select -unique) -join ';'
+       }
+       $_
+    } | Set-Content -Path { "Env:$($_.Name)" }
+ }
 
 # Building NNI Manager
 cd src\nni_manager
@@ -190,4 +207,3 @@ if(!(Test-Path $BASH_COMP_PREFIX)){
     New-Item $BASH_COMP_PREFIX -ItemType Directory 
 }
 Copy-Item tools/bash-completion $BASH_COMP_SCRIPT
-
