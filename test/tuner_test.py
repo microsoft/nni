@@ -38,7 +38,7 @@ def switch(dispatch_type, dispatch_name):
     '''Change dispatch in config.yml'''
     config_path = 'tuner_test/local.yml'
     experiment_config = get_yml_content(config_path)
-    if dispatch_name in ['GridSearch', 'BatchTuner']:
+    if dispatch_name in ['GridSearch', 'BatchTuner', 'Random']:
         experiment_config[dispatch_type.lower()] = {
             'builtin' + dispatch_type + 'Name': dispatch_name
         }
