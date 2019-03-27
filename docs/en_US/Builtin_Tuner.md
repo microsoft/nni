@@ -73,8 +73,6 @@ Random search is suggested when each trial does not take too long (e.g., each tr
 # config.yml
 tuner:
   builtinTunerName: Random
-  classArgs:
-    optimize_mode: maximize
 ```
 
 <br>
@@ -114,10 +112,6 @@ tuner:
 **Suggested scenario**
 
 Its requirement of computation resource is relatively high. Specifically, it requires large initial population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
-
-**Requirement of classArg**
-
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
 
 **Usage example**
 
