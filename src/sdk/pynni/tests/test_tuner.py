@@ -88,11 +88,12 @@ class TunerTestCase(TestCase):
 
         tuner = NaiveTuner()
         dispatcher = MsgDispatcher(tuner)
-        try:
-            dispatcher.run()
-        except Exception as e:
-            self.assertIs(type(e), AssertionError)
-            self.assertEqual(e.args[0], 'Unsupported command: CommandType.KillTrialJob')
+        nni.msg_dispatcher_base._worker_fast_exit_on_terminate = False
+
+        dispatcher.run()
+        e = dispatcher.worker_exceptions[0]
+        self.assertIs(type(e), AssertionError)
+        self.assertEqual(e.args[0], 'Unsupported command: CommandType.KillTrialJob')
 
         _reverse_io()  # now we are receiving from Tuner's outgoing stream
         self._assert_params(0, 2, [ ], None)

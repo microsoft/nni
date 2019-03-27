@@ -3,27 +3,23 @@ $install_node = $TRUE
 $install_yarn = $TRUE
 $install_py = $FALSE
 $install_pip = $FALSE
-$uninstall = $FALSE
 
 ### CONFIGURATION
 $PIP_INSTALL = "python -m pip install ."
-$PIP_UNINSTALL = "python -m pip uninstall ."
 
 # nodejs
 $version = "10.15.1"
-$pyVersion ="37"
+$pyVersion ="36"
 $nodeUrl = "https://nodejs.org/dist/v10.15.1/node-v10.15.1-win-x64.zip"
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
-$pyUrl= "https://www.python.org/ftp/python/3.7.2/python-3.7.2.post1-embed-amd64.zip"
+$pyUrl= "https://www.python.org/ftp/python/3.6.4/python-3.6.4-embed-amd64.zip"
 $pipUrl = "https://bootstrap.pypa.io/get-pip.py"
 $unzipNodeDir = "node-v$version-win-x64"
-$unzipPythonDir = "python-3.7.2.post1-embed-amd64"
+$unzipPythonDir = "python-3.6.4-embed-amd64"
 
-
-##$NNI_DEPENDENCY_FOLDER = "$env:temp\$env:USERNAME"
 $NNI_DEPENDENCY_FOLDER = "\tmp\$env:USERNAME"
 $NNI_PYTHON3 = "C:\Python3"
-
+$NNI_PKG_FOLDER = $NNI_PYTHON3 +"\python\nni"
 function FindPython{
     param()
     $val =  where.exe python;
@@ -41,22 +37,20 @@ if($WHICH_PYTHON -eq "-1"){
 }
 else {
     $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+    $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 }
 
-$NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 $NNI_PYTHON3_ZIP = $NNI_PYTHON3 +"\python.zip"
 $NNI_PYTHON_FOLDER = $NNI_PYTHON3 +"\python"
 $GET_PIP = $NNI_PYTHON3 +"\get-pip.py"
 $NNI_PIP_FOLDER = $NNI_PYTHON_FOLDER+"\Scripts"
 $BASH_COMP_PREFIX = $env:HOMEPATH +"\.bash_completion.d"
 $BASH_COMP_SCRIPT = $BASH_COMP_PREFIX +"\nnictl"
-$BIN_FOLDER = $NNI_PYTHON3+"\bin"
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
     New-Item $NNI_DEPENDENCY_FOLDER -ItemType Directory
 }
 $NNI_NODE_ZIP = $NNI_DEPENDENCY_FOLDER+"\nni-node.zip"
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
-$NNI_NODE = $BIN_FOLDER+"\node" 
 $NNI_YARN_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-yarn.tar.gz"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
 $NNI_YARN = $NNI_YARN_FOLDER +"\bin\yarn"
@@ -84,13 +78,7 @@ if ($install_node) {
     }
     Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
     Rename-Item "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir" "nni-node"
-    if(!(Test-Path $BIN_FOLDER)){
-        New-Item $BIN_FOLDER -ItemType Directory
-    }
-    if(Test-Path $NNI_NODE){
-        Remove-Item $NNI_NODE -r -fo
-    } 
-    Copy-Item $NNI_NODE_FOLDER -Destination $NNI_NODE -Recurse 
+     
     ### yarn install
     if(Test-Path $NNI_YARN_FOLDER){
         Remove-Item $NNI_YARN_FOLDER -r -fo
@@ -109,7 +97,14 @@ if($install_py)
     Write-Host "Downloading Python3..."
     (New-Object Net.WebClient).DownloadFile($pyUrl, $NNI_PYTHON3_ZIP)
     Expand-Archive $NNI_PYTHON3_ZIP -DestinationPath $NNI_PYTHON_FOLDER
-    $deleteFile = $NNI_PYTHON_FOLDER + "\python37._pth"
+    # fix read zip error
+    $PYTHON3_INNER_ZIP = "$NNI_PYTHON_FOLDER\python$pyVersion"+".zip"
+    Expand-Archive $PYTHON3_INNER_ZIP -DestinationPath $PYTHON3_INNER_ZIP.Split('.')[0]
+    $Rename_INNER_ZIP = "$NNI_PYTHON_FOLDER\python$pyVersion"+".zipp"
+    Rename-Item $PYTHON3_INNER_ZIP $Rename_INNER_ZIP
+    Rename-Item $PYTHON3_INNER_ZIP.Split('.')[0] $PYTHON3_INNER_ZIP
+    # fix import local file error
+    $deleteFile = $NNI_PYTHON_FOLDER + "\python36._pth"
     if(Test-Path $deleteFile){
         Remove-Item $deleteFile -r -fo
     }
@@ -123,7 +118,6 @@ if($install_pip)
 }
 
 ### add to PATH
-
 function Add2Path {
     param ($fileName)
     $PathVariable = [System.Environment]::GetEnvironmentVariable("Path","Machine")
@@ -140,7 +134,7 @@ function Add2Path {
 }
 
 
-Add2Path -fileName $NNI_NODE
+Add2Path -fileName $NNI_NODE_FOLDER
 Add2Path -fileName "$NNI_YARN_FOLDER\bin"
 if($install_py){
     Add2Path -fileName $NNI_PYTHON_FOLDER
@@ -148,6 +142,17 @@ if($install_py){
 if($install_pip){
     Add2Path -fileName $NNI_PIP_FOLDER
 }
+
+# Refresh Path environment in this session
+foreach($level in "Machine","User") {
+    [Environment]::GetEnvironmentVariables($level).GetEnumerator() | % {
+       # For Path variables, append the new values, if they're not already in there
+       if($_.Name -match 'Path$') { 
+          $_.Value = ($((Get-Content "Env:$($_.Name)") + ";$($_.Value)") -split ';' | Select -unique) -join ';'
+       }
+       $_
+    } | Set-Content -Path { "Env:$($_.Name)" }
+ }
 
 # Building NNI Manager
 cd src\nni_manager
@@ -192,26 +197,3 @@ if(!(Test-Path $BASH_COMP_PREFIX)){
     New-Item $BASH_COMP_PREFIX -ItemType Directory 
 }
 Copy-Item tools/bash-completion $BASH_COMP_SCRIPT
-
-if($uninstall)
-{
-    # uninstall
-    cmd /c $PIP_UNINSTALL -y nni
-    cmd /c $PIP_UNINSTALL -y nnictl
-    Remove-Item NNI_PKG_FOLDER -r -fo
-    Remove-Item "$BIN_FOLDER/node" -r -fo
-    Remove-Item "$BIN_FOLDER/nnictl" -r -fo
-    Remove-Item $BASH_COMP_SCRIPT -r -fo
-
-    # clean
-    Remove-Item "tools/build" -r -fo
-    Remove-Item "tools/nnictl.egg-info" -r -fo
-    Remove-Item "src/nni_manager/dist" -r -fo
-    Remove-Item "src/nni_manager/node_modules" -r -fo
-    Remove-Item "src/sdk/pynni/build" -r -fo
-    Remove-Item "src/sdk/pynni/nni_sdk.egg-info" -r -fo
-    Remove-Item "src/webui/build" -r -fo
-    Remove-Item "src/webui/node_modules" -r -fo
-    Remove-Item $NNI_YARN_FOLDER -r -fo
-    Remove-Item $NNI_NODE_FOLDER -r -fo
-}

@@ -3,6 +3,7 @@ import argparse
 from subprocess import check_output, check_call
 import socket
 import random
+import re
 
 def detect_port(port):
     '''Detect if the port is used, return True if the port is used'''
@@ -21,6 +22,14 @@ def find_port():
         port = random.randint(10000, 20000)
     return port
 
+def find_wheel_package(dir):
+    '''Find the wheel package uploaded to this machine'''
+    regular = re.compile('^nni-.*\.whl$')
+    for file_name in os.listdir(dir):
+        if regular.search(file_name):
+            return file_name
+    return None
+
 def start_container(image, name):
     '''Start docker container, generate a port in /tmp/nnitest/{name}/port file'''
     port = find_port()
@@ -28,10 +37,12 @@ def start_container(image, name):
     run_cmds = ['docker', 'run', '-d', '-p', str(port) + ':22', '--name', name, '--mount', 'type=bind,source=' + source_dir + ',target=/tmp/nni', image]
     output = check_output(run_cmds)
     commit_id = output.decode('utf-8')
-    sdk_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '--user', '--no-cache-dir', '/tmp/nni/pynni/']
+    wheel_name = find_wheel_package(os.path.join(source_dir, 'dist'))
+    if not wheel_name:
+        print('Error: could not find wheel package in {0}'.format(source_dir))
+        exit(1)
+    sdk_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '/tmp/nni/dist/{0}'.format(wheel_name)]
     check_call(sdk_cmds)
-    tools_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '--user', '--no-cache-dir', '/tmp/nni/tools']
-    check_call(tools_cmds)
     with open(source_dir + '/port', 'w') as file:
         file.write(str(port))
 

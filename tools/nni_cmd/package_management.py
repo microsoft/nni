@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import nni
-import os
+import os,sys
 from subprocess import call
 from .constants import PACKAGE_REQUIREMENTS
 from .common_utils import print_normal, print_error
@@ -29,7 +29,10 @@ def process_install(package_name):
         print_error('{0} is not supported!' % package_name)
     else:
         requirements_path = os.path.join(nni.__path__[0], PACKAGE_REQUIREMENTS[package_name])
-        cmds = 'cd ' + requirements_path + ' && python3 -m pip install --user -r requirements.txt'
+        if sys.platform == "win32":
+            cmds = 'cd ' + requirements_path + ' && python -m pip install --user -r requirements.txt'
+        else:
+            cmds = 'cd ' + requirements_path + ' && python3 -m pip install --user -r requirements.txt'
         call(cmds, shell=True)
 
 def package_install(args):

@@ -22,6 +22,8 @@
 import * as assert from 'assert';
 import { randomBytes } from 'crypto';
 import * as cpp from 'child-process-promise';
+import * as cp from 'child_process';
+import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -32,6 +34,7 @@ import * as util from 'util';
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentId, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
+import { TrialConfig } from '../training_service/common/trialConfig';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { getLogger } from './log';
 
@@ -42,6 +45,11 @@ function getExperimentRootDir(): string {
 
 function getLogDir(): string{
     return path.join(getExperimentRootDir(), 'log');
+}
+
+function getLogLevel(): string{
+    return getExperimentStartupInfo()
+    .getLogLevel();
 }
 
 function getDefaultDatabaseDir(): string {
@@ -141,6 +149,15 @@ function parseArg(names: string[]): string {
     return '';
 }
 
+function crossPlatformStringify(args:any):any{
+    if(process.platform === 'win32'){
+        return JSON.stringify(args);
+    }
+    else{
+        return JSON.stringify(JSON.stringify(args));
+    }
+}
+
 /**
  * Generate command line to start automl algorithm(s), 
  * either start advisor or start a process which runs tuner and assessor
@@ -175,9 +192,6 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
         throw new Error('Error: specify neither tuner nor advisor is not allowed');
     }
     let command: string = `python3 -m nni`;
-    if(os.platform()==="win32"){
-        command = `python -m nni`;
-    }
     if (multiPhase) {
         command += ' --multi_phase';
     }
@@ -189,12 +203,7 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
     if (advisor) {
         command += ` --advisor_class_name ${advisor.className}`;
         if (advisor.classArgs !== undefined) {
-            if(os.platform()==="win32"){
-                command += ` --advisor_args ${JSON.stringify(advisor.classArgs)}`;
-            }
-            else{
-                command += ` --advisor_args ${JSON.stringify(JSON.stringify(advisor.classArgs))}`;
-            }
+            command += ` --advisor_args ${crossPlatformStringify(advisor.classArgs)}`;
         }
         if (advisor.codeDir !== undefined && advisor.codeDir.length > 1) {
             command += ` --advisor_directory ${advisor.codeDir}`;
@@ -205,12 +214,7 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
     } else {
         command += ` --tuner_class_name ${tuner.className}`;
         if (tuner.classArgs !== undefined) {
-            if(os.platform()==="win32"){
-                command += ` --tuner_args ${JSON.stringify(tuner.classArgs)}`;
-            }
-            else{
-                command += ` --tuner_args ${JSON.stringify(JSON.stringify(tuner.classArgs))}`;
-            }
+            command += ` --tuner_args ${crossPlatformStringify(tuner.classArgs)}`;
         }
         if (tuner.codeDir !== undefined && tuner.codeDir.length > 1) {
             command += ` --tuner_directory ${tuner.codeDir}`;
@@ -222,12 +226,7 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
         if (assessor !== undefined && assessor.className !== undefined) {
             command += ` --assessor_class_name ${assessor.className}`;
             if (assessor.classArgs !== undefined) {
-                if(os.platform()==="win32"){
-                    command += ` --assessor_args ${JSON.stringify(assessor.classArgs)}`;
-                }
-                else{
-                    command += ` --assessor_args ${JSON.stringify(JSON.stringify(assessor.classArgs))}`;
-                }
+                command += ` --assessor_args ${crossPlatformStringify(assessor.classArgs)}`;
             }
             if (assessor.codeDir !== undefined && assessor.codeDir.length > 1) {
                 command += ` --assessor_directory ${assessor.codeDir}`;
@@ -375,6 +374,107 @@ async function getVersion(): Promise<string> {
     return deferred.promise;
 } 
 
+function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any):ChildProcess{
+    if(process.platform === "win32"){
+        command = command.split('python3').join('python');
+        let cmd = command.split(" ", 1)[0];
+        const tunerProc: ChildProcess = spawn(cmd, command.substr(cmd.length+1).split(" "), {
+            stdio,
+            cwd: newCwd,
+            env: newEnv
+        });
+        return tunerProc;
+    }
+    else{
+        const tunerProc: ChildProcess = spawn(command, [], {
+            stdio,
+            cwd: newCwd,
+            env: newEnv,
+            shell: true
+        });
+        return tunerProc;
+    }
+}
+
+async function isAlive(pid:any):Promise<boolean>{
+    let deferred : Deferred<boolean> = new Deferred<boolean>();
+    let alive: boolean = false;
+    if(process.platform ==='win32'){
+        const str = cp.execSync(`tasklist /FI ${'"PID eq '+pid +'"'}`).toString();
+        if(!str.includes("No tasks")){
+            alive = true;
+        }
+    }
+    else{
+        try {
+            await cpp.exec(`kill -0 ${pid}`);
+            alive = true;
+        } catch (error) {
+            //ignore
+        }
+    }
+    deferred.resolve(alive);
+    return deferred.promise;
+}
+
+async function killPid(pid:any):Promise<void>{
+    let deferred : Deferred<void> = new Deferred<void>();
+    try {
+        if (process.platform === "win32") {
+            await cpp.exec(`taskkill /PID ${pid} /F`);
+        }
+        else{
+            await cpp.exec(`kill ${pid}`);
+        }
+    } catch (error) {
+        // pid does not exist, do nothing here
+    }
+    deferred.resolve();
+    return deferred.promise;
+}
+
+async function runScript(localTrailConfig: TrialConfig, workingDirectory: string, variables: { key: string; value: string }[]):Promise<string[]>{
+    let deferred : Deferred<string[]> = new Deferred<string[]>();
+    let cmdParameter: string[] = [];
+    const runScriptLines: string[] = [];
+    if (process.platform === "win32") {
+        runScriptLines.push(`cd ${localTrailConfig.codeDir}`);
+        for (const variable of variables) {
+            runScriptLines.push(`$env:${variable.key}="${variable.value}"`);
+        }
+        runScriptLines.push(
+        `Invoke-Expression "${localTrailConfig.command}" 2>${path.join(workingDirectory, 'stderr')}`,
+        `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
+        `$NOW_DATE = "$NOW_DATE" + "000"`,
+        `$state = 0`,
+        `if($?){$state = 0}`,
+        `else{$state = 2}`,
+        `Write $state " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`
+        );
+        await cpp.exec(`mkdir ${workingDirectory}`);
+        await cpp.exec(`mkdir ${path.join(workingDirectory, '.nni')}`);
+        await cpp.exec(`copy NUL ${path.join(workingDirectory, '.nni', 'metrics')}`);
+        await fs.promises.writeFile(path.join(workingDirectory, 'run.ps1'), runScriptLines.join('\r\n'), { encoding: 'utf8', mode: 0o777 });
+        cmdParameter.push("powershell");
+        cmdParameter.push("run.ps1");
+    }
+    else{
+        runScriptLines.push('#!/bin/bash', `cd ${localTrailConfig.codeDir}`);
+            for (const variable of variables) {
+                runScriptLines.push(`export ${variable.key}=${variable.value}`);
+            }
+            runScriptLines.push(`eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`, `echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`);
+            await cpp.exec(`mkdir -p ${workingDirectory}`);
+            await cpp.exec(`mkdir -p ${path.join(workingDirectory, '.nni')}`);
+            await cpp.exec(`touch ${path.join(workingDirectory, '.nni', 'metrics')}`);
+            await fs.promises.writeFile(path.join(workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
+            cmdParameter.push("bash");
+            cmdParameter.push("run.sh");
+    }
+    deferred.resolve(cmdParameter);
+    return deferred.promise;
+}
+
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getVersion };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getTunerProc, isAlive, killPid, runScript };

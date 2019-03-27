@@ -32,7 +32,7 @@ from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port, get_user, get_python_dir
 from .constants import *
 import random
 import site
@@ -67,10 +67,7 @@ def get_nni_installation_path():
         Return None if nothing is found
         '''
         def _generate_installation_path(sitepackages_path):
-            if sys.platform == "win32":
-                python_dir = str(Path(sitepackages_path))
-            else:
-                python_dir = str(Path(sitepackages_path).parents[2])
+            python_dir = get_python_dir(sitepackages_path)
             entry_file = os.path.join(python_dir, 'nni', 'main.js')
             if os.path.isfile(entry_file):
                 return python_dir
@@ -274,8 +271,11 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['tuner'] = experiment_config['tuner']
         if 'assessor' in experiment_config:
             request_data['assessor'] = experiment_config['assessor']
+    #debug mode should disable version check
     if experiment_config.get('debug') is not None:
-        request_data['versionCheck'] = experiment_config.get('debug')
+        request_data['versionCheck'] = not experiment_config.get('debug')
+    if experiment_config.get('logCollection'):
+        request_data['logCollection'] = experiment_config.get('logCollection')
 
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
@@ -336,7 +336,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
-        path = os.path.join(tempfile.gettempdir(), os.environ['USER'], 'nni', 'annotation')
+        path = os.path.join(tempfile.gettempdir(), get_user(), 'nni', 'annotation')
         if not os.path.isdir(path):
             os.makedirs(path)
         path = tempfile.mkdtemp(dir=path)
@@ -445,7 +445,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     # start a new experiment
     print_normal('Starting experiment...')
     # set debug configuration
-    if args.debug is not None:
+    if experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
     response = set_experiment(experiment_config, mode, args.port, config_file_name)
     if response:
