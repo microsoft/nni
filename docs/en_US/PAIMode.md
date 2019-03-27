@@ -55,10 +55,10 @@ Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial con
     * Optional key. It specifies the HDFS data direcotry for trial to download data. The format should be something like hdfs://{your HDFS host}:9000/{your data directory}
 * outputDir 
     * Optional key. It specifies the HDFS output directory for trial. Once the trial is completed (either succeed or fail), trial's stdout, stderr will be copied to this directory by NNI sdk automatically. The format should be something like hdfs://{your HDFS host}:9000/{your output directory}
-* virturlCluster
-    * Optional key. Set the virtualCluster of PAI. If omitted, the job will run on default virtual cluster.
+* virtualCluster
+    * Optional key. Set the virtualCluster of OpenPAI. If omitted, the job will run on default virtual cluster.
 * shmMB
-    * Optional key. Set the shmMB configuration of PAI, it set the shared memory for one task in the task role.
+    * Optional key. Set the shmMB configuration of OpenPAI, it set the shared memory for one task in the task role.
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 ```
