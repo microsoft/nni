@@ -17,11 +17,9 @@ $pipUrl = "https://bootstrap.pypa.io/get-pip.py"
 $unzipNodeDir = "node-v$version-win-x64"
 $unzipPythonDir = "python-3.6.4-embed-amd64"
 
-
-##$NNI_DEPENDENCY_FOLDER = "$env:temp\$env:USERNAME"
 $NNI_DEPENDENCY_FOLDER = "\tmp\$env:USERNAME"
 $NNI_PYTHON3 = "C:\Python3"
-
+$NNI_PKG_FOLDER = $NNI_PYTHON3 +"\python\nni"
 function FindPython{
     param()
     $val =  where.exe python;
@@ -39,9 +37,9 @@ if($WHICH_PYTHON -eq "-1"){
 }
 else {
     $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+    $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 }
 
-$NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 $NNI_PYTHON3_ZIP = $NNI_PYTHON3 +"\python.zip"
 $NNI_PYTHON_FOLDER = $NNI_PYTHON3 +"\python"
 $GET_PIP = $NNI_PYTHON3 +"\get-pip.py"

@@ -420,10 +420,16 @@ async function isAlive(pid:any):Promise<boolean>{
 async function killPid(pid:any):Promise<void>{
     let deferred : Deferred<void> = new Deferred<void>();
     try {
-        await cpp.exec(`kill ${pid}`);
+        if (process.platform === "win32") {
+            await cpp.exec(`taskkill /PID ${pid} /F`);
+        }
+        else{
+            await cpp.exec(`kill ${pid}`);
+        }
     } catch (error) {
         // pid does not exist, do nothing here
     }
+    deferred.resolve();
     return deferred.promise;
 }
 
