@@ -121,6 +121,13 @@ class ENASTuner():
         self.epoch = 0
         self.generate_one_epoch_parameters()
 
+    def get_controller_arc_macro(self, child_totalsteps):
+        child_arc = []
+        for _ in range(0, child_totalsteps):
+            arc = self.sess.run(self.controller_model.sample_arc)
+            child_arc.append(arc)
+        return child_arc
+
     def generate_one_epoch_parameters(self):
         # Generate architectures in one epoch and 
         # store them to self.child_arc

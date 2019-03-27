@@ -9,12 +9,12 @@ trainingServicePlatform: local
 useAnnotation: true
 multiPhase: true
 tuner:
-  codeDir: ./src/cifar10
+  codeDir: .
   classFileName: nni_controller_cifar10.py
   className: ENASTuner
   classArgs:
-    child_train_steps: 350
-    controller_train_steps: 50
+    child_train_steps: 3
+    controller_train_steps: 3
 
 trial:
   command: sh ./macro_cifar10.sh

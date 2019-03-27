@@ -293,6 +293,7 @@ class GeneralChild(Model):
 
       """@nni.architecture
       {
+        platform: tensorflow,
         layer_0: {
           layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [],
@@ -330,6 +331,7 @@ class GeneralChild(Model):
       layer_0_out, layer_1_out, layer_2_out, layer_3_out = layers[-4:]
       """@nni.architecture
       {
+        platform: tensorflow,
         layer_4: {
           layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out],
@@ -367,6 +369,7 @@ class GeneralChild(Model):
       layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out = layers[-8:]
       """@nni.architecture
       {
+        platform: tensorflow,
         layer_8: {
           layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out],

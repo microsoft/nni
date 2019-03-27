@@ -158,7 +158,7 @@ class ENASTrial():
 
     def run(self, num):
         for _ in range(num):
-            """@nni.get_next_parameter(self.sess)"""
+            """@nni.get_next_parameter(tf, self.sess)"""
             """@nni.variable(nni.choice('train', 'validate'), name=entry)"""
             entry = 'trian'
             if entry == 'train':
