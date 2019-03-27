@@ -42,7 +42,7 @@ export abstract class ClusterJobRestServer extends RestServer{
     private readonly expId: string = getExperimentId();
 
     private enableVersionCheck: boolean = true; //switch to enable version check
-    private versionCheckSuccess: boolean = false;
+    private versionCheckSuccess: boolean | undefined;
     private errorMessage?: string;
 
     /**
@@ -92,10 +92,16 @@ export abstract class ClusterJobRestServer extends RestServer{
         router.post(`/version/${this.expId}/:trialId`, (req: Request, res: Response) => {
             if (this.enableVersionCheck) {
                 try {
-                    if (req.body.tag === 'VCSuccess') {
+                    const checkResultSuccess: boolean = req.body.tag === 'VCSuccess'? true: false;
+                    if (this.versionCheckSuccess !== undefined && this.versionCheckSuccess !== checkResultSuccess) {
+                        this.errorMessage = 'Version check error, version check result is inconsistent!';
+                        this.log.error(this.errorMessage);
+                    }
+                    else if (checkResultSuccess) {
                         this.log.info(`Version check in trialKeeper success!`);
                         this.versionCheckSuccess = true;
                     } else {
+                        this.versionCheckSuccess = false;
                         this.errorMessage = req.body.msg;
                     }
                 } catch(err) {
