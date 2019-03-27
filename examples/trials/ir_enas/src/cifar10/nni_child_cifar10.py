@@ -15,7 +15,6 @@ import pickle
 from src.utils import Logger
 from src.cifar10.data_utils import read_data
 from src.cifar10.general_child import GeneralChild
-from src.nni_child import ENASBaseTrial
 from src.cifar10_flags import *
 child_init()
 import nni
@@ -87,7 +86,7 @@ def get_child_ops(child_model):
     return child_ops
 
 
-class ENASTrial(ENASBaseTrial):
+class ENASTrial():
 
     def __init__(self):
         if FLAGS.child_fixed_arc is None:
@@ -122,36 +121,7 @@ class ENASTrial(ENASBaseTrial):
             self.sess = tf.train.SingularMonitoredSession(
                 config=config, hooks=hooks, checkpoint_dir=FLAGS.output_dir)
 
-            #self.load(self.file_path)
         logger.debug('initlize ENASTrial done.')
-
-    def load(self, file_path):
-        '''{variable_name: value}'''
-        # first time, there's no file
-        if not os.path.exists(file_path):
-            return
-        # otherwise load variable
-        with open(file_path, 'rb') as fp:
-            vals = pickle.load(fp)
-        with self.g.as_default():
-            for variable in tf.trainable_variables():
-                name = variable.name
-                if name in vals:
-                    variable.load(vals[name], self.sess)
-
-    def save(self, dir_path, file_path):
-        if not os.path.exists(dir_path):
-            os.mkdirs(dir_path)
-        vals = dict()
-        if os.path.exists(file_path):
-            with open(file_path, 'rb') as fp:
-                vals = pickle.load(fp)
-        with self.g.as_default():
-            logger.debug(tf.trainable_variables()[:3])
-            for variable in tf.trainable_variables():
-                vals[variable.name] = self.sess.run(variable)
-        with open(file_path, 'wb') as fp:
-            pickle.dump(vals, fp)
 
     def run_child_one_macro(self):
         run_ops = [
@@ -165,7 +135,6 @@ class ENASTrial(ENASBaseTrial):
         loss, lr, gn, tr_acc, _ = self.sess.run(run_ops)
         global_step = self.sess.run(self.child_ops["global_step"])
         log_string = ""
-        #log_string += "epoch={:<6d}".format(epoch)
         log_string += "ch_step={:<6d}".format(global_step)
         log_string += " loss={:<8.6f}".format(loss)
         log_string += " lr={:<8.4f}".format(lr)
@@ -175,8 +144,11 @@ class ENASTrial(ENASBaseTrial):
         if int(global_step) % 50 == 0:
             logger.debug(log_string)
 
-        #self.save(self.output_dir, self.file_path)
         return loss
+
+    def get_csvaa(self):
+        cur_valid_acc = self.sess.run(self.child_model.cur_valid_acc)
+        return cur_valid_acc
 
     def start_eval_macro(self, first_arc):
         self.child_ops["eval_func"]\
@@ -186,7 +158,7 @@ class ENASTrial(ENASBaseTrial):
 
     def run(self, num):
         for _ in range(num):
-            '''@nni.get_next_parameter()'''
+            """@nni.get_next_parameter(self.sess)"""
             """@nni.variable(nni.choice('train', 'validate'), name=entry)"""
             entry = 'trian'
             if entry == 'train':
@@ -197,9 +169,6 @@ class ENASTrial(ENASBaseTrial):
                 '''@nni.report_final_result(valid_acc_arr)'''
             else:
                 raise RuntimeError('No such entry: ' + entry)
-
-            logger.debug("Send rewards Done\n")
-            #trial.start_eval_macro(first_arc=first_arc)
 
 def main(_):
     logger.debug("-" * 80)

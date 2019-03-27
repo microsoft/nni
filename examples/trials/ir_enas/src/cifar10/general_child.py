@@ -290,17 +290,7 @@ class GeneralChild(Model):
             # out = post_process_out(out, layers[-1], res_layers)
             # global_res_layers = res_layers
         return out
-      
-      ############################# New added code beginning
-      #x = self._enas_layer(layer_id, layers, start_idx, out_filters, is_training)
-      # layer_0: {
-      #     layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-      #     fixed_inputs: [],
-      #     input_candidates: [],
-      #     input_num: 1,
-      #     input_aggregate: None,
-      #     outputs: layer_0_out,
-      #   },
+
       """@nni.architecture
       {
         layer_0: {

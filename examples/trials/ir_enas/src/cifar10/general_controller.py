@@ -5,13 +5,12 @@ import time
 import numpy as np
 import tensorflow as tf
 
-from src.controller import Controller
 from src.utils import get_train_ops
 from src.common_ops import stack_lstm
 
 from tensorflow.python.training import moving_averages
 
-class GeneralController(Controller):
+class GeneralController():
   def __init__(self,
                search_for="both",
                search_whole_channels=False,
@@ -40,7 +39,6 @@ class GeneralController(Controller):
                skip_target=0.8,
                skip_weight=0.5,
                name="controller",
-               hash_search_space=None,
                *args,
                **kwargs):
 
@@ -77,8 +75,6 @@ class GeneralController(Controller):
     self.num_aggregate = num_aggregate
     self.num_replicas = num_replicas
     self.name = name
-
-    self.hash_search_space = hash_search_space
 
     print('begin to create params...\n')
     self._create_params()
@@ -152,21 +148,15 @@ class GeneralController(Controller):
     for layer_id in range(self.num_layers):
       if self.search_whole_channels:
         next_c, next_h = stack_lstm(inputs, prev_c, prev_h, self.w_lstm)
-        prev_c, prev_h = next_c, next_h #[1, lstm_size] [lstm_size, branch_num]
-        logit = tf.matmul(next_h[-1], self.w_soft)
+        prev_c, prev_h = next_c, next_h
+        logit = tf.matmul(next_h[-1], self.w_soft) #so there should be multiple self.w_soft with different dimension?
         if self.temperature is not None:
           logit /= self.temperature
         if self.tanh_constant is not None:
           logit = self.tanh_constant * tf.tanh(logit)
         if self.search_for == "macro" or self.search_for == "branch":
-          print(logit.shape)
-          current_branch_indices = tf.constant(self.hash_search_space[layer_id]['layer_choice'])
-          sample_logit = tf.gather(logit, current_branch_indices, axis=-1)
-          print(sample_logit.shape)
-          branch_id = tf.multinomial(sample_logit, 1)
+          branch_id = tf.multinomial(logit, 1)
           branch_id = tf.to_int32(branch_id)
-          # branch_id = tf.reshape(branch_id, [])
-          # branch_id = self.hash_search_space[layer_id]['layer_choice'][branch_id]
           branch_id = tf.reshape(branch_id, [1])
         elif self.search_for == "connection":
           branch_id = tf.constant([0], dtype=tf.int32)
@@ -225,9 +215,9 @@ class GeneralController(Controller):
       prev_c, prev_h = next_c, next_h
 
       if layer_id > 0:
-        query = tf.concat(anchors_w_1, axis=0) # [[[1, lstm_size]], [[1, lstm_size]]] => [[1, lstm_size], [1, lstm_size], [1, lstm_size]]
+        query = tf.concat(anchors_w_1, axis=0)
         query = tf.tanh(query + tf.matmul(next_h[-1], self.w_attn_2))
-        query = tf.matmul(query, self.v_attn) # [[exp(x),exp(-x)],[1,-1],[1,-1]]
+        query = tf.matmul(query, self.v_attn)
         logit = tf.concat([-query, query], axis=1)
         if self.temperature is not None:
           logit /= self.temperature
@@ -237,9 +227,7 @@ class GeneralController(Controller):
         skip = tf.multinomial(logit, 1)
         skip = tf.to_int32(skip)
         skip = tf.reshape(skip, [layer_id])
-        current_skip =  tf.gather(skip, self.hash_search_space[layer_id]['input_candidates'], axis=-1)
-
-        arc_seq.append(current_skip)
+        arc_seq.append(skip)
 
         skip_prob = tf.sigmoid(logit)
         kl = skip_prob * tf.log(skip_prob / skip_targets)
@@ -263,7 +251,7 @@ class GeneralController(Controller):
         inputs = self.g_emb
 
       anchors.append(next_h[-1])
-      anchors_w_1.append(tf.matmul(next_h[-1], self.w_attn_1)) #[1, lstm_size]
+      anchors_w_1.append(tf.matmul(next_h[-1], self.w_attn_1))
 
     arc_seq = tf.concat(arc_seq, axis=0)
     self.sample_arc = tf.reshape(arc_seq, [-1])

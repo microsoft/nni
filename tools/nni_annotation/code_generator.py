@@ -185,9 +185,10 @@ def parse_architecture(string, layer_dict_initialized):
     for char in string.split('\n')[0]:
         if char in [' ', '\t']:
             first_char_index += 1
-    string = '\n'.join([line[first_char_index:]
-                        for line in string.split('\n')])
-    dict_node = ast.parse(string)
+    strings = [line[first_char_index:] for line in string.split('\n')]
+    platform = strings.pop(1).split(':')[1].strip()
+    assert platform in ['tensorflow', 'others'], "Platform must be 'tensorflow' or 'others'"
+    dict_node = ast.parse('\n'.join(strings))
     dict_node = NameReplacer().visit(dict_node)
     dict_node = dict_node.body[0].value
     if not layer_dict_initialized:
@@ -203,7 +204,7 @@ def parse_architecture(string, layer_dict_initialized):
     return_node_list.append(ast.parse('_nni_locals=locals()').body[0])
     return_node_list.append(ast.parse('_nni_globals=globals()').body[0])
     #layer_names = {layer_name.s: eval(layer_name.s) for layer_name in dict_node.keys}
-    return_node_list.extend(make_nodes_for_each_layer(dict_node))
+    return_node_list.extend(make_nodes_for_each_layer(dict_node, platform))
 
     return (*return_node_list,)
 
@@ -234,7 +235,11 @@ def make_layer_info_node(layer_name, key):
 
 
 def eval_items(layername, key, return_dict=False, is_list=True):
-    '''eval all items in a list and return a ast node'''
+    """Eval an item or all items in a list 
+    Return the Ast node of the evaluation list
+    return_dict: if true, the Ast node will be a dict whose key-value is like {variable_name: variable_value}
+    is_list: eval an item or all items in a list
+    """
     target = "{}['{}']['{}']".format(layer_dict_name, layername, key)
     if is_list:
         if return_dict:
@@ -250,65 +255,7 @@ def eval_items(layername, key, return_dict=False, is_list=True):
     return ast.parse(template).body[0]
 
 
-def make_nodes_for_each_layer(dict_node):
-    # call NNI API to get output
-    def tensorflow_node(layer_name, info):
-        layer_mask = ast.Name(id=layer_name+'_mask')
-        layer_inputs = ast.Name(id=layer_name+'_inputs')
-        layer_choice = ast.Name(id=layer_name+'_choice')
-        layer_branches = ast.Name(id=layer_name+'_branches')
-        layer_y = ast.Name(id=layer_name+'_y')
-        layer_output_node = ast.Name(id=info['outputs'].s)
-        layer_name_node = ast.Str(s=layer_name)
-        # get mask from nni API
-        get_mask_call_node = make_attr_call('nni', 'get_mask', [ast.Name(
-            id=layer_dict_name), layer_name_node, ast.Name(id='tf')])
-        mask_assign_node = ast.Assign(
-            targets=[layer_mask], value=get_mask_call_node)
-        # call tensorflow to mask inputs
-        tf_mask_call_node = make_attr_call('tf', 'boolean_mask', [
-                                           make_layer_info_node(layer_name, 'input_candidates'), layer_mask])
-        tf_mask_assign_node = ast.Assign(
-            targets=[layer_inputs], value=tf_mask_call_node)
-        # get layer_choice from nni API
-        get_choice_call_node = make_attr_call('nni', 'get_choice', [ast.Name(
-            id=layer_dict_name), layer_name_node, ast.Name(id='tf')])
-        choice_assign_node = ast.Assign(
-            targets=[layer_choice], value=get_choice_call_node)
-        # Initialize dict
-        initialize_dict_node = ast.Assign(
-            targets=[layer_branches], value=ast.Dict(keys=[], values=[]))
-        # Add each branch
-        iter_node = make_call('range', args=[make_call(
-            'len', args=[make_layer_info_node(layer_name, 'layer_choice')])])
-        condition = make_attr_call(
-            'tf', 'equal', args=[layer_choice, ast.Name(id='idx')])
-        left_value = ast.Subscript(
-            value=layer_branches, slice=ast.Index(value=condition))
-        current_branch = ast.Subscript(value=make_layer_info_node(
-            layer_name, 'layer_choice'), slice=ast.Name(id='idx'))
-        current_branch_call_node = ast.Call(func=current_branch, args=[
-                                            layer_name_node, layer_inputs], keywords=[])
-        assign_node_in_for_one = ast.Assign(
-            targets=[layer_y], value=current_branch_call_node)
-        assign_node_in_for_two = ast.Assign(
-            targets=[left_value], value=make_lambda(layer_y))
-        for_node = ast.For(target=ast.Name(id='idx'), iter=iter_node, body=[
-                           assign_node_in_for_one, assign_node_in_for_two], orelse=[])
-        # Assign tf.case to layer output
-        # get_type_call = ast.Attribute(value=layer_y, attr='dtype')
-        # get_shape_call = make_attr_call(layer_name+'_y', 'get_shape')
-        tf_case_node = make_attr_call('tf', 'case', args=[layer_branches], keywords=[ast.keyword(arg='exclusive', value=ast.NameConstant(
-            value=True)), ast.keyword(arg='default', value=make_lambda(layer_y))])
-        layer_output_assign_node = ast.Assign(
-            targets=[layer_output_node], value=tf_case_node)
-        # post_process_output
-        post_process_output_node = ast.Assign(targets=[layer_output_node], value=make_call(
-            info['post_process_outputs'].s, [layer_name_node, layer_output_node, layer_inputs]))
-        core_nodes = [mask_assign_node, tf_mask_assign_node, choice_assign_node, initialize_dict_node,
-                      for_node, layer_output_assign_node, post_process_output_node]
-        return core_nodes
-
+def make_nodes_for_each_layer(dict_node, platform):
     def other_node(layer_name, info):
         # left value
         output_node = ast.Name(id=info['outputs'].s)
@@ -329,14 +276,20 @@ def make_nodes_for_each_layer(dict_node):
             layer_name, 'input_candidates_str')], value=make_layer_info_node(layer_name, 'input_candidates')))
         layer_nodes.append(ast.Assign(targets=[make_layer_info_node(
             layer_name, 'layer_choice_str')], value=make_layer_info_node(layer_name, 'layer_choice')))
-        layer_nodes.append(eval_items(layer_name, 'layer_choice'))
-        layer_nodes.append(eval_items(layer_name, 'input_candidates'))
-        layer_nodes.append(eval_items(
-            layer_name, 'post_process_outputs', is_list=False))
-        # TO DO: Add a switcher for tensorflow
-        #core_nodes = other_node(layer_name, info)
-        core_nodes = tensorflow_node(layer_name, info)
-        layer_nodes.extend(core_nodes)
+        return_dict = False if platform=="tensorflow" else True
+        layer_nodes.append(eval_items(layer_name, 'layer_choice', return_dict=return_dict))
+        layer_nodes.append(eval_items(layer_name, 'input_candidates', return_dict=return_dict))
+        layer_nodes.append(eval_items(layer_name, 'post_process_outputs', is_list=False))
+        # left value
+        output_node = ast.Name(id=info['outputs'].s)
+        # right value
+        args = [ast.Name(id=layer_dict_name), ast.Str(layer_name)]
+        if platform=="tensorflow":
+            args.append(ast.Name(id="tf"))
+        value_node = make_attr_call('nni', 'get_layer_output', args)
+        # assign statement
+        assign_node = ast.Assign(targets=[output_node], value=value_node)
+        layer_nodes.append(assign_node)
 
     return layer_nodes
 
@@ -408,9 +361,7 @@ class Transformer(ast.NodeTransformer):
             return node  # not an annotation, ignore it
 
         if string.startswith('@nni.get_next_parameter('):
-            deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. Please remove this line in the trial code."
-            print_warning(deprecated_message)
-            return parse_annotation("nni.reload_tf_variable(tf, self.sess)")
+            return parse_annotation("nni.reload_tf_variable(" + string.split('(')[1])
 
         if string.startswith('@nni.report_intermediate_result(')  \
                 or string.startswith('@nni.report_final_result('):

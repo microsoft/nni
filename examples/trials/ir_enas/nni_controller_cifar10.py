@@ -14,7 +14,6 @@ import src.utils
 import nni
 from src.utils import Logger
 from src.cifar10.general_controller import GeneralController
-from src.nni_controller import ENASBaseTuner
 from src.cifar10_flags import *
 from collections import OrderedDict
 
@@ -30,7 +29,35 @@ def build_logger(log_name):
 logger = build_logger("nni_controller_cifar10")
 
 
+def BuildController(ControllerClass):
+    controller_model = ControllerClass(
+        search_for=FLAGS.search_for,
+        search_whole_channels=FLAGS.controller_search_whole_channels,
+        skip_target=FLAGS.controller_skip_target,
+        skip_weight=FLAGS.controller_skip_weight,
+        num_cells=FLAGS.child_num_cells,
+        num_layers=FLAGS.child_num_layers,
+        num_branches=FLAGS.child_num_branches,
+        out_filters=FLAGS.child_out_filters,
+        lstm_size=64,
+        lstm_num_layers=1,
+        lstm_keep_prob=1.0,
+        tanh_constant=FLAGS.controller_tanh_constant,
+        op_tanh_reduce=FLAGS.controller_op_tanh_reduce,
+        temperature=FLAGS.controller_temperature,
+        lr_init=FLAGS.controller_lr,
+        lr_dec_start=0,
+        lr_dec_every=1000000,  # never decrease learning rate
+        l2_reg=FLAGS.controller_l2_reg,
+        entropy_weight=FLAGS.controller_entropy_weight,
+        bl_dec=FLAGS.controller_bl_dec,
+        use_critic=FLAGS.controller_use_critic,
+        optim_algo="adam",
+        sync_replicas=FLAGS.controller_sync_replicas,
+        num_aggregate=FLAGS.controller_num_aggregate,
+        num_replicas=FLAGS.controller_num_replicas)
 
+    return controller_model
 
 
 def get_controller_ops(controller_model):
@@ -57,26 +84,22 @@ def get_controller_ops(controller_model):
     return controller_ops
 
 
-class ENASTuner(ENASBaseTuner):
+class ENASTuner():
 
     def __init__(self, child_train_steps, controller_train_steps):
         # branches defaults to 6, need to be modified according to ss
         macro_init()
 
         # self.child_totalsteps = (FLAGS.train_data_size + FLAGS.batch_size - 1) // FLAGS.batch_size
-        # self.controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
+        #self.controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
         self.child_train_steps = child_train_steps
         self.controller_train_steps = controller_train_steps
         self.total_steps = max(self.child_train_steps, self.controller_train_steps)
         logger.debug("child steps:\t"+str(self.child_train_steps))
         logger.debug("controller step\t"+str(self.controller_train_steps))
-        logger.debug('Parse parameter done.')
 
-        
-
-        
-    def init_controller(self):
-        self.controller_model = self.BuildController(GeneralController)
+        ControllerClass = GeneralController
+        self.controller_model = BuildController(ControllerClass)
 
         self.graph = tf.Graph()
 
@@ -119,7 +142,6 @@ class ENASTuner(ENASBaseTuner):
             raise nni.NoMoreTrialError('no more parameters now.')
 
         current_arc_code = self.child_arc[self.pos - (1 if self.entry=='train' else (self.child_train_steps+1))]
-        logger.debug('current_arc_code: ' + str(current_arc_code))
         current_config = {self.key: self.entry}
         start_idx = 0
         onehot2list = lambda l: [idx for idx, val in enumerate(l) if val==1]
@@ -129,15 +151,14 @@ class ENASTuner(ENASBaseTuner):
                 input_start = start_idx + 1
             else:
                 input_start = start_idx
-            num_input_candidates = len(info['input_candidates'])
-            inputs_idxs = current_arc_code[input_start: input_start + num_input_candidates]
+            inputs_idxs = current_arc_code[input_start: input_start + layer_id]
             inputs_idxs = onehot2list(inputs_idxs)
             current_config[layer_name] = dict()
             current_config[layer_name]['layer_choice'] = info['layer_choice'][layer_choice_idx]
             current_config[layer_name]['input_candidates'] = [info['input_candidates'][ipi] for ipi in inputs_idxs]
-            start_idx += 1 + num_input_candidates
+            start_idx += 1 + layer_id
 
-        return current_config
+        return current_config 
 
 
     def controller_one_step(self, epoch, valid_acc_arr):
@@ -173,14 +194,12 @@ class ENASTuner(ENASBaseTuner):
         return
 
 
-    def receive_trial_result(self, parameter_id, parameters, reward):
+    def receive_trial_result(self, parameter_id, parameters, reward, trial_job_id):
         logger.debug("epoch:\t"+str(self.epoch))
         logger.debug(parameter_id)
         logger.debug(reward)
         if self.entry == 'validate':
             self.controller_one_step(self.epoch, reward)
-        return
-
 
     def update_search_space(self, data):
         # Extract choice
@@ -189,65 +208,6 @@ class ENASTuner(ENASBaseTuner):
         # Sort layers
         self.search_space = OrderedDict(sorted(data.items(), key=lambda tp:int(tp[0].split('_')[1])))
         logger.debug(self.search_space)
-        # Number each layer_choice and outputs and input_candidate
-        num_branches = 0
-        self.branches = dict()
-        self.outputs = dict()
-        self.hash_search_space = list()
-        for layer_id, (_, info) in enumerate(self.search_space.items()):
-            hash_info = {'layer_choice': [], 'input_candidates': []}
-            # record branch_name <--> branch_id
-            for branch_idx in range(len(info['layer_choice'])):
-                branch_name = info['layer_choice'][branch_idx]
-                if branch_name not in self.branches:
-                    self.branches[branch_name] = num_branches
-                    hash_info['layer_choice'].append(num_branches)
-                    num_branches += 1
-                else:
-                    hash_info['layer_choice'].append(self.branches[branch_name])
-            assert info['outputs'] not in self.outputs, 'Output variables from different layers cannot be the same'
-            # record output_name <--> output_id
-            self.outputs[layer_id], self.outputs[info['outputs']] = info['outputs'], layer_id
-            # convert input_candidate to id
-            if layer_id != 0:
-                for candidate in info['input_candidates']:
-                    assert candidate in self.outputs, 'Subsequent layers must use the output of the previous layer as an input candidate'
-                    hash_info['input_candidates'].append(self.outputs[candidate])
-            self.hash_search_space.append(hash_info)
-        logger.debug(self.hash_search_space)
-        self.init_controller()
-        
-
-    def BuildController(self, ControllerClass):
-        controller_model = ControllerClass(
-            search_for=FLAGS.search_for,
-            search_whole_channels=FLAGS.controller_search_whole_channels,
-            skip_target=FLAGS.controller_skip_target,
-            skip_weight=FLAGS.controller_skip_weight,
-            num_cells=FLAGS.child_num_cells,
-            out_filters=FLAGS.child_out_filters,
-            lstm_size=64,
-            lstm_num_layers=1,
-            lstm_keep_prob=1.0,
-            tanh_constant=FLAGS.controller_tanh_constant,
-            op_tanh_reduce=FLAGS.controller_op_tanh_reduce,
-            temperature=FLAGS.controller_temperature,
-            lr_init=FLAGS.controller_lr,
-            lr_dec_start=0,
-            lr_dec_every=1000000,  # never decrease learning rate
-            l2_reg=FLAGS.controller_l2_reg,
-            entropy_weight=FLAGS.controller_entropy_weight,
-            bl_dec=FLAGS.controller_bl_dec,
-            use_critic=FLAGS.controller_use_critic,
-            optim_algo="adam",
-            sync_replicas=FLAGS.controller_sync_replicas,
-            num_aggregate=FLAGS.controller_num_aggregate,
-            num_replicas=FLAGS.controller_num_replicas,
-            num_layers=FLAGS.child_num_layers,
-            num_branches=len(self.branches),
-            hash_search_space=self.hash_search_space)
-
-        return controller_model
 
 if __name__ == "__main__":
     tf.app.run()

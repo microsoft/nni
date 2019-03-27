@@ -9,7 +9,7 @@ trainingServicePlatform: local
 useAnnotation: true
 multiPhase: true
 tuner:
-  codeDir: ../tuner
+  codeDir: ./src/cifar10
   classFileName: nni_controller_cifar10.py
   className: ENASTuner
   classArgs:
@@ -21,7 +21,3 @@ trial:
   codeDir: ./
   gpuNum: 1
 
-# machineList:
-#   - ip: 10.150.144.121
-#     username: v-zejlin
-#     passwd: v-zejlin

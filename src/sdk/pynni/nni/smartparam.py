@@ -51,57 +51,71 @@ __all__ = [
 
 global_layer = dict()
 
-
-def get_layer_output(layer, layer_name):
-    if trial._params is None:
-        trial.get_next_parameter()
-    input_candidate_names = trial.get_current_parameter(layer_name)[
-        'input_candidates']
-    layer_choice = trial.get_current_parameter(layer_name)['layer_choice']
-
+def get_layer_output(layer, layer_name, tf=None):
     layer = layer[layer_name]
-    input_candidate = [layer['input_candidates'][x]
-                       for x in input_candidate_names]
-    if layer['input_aggregate'] is not None:
-        aggregated_output = layer['input_aggregate'](*input_candidate)
-        return layer['layer_choice'][layer_choice](layer_name, aggregated_output)
+    # Get inputs
+    if tf is None:
+        if trial._params is None:
+            trial.get_next_parameter()
+        input_candidate_names = trial.get_current_parameter(layer_name)['input_candidates']
+        layer_choice = trial.get_current_parameter(layer_name)['layer_choice']
+        inputs = [layer['input_candidates'][x] for x in input_candidate_names]
     else:
-        return layer['layer_choice'][layer_choice](layer_name, *input_candidate)
+        layer_mask = get_mask(layer, layer_name, tf)
+        layer_inputs = tf.boolean_mask(layer['input_candidates'], layer_mask)
+    # Invoke input_aggregate function if it's not None
+    if layer['input_aggregate'] is not None:
+        layer_inputs = layer['input_aggregate'](layer_inputs)
+    # Get output
+    if tf is None:
+        layer_out = layer['layer_choice'][layer_choice](layer_name, layer_inputs)
+    else:
+        layer_choice = get_choice(layer, layer_name, tf)
+        layer_branches = {}
+        for idx in range(len(layer['layer_choice'])):
+            layer_y = layer['layer_choice'][idx](layer_name, layer_inputs)
+            layer_branches[tf.equal(layer_choice, idx)] = lambda: layer_y
+        layer_out = tf.case(layer_branches, exclusive=True, default=lambda: layer_y)
+    # Invoke post_process_outputs function if it's not None
+    if layer['post_process_outputs'] is not None:
+        layer_out = layer['post_process_outputs'](layer_name, layer_out, inputs)
+    
+    return layer_out
 
 
-def reload_tf_variable(tf, sess):
+def reload_tf_variable(tf=None, session=None):
     '''Get next parameter from tuner and load them into tf variable'''
-    global global_layer
-    if trial._params is None:
+    trial.get_next_parameter()
+    if tf is not None:
+        assert session is not None, "Tensorflow session should be provided"
+        global global_layer
         trial.get_next_parameter()
-    param = trial._params['parameters']
-    for layer_name, info in global_layer.items():
-        mask = [1 if inp in param[layer_name]['input_candidates']
-                else 0 for inp in info['input_candidates_str']]
-        info['mask'].load(mask, sess)
-        choice_idx = info['layer_choice_str'].index(
-            param[layer_name]['layer_choice'])
-        info['choice'].load(choice_idx, sess)
+        param = trial._params['parameters']
+        for layer_name, info in global_layer.items():
+            mask = [1 if inp in param[layer_name]['input_candidates']
+                    else 0 for inp in info['input_candidates_str']]
+            info['mask'].load(mask, session)
+            choice_idx = info['layer_choice_str'].index(
+                param[layer_name]['layer_choice'])
+            info['choice'].load(choice_idx, session)
 
 
 def get_mask(layer, layer_name, tf):
     '''Create a unique tf variable binary mask for input candidates'''
-    mask = tf.get_variable('{}_mask'.format(layer_name), [len(
-        layer[layer_name]['input_candidates'])], dtype=tf.bool, trainable=False)
-    layer[layer_name]['mask'] = mask
+    layer['mask'] = tf.get_variable('{}_mask'.format(layer_name), [len(
+        layer['input_candidates'])], dtype=tf.bool, trainable=False)
     global global_layer
     global_layer.update(layer)
-    return mask
+    return layer['mask']
 
 
 def get_choice(layer, layer_name, tf):
     '''Create a unique tf scalar variable for layer choice'''
-    choice = tf.get_variable('{}_choice'.format(
+    layer['choice'] = tf.get_variable('{}_choice'.format(
         layer_name), [], dtype=tf.int64, trainable=False)
-    layer[layer_name]['choice'] = choice
     global global_layer
     global_layer.update(layer)
-    return choice
+    return layer['choice']
 
 
 if env_args.platform is None:
