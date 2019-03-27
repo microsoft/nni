@@ -2,15 +2,15 @@ import * as React from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
 import {
-    Row, Input, Table, Button, Popconfirm, Modal, Checkbox
+    Row, Table, Button, Popconfirm, Modal, Checkbox
 } from 'antd';
-const { TextArea } = Input;
 const CheckboxGroup = Checkbox.Group;
-import { MANAGER_IP, DOWNLOAD_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
+import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
 import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
-import DefaultMetric from '../public-child/DefaultMetrc';
+// import DefaultMetric from '../public-child/DefaultMetrc';
+import IntermediateVal from '../public-child/IntermediateVal';
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
@@ -29,10 +29,9 @@ echarts.registerTheme('my_theme', {
 interface TableListProps {
     entries: number;
     tableSource: Array<TableObj>;
-    searchResult: Array<TableObj>;
     updateList: Function;
-    isHasSearch: boolean;
     platform: string;
+    logCollection: boolean;
 }
 
 interface TableListState {
@@ -41,8 +40,6 @@ interface TableListState {
     isObjFinal: boolean;
     isShowColumn: boolean;
     columnSelected: Array<string>; // user select columnKeys
-    logModal: boolean;
-    logMessage: string;
 }
 
 interface ColumnIndex {
@@ -64,9 +61,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             modalVisible: false,
             isObjFinal: false,
             isShowColumn: false,
-            logModal: false,
-            columnSelected: COLUMN,
-            logMessage: ''
+            columnSelected: COLUMN
         };
     }
 
@@ -78,6 +73,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             .then(res => {
                 if (res.status === 200) {
                     const intermediateArr: number[] = [];
+                    // support intermediate result is dict
                     Object.keys(res.data).map(item => {
                         const temp = JSON.parse(res.data[item].data);
                         if (typeof temp === 'object') {
@@ -105,51 +101,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         if (this._isMounted) {
             this.setState({
                 modalVisible: false
-            });
-        }
-    }
-
-    updateTrialLogMessage = (id: string) => {
-        this._trialId = id;
-        axios(`${DOWNLOAD_IP}/trial_${this._trialId}.log`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    if (this._isMounted) {
-                        this.setState(() => ({
-                            logMessage: res.data
-                        }));
-                    }
-                }
-            })
-            .catch(error => {
-                if (error.response.status === 500) {
-                    if (this._isMounted) {
-                        this.setState(() => ({
-                            logMessage: 'failed to get log message'
-                        }));
-                    }
-                }
-            });
-    }
-
-    showLogModal = (id: string) => {
-        this.updateTrialLogMessage(id);
-        this.intervalTrialLog = window.setInterval(this.updateTrialLogMessage.bind(this, this._trialId), 10000);
-        if (this._isMounted) {
-            this.setState({
-                logModal: true
-            });
-        }
-    }
-
-    hideLogModal = () => {
-        window.clearInterval(this.intervalTrialLog);
-        if (this._isMounted) {
-            this.setState({
-                logModal: false,
-                logMessage: ''
             });
         }
     }
@@ -224,12 +175,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     openRow = (record: TableObj) => {
-        const { platform } = this.props;
+        const { platform, logCollection } = this.props;
         return (
             <OpenRow
-                showLogModalOverview={this.showLogModal}
                 trainingPlatform={platform}
                 record={record}
+                logCollection={logCollection}
             />
         );
     }
@@ -244,10 +195,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     render() {
 
-        const { entries, tableSource, searchResult, isHasSearch, updateList } = this.props;
-        const { intermediateOption, modalVisible, isShowColumn, columnSelected,
-            logMessage, logModal
-        } = this.state;
+        const { entries, tableSource, updateList } = this.props;
+        const { intermediateOption, modalVisible, isShowColumn, columnSelected } = this.state;
         let showTitle = COLUMN;
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
@@ -340,7 +289,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             );
                         },
                         filters: trialJob,
-                        onFilter: (value: string, record: TableObj) => record.status.indexOf(value) === 0,
+                        onFilter: (value: string, record: TableObj) => {
+                            return record.status.indexOf(value) === 0;
+                        },
+                        // onFilter: (value: string, record: TableObj) => record.status.indexOf(value) === 0,
                         sorter: (a: TableObj, b: TableObj): number => a.status.localeCompare(b.status)
                     });
                     break;
@@ -349,17 +301,19 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title: 'Default Metric',
                         dataIndex: 'acc',
                         key: 'acc',
-                        width: 200,
+                        width: 160,
                         sorter: (a: TableObj, b: TableObj) => {
-                            if (a.acc !== undefined && b.acc !== undefined) {
-                                return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
+                            const aa = a.description.intermediate;
+                            const bb = b.description.intermediate;
+                            if (aa !== undefined && bb !== undefined) {
+                                return aa[aa.length - 1] - bb[bb.length - 1];
                             } else {
                                 return NaN;
                             }
                         },
                         render: (text: string, record: TableObj) => {
                             return (
-                                <DefaultMetric record={record}/>
+                                <IntermediateVal record={record} />
                             );
                         }
                     });
@@ -453,7 +407,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     <Table
                         columns={showColumn}
                         expandedRowRender={this.openRow}
-                        dataSource={isHasSearch ? searchResult : tableSource}
+                        dataSource={tableSource}
                         className="commonTableStyle"
                         pagination={{ pageSize: entries }}
                     />
@@ -474,24 +428,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             }}
                             theme="my_theme"
                         />
-                    </Modal>
-
-                    {/* trial log modal */}
-                    <Modal
-                        title="trial log"
-                        visible={logModal}
-                        onCancel={this.hideLogModal}
-                        footer={null}
-                        destroyOnClose={true}
-                        width="80%"
-                    >
-                        <div id="trialLogContent" style={{ height: window.innerHeight * 0.6 }}>
-                            <TextArea
-                                value={logMessage}
-                                disabled={true}
-                                className="logcontent"
-                            />
-                        </div>
                     </Modal>
                 </div>
                 {/* Add Column Modal */}
