@@ -186,8 +186,8 @@ def parse_architecture(string, layer_dict_initialized):
         if char in [' ', '\t']:
             first_char_index += 1
     strings = [line[first_char_index:] for line in string.split('\n')]
-    platform = strings.pop(1).split(':')[1].strip()
-    assert platform in ['tensorflow', 'others'], "Platform must be 'tensorflow' or 'others'"
+    platform = strings.pop(1).split(':')[1].strip().strip(',')
+    assert platform in ['tensorflow', 'others'], "Platform:'%s' must be 'tensorflow' or 'others'" % platform
     dict_node = ast.parse('\n'.join(strings))
     dict_node = NameReplacer().visit(dict_node)
     dict_node = dict_node.body[0].value
