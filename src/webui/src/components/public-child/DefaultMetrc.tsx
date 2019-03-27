@@ -19,7 +19,7 @@ class DefaultMetric extends React.Component<DefaultMetricProps, {}> {
             accuracy = record.acc.default;
         }
         let wei = 0;
-        if (accuracy) {
+        if (accuracy !== undefined) {
             if (accuracy.toString().indexOf('.') !== -1) {
                 wei = accuracy.toString().length - accuracy.toString().indexOf('.') - 1;
             }
@@ -27,7 +27,7 @@ class DefaultMetric extends React.Component<DefaultMetricProps, {}> {
         return (
             <div>
                 {
-                    record.acc && record.acc.default
+                    record.acc !== undefined && record.acc.default !== undefined
                         ?
                         wei > 6
                             ?

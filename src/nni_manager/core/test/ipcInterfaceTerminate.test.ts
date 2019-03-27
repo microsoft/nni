@@ -22,7 +22,7 @@
 import * as assert from 'assert';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
-import { cleanupUnitTest, prepareUnitTest, getMsgDispatcherCommand } from '../../common/utils';
+import { cleanupUnitTest, prepareUnitTest, getMsgDispatcherCommand, getTunerProc } from '../../common/utils';
 import * as CommandType from '../commands';
 import { createDispatcherInterface, IpcInterface } from '../ipcInterface';
 
@@ -50,14 +50,7 @@ function startProcess(): void {
         // advisor
         undefined
     );
-    let proc: ChildProcess;
-    if(process.platform==='win32'){
-        let cmd = dispatcherCmd.split(" ", 1)[0];
-        proc = spawn(cmd, dispatcherCmd.substr(cmd.length+1).split(" "), { stdio, cwd: 'core/test' });
-    }
-    else{
-        proc = spawn(dispatcherCmd, [], { stdio, cwd: 'core/test', shell: true });
-    }
+    const proc: ChildProcess = getTunerProc(dispatcherCmd, stdio,  'core/test', process.env);
     proc.on('error', (error: Error): void => {
         procExit = true;
         procError = true;
