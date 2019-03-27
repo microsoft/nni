@@ -54,14 +54,14 @@ Optional('advisor'): Or({
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 }),
 Optional('tuner'): Or({
-    'builtinTunerName': Or('TPE', 'Random', 'Anneal', 'SMAC', 'Evolution'),
+    'builtinTunerName': Or('TPE', 'Anneal', 'SMAC', 'Evolution'),
     Optional('classArgs'): {
         'optimize_mode': Or('maximize', 'minimize')
     },
     Optional('includeIntermediateResults'): bool,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
-    'builtinTunerName': Or('BatchTuner', 'GridSearch'),
+    'builtinTunerName': Or('BatchTuner', 'GridSearch', 'Random'),
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 },{
     'builtinTunerName': 'NetworkMorphism',
