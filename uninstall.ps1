@@ -1,22 +1,8 @@
 
 $NNI_DEPENDENCY_FOLDER = "\tmp\$env:USERNAME"
-$NNI_PYTHON3 = "C:\Python3"
-function FindPython{
-    param()
-    $val =  where.exe python;
-    if($val -eq $null) {
-        return "-1";
-    }
-    else {
-        return $val;
-    }
-}
-$WHICH_PYTHON = FindPython
-if($WHICH_PYTHON -ne "-1"){
-    $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
-}
-$BIN_FOLDER = $NNI_PYTHON3+"\bin"
-$NNI_NODE = $BIN_FOLDER+"\node" 
+
+$WHICH_PYTHON = where.exe python;
+$NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
 $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 $LIB_FOLDER = $NNI_PYTHON3 + "\Lib\site-packages"
 $NNI_LIB_FOLDER = $LIB_FOLDER + "\nni*"
@@ -28,7 +14,6 @@ $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
 # uninstall
 Remove-Item $NNI_PKG_FOLDER -r -fo
 Remove-Item $NNI_LIB_FOLDER -r -fo
-Remove-Item "$BIN_FOLDER/node" -r -fo
 Remove-Item $BASH_COMP_SCRIPT -r -fo
 
 # clean
@@ -48,7 +33,7 @@ function Delete2Path {
     [System.Environment]::SetEnvironmentVariable("Path",$PathVariable,"Machine")
 }
 
-$NNI_NODE = $NNI_NODE -split '\\' -join '\\'
+$NNI_NODE_FOLDER = $NNI_NODE_FOLDER -split '\\' -join '\\'
 $NNI_YARN_FOLDER = $NNI_YARN_FOLDER -split '\\' -join '\\'
-Delete2Path -fileName $NNI_NODE
+Delete2Path -fileName $NNI_NODE_FOLDER
 Delete2Path -fileName "$NNI_YARN_FOLDER\\bin"

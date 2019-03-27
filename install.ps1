@@ -46,13 +46,11 @@ $GET_PIP = $NNI_PYTHON3 +"\get-pip.py"
 $NNI_PIP_FOLDER = $NNI_PYTHON_FOLDER+"\Scripts"
 $BASH_COMP_PREFIX = $env:HOMEPATH +"\.bash_completion.d"
 $BASH_COMP_SCRIPT = $BASH_COMP_PREFIX +"\nnictl"
-$BIN_FOLDER = $NNI_PYTHON3+"\bin"
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
     New-Item $NNI_DEPENDENCY_FOLDER -ItemType Directory
 }
 $NNI_NODE_ZIP = $NNI_DEPENDENCY_FOLDER+"\nni-node.zip"
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
-$NNI_NODE = $BIN_FOLDER+"\node" 
 $NNI_YARN_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-yarn.tar.gz"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
 $NNI_YARN = $NNI_YARN_FOLDER +"\bin\yarn"
@@ -80,13 +78,7 @@ if ($install_node) {
     }
     Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
     Rename-Item "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir" "nni-node"
-    if(!(Test-Path $BIN_FOLDER)){
-        New-Item $BIN_FOLDER -ItemType Directory
-    }
-    if(Test-Path $NNI_NODE){
-        Remove-Item $NNI_NODE -r -fo
-    } 
-    Copy-Item $NNI_NODE_FOLDER -Destination $NNI_NODE -Recurse 
+     
     ### yarn install
     if(Test-Path $NNI_YARN_FOLDER){
         Remove-Item $NNI_YARN_FOLDER -r -fo
@@ -142,7 +134,7 @@ function Add2Path {
 }
 
 
-Add2Path -fileName $NNI_NODE
+Add2Path -fileName $NNI_NODE_FOLDER
 Add2Path -fileName "$NNI_YARN_FOLDER\bin"
 if($install_py){
     Add2Path -fileName $NNI_PYTHON_FOLDER
