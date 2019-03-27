@@ -54,7 +54,7 @@ net = build_graph_from_json(RCV_CONFIG)
 nni.report_final_result(best_acc)
 ```
 
-If you want to save and load the best model, the following methods are recommended. 
+If you want to save and **load the best model**, the following methods are recommended. 
 
 ```python
 # 1. Use NNI API
