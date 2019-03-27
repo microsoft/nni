@@ -1,6 +1,7 @@
 
 $NNI_DEPENDENCY_FOLDER = "\tmp\$env:USERNAME"
 $NNI_PYTHON3 = "C:\Python3"
+$NNI_PKG_FOLDER = $NNI_PYTHON3 +"\python\nni"
 function FindPython{
     param()
     $val =  where.exe python;
@@ -14,10 +15,10 @@ function FindPython{
 $WHICH_PYTHON = FindPython
 if($WHICH_PYTHON -ne "-1"){
     $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+    $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 }
 $BIN_FOLDER = $NNI_PYTHON3+"\bin"
 $NNI_NODE = $BIN_FOLDER+"\node" 
-$NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 $LIB_FOLDER = $NNI_PYTHON3 + "\Lib\site-packages"
 $NNI_LIB_FOLDER = $LIB_FOLDER + "\nni*"
 $BASH_COMP_PREFIX = $env:HOMEPATH +"\.bash_completion.d"
