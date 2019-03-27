@@ -27,7 +27,7 @@ def read(fname):
 
 setuptools.setup(
     name = 'nni-sdk',
-    version = 'v0.1-521-gf803acb',
+    version = '999.0.0-developing',
     packages = setuptools.find_packages(exclude=['tests']),
 
     python_requires = '>=3.5',

@@ -20,8 +20,6 @@
 
 import os
 from colorama import Fore
-from colorama import init
-init(autoreset=True)
 
 NNICTL_HOME_DIR = os.path.join(os.path.expanduser('~'), '.local',  'nnictl')
 
