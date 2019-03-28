@@ -34,6 +34,7 @@ def kill_command(pid):
 
 def install_package_command(package_name):
     '''install python package from pip'''
+    #TODO refactor python logic
     if sys.platform == "win32":
         cmds = 'python -m pip install --user {0}'.format(package_name)
     else:
