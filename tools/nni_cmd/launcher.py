@@ -488,7 +488,7 @@ def resume_experiment(args):
         if experiment_dict.get(args.id) is None:
             print_error('Id %s not exist!' % args.id)
             exit(1)
-        if experiment_dict[args.id]['status'] == 'running':
+        if experiment_dict[args.id]['status'] != 'STOPPED':
             print_error('Experiment %s is running!' % args.id)
             exit(1)
         experiment_id = args.id
