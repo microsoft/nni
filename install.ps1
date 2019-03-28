@@ -55,7 +55,6 @@ $NNI_YARN_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-yarn.tar.gz"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
 $NNI_YARN = $NNI_YARN_FOLDER +"\bin\yarn"
 
-
 ## Version number
 $NNI_VERSION_VALUE = $(git describe --tags)
 $NNI_VERSION_TEMPLATE = "999.0.0-developing"
@@ -88,9 +87,7 @@ if ($install_node) {
     
 }
 
-
-if($install_py)
-{
+if($install_py){
     if(!(Test-Path $NNI_PYTHON_FOLDER)){
         New-Item $NNI_PYTHON_FOLDER -ItemType Directory
     }
@@ -110,8 +107,7 @@ if($install_py)
     }
 }
 
-if($install_pip)
-{
+if($install_pip){
     Write-Host "Downloading pip..."
     (New-Object Net.WebClient).DownloadFile($pipUrl, $GET_PIP)
     cmd /c "$NNI_PYTHON_FOLDER\python $GET_PIP"
@@ -132,7 +128,6 @@ function Add2Path {
         [System.Environment]::SetEnvironmentVariable("Path",$PathVariable,"Machine")
     }
 }
-
 
 Add2Path -fileName $NNI_NODE_FOLDER
 Add2Path -fileName "$NNI_YARN_FOLDER\bin"
@@ -168,12 +163,7 @@ cmd /c $NNI_YARN build
 ### Installing Python SDK
 cd ..\sdk\pynni 
 (Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
-if($install_py){
-    cmd /c "$NNI_PYTHON_FOLDER\$PIP_INSTALL" 
-}
-else {
-    cmd /c "$NNI_PYTHON3\$PIP_INSTALL" 
-}
+cmd /c $PIP_INSTALL
 
 ## Installing nnictl
 cd ..\..\..\tools 
