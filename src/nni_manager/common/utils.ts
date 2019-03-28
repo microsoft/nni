@@ -375,25 +375,22 @@ async function getVersion(): Promise<string> {
 } 
 
 function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any):ChildProcess{
+    let cmd: string = command;
+    let arg: string[] = [];
+    let newShell: boolean = true;
     if(process.platform === "win32"){
         command = command.split('python3').join('python');
-        let cmd = command.split(" ", 1)[0];
-        const tunerProc: ChildProcess = spawn(cmd, command.substr(cmd.length+1).split(" "), {
-            stdio,
-            cwd: newCwd,
-            env: newEnv
-        });
-        return tunerProc;
+        cmd = command.split(" ", 1)[0];
+        arg = command.substr(cmd.length+1).split(" ");
+        newShell = false;
     }
-    else{
-        const tunerProc: ChildProcess = spawn(command, [], {
-            stdio,
-            cwd: newCwd,
-            env: newEnv,
-            shell: true
-        });
-        return tunerProc;
-    }
+    const tunerProc: ChildProcess = spawn(cmd, arg, {
+        stdio,
+        cwd: newCwd,
+        env: newEnv,
+        shell: newShell
+    });
+    return tunerProc;
 }
 
 async function isAlive(pid:any):Promise<boolean>{
@@ -421,7 +418,7 @@ async function killPid(pid:any):Promise<void>{
     let deferred : Deferred<void> = new Deferred<void>();
     try {
         if (process.platform === "win32") {
-            await cpp.exec(`taskkill /PID ${pid} /F`);
+            await cpp.exec(`powershell.exe kill ${pid}`);
         }
         else{
             await cpp.exec(`kill ${pid}`);
