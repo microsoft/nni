@@ -24,9 +24,11 @@ $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\python\nni"
 $WHICH_PYTHON = where.exe python
 if($WHICH_PYTHON -eq $null){
     $install_py = $TRUE
+    $NNI_PYTHON_FOLDER = $NNI_PYTHON3 +"\python"
 }
 else {
     $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+    $NNI_PYTHON_FOLDER = $NNI_PYTHON3
     $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 }
 
@@ -36,7 +38,6 @@ if($WHICH_PIP -eq $null){
 }
 
 $NNI_PYTHON3_ZIP = $NNI_PYTHON3 +"\python.zip"
-$NNI_PYTHON_FOLDER = $NNI_PYTHON3 +"\python"
 $GET_PIP = $NNI_PYTHON3 +"\get-pip.py"
 $NNI_PIP_FOLDER = $NNI_PYTHON_FOLDER+"\Scripts"
 $BASH_COMP_PREFIX = $env:HOMEPATH +"\.bash_completion.d"
