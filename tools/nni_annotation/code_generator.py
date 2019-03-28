@@ -152,13 +152,10 @@ def replace_variable_node(node, annotation):
     node: the AST node to replace
     annotation: annotation string
     """
-    assert type(
-        node) is ast.Assign, 'nni.variable is not annotating assignment expression'
-    assert len(
-        node.targets) == 1, 'Annotated assignment has more than one left-hand value'
+    assert type(node) is ast.Assign, 'nni.variable is not annotating assignment expression'
+    assert len(node.targets) == 1, 'Annotated assignment has more than one left-hand value'
     name, expr = parse_nni_variable(annotation)
-    assert test_variable_equal(
-        node.targets[0], name), 'Annotated variable has wrong name'
+    assert test_variable_equal(node.targets[0], name), 'Annotated variable has wrong name'
     node.value = expr
     return node
 
