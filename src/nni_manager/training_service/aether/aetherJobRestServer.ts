@@ -70,20 +70,20 @@ export class AetherJobRestServer extends RestServer {
             next();
         });
 
+        // report metric for trial
         router.post(`update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            // report metric for trial
         });
 
+        // update status of trial 
         router.post(`update-status/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            // update status of trial 
         });
 
+        // return aether expriment id
         router.post(`update-guid/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            // return aether expriment id
         });
 
+        // get trial information
         router.get(`trial-meta/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            // get trial information
         });
         return router;
     }
