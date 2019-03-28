@@ -29,6 +29,10 @@ import {
     HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
+import { Logger, getLogger } from 'common/log';
+import { stringify } from 'querystring';
+import { Deferred } from 'ts-deferred';
+import { MethodNotImplementedError } from 'common/errors';
 
 class AetherTrialJobDetail implements TrialJobDetail {
     readonly id:string;
@@ -39,6 +43,18 @@ class AetherTrialJobDetail implements TrialJobDetail {
     readonly workingDirectory: string;
     readonly form: JobApplicationForm;
     readonly sequenceId: number;
+
+    constructor(id: string, status: TrialJobStatus, submitTime: number, guid: string, 
+        workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
+        this.id = id;
+        this.status = status;
+        this.submitTime = submitTime;
+        this.url = `aether://experiments/${guid}`;
+        this.guid = guid;
+        this.workingDirectory = workingDirectory;
+        this.form = form;
+        this.sequenceId = sequenceId;
+    }
 }
 
 /**
@@ -46,20 +62,37 @@ class AetherTrialJobDetail implements TrialJobDetail {
  */
 
 @component.Singleton
-class aetherTrainingService extends TrainingService {
-    private readonly AetherClientPath: string;
+class AetherTrainingService implements TrainingService {
+    private readonly log!: Logger;
+    private readonly AETHER_EXE_PATH: string = '/fake/aether/exe/path';
     private readonly metricsEmitter: EventEmitter;
     private readonly trialJobsMap: Map<string, AetherTrialJobDetail>;
 
+    constructor() {
+        this.log = getLogger();
+        this.metricsEmitter = new EventEmitter();
+        this.trialJobsMap = new Map<string, AetherTrialJobDetail>();
+    }
     public async listTrialJobs(): Promise<AetherTrialJobDetail[]> {
+        const deferred: Deferred<AetherTrialJobDetail[]> = new Deferred<AetherTrialJobDetail[]>();
+
+        return deferred.promise;
     }
 
     public async getTrialJob(trialJobId: string): Promise<AetherTrialJobDetail> {
+        const deferred: Deferred<AetherTrialJobDetail> = new Deferred<AetherTrialJobDetail>();
 
+        return deferred.promise;
     }
 
     public async submitTrialJob(form: JobApplicationForm): Promise<AetherTrialJobDetail> {
+        const deferred: Deferred<AetherTrialJobDetail> = new Deferred<AetherTrialJobDetail>();
 
+        return deferred.promise;
+    }
+
+    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<AetherTrialJobDetail> {
+        throw new MethodNotImplementedError();
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void) {
@@ -82,15 +115,22 @@ class aetherTrainingService extends TrainingService {
     }
 
     public async getClusterMetadata(key: string): Promise<string> {
+        const deferred: Deferred<string> = new Deferred<string>();
 
+        return deferred.promise;
     }
 
     public async cleanUp(): Promise<void> {
-
+        
     }
 
     public async run(): Promise<void> {
 
     }
 
+    public get MetricsEmitter() : EventEmitter {
+        return this.metricsEmitter;
+    }
 }
+
+export { AetherTrainingService }
