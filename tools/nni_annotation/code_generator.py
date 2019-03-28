@@ -54,8 +54,7 @@ def parse_annotation_function(code, func_name):
     assert call.func.value.id == 'nni', 'Annotation is not a NNI function'
     assert call.func.attr == func_name, 'internal error #2'
 
-    assert len(
-        call.keywords) == 1, 'Annotation function contains more than one keyword argument'
+    assert len(call.keywords) == 1, 'Annotation function contains more than one keyword argument'
     assert call.keywords[0].arg == 'name', 'Annotation keyword argument is not "name"'
     name = call.keywords[0].value
 
@@ -72,10 +71,8 @@ def parse_nni_variable(code):
     assert len(call.args) == 1, 'nni.variable contains more than one arguments'
     arg = call.args[0]
     assert type(arg) is ast.Call, 'Value of nni.variable is not a function call'
-    assert type(
-        arg.func) is ast.Attribute, 'nni.variable value is not a NNI function'
-    assert type(
-        arg.func.value) is ast.Name, 'nni.variable value is not a NNI function'
+    assert type(arg.func) is ast.Attribute, 'nni.variable value is not a NNI function'
+    assert type(arg.func.value) is ast.Name, 'nni.variable value is not a NNI function'
     assert arg.func.value.id == 'nni', 'nni.variable value is not a NNI function'
 
     name_str = astor.to_source(name).strip()
