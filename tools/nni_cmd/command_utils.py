@@ -31,3 +31,22 @@ def kill_command(pid):
     else:
         cmds = ['kill', str(pid)]
     call(cmds)
+
+def install_package_command(package_name):
+    '''install python package from pip'''
+    #TODO refactor python logic
+    if sys.platform == "win32":
+        cmds = 'python -m pip install --user {0}'.format(package_name)
+    else:
+        cmds = 'python3 -m pip install --user {0}'.format(package_name)
+    call(cmds, shell=True)
+
+def install_requirements_command(requirements_path):
+    '''install requirements.txt'''
+    cmds = 'cd ' + requirements_path + ' && {0} -m pip install --user -r requirements.txt'
+    #TODO refactor python logic
+    if sys.platform == "win32":
+        cmds = cmds.format('python')
+    else:
+        cmds = cmds.format('python3')
+    call(cmds, shell=True)
