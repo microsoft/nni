@@ -3,7 +3,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = "3"
 import shutil
 import sys
 import time
@@ -17,7 +16,6 @@ from src.cifar10.data_utils import read_data
 from src.cifar10.general_child import GeneralChild
 from src.cifar10_flags import *
 child_init()
-import nni
 
 
 def build_logger(log_name):
@@ -65,6 +63,7 @@ def BuildChild(images, labels, ChildClass):
         sync_replicas=FLAGS.child_sync_replicas,
         num_aggregate=FLAGS.child_num_aggregate,
         num_replicas=FLAGS.child_num_replicas,
+        mode=FLAGS.child_mode
     )
 
     return child_model
@@ -94,14 +93,12 @@ class ENASTrial():
         else:
             images, labels = read_data(FLAGS.data_path, num_valids=0)
 
-        ChildClass = GeneralChild
-
         self.output_dir = os.path.join(os.getenv('NNI_OUTPUT_DIR'), '../..')
         self.file_path = os.path.join(self.output_dir, 'trainable_variable.txt')
 
         self.g = tf.Graph()
         with self.g.as_default():
-            self.child_model = BuildChild(images, labels, ChildClass)
+            self.child_model = BuildChild(images, labels, GeneralChild)
 
             self.total_data = {}
 
@@ -158,7 +155,11 @@ class ENASTrial():
 
     def run(self, num):
         for _ in range(num):
-            """@nni.get_next_parameter(tf, self.sess)"""
+            if FLAGS.child_mode == 'subgraph':
+                """@nni.get_next_parameter()"""
+            else:
+                """@nni.get_next_parameter(tf, self.sess)"""
+
             """@nni.variable(nni.choice('train', 'validate'), name=entry)"""
             entry = 'trian'
             if entry == 'train':

@@ -53,6 +53,7 @@ class GeneralChild(Model):
                num_replicas=None,
                data_format="NHWC",
                name="child",
+               mode="subgraph",
                *args,
                **kwargs
               ):
@@ -87,6 +88,7 @@ class GeneralChild(Model):
     self.lr_T_mul = lr_T_mul
     self.out_filters = out_filters * out_filters_scale
     self.num_layers = num_layers
+    self.mode = mode
 
     self.num_branches = num_branches
     self.fixed_arc = fixed_arc
@@ -233,15 +235,17 @@ class GeneralChild(Model):
               inp_h = inputs.get_shape()[2].value
               inp_w = inputs.get_shape()[3].value
               out.set_shape([None, out_filters, inp_h, inp_w])
-            # res_layers = list(res_layers)
-            # res_layers.append(out)
-            # out = tf.add_n(res_layers)
-            try:
-              pout = tf.add_n([out, tf.reduce_sum(input_candidates, axis=0)])
-            except Exception as e:
-              print(e)
-              pout = out
+            if self.mode == 'subgraph':
+              input_candidates.append(out)
+              pout = tf.add_n(input_candidates)
+            else:
+              try:
+                pout = tf.add_n([out, tf.reduce_sum(input_candidates, axis=0)])
+              except Exception as e:
+                print(e)
+                pout = out
             out = batch_norm(pout, is_training, data_format=self.data_format)
+
         layers.append(out)
 
         return out
@@ -252,48 +256,36 @@ class GeneralChild(Model):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_0'):
             out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0)
-            #out = post_process_out(out, layers[-1], res_layers)
-            # global_res_layers = res_layers
         return out
       def conv3_sep(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_1'):
             out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0, separable=True)
-            # out = post_process_out(out, layers[-1], res_layers)
-            # global_res_layers = res_layers
         return out
       def conv5(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_2'):
             out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0)
-            # out = post_process_out(out, layers[-1], res_layers)
-            # global_res_layers = res_layers
         return out
       def conv5_sep(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_3'):
             out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=0, separable=True)
-            # out = post_process_out(out, layers[-1], res_layers)
-            # global_res_layers = res_layers
         return out
       def avg_pool(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_4'):
             out = self._pool_branch(layers[-1], is_training, out_filters, "avg", start_idx=0)
-            # out = post_process_out(out, layers[-1], res_layers)
-            # global_res_layers = res_layers
         return out
       def max_pool(layer_id, res_layers):
         with tf.variable_scope(layer_id):
           with tf.variable_scope('branch_5'):
             out = self._pool_branch(layers[-1], is_training, out_filters, "max", start_idx=0)
-            # out = post_process_out(out, layers[-1], res_layers)
-            # global_res_layers = res_layers
         return out
 
       """@nni.architecture
       {
-        platform: tensorflow,
+        platform: others,
         layer_0: {
           layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [],
@@ -331,7 +323,7 @@ class GeneralChild(Model):
       layer_0_out, layer_1_out, layer_2_out, layer_3_out = layers[-4:]
       """@nni.architecture
       {
-        platform: tensorflow,
+        platform: others,
         layer_4: {
           layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out],
@@ -369,7 +361,7 @@ class GeneralChild(Model):
       layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out = layers[-8:]
       """@nni.architecture
       {
-        platform: tensorflow,
+        platform: others,
         layer_8: {
           layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
           input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out],

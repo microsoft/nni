@@ -30,5 +30,6 @@ python3 src/cifar10/nni_child_cifar10.py \
   --controller_train_every=1 \
   --controller_num_aggregate=20 \
   --controller_train_steps=50 \
+  --child_mode="subgraph"
   "$@"
 
