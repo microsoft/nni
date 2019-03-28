@@ -20,24 +20,19 @@ $unzipPythonDir = "python-3.6.4-embed-amd64"
 $NNI_DEPENDENCY_FOLDER = "\tmp\$env:USERNAME"
 $NNI_PYTHON3 = "C:\Python3"
 $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\python\nni"
-function FindPython{
-    param()
-    $val =  where.exe python;
-    if($val -eq $null) {
-        return "-1";
-    }
-    else {
-        return $val;
-    }
-}
-$WHICH_PYTHON = FindPython
-if($WHICH_PYTHON -eq "-1"){
+
+$WHICH_PYTHON = where.exe python
+if($WHICH_PYTHON -eq $null){
     $install_py = $TRUE
-    $install_pip = $TRUE
 }
 else {
     $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
     $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
+}
+
+$WHICH_PIP = where.exe pip
+if($WHICH_PIP -eq $null){
+    $install_pip = $TRUE
 }
 
 $NNI_PYTHON3_ZIP = $NNI_PYTHON3 +"\python.zip"
