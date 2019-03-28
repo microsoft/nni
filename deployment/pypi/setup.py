@@ -69,7 +69,8 @@ setuptools.setup(
         'json_tricks',
         'numpy',
         'scipy',
-        'coverage'
+        'coverage',
+        'colorama'
     ],
     classifiers = [
         'Programming Language :: Python :: 3',

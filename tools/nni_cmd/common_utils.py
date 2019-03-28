@@ -74,13 +74,6 @@ def detect_port(port):
     except:
         return False
 
-def kill_command(pid):
-    '''Kill process'''
-    if sys.platform =='win32':
-        return ['taskkill','/PID', str(pid),'/F']
-    else:
-        return ['kill', '-9', str(pid)]
-
 def get_user():
     if sys.platform =='win32':
         return os.environ['USERNAME']
