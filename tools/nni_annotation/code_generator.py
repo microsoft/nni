@@ -202,6 +202,7 @@ def parse_architecture(string, layer_dict_initialized):
     return_node_list.append(ast.parse('_nni_globals=globals()').body[0])
     #layer_names = {layer_name.s: eval(layer_name.s) for layer_name in dict_node.keys}
     return_node_list.extend(make_nodes_for_each_layer(dict_node, platform))
+    return_node_list.append(platform=='tensorflow')
 
     return (*return_node_list,)
 
@@ -324,6 +325,7 @@ class Transformer(ast.NodeTransformer):
         self.last_line = 0
         self.annotated = False
         self.layer_dict_initialized = False
+        self.tensorflow_used = False
 
     def visit(self, node):
         if isinstance(node, (ast.expr, ast.stmt)):
@@ -376,7 +378,9 @@ class Transformer(ast.NodeTransformer):
             nodes = parse_architecture(
                 string[len('@nni.architecture')+1:], self.layer_dict_initialized)
             self.layer_dict_initialized = True
-            return nodes
+            if not self.tensorflow_used:
+                self.tensorflow_used = nodes[-1]
+            return nodes[:-1]
 
         raise AssertionError('Unexpected annotation function')
 
@@ -409,13 +413,13 @@ def parse(code):
 
     last_future_import = -1
     import_nni = ast.Import(names=[ast.alias(name='nni', asname=None)])
-    import_tensorflow = ast.Import(
-        names=[ast.alias(name='tensorflow', asname='tf')])
     nodes = ast_tree.body
     for i, _ in enumerate(nodes):
         if type(nodes[i]) is ast.ImportFrom and nodes[i].module == '__future__':
             last_future_import = i
     nodes.insert(last_future_import + 1, import_nni)
-    nodes.insert(last_future_import + 2, import_tensorflow)
+    if transformer.tensorflow_used:
+        import_tensorflow = ast.Import(names=[ast.alias(name='tensorflow', asname='tf')])
+        nodes.insert(last_future_import + 2, import_tensorflow)
 
     return astor.to_source(ast_tree)
