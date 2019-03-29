@@ -28,12 +28,12 @@ from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_re
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
-     EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL
+     EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process
 
 def get_experiment_time(port):
     '''get the startTime and endTime of an experiment'''
-    response = rest_get(experiment_url(port), 20)
+    response = rest_get(experiment_url(port), REST_TIME_OUT)
     if response and check_response(response):
         content = convert_time_stamp_to_date(json.loads(response.text))
         return content.get('startTime'), content.get('endTime')
@@ -246,7 +246,7 @@ def trial_ls(args):
         return
     running, response = check_rest_server_quick(rest_port)
     if running:
-        response = rest_get(trial_jobs_url(rest_port), 20)
+        response = rest_get(trial_jobs_url(rest_port), REST_TIME_OUT)
         if response and check_response(response):
             content = json.loads(response.text)
             for index, value in enumerate(content):
@@ -267,7 +267,7 @@ def trial_kill(args):
         return
     running, _ = check_rest_server_quick(rest_port)
     if running:
-        response = rest_delete(trial_job_id_url(rest_port, args.id), 20)
+        response = rest_delete(trial_job_id_url(rest_port, args.id), REST_TIME_OUT)
         if response and check_response(response):
             print(response.text)
         else:
@@ -285,7 +285,7 @@ def list_experiment(args):
         return
     running, _ = check_rest_server_quick(rest_port)
     if running:
-        response = rest_get(experiment_url(rest_port), 20)
+        response = rest_get(experiment_url(rest_port), REST_TIME_OUT)
         if response and check_response(response):
             content = convert_time_stamp_to_date(json.loads(response.text))
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
@@ -347,7 +347,7 @@ def log_trial(args):
         return
     running, response = check_rest_server_quick(rest_port)
     if running:
-        response = rest_get(trial_jobs_url(rest_port), 20)
+        response = rest_get(trial_jobs_url(rest_port), REST_TIME_OUT)
         if response and check_response(response):
             content = json.loads(response.text)
             for trial in content:
@@ -444,7 +444,7 @@ def show_experiment_info():
         print(TRIAL_MONITOR_HEAD)
         running, response = check_rest_server_quick(experiment_dict[key]['port'])
         if running:
-            response = rest_get(trial_jobs_url(experiment_dict[key]['port']), 20)
+            response = rest_get(trial_jobs_url(experiment_dict[key]['port']), REST_TIME_OUT)
             if response and check_response(response):
                 content = json.loads(response.text)
                 for index, value in enumerate(content):
