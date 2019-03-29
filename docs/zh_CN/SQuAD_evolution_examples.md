@@ -4,7 +4,7 @@
 
 ## 1. 搜索空间
 
-Since attention and RNN have been proven effective in Reading Comprehension, we conclude the search space as follow:
+在阅读理解领域，注意力（Attention）和循环神经网络都已被证明是非常有效的方法，因此搜索空间定义如下：
 
 1. IDENTITY (Effectively 表示继续训练)。
 2. INSERT-RNN-LAYER (插入 LSTM。 在 Experiment 中比较了 GRU 和 LSTM 的性能后，我们决定在这里采用 LSTM。)
