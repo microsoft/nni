@@ -79,7 +79,7 @@ def fetch_nni_log_path(experiment_url):
     '''get nni's log path from nni's experiment url'''
     experiment_profile = requests.get(experiment_url)
     experiment_id = json.loads(experiment_profile.text)['id']
-    experiment_path = os.path.join(os.path.expanduser('~'), 'nni','experiments', experiment_id)
+    experiment_path = os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id)
     nnimanager_log_path = os.path.join(experiment_path, 'log', 'nnimanager.log')
 
     return nnimanager_log_path
