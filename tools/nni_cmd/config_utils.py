@@ -79,7 +79,7 @@ class Experiments:
         self.experiments[id]['port'] = port
         self.experiments[id]['startTime'] = time
         self.experiments[id]['endTime'] = 'N/A'
-        self.experiments[id]['status'] = 'running'
+        self.experiments[id]['status'] = 'INITIALIZED'
         self.experiments[id]['fileName'] = file_name
         self.experiments[id]['platform'] = platform
         self.write_file()
