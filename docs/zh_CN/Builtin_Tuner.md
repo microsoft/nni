@@ -113,7 +113,7 @@ tuner:
 
 此算法对计算资源的需求相对较高。 需要非常大的初始种群，以免落入局部最优中。 如果 Trial 时间很短，或者使用了 Assessor，就非常适合此算法。 如果 Trial 代码支持权重迁移，即每次 Trial 会从上一轮继承已经收敛的权重，建议使用此算法。 这会大大提高训练速度。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -131,23 +131,23 @@ tuner:
 
 > 名称：**SMAC**
 
-**Installation**
+**安装**
 
-SMAC need to be installed by following command before first use.
+SMAC 在第一次使用前，必须用下面的命令先安装。
 
 ```bash
 nnictl package install --name=SMAC
 ```
 
-**Suggested scenario**
+**建议场景**
 
-Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.
+与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒 Tuner。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize，可选，默认值为 maximize*) - 如果为 'maximize'，Tuner 会给出有可能产生较大值的参数组合。 如果为 'minimize'，Tuner 会给出有可能产生较小值的参数组合。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
@@ -165,9 +165,9 @@ tuner:
 
 > 名称：BatchTuner
 
-**Suggested scenario**
+**建议场景**
 
-If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner.
+如果 Experiment 配置已确定，可通过 `choice` 将它们罗列到搜索空间文件中运行即可。
 
 **Usage example**
 
