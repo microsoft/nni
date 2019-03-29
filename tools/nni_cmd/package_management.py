@@ -19,7 +19,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import nni
-import os,sys
+import os
+import sys
 from subprocess import call
 from .constants import PACKAGE_REQUIREMENTS
 from .common_utils import print_normal, print_error
