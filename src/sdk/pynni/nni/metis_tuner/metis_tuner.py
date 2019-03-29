@@ -65,7 +65,7 @@ class MetisTuner(Tuner):
     """
 
     def __init__(self, optimize_mode="maximize", no_resampling=True, no_candidates=True,
-                 selection_num_starting_points=600, cold_start_num=10, exploration_probability=0.1):
+                 selection_num_starting_points=600, cold_start_num=10, exploration_probability=0.9):
         """
         Parameters
         ----------
