@@ -28,6 +28,9 @@ from . import search_space_generator
 
 __all__ = ['generate_search_space', 'expand_annotations']
 
+slash = '/'
+if sys.platform == "win32":
+    slash = '\\'        
 
 def generate_search_space(code_dir):
     """Generate search space from Python source code.
@@ -35,10 +38,6 @@ def generate_search_space(code_dir):
     code_dir: directory path of source files (str)
     """
     search_space = {}
-    if sys.platform == "win32":
-        slash = '\\'
-    else:
-        slash = '/'
     
     if code_dir.endswith(slash):
         code_dir = code_dir[:-1]

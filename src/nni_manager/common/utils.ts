@@ -440,13 +440,10 @@ async function runScript(localTrailConfig: TrialConfig, workingDirectory: string
             runScriptLines.push(`$env:${variable.key}="${variable.value}"`);
         }
         runScriptLines.push(
-        `Invoke-Expression "${localTrailConfig.command}" 2>${path.join(workingDirectory, 'stderr')}`,
-        `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
-        `$NOW_DATE = "$NOW_DATE" + "000"`,
-        `$state = 0`,
-        `if($?){$state = 0}`,
-        `else{$state = 2}`,
-        `Write $state " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`
+            `cmd /c ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
+            `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
+            `$NOW_DATE = "$NOW_DATE" + "000"`,
+            `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`
         );
         await cpp.exec(`mkdir ${workingDirectory}`);
         await cpp.exec(`mkdir ${path.join(workingDirectory, '.nni')}`);
@@ -457,16 +454,18 @@ async function runScript(localTrailConfig: TrialConfig, workingDirectory: string
     }
     else{
         runScriptLines.push('#!/bin/bash', `cd ${localTrailConfig.codeDir}`);
-            for (const variable of variables) {
-                runScriptLines.push(`export ${variable.key}=${variable.value}`);
-            }
-            runScriptLines.push(`eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`, `echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`);
-            await cpp.exec(`mkdir -p ${workingDirectory}`);
-            await cpp.exec(`mkdir -p ${path.join(workingDirectory, '.nni')}`);
-            await cpp.exec(`touch ${path.join(workingDirectory, '.nni', 'metrics')}`);
-            await fs.promises.writeFile(path.join(workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
-            cmdParameter.push("bash");
-            cmdParameter.push("run.sh");
+        for (const variable of variables) {
+            runScriptLines.push(`export ${variable.key}=${variable.value}`);
+        }
+        runScriptLines.push(
+            `eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`, 
+            `echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`);
+        await cpp.exec(`mkdir -p ${workingDirectory}`);
+        await cpp.exec(`mkdir -p ${path.join(workingDirectory, '.nni')}`);
+        await cpp.exec(`touch ${path.join(workingDirectory, '.nni', 'metrics')}`);
+        await fs.promises.writeFile(path.join(workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
+        cmdParameter.push("bash");
+        cmdParameter.push("run.sh");
     }
     deferred.resolve(cmdParameter);
     return deferred.promise;

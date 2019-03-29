@@ -18,7 +18,8 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-import os,sys
+import os
+import sys
 import json
 import time
 import json_tricks

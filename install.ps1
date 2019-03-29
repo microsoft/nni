@@ -20,28 +20,24 @@ $unzipPythonDir = "python-3.6.4-embed-amd64"
 $NNI_DEPENDENCY_FOLDER = "\tmp\$env:USERNAME"
 $NNI_PYTHON3 = "C:\Python3"
 $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\python\nni"
-function FindPython{
-    param()
-    $val =  where.exe python;
-    if($val -eq $null) {
-        return "-1";
-    }
-    else {
-        return $val;
-    }
-}
-$WHICH_PYTHON = FindPython
-if($WHICH_PYTHON -eq "-1"){
+
+$WHICH_PYTHON = where.exe python
+if($WHICH_PYTHON -eq $null){
     $install_py = $TRUE
-    $install_pip = $TRUE
+    $NNI_PYTHON_FOLDER = $NNI_PYTHON3 +"\python"
 }
 else {
     $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+    $NNI_PYTHON_FOLDER = $NNI_PYTHON3
     $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 }
 
+$WHICH_PIP = where.exe pip
+if($WHICH_PIP -eq $null){
+    $install_pip = $TRUE
+}
+
 $NNI_PYTHON3_ZIP = $NNI_PYTHON3 +"\python.zip"
-$NNI_PYTHON_FOLDER = $NNI_PYTHON3 +"\python"
 $GET_PIP = $NNI_PYTHON3 +"\get-pip.py"
 $NNI_PIP_FOLDER = $NNI_PYTHON_FOLDER+"\Scripts"
 $BASH_COMP_PREFIX = $env:HOMEPATH +"\.bash_completion.d"
@@ -54,7 +50,6 @@ $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-yarn.tar.gz"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
 $NNI_YARN = $NNI_YARN_FOLDER +"\bin\yarn"
-
 
 ## Version number
 $NNI_VERSION_VALUE = $(git describe --tags)
@@ -71,6 +66,7 @@ if(!(Test-Path $NNI_YARN_TARBALL)){
 }
 
 if ($install_node) {
+
     ### nodejs install
     if(Test-Path $NNI_NODE_FOLDER){
         Remove-Item $NNI_NODE_FOLDER -r -fo
@@ -84,6 +80,7 @@ if ($install_node) {
     }
     New-Item $NNI_YARN_FOLDER -ItemType Directory
 	cmd /c tar -xf $NNI_YARN_TARBALL -C $NNI_YARN_FOLDER --strip-components 1
+    
 }
 
 if($install_py){
@@ -160,7 +157,12 @@ cmd /c $NNI_YARN build
 
 ## install-python-modules:
 ### Installing Python SDK
-cd ..\..
+cd ..\sdk\pynni 
+(Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
+cmd /c $PIP_INSTALL
+
+## Installing nnictl
+cd ..\..\..\tools 
 (Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
 cmd /c $PIP_INSTALL 
 
@@ -168,7 +170,7 @@ cmd /c $PIP_INSTALL
 if(!(Test-Path $NNI_PKG_FOLDER)){
     New-Item $NNI_PKG_FOLDER -ItemType Directory
 }
-
+cd ..
 Remove-Item $NNI_PKG_FOLDER -r -fo
 Copy-Item "src\nni_manager\dist" $NNI_PKG_FOLDER -Recurse
 Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER
