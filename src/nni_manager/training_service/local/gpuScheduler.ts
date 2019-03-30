@@ -100,7 +100,9 @@ class GPUScheduler {
 
     private async updateGPUSummary() {
         const cmdresult = await cpp.exec(`tail -n 1 ${path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics')}`);
-        this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
+        if(cmdresult && cmdresult.stdout) {
+            this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
+        }
     }
 }
 

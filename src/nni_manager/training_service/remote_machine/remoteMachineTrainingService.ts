@@ -175,7 +175,6 @@ class RemoteMachineTrainingService implements TrainingService {
         };
         deferred.resolve(jobs);
 
-        
         return deferred.promise;
     }
 
