@@ -88,7 +88,7 @@ class GPUScheduler {
     public async stop() {
         this.stopping = true;
         if(this.gpuDetectorProcessPid) {
-            await cpp.exec(`kill -9 ${this.gpuDetectorProcessPid}`);
+            await cpp.exec(`pkill -P ${this.gpuDetectorProcessPid}`);
         }
     }
 
