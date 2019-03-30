@@ -28,7 +28,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
 import { String } from 'typescript-string-operations';
-import { GPU_COLLECTOR_FORMAT } from '../common/gpuData'
+import { GPU_INFO_COLLECTOR_FORMAT } from '../common/gpuData'
 
 /**
  * GPUScheduler
@@ -67,7 +67,7 @@ class GPUScheduler {
         //generate gpu_metrics_collector.sh
         let gpuMetricsCollectorScriptPath: string = path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics_collector.sh');
         const gpuMetricsCollectorScriptContent: string = String.Format(
-            GPU_COLLECTOR_FORMAT,
+            GPU_INFO_COLLECTOR_FORMAT,
             this.gpuMetricCollectorScriptFolder,
             path.join(this.gpuMetricCollectorScriptFolder, 'pid'),
         );
@@ -87,6 +87,7 @@ class GPUScheduler {
         this.stopping = true;
         const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
         await cpp.exec(`pkill -P ${pid}`);
+        await cpp.exec(`rm -rf ${this.gpuMetricCollectorScriptFolder}`);
     }
 
     private async updateGPUSummary() {

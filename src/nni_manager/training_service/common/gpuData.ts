@@ -59,7 +59,7 @@ export class GPUSummary {
     }
 }
 
-export const GPU_COLLECTOR_FORMAT: string = 
+export const GPU_INFO_COLLECTOR_FORMAT: string = 
 `
 #!/bin/bash
 export METRIC_OUTPUT_DIR={0}
