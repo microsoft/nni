@@ -33,24 +33,27 @@ import { Logger, getLogger } from 'common/log';
 import { stringify } from 'querystring';
 import { Deferred } from 'ts-deferred';
 import { MethodNotImplementedError } from 'common/errors';
+import { resolve } from 'dns';
+import { uniqueString } from 'common/utils';
+import { getInitTrialSequenceId } from 'common/experimentStartupInfo';
 
 class AetherTrialJobDetail implements TrialJobDetail {
-    readonly id:string;
-    readonly status: TrialJobStatus;
-    readonly submitTime: number;
-    readonly url: string;
-    readonly guid: string;  // GUID of Aether Experiment
-    readonly workingDirectory: string;
-    readonly form: JobApplicationForm;
-    readonly sequenceId: number;
+    public id:string;
+    public status: TrialJobStatus;
+    public submitTime: number;
+    public url: string;
+    public guid: Deferred<string>;  // GUID of Aether Experiment
+    public workingDirectory: string;
+    public form: JobApplicationForm;
+    public sequenceId: number;
 
-    constructor(id: string, status: TrialJobStatus, submitTime: number, guid: string, 
+    constructor(id: string, submitTime: number, 
         workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
         this.id = id;
-        this.status = status;
+        this.status = 'WAITING';
         this.submitTime = submitTime;
-        this.url = `aether://experiments/${guid}`;
-        this.guid = guid;
+        this.url = "";
+        this.guid = new Deferred<string>();
         this.workingDirectory = workingDirectory;
         this.form = form;
         this.sequenceId = sequenceId;
@@ -67,12 +70,23 @@ class AetherTrainingService implements TrainingService {
     private readonly AETHER_EXE_PATH: string = '/fake/aether/exe/path';
     private readonly metricsEmitter: EventEmitter;
     private readonly trialJobsMap: Map<string, AetherTrialJobDetail>;
+    private nextTrialSequenceId: number;
 
     constructor() {
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, AetherTrialJobDetail>();
+        this.nextTrialSequenceId = -1;
     }
+
+    public _getTrialJob(trialJobId: string): AetherTrialJobDetail {
+        const aetherTrialJob: AetherTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        if (!aetherTrialJob) {
+           throw Error(`trial job ${trialJobId} not found`); 
+        }
+        return aetherTrialJob;
+    }
+
     public async listTrialJobs(): Promise<AetherTrialJobDetail[]> {
         const deferred: Deferred<AetherTrialJobDetail[]> = new Deferred<AetherTrialJobDetail[]>();
 
@@ -88,10 +102,13 @@ class AetherTrainingService implements TrainingService {
     public async submitTrialJob(form: JobApplicationForm): Promise<AetherTrialJobDetail> {
         const deferred: Deferred<AetherTrialJobDetail> = new Deferred<AetherTrialJobDetail>();
 
+        const trialJobId: string = uniqueString(5);
+        const trialSequenceId: number = this.generateSequenceId();
+        
         return deferred.promise;
     }
 
-    public updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<AetherTrialJobDetail> {
+    public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<AetherTrialJobDetail> {
         throw new MethodNotImplementedError();
     }
 
@@ -131,6 +148,14 @@ class AetherTrainingService implements TrainingService {
     public get MetricsEmitter() : EventEmitter {
         return this.metricsEmitter;
     }
+
+    private generateSequenceId(): number {
+        if (this.nextTrialSequenceId === -1) {
+            this.nextTrialSequenceId = getInitTrialSequenceId();
+        }
+
+        return this.nextTrialSequenceId++;
+    }
 }
 
-export { AetherTrainingService }
+export { AetherTrainingService, AetherTrialJobDetail }

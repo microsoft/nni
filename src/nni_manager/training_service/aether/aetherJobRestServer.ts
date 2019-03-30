@@ -22,7 +22,7 @@
 import * as assert from 'assert';
 import * as component from '../../common/component';
 import { Inject } from 'typescript-ioc';
-import { AetherTrainingService } from './aetherTrainingService'
+import { AetherTrainingService, AetherTrialJobDetail } from './aetherTrainingService'
 import bodyParser = require('body-parser');
 import { RestServer } from 'common/restServer';
 import { getExperimentId, getBasePort } from 'common/experimentStartupInfo';
@@ -72,18 +72,48 @@ export class AetherJobRestServer extends RestServer {
 
         // report metric for trial
         router.post(`update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            try {
+                this.log.debug(`Get update-metrics request, trial job id: ${req.params.trialId}`);
+                this.log.debug(`update-metrics body: ${JSON.stringify(req.body)}`);
+
+                this.handleTrialMetrics(req.body.jobId, req.body.metrics);
+            } catch(err) {
+                this.log.error(err.message);
+                res.status(500);
+                res.send(err.message);
+            }
+            res.send();
         });
 
         // update status of trial 
         router.post(`update-status/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            try {
+                this.log.debug(`update status of trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
+                var trial = this.aetherTrainingService._getTrialJob(req.params.trialId);
+                trial.status = req.body.status;
+            } catch(err) {
+                this.log.error(err.message);
+                res.status(500);
+                res.send(err.message);
+            }
         });
 
         // return aether expriment id
         router.post(`update-guid/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            try{
+                this.log.debug(`aether GUID of trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
+                var trial = this.aetherTrainingService._getTrialJob(req.params.trialId);
+                trial.guid.resolve(req.body.guid);
+            } catch(err) {
+                this.log.error(err.message);
+                res.status(500);
+                res.send(err.message);
+            }
         });
 
         // get trial information
         router.get(`trial-meta/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            this.log.debug(`sending meta-data for trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
         });
         return router;
     }
