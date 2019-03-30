@@ -44,9 +44,9 @@ import { GPUScheduler } from './gpuScheduler';
 import {
     HOST_JOB_SHELL_FORMAT, RemoteCommandResult, RemoteMachineMeta,
     RemoteMachineScheduleInfo, RemoteMachineScheduleResult, SSHClient, SSHClientManager,
-    RemoteMachineTrialJobDetail, ScheduleResultType, REMOTEMACHINE_TRIAL_COMMAND_FORMAT, 
-    GPU_COLLECTOR_FORMAT
+    RemoteMachineTrialJobDetail, ScheduleResultType, REMOTEMACHINE_TRIAL_COMMAND_FORMAT
 } from './remoteMachineData';
+import { GPU_COLLECTOR_FORMAT } from '../common/gpuData';
 import { SSHClientUtility } from './sshClientUtility';
 import { validateCodeDir } from '../common/util';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
@@ -170,6 +170,7 @@ class RemoteMachineTrainingService implements TrainingService {
         };
         deferred.resolve(jobs);
 
+        
         return deferred.promise;
     }
 
