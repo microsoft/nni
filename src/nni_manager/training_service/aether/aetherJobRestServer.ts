@@ -20,50 +20,63 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as component from '../../common/component';
+import { Request, Response, Router } from 'express';
 import { Inject } from 'typescript-ioc';
-import { AetherTrainingService, AetherTrialJobDetail } from './aetherTrainingService'
-import bodyParser = require('body-parser');
-import { RestServer } from 'common/restServer';
-import { getExperimentId, getBasePort } from 'common/experimentStartupInfo';
-import { Router, Request, Response } from 'express';
+import * as component from '../../common/component';
+import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
+import { RestServer } from '../../common/restServer';
+import { AetherTrainingService, AetherTrialJobDetail } from './aetherTrainingService';
 
+// tslint:disable-next-line:no-require-imports
+// tslint:disable-next-line:no-implicit-dependencies
+import bodyParser = require('body-parser');
 /**
  * Aether Training Service Rest Server, provides rest API to support Aether job update
  */
 @component.Singleton
 export class AetherJobRestServer extends RestServer {
     @Inject
-    private readonly API_ROOT_URL : string = 'api/v1/nni-aether';
+    private readonly API_ROOT_URL: string = 'api/v1/nni-aether';
     private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
-    private readonly aetherTrainingService : AetherTrainingService;
+    private readonly aetherTrainingService: AetherTrainingService;
     private readonly expId: string = getExperimentId();
 
     constructor() {
         super();
         const basePort: number = getBasePort();
         assert(basePort && basePort > 1024);
-        this.port = basePort + 1;         
+        this.port = basePort + 1;
 
         this.aetherTrainingService = component.get(AetherTrainingService);
     }
 
     public get clusterRestServerPort(): number {
-        if(!this.port) {
+        if (!this.port) {
             throw new Error('PAI Rest server port is undefined');
         }
+
         return this.port;
     }
 
-    protected registerRestHandler() {
+    protected registerRestHandler(): void {
         this.app.use(bodyParser.json());
         this.app.use(this.API_ROOT_URL, this.createRestHandler());
+    }
+
+    // tslint:disable-next-line:no-any
+    protected handleTrialMetrics(jobId: string, metrics: any[]): void {
+        for (const singleMetric of metrics) {
+            this.aetherTrainingService.MetricsEmitter.emit('metric', {
+                id: jobId,
+                data: singleMetric
+            });
+        }
     }
 
     private createRestHandler(): Router {
         const router: Router = Router();
 
-        //tslint:desable-next-line:typedef
+        // tslint:disable-next-line:typedef
         router.use((req: Request, res: Response, next) => {
             this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
             res.setHeader('Content-Type', 'application/json');
@@ -77,7 +90,7 @@ export class AetherJobRestServer extends RestServer {
                 this.log.debug(`update-metrics body: ${JSON.stringify(req.body)}`);
 
                 this.handleTrialMetrics(req.body.jobId, req.body.metrics);
-            } catch(err) {
+            } catch (err) {
                 this.log.error(err.message);
                 res.status(500);
                 res.send(err.message);
@@ -85,13 +98,13 @@ export class AetherJobRestServer extends RestServer {
             res.send();
         });
 
-        // update status of trial 
+        // update status of trial
         router.post(`update-status/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
                 this.log.debug(`update status of trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
-                var trial = this.aetherTrainingService._getTrialJob(req.params.trialId);
+                const trial: AetherTrialJobDetail = this.aetherTrainingService.getTrialJobById(req.params.trialId);
                 trial.status = req.body.status;
-            } catch(err) {
+            } catch (err) {
                 this.log.error(err.message);
                 res.status(500);
                 res.send(err.message);
@@ -100,11 +113,11 @@ export class AetherJobRestServer extends RestServer {
 
         // return aether expriment id
         router.post(`update-guid/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            try{
+            try {
                 this.log.debug(`aether GUID of trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
-                var trial = this.aetherTrainingService._getTrialJob(req.params.trialId);
+                const trial: AetherTrialJobDetail = this.aetherTrainingService.getTrialJobById(req.params.trialId);
                 trial.guid.resolve(req.body.guid);
-            } catch(err) {
+            } catch (err) {
                 this.log.error(err.message);
                 res.status(500);
                 res.send(err.message);
@@ -115,16 +128,7 @@ export class AetherJobRestServer extends RestServer {
         router.get(`trial-meta/${this.expId}/:trialId`, (req: Request, res: Response) => {
             this.log.debug(`sending meta-data for trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
         });
-        return router;
-    }
-    
 
-    protected handleTrialMetrics(jobId: string, metrics: any[]) {
-        for (const singleMetric of metrics) {
-            this.aetherTrainingService.MetricsEmitter.emit('metric', {
-                id: jobId,
-                data: singleMetric
-            });
-        }
+        return router;
     }
 }
