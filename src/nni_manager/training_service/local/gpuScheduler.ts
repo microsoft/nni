@@ -86,7 +86,6 @@ class GPUScheduler {
     public async stop() {
         this.stopping = true;
         const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
-        console.log(pid)
         await cpp.exec(`pkill -P ${pid}`);
     }
 
