@@ -39,7 +39,6 @@ class GPUScheduler {
     private stopping: boolean;
     private log: Logger;
     private gpuMetricCollectorScriptFolder: string;
-    private gpuDetectorProcessPid?: number;
 
     constructor() {
         this.stopping = false;
@@ -73,8 +72,7 @@ class GPUScheduler {
             path.join(this.gpuMetricCollectorScriptFolder, 'pid'),
         );
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
-        const process: cp.ChildProcess = cp.exec(`bash ${gpuMetricsCollectorScriptPath}`);
-        this.gpuDetectorProcessPid = process.pid;
+        cp.exec(`bash ${gpuMetricsCollectorScriptPath}`);
     }
 
     public getAvailableGPUIndices(): number[] {
@@ -87,9 +85,9 @@ class GPUScheduler {
 
     public async stop() {
         this.stopping = true;
-        if(this.gpuDetectorProcessPid) {
-            await cpp.exec(`pkill -P ${this.gpuDetectorProcessPid}`);
-        }
+        const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
+        console.log(pid)
+        await cpp.exec(`pkill -P ${pid}`);
     }
 
     private async updateGPUSummary() {
