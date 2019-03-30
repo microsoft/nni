@@ -38,14 +38,12 @@ class GPUScheduler {
     private gpuSummary!: GPUSummary;
     private stopping: boolean;
     private log: Logger;
-    private nvdmNotFoundRegex: RegExp;
     private gpuMetricCollectorScriptFolder: string;
     private gpuDetectorProcessPid?: number;
 
     constructor() {
         this.stopping = false;
         this.log = getLogger();
-        this.nvdmNotFoundRegex = /nvidia-smi: not found/gi;
         this.gpuMetricCollectorScriptFolder = `${os.tmpdir()}/nni/script`;
     }
 
@@ -56,10 +54,6 @@ class GPUScheduler {
                 await this.updateGPUSummary();
             } catch (error) {
                 this.log.error('Read GPU summary failed with error: ', error);
-                // If nvidia-smi command is not found, break the gpu summary reading loop to avoid unnecessary periodically checking
-                if(this.nvdmNotFoundRegex.test(error)) {
-                    break;
-                }
             }
             await delay(5000);
         }
