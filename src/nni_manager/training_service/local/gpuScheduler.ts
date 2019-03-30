@@ -40,7 +40,7 @@ class GPUScheduler {
     private log: Logger;
     private nvdmNotFoundRegex: RegExp;
     private gpuMetricCollectorScriptFolder: string;
-    private gpuSchedulerProcessPid?: number;
+    private gpuDetectorProcessPid?: number;
 
     constructor() {
         this.stopping = false;
@@ -80,7 +80,7 @@ class GPUScheduler {
         );
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
         const process: cp.ChildProcess = cp.exec(`bash ${gpuMetricsCollectorScriptPath}`);
-        this.gpuSchedulerProcessPid = process.pid;
+        this.gpuDetectorProcessPid = process.pid;
     }
 
     public getAvailableGPUIndices(): number[] {
@@ -93,8 +93,8 @@ class GPUScheduler {
 
     public async stop() {
         this.stopping = true;
-        if(this.gpuSchedulerProcessPid) {
-            await cpp.exec(`kill -9 ${this.gpuSchedulerProcessPid}`);
+        if(this.gpuDetectorProcessPid) {
+            await cpp.exec(`kill -9 ${this.gpuDetectorProcessPid}`);
         }
     }
 
