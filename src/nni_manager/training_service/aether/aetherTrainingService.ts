@@ -18,94 +18,122 @@
  */
 'use strict';
 
-import * as component from '../../common/component';
-// import * as cpp from 'child-process-promise';
+import { ChildProcess, spawn } from 'child_process';
 // import * as fs from 'fs';
-// import * as path from 'path';
 // import * as request from 'request';
+import * as path from 'path';
+import * as component from '../../common/component';
 
 import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
 import { MethodNotImplementedError } from '../../common/errors';
-import { getInitTrialSequenceId } from '../../common/experimentStartupInfo';
+import { getBasePort, getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     JobApplicationForm,
+    NNIManagerIpConfig,
     TrainingService,
-    TrialJobDetail,
-    TrialJobMetric,
-    TrialJobStatus
+    TrialJobMetric
 } from '../../common/trainingService';
-import { uniqueString } from '../../common/utils';
-
-/**
- * AetherTrialJobDetail
- */
-class AetherTrialJobDetail implements TrialJobDetail {
-    public id: string;
-    public status: TrialJobStatus;
-    public submitTime: number;
-    public url: string;
-    public guid: Deferred<string>; // GUID of Aether Experiment
-    public workingDirectory: string;
-    public form: JobApplicationForm;
-    public sequenceId: number;
-
-    constructor(
-        id: string,
-        submitTime: number,
-        workingDirectory: string,
-        form: JobApplicationForm,
-        sequenceId: number
-    ) {
-        this.id = id;
-        this.status = 'WAITING';
-        this.submitTime = submitTime;
-        this.url = '';
-        this.guid = new Deferred<string>();
-        this.workingDirectory = workingDirectory;
-        this.form = form;
-        this.sequenceId = sequenceId;
-    }
-}
+import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
+import { AetherConfig, AetherTrialJobDetail } from './aetherData';
+import { AetherJobRestServer } from './aetherJobRestServer';
 
 // tslint:disable-next-line:completed-docs
 @component.Singleton
 class AetherTrainingService implements TrainingService {
+
+    public get isMultiPhaseJobSupported(): boolean {
+        return false;
+    }
+
+    public get MetricsEmitter(): EventEmitter {
+        return this.metricsEmitter;
+    }
+
+    public  readonly trialJobsMap: Map<string, AetherTrialJobDetail>;
+    private aetherClientExePath: string = '/fake/path/to/exe';
     private readonly metricsEmitter: EventEmitter;
-    private readonly trialJobsMap: Map<string, AetherTrialJobDetail>;
     private nextTrialSequenceId: number;
     private readonly log!: Logger;
+    private nniManagerIpConfig!: NNIManagerIpConfig;
+    private aetherJobConfig!: AetherConfig;
+    private readonly runDeferred: Deferred<void>;
 
     constructor() {
+        this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, AetherTrialJobDetail>();
         this.nextTrialSequenceId = -1;
+        this.runDeferred = new Deferred<void>();
+        this.log.info('Aether Training Service Constructed.');
     }
 
-    public getTrialJobById(trialJobId: string): AetherTrialJobDetail {
-        const aetherTrialJob: AetherTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
-        if (!aetherTrialJob) {
-            throw Error(`trial job ${trialJobId} not found`);
-        }
+    public async run(): Promise<void> {
+        this.log.info('Run Aether training service.');
+        const restServer: AetherJobRestServer = component.get(AetherJobRestServer);
+        await restServer.start();
 
-        return aetherTrialJob;
+        this.log.info(`Aether Training service rest server listening on: ${restServer.endPoint}`);
+
+        this.runDeferred.promise.then(() => {
+            this.log.info('Aether Training service exit.');
+        });
+
+        return this.runDeferred.promise;
     }
 
     public async listTrialJobs(): Promise<AetherTrialJobDetail[]> {
-        const deferred: Deferred<AetherTrialJobDetail[]> = new Deferred<AetherTrialJobDetail[]>();
+        const jobs: AetherTrialJobDetail[] = [];
+        for (const [key, value] of this.trialJobsMap) {
+            if (value.form.jobType === 'TRIAL') {
+                jobs.push(value);
+            }
+        }
 
-        return deferred.promise;
+        return Promise.resolve(jobs);
     }
 
     public async getTrialJob(trialJobId: string): Promise<AetherTrialJobDetail> {
-        const deferred: Deferred<AetherTrialJobDetail> = new Deferred<AetherTrialJobDetail>();
+        const trial: AetherTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        if (!trial) {
+            return Promise.reject(`Trial job ${trialJobId} not found`);
+        }
 
-        return deferred.promise;
+        return Promise.resolve(trial);
     }
 
     public async submitTrialJob(form: JobApplicationForm): Promise<AetherTrialJobDetail> {
         const deferred: Deferred<AetherTrialJobDetail> = new Deferred<AetherTrialJobDetail>();
+        if (!this.nniManagerIpConfig) {
+            return Promise.reject('nnimanager ip not initialized');
+        }
+        if (!this.aetherJobConfig) {
+            return Promise.reject('Aether job config not initialized');
+        }
+
+        const trialJobId: string = uniqueString(5);
+        const trialSequencdId: number = this.generateSequenceId();
+        const trialWorkingDirectory: string = path.join(getExperimentRootDir(), 'trials', trialJobId);
+        const clientCmdArgs: string[] = [this.nniManagerIpConfig.nniManagerIp, getExperimentId(), trialJobId];
+        this.log.debug(`execute command: ${this.aetherClientExePath} ${clientCmdArgs.join(' ')}`);
+        const clientProc: ChildProcess = spawn(this.aetherClientExePath, clientCmdArgs);
+        const trialDetail: AetherTrialJobDetail = new AetherTrialJobDetail(
+            trialJobId,
+            'WAITING',
+            Date.now(),
+            trialWorkingDirectory,
+            form,
+            trialSequencdId,
+            clientProc,
+            this.aetherJobConfig
+        );
+
+        const guid: string = await trialDetail.guid.promise;
+        trialDetail.url = `aether:\\experiment\\${guid}`;
+        this.trialJobsMap.set(trialJobId, trialDetail);
+        deferred.resolve(trialDetail);
 
         return deferred.promise;
     }
@@ -121,13 +149,32 @@ class AetherTrainingService implements TrainingService {
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.off('metric', listener);
     }
+    public async cancelTrialJob(trialJobId: string): Promise<void> {
+        const trial: AetherTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
+        if (!trial) {
+            return Promise.reject(`Trial ${trialJobId} not found`);
+        }
+        trial.clientProc.kill();
+        trial.status = 'SYS_CANCELED';  //USER or SYS CANCELLED?
 
-    public get isMultiPhaseJobSupported(): boolean {
-        return false;
+        return Promise.resolve();
     }
-    public async cancelTrialJob(trialJobId: string): Promise<void> {}
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {}
+    public async setClusterMetadata(key: string, value: string): Promise<void> {
+
+        switch (key) {
+            case TrialConfigMetadataKey.NNI_MANAGER_IP:
+                this.nniManagerIpConfig = <NNIManagerIpConfig> JSON.parse(value);
+                break;
+            case TrialConfigMetadataKey.AETHER_CONFIG:
+                this.aetherJobConfig = <AetherConfig> JSON.parse(value);
+                break;
+            default:
+                throw new Error(`Unknown key: ${key}`);
+        }
+
+        return Promise.resolve();
+    }
 
     public async getClusterMetadata(key: string): Promise<string> {
         const deferred: Deferred<string> = new Deferred<string>();
@@ -135,12 +182,11 @@ class AetherTrainingService implements TrainingService {
         return deferred.promise;
     }
 
-    public async cleanUp(): Promise<void> {}
+    public async cleanUp(): Promise<void> {
+        this.log.info('Stopping Aether Training Service...');
+        this.runDeferred.resolve();
 
-    public async run(): Promise<void> {}
-
-    public get MetricsEmitter(): EventEmitter {
-        return this.metricsEmitter;
+        return Promise.resolve();
     }
 
     private generateSequenceId(): number {

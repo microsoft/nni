@@ -84,7 +84,7 @@ class PAITrainingService implements TrainingService {
         this.trialJobsMap = new Map<string, PAITrialJobDetail>();
         // Root dir on HDFS
         this.expRootDir = path.join('/nni', 'experiments', getExperimentId());
-        this.experimentId = getExperimentId();      
+        this.experimentId = getExperimentId();
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
@@ -141,6 +141,7 @@ class PAITrainingService implements TrainingService {
         this.metricsEmitter.off('metric', listener);
     }
 
+    // tslint:disable-next-line:max-func-body-length
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
         const deferred : Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
         if(!this.paiClusterConfig) {
@@ -152,7 +153,7 @@ class PAITrainingService implements TrainingService {
         if (!this.paiToken) {
             throw new Error('PAI token is not initialized');
         }
-        
+
         if(!this.hdfsBaseDir) {
             throw new Error('hdfsBaseDir is not initialized');
         }
@@ -187,7 +188,7 @@ class PAITrainingService implements TrainingService {
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), runScriptContent, { encoding: 'utf8' });
 
         // Write file content ( parameter.cfg ) to local tmp folders
-        const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form)
+        const trialForm : TrialJobApplicationForm = (<TrialJobApplicationForm>form);
         if(trialForm) {
             await fs.promises.writeFile(path.join(trialLocalTempFolder, generateParamFileName(trialForm.hyperParameters)), 
                             trialForm.hyperParameters.value, { encoding: 'utf8' });
@@ -206,7 +207,7 @@ class PAITrainingService implements TrainingService {
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
             'WAITING',
-            paiJobName,            
+            paiJobName,
             Date.now(),
             trialWorkingFolder,
             form,
@@ -237,32 +238,32 @@ class PAITrainingService implements TrainingService {
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
         const paiTaskRoles : PAITaskRole[] = [new PAITaskRole('nni_trail_' + trialJobId, 
                                     // Task role number
-                                    1, 
+                                    1,
                                     // Task CPU number
-                                    this.paiTrialConfig.cpuNum, 
+                                                              this.paiTrialConfig.cpuNum, 
                                     // Task memory
-                                    this.paiTrialConfig.memoryMB, 
+                                                              this.paiTrialConfig.memoryMB, 
                                     // Task GPU number
-                                    this.paiTrialConfig.gpuNum, 
+                                                              this.paiTrialConfig.gpuNum, 
                                     // Task command
-                                    nniPaiTrialCommand,
+                                                              nniPaiTrialCommand,
                                     // Task shared memory
-                                    this.paiTrialConfig.shmMB)];
+                                                              this.paiTrialConfig.shmMB)];
 
         const paiJobConfig : PAIJobConfig = new PAIJobConfig(
                                     // Job name
-                                    paiJobName, 
+                                    paiJobName,
                                     // Docker image
-                                    this.paiTrialConfig.image, 
+                                    this.paiTrialConfig.image,
                                     // dataDir
-                                    this.paiTrialConfig.dataDir, 
+                                    this.paiTrialConfig.dataDir,
                                     // outputDir
-                                    this.paiTrialConfig.outputDir, 
+                                    this.paiTrialConfig.outputDir,
                                     // codeDir
-                                    `$PAI_DEFAULT_FS_URI${hdfsCodeDir}`, 
+                                    `$PAI_DEFAULT_FS_URI${hdfsCodeDir}`,
                                     // PAI Task roles
-                                    paiTaskRoles, 
-                                    // Add Virutal Cluster 
+                                    paiTaskRoles,
+                                    // Add Virutal Cluster
                                     this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString());
 
         // Step 2. Upload code files in codeDir onto HDFS
@@ -281,15 +282,15 @@ class PAITrainingService implements TrainingService {
             json: true,
             body: paiJobConfig,
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": 'Bearer ' + this.paiToken
+                'Content-Type': 'application/json',
+                Authorization: 'Bearer ' + this.paiToken
             }
         };
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
             if (error || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: Submit trial ${trialJobId} to PAI Cluster failed!`);
                 trialJobDetail.status = 'FAILED';
-                deferred.reject(error ? error.message : 'Submit trial failed, http code: ' + response.statusCode);                
+                deferred.reject(error ? error.message : 'Submit trial failed, http code: ' + response.statusCode);
             } else {
                 trialJobDetail.submitTime = Date.now();
                 deferred.resolve(trialJobDetail);
@@ -310,14 +311,15 @@ class PAITrainingService implements TrainingService {
     public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trialJobDetail : PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         const deferred : Deferred<void> = new Deferred<void>();
-        if(!trialJobDetail) {
+        if (!trialJobDetail) {
             this.log.error(`cancelTrialJob: trial job id ${trialJobId} not found`);
+
             return Promise.reject();
         }
 
-        if(!this.paiClusterConfig) {
+        if (!this.paiClusterConfig) {
             throw new Error('PAI Cluster config is not initialized');
-        }        
+        }
         if (!this.paiToken) {
             throw new Error('PAI token is not initialized');
         }
@@ -326,10 +328,10 @@ class PAITrainingService implements TrainingService {
             uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs/${trialJobDetail.paiJobName}/executionType`,
             method: 'PUT',
             json: true,
-            body: {'value' : 'STOP'},
+            body: {value : 'STOP'},
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": 'Bearer ' + this.paiToken
+                'Content-Type': 'application/json',
+                Authorization: 'Bearer ' + this.paiToken
             }
         };
 
@@ -339,15 +341,16 @@ class PAITrainingService implements TrainingService {
         request(stopJobRequest, (error: Error, response: request.Response, body: any) => {
             if (error || response.statusCode >= 400) {
                 this.log.error(`PAI Training service: stop trial ${trialJobId} to PAI Cluster failed!`);
-                deferred.reject(error ? error.message : 'Stop trial failed, http code: ' + response.statusCode);                
+                deferred.reject(error ? error.message : 'Stop trial failed, http code: ' + response.statusCode);
             } else {
                 deferred.resolve();
             }
         });
 
-        return deferred.promise; 
+        return deferred.promise;
     }
 
+    // tslint:disable-next-line:max-func-body-length
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
 
@@ -358,9 +361,10 @@ class PAITrainingService implements TrainingService {
                 break;
 
             case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
+                // tslint:disable-next-line:no-suspicious-comment
                 //TODO: try catch exception when setting up HDFS client and get PAI token
                 this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
-                
+
                 this.hdfsClient = WebHDFS.createClient({
                     user: this.paiClusterConfig.userName,
                     // Refer PAI document for Pylon mapping https://github.com/Microsoft/pai/tree/master/docs/pylon
@@ -375,14 +379,14 @@ class PAITrainingService implements TrainingService {
                 break;
 
             case TrialConfigMetadataKey.TRIAL_CONFIG:
-                if (!this.paiClusterConfig){
+                if (!this.paiClusterConfig) {
                     this.log.error('pai cluster config is not initialized');
                     deferred.reject(new Error('pai cluster config is not initialized'));
                     break;
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
                 //paiTrialConfig.outputDir could be null if it is not set in nnictl
-                if(this.paiTrialConfig.outputDir === undefined || this.paiTrialConfig.outputDir === null){
+                if (this.paiTrialConfig.outputDir === undefined || this.paiTrialConfig.outputDir === null) {
                     this.paiTrialConfig.outputDir = String.Format(
                         PAI_OUTPUT_DIR_FORMAT,
                         this.paiClusterConfig.host
@@ -392,7 +396,7 @@ class PAITrainingService implements TrainingService {
                 // Validate to make sure codeDir doesn't have too many files
                 try {
                     await validateCodeDir(this.paiTrialConfig.codeDir);
-                } catch(error) {
+                } catch (error) {
                     this.log.error(error);
                     deferred.reject(new Error(error));
                     break;
@@ -400,24 +404,24 @@ class PAITrainingService implements TrainingService {
 
                 const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
 
-                if(hdfsDirContent === null) {
+                if (hdfsDirContent === null) {
                     throw new Error('Trial outputDir format Error');
                 }
                 const groups = hdfsDirContent.groups;
-                if(groups === undefined) {
+                if (groups === undefined) {
                     throw new Error('Trial outputDir format Error');
                 }
-        
-                this.hdfsOutputHost = groups['host'];
+
+                this.hdfsOutputHost = groups.host;
                 //TODO: choose to use /${username} as baseDir
-                this.hdfsBaseDir = groups['baseDir'];
-                if(this.hdfsBaseDir === undefined) {
-                    this.hdfsBaseDir = "/";
+                this.hdfsBaseDir = groups.baseDir;
+                if (this.hdfsBaseDir === undefined) {
+                    this.hdfsBaseDir = '/';
                 }
-                
-                let dataOutputHdfsClient; 
+
+                let dataOutputHdfsClient;
                 if (this.paiClusterConfig.host === this.hdfsOutputHost && this.hdfsClient) {
-                    dataOutputHdfsClient = this.hdfsClient
+                    dataOutputHdfsClient = this.hdfsClient;
                 } else {
                     dataOutputHdfsClient = WebHDFS.createClient({
                         user: this.paiClusterConfig.userName,
@@ -427,18 +431,18 @@ class PAITrainingService implements TrainingService {
                 }
 
                 try {
-                    const exist : boolean = await HDFSClientUtility.pathExists("/", dataOutputHdfsClient);
-                    if(!exist) {
+                    const exist : boolean = await HDFSClientUtility.pathExists('/', dataOutputHdfsClient);
+                    if (!exist) {
                         deferred.reject(new Error(`Please check hdfsOutputDir host!`));
                     }
-                } catch(error) {
+                } catch (error) {
                     deferred.reject(new Error(`HDFS encounters problem, error is ${error}. Please check hdfsOutputDir host!`));
                 }
-                
+
                 // Copy experiment files from local folder to HDFS
-                this.copyExpCodeDirPromise = HDFSClientUtility.copyDirectoryToHdfs(this.paiTrialConfig.codeDir, 
-                    HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
-                    this.hdfsClient);
+                this.copyExpCodeDirPromise = HDFSClientUtility.copyDirectoryToHdfs(this.paiTrialConfig.codeDir,
+                                                                                   HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
+                                                                                   this.hdfsClient);
 
                 deferred.resolve();
                 break;
@@ -453,14 +457,15 @@ class PAITrainingService implements TrainingService {
                 throw new Error(`Uknown key: ${key}`);
         }
 
-        return deferred.promise; 
+        return deferred.promise;
     }
 
     public getClusterMetadata(key: string): Promise<string> {
         const deferred : Deferred<string> = new Deferred<string>();
 
         deferred.resolve();
-        return deferred.promise; 
+
+        return deferred.promise;
     }
 
     public async cleanUp(): Promise<void> {
@@ -474,11 +479,11 @@ class PAITrainingService implements TrainingService {
             deferred.resolve();
             this.log.info('PAI Training service rest server stopped successfully.');
         } catch (error) {
-            this.log.error(`PAI Training service rest server stopped failed, error: ${error.message}`);    
+            this.log.error(`PAI Training service rest server stopped failed, error: ${error.message}`);
             deferred.reject(error);
         }
 
-        return deferred.promise; 
+        return deferred.promise;
     }
 
     public get MetricsEmitter() : EventEmitter {
@@ -492,23 +497,23 @@ class PAITrainingService implements TrainingService {
 
         return this.nextTrialSequenceId++;
     }
-    
+
     /**
      * Update pai token by the interval time or initialize the pai token
      */
     private async updatePaiToken(): Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
-        
-        let currentTime: number = new Date().getTime();
+
+        const currentTime: number = new Date().getTime();
         //If pai token initialized and not reach the interval time, do not update
-        if(this.paiTokenUpdateTime && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval){
+        if (this.paiTokenUpdateTime && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval) {
             return Promise.resolve();
         }
-     
-        if(!this.paiClusterConfig){
-            const paiClusterConfigError = `pai cluster config not initialized!`
+
+        if (!this.paiClusterConfig) {
+            const paiClusterConfigError = `pai cluster config not initialized!`;
             this.log.error(`${paiClusterConfigError}`);
-            throw Error(`${paiClusterConfigError}`)
+            throw Error(`${paiClusterConfigError}`);
         }
 
         const authentication_req: request.Options = {
@@ -526,7 +531,7 @@ class PAITrainingService implements TrainingService {
                 this.log.error(`Get PAI token failed: ${error.message}`);
                 deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
             } else {
-                if(response.statusCode !== 200){
+                if (response.statusCode !== 200) {
                     this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
                     deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
                 }
@@ -535,7 +540,7 @@ class PAITrainingService implements TrainingService {
                 deferred.resolve();
             }
         });
-        
+
         let timeoutId: NodeJS.Timer;
         const timeoutDelay: Promise<void> = new Promise<void>((resolve: Function, reject: Function): void => {
             // Set timeout and reject the promise once reach timeout (5 seconds)
@@ -548,4 +553,4 @@ class PAITrainingService implements TrainingService {
     }
 }
 
-export { PAITrainingService }
+export { PAITrainingService };
