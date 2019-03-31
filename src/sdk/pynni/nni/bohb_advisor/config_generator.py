@@ -57,7 +57,6 @@ class CG_BOHB(object):
         min_bandwidth: float
             to keep diversity, even when all (good) samples have the same value for one of the parameters,
             a minimum bandwidth (Default: 1e-3) is used instead of zero.
-
         """
         self.top_n_percent = top_n_percent
         self.configspace = configspace
@@ -104,7 +103,26 @@ class CG_BOHB(object):
         return(max(self.kde_models.keys()))
 
     def sample_from_largest_budget(self, info_dict):
-        """sample from largest budget"""
+        """We opted for a single multidimensional KDE compared to the
+        hierarchy of one-dimensional KDEs used in TPE. The dimensional is
+        seperated by budget. This function sample a configuration from
+        largest budget. Firstly we sample "num_samples" configurations,
+        then prefer one with the largest l(x)/g(x).
+        
+        Parameters:
+        -----------
+        info_dict: dict
+            record the information of this configuration
+
+        Returns
+        -------
+        dict:
+            new configuration named sample
+        dict:
+            info_dict, record the information of this configuration
+        """
+        best = np.inf
+        best_vector = None
 
         budget = max(self.kde_models.keys())
 
@@ -201,17 +219,8 @@ class CG_BOHB(object):
             sample = self.configspace.sample_configuration()
             info_dict['model_based_pick'] = False
 
-        best = np.inf
-        best_vector = None
-
         if sample is None:
-            try:
-                sample, info_dict = sample_from_largest_budget(info_dict)
-            except:
-                logger.warning("Sampling based optimization with %i samples failed\n %s \n \
-                Using random configuration"%(self.num_samples, traceback.format_exc()))
-                sample = self.configspace.sample_configuration()
-                info_dict['model_based_pick'] = False
+            sample, info_dict= self.sample_from_largest_budget(info_dict)
 
         sample = ConfigSpace.util.deactivate_inactive_hyperparameters(
             configuration_space=self.configspace,
@@ -297,7 +306,6 @@ class CG_BOHB(object):
         train_losses = np.array(self.losses[budget])
 
         n_good = max(self.min_points_in_model, (self.top_n_percent * train_configs.shape[0])//100)
-        #n_bad = min(max(self.min_points_in_model, ((100-self.top_n_percent)*train_configs.shape[0])//100), 10)
         n_bad = max(self.min_points_in_model, ((100-self.top_n_percent)*train_configs.shape[0])//100)
 
         # Refit KDE for the current budget
