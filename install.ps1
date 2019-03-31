@@ -1,45 +1,37 @@
 # activate / desactivate any install
 $install_node = $TRUE
 $install_yarn = $TRUE
-$install_py = $FALSE
-$install_pip = $FALSE
 
 ### CONFIGURATION
 $PIP_INSTALL = "python -m pip install ."
 
 # nodejs
 $version = "10.15.1"
-$pyVersion ="36"
 $nodeUrl = "https://nodejs.org/dist/v10.15.1/node-v10.15.1-win-x64.zip"
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
-$pyUrl= "https://www.python.org/ftp/python/3.6.4/python-3.6.4-embed-amd64.zip"
-$pipUrl = "https://bootstrap.pypa.io/get-pip.py"
 $unzipNodeDir = "node-v$version-win-x64"
-$unzipPythonDir = "python-3.6.4-embed-amd64"
 
 $NNI_DEPENDENCY_FOLDER = "\tmp\$env:USERNAME"
-$NNI_PYTHON3 = "C:\Python3"
-$NNI_PKG_FOLDER = $NNI_PYTHON3 +"\python\nni"
 
 $WHICH_PYTHON = where.exe python
 if($WHICH_PYTHON -eq $null){
-    $install_py = $TRUE
-    $NNI_PYTHON_FOLDER = $NNI_PYTHON3 +"\python"
+    throw "Can not find python"
 }
-else {
-    $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
-    $NNI_PYTHON_FOLDER = $NNI_PYTHON3
-    $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
+else{
+    $pyVersion = & python -V 2>&1
+    $pyVersion =  ([string]$pyVersion).substring(7,3)
+    if([double]$pyVersion -lt 3.5){
+        throw "python version should >= 3.5"
+    }
 }
 
 $WHICH_PIP = where.exe pip
 if($WHICH_PIP -eq $null){
-    $install_pip = $TRUE
+    throw "Can not find pip"
 }
+$NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+$NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 
-$NNI_PYTHON3_ZIP = $NNI_PYTHON3 +"\python.zip"
-$GET_PIP = $NNI_PYTHON3 +"\get-pip.py"
-$NNI_PIP_FOLDER = $NNI_PYTHON_FOLDER+"\Scripts"
 $BASH_COMP_PREFIX = $env:HOMEPATH +"\.bash_completion.d"
 $BASH_COMP_SCRIPT = $BASH_COMP_PREFIX +"\nnictl"
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
@@ -66,7 +58,6 @@ if(!(Test-Path $NNI_YARN_TARBALL)){
 }
 
 if ($install_node) {
-
     ### nodejs install
     if(Test-Path $NNI_NODE_FOLDER){
         Remove-Item $NNI_NODE_FOLDER -r -fo
@@ -80,39 +71,12 @@ if ($install_node) {
     }
     New-Item $NNI_YARN_FOLDER -ItemType Directory
 	cmd /c tar -xf $NNI_YARN_TARBALL -C $NNI_YARN_FOLDER --strip-components 1
-    
-}
-
-if($install_py){
-    if(!(Test-Path $NNI_PYTHON_FOLDER)){
-        New-Item $NNI_PYTHON_FOLDER -ItemType Directory
-    }
-    Write-Host "Downloading Python3..."
-    (New-Object Net.WebClient).DownloadFile($pyUrl, $NNI_PYTHON3_ZIP)
-    Expand-Archive $NNI_PYTHON3_ZIP -DestinationPath $NNI_PYTHON_FOLDER
-    # fix read zip error
-    $PYTHON3_INNER_ZIP = "$NNI_PYTHON_FOLDER\python$pyVersion"+".zip"
-    Expand-Archive $PYTHON3_INNER_ZIP -DestinationPath $PYTHON3_INNER_ZIP.Split('.')[0]
-    $Rename_INNER_ZIP = "$NNI_PYTHON_FOLDER\python$pyVersion"+".zipp"
-    Rename-Item $PYTHON3_INNER_ZIP $Rename_INNER_ZIP
-    Rename-Item $PYTHON3_INNER_ZIP.Split('.')[0] $PYTHON3_INNER_ZIP
-    # fix import local file error
-    $deleteFile = $NNI_PYTHON_FOLDER + "\python36._pth"
-    if(Test-Path $deleteFile){
-        Remove-Item $deleteFile -r -fo
-    }
-}
-
-if($install_pip){
-    Write-Host "Downloading pip..."
-    (New-Object Net.WebClient).DownloadFile($pipUrl, $GET_PIP)
-    cmd /c "$NNI_PYTHON_FOLDER\python $GET_PIP"
 }
 
 ### add to PATH
 function Add2Path {
     param ($fileName)
-    $PathVariable = [System.Environment]::GetEnvironmentVariable("Path","Machine")
+    $PathVariable = [System.Environment]::GetEnvironmentVariable("Path","User")
     $PathFolders = $PathVariable.Split(";")
     if(!$PathFolders.Contains($fileName)){
         if($PathVariable.Trim().EndsWith(";")){
@@ -121,18 +85,12 @@ function Add2Path {
         else {
             $PathVariable = $PathVariable + ";" + $fileName
         }
-        [System.Environment]::SetEnvironmentVariable("Path",$PathVariable,"Machine")
+        [System.Environment]::SetEnvironmentVariable("Path",$PathVariable,"User")
     }
 }
 
 Add2Path -fileName $NNI_NODE_FOLDER
 Add2Path -fileName "$NNI_YARN_FOLDER\bin"
-if($install_py){
-    Add2Path -fileName $NNI_PYTHON_FOLDER
-}
-if($install_pip){
-    Add2Path -fileName $NNI_PIP_FOLDER
-}
 
 # Refresh Path environment in this session
 foreach($level in "Machine","User") {
@@ -157,7 +115,7 @@ cmd /c $NNI_YARN build
 
 ## install-python-modules:
 ### Installing Python SDK
-cd ..\sdk\pynni 
+cd ..\sdk\pynni
 (Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
 cmd /c $PIP_INSTALL
 
