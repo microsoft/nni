@@ -100,4 +100,4 @@ Trial configuration in frameworkcontroller mode have the following configuration
 After you prepare a config file, you could run your experiment by nnictl. The way to start an experiment on frameworkcontroller is similar to kubeflow, please refer the [document](./KubeflowMode.md) for more information.
 
 ## version check
-NNI will check the version of NNIManager and trialKeeper, [refer](PAIMode.md)
+NNI support version check feature in since version 0.6, [refer](PAIMode.md)
