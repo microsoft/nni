@@ -6,11 +6,10 @@ jobs:
       set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts
       python -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
-  # - script: |
-  #     nnictl --help
-  #     set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts
-  #     powershell.exe -file install.ps1
-  #   displayName: 'Install nni toolkit via source code'
+  - script: |
+      set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts && 
+      powershell.exe -file install.ps1
+    displayName: 'Install nni toolkit via source code'
   # - script: |
   #     set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts
   #     cd test
