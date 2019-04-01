@@ -3,7 +3,6 @@ jobs:
 
   steps:
   - script:
-      whoami
       set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts
       python -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
