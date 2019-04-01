@@ -69,9 +69,9 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
         }
     }
 
-    public cleanUp(): Promise<void> {
+    public async cleanUp(): Promise<void> {
         if (this.gpuScheduler !== undefined) {
-            this.gpuScheduler.stop();
+            await this.gpuScheduler.stop();
         }
 
         return super.cleanUp();

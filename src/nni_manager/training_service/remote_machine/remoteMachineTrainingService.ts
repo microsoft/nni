@@ -44,9 +44,9 @@ import { GPUScheduler } from './gpuScheduler';
 import {
     HOST_JOB_SHELL_FORMAT, RemoteCommandResult, RemoteMachineMeta,
     RemoteMachineScheduleInfo, RemoteMachineScheduleResult, SSHClient, SSHClientManager,
-    RemoteMachineTrialJobDetail, ScheduleResultType, REMOTEMACHINE_TRIAL_COMMAND_FORMAT, 
-    GPU_COLLECTOR_FORMAT
+    RemoteMachineTrialJobDetail, ScheduleResultType, REMOTEMACHINE_TRIAL_COMMAND_FORMAT
 } from './remoteMachineData';
+import { GPU_INFO_COLLECTOR_FORMAT } from '../common/gpuData';
 import { SSHClientUtility } from './sshClientUtility';
 import { validateCodeDir } from '../common/util';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
@@ -452,7 +452,7 @@ class RemoteMachineTrainingService implements TrainingService {
         let gpuMetricsCollectorScriptPath: string = path.join(gpuMetricCollectorScriptFolder, userName, 'gpu_metrics_collector.sh');
         const remoteGPUScriptsDir: string = this.getRemoteScriptsPath(userName); // This directory is used to store gpu_metrics and pid created by script
         const gpuMetricsCollectorScriptContent: string = String.Format(
-            GPU_COLLECTOR_FORMAT, 
+            GPU_INFO_COLLECTOR_FORMAT, 
             remoteGPUScriptsDir, 
             path.join(remoteGPUScriptsDir, 'pid'), 
         );
