@@ -85,9 +85,14 @@ class GPUScheduler {
 
     public async stop() {
         this.stopping = true;
-        const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
-        await cpp.exec(`pkill -P ${pid}`);
-        await cpp.exec(`rm -rf ${this.gpuMetricCollectorScriptFolder}`);
+        try {
+            const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
+            await cpp.exec(`pkill -P ${pid}`);
+            await cpp.exec(`rm -rf ${this.gpuMetricCollectorScriptFolder}`);
+        } catch (error){
+            this.log.error(`${error}`);
+        }
+
     }
 
     private async updateGPUSummary() {
