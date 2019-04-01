@@ -90,9 +90,8 @@ class GPUScheduler {
             await cpp.exec(`pkill -P ${pid}`);
             await cpp.exec(`rm -rf ${this.gpuMetricCollectorScriptFolder}`);
         } catch (error){
-            this.log.error(`${error}`);
+            this.log.error(`GPU scheduler error: ${error}`);
         }
-
     }
 
     private async updateGPUSummary() {
