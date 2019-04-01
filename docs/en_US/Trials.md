@@ -130,9 +130,9 @@ useAnnotation: true
 
 ### Local Mode
 
-In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trials code, data and other possible log. In addition, each trial's log will be re-directed to a file name `trial.log` under that directory.
+In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trial's code, data and other possible log. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
 
-Besides, trial's converted code is in another temporary directory if NNI Annotation is used. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
+If NNI Annotation is used, trial's converted code is in another temporary directory. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line (i.e., the `cd` command) of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
 ```shell
 #!/bin/bash
 cd /tmp/user_name/nni/annotation/tmpzj0h72x6 #This is the actual directory
