@@ -85,9 +85,11 @@ If you also want to save trial's other output into HDFS, like model files, you c
 Any problems when using NNI in pai mode, please create issues on [NNI github repo](https://github.com/Microsoft/nni).
 
 ## version check
-NNI support version check feature in PAI mode since version 0.6. It is a policy to insure the version of NNIManager is consistent with trialKeeper, and avoid errors caused by version incompatibility.  
+NNI support version check feature in since version 0.6. It is a policy to insure the version of NNIManager is consistent with trialKeeper, and avoid errors caused by version incompatibility.  
 Check policy:  
 1. NNIManager before v0.6 could run any version of trialKeeper, trialKeeper support backward compatibility.
-2. Since v0.6, NNIManager version should keep same with triakKeeper version, for example, if NNIManager version is 0.6, trialKeeper version should be 0.6 too. Note that the version check feature only check first two digits of version.For example, NNIManager v0.6.1 could use trialKeeper v0.6 or trialKeeper v0.6.2, but could not use trialKeeper v0.5.1 or trialKeeper v0.7.
-If you could not run your trials and want to know if it is caused by version check, you could check your webUI, and there will be an error message shown in the picture.  
+2. Since v0.6, NNIManager version should keep same with triakKeeper version. For example, if NNIManager version is 0.6, trialKeeper version should be 0.6 too.  
+3. Note that the version check feature only check first two digits of version.For example, NNIManager v0.6.1 could use trialKeeper v0.6 or trialKeeper v0.6.2, but could not use trialKeeper v0.5.1 or trialKeeper v0.7.  
+  
+If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.  
 ![](../img/version_check.png)
