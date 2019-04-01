@@ -2,6 +2,6 @@ jobs:
 - job: 'integration_test_local_windows'
 
   steps:
-  - script:
+  - script: |
       whoami
   - displayName: 'Install python'
