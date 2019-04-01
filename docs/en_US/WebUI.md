@@ -33,6 +33,17 @@ Click the tab "Trial Duration" to see the bar graph.
 
 ![](../img/trial_duration.png)
 
+## View Trial Intermediate Result Graph
+
+Click the tab "Intermediate Result" to see the lines graph.
+
+![](../img/webui-img/trials_intermeidate.png)
+
+The graph has a filter function. You can open the filter button. And then enter your focus point
+in the scape input. Simultaneously, intermediate result inputs can limit the intermediate's range.
+
+![](../img/webui-img/filter_intermediate.png)
+
 ## View trials status 
 
 Click the tab "Trials Detail" to see the status of the all trials. Specifically:
