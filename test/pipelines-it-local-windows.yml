@@ -2,7 +2,9 @@ jobs:
 - job: 'integration_test_local_windows'
 
   steps:
-  - script: python -m pip install --upgrade pip setuptools --user
+  - script: 
+      set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts
+      python -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
   - script: |
       powershell.exe -file install.ps1
