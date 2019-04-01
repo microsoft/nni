@@ -94,6 +94,8 @@ class GPUScheduler {
         const cmdresult = await cpp.exec(`tail -n 1 ${path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics')}`);
         if(cmdresult && cmdresult.stdout) {
             this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
+        } else {
+            this.log.error('Could not get gpu metrics information!');
         }
     }
 }
