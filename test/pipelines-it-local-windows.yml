@@ -3,10 +3,6 @@ jobs:
 
   steps:
   - script:
-      set path=$(path) && 
+      whoami && set path=$(path)  
       python -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
-  - script: |
-      set path=$(path) && 
-      powershell.exe -file install.ps1
-    displayName: 'Install nni toolkit via source code'
