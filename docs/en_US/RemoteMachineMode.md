@@ -63,3 +63,6 @@ nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
 ```
 
 to start the experiment.
+
+## version check
+NNI will check the version of NNIManager and trialKeeper, [refer](PAIMode.md)
