@@ -35,7 +35,6 @@ import { AetherTrainingService, AetherTrialJobDetail } from './aetherTrainingSer
 export class AetherJobRestServer extends RestServer {
     @Inject
     private readonly API_ROOT_URL: string = 'api/v1/nni-aether';
-    private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
     private readonly aetherTrainingService: AetherTrainingService;
     private readonly expId: string = getExperimentId();
 
