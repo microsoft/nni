@@ -3,6 +3,5 @@ jobs:
 
   steps:
   - script:
-      whoami && set path=$(path)  
-      python -m pip install --upgrade pip setuptools --user
-    displayName: 'Install python tools'
+      whoami
+  - displayName: 'Install python'
