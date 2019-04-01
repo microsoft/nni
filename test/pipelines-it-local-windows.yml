@@ -7,21 +7,26 @@ jobs:
       python -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
   - script: |
+      set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - script: |
+      set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts
       cd test
       python naive_test.py
     displayName: 'Naive test'
   - script: |
+      set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts
       cd test
       python tuner_test.py
     displayName: 'Built-in tuners / assessors tests'
   - script: |
+      set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts
       cd test
       python config_test.py --ts local --exclude cifar10
     displayName: 'Examples and advanced features tests on local machine'
   - script: |
+      set path=%path%;C:\Users\nni\AppData\Local\Programs\Python\Python37;C:\Users\nni\AppData\Local\Programs\Python\Python37\Scripts
       cd test
       python metrics_test.py
     displayName: 'Trial job metrics test'
