@@ -13,3 +13,4 @@ Tutorials
     Training Platform<training_services>
     How to use docker<HowToUseDocker>
     advanced
+    Debug HowTo<HowToDebug>
