@@ -192,7 +192,7 @@ class SMACTuner(Tuner):
         Returns
         -------
         dict
-            challenger dict
+            dict which stores copy of challengers
         """
         converted_dict = {}
         for key, value in challenger_dict.items():
