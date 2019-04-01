@@ -264,7 +264,7 @@ class LocalTrainingService implements TrainingService {
         if (!this.initialized) {
             this.rootDir = getExperimentRootDir();
             if(!fs.existsSync(this.rootDir)){
-                await cpp.exec(`mkdir ${this.rootDir}`);
+                await cpp.exec(`powershell.exe mkdir ${this.rootDir}`);
             }
             this.initialized = true;
         }
@@ -366,9 +366,9 @@ class LocalTrainingService implements TrainingService {
                 `$NOW_DATE = "$NOW_DATE" + "000"`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`
             );
-            await cpp.exec(`mkdir ${workingDirectory}`);
-            await cpp.exec(`mkdir ${path.join(workingDirectory, '.nni')}`);
-            await cpp.exec(`copy NUL ${path.join(workingDirectory, '.nni', 'metrics')}`);
+            await cpp.exec(`powershell.exe mkdir ${workingDirectory}`);
+            await cpp.exec(`powershell.exe mkdir ${path.join(workingDirectory, '.nni')}`);
+            await cpp.exec(`powershell.exe New-Item ${path.join(workingDirectory, '.nni', 'metrics')}`);
             await fs.promises.writeFile(path.join(workingDirectory, 'run.ps1'), runScriptLines.join('\r\n'), { encoding: 'utf8', mode: 0o777 });
             cmdParameter.push("powershell");
             cmdParameter.push("run.ps1");
