@@ -34,9 +34,19 @@
 
 ![](../img/trial_duration.png)
 
-## 查看 Trial 状态
+## View Trial Intermediate Result Graph
 
-点击 "Trials Detail" 标签查看所有 Trial 的状态。 特别是：
+Click the tab "Intermediate Result" to see the lines graph.
+
+![](../img/webui-img/trials_intermeidate.png)
+
+The graph has a filter function. You can open the filter button. And then enter your focus point in the scape input. Simultaneously, intermediate result inputs can limit the intermediate's range.
+
+![](../img/webui-img/filter_intermediate.png)
+
+## View trials status
+
+Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 
 * Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
 
