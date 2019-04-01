@@ -21,7 +21,8 @@
 import contextlib
 import collections
 import json
-import os,sys
+import os
+import sys
 import subprocess
 import requests
 import yaml
