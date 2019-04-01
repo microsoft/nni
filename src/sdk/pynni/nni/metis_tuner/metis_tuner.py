@@ -396,7 +396,7 @@ class MetisTuner(Tuner):
             if next_candidate is not None:
                 outputs = self._pack_output(next_candidate['hyperparameter'])
             else:
-                random_parameter = _rand_init(self.x_bounds, self.x_types, 1)[0]
+                random_parameter = _rand_init(x_bounds, x_types, 1)[0]
                 outputs = self._pack_output(random_parameter)
         self.history_parameters.append(outputs)
         return outputs
