@@ -7,5 +7,5 @@ jobs:
       versionSpec: '3.6' 
       addToPath: true 
       architecture: 'x64'
-  - script: python --version
-    displayName: 'Install python tools'
+  - powershell: ./install.ps1
+    displayName: 'Install nni toolkit via source code'
