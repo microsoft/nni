@@ -4,4 +4,4 @@ jobs:
   steps:
   - script: |
       whoami
-  - displayName: 'Install python'
+    displayName: 'test user'
