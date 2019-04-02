@@ -3,5 +3,5 @@ jobs:
 
   steps:
   - script: |
-      C:\agent\_work\_tool\Python\3.6.4\x64\python --version
+      echo %PATH%
     displayName: 'test'
