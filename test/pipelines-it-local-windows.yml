@@ -2,6 +2,11 @@ jobs:
 - job: 'Test'
 
   steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.6' 
+      addToPath: true 
+      architecture: 'x64'
   - script: |
       python --version
     displayName: 'test python'
