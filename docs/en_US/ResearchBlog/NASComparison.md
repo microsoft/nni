@@ -23,8 +23,7 @@ To avoid over-fitting in **CIFAR-10** (I hate this dataset) , we also compare th
 | [CIFAR-10](<https://www.cs.toronto.edu/~kriz/cifar.html>)    | 50,000        | 10               | Airplanes, cars, birds, cats, deer, dogs, frogs, horses, ships, and trucks. |
 | [CIFAR-100](<https://www.cs.toronto.edu/~kriz/cifar.html>)   | 50,000        | 100              | Similar to CIFAR-10 but with 100 classes and 600 images each. |
 | [OUI-Adience-Age](<https://talhassner.github.io/home/projects/Adience/Adience-data.html>) | 26,580        | 8                | 8 age groups/labels (0-2, 4-6, 8-13, 15-20, 25-32, 38-43, 48-53, 60-) |
-| [ImageNet-10-1](<http://www.image-net.org/>)                 | 9,750         | 10               | Coffee mug, computer keyboard, dining table, wardrobe, lawn mower, microphone, swing,
-sewing machine, odometer, gas pump |
+| [ImageNet-10-1](<http://www.image-net.org/>)                 | 9,750         | 10               | Coffee mug, computer keyboard, dining table, wardrobe, lawn mower, microphone, swing, sewing machine, odometer, gas pump |
 | [ImageNet-10-2](<http://www.image-net.org/>)                 | 9,750         | 10               | Drum, banj, whistle, grand piano, violin, organ, acoustic guitar, trombone, flute, sax |
 
 
