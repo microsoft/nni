@@ -2,7 +2,5 @@ jobs:
 - job: 'Test'
 
   steps:
-  - script: |
-      python --version
-    displayName: 'test'
-  - powershell: echo hello
+  - powershell: install.ps1
+    displayName: 'Install nni toolkit via source code'
