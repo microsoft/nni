@@ -9,6 +9,6 @@ jobs:
       architecture: 'x64'
   - task: PowerShell@2
     inputs:
-      targetType: 'filePath' # Optional. Options: filePath, inline
-      filePath: install.ps1
+      targetType: 'inline' # Optional. Options: filePath, inline
+      script: Write-Host "Hello World"
     displayName: 'install nni from source code'
