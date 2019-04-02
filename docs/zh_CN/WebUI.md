@@ -34,19 +34,19 @@
 
 ![](../img/trial_duration.png)
 
-## View Trial Intermediate Result Graph
+## 查看试用中间结果图
 
-Click the tab "Intermediate Result" to see the lines graph.
+单击 "中间结果" 标签查看折线图。
 
 ![](../img/webui-img/trials_intermeidate.png)
 
-The graph has a filter function. You can open the filter button. And then enter your focus point in the scape input. Simultaneously, intermediate result inputs can limit the intermediate's range.
+我们为该图设置了筛选功能。 您可以打开筛选器按钮， 在第一个输入框中输入您关注的点的序号， 同时, 在第二个输入框中输入中间结果的范围来筛选数据。
 
 ![](../img/webui-img/filter_intermediate.png)
 
-## View trials status
+## 查看 Trial 状态
 
-Click the tab "Trials Detail" to see the status of the all trials. Specifically:
+点击 "Trials Detail" 标签查看所有 Trial 的状态。 Specifically:
 
 * Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
 
