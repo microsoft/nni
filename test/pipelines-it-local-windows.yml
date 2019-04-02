@@ -1,12 +1,6 @@
 jobs:
 - job: 'Test'
-  strategy:
-    matrix:
-      Python:
-        python.version: '3.7.3'
 
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '$(python.version)'
-      architecture: 'x64'
+  - script: python --version
+    displayName: 'Install python tools'
