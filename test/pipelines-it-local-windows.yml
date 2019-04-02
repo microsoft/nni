@@ -2,9 +2,6 @@ jobs:
 - job: 'Test'
 
   steps:
-  - script: |
-      node --version
-    displayName: 'node version'
   - task: PowerShell@2
     continueOnError: true
     inputs:
@@ -19,5 +16,5 @@ jobs:
   - task: PowerShell@2
     inputs:
       targetType: 'filePath'
-      filePath: $CWD/test/unittest.ps1
+      filePath: test/unittest.ps1
     displayName: 'unit test'
