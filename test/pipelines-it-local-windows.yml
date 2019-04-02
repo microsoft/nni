@@ -2,4 +2,6 @@ jobs:
 - job: 'Test'
 
   steps:
-  - powershell:  Write-Host "Hello World."
+  - script: |
+      C:\agent\_work\_tool\Python\3.6.4\x64\python --version
+    displayName: 'test'
