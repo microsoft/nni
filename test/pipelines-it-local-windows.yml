@@ -2,12 +2,6 @@ jobs:
 - job: 'Test'
 
   steps:
-#   - task: PowerShell@2
-#     continueOnError: true
-#     inputs:
-#       targetType: 'filePath'
-#       filePath: install.ps1
-#     displayName: 'Install nni toolkit via source code'
   - script: |
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
@@ -16,8 +10,7 @@ jobs:
       python -m pip install keras==2.1.6 --user
       python -m pip install tensorflow-gpu==1.12.0 --user
     displayName: 'Install dependencies for integration tests'
-  - task: PowerShell@2
-    inputs:
-      targetType: 'filePath'
-      filePath: test\unittest.ps1
-    displayName: 'unit test'
+  - script: |
+      cd test
+      powershell.exe -file unittest.ps1
+    displayName: 'Install nni toolkit via source code'
