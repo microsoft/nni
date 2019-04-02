@@ -5,8 +5,7 @@ import { DOWNLOAD_IP } from '../../static/const';
 interface PaiTrialChildProps {
     logString: string;
     id: string;
-    showLogModal: Function;
-    isdisLogbtn?: boolean;
+    logCollect: boolean;
 }
 
 class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
@@ -17,7 +16,7 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
     }
 
     render() {
-        const { logString, id } = this.props;
+        const { logString, id, logCollect } = this.props;
         return (
             <div>
                 {
@@ -26,15 +25,19 @@ class PaiTrialChild extends React.Component<PaiTrialChildProps, {}> {
                         <div />
                         :
                         <Row>
-                            <Row>
-                                <a
-                                    target="_blank"
-                                    href={`${DOWNLOAD_IP}/trial_${id}.log`}
-                                    style={{ marginRight: 10 }}
-                                >
-                                    trial stdout
-                                </a>
-                            </Row>
+                            {
+                                logCollect
+                                    ?
+                                    <a
+                                        target="_blank"
+                                        href={`${DOWNLOAD_IP}/trial_${id}.log`}
+                                        style={{ marginRight: 10 }}
+                                    >
+                                        trial stdout
+                                    </a>
+                                    :
+                                    <span>trial stdout: {logString}</span>
+                            }
                         </Row>
                 }
             </div>

@@ -69,7 +69,7 @@ kubeflowConfig:
 
 
 ## Run an experiment
-Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of kubeflow. The NNI config yml file's content is like: 
+Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of kubeflow. The NNI config YAML file's content is like: 
 ```
 authorName: default
 experimentName: example_mnist
@@ -119,9 +119,9 @@ kubeflowConfig:
     path: {your_nfs_server_export_path}
 ```
 
-Note: You should explicitly set `trainingServicePlatform: kubeflow` in NNI config yml file if you want to start experiment in kubeflow mode. 
+Note: You should explicitly set `trainingServicePlatform: kubeflow` in NNI config YAML file if you want to start experiment in kubeflow mode. 
 
-If you want to run Pytorch jobs, you could set your config files as follow:
+If you want to run PyTorch jobs, you could set your config files as follow:
 ```
 authorName: default
 experimentName: example_mnist_distributed_pytorch
