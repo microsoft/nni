@@ -2,7 +2,7 @@ jobs:
 - job: 'Test'
   strategy:
     matrix:
-      Python37:
+      Python:
         python.version: '3.7.3'
 
   steps:
