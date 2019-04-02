@@ -7,5 +7,8 @@ jobs:
       versionSpec: '3.6' 
       addToPath: true 
       architecture: 'x64'
-  - powershell: ./install.ps1
-    displayName: 'Install nni toolkit via source code'
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath' # Optional. Options: filePath, inline
+      filePath: install.ps1
+    displayName: 'install nni from source code'
