@@ -130,11 +130,11 @@ Annotation 的语法和用法等，参考 [Annotation](AnnotationSpec.md)。
     useAnnotation: true
     
 
-## Trial 内容在什么位置？
+## Trial 存放在什么地方？
 
 ### 本机模式
 
-In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trial's code, data and other possible log. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
+每个 Trial 都有单独的目录来输出自己的数据。 In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trial's code, data and other possible log. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
 
 If NNI Annotation is used, trial's converted code is in another temporary directory. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line (i.e., the `cd` command) of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
 
