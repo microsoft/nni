@@ -8,5 +8,5 @@ jobs:
       addToPath: true 
       architecture: 'x64'
   - script: |
-      python --version
-    displayName: 'test python'
+      powershell.exe
+    displayName: 'test'
