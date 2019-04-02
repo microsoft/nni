@@ -4,11 +4,9 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-      versionSpec: '3.6' 
+      versionSpec: '3.6.4' 
       addToPath: true 
       architecture: 'x64'
-  - task: PowerShell@2
-    inputs:
-      targetType: 'inline' # Optional. Options: filePath, inline
-      script: Write-Host "Hello World"
-    displayName: 'install nni from source code'
+  - script: |
+      python --version
+    displayName: 'test python'
