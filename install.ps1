@@ -1,6 +1,6 @@
 # activate / desactivate any install
-$install_node = $FALSE
-$install_yarn = $FALSE
+$install_node = $TRUE
+$install_yarn = $TRUE
 
 ### CONFIGURATION
 $PIP_INSTALL = "python -m pip install ."
