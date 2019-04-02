@@ -1,43 +1,38 @@
 import * as React from 'react';
-import axios from 'axios';
-import { MANAGER_IP } from '../../static/const';
 import ReactEcharts from 'echarts-for-react';
-const echarts = require('echarts/lib/echarts');
+import { TableObj } from 'src/static/interface';
 require('echarts/lib/chart/bar');
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
-echarts.registerTheme('my_theme', {
-    color: '#3c8dbc'
-});
 
 interface Runtrial {
     trialId: Array<string>;
     trialTime: Array<number>;
 }
 
+interface DurationProps {
+    source: Array<TableObj>;
+}
+
 interface DurationState {
     durationSource: {};
 }
 
-class Duration extends React.Component<{}, DurationState> {
+class Duration extends React.Component<DurationProps, DurationState> {
 
-    static intervalDuration = 1;
     public _isMounted = false;
 
-    constructor(props: {}) {
+    constructor(props: DurationProps) {
+
         super(props);
-
         this.state = {
-
             durationSource: {}
         };
 
     }
 
     getOption = (dataObj: Runtrial) => {
-        let xAxis = dataObj.trialTime;
-        let yAxis = dataObj.trialId;
-        let option = {
+        return  {
             tooltip: {
                 trigger: 'axis',
                 axisPointer: {
@@ -50,6 +45,7 @@ class Duration extends React.Component<{}, DurationState> {
                 left: '1%',
                 right: '4%'
             },
+           
             dataZoom: [{
                 type: 'slider',
                 name: 'trial',
@@ -69,65 +65,52 @@ class Duration extends React.Component<{}, DurationState> {
             yAxis: {
                 name: 'Trial',
                 type: 'category',
-                data: yAxis
+                data: dataObj.trialId
             },
             series: [{
                 type: 'bar',
-                data: xAxis
+                data: dataObj.trialTime
             }]
         };
-        return option;
     }
 
-    drawRunGraph = () => {
+    drawDurationGraph = (trialJobs: Array<TableObj>) => {
 
-        axios(`${MANAGER_IP}/trial-jobs`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    const trialJobs = res.data;
-                    const trialId: Array<string> = [];
-                    const trialTime: Array<number> = [];
-                    const trialRun: Array<Runtrial> = [];
-                    Object.keys(trialJobs).map(item => {
-                        if (trialJobs[item].status !== 'WAITING') {
-                            let duration: number = 0;
-                            const end = trialJobs[item].endTime;
-                            const start = trialJobs[item].startTime;
-                            if (start && end) {
-                                duration = (end - start) / 1000;
-                            } else {
-                                duration = (new Date().getTime() - start) / 1000;
-                            }
-                            trialId.push(trialJobs[item].sequenceId);
-                            trialTime.push(duration);
-                        }
-                    });
-                    trialRun.push({
-                        trialId: trialId,
-                        trialTime: trialTime
-                    });
-                    if (this._isMounted && res.status === 200) {
-                        this.setState({
-                            durationSource: this.getOption(trialRun[0])
-                        });
-                    }
-                }
+        const trialId: Array<string> = [];
+        const trialTime: Array<number> = [];
+        const trialRun: Array<Runtrial> = [];
+        Object.keys(trialJobs).map(item => {
+            const temp = trialJobs[item];
+            if (temp.status !== 'WAITING') {
+                trialId.push(temp.sequenceId);
+                trialTime.push(temp.duration);
+            }
+        });
+        trialRun.push({
+            trialId: trialId,
+            trialTime: trialTime
+        });
+        if (this._isMounted) {
+            this.setState({
+                durationSource: this.getOption(trialRun[0])
             });
+        }
+    }
+
+    componentWillReceiveProps(nextProps: DurationProps) {
+        const trialJobs = nextProps.source;
+        this.drawDurationGraph(trialJobs);
     }
 
     componentDidMount() {
-
         this._isMounted = true;
-        this.drawRunGraph();
-        Duration.intervalDuration = window.setInterval(this.drawRunGraph, 10000);
+        // init: user don't search
+        const {source} = this.props;
+        this.drawDurationGraph(source);
     }
 
     componentWillUnmount() {
-
         this._isMounted = false;
-        window.clearInterval(Duration.intervalDuration);
     }
 
     render() {
@@ -136,7 +119,7 @@ class Duration extends React.Component<{}, DurationState> {
             <div>
                 <ReactEcharts
                     option={durationSource}
-                    style={{ width: '100%', height: 412, margin: '0 auto' }}
+                    style={{ width: '95%', height: 412, margin: '0 auto' }}
                     theme="my_theme"
                 />
             </div>

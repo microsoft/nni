@@ -2,10 +2,7 @@ import * as React from 'react';
 import axios from 'axios';
 import { Row, Col } from 'antd';
 import { MANAGER_IP } from '../static/const';
-import {
-    Experiment, TableObj,
-    Parameters, TrialNumber
-} from '../static/interface';
+import { Experiment, TableObj, Parameters, TrialNumber } from '../static/interface';
 import { getFinal } from '../static/function';
 import SuccessTable from './overview/SuccessTable';
 import Title1 from './overview/Title1';
@@ -36,6 +33,8 @@ interface OverviewState {
     isTop10: boolean;
     titleMaxbgcolor: string;
     titleMinbgcolor?: string;
+    // trial stdout is content(false) or link(true)
+    isLogCollection: boolean;
 }
 
 class Overview extends React.Component<{}, OverviewState> {
@@ -79,7 +78,8 @@ class Overview extends React.Component<{}, OverviewState> {
                 totalCurrentTrial: 0
             },
             isTop10: true,
-            titleMaxbgcolor: '#999'
+            titleMaxbgcolor: '#999',
+            isLogCollection: false
         };
     }
 
@@ -98,6 +98,12 @@ class Overview extends React.Component<{}, OverviewState> {
                     const endTimenum = sessionData.endTime;
                     const assessor = sessionData.params.assessor;
                     const advisor = sessionData.params.advisor;
+                     // default logCollection is true
+                    const logCollection = res.data.params.logCollection;
+                    let expLogCollection: boolean = false;
+                    if (logCollection !== undefined && logCollection !== 'none') {
+                        expLogCollection = true;
+                    }
                     trialPro.push({
                         id: sessionData.id,
                         author: sessionData.params.authorName,
@@ -114,10 +120,13 @@ class Overview extends React.Component<{}, OverviewState> {
                         tuner: sessionData.params.tuner,
                         assessor: assessor ? assessor : undefined,
                         advisor: advisor ? advisor : undefined,
-                        clusterMetaData: clusterMetaData ? clusterMetaData : undefined
+                        clusterMetaData: clusterMetaData ? clusterMetaData : undefined,
+                        logCollection: logCollection
                     });
                     // search space format loguniform max and min
-                    const searchSpace = JSON.parse(sessionData.params.searchSpace);
+                    const temp = sessionData.params.searchSpace;
+                    const searchSpace = temp !== undefined
+                        ? JSON.parse(temp) : {};
                     Object.keys(searchSpace).map(item => {
                         const key = searchSpace[item]._type;
                         let value = searchSpace[item]._value;
@@ -135,7 +144,8 @@ class Overview extends React.Component<{}, OverviewState> {
                     if (this._isMounted) {
                         this.setState({
                             trialProfile: trialPro[0],
-                            searchSpace: searchSpace
+                            searchSpace: searchSpace,
+                            isLogCollection: expLogCollection
                         });
                     }
                 }
@@ -380,7 +390,7 @@ class Overview extends React.Component<{}, OverviewState> {
         const {
             trialProfile, searchSpace, tableData, accuracyData,
             accNodata, status, errorStr, trialNumber, bestAccuracy,
-            titleMaxbgcolor, titleMinbgcolor
+            titleMaxbgcolor, titleMinbgcolor, isLogCollection
         } = this.state;
 
         return (
@@ -411,7 +421,7 @@ class Overview extends React.Component<{}, OverviewState> {
                         </Row>
                     </Col>
                     <Col span={8} className="overviewBoder">
-                        <Title1 text="Trial Profile" icon="4.png" />
+                        <Title1 text="Profile" icon="4.png" />
                         <Row className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
                             <div className="experiment searchSpace">
@@ -454,6 +464,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     <Col span={16} id="succeTable">
                         <SuccessTable
                             tableSource={tableData}
+                            logCollection={isLogCollection}
                             trainingPlatform={trialProfile.trainingServicePlatform}
                         />
                     </Col>

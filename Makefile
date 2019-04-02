@@ -109,15 +109,6 @@ dev-install: install-scripts
 dev-install:
 	#$(_INFO) Complete! You may want to add $(BIN_FOLDER) to your PATH environment $(_END)
 
-# Target for setup.py
-# Do not invoke this manually
-.PHONY: pip-install
-pip-install: install-dependencies
-pip-install: build
-pip-install: install-node-modules
-pip-install: install-scripts
-pip-install: update-bash-config
-
 .PHONY: uninstall
 uninstall:
 	-$(PIP_UNINSTALL) -y nni
@@ -173,7 +164,7 @@ install-python-modules:
 .PHONY: dev-install-python-modules
 dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
+	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) -e .
 
 
 .PHONY: install-node-modules
