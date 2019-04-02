@@ -36,17 +36,17 @@
 
 ## 查看 Trial 中间结果
 
-单击 Intermediate Result" 标签查看折线图。
+单击 "Intermediate Result" 标签查看折线图。
 
 ![](../img/webui-img/trials_intermeidate.png)
 
-该图有筛选功能。 点击筛选按钮， 在第一个输入框中输入关注点的序号， 在第二个输入框中输入中间结果的范围来筛选出想看的数据。
+该图有筛选功能。 点击筛选按钮， 在第一个输入框中输入关注点的序号， 在第二个输入框中输入中间结果的范围，选出需要的数据。
 
 ![](../img/webui-img/filter_intermediate.png)
 
 ## 查看 Trial 状态
 
-点击 "Trials Detail" 标签查看所有 Trial 的状态。 具体如下：
+点击 "Trials Detail" 标签查看所有 Trial 的状态。 特别是：
 
 * Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
 
