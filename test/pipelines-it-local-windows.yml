@@ -2,13 +2,8 @@ jobs:
 - job: 'Test'
   strategy:
     matrix:
-      Python27:
-        python.version: '2.7'
-      Python35:
-        python.version: '3.5'
       Python36:
         python.version: '3.6'
-    maxParallel: 3
 
   steps:
   - task: UsePythonVersion@0
