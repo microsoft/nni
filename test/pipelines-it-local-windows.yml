@@ -1,6 +1,5 @@
 jobs:
 - job: 'Test'
-  ContinueOnError: True
 
   steps:
   - task: PowerShell@2
