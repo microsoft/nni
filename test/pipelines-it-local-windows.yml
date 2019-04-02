@@ -4,8 +4,8 @@ jobs:
   steps:
   - task: UsePythonVersion@0
     inputs:
-    versionSpec: '3.x' 
-    addToPath: true 
+      versionSpec: '3.x' 
+      addToPath: true 
   - script: |
       python --version
     displayName: 'test python'
