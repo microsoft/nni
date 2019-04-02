@@ -13,7 +13,7 @@ Their source code link is as below:
 
 ## Experiment Description
 
-To avoid over-fitting in **CIFAR-10** (I hate this dataset) , we also compare the models in the other five datasets including Fashion-MNIST, CIFAR-100, OUI-Adience-Age, ImageNet-10-1 (subset of ImageNet), ImageNet-10-2 (another subset of ImageNet).
+To avoid over-fitting in **CIFAR-10** (I hate this dataset) , we also compare the models in the other five datasets including Fashion-MNIST, CIFAR-100, OUI-Adience-Age, ImageNet-10-1 (subset of ImageNet), ImageNet-10-2 (another subset of ImageNet). We just sample a subset with 10 different labels from ImageNet to make ImageNet-10-1 or ImageNet-10-2.
 
 
 

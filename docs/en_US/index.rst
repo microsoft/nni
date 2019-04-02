@@ -18,4 +18,5 @@ Contents
     Reference
     FAQ
     Contribution
+    Research Blog<ResearchBlog/index>
     Changelog<RELEASE>
