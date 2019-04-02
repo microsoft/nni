@@ -2,11 +2,14 @@ jobs:
 - job: 'Test'
 
   steps:
-  - task: PowerShell@2
-    continueOnError: true
-    inputs:
-      targetType: 'filePath'
-      filePath: install.ps1
+#   - task: PowerShell@2
+#     continueOnError: true
+#     inputs:
+#       targetType: 'filePath'
+#       filePath: install.ps1
+#     displayName: 'Install nni toolkit via source code'
+  - script: |
+      powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - script: |
       python -m pip install scikit-learn==0.20.0 --user
