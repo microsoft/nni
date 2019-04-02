@@ -13,7 +13,7 @@ Their source code link is as below:
 
 ## Experiment Description
 
-To avoid over-fitting in **CIFAR-10** (I hate this dataset) , we also compare the models in the other five datasets including Fashion-MNIST, CIFAR-100, OUI-Adience-Age, ImageNet-10-1 (subset of ImageNet), ImageNet-10-2 (another subset of ImageNet). We just sample a subset with 10 different labels from ImageNet to make ImageNet-10-1 or ImageNet-10-2.
+To avoid over-fitting in **CIFAR-10**, we also compare the models in the other five datasets including Fashion-MNIST, CIFAR-100, OUI-Adience-Age, ImageNet-10-1 (subset of ImageNet), ImageNet-10-2 (another subset of ImageNet). We just sample a subset with 10 different labels from ImageNet to make ImageNet-10-1 or ImageNet-10-2.
 
 
 
@@ -30,7 +30,7 @@ To avoid over-fitting in **CIFAR-10** (I hate this dataset) , we also compare th
 
 We do not change the default fine-tuning technique in their source code. In order to match each task, the codes of input image shape and output numbers are changed.  
 
-Search phase time for all NAS methods is **two days** as well as the retrain time.  Average results are reported based on **three repeat times**.
+Search phase time for all NAS methods is **two days** as well as the retrain time.  Average results are reported based on **three repeat times**. Our evaluation machines have one Nvidia Tesla P100 GPU, 112GB of RAM and one 2.60GHz CPU (Intel E5-2690).
 
 For NAO, it requires too much computing resources, so we only use NAO-WS which provides the pipeline script.
 
@@ -59,7 +59,7 @@ The best or average results reported in the paper:
 
 
 
-For AutoKeras, the initial model of 0.2.18 version has a poor performance on all datasets. That's no wonder ResNet and DenseNet are added to the initial model list in the later version.
+For AutoKeras, it has relatively worse performance across all datasets due to its random factor on network morphism.
 
 For ENAS, ENAS (macro) shows good results in OUI-Adience-Age and ENAS (micro)  shows good results in CIFAR-10. 
 
