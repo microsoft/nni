@@ -8,4 +8,4 @@ jobs:
     inputs:
       targetType: 'filePath'
       filePath: install.ps1
-      displayName: 'Install nni toolkit via source code'
+    displayName: 'Install nni toolkit via source code'
