@@ -2,5 +2,8 @@ jobs:
 - job: 'Test'
 
   steps:
-  - powershell: install.ps1
-    displayName: 'Install nni toolkit via source code'
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: install.ps1
+      displayName: 'Install nni toolkit via source code'
