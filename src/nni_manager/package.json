@@ -10,10 +10,12 @@
   },
   "license": "MIT",
   "dependencies": {
+    "immutable": "^3.7.4",
     "azure-storage": "^2.10.2",
     "chai-as-promised": "^7.1.1",
     "child-process-promise": "^2.2.1",
     "express": "^4.16.3",
+    "express-joi-validator": "^2.0.1",
     "js-base64": "^2.4.9",
     "kubernetes-client": "^6.5.0",
     "node-nvidia-smi": "^1.0.0",

@@ -1,8 +1,6 @@
-# activate / desactivate any install
 $install_node = $TRUE
 $install_yarn = $TRUE
 
-### CONFIGURATION
 $PIP_INSTALL = "python -m pip install ."
 
 # nodejs
@@ -11,7 +9,7 @@ $nodeUrl = "https://nodejs.org/dist/v10.15.1/node-v10.15.1-win-x64.zip"
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
 $unzipNodeDir = "node-v$version-win-x64"
 
-$NNI_DEPENDENCY_FOLDER = "\tmp\$env:USERNAME"
+$NNI_DEPENDENCY_FOLDER = "C:\tmp\$env:USERNAME"
 
 $WHICH_PYTHON = where.exe python
 if($WHICH_PYTHON -eq $null){
@@ -93,21 +91,13 @@ Add2Path -fileName $NNI_NODE_FOLDER
 Add2Path -fileName "$NNI_YARN_FOLDER\bin"
 
 # Refresh Path environment in this session
-foreach($level in "Machine","User") {
-    [Environment]::GetEnvironmentVariables($level).GetEnumerator() | % {
-       # For Path variables, append the new values, if they're not already in there
-       if($_.Name -match 'Path$') { 
-          $_.Value = ($((Get-Content "Env:$($_.Name)") + ";$($_.Value)") -split ';' | Select -unique) -join ';'
-       }
-       $_
-    } | Set-Content -Path { "Env:$($_.Name)" }
- }
+ $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
 # Building NNI Manager
 cd src\nni_manager
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
-Copy-Item config -Destination .\dist\ -Recurse  
+Copy-Item config -Destination .\dist\ -Recurse -Force
 # Building WebUI
 cd ..\webui
 cmd /c $NNI_YARN
