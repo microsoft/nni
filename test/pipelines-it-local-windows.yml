@@ -5,3 +5,4 @@ jobs:
   - script: |
       python --version
     displayName: 'test'
+  - powershell: echo hello
