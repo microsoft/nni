@@ -2,6 +2,4 @@ jobs:
 - job: 'Test'
 
   steps:
-  - script: |
-      powershell
-    displayName: 'test'
+  - powershell:  Write-Host "Hello World."
