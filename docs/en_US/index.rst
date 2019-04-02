@@ -18,5 +18,5 @@ Contents
     Reference
     FAQ
     Contribution
-    Research Blog<ResearchBlog/index>
     Changelog<RELEASE>
+    Research Blog<ResearchBlog/index>
