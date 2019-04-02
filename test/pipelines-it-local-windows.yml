@@ -1,8 +1,10 @@
 jobs:
 - job: 'Test'
+  ContinueOnError: True
 
   steps:
   - task: PowerShell@2
+    continueOnError: true
     inputs:
       targetType: 'filePath'
       filePath: install.ps1
