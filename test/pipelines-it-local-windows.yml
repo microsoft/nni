@@ -13,7 +13,8 @@ jobs:
       python -m pip install keras==2.1.6 --user
       python -m pip install tensorflow-gpu==1.12.0 --user
     displayName: 'Install dependencies for integration tests'
-  - script: |
-      cd test
-      python naive_test.py
-    displayName: 'Naive test'
+  - task: PowerShell@2
+    inputs:
+      targetType: 'filePath'
+      filePath: test\unittest.ps1
+    displayName: 'Install nni toolkit via source code'
