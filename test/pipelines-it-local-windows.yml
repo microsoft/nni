@@ -3,5 +3,5 @@ jobs:
 
   steps:
   - script: |
-      echo %PATH%
+      python --version
     displayName: 'test'
