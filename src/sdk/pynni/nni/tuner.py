@@ -71,6 +71,13 @@ class Tuner(Recoverable):
         """
         _logger.info('Customized trial job %s ignored by tuner', parameter_id)
 
+    def trial_end(self, parameter_id, success):
+        """Invoked when a trial is completed or terminated. Do nothing by default.
+        parameter_id: int
+        success: True if the trial successfully completed; False if failed or terminated
+        """
+        pass
+
     def update_search_space(self, search_space):
         """Update the search space of tuner. Must override.
         search_space: JSON object

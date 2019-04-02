@@ -150,6 +150,7 @@ class MultiPhaseMsgDispatcher(MsgDispatcherBase):
             _trial_history.pop(trial_job_id)
             if self.assessor is not None:
                 self.assessor.trial_end(trial_job_id, data['event'] == 'SUCCEEDED')
+            self.tuner.trial_end(data['hyper_params']['parameter_id'], data['event'] == 'SUCCEEDED', trial_job_id)
         return True
 
     def _handle_intermediate_metric_data(self, data):
