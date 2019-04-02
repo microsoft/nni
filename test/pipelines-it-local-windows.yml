@@ -1,7 +1,19 @@
 jobs:
-- job: 'integration_test_local_windows'
+- job: 'Test'
+  pool:
+    vmImage: 'vs2019-win2019'
+  strategy:
+    matrix:
+      Python27:
+        python.version: '2.7'
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+    maxParallel: 3
 
   steps:
-  - script: |
-      whoami
-    displayName: 'test user'
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+      architecture: 'x64'
