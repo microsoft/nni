@@ -130,9 +130,9 @@ Annotation 的语法和用法等，参考 [Annotation](AnnotationSpec.md)。
     useAnnotation: true
     
 
-## Where are my trials?
+## Trial 内容在什么位置？
 
-### Local Mode
+### 本机模式
 
 In NNI, every trial has a dedicated directory for them to output their own data. In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trial's code, data and other possible log. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
 
@@ -152,15 +152,15 @@ eval python3 mnist.py 2>/home/user_name/nni/experiments/$experiment_id$/trials/$
 echo $? `date +%s000` >/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/.nni/state
 ```
 
-### Other Modes
+### 其它模式
 
 When runing trials on other platform like remote machine or PAI, the environment variable `NNI_OUTPUT_DIR` only refers to the output directory of the trial, while trial code and `run.sh` might not be there. However, the `trial.log` will be transmitted back to local machine in trial's directory, which defaults to `~/nni/experiments/$experiment_id$/trials/$trial_id$/`
 
-For more information, please refer to [HowToDebug](HowToDebug.md)
+详细信息，可参考[调试指南](HowToDebug.md)。
 
 <a name="more-examples"></a>
 
-## More Trial Examples
+## 更多 Trial 的样例
 
 * [MNIST 样例](mnist_examples.md)
 * [为 CIFAR 10 分类找到最佳的 optimizer](cifar10_examples.md)
