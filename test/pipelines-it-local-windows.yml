@@ -16,5 +16,5 @@ jobs:
   - task: PowerShell@2
     inputs:
       targetType: 'filePath'
-      filePath: test/unittest.ps1
+      filePath: test\unittest.ps1
     displayName: 'unit test'
