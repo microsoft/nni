@@ -31,6 +31,8 @@ WARNING_INFO = 'WARNING: %s'
 
 DEFAULT_REST_PORT = 8080
 
+REST_TIME_OUT = 20
+
 EXPERIMENT_SUCCESS_INFO = Fore.GREEN + 'Successfully started experiment!\n' + Fore.RESET + \
                           '-----------------------------------------------------------------------\n' \
                           'The experiment id is %s\n'\

@@ -18,7 +18,6 @@
     "express-joi-validator": "^2.0.1",
     "js-base64": "^2.4.9",
     "kubernetes-client": "^6.5.0",
-    "node-nvidia-smi": "^1.0.0",
     "rx": "^4.1.0",
     "sqlite3": "^4.0.2",
     "ssh2": "^0.6.1",
