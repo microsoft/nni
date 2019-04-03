@@ -27,6 +27,7 @@ import * as cp from 'child_process';
 import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData'
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
+import { file } from "../../node_modules/@types/tmp";
 
 /**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
@@ -83,8 +84,12 @@ export function execScript(filePath: string): void {
  */
 export async function execTail(filePath: string): Promise<cpp.childProcessPromise.Result> {
     let cmdresult: cpp.childProcessPromise.Result;
+    console.log('----------------------86--------------')
     if (process.platform === 'win32') {
+        console.log('----------------------88--------------')
+        console.log(filePath)
         cmdresult = await cpp.exec(`powershell.exe type ${filePath} | select -last 1`);
+        console.log('--------------------92-------------')
     } else {
         cmdresult = await cpp.exec(`tail -n 1 ${filePath}`);
     }
