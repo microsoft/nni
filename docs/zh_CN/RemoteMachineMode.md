@@ -66,4 +66,4 @@ nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
 
 ## 检查版本
 
-NNI support version check feature in since version 0.6, [refer](PAIMode.md)
+从 0.6 开始，NNI 支持查看版本，详情参考[这里](PAIMode.md)。
