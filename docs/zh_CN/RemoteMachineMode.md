@@ -64,6 +64,6 @@ nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
 
 来启动 Experiment。
 
-## version check
+## 检查版本
 
 NNI support version check feature in since version 0.6, [refer](PAIMode.md)
