@@ -30,6 +30,7 @@ import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics} from '../common/manager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
+import { getVersion } from '../common/utils';
 
 const expressJoi = require('express-joi-validator');
 
@@ -104,8 +105,8 @@ class NNIRestHandler {
 
     private version(router: Router): void {
         router.get('/version', async (req: Request, res: Response) => {
-            const pkg = await import(path.join(__dirname, '..', 'package.json'));
-            res.send(pkg.version);
+            const version = await getVersion();
+            res.send(version);
         });
     }
 

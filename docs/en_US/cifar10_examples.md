@@ -16,9 +16,9 @@ In this example, we have selected the following common deep learning optimizer:
 
 #### Preparations
 
-This example requires pytorch. Pytorch install package should be chosen based on python version and cuda version.
+This example requires PyTorch. PyTorch install package should be chosen based on python version and cuda version.
 
-Here is an example of the environment python==3.5 and cuda == 8.0, then using the following commands to install [pytorch][2]:
+Here is an example of the environment python==3.5 and cuda == 8.0, then using the following commands to install [PyTorch][2]:
 
 ```bash
 python3 -m pip install http://download.pytorch.org/whl/cu80/torch-0.4.1-cp35-cp35m-linux_x86_64.whl

@@ -38,7 +38,7 @@ def switch(dispatch_type, dispatch_name):
     '''Change dispatch in config.yml'''
     config_path = 'tuner_test/local.yml'
     experiment_config = get_yml_content(config_path)
-    if dispatch_name in ['GridSearch', 'BatchTuner']:
+    if dispatch_name in ['GridSearch', 'BatchTuner', 'Random']:
         experiment_config[dispatch_type.lower()] = {
             'builtin' + dispatch_type + 'Name': dispatch_name
         }
@@ -76,8 +76,8 @@ def run(dispatch_type):
     dipsatcher_list = TUNER_LIST if dispatch_type == 'Tuner' else ASSESSOR_LIST
     for dispatcher_name in dipsatcher_list:
         try:
-            # sleep 5 seconds here, to make sure previous stopped exp has enough time to exit to avoid port conflict
-            time.sleep(5)
+            # Sleep here to make sure previous stopped exp has enough time to exit to avoid port conflict
+            time.sleep(6)
             test_builtin_dispatcher(dispatch_type, dispatcher_name)
             print(GREEN + 'Test %s %s: TEST PASS' % (dispatcher_name, dispatch_type) + CLEAR)
         except Exception as error:

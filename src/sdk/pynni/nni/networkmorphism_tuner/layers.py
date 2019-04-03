@@ -254,7 +254,7 @@ class StubConv(StubWeightBiasLayer):
         keras_layer.set_weights((self.weights[0].T, self.weights[1]))
 
     def size(self):
-        return self.filters * self.kernel_size * self.kernel_size + self.filters
+        return (self.input_channel * self.kernel_size * self.kernel_size + 1) * self.filters
 
     @abstractmethod
     def to_real_layer(self):

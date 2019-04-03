@@ -1,14 +1,15 @@
 import * as React from 'react';
 import axios from 'axios';
 import { MANAGER_IP } from '../static/const';
-import { Row, Col, Tabs, Input, Select, Button } from 'antd';
+import { Row, Col, Tabs, Input, Select, Button, Icon } from 'antd';
 const Option = Select.Option;
-import { TableObj, Parameters, DetailAccurPoint, TooltipForAccuracy } from '../static/interface';
-import { getFinalResult, getFinal } from '../static/function';
-import Accuracy from './overview/Accuracy';
+import { TableObj, Parameters } from '../static/interface';
+import { getFinal } from '../static/function';
+import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import Duration from './trial-detail/Duration';
 import Title1 from './overview/Title1';
 import Para from './trial-detail/Para';
+import Intermediate from './trial-detail/Intermeidate';
 import TableList from './trial-detail/TableList';
 const TabPane = Tabs.TabPane;
 import '../static/style/trialsDetail.scss';
@@ -20,8 +21,11 @@ interface TrialDetailState {
     searchResultSource: Array<TableObj>;
     isHasSearch: boolean;
     experimentStatus: string;
-    entriesTable: number;
     experimentPlatform: string;
+    experimentLogCollection: boolean;
+    entriesTable: number;
+    searchSpace: string;
+    defaultMetric?: Array<number>;
 }
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
@@ -33,6 +37,25 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
     public tableList: TableList | null;
 
+    private titleOfacc = (
+        <Title1 text="Default Metric" icon="3.png" />
+    );
+
+    private titleOfhyper = (
+        <Title1 text="Hyper Parameter" icon="1.png" />
+    );
+
+    private titleOfDuration = (
+        <Title1 text="Trial Duration" icon="2.png" />
+    );
+
+    private titleOfIntermediate = (
+        <div className="panelTitle">
+            <Icon type="line-chart" />
+            <span>Intermediate Result</span>
+        </div>
+    );
+
     constructor(props: {}) {
         super(props);
 
@@ -42,105 +65,32 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             tableListSource: [],
             searchResultSource: [],
             experimentStatus: '',
+            experimentPlatform: '',
+            experimentLogCollection: false,
             entriesTable: 20,
             isHasSearch: false,
-            experimentPlatform: ''
+            searchSpace: '',
+            defaultMetric: [0, 1]
         };
     }
-    // trial accuracy graph
-    drawPointGraph = () => {
 
-        axios(`${MANAGER_IP}/trial-jobs`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200 && this._isMounted) {
-                    const accData = res.data;
-                    const accSource: Array<DetailAccurPoint> = [];
-                    Object.keys(accData).map(item => {
-                        if (accData[item].status === 'SUCCEEDED' && accData[item].finalMetricData) {
-                            let searchSpace: object = {};
-                            const acc = getFinalResult(accData[item].finalMetricData);
-                            if (accData[item].hyperParameters) {
-                                searchSpace = JSON.parse(accData[item].hyperParameters).parameters;
-                            }
-                            accSource.push({
-                                acc: acc,
-                                index: accData[item].sequenceId,
-                                searchSpace: JSON.stringify(searchSpace)
-                            });
-                        }
-                    });
-                    const resultList: Array<number | string>[] = [];
-                    Object.keys(accSource).map(item => {
-                        const items = accSource[item];
-                        let temp: Array<number | string>;
-                        temp = [items.index, items.acc, JSON.parse(items.searchSpace)];
-                        resultList.push(temp);
-                    });
-                    const allAcuracy = {
-                        tooltip: {
-                            trigger: 'item',
-                            enterable: true,
-                            position: function (point: Array<number>, data: TooltipForAccuracy) {
-                                if (data.data[0] < resultList.length / 2) {
-                                    return [point[0], 80];
-                                } else {
-                                    return [point[0] - 300, 80];
-                                }
-                            },
-                            formatter: function (data: TooltipForAccuracy) {
-                                const result = '<div class="tooldetailAccuracy">' +
-                                    '<div>Trial No: ' + data.data[0] + '</div>' +
-                                    '<div>Default Metric: ' + data.data[1] + '</div>' +
-                                    '<div>Parameters: ' +
-                                    '<pre>' + JSON.stringify(data.data[2], null, 4) + '</pre>' +
-                                    '</div>' +
-                                    '</div>';
-                                return result;
-                            }
-                        },
-                        xAxis: {
-                            name: 'Trial',
-                            type: 'category',
-                        },
-                        yAxis: {
-                            name: 'Default Metric',
-                            type: 'value',
-                        },
-                        series: [{
-                            symbolSize: 6,
-                            type: 'scatter',
-                            data: resultList
-                        }]
-                    };
-
-                    this.setState({ accSource: allAcuracy }, () => {
-                        if (resultList.length === 0) {
-                            this.setState({
-                                accNodata: 'No data'
-                            });
-                        } else {
-                            this.setState({
-                                accNodata: ''
-                            });
-                        }
-                    });
-                }
-            });
-    }
-
-    drawTableList = () => {
+    getDetailSource = () => {
         this.isOffIntervals();
-        axios.get(`${MANAGER_IP}/trial-jobs`)
-            .then(res => {
+        axios
+            .all([
+                axios.get(`${MANAGER_IP}/trial-jobs`),
+                axios.get(`${MANAGER_IP}/metric-data`)
+            ])
+            .then(axios.spread((res, res1) => {
                 if (res.status === 200) {
                     const trialJobs = res.data;
+                    const metricSource = res1.data;
                     const trialTable: Array<TableObj> = [];
                     Object.keys(trialJobs).map(item => {
                         // only succeeded trials have finalMetricData
                         let desc: Parameters = {
-                            parameters: {}
+                            parameters: {},
+                            intermediate: []
                         };
                         let duration = 0;
                         const id = trialJobs[item].id !== undefined
@@ -171,7 +121,23 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         if (trialJobs[item].logPath !== undefined) {
                             desc.logPath = trialJobs[item].logPath;
                         }
+
                         const acc = getFinal(trialJobs[item].finalMetricData);
+                        // deal with intermediate result list
+                        const mediate: Array<number> = [];
+                        Object.keys(metricSource).map(key => {
+                            const items = metricSource[key];
+                            if (items.trialJobId === id) {
+                                // succeed trial, last intermediate result is final result
+                                // final result format may be object 
+                                if (typeof JSON.parse(items.data) === 'object') {
+                                    mediate.push(JSON.parse(items.data).default);
+                                } else {
+                                    mediate.push(JSON.parse(items.data));
+                                }
+                            }
+                        });
+                        desc.intermediate = mediate;
                         trialTable.push({
                             key: trialTable.length,
                             sequenceId: trialJobs[item].sequenceId,
@@ -182,7 +148,33 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             description: desc
                         });
                     });
-                    // search part data
+                    // get acc max and min for hyper-parameters graph color bar max and min
+                    const sortSource = JSON.parse(JSON.stringify(trialTable));
+                    sortSource.sort((a: TableObj, b: TableObj) => {
+                        if (a.acc !== undefined && b.acc !== undefined) {
+                            return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
+                        } else {
+                            return NaN;
+                        }
+                    });
+
+                    if (this._isMounted && sortSource !== undefined) {
+
+                        const hyperMin = sortSource[0].acc !== undefined
+                            ?
+                            sortSource[0].acc.default
+                            :
+                            '0';
+                        const max = sortSource[sortSource.length - 1].acc;
+                        let maxResult = '1';
+                        if (max !== undefined) {
+                            maxResult = max.default;
+                        }
+                        this.setState(() => ({
+                            defaultMetric: [JSON.parse(hyperMin), JSON.parse(maxResult)]
+                        }));
+                    }
+                    // update search data result
                     const { searchResultSource } = this.state;
                     if (searchResultSource.length !== 0) {
                         const temp: Array<number> = [];
@@ -211,111 +203,29 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         }));
                     }
                 }
-            });
-    }
-
-    // update all data in table
-    drawAllTableList = () => {
-        this.isOffIntervals();
-        axios.get(`${MANAGER_IP}/trial-jobs`)
-            .then(res => {
-                if (res.status === 200) {
-                    const trialJobs = res.data;
-                    const trialTable: Array<TableObj> = [];
-                    Object.keys(trialJobs).map(item => {
-                        // only succeeded trials have finalMetricData
-                        let desc: Parameters = {
-                            parameters: {}
-                        };
-                        let duration = 0;
-                        const id = trialJobs[item].id !== undefined
-                            ? trialJobs[item].id
-                            : '';
-                        const status = trialJobs[item].status !== undefined
-                            ? trialJobs[item].status
-                            : '';
-                        const begin = trialJobs[item].startTime;
-                        const end = trialJobs[item].endTime;
-                        if (begin) {
-                            if (end) {
-                                duration = (end - begin) / 1000;
-                            } else {
-                                duration = (new Date().getTime() - begin) / 1000;
-                            }
-                        }
-                        if (trialJobs[item].hyperParameters !== undefined) {
-                            const getPara = JSON.parse(trialJobs[item].hyperParameters[0]).parameters;
-                            if (typeof getPara === 'string') {
-                                desc.parameters = JSON.parse(getPara);
-                            } else {
-                                desc.parameters = getPara;
-                            }
-                        } else {
-                            desc.parameters = { error: 'This trial\'s parameters are not available.' };
-                        }
-                        if (trialJobs[item].logPath !== undefined) {
-                            desc.logPath = trialJobs[item].logPath;
-                        }
-                        const acc = getFinal(trialJobs[item].finalMetricData);
-                        trialTable.push({
-                            key: trialTable.length,
-                            sequenceId: trialJobs[item].sequenceId,
-                            id: id,
-                            status: status,
-                            duration: duration,
-                            acc: acc,
-                            description: desc
-                        });
-                    });
-                    if (this._isMounted) {
-                        this.setState(() => ({
-                            tableListSource: trialTable,
-                            searchResultSource: trialTable
-                        }));
-                    }
-                }
-            });
-    }
-
-    callback = (key: string) => {
-
-        switch (key) {
-            case '1':
-                window.clearInterval(Para.intervalIDPara);
-                window.clearInterval(Duration.intervalDuration);
-                this.drawPointGraph();
-                this.interAccuracy = window.setInterval(this.drawPointGraph, 10000);
-                break;
-
-            case '2':
-                this.isOffIntervals();
-                window.clearInterval(this.interAccuracy);
-                window.clearInterval(Duration.intervalDuration);
-                break;
-
-            case '3':
-                this.isOffIntervals();
-                window.clearInterval(this.interAccuracy);
-                window.clearInterval(Para.intervalIDPara);
-                break;
-
-            default:
-        }
+            }));
     }
 
     // search a trial by trial No. & trial id
     searchTrial = (event: React.ChangeEvent<HTMLInputElement>) => {
         const targetValue = event.target.value;
         if (targetValue === '' || targetValue === ' ') {
-            this.drawAllTableList();
-            this.interAllTableList = window.setInterval(this.drawAllTableList, 10000);
+            const { tableListSource } = this.state;
+            if (this._isMounted) {
+                this.setState(() => ({
+                    isHasSearch: false,
+                    tableListSource: tableListSource,
+                }));
+            }
         } else {
-            window.clearInterval(this.interAllTableList);
             const { tableListSource } = this.state;
             const searchResultList: Array<TableObj> = [];
             Object.keys(tableListSource).map(key => {
                 const item = tableListSource[key];
-                if (item.sequenceId.toString() === targetValue || item.id.includes(targetValue)) {
+                if (item.sequenceId.toString() === targetValue
+                    || item.id.includes(targetValue)
+                    || item.status.includes(targetValue)
+                ) {
                     searchResultList.push(item);
                 }
             });
@@ -328,6 +238,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         }
     }
 
+    // close timer
     isOffIntervals = () => {
         axios(`${MANAGER_IP}/check-status`, {
             method: 'GET'
@@ -338,11 +249,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         case 'DONE':
                         case 'ERROR':
                         case 'STOPPED':
-                            window.clearInterval(this.interAccuracy);
                             window.clearInterval(this.interTableList);
-                            window.clearInterval(Duration.intervalDuration);
-                            window.clearInterval(Para.intervalIDPara);
-                            window.clearInterval(this.interAllTableList);
                             break;
                         default:
                     }
@@ -362,7 +269,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 this.setState(() => ({ entriesTable: 100 }));
                 break;
             case 'all':
-                this.setState(() => ({ entriesTable: 100000 }));
+                const { tableListSource } = this.state;
+                this.setState(() => ({ entriesTable: tableListSource.length }));
                 break;
             default:
         }
@@ -372,6 +280,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         alert('TableList component was not properly initialized.');
     }
 
+    // get and set logCollection val
     checkExperimentPlatform = () => {
         axios(`${MANAGER_IP}/experiment`, {
             method: 'GET'
@@ -379,13 +288,21 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             .then(res => {
                 if (res.status === 200) {
                     const trainingPlatform = res.data.params.trainingServicePlatform !== undefined
-                    ?
-                    res.data.params.trainingServicePlatform
-                    :
-                    '';
+                        ?
+                        res.data.params.trainingServicePlatform
+                        :
+                        '';
+                    // default logCollection is true
+                    const logCollection = res.data.params.logCollection;
+                    let expLogCollection: boolean = false;
+                    if (logCollection !== undefined && logCollection !== 'none') {
+                        expLogCollection = true;
+                    }
                     if (this._isMounted) {
                         this.setState({
-                            experimentPlatform: trainingPlatform
+                            experimentPlatform: trainingPlatform,
+                            searchSpace: res.data.params.searchSpace,
+                            experimentLogCollection: expLogCollection
                         });
                     }
                 }
@@ -395,56 +312,55 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     componentDidMount() {
 
         this._isMounted = true;
-        this.drawTableList();
-        this.drawPointGraph();
-        this.interTableList = window.setInterval(this.drawTableList, 10000);
-        this.interAccuracy = window.setInterval(this.drawPointGraph, 10000);
+        this.getDetailSource();
+        this.interTableList = window.setInterval(this.getDetailSource, 10000);
         this.checkExperimentPlatform();
     }
 
     componentWillUnmount() {
         this._isMounted = false;
         window.clearInterval(this.interTableList);
-        window.clearInterval(this.interAccuracy);
     }
 
     render() {
-        const { accSource, accNodata, tableListSource, 
-            entriesTable, searchResultSource, isHasSearch,
-            experimentPlatform
+
+        const {
+            tableListSource, searchResultSource, isHasSearch,
+            entriesTable, experimentPlatform, searchSpace,
+            defaultMetric, experimentLogCollection
         } = this.state;
-        const titleOfacc = (
-            <Title1 text="Default Metric" icon="3.png" />
-        );
-        const titleOfhyper = (
-            <Title1 text="Hyper Parameter" icon="1.png" />
-        );
-        const titleOfDuration = (
-            <Title1 text="Trial Duration" icon="2.png" />
-        );
+        const source = isHasSearch ? searchResultSource : tableListSource;
         return (
             <div>
                 <div className="trial" id="tabsty">
-                    <Tabs onChange={this.callback} type="card">
-                        <TabPane tab={titleOfacc} key="1">
+                    <Tabs type="card">
+                        <TabPane tab={this.titleOfacc} key="1">
                             <Row className="graph">
-                                <Accuracy
+                                <DefaultPoint
                                     height={432}
-                                    accuracyData={accSource}
-                                    accNodata={accNodata}
+                                    showSource={source}
                                 />
                             </Row>
                         </TabPane>
-                        <TabPane tab={titleOfhyper} key="2">
-                            <Row className="graph"><Para /></Row>
+                        <TabPane tab={this.titleOfhyper} key="2">
+                            <Row className="graph">
+                                <Para
+                                    dataSource={source}
+                                    expSearchSpace={searchSpace}
+                                    defaultMetric={defaultMetric}
+                                />
+                            </Row>
                         </TabPane>
-                        <TabPane tab={titleOfDuration} key="3">
-                            <Duration />
+                        <TabPane tab={this.titleOfDuration} key="3">
+                            <Duration source={source} />
+                        </TabPane>
+                        <TabPane tab={this.titleOfIntermediate} key="4">
+                            <Intermediate source={source} />
                         </TabPane>
                     </Tabs>
                 </div>
                 {/* trial table list */}
-                <Title1 text="All Trials" icon="6.png" />
+                <Title1 text="Trial Jobs" icon="6.png" />
                 <Row className="allList">
                     <Col span={12}>
                         <span>show</span>
@@ -472,12 +388,11 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 </Button>
                             </Col>
                             <Col span={12}>
-                                {/* <span>Search:</span> */}
                                 <Input
                                     type="text"
-                                    placeholder="search by Trial No. and id"
+                                    placeholder="search by Id, Trial No. or Status"
                                     onChange={this.searchTrial}
-                                    style={{ width: 200, marginLeft: 6 }}
+                                    style={{ width: 230, marginLeft: 6 }}
                                 />
                             </Col>
                         </Row>
@@ -485,11 +400,10 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 </Row>
                 <TableList
                     entries={entriesTable}
-                    tableSource={tableListSource}
-                    updateList={this.drawTableList}
-                    searchResult={searchResultSource}
-                    isHasSearch={isHasSearch}
+                    tableSource={source}
                     platform={experimentPlatform}
+                    updateList={this.getDetailSource}
+                    logCollection={experimentLogCollection}
                     ref={(tabList) => this.tableList = tabList}
                 />
             </div>

@@ -2,25 +2,28 @@ jobs:
 - job: 'integration_test_remote'
 
   steps:
-  - script: python3 -m pip install --upgrade pip setuptools
+  - script: python3 -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
+  - script: |
+      cd deployment/pypi
+      echo 'building prerelease package...'
+      make build
+      ls $(Build.SourcesDirectory)/deployment/pypi/dist/
+    displayName: 'build nni bdsit_wheel'
   - script: |
       source install.sh
     displayName: 'Install nni toolkit via source code'
+  - script: |
+      sudo apt-get install swig -y
+      PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
+    displayName: 'Install dependencies for integration tests in remote mode'
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
-      sourceFolder: src/sdk/pynni
-      targetFolder: /tmp/nnitest/$(Build.BuildId)/pynni
+      sourceFolder: deployment/pypi/dist/
+      targetFolder: /tmp/nnitest/$(Build.BuildId)/dist
       overwrite: true
-    displayName: 'Copy sdk files to remote machine'
-  - task: CopyFilesOverSSH@0
-    inputs:
-      sshEndpoint: remote_nni-ci-gpu-01
-      sourceFolder: tools
-      targetFolder: /tmp/nnitest/$(Build.BuildId)/tools
-      overwrite: true
-    displayName: 'Copy tool files to remote machine'
+    displayName: 'Copy dist files to remote machine'
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01

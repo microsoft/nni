@@ -39,7 +39,7 @@ import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
 import { delay, generateParamFileName, 
-    getExperimentRootDir, getIPV4Address, uniqueString } from '../../common/utils';
+    getExperimentRootDir, getIPV4Address, uniqueString, getVersion } from '../../common/utils';
 import { PAIJobRestServer } from './paiJobRestServer'
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_LOG_PATH_FORMAT } from './paiData';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
@@ -75,6 +75,8 @@ class PAITrainingService implements TrainingService {
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
+    private versionCheck: boolean = true;
+    private logCollection: string;
 
     constructor() {
         this.log = getLogger();
@@ -87,6 +89,7 @@ class PAITrainingService implements TrainingService {
         this.hdfsDirPattern = 'hdfs://(?<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?<baseDir>/.*)?';
         this.nextTrialSequenceId = -1;
         this.paiTokenUpdateInterval = 7200000; //2hours
+        this.logCollection = 'none';
         this.log.info('Construct OpenPAI training service.');
     }
 
@@ -94,11 +97,15 @@ class PAITrainingService implements TrainingService {
         this.log.info('Run PAI training service.');
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         await restServer.start();
-
+        restServer.setEnableVersionCheck = this.versionCheck;
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
             await this.updatePaiToken();
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
+            if (restServer.getErrorMessage) {
+                throw new Error(restServer.getErrorMessage)
+                this.stopping = true;
+            }
             await delay(3000);
         }
         this.log.info('PAI training service exit.');
@@ -211,6 +218,7 @@ class PAITrainingService implements TrainingService {
             hdfsLogPath);
         this.trialJobsMap.set(trialJobId, trialJobDetail);
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
+        const version = this.versionCheck? await getVersion(): '';
         const nniPaiTrialCommand : string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
             // PAI will copy job's codeDir into /root directory
@@ -225,7 +233,9 @@ class PAITrainingService implements TrainingService {
             hdfsOutputDir,
             this.hdfsOutputHost,
             this.paiClusterConfig.userName, 
-            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName)
+            HDFSClientUtility.getHdfsExpCodeDir(this.paiClusterConfig.userName),
+            version,
+            this.logCollection
         ).replace(/\r\n|\n|\r/gm, '');
 
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
@@ -239,7 +249,9 @@ class PAITrainingService implements TrainingService {
                                     // Task GPU number
                                     this.paiTrialConfig.gpuNum, 
                                     // Task command
-                                    nniPaiTrialCommand)];
+                                    nniPaiTrialCommand,
+                                    // Task shared memory
+                                    this.paiTrialConfig.shmMB)];
 
         const paiJobConfig : PAIJobConfig = new PAIJobConfig(
                                     // Job name
@@ -433,6 +445,12 @@ class PAITrainingService implements TrainingService {
                     this.hdfsClient);
 
                 deferred.resolve();
+                break;
+            case TrialConfigMetadataKey.VERSION_CHECK:
+                this.versionCheck = (value === 'true' || value === 'True');
+                break;
+            case TrialConfigMetadataKey.LOG_COLLECTION:
+                this.logCollection = value;
                 break;
             default:
                 //Reject for unknown keys
