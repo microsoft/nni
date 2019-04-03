@@ -75,7 +75,7 @@ class PAITrainingService implements TrainingService {
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private copyExpCodeDirPromise?: Promise<void>;
-    private versionCheck?: boolean = true;
+    private versionCheck: boolean = true;
     private logCollection: string;
 
     constructor() {
@@ -97,11 +97,15 @@ class PAITrainingService implements TrainingService {
         this.log.info('Run PAI training service.');
         const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
         await restServer.start();
-
+        restServer.setEnableVersionCheck = this.versionCheck;
         this.log.info(`PAI Training service rest server listening on: ${restServer.endPoint}`);
         while (!this.stopping) {
             await this.updatePaiToken();
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
+            if (restServer.getErrorMessage) {
+                throw new Error(restServer.getErrorMessage)
+                this.stopping = true;
+            }
             await delay(3000);
         }
         this.log.info('PAI training service exit.');
