@@ -88,7 +88,7 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
     if (process.platform === 'win32') {
         console.log('----------------------88--------------')
         console.log(filePath)
-        cmdresult = await cpp.exec(`powershell.exe type ${filePath} | select -last 1`);
+        cmdresult = await cpp.exec(`powershell.exe Get-Content ${filePath} -Tail 1`);
         console.log('--------------------92-------------')
     } else {
         cmdresult = await cpp.exec(`tail -n 1 ${filePath}`);
