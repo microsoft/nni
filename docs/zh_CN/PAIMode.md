@@ -86,8 +86,8 @@ paiConfig:
 
 ## 检查版本
 
-NNI support version check feature in since version 0.6. It is a policy to insure the version of NNIManager is consistent with trialKeeper, and avoid errors caused by version incompatibility.  
-Check policy:
+从 0.6 开始，NNI 会检查版本。确保 NNIManager 与 trialKeeper 的版本一致，避免兼容性错误。  
+检查策略：
 
 1. NNIManager before v0.6 could run any version of trialKeeper, trialKeeper support backward compatibility.
 2. Since version 0.6, NNIManager version should keep same with triakKeeper version. For example, if NNIManager version is 0.6, trialKeeper version should be 0.6 too. 
