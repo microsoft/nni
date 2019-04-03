@@ -116,7 +116,10 @@ def print_stderr(trial_jobs_url):
     for trial_job in trial_jobs:
         if trial_job['status'] == 'FAILED':
             stderr_path = trial_job['stderrPath'].split(':')[-1]
-            subprocess.run(['cat', stderr_path])
+            if sys.platform == "win32":
+                subprocess.run(['type', stderr_path], shell=True)
+            else:
+                subprocess.run(['cat', stderr_path])
 
 def parse_max_duration_time(max_exec_duration):
     unit = max_exec_duration[-1]

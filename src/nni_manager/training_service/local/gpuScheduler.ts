@@ -28,7 +28,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
 import { String } from 'typescript-string-operations';
-import { GPU_INFO_COLLECTOR_FORMAT } from '../common/gpuData'
+import { execMkdir, getScriptName, getgpuMetricsCollectorScriptContent, execScript, execTail, execRemove, execKill } from '../common/util'
 
 /**
  * GPUScheduler
@@ -63,16 +63,14 @@ class GPUScheduler {
      * used to run in remote machine, and will be deleted after uploaded from local. 
      */
     private async runGpuMetricsCollectorScript(): Promise<void> {
-        await cpp.exec(`mkdir -p ${this.gpuMetricCollectorScriptFolder}`);
-        //generate gpu_metrics_collector.sh
-        let gpuMetricsCollectorScriptPath: string = path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics_collector.sh');
-        const gpuMetricsCollectorScriptContent: string = String.Format(
-            GPU_INFO_COLLECTOR_FORMAT,
-            this.gpuMetricCollectorScriptFolder,
-            path.join(this.gpuMetricCollectorScriptFolder, 'pid'),
-        );
+        await execMkdir(this.gpuMetricCollectorScriptFolder);
+        //generate gpu_metrics_collector script
+        let gpuMetricsCollectorScriptPath: string = path.join(this.gpuMetricCollectorScriptFolder, getScriptName('gpu_metrics_collector'));
+        const gpuMetricsCollectorScriptContent: string = getgpuMetricsCollectorScriptContent(this.gpuMetricCollectorScriptFolder);
+        console.log(this.gpuMetricCollectorScriptFolder)
+        console.log(gpuMetricsCollectorScriptContent)
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
-        cp.exec(`bash ${gpuMetricsCollectorScriptPath}`);
+        execScript(gpuMetricsCollectorScriptPath)
     }
 
     public getAvailableGPUIndices(): number[] {
@@ -87,15 +85,15 @@ class GPUScheduler {
         this.stopping = true;
         try {
             const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
-            await cpp.exec(`pkill -P ${pid}`);
-            await cpp.exec(`rm -rf ${this.gpuMetricCollectorScriptFolder}`);
+            await execKill(pid);
+            await execRemove(this.gpuMetricCollectorScriptFolder);
         } catch (error){
             this.log.error(`GPU scheduler error: ${error}`);
         }
     }
 
     private async updateGPUSummary() {
-        const cmdresult = await cpp.exec(`tail -n 1 ${path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics')}`);
+        const cmdresult = await execTail(path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics'));
         if(cmdresult && cmdresult.stdout) {
             this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
         } else {
