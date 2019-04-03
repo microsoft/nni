@@ -78,23 +78,19 @@ export function execScript(filePath: string): void {
     }
 }
 
+
+
 /**
  * output the last line of a file
  * @param filePath 
  */
 export async function execTail(filePath: string): Promise<cpp.childProcessPromise.Result> {
     let cmdresult: cpp.childProcessPromise.Result;
-    console.log('----------------------86--------------')
     if (process.platform === 'win32') {
-        console.log('----------------------88--------------')
-        console.log(filePath)
         cmdresult = await cpp.exec(`powershell.exe Get-Content ${filePath} -Tail 1`);
-        console.log('--------------------92-------------')
     } else {
         cmdresult = await cpp.exec(`tail -n 1 ${filePath}`);
     }
-    console.log('----------------91-----------')
-    console.log(cmdresult)
     return Promise.resolve(cmdresult);
 }
 
@@ -110,6 +106,20 @@ export async function execRemove(directory: string): Promise<void>{
     }
     return Promise.resolve();
 }
+
+/**
+ * kill a process
+ * @param directory 
+ */
+export async function execKill(pid: string): Promise<void>{
+    if (process.platform === 'win32') {
+        await cpp.exec(`powershell.exe kill ${pid}`);
+    } else {
+        await cpp.exec(`pkill -P ${pid}`);
+    }
+    return Promise.resolve();
+}
+
 
 /**
  * generate script file name

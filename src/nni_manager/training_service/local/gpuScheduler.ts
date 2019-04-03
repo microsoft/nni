@@ -28,7 +28,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
 import { String } from 'typescript-string-operations';
-import { execMkdir, getScriptName, getgpuMetricsCollectorScriptContent, execScript, execTail, execRemove } from '../common/util'
+import { execMkdir, getScriptName, getgpuMetricsCollectorScriptContent, execScript, execTail, execRemove, execKill } from '../common/util'
 
 /**
  * GPUScheduler
@@ -71,7 +71,6 @@ class GPUScheduler {
         console.log(gpuMetricsCollectorScriptContent)
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
         execScript(gpuMetricsCollectorScriptPath)
-        console.log('----------------74----------')
     }
 
     public getAvailableGPUIndices(): number[] {
@@ -86,7 +85,7 @@ class GPUScheduler {
         this.stopping = true;
         try {
             const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
-            await cpp.exec(`pkill -P ${pid}`);
+            await execKill(pid);
             await execRemove(this.gpuMetricCollectorScriptFolder);
         } catch (error){
             this.log.error(`GPU scheduler error: ${error}`);
@@ -94,14 +93,9 @@ class GPUScheduler {
     }
 
     private async updateGPUSummary() {
-        console.log('----------------97----------')
         const cmdresult = await execTail(path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics'));
-        console.log('----------------99----------')
         if(cmdresult && cmdresult.stdout) {
-            console.log('----------------101----------')
-            console.log(cmdresult.stdout)
             this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
-            console.log(this.gpuSummary)
         } else {
             this.log.error('Could not get gpu metrics information!');
         }
