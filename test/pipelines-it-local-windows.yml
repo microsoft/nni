@@ -14,22 +14,22 @@ jobs:
       cd test
       python generate_ts_config.py
     displayName: 'generate config files'
-  - script: |
-      cd test
-      powershell.exe -file unittest.ps1
-    displayName: 'unit test'
-  - script: |
-      cd test
-      python naive_test.py
-    displayName: 'Naive test'
-  - script: |
-      cd test
-      python tuner_test.py
-    displayName: 'Built-in tuners / assessors tests'
-  - script: |
-      cd test
-      python metrics_test.py
-    displayName: 'Trial job metrics test'
+#   - script: |
+#       cd test
+#       powershell.exe -file unittest.ps1
+#     displayName: 'unit test'
+#   - script: |
+#       cd test
+#       python naive_test.py
+#     displayName: 'Naive test'
+#   - script: |
+#       cd test
+#       python tuner_test.py
+#     displayName: 'Built-in tuners / assessors tests'
+#   - script: |
+#       cd test
+#       python metrics_test.py
+#     displayName: 'Trial job metrics test'
   - script: |
       cd test
       python config_test.py --ts local --exclude cifar10,smac,batchtuner

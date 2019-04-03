@@ -117,7 +117,7 @@ def print_stderr(trial_jobs_url):
         if trial_job['status'] == 'FAILED':
             stderr_path = trial_job['stderrPath'].split(':')[-1]
             if sys.platform == "win32":
-                subprocess.run(['type', stderr_path])
+                subprocess.run(['type', stderr_path], shell=True)
             else:
                 subprocess.run(['cat', stderr_path])
 
