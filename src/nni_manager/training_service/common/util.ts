@@ -22,6 +22,11 @@ import { getLogger } from "common/log";
 'use strict';
 
 import { countFilesRecursively } from '../../common/utils'
+import * as cpp from 'child-process-promise';
+import * as cp from 'child_process';
+import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData'
+import * as path from 'path';
+import { String } from 'typescript-string-operations';
 
 /**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
@@ -45,4 +50,70 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
     }
 
     return fileCount;
+}
+
+/**
+ * crete a new directory
+ * @param directory 
+ */
+export async function execMkdir(directory: string): Promise<void> {
+    if (process.platform === 'win32') {
+        await cpp.exec(`powershell.exe mkdir ${directory}`);
+    } else {
+        await cpp.exec(`mkdir -p ${directory}`);
+    }
+}
+
+/**
+ * run script
+ * @param filePath
+ */
+export function execScript(filePath: string): void {
+    if (process.platform === 'win32') {
+        cp.exec(`powershell ${filePath}`);
+    } else {
+        cp.exec(`bash ${filePath}`);
+    }
+}
+
+export async function execTail(filePath: string): Promise<cpp.childProcessPromise.Result> {
+    let cmdresult: cpp.childProcessPromise.Result;
+    if (process.platform === 'win32') {
+        cmdresult = await cpp.exec(`powershell.exe type ${filePath} | select -last 1`);
+    } else {
+        cmdresult = await cpp.exec(`tail -n 1 ${filePath}`);
+    }
+    return Promise.resolve(cmdresult);
+}
+
+/**
+ * generate script file name
+ * @param fileNamePrefix 
+ */
+export function getScriptName(fileNamePrefix: string): string {
+    if (process.platform === 'win32') {
+        return fileNamePrefix + '.ps1';
+    } else {
+        return fileNamePrefix + '.sh';
+    }
+}
+
+/**
+ * generate script file
+ * @param gpuMetricCollectorScriptFolder 
+ */
+export function getgpuMetricsCollectorScriptContent(gpuMetricCollectorScriptFolder: string): string {
+    if(process.platform === 'win32') {
+        return String.Format(
+            GPU_INFO_COLLECTOR_FORMAT_WINDOWS,
+            gpuMetricCollectorScriptFolder,
+            path.join(gpuMetricCollectorScriptFolder, 'pid'),
+        );
+    } else {
+        return String.Format(
+            GPU_INFO_COLLECTOR_FORMAT_LINUX,
+            gpuMetricCollectorScriptFolder,
+            path.join(gpuMetricCollectorScriptFolder, 'pid'),
+        );
+    }
 }
