@@ -84,14 +84,14 @@ paiConfig:
 
 如果在使用 pai 模式时遇到任何问题，请到 [NNI Github](https://github.com/Microsoft/nni) 中创建问题。
 
-## 检查版本
+## 版本校验
 
-从 0.6 开始，NNI 会检查版本。确保 NNIManager 与 trialKeeper 的版本一致，避免兼容性错误。  
+从 0.6 开始，NNI 支持版本校验。确保 NNIManager 与 trialKeeper 的版本一致，避免兼容性错误。  
 检查策略：
 
 1. 0.6 以前的 NNIManager 可与任何版本的 trialKeeper 一起运行，trialKeeper 支持向后兼容。
 2. 从 NNIManager 0.6 开始，与 triakKeeper 的版本必须一致。 例如，如果 NNIManager 是 0.6 版，则 trialKeeper 也必须是 0.6 版。 
-3. 注意，只有版本的头两位数字才会被检查。例如，NNIManager 0.6.1 可以和 trialKeeper 的 0.6 或 0.6.2 一起使用，但不能与 trialKeeper 的 0.5.1 或 0.7 版本一起使用。 
+3. 注意，只有版本的前两位数字才会被检查。例如，NNIManager 0.6.1 可以和 trialKeeper 的 0.6 或 0.6.2 一起使用，但不能与 trialKeeper 的 0.5.1 或 0.7 版本一起使用。 
 
 如果 Experiment 无法运行，而且不能确认是否是因为版本不匹配造成的，可以在 Web 界面检查是否有相关的错误消息。  
 ![](../img/version_check.png)
