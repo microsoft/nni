@@ -41,6 +41,10 @@ export abstract class ClusterJobRestServer extends RestServer{
 
     private readonly expId: string = getExperimentId();
 
+    private enableVersionCheck: boolean = true; //switch to enable version check
+    private versionCheckSuccess: boolean | undefined;
+    private errorMessage?: string;
+
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
@@ -57,6 +61,14 @@ export abstract class ClusterJobRestServer extends RestServer{
             throw new Error('PAI Rest server port is undefined');
         }
         return this.port;
+    }
+    
+    public get getErrorMessage(): string | undefined{
+        return this.errorMessage;
+    }
+    
+    public set setEnableVersionCheck(versionCheck: boolean) {
+        this.enableVersionCheck = versionCheck;
     }
 
     /**
@@ -77,6 +89,31 @@ export abstract class ClusterJobRestServer extends RestServer{
             next();
         });
 
+        router.post(`/version/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            if (this.enableVersionCheck) {
+                try {
+                    const checkResultSuccess: boolean = req.body.tag === 'VCSuccess'? true: false;
+                    if (this.versionCheckSuccess !== undefined && this.versionCheckSuccess !== checkResultSuccess) {
+                        this.errorMessage = 'Version check error, version check result is inconsistent!';
+                        this.log.error(this.errorMessage);
+                    } else if (checkResultSuccess) {
+                        this.log.info(`Version check in trialKeeper success!`);
+                        this.versionCheckSuccess = true;
+                    } else {
+                        this.versionCheckSuccess = false;
+                        this.errorMessage = req.body.msg;
+                    }
+                } catch(err) {
+                    this.log.error(`json parse metrics error: ${err}`);
+                    res.status(500);
+                    res.send(err.message);
+                }
+            } else {
+                this.log.info(`Skipping version check!`);
+            }
+            res.send();
+        });
+
         router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
                 this.log.info(`Get update-metrics request, trial job id is ${req.params.trialId}`);
@@ -94,6 +131,10 @@ export abstract class ClusterJobRestServer extends RestServer{
         });
 
         router.post(`/stdout/${this.expId}/:trialId`, (req: Request, res: Response) => {
+            if(this.enableVersionCheck && !this.versionCheckSuccess && !this.errorMessage) {
+                this.errorMessage = `Version check failed, didn't get version check response from trialKeeper, please check your NNI version in `
+                 + `NNIManager and TrialKeeper!`
+            }
             const trialLogPath: string = path.join(getLogDir(), `trial_${req.params.trialId}.log`);
             try {
                 let skipLogging: boolean = false;

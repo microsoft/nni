@@ -6,7 +6,7 @@ Network Morphism （网络形态）是内置的 Tuner，它使用了网络形态
 
 ### 1. 训练框架支持
 
-网络形态当前基于框架，还没有实现与框架脱离的方法。 当前支持 Pytorch 和 Keras。 如果熟悉 JSON 中间格式，可以在自定义的训练框架中生成自己的模型。 随后，我们会将中间结果从 JSON 转换为 ONNX，从而能够成为[标准的中间表示](https://github.com/onnx/onnx/blob/master/docs/IR.md)。
+网络形态当前基于框架，还没有实现与框架脱离的方法。 当前支持 PyTorch 和 Keras。 如果熟悉 JSON 中间格式，可以在自定义的训练框架中生成自己的模型。 随后，我们会将中间结果从 JSON 转换为 ONNX，从而能够成为[标准的中间表示](https://github.com/onnx/onnx/blob/master/docs/IR.md)。
 
 ### 2. 安装需求
 
