@@ -69,7 +69,7 @@ advisor:
 
 **Requirement of classArg**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will return the hyperparameter set with larger expectation. If 'minimize', tuner will return the hyperparameter set with smaller expectation.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will target to maximize metrics. If 'minimize', tuner will target to minimize metrics.
 * **min_budget** (*int, optional, default = 1*) - The smallest budget to consider. Needs to be positive.
 * **max_budget** (*int, optional, default = 3*) - The largest budget to consider. Needs to be larger than min_budget.
 * **eta** (*int, optional, default = 3*) - In each iteration, a complete run of sequential halving is executed. In it, after evaluating each configuration on the same subset size, only a fraction of 1/eta of them 'advances' to the next round. Must be greater or equal to 2.
