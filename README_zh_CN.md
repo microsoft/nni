@@ -10,7 +10,7 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
-### **NNI [v0.5.2](https://github.com/Microsoft/nni/releases) 已发布！**
+### **NNI [v0.6](https://github.com/Microsoft/nni/releases) has been released!**
 
 <p align="center">
   <a href="#nni-v05-has-been-released"><img src="docs/img/overview.svg" /></a>
@@ -116,7 +116,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
-    git clone -b v0.5.2 https://github.com/Microsoft/nni.git
+    git clone -b v0.6 https://github.com/Microsoft/nni.git
     cd nni  
     source install.sh   
 ```
@@ -130,7 +130,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 * 通过克隆源代码下载示例。 
 
 ```bash
-    git clone -b v0.5.2 https://github.com/Microsoft/nni.git
+    git clone -b v0.6 https://github.com/Microsoft/nni.git
 ```
 
 * 运行 mnist 示例。

@@ -144,7 +144,7 @@ def start_tensorboard(args):
     running, response = check_rest_server_quick(rest_port)
     trial_content = None
     if running:
-        response = rest_get(trial_jobs_url(rest_port), 20)
+        response = rest_get(trial_jobs_url(rest_port), REST_TIME_OUT)
         if response and check_response(response):
             trial_content = json.loads(response.text)
         else:

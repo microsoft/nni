@@ -158,7 +158,7 @@ class HyperoptTuner(Tuner):
     HyperoptTuner is a tuner which using hyperopt algorithm.
     """
 
-    def __init__(self, algorithm_name, optimize_mode):
+    def __init__(self, algorithm_name, optimize_mode = 'minimize'):
         """
         Parameters
         ----------

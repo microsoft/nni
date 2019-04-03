@@ -22,6 +22,7 @@
 import time
 import requests
 from .url_utils import check_status_url
+from .constants import REST_TIME_OUT
 
 def rest_put(url, data, timeout):
     '''Call rest put method'''
@@ -61,7 +62,7 @@ def check_rest_server(rest_port):
     '''Check if restful server is ready'''
     retry_count = 5
     for _ in range(retry_count):
-        response = rest_get(check_status_url(rest_port), 20)
+        response = rest_get(check_status_url(rest_port), REST_TIME_OUT)
         if response:
             if response.status_code == 200:
                 return True, response

@@ -20,6 +20,7 @@ require('../static/style/overviewTitle.scss');
 
 interface OverviewState {
     tableData: Array<TableObj>;
+    experimentAPI: object;
     searchSpace: object;
     status: string;
     errorStr: string;
@@ -47,6 +48,7 @@ class Overview extends React.Component<{}, OverviewState> {
         super(props);
         this.state = {
             searchSpace: {},
+            experimentAPI: {},
             status: '',
             errorStr: '',
             trialProfile: {
@@ -143,6 +145,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     });
                     if (this._isMounted) {
                         this.setState({
+                            experimentAPI: res.data,
                             trialProfile: trialPro[0],
                             searchSpace: searchSpace,
                             isLogCollection: expLogCollection
@@ -390,7 +393,7 @@ class Overview extends React.Component<{}, OverviewState> {
         const {
             trialProfile, searchSpace, tableData, accuracyData,
             accNodata, status, errorStr, trialNumber, bestAccuracy,
-            titleMaxbgcolor, titleMinbgcolor, isLogCollection
+            titleMaxbgcolor, titleMinbgcolor, isLogCollection, experimentAPI
         } = this.state;
 
         return (
@@ -425,9 +428,7 @@ class Overview extends React.Component<{}, OverviewState> {
                         <Row className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
                             <div className="experiment searchSpace">
-                                <TrialPro
-                                    tiralProInfo={trialProfile}
-                                />
+                            <TrialPro experiment={experimentAPI} />
                             </div>
                         </Row>
                     </Col>
