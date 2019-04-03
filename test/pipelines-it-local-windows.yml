@@ -11,6 +11,9 @@ jobs:
       python -m pip install tensorflow-gpu==1.12.0 --user
     displayName: 'Install dependencies for integration tests'
   - script: |
+      ce test
+      python generate_ts_config.py
+  - script: |
       cd test
       powershell.exe -file unittest.ps1
-    displayName: 'Install nni toolkit via source code'
+    displayName: 'unit test'
