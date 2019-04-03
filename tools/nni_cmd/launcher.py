@@ -136,7 +136,7 @@ def set_trial_config(experiment_config, port, config_file_name):
     '''set trial configuration'''
     request_data = dict()
     request_data['trial_config'] = experiment_config['trial']
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
     if check_response(response):
         return True
     else:
@@ -156,7 +156,7 @@ def set_remote_config(experiment_config, port, config_file_name):
     #set machine_list
     request_data = dict()
     request_data['machine_list'] = experiment_config['machineList']
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
     err_message = ''
     if not response or not check_response(response):
         if response is not None:
@@ -177,7 +177,7 @@ def setNNIManagerIp(experiment_config, port, config_file_name):
         return True, None
     ip_config_dict = dict()
     ip_config_dict['nni_manager_ip'] = { 'nniManagerIp' : experiment_config['nniManagerIp'] }
-    response = rest_put(cluster_metadata_url(port), json.dumps(ip_config_dict), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(ip_config_dict), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -192,7 +192,7 @@ def set_pai_config(experiment_config, port, config_file_name):
     '''set pai configuration''' 
     pai_config_data = dict()
     pai_config_data['pai_config'] = experiment_config['paiConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(pai_config_data), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(pai_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -211,7 +211,7 @@ def set_kubeflow_config(experiment_config, port, config_file_name):
     '''set kubeflow configuration''' 
     kubeflow_config_data = dict()
     kubeflow_config_data['kubeflow_config'] = experiment_config['kubeflowConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(kubeflow_config_data), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(kubeflow_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -230,7 +230,7 @@ def set_frameworkcontroller_config(experiment_config, port, config_file_name):
     '''set kubeflow configuration''' 
     frameworkcontroller_config_data = dict()
     frameworkcontroller_config_data['frameworkcontroller_config'] = experiment_config['frameworkcontrollerConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -301,7 +301,7 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
 
-    response = rest_post(experiment_url(port), json.dumps(request_data), 20)
+    response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT)
     if check_response(response):
         return response
     else:
@@ -478,7 +478,7 @@ def resume_experiment(args):
         if experiment_dict.get(args.id) is None:
             print_error('Id %s not exist!' % args.id)
             exit(1)
-        if experiment_dict[args.id]['status'] == 'running':
+        if experiment_dict[args.id]['status'] != 'STOPPED':
             print_error('Experiment %s is running!' % args.id)
             exit(1)
         experiment_id = args.id

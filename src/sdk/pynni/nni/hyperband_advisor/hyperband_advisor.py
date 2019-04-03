@@ -143,7 +143,7 @@ class Bracket():
         self.s_max = s_max
         self.eta = eta
         self.n = math.ceil((s_max + 1) * (eta**s) / (s + 1) - _epsilon) # pylint: disable=invalid-name
-        self.r = math.ceil(R / eta**s - _epsilon)                       # pylint: disable=invalid-name
+        self.r = R / eta**s                     # pylint: disable=invalid-name
         self.i = 0
         self.hyper_configs = []         # [ {id: params}, {}, ... ]
         self.configs_perf = []          # [ {id: [seq, acc]}, {}, ... ]
@@ -158,7 +158,7 @@ class Bracket():
 
     def get_n_r(self):
         """return the values of n and r for the next round"""
-        return math.floor(self.n / self.eta**self.i + _epsilon), self.r * self.eta**self.i
+        return math.floor(self.n / self.eta**self.i + _epsilon), math.floor(self.r * self.eta**self.i + _epsilon)
 
     def increase_i(self):
         """i means the ith round. Increase i by 1"""
