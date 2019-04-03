@@ -8,7 +8,7 @@ jobs:
   - script: |
       python -m pip install scikit-learn==0.20.0 --user
       python -m pip install keras==2.1.6 --user
-      python -m pip install tensorflow-gpu==1.12.0 --user
+      python -m pip install tensorflow --user
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
