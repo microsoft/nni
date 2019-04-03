@@ -58,3 +58,11 @@ export class GPUSummary {
         this.gpuInfos = gpuInfos;
     }
 }
+
+export const GPU_INFO_COLLECTOR_FORMAT: string = 
+`
+#!/bin/bash
+export METRIC_OUTPUT_DIR={0}
+echo $$ >{1}
+python3 -m nni_gpu_tool.gpu_metrics_collector
+`
