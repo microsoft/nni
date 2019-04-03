@@ -167,7 +167,7 @@ def generate_default_params():
 
 
 if __name__ == '__main__':
-    nni.get_next_parameter()
+    nni.reload_tf_variable()
     try:
         params = generate_default_params()
         logger.debug('params')
