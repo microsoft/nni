@@ -27,6 +27,7 @@ from .config_utils import Config
 from .common_utils import get_json_content
 from .nnictl_utils import check_experiment_id, get_experiment_port, get_config_filename
 from .launcher_utils import parse_time
+from .constants import REST_TIME_OUT
 
 def validate_digit(value, start, end):
     '''validate if a digit is valid'''
@@ -62,11 +63,11 @@ def update_experiment_profile(args, key, value):
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)
     if running:
-        response = rest_get(experiment_url(rest_port), 20)
+        response = rest_get(experiment_url(rest_port), REST_TIME_OUT)
         if response and check_response(response):
             experiment_profile = json.loads(response.text)
             experiment_profile['params'][key] = value
-            response = rest_put(experiment_url(rest_port)+get_query_type(key), json.dumps(experiment_profile), 20)
+            response = rest_put(experiment_url(rest_port)+get_query_type(key), json.dumps(experiment_profile), REST_TIME_OUT)
             if response and check_response(response):
                 return response
     else:
