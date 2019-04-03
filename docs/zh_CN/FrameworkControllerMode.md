@@ -104,6 +104,6 @@ frameworkcontroller 模式中的 Trial 配置使用以下主键：
 
 准备好配置文件后，通过运行 nnictl 来启动 Experiment。 在 Frameworkcontroller 上开始 Experiment 的方法与 Kubeflow 类似，可参考[指南](./KubeflowMode.md)了解更多信息。
 
-## version check
+## 检查版本
 
-NNI support version check feature in since version 0.6, [refer](PAIMode.md)
+从 0.6 开始，NNI 支持查看版本，详情参考[这里](PAIMode.md)。
