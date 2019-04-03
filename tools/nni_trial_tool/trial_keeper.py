@@ -28,6 +28,7 @@ import re
 import sys
 import select
 from pyhdfs import HdfsClient
+import pkg_resources
 
 from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
@@ -43,10 +44,9 @@ def main_loop(args):
     
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
-    
-    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout)
+    trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout, args.log_collection)
     # redirect trial keeper's stdout and stderr to syslog
-    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout)
+    trial_syslogger_stdout = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial', StdOutputType.Stdout, args.log_collection)
     sys.stdout = sys.stderr = trial_keeper_syslogger
     # backward compatibility
     hdfs_host = None
@@ -103,6 +103,31 @@ def main_loop(args):
 def trial_keeper_help_info(*args):
     print('please run --help to see guidance')
 
+def check_version(args):
+    try:
+        trial_keeper_version = pkg_resources.get_distribution('nni').version
+    except pkg_resources.ResolutionError as err:
+        #package nni does not exist, try nni-tool package
+        nni_log(LogType.Error, 'Package nni does not exist!')
+        os._exit(1)
+    if not args.version:
+        # skip version check
+        nni_log(LogType.Warning, 'Skipping version check!')
+    else:
+        regular = re.compile('v?(?P<version>[0-9](\.[0-9]){0,2}).*')
+        try:
+            trial_keeper_version = regular.search(trial_keeper_version).group('version')
+            nni_log(LogType.Info, 'trial_keeper_version is {0}'.format(trial_keeper_version))
+            training_service_version = regular.search(args.version).group('version')
+            nni_log(LogType.Info, 'training_service_version is {0}'.format(training_service_version))
+            if trial_keeper_version != training_service_version:
+                nni_log(LogType.Error, 'Version does not match!')
+                os._exit(1)
+            else:
+                nni_log(LogType.Info, 'Version match!')
+        except AttributeError as err:
+            nni_log(LogType.Error, err)
+
 if __name__ == '__main__':
     '''NNI Trial Keeper main function'''
     PARSER = argparse.ArgumentParser()
@@ -117,10 +142,12 @@ if __name__ == '__main__':
     PARSER.add_argument('--pai_user_name', type=str, help='the username of hdfs')
     PARSER.add_argument('--nni_hdfs_exp_dir', type=str, help='nni experiment directory in hdfs')
     PARSER.add_argument('--webhdfs_path', type=str, help='the webhdfs path used in webhdfs URL')
+    PARSER.add_argument('--version', type=str, help='the nni version transmitted from trainingService')
+    PARSER.add_argument('--log_collection', type=str, help='set the way to collect log in trialkeeper')
     args, unknown = PARSER.parse_known_args()
     if args.trial_command is None:
         exit(1)
-
+    check_version(args)
     try:
         main_loop(args)
     except SystemExit as se:

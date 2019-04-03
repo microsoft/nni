@@ -1,14 +1,12 @@
 authorName: nni
 experimentName: default_test
 maxExecDuration: 5m
-maxTrialNum: 2
-trialConcurrency: 1
+maxTrialNum: 4
+trialConcurrency: 2
 searchSpacePath: ./mnist_search_space.json
 
 tuner:
   builtinTunerName: Random
-  classArgs:
-    optimize_mode: maximize
 assessor:
   builtinAssessorName: Medianstop
   classArgs:

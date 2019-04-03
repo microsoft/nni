@@ -45,6 +45,12 @@ nnictl support commands:
   |------|------|------|------|
   |--config, -c|  True| |YAML configure file of the experiment|
   |--port, -p|False| |the port of restful server|
+  |--debug, -d|False||set debug mode|
+
+  Note:
+  ```
+  Debug mode will disable version check function in Trialkeeper.
+  ```
 
 <a name="resume"></a>
 * __nnictl resume__
@@ -65,6 +71,7 @@ nnictl support commands:
   |------|------|------ |------|
   |id|  False| |The id of the experiment you want to resume|  
   |--port, -p|  False| |Rest port of the experiment you want to resume|
+  |--debug, -d|False||set debug mode|
 
 <a name="stop"></a>
 * __nnictl stop__
@@ -200,8 +207,8 @@ nnictl support commands:
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id|  False| |ID of the experiment you want to set|
-  |--trialid, -t|  True| |ID of the trial you want to kill.|
+  |id|  False| |ID of the trial to be killed|
+  |--experiment, -E|  True| |Experiment id of the trial|
 
 <a name="top"></a>
 * __nnictl top__
@@ -347,7 +354,8 @@ nnictl support commands:
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id| False| |the id of trial|
+  |id|  False| |ID of the trial to be found the log path|
+  |--experiment, -E|  False| |Experiment ID of the trial, required when id is not empty.|
 
 <a name="webui"></a>
 ### Manage webui

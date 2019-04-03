@@ -59,12 +59,15 @@ def generate_search_space(code_dir):
 def _generate_file_search_space(path, module):
     with open(path) as src:
         try:
-            return search_space_generator.generate(module, src.read())
+            search_space, code = search_space_generator.generate(module, src.read())
         except Exception as exc:  # pylint: disable=broad-except
             if exc.args:
                 raise RuntimeError(path + ' ' + '\n'.join(exc.args))
             else:
                 raise RuntimeError('Failed to generate search space for %s: %r' % (path, exc))
+    with open(path, 'w') as dst:
+        dst.write(code)
+    return search_space
 
 
 def expand_annotations(src_dir, dst_dir):

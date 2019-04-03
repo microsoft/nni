@@ -17,7 +17,7 @@
     先决条件：`python >=3.5, git, wget`
     
     ```bash
-    git clone -b v0.5.1 https://github.com/Microsoft/nni.git
+    git clone -b v0.6 https://github.com/Microsoft/nni.git
     cd nni
     ./install.sh
     ```

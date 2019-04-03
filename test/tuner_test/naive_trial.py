@@ -1,6 +1,6 @@
 import nni
 
-params = nni.get_parameters()
+params = nni.get_next_parameter()
 print('params:', params)
 x = params['x']
 
