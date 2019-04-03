@@ -84,7 +84,7 @@ paiConfig:
 
 如果在使用 pai 模式时遇到任何问题，请到 [NNI Github](https://github.com/Microsoft/nni) 中创建问题。
 
-## version check
+## 检查版本
 
 NNI support version check feature in since version 0.6. It is a policy to insure the version of NNIManager is consistent with trialKeeper, and avoid errors caused by version incompatibility.  
 Check policy:
