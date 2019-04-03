@@ -1,8 +1,7 @@
 $CWD = $PWD
 $OS_SPEC = "windows"
-Remove-Item $CWD\build -r -fo
-Remove-Item $CWD\dist -r -fo
-Remove-Item $CWD\nni -r -fo
-# TO DO
-Remove-Item $CWD\nni.egg-info -r -fo
-Remove-Item $CWD\node-$OS_SPEC-x64 -r -fo
+Remove-Item $CWD\build -Recurse -Force
+Remove-Item $CWD\dist -Recurse -Force
+Remove-Item $CWD\nni -Recurse -Force
+Remove-Item $CWD\nni.egg-info -Recurse -Force
+Remove-Item $CWD\node-$OS_SPEC-x64 -Recurse -Force

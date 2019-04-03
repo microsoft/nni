@@ -4,10 +4,8 @@ $install_yarn = $TRUE
 $PIP_INSTALL = "python -m pip install ."
 
 # nodejs
-$version = "10.15.1"
-$nodeUrl = "https://nodejs.org/dist/v10.15.1/node-v10.15.1-win-x64.zip"
+$nodeUrl = "https://aka.ms/nni/nodejs-download/win64"
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
-$unzipNodeDir = "node-v$version-win-x64"
 
 $NNI_DEPENDENCY_FOLDER = "C:\tmp\$env:USERNAME"
 
@@ -30,12 +28,10 @@ if($WHICH_PIP -eq $null){
 $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
 $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 
-$BASH_COMP_PREFIX = $env:HOMEPATH +"\.bash_completion.d"
-$BASH_COMP_SCRIPT = $BASH_COMP_PREFIX +"\nnictl"
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
     New-Item $NNI_DEPENDENCY_FOLDER -ItemType Directory
 }
-$NNI_NODE_ZIP = $NNI_DEPENDENCY_FOLDER+"\nni-node.zip"
+$NNI_NODE_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-node.tar.gz"
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-yarn.tar.gz"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
@@ -45,7 +41,7 @@ $NNI_YARN = $NNI_YARN_FOLDER +"\bin\yarn"
 $NNI_VERSION_VALUE = $(git describe --tags)
 $NNI_VERSION_TEMPLATE = "999.0.0-developing"
 
-if(!(Test-Path $NNI_NODE_ZIP)){
+if(!(Test-Path $NNI_NODE_TARBALL)){
     Write-Host "Downloading Node..."
     (New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_ZIP)
 }
@@ -58,14 +54,14 @@ if(!(Test-Path $NNI_YARN_TARBALL)){
 if ($install_node) {
     ### nodejs install
     if(Test-Path $NNI_NODE_FOLDER){
-        Remove-Item $NNI_NODE_FOLDER -r -fo
+        Remove-Item $NNI_NODE_FOLDER -Recurse -Force
     }
-    Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
-    Rename-Item "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir" "nni-node"
+    New-Item $NNI_NODE_FOLDER -ItemType Directory
+	cmd /c tar -xf $NNI_NODE_TARBALL -C $NNI_NODE_FOLDER --strip-components 1
      
     ### yarn install
     if(Test-Path $NNI_YARN_FOLDER){
-        Remove-Item $NNI_YARN_FOLDER -r -fo
+        Remove-Item $NNI_YARN_FOLDER -Recurse -Force
     }
     New-Item $NNI_YARN_FOLDER -ItemType Directory
 	cmd /c tar -xf $NNI_YARN_TARBALL -C $NNI_YARN_FOLDER --strip-components 1
@@ -119,7 +115,7 @@ if(!(Test-Path $NNI_PKG_FOLDER)){
     New-Item $NNI_PKG_FOLDER -ItemType Directory
 }
 cd ..
-Remove-Item $NNI_PKG_FOLDER -r -fo
+Remove-Item $NNI_PKG_FOLDER -Recurse -Force
 Copy-Item "src\nni_manager\dist" $NNI_PKG_FOLDER -Recurse
 Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER
 $PKG_JSON = $NNI_PKG_FOLDER+"\package.json"
@@ -127,7 +123,3 @@ $PKG_JSON = $NNI_PKG_FOLDER+"\package.json"
 cmd /c $NNI_YARN --prod --cwd $NNI_PKG_FOLDER
 $NNI_PKG_FOLDER_STATIC = $NNI_PKG_FOLDER+"\static"
 Copy-Item "src\webui\build" $NNI_PKG_FOLDER_STATIC -Recurse 
-if(!(Test-Path $BASH_COMP_PREFIX)){
-    New-Item $BASH_COMP_PREFIX -ItemType Directory 
-}
-Copy-Item tools/bash-completion $BASH_COMP_SCRIPT
