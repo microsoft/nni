@@ -96,7 +96,9 @@ class GPUScheduler {
     private async updateGPUSummary() {
         const cmdresult = await execTail(path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics'));
         if(cmdresult && cmdresult.stdout) {
+            console.log(cmdresult.stdout)
             this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
+            console.log(this.gpuSummary)
         } else {
             this.log.error('Could not get gpu metrics information!');
         }

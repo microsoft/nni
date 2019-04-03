@@ -88,6 +88,8 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
     } else {
         cmdresult = await cpp.exec(`tail -n 1 ${filePath}`);
     }
+    console.log('----------------91-----------')
+    console.log(cmdresult)
     return Promise.resolve(cmdresult);
 }
 
