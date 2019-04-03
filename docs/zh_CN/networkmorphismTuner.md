@@ -59,48 +59,48 @@ nni.report_final_result(best_acc)
 ## 从 Web 界面获取最佳模型的 ID 
 ## 或查看 `nni/experiments/experiment_id/log/model_path/best_model.txt' 文件
 
-## 从 JSON 文件中读取
+## 从 JSON 文件中读取，并使用 NNI API 来加载
 with open("best-model.json") as json_file:
     json_of_model = json_file.read()
 model = build_graph_from_json(json_of_model)
 
-# 2. Use Framework API (Related to Framework) 
+# 2. 使用框架的 API (与具体框架相关) 
 ## 2.1 Keras API
 
-## Save the model with Keras API in the trial code
-## it's better to save model with id in nni local mode
+## 在 Trial 代码中使用 Keras API 保存
+## 最好保存 NNI 的 ID
 model_id = nni.get_sequence_id()
-## serialize model to JSON
+## 将模型序列化为 JSON
 model_json = model.to_json()
 with open("model-{}.json".format(model_id), "w") as json_file:
     json_file.write(model_json)
-## serialize weights to HDF5
+## 将权重序列化至 HDF5
 model.save_weights("model-{}.h5".format(model_id))
 
-## Load the model with Keras API if you want to reuse the model
-## load json and create model
-model_id = "" # id of the model you want to reuse
+## 重用模型时，使用 Keras API 读取
+## 读取 JSON 文件，并创建模型
+model_id = "" # 需要重用的模型 ID
 with open('model-{}.json'.format(model_id), 'r') as json_file:
     loaded_model_json = json_file.read()
 loaded_model = model_from_json(loaded_model_json)
-## load weights into new model
+## 将权重加载到新模型中
 loaded_model.load_weights("model-{}.h5".format(model_id))
 
 ## 2.2 PyTorch API
 
-## Save the model with PyTorch API in the trial code
+## 在 Trial 代码中使用 PyTorch API 保存
 model_id = nni.get_sequence_id()
 torch.save(model, "model-{}.pt".format(model_id))
 
-## Load the model with PyTorch API if you want to reuse the model
-model_id = "" # id of the model you want to reuse
+## 重用模型时，使用 PyTorch API 读取
+model_id = "" # 需要重用的模型 ID
 loaded_model = torch.load("model-{}.pt".format(model_id))
 
 ```
 
 ## 3. 文件结构
 
-The tuner has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
+Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
 
 - `networkmorphism_tuner.py` 是使用 network morphism 算法的 Tuner。
 
@@ -123,7 +123,7 @@ The tuner has a lot of different files, functions and classes. Here we will only
 
 ## 4. 网络表示的 JSON 样例
 
-Here is an example of the intermediate representation JSON file we defined, which is passed from the tuner to the trial in the architecture search procedure. Users can call "json\_to\_graph()" function in trial code to build a pytorch model or keras model from this JSON file. The example is as follows.
+这是定义的中间表示 JSON 样例，在架构搜索过程中会从 Tuner 传到 Trial。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。 样例如下。
 
 ```json
 {
@@ -216,7 +216,7 @@ Here is an example of the intermediate representation JSON file we defined, whic
  }
 ```
 
-The definition of each model is a JSON object(also you can consider the model as a [directed acyclic graph](https://en.wikipedia.org/wiki/Directed_acyclic_graph)), where:
+每个模型的定义都是一个 JSON 对象 （也可以认为模型是一个 [有向无环图](https://en.wikipedia.org/wiki/Directed_acyclic_graph))：
 
 - `input_shape` 是整数的列表，不包括批量维度。
 - `weighted` 表示是否权重和偏移值应该包含在此神经网络图中。
@@ -242,4 +242,4 @@ The definition of each model is a JSON object(also you can consider the model as
 
 ## 5. TODO
 
-Next step, we will change the API from fixed network generator to more network operator generator. Besides, we will use ONNX instead of JSON later as the intermediate representation spec in the future.
+下一步，会将 API 从固定的网络生成方法改为更多的网络操作生成方法。 此外，还会使用 ONNX 格式来替代 JSON 作为中间表示结果。
