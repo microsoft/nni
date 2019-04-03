@@ -30,13 +30,24 @@ best and worst configurations, respectively, to model the two densities.
 
 Note that we alse sample a constant fraction named **random fraction** of the configurations uniformly at random.
 
-This procedure is summarized by the pseudocode below.
+### Workflow
+
+![](../img/bohb_6.jpg)
+
+This image shows the workflow of BOHB. Here we set max_budget = 9, min_budget = 1, eta = 3, others as default. In this case, s_max = 2, so we will continuesly run the {s=2, s=1, s=0, s=2, s=1, s=0, ...} cycle. In each stage of SuccessiveHalving (the orange box), we will pick the top 1/eta configurations and run them again with more budget, repeated SuccessiveHalving stage until the end of this iteration. At the same time, we collect the configurations, budgets and final metrics of each trial, and use this to build a multidimensional KDEmodel with the key "budget".
+ Multidimensional KDE is used to guide the selection of configurations for the next iteration.
+
+The way of sampling procedure(use Multidimensional KDE to guide the selection) is summarized by the pseudocode below.
 
 ![](../img/bohb_4.png)
 
 ## 2. Usage
 
-BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace), user could use `pip3 install ConfigSpace==0.4.7` to install it.
+BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace) package, ConfigSpace need to be installed by following command before first use.
+
+```bash
+nnictl package install --name=BOHB
+```
 
 To use BOHB, you should add the following spec in your experiment's YAML config file:
 
@@ -63,7 +74,7 @@ advisor:
 * **max_budget** (*int, optional, default = 3*) - The largest budget to consider. Needs to be larger than min_budget.
 * **eta** (*int, optional, default = 3*) - In each iteration, a complete run of sequential halving is executed. In it, after evaluating each configuration on the same subset size, only a fraction of 1/eta of them 'advances' to the next round. Must be greater or equal to 2.
 * **min_points_in_model**(*int, optional, default = None*): number of observations to start building a KDE. Default 'None' means dim+1, the bare minimum, reset value must be positive.
-* **top_n_percent**(*int, optional, default = 15*): percentage (between 1 and 99, default 15) of the observations that are considered good.
+* **top_n_percent**(*int, optional, default = 15*): percentage (between 1 and 99, default 15) of the observations that are considered good. Good points and bad points are used for building KDE models. For example, if you have 100 observed trials and top_n_percent is 15, then top 15 point will used for building good point models "l(x)", the remaining 85 point will used for building bad point models "g(x)"
 * **num_samples**(*int, optional, default = 64*): number of samples to optimize EI (default 64)
 * **random_fraction**(*float, optional, default = 0.33*): fraction of purely random configurations that are sampled from the prior without the model.
 * **bandwidth_factor**(*float, optional, default = 3.0*): to encourage diversity, the points proposed to optimize EI, are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor

@@ -18,7 +18,7 @@ Currently we support the following algorithms:
 |[__Hyperband__](#Hyperband)|Hyperband tries to use the limited resource to explore as many configurations as possible, and finds out the promising ones to get the final result. The basic idea is generating many configurations and to run them for the small number of STEPs to find out promising one, then further training those promising ones to select several more promising one.[Reference Paper](https://arxiv.org/pdf/1603.06560.pdf)|
 |[__Network Morphism__](#NetworkMorphism)|Network Morphism provides functions to automatically search for architecture of deep learning models. Every child network inherits the knowledge from its parent network and morphs into diverse types of networks, including changes of depth, width, and skip-connection. Next, it estimates the value of a child network using the historic architecture and metric pairs. Then it selects the most promising one to train. [Reference Paper](https://arxiv.org/abs/1806.10282)|
 |[__Metis Tuner__](#MetisTuner)|Metis offers the following benefits when it comes to tuning parameters: While most tools only predict the optimal configuration, Metis gives you two outputs: (a) current prediction of optimal configuration, and (b) suggestion for the next trial. No more guesswork. While most tools assume training datasets do not have noisy data, Metis actually tells you if you need to re-sample a particular hyper-parameter. [Reference Paper](https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/)|
-|[__BOHB__](#BOHB)|BOHB relies on HB(Hyperband) to determine the number of configurations to evaluate with which budget, but it replaces the random selection of configurations at the beginning of each HB iteration by a model-based search(Byesian Optimization). [Reference Paper](https://arxiv.org/abs/1807.01774)|
+|[__BOHB__](#BOHB)|BOHB is a follow-up work of Hyperband. It targets the weakness of Hyperband that new configurations are generated randomly without leveraging finished trials. For the name BOHB, HB means Hyperband, BO means Byesian Optimization. BOHB leverages finished trials by building multiple TPE models, a proportion of new configurations are generated through these models. [Reference Paper](https://arxiv.org/abs/1807.01774)|
 
 <br>
 
@@ -329,11 +329,15 @@ tuner:
 
 **Installation**
 
-BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace), user could use `pip3 install ConfigSpace==0.4.7` to install it.
+BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace) package, ConfigSpace need to be installed by following command before first use.
+
+```bash
+nnictl package install --name=BOHB
+```
 
 **Suggested scenario**
 
-Similar to Hyperband, it is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent. Besides that, it may converges to a better configuration due to bayesian optimization usage.
+Similar to Hyperband, it is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent. In this case, it may converges to a better configuration due to bayesian optimization usage.
 
 **Requirement of classArg**
 
@@ -360,10 +364,4 @@ advisor:
     min_budget: 1
     max_budget: 27
     eta: 3
-    min_points_in_model: 7
-    top_n_percent: 15
-    num_samples: 64
-    random_fraction: 0.33
-    bandwidth_factor: 3.0
-    min_bandwidth: 0.001
 ```

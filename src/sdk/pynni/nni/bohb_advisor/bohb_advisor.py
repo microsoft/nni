@@ -567,11 +567,12 @@ class BOHB(MsgDispatcherBase):
             self.generated_hyper_configs = self.generated_hyper_configs + hyper_configs
             for _ in range(self.credit):
                 self._request_one_trial_job()
-
         # Finish this bracket and generate a new bracket
-        if self.brackets[int(s)].no_more_trial:
+        elif self.brackets[int(s)].no_more_trial:
             self.curr_s -= 1
             self.generate_new_bracket()
+            for _ in range(self.credit):
+                self._request_one_trial_job()
         return True
 
     def handle_report_metric_data(self, data):

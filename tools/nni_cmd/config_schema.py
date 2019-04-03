@@ -60,8 +60,8 @@ Optional('advisor'): Or({
         Optional('max_budget'): And(int, lambda x: 0 <= x <= 9999),
         Optional('eta'): And(int, lambda x: 0 <= x <= 9999),
         Optional('min_points_in_model'): And(int, lambda x: 0 <= x <= 9999),
-        Optional('top_n_percent'): And(int, lambda x: 0 <= x <= 9999),
-        Optional('num_samples'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('top_n_percent'): And(int, lambda x: 1 <= x <= 99),
+        Optional('num_samples'): And(int, lambda x: 1 <= x <= 9999),
         Optional('random_fraction'): And(float, lambda x: 0.0 <= x <= 9999.0),
         Optional('bandwidth_factor'): And(float, lambda x: 0.0 <= x <= 9999.0),
         Optional('min_bandwidth'): And(float, lambda x: 0.0 <= x <= 9999.0)
