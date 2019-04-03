@@ -54,6 +54,52 @@ net = build_graph_from_json(RCV_CONFIG)
 nni.report_final_result(best_acc)
 ```
 
+If you want to save and **load the best model**, the following methods are recommended. 
+
+```python
+# 1. Use NNI API
+## You can get the best model ID from WebUI 
+## or `nni/experiments/experiment_id/log/model_path/best_model.txt'
+
+## read the json string from model file and load it with NNI API
+with open("best-model.json") as json_file:
+    json_of_model = json_file.read()
+model = build_graph_from_json(json_of_model)
+
+# 2. Use Framework API (Related to Framework) 
+## 2.1 Keras API
+
+## Save the model with Keras API in the trial code
+## it's better to save model with id in nni local mode
+model_id = nni.get_sequence_id()
+## serialize model to JSON
+model_json = model.to_json()
+with open("model-{}.json".format(model_id), "w") as json_file:
+    json_file.write(model_json)
+## serialize weights to HDF5
+model.save_weights("model-{}.h5".format(model_id))
+
+## Load the model with Keras API if you want to reuse the model
+## load json and create model
+model_id = "" # id of the model you want to reuse
+with open('model-{}.json'.format(model_id), 'r') as json_file:
+    loaded_model_json = json_file.read()
+loaded_model = model_from_json(loaded_model_json)
+## load weights into new model
+loaded_model.load_weights("model-{}.h5".format(model_id))
+
+## 2.2 PyTorch API
+
+## Save the model with PyTorch API in the trial code
+model_id = nni.get_sequence_id()
+torch.save(model, "model-{}.pt".format(model_id))
+
+## Load the model with PyTorch API if you want to reuse the model
+model_id = "" # id of the model you want to reuse
+loaded_model = torch.load("model-{}.pt".format(model_id))
+
+```
+
 ## 3. File Structure
 
 The tuner has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
