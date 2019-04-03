@@ -64,11 +64,14 @@ class GPUScheduler {
      */
     private async runGpuMetricsCollectorScript(): Promise<void> {
         await execMkdir(this.gpuMetricCollectorScriptFolder);
-        //generate gpu_metrics_collector.sh
+        //generate gpu_metrics_collector script
         let gpuMetricsCollectorScriptPath: string = path.join(this.gpuMetricCollectorScriptFolder, getScriptName('gpu_metrics_collector'));
         const gpuMetricsCollectorScriptContent: string = getgpuMetricsCollectorScriptContent(this.gpuMetricCollectorScriptFolder);
+        console.log(this.gpuMetricCollectorScriptFolder)
+        console.log(gpuMetricsCollectorScriptContent)
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
         execScript(gpuMetricsCollectorScriptPath)
+        console.log('----------------74----------')
     }
 
     public getAvailableGPUIndices(): number[] {
