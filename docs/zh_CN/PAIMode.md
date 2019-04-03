@@ -89,9 +89,9 @@ paiConfig:
 从 0.6 开始，NNI 会检查版本。确保 NNIManager 与 trialKeeper 的版本一致，避免兼容性错误。  
 检查策略：
 
-1. NNIManager before v0.6 could run any version of trialKeeper, trialKeeper support backward compatibility.
-2. Since version 0.6, NNIManager version should keep same with triakKeeper version. For example, if NNIManager version is 0.6, trialKeeper version should be 0.6 too. 
-3. Note that the version check feature only check first two digits of version.For example, NNIManager v0.6.1 could use trialKeeper v0.6 or trialKeeper v0.6.2, but could not use trialKeeper v0.5.1 or trialKeeper v0.7. 
+1. 0.6 以前的 NNIManager 可与任何版本的 trialKeeper 一起运行，trialKeeper 支持向后兼容。
+2. 从 NNIManager 0.6 开始，与 triakKeeper 的版本必须一致。 例如，如果 NNIManager 是 0.6 版，则 trialKeeper 也必须是 0.6 版。 
+3. 注意，只有版本的头两位数字才会被检查。例如，NNIManager 0.6.1 可以和 trialKeeper 的 0.6 或 0.6.2 一起使用，但不能与 trialKeeper 的 0.5.1 或 0.7 版本一起使用。 
 
-If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.  
+如果 Experiment 无法运行，而且不能确认是否是因为版本不匹配造成的，可以在 Web 界面检查是否有相关的错误消息。  
 ![](../img/version_check.png)
