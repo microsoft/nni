@@ -134,7 +134,7 @@ Annotation 的语法和用法等，参考 [Annotation](AnnotationSpec.md)。
 
 ### 本机模式
 
-每个 Trial 都有单独的目录来输出自己的数据。 In each trial, an environment variable called `NNI_OUTPUT_DIR` is exported. Under this directory, you could find each trial's code, data and other possible log. In addition, each trial's log (including stdout) will be re-directed to a file named `trial.log` under that directory.
+每个 Trial 都有单独的目录来输出自己的数据。 在每次 Trial 运行后，环境变量 `NNI_OUTPUT_DIR` 定义的目录都会被导出。 在这个目录中可以看到 Trial 的代码、数据和日志。 此外，Trial 的日志（包括 stdout）还会被重定向到此目录中的 `trial.log` 文件。
 
 If NNI Annotation is used, trial's converted code is in another temporary directory. You can check that in a file named `run.sh` under the directory indicated by `NNI_OUTPUT_DIR`. The second line (i.e., the `cd` command) of this file will change directory to the actual directory where code is located. Below is an example of `run.sh`:
 
