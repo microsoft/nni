@@ -28,7 +28,7 @@ import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
 import { String } from 'typescript-string-operations';
-import { execMkdir, getScriptName, getgpuMetricsCollectorScriptContent, execScript, execTail } from '../common/util'
+import { execMkdir, getScriptName, getgpuMetricsCollectorScriptContent, execScript, execTail, execRemove } from '../common/util'
 
 /**
  * GPUScheduler
@@ -84,7 +84,7 @@ class GPUScheduler {
         try {
             const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
             await cpp.exec(`pkill -P ${pid}`);
-            await cpp.exec(`rm -rf ${this.gpuMetricCollectorScriptFolder}`);
+            await execRemove(this.gpuMetricCollectorScriptFolder);
         } catch (error){
             this.log.error(`GPU scheduler error: ${error}`);
         }

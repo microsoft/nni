@@ -62,6 +62,7 @@ export async function execMkdir(directory: string): Promise<void> {
     } else {
         await cpp.exec(`mkdir -p ${directory}`);
     }
+    return Promise.resolve();
 }
 
 /**
@@ -76,6 +77,10 @@ export function execScript(filePath: string): void {
     }
 }
 
+/**
+ * output the last line of a file
+ * @param filePath 
+ */
 export async function execTail(filePath: string): Promise<cpp.childProcessPromise.Result> {
     let cmdresult: cpp.childProcessPromise.Result;
     if (process.platform === 'win32') {
@@ -84,6 +89,19 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
         cmdresult = await cpp.exec(`tail -n 1 ${filePath}`);
     }
     return Promise.resolve(cmdresult);
+}
+
+/**
+ * delete a directory
+ * @param directory 
+ */
+export async function execRemove(directory: string): Promise<void>{
+    if (process.platform === 'win32') {
+        await cpp.exec(`powershell.exe Remove-Item ${directory}`);
+    } else {
+        await cpp.exec(`rm -rf ${directory}`);
+    }
+    return Promise.resolve();
 }
 
 /**
