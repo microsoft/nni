@@ -58,7 +58,7 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
  */
 export async function execMkdir(directory: string): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe mkdir ${directory}`);
+        await cpp.exec(`powershell.exe New-Item -Path ${directory} -ItemType "directory" -Force`);
     } else {
         await cpp.exec(`mkdir -p ${directory}`);
     }
@@ -71,7 +71,7 @@ export async function execMkdir(directory: string): Promise<void> {
  */
 export function execScript(filePath: string): void {
     if (process.platform === 'win32') {
-        cp.exec(`powershell ${filePath}`);
+        cp.exec(`powershell.exe -file ${filePath}`);
     } else {
         cp.exec(`bash ${filePath}`);
     }
