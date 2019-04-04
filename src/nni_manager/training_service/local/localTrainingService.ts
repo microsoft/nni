@@ -353,19 +353,17 @@ class LocalTrainingService implements TrainingService {
         }
     }
 
-    private getScript(localTrailConfig: TrialConfig, workingDirectory: string): string{
-        let script: string;
+    private getScript(localTrailConfig: TrialConfig, workingDirectory: string): string[]{
+        let script: string[] = [];
         if (process.platform === "win32") {
-            script = 
-                `cmd /c ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}
-                 $NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds
-                 $NOW_DATE = "$NOW_DATE" + "000"
-                 Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`;
+            script.push(`cmd /c ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`);
+            script.push(`$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`);
+            script.push(`$NOW_DATE = "$NOW_DATE" + "000"`);
+            script.push(`Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`);
         }
         else{
-            script = 
-                `eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}
-                 echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`;
+            script.push(`eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`);
+            script.push(`echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`);
         }
         return script;
     }
@@ -385,18 +383,20 @@ class LocalTrainingService implements TrainingService {
         for (const variable of variables) {
             runScriptLines.push(setEnvVariable(variable));
         }
-        const script: string = this.getScript(this.localTrailConfig, trialJobDetail.workingDirectory);
-        runScriptLines.push(script);
+        const scripts: string[] = this.getScript(this.localTrailConfig, trialJobDetail.workingDirectory);
+        scripts.forEach(script => {
+            runScriptLines.push(script); 
+        });
         await execMkdir(trialJobDetail.workingDirectory);
         await execMkdir(path.join(trialJobDetail.workingDirectory, '.nni'));
         await execNewFile(path.join(trialJobDetail.workingDirectory, '.nni', 'metrics'));
         const scriptName: string = getScriptName('run');
         await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, scriptName), runScriptLines.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
-        const process: cp.ChildProcess = execScript(path.join(trialJobDetail.workingDirectory, scriptName));
+        const trialJobProcess: cp.ChildProcess = execScript(path.join(trialJobDetail.workingDirectory, scriptName));
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
         trialJobDetail.startTime = Date.now();
-        trialJobDetail.pid = process.pid;
+        trialJobDetail.pid = trialJobProcess.pid;
         this.setExtraProperties(trialJobDetail, resource);
 
         let buffer: Buffer = Buffer.alloc(0);

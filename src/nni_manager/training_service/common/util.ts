@@ -83,11 +83,11 @@ export async function execNewFile(filename: string): Promise<void> {
  * run script
  * @param filePath
  */
-export function execScript(filePath: string): void {
+export function execScript(filePath: string): cp.ChildProcess {
     if (process.platform === 'win32') {
-        cp.exec(`powershell.exe -file ${filePath}`);
+        return cp.exec(`powershell.exe -file ${filePath}`);
     } else {
-        cp.exec(`bash ${filePath}`);
+        return cp.exec(`bash ${filePath}`);
     }
 }
 
