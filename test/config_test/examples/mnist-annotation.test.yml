@@ -6,8 +6,6 @@ trialConcurrency: 2
 
 tuner:
   builtinTunerName: Random
-  classArgs:
-    optimize_mode: maximize
 assessor:
   builtinAssessorName: Medianstop
   classArgs:

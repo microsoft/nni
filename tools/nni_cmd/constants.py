@@ -30,6 +30,8 @@ WARNING_INFO = 'WARNING: %s'
 
 DEFAULT_REST_PORT = 8080
 
+REST_TIME_OUT = 20
+
 EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0m' \
                           '-----------------------------------------------------------------------\n' \
                           'The experiment id is %s\n'\

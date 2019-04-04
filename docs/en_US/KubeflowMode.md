@@ -69,7 +69,7 @@ kubeflowConfig:
 
 
 ## Run an experiment
-Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of kubeflow. The NNI config yml file's content is like: 
+Use `examples/trials/mnist` as an example. This is a tensorflow job, and use tf-operator of kubeflow. The NNI config YAML file's content is like: 
 ```
 authorName: default
 experimentName: example_mnist
@@ -119,9 +119,9 @@ kubeflowConfig:
     path: {your_nfs_server_export_path}
 ```
 
-Note: You should explicitly set `trainingServicePlatform: kubeflow` in NNI config yml file if you want to start experiment in kubeflow mode. 
+Note: You should explicitly set `trainingServicePlatform: kubeflow` in NNI config YAML file if you want to start experiment in kubeflow mode. 
 
-If you want to run Pytorch jobs, you could set your config files as follow:
+If you want to run PyTorch jobs, you could set your config files as follow:
 ```
 authorName: default
 experimentName: example_mnist_distributed_pytorch
@@ -195,5 +195,8 @@ You can see the kubeflow tfjob created by NNI in your Kubernetes dashboard.
 Notice: In kubeflow mode, NNIManager will start a rest server and listen on a port which is your NNI WebUI's port plus 1. For example, if your WebUI port is `8080`, the rest server will listen on `8081`, to receive metrics from trial job running in Kubernetes. So you should `enable 8081` TCP port in your firewall rule to allow incoming traffic. 
 
 Once a trial job is completed, you can goto NNI WebUI's overview page (like http://localhost:8080/oview) to check trial's information. 
+
+## version check
+NNI support version check feature in since version 0.6, [refer](PAIMode.md)
 
 Any problems when using NNI in kubeflow mode, please create issues on [NNI Github repo](https://github.com/Microsoft/nni).

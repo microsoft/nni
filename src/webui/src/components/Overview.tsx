@@ -20,6 +20,7 @@ require('../static/style/overviewTitle.scss');
 
 interface OverviewState {
     tableData: Array<TableObj>;
+    experimentAPI: object;
     searchSpace: object;
     status: string;
     errorStr: string;
@@ -33,6 +34,8 @@ interface OverviewState {
     isTop10: boolean;
     titleMaxbgcolor: string;
     titleMinbgcolor?: string;
+    // trial stdout is content(false) or link(true)
+    isLogCollection: boolean;
 }
 
 class Overview extends React.Component<{}, OverviewState> {
@@ -45,6 +48,7 @@ class Overview extends React.Component<{}, OverviewState> {
         super(props);
         this.state = {
             searchSpace: {},
+            experimentAPI: {},
             status: '',
             errorStr: '',
             trialProfile: {
@@ -76,7 +80,8 @@ class Overview extends React.Component<{}, OverviewState> {
                 totalCurrentTrial: 0
             },
             isTop10: true,
-            titleMaxbgcolor: '#999'
+            titleMaxbgcolor: '#999',
+            isLogCollection: false
         };
     }
 
@@ -95,6 +100,12 @@ class Overview extends React.Component<{}, OverviewState> {
                     const endTimenum = sessionData.endTime;
                     const assessor = sessionData.params.assessor;
                     const advisor = sessionData.params.advisor;
+                     // default logCollection is true
+                    const logCollection = res.data.params.logCollection;
+                    let expLogCollection: boolean = false;
+                    if (logCollection !== undefined && logCollection !== 'none') {
+                        expLogCollection = true;
+                    }
                     trialPro.push({
                         id: sessionData.id,
                         author: sessionData.params.authorName,
@@ -111,7 +122,8 @@ class Overview extends React.Component<{}, OverviewState> {
                         tuner: sessionData.params.tuner,
                         assessor: assessor ? assessor : undefined,
                         advisor: advisor ? advisor : undefined,
-                        clusterMetaData: clusterMetaData ? clusterMetaData : undefined
+                        clusterMetaData: clusterMetaData ? clusterMetaData : undefined,
+                        logCollection: logCollection
                     });
                     // search space format loguniform max and min
                     const temp = sessionData.params.searchSpace;
@@ -133,8 +145,10 @@ class Overview extends React.Component<{}, OverviewState> {
                     });
                     if (this._isMounted) {
                         this.setState({
+                            experimentAPI: res.data,
                             trialProfile: trialPro[0],
-                            searchSpace: searchSpace
+                            searchSpace: searchSpace,
+                            isLogCollection: expLogCollection
                         });
                     }
                 }
@@ -379,7 +393,7 @@ class Overview extends React.Component<{}, OverviewState> {
         const {
             trialProfile, searchSpace, tableData, accuracyData,
             accNodata, status, errorStr, trialNumber, bestAccuracy,
-            titleMaxbgcolor, titleMinbgcolor
+            titleMaxbgcolor, titleMinbgcolor, isLogCollection, experimentAPI
         } = this.state;
 
         return (
@@ -410,13 +424,11 @@ class Overview extends React.Component<{}, OverviewState> {
                         </Row>
                     </Col>
                     <Col span={8} className="overviewBoder">
-                        <Title1 text="Trial Profile" icon="4.png" />
+                        <Title1 text="Profile" icon="4.png" />
                         <Row className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
                             <div className="experiment searchSpace">
-                                <TrialPro
-                                    tiralProInfo={trialProfile}
-                                />
+                            <TrialPro experiment={experimentAPI} />
                             </div>
                         </Row>
                     </Col>
@@ -453,6 +465,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     <Col span={16} id="succeTable">
                         <SuccessTable
                             tableSource={tableData}
+                            logCollection={isLogCollection}
                             trainingPlatform={trialProfile.trainingServicePlatform}
                         />
                     </Col>

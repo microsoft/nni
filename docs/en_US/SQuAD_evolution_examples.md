@@ -2,8 +2,7 @@
 This example shows us how to use Genetic Algorithm to find good model architectures for Reading Comprehension.
 
 ## 1. Search Space
-Since attention and recurrent neural network (RNN) have been proven effective in Reading Comprehension.
-We conclude the search space as follow:
+Since attention and RNN have been proven effective in Reading Comprehension, we conclude the search space as follow:
 
 1. IDENTITY (Effectively means keep training).
 2. INSERT-RNN-LAYER (Inserts a LSTM. Comparing the performance of GRU and LSTM in our experiment, we decided to use LSTM here.)
