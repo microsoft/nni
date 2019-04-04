@@ -19,4 +19,4 @@ Contents
     FAQ
     Contribution
     Changelog<RELEASE>
-    Research Blog<ResearchBlog/index>
+    Research Blog<Blog/index>
