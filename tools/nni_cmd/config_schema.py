@@ -22,133 +22,133 @@ import os
 from schema import Schema, And, Use, Optional, Regex, Or
 
 common_schema = {
-'authorName': str,
-'experimentName': str,
-Optional('description'): str,
-'trialConcurrency': And(int, lambda n: 1 <=n <= 999999),
-Optional('maxExecDuration'): Regex(r'^[1-9][0-9]*[s|m|h|d]$'),
-Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
-'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller']),
-Optional('searchSpacePath'): os.path.exists,
-Optional('multiPhase'): bool,
-Optional('multiThread'): bool,
-Optional('nniManagerIp'): str,
-Optional('logDir'): os.path.isdir,
-Optional('debug'): bool,
-Optional('logLevel'): Or('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
-Optional('logCollection'): Or('http', 'none'),
-'useAnnotation': bool,
-Optional('advisor'): Or({
-    'builtinAdvisorName': Or('Hyperband'),
-    'classArgs': {
-        'optimize_mode': Or('maximize', 'minimize'),
-        Optional('R'): int,
-        Optional('eta'): int
-    },
-    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
-},{
-    'codeDir': os.path.exists,
-    'classFileName': str,
-    'className': str,
-    Optional('classArgs'): dict,
-    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
-}),
-Optional('tuner'): Or({
-    'builtinTunerName': Or('TPE', 'Anneal', 'SMAC', 'Evolution'),
-    Optional('classArgs'): {
-        'optimize_mode': Or('maximize', 'minimize')
-    },
-    Optional('includeIntermediateResults'): bool,
-    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
-},{
-    'builtinTunerName': Or('BatchTuner', 'GridSearch', 'Random'),
-    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
-},{
-    'builtinTunerName': 'NetworkMorphism',
-    'classArgs': {
-        Optional('optimize_mode'): Or('maximize', 'minimize'),
-        Optional('task'): And(str, lambda x: x in ['cv','nlp','common']),
-        Optional('input_width'):  int,
-        Optional('input_channel'):  int,
-        Optional('n_output_node'):  int,
+    'authorName': str,
+    'experimentName': str,
+    Optional('description'): str,
+    'trialConcurrency': And(int, lambda n: 1 <= n <= 999999),
+    Optional('maxExecDuration'): Regex(r'^[1-9][0-9]*[s|m|h|d]$'),
+    Optional('maxTrialNum'): And(int, lambda x: 1 <= x <= 99999),
+    'trainingServicePlatform': And(str, lambda x: x in ['remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'aether']),
+    Optional('searchSpacePath'): os.path.exists,
+    Optional('multiPhase'): bool,
+    Optional('multiThread'): bool,
+    Optional('nniManagerIp'): str,
+    Optional('logDir'): os.path.isdir,
+    Optional('debug'): bool,
+    Optional('logLevel'): Or('trace', 'debug', 'info', 'warning', 'error', 'fatal'),
+    Optional('logCollection'): Or('http', 'none'),
+    'useAnnotation': bool,
+    Optional('advisor'): Or({
+        'builtinAdvisorName': Or('Hyperband'),
+        'classArgs': {
+            'optimize_mode': Or('maximize', 'minimize'),
+            Optional('R'): int,
+            Optional('eta'): int
         },
-    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
-},{
-    'builtinTunerName': 'MetisTuner',
-    'classArgs': {
-        Optional('optimize_mode'): Or('maximize', 'minimize'),
-        Optional('no_resampling'):  bool,
-        Optional('no_candidates'):  bool,
-        Optional('selection_num_starting_points'):  int,
-        Optional('cold_start_num'):  int,
+        Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+    }, {
+        'codeDir': os.path.exists,
+        'classFileName': str,
+        'className': str,
+        Optional('classArgs'): dict,
+        Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+    }),
+    Optional('tuner'): Or({
+        'builtinTunerName': Or('TPE', 'Anneal', 'SMAC', 'Evolution'),
+        Optional('classArgs'): {
+            'optimize_mode': Or('maximize', 'minimize')
         },
-    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
-},{
-    'codeDir': os.path.exists,
-    'classFileName': str,
-    'className': str,
-    Optional('classArgs'): dict,
-    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
-}),
-Optional('assessor'): Or({
-    'builtinAssessorName': lambda x: x in ['Medianstop'],
-    Optional('classArgs'): {
-        Optional('optimize_mode'): Or('maximize', 'minimize'),
-        Optional('start_step'): And(int, lambda x: 0 <= x <= 9999)
-    },
-    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
-},{
-    'builtinAssessorName': lambda x: x in ['Curvefitting'],
-    Optional('classArgs'): {
-        'epoch_num': And(int, lambda x: 0 <= x <= 9999),
-        Optional('optimize_mode'): Or('maximize', 'minimize'),
-        Optional('start_step'): And(int, lambda x: 0 <= x <= 9999),
-        Optional('threshold'): And(float, lambda x: 0.0 <= x <= 9999.0),
-        Optional('gap'): And(int, lambda x: 1 <= x <= 9999)
-    },
-    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
-},{
-    'codeDir': os.path.exists,
-    'classFileName': str,
-    'className': str,
-    Optional('classArgs'): dict,
-    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
-}),
+        Optional('includeIntermediateResults'): bool,
+        Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+    }, {
+        'builtinTunerName': Or('BatchTuner', 'GridSearch', 'Random'),
+        Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+    }, {
+        'builtinTunerName': 'NetworkMorphism',
+        'classArgs': {
+            Optional('optimize_mode'): Or('maximize', 'minimize'),
+            Optional('task'): And(str, lambda x: x in ['cv', 'nlp', 'common']),
+            Optional('input_width'):  int,
+            Optional('input_channel'):  int,
+            Optional('n_output_node'):  int,
+        },
+        Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+    }, {
+        'builtinTunerName': 'MetisTuner',
+        'classArgs': {
+            Optional('optimize_mode'): Or('maximize', 'minimize'),
+            Optional('no_resampling'):  bool,
+            Optional('no_candidates'):  bool,
+            Optional('selection_num_starting_points'):  int,
+            Optional('cold_start_num'):  int,
+        },
+        Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+    }, {
+        'codeDir': os.path.exists,
+        'classFileName': str,
+        'className': str,
+        Optional('classArgs'): dict,
+        Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+    }),
+    Optional('assessor'): Or({
+        'builtinAssessorName': lambda x: x in ['Medianstop'],
+        Optional('classArgs'): {
+            Optional('optimize_mode'): Or('maximize', 'minimize'),
+            Optional('start_step'): And(int, lambda x: 0 <= x <= 9999)
+        },
+        Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
+    }, {
+        'builtinAssessorName': lambda x: x in ['Curvefitting'],
+        Optional('classArgs'): {
+            'epoch_num': And(int, lambda x: 0 <= x <= 9999),
+            Optional('optimize_mode'): Or('maximize', 'minimize'),
+            Optional('start_step'): And(int, lambda x: 0 <= x <= 9999),
+            Optional('threshold'): And(float, lambda x: 0.0 <= x <= 9999.0),
+            Optional('gap'): And(int, lambda x: 1 <= x <= 9999)
+        },
+        Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999)
+    }, {
+        'codeDir': os.path.exists,
+        'classFileName': str,
+        'className': str,
+        Optional('classArgs'): dict,
+        Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+    }),
 }
 
 common_trial_schema = {
-'trial':{
-    'command': str,
-    'codeDir': os.path.exists,
-    'gpuNum': And(int, lambda x: 0 <= x <= 99999)
+    'trial': {
+        'command': str,
+        'codeDir': os.path.exists,
+        'gpuNum': And(int, lambda x: 0 <= x <= 99999)
     }
 }
 
 pai_trial_schema = {
-'trial':{
-    'command': str,
-    'codeDir': os.path.exists,
-    'gpuNum': And(int, lambda x: 0 <= x <= 99999),
-    'cpuNum': And(int, lambda x: 0 <= x <= 99999),
-    'memoryMB': int,
-    'image': str,
-    Optional('shmMB'): int,
-    Optional('dataDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
-    Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
-    Optional('virtualCluster'): str
+    'trial': {
+        'command': str,
+        'codeDir': os.path.exists,
+        'gpuNum': And(int, lambda x: 0 <= x <= 99999),
+        'cpuNum': And(int, lambda x: 0 <= x <= 99999),
+        'memoryMB': int,
+        'image': str,
+        Optional('shmMB'): int,
+        Optional('dataDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
+        Optional('outputDir'): Regex(r'hdfs://(([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(/.*)?'),
+        Optional('virtualCluster'): str
     }
 }
 
 pai_config_schema = {
-'paiConfig':{
-  'userName': str,
-  'passWord': str,
-  'host': str
-}
+    'paiConfig': {
+        'userName': str,
+        'passWord': str,
+        'host': str
+    }
 }
 
 kubeflow_trial_schema = {
-'trial':{
+    'trial': {
         'codeDir':  os.path.exists,
         Optional('ps'): {
             'replicas': int,
@@ -166,19 +166,19 @@ kubeflow_trial_schema = {
             'memoryMB': int,
             'image': str
         },
-        Optional('worker'):{
+        Optional('worker'): {
             'replicas': int,
             'command': str,
             'gpuNum': And(int, lambda x: 0 <= x <= 99999),
             'cpuNum': And(int, lambda x: 0 <= x <= 99999),
             'memoryMB': int,
             'image': str
-        } 
+        }
     }
 }
 
 kubeflow_config_schema = {
-    'kubeflowConfig':Or({
+    'kubeflowConfig': Or({
         'operator': Or('tf-operator', 'pytorch-operator'),
         'apiVersion': str,
         Optional('storage'): Or('nfs', 'azureStorage'),
@@ -186,7 +186,7 @@ kubeflow_config_schema = {
             'server': str,
             'path': str
         }
-    },{
+    }, {
         'operator': Or('tf-operator', 'pytorch-operator'),
         'apiVersion': str,
         Optional('storage'): Or('nfs', 'azureStorage'),
@@ -202,7 +202,7 @@ kubeflow_config_schema = {
 }
 
 frameworkcontroller_trial_schema = {
-    'trial':{
+    'trial': {
         'codeDir':  os.path.exists,
         'taskRoles': [{
             'name': str,
@@ -221,14 +221,14 @@ frameworkcontroller_trial_schema = {
 }
 
 frameworkcontroller_config_schema = {
-    'frameworkcontrollerConfig':Or({
+    'frameworkcontrollerConfig': Or({
         Optional('storage'): Or('nfs', 'azureStorage'),
         Optional('serviceAccountName'): str,
         'nfs': {
             'server': str,
             'path': str
         }
-    },{
+    }, {
         Optional('storage'): Or('nfs', 'azureStorage'),
         Optional('serviceAccountName'): str,
         'keyVault': {
@@ -242,28 +242,44 @@ frameworkcontroller_config_schema = {
     })
 }
 
+aether_trial_schema = {
+    'trial': {
+        'codeDir': os.path.exists,
+        'baseGraph': os.path.exists,
+        'outputNodeAlias': Regex('([0-9]|[a-f]){8}'),
+        'outputName': str,
+    }
+}
 
 machine_list_schima = {
-Optional('machineList'):[Or({
-    'ip': str,
-    Optional('port'): And(int, lambda x: 0 < x < 65535),
-    'username': str,
-    'passwd': str
-    },{
-    'ip': str,
-    Optional('port'): And(int, lambda x: 0 < x < 65535),
-    'username': str,
-    'sshKeyPath': os.path.exists,
-    Optional('passphrase'): str
-})]
+    Optional('machineList'): [Or({
+        'ip': str,
+        Optional('port'): And(int, lambda x: 0 < x < 65535),
+        'username': str,
+        'passwd': str
+    },
+        {
+            'ip': str,
+            Optional('port'): And(int, lambda x: 0 < x < 65535),
+            'username': str,
+            'sshKeyPath': os.path.exists,
+            Optional('passphrase'): str
+    })]
 }
 
 LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
 
-REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine_list_schima})
+REMOTE_CONFIG_SCHEMA = Schema(
+    {**common_schema, **common_trial_schema, **machine_list_schima})
 
-PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
+PAI_CONFIG_SCHEMA = Schema(
+    {**common_schema, **pai_trial_schema, **pai_config_schema})
 
-KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
+KUBEFLOW_CONFIG_SCHEMA = Schema(
+    {**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
 
-FRAMEWORKCONTROLLER_CONFIG_SCHEMA = Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema})
+FRAMEWORKCONTROLLER_CONFIG_SCHEMA = Schema(
+    {**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema})
+
+AETHER_CONFIG_SCHEMA = Schema(
+    {**common_schema, **aether_trial_schema})

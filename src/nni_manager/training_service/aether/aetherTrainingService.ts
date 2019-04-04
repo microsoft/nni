@@ -53,13 +53,14 @@ class AetherTrainingService implements TrainingService {
     }
 
     public  readonly trialJobsMap: Map<string, AetherTrialJobDetail>;
-    private aetherClientExePath: string = '/fake/path/to/exe';
+    private aetherClientExePath: string = 'echo';
     private readonly metricsEmitter: EventEmitter;
     private nextTrialSequenceId: number;
     private readonly log!: Logger;
     private nniManagerIpConfig!: NNIManagerIpConfig;
     private aetherJobConfig!: AetherConfig;
     private readonly runDeferred: Deferred<void>;
+    private restServerAddress!: string;
 
     constructor() {
         this.log = getLogger();
@@ -73,15 +74,15 @@ class AetherTrainingService implements TrainingService {
     public async run(): Promise<void> {
         this.log.info('Run Aether training service.');
         const restServer: AetherJobRestServer = component.get(AetherJobRestServer);
+        this.restServerAddress = restServer.endPoint;
         await restServer.start();
 
         this.log.info(`Aether Training service rest server listening on: ${restServer.endPoint}`);
 
-        this.runDeferred.promise.then(() => {
-            this.log.info('Aether Training service exit.');
-        });
+        await this.runDeferred.promise;
+        this.log.info('Aether Training service exit.');
 
-        return this.runDeferred.promise;
+        return Promise.resolve();
     }
 
     public async listTrialJobs(): Promise<AetherTrialJobDetail[]> {
@@ -98,7 +99,7 @@ class AetherTrainingService implements TrainingService {
     public async getTrialJob(trialJobId: string): Promise<AetherTrialJobDetail> {
         const trial: AetherTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (!trial) {
-            return Promise.reject(`Trial job ${trialJobId} not found`);
+            return Promise.reject(new Error(`Trial job ${trialJobId} not found`));
         }
 
         return Promise.resolve(trial);
@@ -107,17 +108,20 @@ class AetherTrainingService implements TrainingService {
     public async submitTrialJob(form: JobApplicationForm): Promise<AetherTrialJobDetail> {
         const deferred: Deferred<AetherTrialJobDetail> = new Deferred<AetherTrialJobDetail>();
         if (!this.nniManagerIpConfig) {
-            return Promise.reject('nnimanager ip not initialized');
+            return Promise.reject(new Error('nnimanager ip not initialized'));
         }
         if (!this.aetherJobConfig) {
-            return Promise.reject('Aether job config not initialized');
+            return Promise.reject(new Error('Aether job config not initialized'));
+        }
+        if (!this.restServerAddress) {
+            return Promise.reject(new Error('Training Service Restful server for Aether Client not initialized'));
         }
 
         const trialJobId: string = uniqueString(5);
         const trialSequencdId: number = this.generateSequenceId();
         const trialWorkingDirectory: string = path.join(getExperimentRootDir(), 'trials', trialJobId);
-        const clientCmdArgs: string[] = [this.nniManagerIpConfig.nniManagerIp, getExperimentId(), trialJobId];
-        this.log.debug(`execute command: ${this.aetherClientExePath} ${clientCmdArgs.join(' ')}`);
+        const clientCmdArgs: string[] = [this.restServerAddress, getExperimentId(), trialJobId];
+        this.log.info(`execute command: ${this.aetherClientExePath} ${clientCmdArgs.join(' ')}`);
         const clientProc: ChildProcess = spawn(this.aetherClientExePath, clientCmdArgs);
         const trialDetail: AetherTrialJobDetail = new AetherTrialJobDetail(
             trialJobId,
@@ -129,10 +133,9 @@ class AetherTrainingService implements TrainingService {
             clientProc,
             this.aetherJobConfig
         );
-
+        this.trialJobsMap.set(trialJobId, trialDetail);
         const guid: string = await trialDetail.guid.promise;
         trialDetail.url = `aether:\\experiment\\${guid}`;
-        this.trialJobsMap.set(trialJobId, trialDetail);
         deferred.resolve(trialDetail);
 
         return deferred.promise;
@@ -152,7 +155,7 @@ class AetherTrainingService implements TrainingService {
     public async cancelTrialJob(trialJobId: string): Promise<void> {
         const trial: AetherTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (!trial) {
-            return Promise.reject(`Trial ${trialJobId} not found`);
+            return Promise.reject(new Error(`Trial ${trialJobId} not found`));
         }
         trial.clientProc.kill();
         trial.status = 'SYS_CANCELED';  //USER or SYS CANCELLED?
@@ -166,11 +169,11 @@ class AetherTrainingService implements TrainingService {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
                 this.nniManagerIpConfig = <NNIManagerIpConfig> JSON.parse(value);
                 break;
-            case TrialConfigMetadataKey.AETHER_CONFIG:
+            case TrialConfigMetadataKey.TRIAL_CONFIG:
                 this.aetherJobConfig = <AetherConfig> JSON.parse(value);
                 break;
             default:
-                throw new Error(`Unknown key: ${key}`);
+                return Promise.reject(new Error(`Unknown key: ${key}`));
         }
 
         return Promise.resolve();

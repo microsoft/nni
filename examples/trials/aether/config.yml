@@ -1,0 +1,16 @@
+authorName: default
+experimentName: example_aether
+trialConcurrency: 1
+maxExecDuration: 2h
+maxTrialNum: 1
+trainingServicePlatform: aether
+searchSpacePath: search_space.json
+useAnnotation: false
+nniManagerIp: 127.0.0.1
+tuner:
+  builtinTunerName: TPE
+trial:
+  codeDir: .
+  baseGraph: hello.json
+  outputNodeAlias: 184eb95a
+  outputName: OutputFile

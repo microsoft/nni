@@ -40,6 +40,7 @@ import {
 import { PAITrainingService } from './training_service/pai/paiTrainingService';
 import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
+import { AetherTrainingService } from './training_service/aether/aetherTrainingService';
 
 function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number, logDirectory: string, experimentLogLevel: string) {
     const createNew: boolean = (startExpMode === 'new');
@@ -58,6 +59,8 @@ async function initContainer(platformMode: string): Promise<void> {
         Container.bind(TrainingService).to(KubeflowTrainingService).scope(Scope.Singleton);
     } else if (platformMode === 'frameworkcontroller') {
         Container.bind(TrainingService).to(FrameworkControllerTrainingService).scope(Scope.Singleton);
+    } else if (platformMode === 'aether') {
+        Container.bind(TrainingService).to(AetherTrainingService).scope(Scope.Singleton);
     }
     else {
         throw new Error(`Error: unsupported mode: ${mode}`);
@@ -71,7 +74,7 @@ async function initContainer(platformMode: string): Promise<void> {
 }
 
 function usage(): void {
-    console.info('usage: node main.js --port <port> --mode <local/remote/pai/kubeflow/frameworkcontroller> --start_mode <new/resume> --experiment_id <id>');
+    console.info('usage: node main.js --port <port> --mode <local/remote/pai/kubeflow/frameworkcontroller/aether> --start_mode <new/resume> --experiment_id <id>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -83,7 +86,7 @@ if (!strPort || strPort.length === 0) {
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'].includes(mode)) {
+if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'aether'].includes(mode)) {
     console.log(`FATAL: unknown mode: ${mode}`);
     usage();
     process.exit(1);

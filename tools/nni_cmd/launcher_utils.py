@@ -20,7 +20,7 @@
 
 import os
 import json
-from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA
+from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, AETHER_CONFIG_SCHEMA
 from .common_utils import get_json_content, print_error, print_warning, print_normal
 
 def expand_path(experiment_config, key):
@@ -76,6 +76,10 @@ def parse_path(experiment_config, config_path):
         for index in range(len(experiment_config['machineList'])):
             parse_relative_path(root_path, experiment_config['machineList'][index], 'sshKeyPath')
 
+    # for Aether Trial
+    if experiment_config.get('trial') and experiment_config.get('trial').get('codeDir') and experiment_config.get('trial').get('baseGraph'):
+        parse_relative_path(experiment_config['trial']['codeDir'], experiment_config['trial'], 'baseGraph')
+
 def validate_search_space_content(experiment_config):
     '''Validate searchspace content, 
        if the searchspace file is not json format or its values does not contain _type and _value which must be specified, 
@@ -122,18 +126,21 @@ def validate_kubeflow_operators(experiment_config):
                 exit(1)
 
 def validate_common_content(experiment_config):
-    '''Validate whether the common values in experiment_config is valid'''
-    if not experiment_config.get('trainingServicePlatform') or \
-        experiment_config.get('trainingServicePlatform') not in ['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller']:
-        print_error('Please set correct trainingServicePlatform!')
-        exit(1)
     schema_dict = {
             'local': LOCAL_CONFIG_SCHEMA,
             'remote': REMOTE_CONFIG_SCHEMA,
             'pai': PAI_CONFIG_SCHEMA,
             'kubeflow': KUBEFLOW_CONFIG_SCHEMA,
-            'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA
+            'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA,
+            'aether': AETHER_CONFIG_SCHEMA
         }
+
+    '''Validate whether the common values in experiment_config is valid'''
+    if not experiment_config.get('trainingServicePlatform') or \
+        experiment_config.get('trainingServicePlatform') not in schema_dict.keys():
+        print_error('Please set correct trainingServicePlatform! Available: {}'.format(schema_dict.keys()))
+        exit(1)
+
     try:
         schema_dict.get(experiment_config['trainingServicePlatform']).validate(experiment_config)
         #set default value

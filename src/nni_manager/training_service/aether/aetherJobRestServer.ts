@@ -34,7 +34,7 @@ import { AetherTrainingService, AetherTrialJobDetail } from './aetherTrainingSer
 @component.Singleton
 export class AetherJobRestServer extends RestServer {
     @Inject
-    private readonly API_ROOT_URL: string = 'api/v1/nni-aether';
+    private readonly API_ROOT_URL: string = '/api/v1/nni-aether';
     private readonly aetherTrainingService: AetherTrainingService;
     private readonly expId: string = getExperimentId();
 
@@ -57,7 +57,7 @@ export class AetherJobRestServer extends RestServer {
 
     protected registerRestHandler(): void {
         this.app.use(bodyParser.json());
-        this.app.use(this.API_ROOT_URL, this.createRestHandler());
+        this.app.use(`${this.API_ROOT_URL}`, this.createRestHandler());
     }
 
     // tslint:disable-next-line:no-any
@@ -72,6 +72,7 @@ export class AetherJobRestServer extends RestServer {
 
     private createRestHandler(): Router {
         const router: Router = Router();
+        this.log.info(`expId: ${this.expId}`);
 
         // tslint:disable-next-line:typedef
         router.use((req: Request, res: Response, next) => {
@@ -80,11 +81,16 @@ export class AetherJobRestServer extends RestServer {
             next();
         });
 
+        router.get('/hello/', (req: Request, res: Response) => {
+            res.status(200);
+            res.send('hello world!');
+        });
+
         // report metric for trial
-        router.post(`update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
+        router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
-                this.log.debug(`Get update-metrics request, trial job id: ${req.params.trialId}`);
-                this.log.debug(`update-metrics body: ${JSON.stringify(req.body)}`);
+                this.log.info(`Get update-metrics request, trial job id: ${req.params.trialId}`);
+                this.log.info(`update-metrics body: ${JSON.stringify(req.body)}`);
 
                 this.handleTrialMetrics(req.body.jobId, req.body.metrics);
             } catch (err) {
@@ -96,9 +102,9 @@ export class AetherJobRestServer extends RestServer {
         });
 
         // update status of trial
-        router.post(`update-status/${this.expId}/:trialId`, (req: Request, res: Response) => {
+        router.post(`/update-status/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
-                this.log.debug(`update status of trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
+                this.log.info(`update status of trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
                 const trial: AetherTrialJobDetail | undefined = this.aetherTrainingService.trialJobsMap.get(req.params.trialId);
                 if (!trial) {
                     throw Error(`unable to find trial job by Id ${req.params.trialId}`);
@@ -109,12 +115,13 @@ export class AetherJobRestServer extends RestServer {
                 res.status(500);
                 res.send(err.message);
             }
+            res.send();
         });
 
         // return aether expriment id
-        router.post(`update-guid/${this.expId}/:trialId`, (req: Request, res: Response) => {
+        router.post(`/update-guid/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
-                this.log.debug(`aether GUID of trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
+                this.log.info(`aether GUID of trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
                 const trial: AetherTrialJobDetail | undefined = this.aetherTrainingService.trialJobsMap.get(req.params.trialId);
                 if (!trial) {
                     throw Error(`unable to find trial job by Id ${req.params.trialId}`);
@@ -125,17 +132,17 @@ export class AetherJobRestServer extends RestServer {
                 res.status(500);
                 res.send(err.message);
             }
+            res.send();
         });
 
         // get trial information
-        router.get(`trial-meta/${this.expId}/:trialId`, (req: Request, res: Response) => {
+        router.get(`/trial-meta/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
-                this.log.debug(`sending meta-data for trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
+                this.log.info(`sending meta-data for trial job ${req.params.trialId}: ${JSON.stringify(req.body)}`);
                 const trial: AetherTrialJobDetail | undefined = this.aetherTrainingService.trialJobsMap.get(req.params.trialId);
                 if (!trial) {
                     throw Error(`unable to find trial job by Id ${req.params.trialId}`);
                 }
-                res.status(400);
                 res.send(JSON.stringify(trial));
             } catch (err) {
                 this.log.error(err.message);

@@ -248,6 +248,13 @@ def set_frameworkcontroller_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
+def set_aether_config(experiment_config, port, config_file_name):
+    '''set aether configuration'''
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+    if not result:
+        return result, message
+    return set_trial_config(experiment_config, port, config_file_name), None
+
 def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
     request_data = dict()
@@ -303,6 +310,10 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'frameworkcontroller_config', 'value': experiment_config['frameworkcontrollerConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'aether':
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']}
+        )
 
     response = rest_post(experiment_url(port), json.dumps(request_data), 20)
     if check_response(response):
@@ -441,6 +452,22 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
+   
+    if experiment_config['trainingServicePlatform'] == 'aether':
+        print_normal('Setting aether config...')
+        config_result, err_msg = set_aether_config(experiment_config, args.port, config_file_name)
+        if config_result:
+            print_normal('Successfully set aether config!')
+        else:
+            if err_msg:
+                print_error('Failed! Error is: {}'.format(err_msg))
+            try:
+                cmds = ['pkill', str(rest_process.pid)]
+                call(cmds)
+            except Exception:
+                raise Exception(ERROR_INFO % 'Restful server stopped!')
+            exit(1)
+
 
     # start a new experiment
     print_normal('Starting experiment...')
