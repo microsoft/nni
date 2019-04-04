@@ -67,6 +67,19 @@ export async function execMkdir(directory: string): Promise<void> {
 }
 
 /**
+ * crete a new file
+ * @param filename 
+ */
+export async function execNewFile(filename: string): Promise<void> {
+    if (process.platform === 'win32') {
+        await cpp.exec(`powershell.exe New-Item -Path ${filename} -ItemType "file" -Force`);
+    } else {
+        await cpp.exec(`touch ${filename}`);
+    }
+    return Promise.resolve();
+}
+
+/**
  * run script
  * @param filePath
  */
@@ -118,6 +131,20 @@ export async function execKill(pid: string): Promise<void>{
         await cpp.exec(`pkill -P ${pid}`);
     }
     return Promise.resolve();
+}
+
+/**
+ * set environment variable
+ * @param  variable
+ * @returns command string  
+ */
+export function setEnvVariable(variable: { key: string; value: string }): string{
+    if (process.platform === 'win32') {
+        return `$env:${variable.key}="${variable.value}"`;
+    }
+    else{
+        return `export ${variable.key}=${variable.value}`;
+    }
 }
 
 

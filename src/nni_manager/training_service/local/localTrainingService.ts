@@ -34,7 +34,8 @@ import {
     HostJobApplicationForm, JobApplicationForm, HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus, isAlive } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus, isAlive, getNewLine } from '../../common/utils';
+import { execMkdir, getScriptName, execScript, setEnvVariable, execNewFile, execRemove, execKill } from '../common/util'
 
 const tkill = require('tree-kill');
 
@@ -352,43 +353,21 @@ class LocalTrainingService implements TrainingService {
         }
     }
 
-    private async runScript(localTrailConfig: TrialConfig, workingDirectory: string, variables: { key: string; value: string }[]):Promise<string[]>{
-        let cmdParameter: string[] = [];
-        const runScriptLines: string[] = [];
+    private getScript(localTrailConfig: TrialConfig, workingDirectory: string): string{
+        let script: string;
         if (process.platform === "win32") {
-            runScriptLines.push(`cd ${localTrailConfig.codeDir}`);
-            for (const variable of variables) {
-                runScriptLines.push(`$env:${variable.key}="${variable.value}"`);
-            }
-            runScriptLines.push(
-                `cmd /c ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
-                `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
-                `$NOW_DATE = "$NOW_DATE" + "000"`,
-                `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`
-            );
-            await cpp.exec(`powershell.exe mkdir ${workingDirectory}`);
-            await cpp.exec(`powershell.exe mkdir ${path.join(workingDirectory, '.nni')}`);
-            await cpp.exec(`powershell.exe New-Item ${path.join(workingDirectory, '.nni', 'metrics')}`);
-            await fs.promises.writeFile(path.join(workingDirectory, 'run.ps1'), runScriptLines.join('\r\n'), { encoding: 'utf8', mode: 0o777 });
-            cmdParameter.push("powershell");
-            cmdParameter.push("run.ps1");
+            script = 
+                `cmd /c ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}
+                 $NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds
+                 $NOW_DATE = "$NOW_DATE" + "000"
+                 Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`;
         }
         else{
-            runScriptLines.push('#!/bin/bash', `cd ${localTrailConfig.codeDir}`);
-            for (const variable of variables) {
-                runScriptLines.push(`export ${variable.key}=${variable.value}`);
-            }
-            runScriptLines.push(
-                `eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`, 
-                `echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`);
-            await cpp.exec(`mkdir -p ${workingDirectory}`);
-            await cpp.exec(`mkdir -p ${path.join(workingDirectory, '.nni')}`);
-            await cpp.exec(`touch ${path.join(workingDirectory, '.nni', 'metrics')}`);
-            await fs.promises.writeFile(path.join(workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
-            cmdParameter.push("bash");
-            cmdParameter.push("run.sh");
+            script = 
+                `eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}
+                 echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`;
         }
-        return Promise.resolve(cmdParameter);
+        return script;
     }
 
     private async runTrialJob(trialJobId: string, resource: {}): Promise<void> {
@@ -398,10 +377,23 @@ class LocalTrainingService implements TrainingService {
         if (!this.localTrailConfig) {
             throw new Error('trial config is not initialized');
         }
-        let cmd: string[] = await this.runScript(this.localTrailConfig, trialJobDetail.workingDirectory, variables);
+        const runScriptLines: string[] = [];
+        if (process.platform !== "win32"){
+            runScriptLines.push('#!/bin/bash');
+        }
+        runScriptLines.push(`cd ${this.localTrailConfig.codeDir}`);
+        for (const variable of variables) {
+            runScriptLines.push(setEnvVariable(variable));
+        }
+        const script: string = this.getScript(this.localTrailConfig, trialJobDetail.workingDirectory);
+        runScriptLines.push(script);
+        await execMkdir(trialJobDetail.workingDirectory);
+        await execMkdir(path.join(trialJobDetail.workingDirectory, '.nni'));
+        await execNewFile(path.join(trialJobDetail.workingDirectory, '.nni', 'metrics'));
+        const scriptName: string = getScriptName('run');
+        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, scriptName), runScriptLines.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
-        const process: cp.ChildProcess = cp.exec(`${cmd[0]} ${path.join(trialJobDetail.workingDirectory, cmd[1])}`);
-
+        const process: cp.ChildProcess = execScript(path.join(trialJobDetail.workingDirectory, scriptName));
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
         trialJobDetail.startTime = Date.now();
         trialJobDetail.pid = process.pid;
