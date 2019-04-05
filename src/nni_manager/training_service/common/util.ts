@@ -126,7 +126,7 @@ export async function execRemove(directory: string): Promise<void>{
  */
 export async function execKill(pid: string): Promise<void>{
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe kill ${pid}`);
+        await cpp.exec(`cmd /c taskkill /PID ${pid} /T`);
     } else {
         await cpp.exec(`pkill -P ${pid}`);
     }
