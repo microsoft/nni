@@ -4,8 +4,10 @@ $install_yarn = $TRUE
 $PIP_INSTALL = "python -m pip install ."
 
 # nodejs
-$nodeUrl = "https://aka.ms/nni/nodejs-download/win64"
+$version = "10.15.1"
+$nodeUrl = "https://nodejs.org/dist/v10.15.1/node-v10.15.1-win-x64.zip"
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
+$unzipNodeDir = "node-v$version-win-x64"
 
 $NNI_DEPENDENCY_FOLDER = "C:\tmp\$env:USERNAME"
 
@@ -31,7 +33,7 @@ $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
     New-Item $NNI_DEPENDENCY_FOLDER -ItemType Directory
 }
-$NNI_NODE_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-node.tar.gz"
+$NNI_NODE_ZIP = $NNI_DEPENDENCY_FOLDER+"\nni-node.zip"
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-yarn.tar.gz"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
@@ -41,7 +43,7 @@ $NNI_YARN = $NNI_YARN_FOLDER +"\bin\yarn"
 $NNI_VERSION_VALUE = $(git describe --tags)
 $NNI_VERSION_TEMPLATE = "999.0.0-developing"
 
-if(!(Test-Path $NNI_NODE_TARBALL)){
+if(!(Test-Path $NNI_NODE_ZIP)){
     Write-Host "Downloading Node..."
     (New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_ZIP)
 }
@@ -56,8 +58,8 @@ if ($install_node) {
     if(Test-Path $NNI_NODE_FOLDER){
         Remove-Item $NNI_NODE_FOLDER -Recurse -Force
     }
-    New-Item $NNI_NODE_FOLDER -ItemType Directory
-	cmd /c tar -xf $NNI_NODE_TARBALL -C $NNI_NODE_FOLDER --strip-components 1
+    Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
+    Rename-Item "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir" "nni-node"
      
     ### yarn install
     if(Test-Path $NNI_YARN_FOLDER){
