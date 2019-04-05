@@ -35,7 +35,7 @@ import {
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString, getJobCancelStatus, isAlive, getNewLine } from '../../common/utils';
-import { execMkdir, getScriptName, execScript, setEnvVariable, execNewFile, execRemove, execKill } from '../common/util'
+import { execMkdir, getScriptName, execScript, setEnvironmentVariable, execNewFile } from '../common/util'
 
 const tkill = require('tree-kill');
 
@@ -383,7 +383,7 @@ class LocalTrainingService implements TrainingService {
         }
         runScriptLines.push(`cd ${this.localTrailConfig.codeDir}`);
         for (const variable of variables) {
-            runScriptLines.push(setEnvVariable(variable));
+            runScriptLines.push(setEnvironmentVariable(variable));
         }
         const scripts: string[] = this.getScript(this.localTrailConfig, trialJobDetail.workingDirectory);
         scripts.forEach(script => {

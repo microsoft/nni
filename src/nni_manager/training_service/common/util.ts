@@ -138,7 +138,7 @@ export async function execKill(pid: string): Promise<void>{
  * @param  variable
  * @returns command string  
  */
-export function setEnvVariable(variable: { key: string; value: string }): string{
+export function setEnvironmentVariable(variable: { key: string; value: string }): string{
     if (process.platform === 'win32') {
         return `$env:${variable.key}="${variable.value}"`;
     }
