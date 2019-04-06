@@ -8,6 +8,8 @@ jobs:
   - script: |
       python -m pip install scikit-learn==0.20.0 --user
       python -m pip install keras==2.1.6 --user
+      python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
+      python -m pip install torchvision --user
       python -m pip install tensorflow-gpu==1.10.0 --user
     displayName: 'Install dependencies for integration tests'
   - script: |
@@ -32,5 +34,5 @@ jobs:
     displayName: 'Trial job metrics test'
   - script: |
       cd test
-      python config_test.py --ts local --exclude cifar10,smac,batchtuner
+      python config_test.py --ts local --local_gpu --exclude smac,batchtuner
     displayName: 'Examples and advanced features tests on local machine'
