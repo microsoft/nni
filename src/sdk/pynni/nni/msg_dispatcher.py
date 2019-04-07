@@ -92,7 +92,6 @@ class MsgDispatcher(MsgDispatcherBase):
         """
         self.tuner.update_search_space(data)
         send(CommandType.Initialized, '')
-        return
 
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
@@ -105,18 +104,15 @@ class MsgDispatcher(MsgDispatcherBase):
         # when parameters is None.
         if len(params_list) < len(ids):
             send(CommandType.NoMoreTrialJobs, _pack_parameter(ids[0], ''))
-        return
 
     def handle_update_search_space(self, data):
         self.tuner.update_search_space(data)
-        return
 
     def handle_add_customized_trial(self, data):
          # data: parameters
         id_ = _create_parameter_id()
         _customized_parameter_ids.add(id_)
         send(CommandType.NewTrialJob, _pack_parameter(id_, data, customized=True))
-        return
 
     def handle_report_metric_data(self, data):
         """
@@ -135,8 +131,6 @@ class MsgDispatcher(MsgDispatcherBase):
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
 
-        return
-
     def handle_trial_end(self, data):
         """
         data: it has three keys: trial_job_id, event, hyper_params
@@ -150,7 +144,6 @@ class MsgDispatcher(MsgDispatcherBase):
             _trial_history.pop(trial_job_id)
             if self.assessor is not None:
                 self.assessor.trial_end(trial_job_id, data['event'] == 'SUCCEEDED')
-        return
 
     def _handle_final_metric_data(self, data):
         """Call tuner to process final results
@@ -166,19 +159,19 @@ class MsgDispatcher(MsgDispatcherBase):
         """Call assessor to process intermediate results
         """
         if data['type'] != 'PERIODICAL':
-            return True
+            return
         if self.assessor is None:
-            return True
+            return
 
         trial_job_id = data['trial_job_id']
         if trial_job_id in _ended_trials:
-            return True
+            return
 
         history = _trial_history[trial_job_id]
         history[data['sequence']] = data['value']
         ordered_history = _sort_history(history)
         if len(ordered_history) < data['sequence']:  # no user-visible update since last time
-            return True
+            return
 
         try:
             result = self.assessor.assess_trial(trial_job_id, ordered_history)
