@@ -50,22 +50,22 @@ nnictl support commands:
 
   * Examples
 
-    `create a new experiment with the port: 8080`
+    > create a new experiment with the default port: 8080
 
     ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
     ```
 
-    `create a new experiment with specified port of restful server`
+    > create a new experiment with specified port of restful server
 
     ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml --port $8088
     ```
 
-    `create a new experiment with specified port of restful server and debug mode`
+    > create a new experiment with specified port of restful server and debug mode
 
     ```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml --port 8080 --debug
+    nnictl create --config nni/examples/trials/mnist/config.yml --port $8088 --debug
     ```
 
   Note:
@@ -97,7 +97,7 @@ nnictl support commands:
 
   * Example
 
-    `resume an experiment with specified port`
+    > resume an experiment with specified port
 
     ```bash
     nnictl resume $experiment_id --port $8080
@@ -190,7 +190,7 @@ nnictl support commands:
 
     * Example
 
-      `update experiment's concurrency`
+      > update experiment's concurrency
 
       ```bash
       nnictl update concurrency $experiment_id --value $concurrency_number
@@ -217,7 +217,7 @@ nnictl support commands:
 
     * Example
 
-      `update experiment's duration`
+      > update experiment's duration
 
       ```bash
       nnictl update duration $experiment_id --value $duration
@@ -243,7 +243,7 @@ nnictl support commands:
 
     * Example
 
-      `update experiment's trial num`
+      > update experiment's trial num
 
       ```bash
       nnictl update trialnum $experiment_id --value $trial_num
@@ -292,7 +292,7 @@ nnictl support commands:
 
     * Example
 
-      `kill trail job`
+      > kill trail job
 
       ```bash
       nnictl trial $trial_id --vexperiment $experiment_id
@@ -412,7 +412,7 @@ nnictl support commands:
 
   * Example
 
-    `Show the tail of stdout log content`
+    > Show the tail of stdout log content
 
     ```bash
     nnictl log stdout $experiment_id --tail $lines_number
@@ -535,7 +535,7 @@ nnictl support commands:
 
   * Example
 
-    `Install the packages needed in tuner SMAC`
+    > Install the packages needed in tuner SMAC
 
     ```bash
     nnictl package install --name=SMAC
