@@ -27,8 +27,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision
 
-sys.path.append("../")
-from network_morphism import utils
+import utils
 
 
 # set the logger format

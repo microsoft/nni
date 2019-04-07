@@ -19,3 +19,4 @@ Contents
     FAQ
     Contribution
     Changelog<RELEASE>
+    Blog<Blog/index>

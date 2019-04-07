@@ -1,15 +1,16 @@
 import * as React from 'react';
+import * as copy from 'copy-to-clipboard';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
-import JSONTree from 'react-json-tree';
 import { TableObj } from '../../static/interface';
-import { Row, Tabs } from 'antd';
+import { Row, Tabs, Button, message } from 'antd';
+import JSONTree from 'react-json-tree';
 const TabPane = Tabs.TabPane;
 
 interface OpenRowProps {
     trainingPlatform: string;
-    showLogModalOverview: Function;
     record: TableObj;
+    logCollection: boolean;
 }
 
 class OpenRow extends React.Component<OpenRowProps, {}> {
@@ -19,8 +20,17 @@ class OpenRow extends React.Component<OpenRowProps, {}> {
 
     }
 
+    copyParams = (record: TableObj) => {
+        let params = JSON.stringify(record.description.parameters);
+        if (copy(params)) {
+            message.success('Success copy parameters to clipboard in form of python dict !', 3);
+        } else {
+            message.error('Failed !', 2);
+        }
+    }
+
     render() {
-        const { trainingPlatform, record, showLogModalOverview } = this.props;
+        const { trainingPlatform, record, logCollection } = this.props;
 
         let isHasParameters = true;
         if (record.description.parameters.error) {
@@ -42,12 +52,19 @@ class OpenRow extends React.Component<OpenRowProps, {}> {
                             {
                                 isHasParameters
                                     ?
-                                    <JSONTree
-                                        hideRoot={true}
-                                        shouldExpandNode={() => true}  // default expandNode
-                                        getItemString={() => (<span />)}  // remove the {} items
-                                        data={openRowDataSource}
-                                    />
+                                    <div>
+                                        <JSONTree
+                                            hideRoot={true}
+                                            shouldExpandNode={() => true}  // default expandNode
+                                            getItemString={() => (<span />)}  // remove the {} items
+                                            data={openRowDataSource.parameters}
+                                        />
+                                        <Button
+                                            onClick={this.copyParams.bind(this, record)}
+                                        >
+                                            Copy as Python
+                                        </Button>
+                                    </div>
                                     :
                                     <div className="logpath">
                                         <span className="logName">Error: </span>
@@ -62,7 +79,7 @@ class OpenRow extends React.Component<OpenRowProps, {}> {
                                     <PaiTrialLog
                                         logStr={logPathRow}
                                         id={record.id}
-                                        showLogModal={showLogModalOverview}
+                                        logCollection={logCollection}
                                     />
                                     :
                                     <TrialLog logStr={logPathRow} id={record.id} />

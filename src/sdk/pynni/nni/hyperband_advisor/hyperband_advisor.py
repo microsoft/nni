@@ -143,7 +143,7 @@ class Bracket():
         self.s_max = s_max
         self.eta = eta
         self.n = math.ceil((s_max + 1) * (eta**s) / (s + 1) - _epsilon) # pylint: disable=invalid-name
-        self.r = R / eta**s                       # pylint: disable=invalid-name
+        self.r = R / eta**s                     # pylint: disable=invalid-name
         self.i = 0
         self.hyper_configs = []         # [ {id: params}, {}, ... ]
         self.configs_perf = []          # [ {id: [seq, acc]}, {}, ... ]

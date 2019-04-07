@@ -10,7 +10,7 @@ Frist, this is an example of how to write an automl algorithm based on MsgDispat
 Second, this implementation fully leverages Hyperband's internal parallelism. More specifically, the next bucket is not started strictly after the current bucket, instead, it starts when there is available resource.
 
 ## 3. Usage
-To use Hyperband, you should add the following spec in your experiment's yml config file:
+To use Hyperband, you should add the following spec in your experiment's YAML config file:
 
 ```
 advisor:
