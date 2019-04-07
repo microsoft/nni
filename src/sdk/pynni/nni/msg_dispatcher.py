@@ -92,7 +92,7 @@ class MsgDispatcher(MsgDispatcherBase):
         """
         self.tuner.update_search_space(data)
         send(CommandType.Initialized, '')
-        return True
+        return
 
     def handle_request_trial_jobs(self, data):
         # data: number or trial jobs
@@ -105,18 +105,18 @@ class MsgDispatcher(MsgDispatcherBase):
         # when parameters is None.
         if len(params_list) < len(ids):
             send(CommandType.NoMoreTrialJobs, _pack_parameter(ids[0], ''))
-        return True
+        return
 
     def handle_update_search_space(self, data):
         self.tuner.update_search_space(data)
-        return True
+        return
 
     def handle_add_customized_trial(self, data):
          # data: parameters
         id_ = _create_parameter_id()
         _customized_parameter_ids.add(id_)
         send(CommandType.NewTrialJob, _pack_parameter(id_, data, customized=True))
-        return True
+        return
 
     def handle_report_metric_data(self, data):
         """
@@ -135,7 +135,7 @@ class MsgDispatcher(MsgDispatcherBase):
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
 
-        return True
+        return
 
     def handle_trial_end(self, data):
         """
@@ -150,7 +150,7 @@ class MsgDispatcher(MsgDispatcherBase):
             _trial_history.pop(trial_job_id)
             if self.assessor is not None:
                 self.assessor.trial_end(trial_job_id, data['event'] == 'SUCCEEDED')
-        return True
+        return
 
     def _handle_final_metric_data(self, data):
         """Call tuner to process final results
