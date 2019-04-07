@@ -48,7 +48,20 @@ nnictl support commands:
   |--port, -p|False| |the port of restful server|
   |--debug, -d|False||set debug mode|
 
-  * Example
+  * Examples
+
+    `create a new experiment with the port: 8080`
+
+    ```bash
+    nnictl create --config nni/examples/trials/mnist/config.yml
+    ```
+
+    `create a new experiment with specified port of restful server`
+
+    ```bash
+    nnictl create --config nni/examples/trials/mnist/config.yml --port $8088
+    ```
+
     `create a new experiment with specified port of restful server and debug mode`
 
     ```bash
@@ -84,10 +97,10 @@ nnictl support commands:
 
   * Example
 
-    `resume an experiment`
+    `resume an experiment with specified port`
 
     ```bash
-    nnictl resume $experiment_id --port 8080
+    nnictl resume $experiment_id --port $8080
     ```
 
 <a name="stop"></a>
@@ -397,6 +410,14 @@ nnictl support commands:
   |--tail, -t|  False| |show tail lines of stdout|
   |--path, -p|  False| |show the path of stdout file|
 
+  * Example
+
+    `Show the tail of stdout log content`
+
+    ```bash
+    nnictl log stdout $experiment_id --tail $lines_number
+    ```
+
 * __nnictl log stderr__
   * Description
 
@@ -511,6 +532,14 @@ nnictl support commands:
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
   |--name|  True| |The name of package to be installed|
+
+  * Example
+
+    `Install the packages needed in tuner SMAC`
+
+    ```bash
+    nnictl package install --name=SMAC
+    ```
 
 * __nnictl package show__
 
