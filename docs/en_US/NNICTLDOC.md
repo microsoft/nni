@@ -246,7 +246,7 @@ nnictl support commands:
       > update experiment's trial num
 
       ```bash
-      nnictl update trialnum $experiment_id --value $trial_num
+      nnictl update trialnum --id $experiment_id --value $trial_num
       ```
 
 <a name="trial"></a>
