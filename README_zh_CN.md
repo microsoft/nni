@@ -69,7 +69,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
       </td>
       <td>
       <ul>
-        <li><a href="docs/zh_CN/tutorial_1_CR_exp_local_api.md">本地计算机</a></li>
+        <li><a href="docs/en_US/LocalMode.md">本地计算机</a></li>
         <li><a href="docs/zh_CN/RemoteMachineMode.md">远程计算机</a></li>
         <li><a href="docs/zh_CN/PAIMode.md">OpenPAI</a></li>
         <li><a href="docs/zh_CN/KubeflowMode.md">Kubeflow</a></li>
@@ -193,7 +193,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **教程**
 
-* [在本机运行 Experiment (支持多 GPU 卡)](docs/zh_CN/tutorial_1_CR_exp_local_api.md)
+* [在本机运行 Experiment (支持多 GPU 卡)](docs/en_US/LocalMode.md)
 * [在多机上运行 Experiment](docs/zh_CN/RemoteMachineMode.md)
 * [在 OpenPAI 上运行 Experiment](docs/zh_CN/PAIMode.md)
 * [在 Kubeflow 上运行 Experiment。](docs/zh_CN/KubeflowMode.md)
