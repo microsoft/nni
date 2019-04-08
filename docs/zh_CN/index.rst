@@ -19,4 +19,4 @@ Neural Network Intelligence（NNI）文档
     常见问答<FAQ>
     贡献<Contribution>
     版本日志<RELEASE>
-    Blog<Blog/index>
+    博客<Blog/index>
