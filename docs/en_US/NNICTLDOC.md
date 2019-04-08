@@ -56,16 +56,16 @@ nnictl support commands:
     nnictl create --config nni/examples/trials/mnist/config.yml
     ```
 
-    > create a new experiment with specified port of restful server
+    > create a new experiment with specified port 8088
 
     ```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml --port $8088
+    nnictl create --config nni/examples/trials/mnist/config.yml --port 8088
     ```
 
-    > create a new experiment with specified port of restful server and debug mode
+    > create a new experiment with specified port 8088 and debug mode
 
     ```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml --port $8088 --debug
+    nnictl create --config nni/examples/trials/mnist/config.yml --port 8088 --debug
     ```
 
   Note:
@@ -97,10 +97,10 @@ nnictl support commands:
 
   * Example
 
-    > resume an experiment with specified port
+    > resume an experiment with specified port 8088
 
     ```bash
-    nnictl resume $experiment_id --port $8080
+    nnictl resume [experiment_id] --port 8088
     ```
 
 <a name="stop"></a>
@@ -128,7 +128,7 @@ nnictl support commands:
     2. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
 
       ```bash
-      nnictl stop $experiment_id
+      nnictl stop [experiment_id]
       ```
 
     3. Users could use 'nnictl stop all' to stop all experiments.
@@ -164,10 +164,10 @@ nnictl support commands:
 
     * Example
 
-      `update experiment's search space`
+      `update experiment's new search space with file dir 'examples/trials/mnist/search_space.json'`
 
       ```bash
-      nnictl update searchspace $experiment_id --file examples/trials/mnist/search_space.json
+      nnictl update searchspace [experiment_id] --file examples/trials/mnist/search_space.json
       ```
 
   * __nnictl update concurrency__  
@@ -193,7 +193,7 @@ nnictl support commands:
       > update experiment's concurrency
 
       ```bash
-      nnictl update concurrency $experiment_id --value $concurrency_number
+      nnictl update concurrency [experiment_id] --value [concurrency_number]
       ```
 
   * __nnictl update duration__  
@@ -220,7 +220,7 @@ nnictl support commands:
       > update experiment's duration
 
       ```bash
-      nnictl update duration $experiment_id --value $duration
+      nnictl update duration [experiment_id] --value [duration]
       ```
 
   * __nnictl update trialnum__  
@@ -246,7 +246,7 @@ nnictl support commands:
       > update experiment's trial num
 
       ```bash
-      nnictl update trialnum --id $experiment_id --value $trial_num
+      nnictl update trialnum --id [experiment_id] --value [trial_num]
       ```
 
 <a name="trial"></a>
@@ -295,7 +295,7 @@ nnictl support commands:
       > kill trail job
 
       ```bash
-      nnictl trial $trial_id --vexperiment $experiment_id
+      nnictl trial [trial_id] --vexperiment [experiment_id]
       ```
 
 <a name="top"></a>
@@ -415,7 +415,7 @@ nnictl support commands:
     > Show the tail of stdout log content
 
     ```bash
-    nnictl log stdout $experiment_id --tail $lines_number
+    nnictl log stdout [experiment_id] --tail [lines_number]
     ```
 
 * __nnictl log stderr__
