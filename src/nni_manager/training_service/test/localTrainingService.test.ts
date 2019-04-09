@@ -31,7 +31,7 @@ import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { LocalTrainingServiceForGPU } from '../local/localTrainingServiceForGPU';
 
 // TODO: copy mockedTrail.py to local folder
-const localCodeDir: string = tmp.dirSync().name
+const localCodeDir: string = tmp.dirSync().name.split('\\').join('\\\\');
 const mockedTrialPath: string = './training_service/test/mockedTrial.py'
 fs.copyFileSync(mockedTrialPath, localCodeDir + '/mockedTrial.py')
 

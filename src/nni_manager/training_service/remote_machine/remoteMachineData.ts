@@ -250,7 +250,7 @@ export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={
 cd $NNI_SYS_DIR
 sh install_nni.sh
 echo $$ >{6}
-python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' --version '{10}' --log_collection '{11}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
+python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' --nni_manager_version '{10}' --log_collection '{11}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
 echo $? \`date +%s%3N\` >{12}`;
 
 export const HOST_JOB_SHELL_FORMAT: string =
@@ -259,11 +259,3 @@ cd {0}
 echo $$ >{1}
 eval {2} >stdout 2>stderr
 echo $? \`date +%s%3N\` >{3}`;
-
-export const GPU_COLLECTOR_FORMAT: string = 
-`
-#!/bin/bash
-export METRIC_OUTPUT_DIR={0}
-echo $$ >{1}
-python3 -m nni_gpu_tool.gpu_metrics_collector
-`

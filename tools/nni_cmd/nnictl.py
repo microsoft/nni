@@ -27,6 +27,8 @@ from .nnictl_utils import *
 from .package_management import *
 from .constants import *
 from .tensorboard_utils import *
+from colorama import init
+init(autoreset=True)
 
 if os.environ.get('COVERAGE_PROCESS_START'):
     import coverage

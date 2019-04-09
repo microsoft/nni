@@ -17,7 +17,7 @@ advisor:
   #choice: Hyperband
   builtinAdvisorName: Hyperband
   classArgs:
-    #R: the maximum STEPS
+    #R: the maximum trial budget
     R: 100
     #eta: proportion of discarded trials
     eta: 3
@@ -26,13 +26,13 @@ advisor:
 ```
 
 Note that once you use advisor, it is not allowed to add tuner and assessor spec in the config file any more.
-If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received by a trial, there is one more key called `STEPS` besides the hyperparameters defined by user. **By using this `STEPS`, the trial can control how long it runs**.
+If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received by a trial, there is one more key called `TRIAL_BUDGET` besides the hyperparameters defined by user. **By using this `TRIAL_BUDGET`, the trial can control how long it runs**.
 
 For `report_intermediate_result(metric)` and `report_final_result(metric)` in your trial code, **`metric` should be either a number or a dict which has a key `default` with a number as its value**. This number is the one you want to maximize or minimize, for example, accuracy or loss.
 
-`R` and `eta` are the parameters of Hyperband that you can change. `R` means the maximum STEPS that can be allocated to a configuration. Here, STEPS could mean the number of epochs or mini-batches. This `STEPS` should be used by the trial to control how long it runs. Refer to the example under `examples/trials/mnist-hyperband/` for details.
+`R` and `eta` are the parameters of Hyperband that you can change. `R` means the maximum trial budget that can be allocated to a configuration. Here, trial budget could mean the number of epochs or mini-batches. This `TRIAL_BUDGET` should be used by the trial to control how long it runs. Refer to the example under `examples/trials/mnist-advisor/` for details.
 
-`eta` means `n/eta` configurations from `n` configurations will survive and rerun using more STEPS.
+`eta` means `n/eta` configurations from `n` configurations will survive and rerun using more budgets.
 
 Here is a concrete example of `R=81` and `eta=3`:
 
@@ -45,7 +45,7 @@ Here is a concrete example of `R=81` and `eta=3`:
 |3     |3 27 |1 81 |     |     |     |
 |4     |1 81 |     |     |     |     |
 
-`s` means bucket, `n` means the number of configurations that are generated, the corresponding `r` means how many STEPS these configurations run. `i` means round, for example, bucket 4 has 5 rounds, bucket 3 has 4 rounds.
+`s` means bucket, `n` means the number of configurations that are generated, the corresponding `r` means how many budgets these configurations run. `i` means round, for example, bucket 4 has 5 rounds, bucket 3 has 4 rounds.
 
 About how to write trial code, please refer to the instructions under `examples/trials/mnist-hyperband/`.
 

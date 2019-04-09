@@ -171,3 +171,46 @@ jobs:
       fi
     condition: eq( variables['upload_package'], 'true')
     displayName: 'upload nni package to pypi/testpypi'
+
+- job: 'Build_upload_nni_windows'
+  dependsOn: version_number_validation
+  condition: succeeded()
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python36:
+        PYTHON_VERSION: '3.6'
+  steps:
+  - script: |
+      python -m pip install --upgrade pip setuptools --user
+      python -m pip install twine --user
+    displayName: 'Install twine'
+
+  - script: |
+      cd deployment/pypi
+      if [ $(build_type) = 'prerelease' ]
+      then
+        # NNI build scripts (powershell) uses branch tag as package version number
+        git tag $(build_version)
+        echo 'building prerelease package...'
+        powershell.exe ./install.ps1 -version_ts $True
+      else
+        echo 'building release package...'
+        powershell.exe ./install.ps1
+      fi
+    condition: eq( variables['upload_package'], 'true')
+    displayName: 'build nni bdsit_wheel'
+
+  - script: |
+      cd deployment/pypi
+      if [ $(build_type) = 'prerelease' ]
+      then
+        echo 'uploading prerelease package to testpypi...'
+        python -m twine upload -u $(testpypi_user) -p $(testpypi_pwd) --repository-url https://test.pypi.org/legacy/ dist/*
+      else
+        echo 'uploading release package to pypi...'
+        python -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
+      fi
+    condition: eq( variables['upload_package'], 'true')
+    displayName: 'upload nni package to pypi/testpypi'

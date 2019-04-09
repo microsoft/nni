@@ -1,9 +1,10 @@
 import * as React from 'react';
+import * as copy from 'copy-to-clipboard';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
-import JSONTree from 'react-json-tree';
 import { TableObj } from '../../static/interface';
-import { Row, Tabs } from 'antd';
+import { Row, Tabs, Button, message } from 'antd';
+import JSONTree from 'react-json-tree';
 const TabPane = Tabs.TabPane;
 
 interface OpenRowProps {
@@ -17,6 +18,15 @@ class OpenRow extends React.Component<OpenRowProps, {}> {
     constructor(props: OpenRowProps) {
         super(props);
 
+    }
+
+    copyParams = (record: TableObj) => {
+        let params = JSON.stringify(record.description.parameters);
+        if (copy(params)) {
+            message.success('Success copy parameters to clipboard in form of python dict !', 3);
+        } else {
+            message.error('Failed !', 2);
+        }
     }
 
     render() {
@@ -42,12 +52,19 @@ class OpenRow extends React.Component<OpenRowProps, {}> {
                             {
                                 isHasParameters
                                     ?
-                                    <JSONTree
-                                        hideRoot={true}
-                                        shouldExpandNode={() => true}  // default expandNode
-                                        getItemString={() => (<span />)}  // remove the {} items
-                                        data={openRowDataSource}
-                                    />
+                                    <div>
+                                        <JSONTree
+                                            hideRoot={true}
+                                            shouldExpandNode={() => true}  // default expandNode
+                                            getItemString={() => (<span />)}  // remove the {} items
+                                            data={openRowDataSource.parameters}
+                                        />
+                                        <Button
+                                            onClick={this.copyParams.bind(this, record)}
+                                        >
+                                            Copy as Python
+                                        </Button>
+                                    </div>
                                     :
                                     <div className="logpath">
                                         <span className="logName">Error: </span>

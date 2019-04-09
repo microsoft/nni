@@ -42,6 +42,7 @@ describe('Unit test for dataStore', () => {
     });
 
     after(() => {
+        ds.close();
         cleanupUnitTest();
     });
 
