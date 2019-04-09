@@ -1,5 +1,5 @@
 
-$NNI_DEPENDENCY_FOLDER = "\tmp\$env:USERNAME"
+$NNI_DEPENDENCY_FOLDER = "C:\tmp\$env:USERNAME"
 
 $WHICH_PYTHON = where.exe python;
 $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
