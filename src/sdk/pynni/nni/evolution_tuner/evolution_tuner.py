@@ -31,6 +31,7 @@ import random
 import numpy as np
 
 from nni.tuner import Tuner
+from nni.utils import *
 from .. import parameter_expressions
 
 
@@ -287,7 +288,7 @@ class EvolutionTuner(Tuner):
             if value is dict, it should have "default" key.
             value is final metrics of the trial.
         '''
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')
         # restore the paramsters contains "_index"
