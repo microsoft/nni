@@ -50,7 +50,6 @@ setup(
         'hyperopt',
         'json_tricks',
         'numpy',
-        'pandas',
         'psutil',
         'pyyaml',
         'requests',
