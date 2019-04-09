@@ -298,6 +298,22 @@ nnictl support commands:
       nnictl trial [trial_id] --vexperiment [experiment_id]
       ```
 
+  * __nnictl trial export__
+    * Description
+        You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+
+    * Usage
+        ```bash
+        nnictl trial export [OPTIONS]
+        ```
+    * Options
+    
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment    |
+  |--file|  True| |File path of the output csv file     |
+
+
 <a name="top"></a>
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
