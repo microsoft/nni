@@ -18,13 +18,12 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import csv
 import os
 import psutil
 import json
 import datetime
 import time
-
-import pandas as pd
 
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
@@ -438,19 +437,25 @@ def monitor_experiment(args):
             exit(1)
 
 
-def parse_trial_data(trial_data):
-    """output: Dict"""
-    hparam = json.loads(trial_data['hyperParameters'][0])['parameters']
-    reward = json.loads(trial_data['finalMetricData'][0]['data'])
-    if isinstance(reward, float):
-        dict_ret = {**hparam, **{'reward': reward}}
-    elif isinstance(reward, dict):
-        dict_ret = {**hparam, **reward}
-    else:
-        raise ValueError("Invalid finalMetricsData format: {}".format(trial_data['finalMetricData'][0]['data']))
-    return dict_ret
+def parse_trial_data(content):
+    """output: List[Dict]"""
+    trial_records = []
+    for trial_data in content:
+        hparam = json.loads(trial_data['hyperParameters'][0])['parameters']
+        if 'finalMetricData' in trial_data.keys():
+            reward = json.loads(trial_data['finalMetricData'][0]['data'])
+            if isinstance(reward, float):
+                dict_tmp = {**hparam, **{'reward': reward}}
+            elif isinstance(reward, dict):
+                dict_tmp = {**hparam, **reward}
+            else:
+                raise ValueError("Invalid finalMetricsData format: {}".format(trial_data['finalMetricData'][0]['data']))
+        else:
+            dict_tmp = hparam
+        trial_records.append(dict_tmp)
+    return trial_records
 
-def export_experiment_2csv(args):
+def export_trials_data(args):
     """export experiment metadata to csv
     :param: csv file path to export
     """
@@ -465,8 +470,13 @@ def export_experiment_2csv(args):
         response = rest_get(trial_jobs_url(rest_port), 20)
         if response is not None and check_response(response):
             content = json.loads(response.text)
-            dframe = pd.DataFrame.from_records([parse_trial_data(t_data) for t_data in content])
-            dframe.to_csv(args.csv_path, sep='\t')
+            # dframe = pd.DataFrame.from_records([parse_trial_data(t_data) for t_data in content])
+            # dframe.to_csv(args.csv_path, sep='\t')
+            records = parse_trial_data(content)
+            with open(args.csv_path, 'w') as f_csv:
+                writer = csv.DictWriter(f_csv, set.union(*[set(r.keys()) for r in records]))
+                writer.writeheader()
+                writer.writerows(records)
         else:
             print_error('Export failed...')
     else:
