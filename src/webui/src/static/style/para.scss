@@ -1,16 +1,15 @@
 
 .parameter{
-    height: 100%;
+    height: 100%;    
+}
 
-    .meline{
-        margin-top: 15px;
+.meline{
+    margin-top: 15px;
 
-        span{
-            font-size: 14px;
-            margin-right: 6px;
-        }
+    span{
+        font-size: 14px;
+        margin-right: 6px;
     }
-
 }
 
 .searcHyper{
@@ -24,4 +23,23 @@
         font-size: 13px;
         color: #999;
     }    
+}
+
+/* Intermediate Result Style */
+.intermediate{
+   /* border: 1px solid blue; */
+    input{
+        width: 80px;
+        height: 32px;
+        padding-left: 8px;
+    }
+    .strange{
+        margin-top: 2px;
+    }
+    .range{
+        .heng{
+            margin-left: 6px;
+            margin-right: 6px;
+        }
+    }
 }

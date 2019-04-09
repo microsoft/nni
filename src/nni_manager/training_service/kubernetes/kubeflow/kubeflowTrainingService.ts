@@ -71,11 +71,16 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             throw new Error('kubernetesJobRestServer not initialized!');
         }
         await this.kubernetesJobRestServer.start();
+        this.kubernetesJobRestServer.setEnableVersionCheck = this.versionCheck;
         this.log.info(`Kubeflow Training service rest server listening on: ${this.kubernetesJobRestServer.endPoint}`);
         while (!this.stopping) {
             // collect metrics for Kubeflow jobs by interacting with Kubernetes API server  
             await delay(3000);
             await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
+            if(this.kubernetesJobRestServer.getErrorMessage) {
+                throw new Error(this.kubernetesJobRestServer.getErrorMessage);
+                this.stopping = true;
+            }
         }
         this.log.info('Kubeflow training service exit.');
     }
@@ -319,6 +324,9 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
+                break;
+            case TrialConfigMetadataKey.LOG_COLLECTION:
+                this.logCollection = value;
                 break;
             default:
                 break;

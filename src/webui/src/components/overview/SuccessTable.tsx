@@ -1,10 +1,7 @@
 import * as React from 'react';
-import axios from 'axios';
-import { Modal, Input, Table } from 'antd';
-const { TextArea } = Input;
+import { Table } from 'antd';
 import OpenRow from '../public-child/OpenRow';
 import DefaultMetric from '../public-child/DefaultMetrc';
-import { DOWNLOAD_IP } from '../../static/const';
 import { TableObj } from '../../static/interface';
 import { convertDuration } from '../../static/function';
 import '../../static/style/tableStatus.css';
@@ -13,72 +10,25 @@ import '../../static/style/tableList.scss';
 interface SuccessTableProps {
     tableSource: Array<TableObj>;
     trainingPlatform: string;
+    logCollection: boolean;
 }
 
-interface SuccessTableState {
-    isShowLogModal: boolean;
-    logContent: string;
-}
-
-class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState> {
+class SuccessTable extends React.Component<SuccessTableProps, {}> {
 
     public _isMounted = false;
 
     constructor(props: SuccessTableProps) {
         super(props);
 
-        this.state = {
-            isShowLogModal: false,
-            logContent: ''
-        };
-
-    }
-
-    showLogModalOverview = (id: string) => {
-        axios(`${DOWNLOAD_IP}/trial_${id}.log`, {
-            method: 'GET'
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    if (this._isMounted) {
-                        this.setState(() => ({
-                            logContent: res.data
-                        }));
-                    }
-                }
-            })
-            .catch(error => {
-                if (error.response.status === 500) {
-                    if (this._isMounted) {
-                        this.setState(() => ({
-                            logContent: 'failed to get log message'
-                        }));
-                    }
-                }
-            });
-        if (this._isMounted) {
-            this.setState({
-                isShowLogModal: true
-            });
-        }
-    }
-
-    hideLogModalOverview = () => {
-        if (this._isMounted) {
-            this.setState({
-                isShowLogModal: false,
-                logContent: '' // close modal, delete data
-            });
-        }
     }
 
     openRow = (record: TableObj) => {
-        const { trainingPlatform } = this.props;
+        const { trainingPlatform, logCollection } = this.props;
         return (
             <OpenRow
-                showLogModalOverview={this.showLogModalOverview}
                 trainingPlatform={trainingPlatform}
                 record={record}
+                logCollection={logCollection}
             />
         );
     }
@@ -93,7 +43,6 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
 
     render() {
         const { tableSource } = this.props;
-        const { isShowLogModal, logContent } = this.state;
 
         let bgColor = '';
         const columns = [{
@@ -168,25 +117,9 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
                     className="commonTableStyle"
                     pagination={false}
                 />
-                {/* trial log modal */}
-                <Modal
-                    title="trial log"
-                    visible={isShowLogModal}
-                    onCancel={this.hideLogModalOverview}
-                    footer={null}
-                    destroyOnClose={true}
-                    width="80%"
-                >
-                    <div id="trialLogContent" style={{ height: window.innerHeight * 0.6 }}>
-                        <TextArea
-                            value={logContent}
-                            disabled={true}
-                            className="logcontent"
-                        />
-                    </div>
-                </Modal>
             </div >
         );
     }
 }
+
 export default SuccessTable;

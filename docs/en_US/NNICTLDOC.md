@@ -25,7 +25,8 @@ nnictl support commands:
 ### Manage an experiment
 
 <a name="create"></a>
-* __nnictl create__
+
+![](https://placehold.it/15/1589F0/000000?text=+) `nnictl create`
 
   * Description
 
@@ -47,13 +48,34 @@ nnictl support commands:
   |--port, -p|False| |the port of restful server|
   |--debug, -d|False||set debug mode|
 
+  * Examples
+
+    > create a new experiment with the default port: 8080
+
+    ```bash
+    nnictl create --config nni/examples/trials/mnist/config.yml
+    ```
+
+    > create a new experiment with specified port 8088
+
+    ```bash
+    nnictl create --config nni/examples/trials/mnist/config.yml --port 8088
+    ```
+
+    > create a new experiment with specified port 8088 and debug mode
+
+    ```bash
+    nnictl create --config nni/examples/trials/mnist/config.yml --port 8088 --debug
+    ```
+
   Note:
   ```
   Debug mode will disable version check function in Trialkeeper.
   ```
 
 <a name="resume"></a>
-* __nnictl resume__
+
+![](https://placehold.it/15/1589F0/000000?text=+) `nnictl resume`
 
   * Description
 
@@ -69,12 +91,21 @@ nnictl support commands:
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id|  False| |The id of the experiment you want to resume|  
+  |id|  True| |The id of the experiment you want to resume|  
   |--port, -p|  False| |Rest port of the experiment you want to resume|
   |--debug, -d|False||set debug mode|
 
+  * Example
+
+    > resume an experiment with specified port 8088
+
+    ```bash
+    nnictl resume [experiment_id] --port 8088
+    ```
+
 <a name="stop"></a>
-* __nnictl stop__
+
+![](https://placehold.it/15/1589F0/000000?text=+) `nnictl stop`
 
   * Description
 
@@ -85,18 +116,33 @@ nnictl support commands:
     ```bash
     nnictl stop [id]
     ```
-  
-  * Detail
 
-    1. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
-    2. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
-    3. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
-    4. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
-    5. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
-    6. Users could use 'nnictl stop all' to stop all experiments.
+  * Details & Examples
+
+    1. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
+
+      ```bash
+      nnictl stop
+      ```
+
+    2. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
+
+      ```bash
+      nnictl stop [experiment_id]
+      ```
+
+    3. Users could use 'nnictl stop all' to stop all experiments.
+
+      ```bash
+      nnictl stop all
+      ```
+    4. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
+    5. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
+    6. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
 
 <a name="update"></a>
-* __nnictl update__
+
+![](https://placehold.it/15/1589F0/000000?text=+) `nnictl update`
 
   * __nnictl update searchspace__
     * Description
@@ -111,10 +157,18 @@ nnictl support commands:
 
     * Options
 
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |id|  False| |ID of the experiment you want to set|
-  |--filename, -f|  True| |the file storing your new search space|
+    |Name, shorthand|Required|Default|Description|
+    |------|------|------ |------|
+    |id|  False| |ID of the experiment you want to set|
+    |--filename, -f|  True| |the file storing your new search space|
+
+    * Example
+
+      `update experiment's new search space with file dir 'examples/trials/mnist/search_space.json'`
+
+      ```bash
+      nnictl update searchspace [experiment_id] --file examples/trials/mnist/search_space.json
+      ```
 
   * __nnictl update concurrency__  
     * Description
@@ -129,10 +183,18 @@ nnictl support commands:
 
     * Options
 
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |id|  False| |ID of the experiment you want to set|
-  |--value, -v|  True| |the number of allowed concurrent trials|
+    |Name, shorthand|Required|Default|Description|
+    |------|------|------ |------|
+    |id|  False| |ID of the experiment you want to set|
+    |--value, -v|  True| |the number of allowed concurrent trials|
+
+    * Example
+
+      > update experiment's concurrency
+
+      ```bash
+      nnictl update concurrency [experiment_id] --value [concurrency_number]
+      ```
 
   * __nnictl update duration__  
 
@@ -145,12 +207,21 @@ nnictl support commands:
       ```bash
       nnictl update duration [OPTIONS]
       ```
+
     * Options
 
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |id|  False| |ID of the experiment you want to set|
-  |--value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|
+    |Name, shorthand|Required|Default|Description|
+    |------|------|------ |------|
+    |id|  False| |ID of the experiment you want to set|
+    |--value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|
+
+    * Example
+
+      > update experiment's duration
+
+      ```bash
+      nnictl update duration [experiment_id] --value [duration]
+      ```
 
   * __nnictl update trialnum__  
     * Description
@@ -165,13 +236,22 @@ nnictl support commands:
 
     * Options
 
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |id|  False| |ID of the experiment you want to set|
-  |--value, -v|  True| |the new number of maxtrialnum you want to set|
+    |Name, shorthand|Required|Default|Description|
+    |------|------|------ |------|
+    |id|  False| |ID of the experiment you want to set|
+    |--value, -v|  True| |the new number of maxtrialnum you want to set|
+
+    * Example
+
+      > update experiment's trial num
+
+      ```bash
+      nnictl update trialnum --id [experiment_id] --value [trial_num]
+      ```
 
 <a name="trial"></a>
-* __nnictl trial__
+
+![](https://placehold.it/15/1589F0/000000?text=+) `nnictl trial`
 
   * __nnictl trial ls__
 
@@ -187,9 +267,9 @@ nnictl support commands:
 
     * Options
 
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |id|  False| |ID of the experiment you want to set|
+    |Name, shorthand|Required|Default|Description|
+    |------|------|------ |------|
+    |id|  False| |ID of the experiment you want to set|
 
   * __nnictl trial kill__
 
@@ -203,12 +283,36 @@ nnictl support commands:
       nnictl trial kill [OPTIONS]
       ```
 
-    * Options  
+    * Options
 
+    |Name, shorthand|Required|Default|Description|
+    |------|------|------ |------|
+    |id|  False| |ID of the trial to be killed|
+    |--experiment, -E|  True| |Experiment id of the trial|
+
+    * Example
+
+      > kill trail job
+
+      ```bash
+      nnictl trial [trial_id] --vexperiment [experiment_id]
+      ```
+
+  * __nnictl trial export__
+    * Description
+        You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+
+    * Usage
+        ```bash
+        nnictl trial export [OPTIONS]
+        ```
+    * Options
+    
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id|  False| |ID of the experiment you want to set|
-  |--trialid, -t|  True| |ID of the trial you want to kill.|
+  |id|  False| |ID of the experiment    |
+  |--file|  True| |File path of the output csv file     |
+
 
   * __nnictl trial export__
     * Description
@@ -227,7 +331,8 @@ nnictl support commands:
 
 
 <a name="top"></a>
-* __nnictl top__
+
+![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
 
   * Description
 
@@ -247,7 +352,8 @@ nnictl support commands:
   |--time, -t|  False| |The interval to update the experiment status, the unit of time is second, and the default value is 3 second.|
 
 <a name="experiment"></a>
-### Manage experiment information
+
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage experiment information`
 
 * __nnictl experiment show__
 
@@ -298,7 +404,8 @@ nnictl support commands:
     ```
 
 <a name="config"></a>
-* __nnictl config show__
+
+![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
 
   * Description
 
@@ -311,7 +418,8 @@ nnictl support commands:
     ```
 
 <a name="log"></a>
-### Manage log
+
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage log`
 
 * __nnictl log stdout__
 
@@ -333,6 +441,14 @@ nnictl support commands:
   |--head, -h| False| |show head lines of stdout|
   |--tail, -t|  False| |show tail lines of stdout|
   |--path, -p|  False| |show the path of stdout file|
+
+  * Example
+
+    > Show the tail of stdout log content
+
+    ```bash
+    nnictl log stdout [experiment_id] --tail [lines_number]
+    ```
 
 * __nnictl log stderr__
   * Description
@@ -370,15 +486,18 @@ nnictl support commands:
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id| False| |the id of trial|
+  |id|  False| |ID of the trial to be found the log path|
+  |--experiment, -E|  False| |Experiment ID of the trial, required when id is not empty.|
 
 <a name="webui"></a>
-### Manage webui
+
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage webui`
 
 * __nnictl webui url__
 
 <a name="tensorboard"></a>
-### Manage tensorboard
+
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage tensorboard`
 
 * __nnictl tensorboard start__
 
@@ -426,7 +545,8 @@ nnictl support commands:
   |id|  False| |ID of the experiment you want to set|
 
 <a name="package"></a>
-### Manage package
+
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage package`
 
 * __nnictl package install__
   * Description
@@ -445,6 +565,14 @@ nnictl support commands:
   |------|------|------ |------|
   |--name|  True| |The name of package to be installed|
 
+  * Example
+
+    > Install the packages needed in tuner SMAC
+
+    ```bash
+    nnictl package install --name=SMAC
+    ```
+
 * __nnictl package show__
 
   * Description
@@ -458,7 +586,8 @@ nnictl support commands:
     ```
 
 <a name="version"></a>
-### Check NNI version
+
+![](https://placehold.it/15/1589F0/000000?text=+) `Check NNI version`
 
 * __nnictl --version__
 

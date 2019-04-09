@@ -15,7 +15,7 @@ Currently we only support installation on Linux & Mac.
 
   Prerequisite: `python >=3.5, git, wget`
   ```bash
-  git clone -b v0.5.2 https://github.com/Microsoft/nni.git
+  git clone -b v0.6 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
@@ -57,7 +57,7 @@ Below are the minimum system requirements for NNI on macOS. Due to potential pro
 * [Use NNIBoard](WebUI.md)
 * [Define search space](SearchSpaceSpec.md)
 * [Config an experiment](ExperimentConfig.md)
-* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
+* [How to run an experiment on local (with multiple GPUs)?](LocalMode.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
 * [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)

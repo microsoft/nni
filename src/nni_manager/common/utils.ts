@@ -44,6 +44,11 @@ function getLogDir(): string{
     return path.join(getExperimentRootDir(), 'log');
 }
 
+function getLogLevel(): string{
+    return getExperimentStartupInfo()
+    .getLogLevel();
+}
+
 function getDefaultDatabaseDir(): string {
     return path.join(getExperimentRootDir(), 'db');
 }
@@ -360,4 +365,4 @@ async function getVersion(): Promise<string> {
 
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getVersion };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion };

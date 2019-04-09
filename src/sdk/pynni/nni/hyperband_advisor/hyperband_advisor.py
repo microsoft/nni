@@ -37,7 +37,7 @@ from .. import parameter_expressions
 _logger = logging.getLogger(__name__)
 
 _next_parameter_id = 0
-_KEY = 'STEPS'
+_KEY = 'TRIAL_BUDGET'
 _epsilon = 1e-6
 
 @unique
@@ -143,7 +143,7 @@ class Bracket():
         self.s_max = s_max
         self.eta = eta
         self.n = math.ceil((s_max + 1) * (eta**s) / (s + 1) - _epsilon) # pylint: disable=invalid-name
-        self.r = math.ceil(R / eta**s - _epsilon)                       # pylint: disable=invalid-name
+        self.r = R / eta**s                     # pylint: disable=invalid-name
         self.i = 0
         self.hyper_configs = []         # [ {id: params}, {}, ... ]
         self.configs_perf = []          # [ {id: [seq, acc]}, {}, ... ]
@@ -158,7 +158,7 @@ class Bracket():
 
     def get_n_r(self):
         """return the values of n and r for the next round"""
-        return math.floor(self.n / self.eta**self.i + _epsilon), self.r * self.eta**self.i
+        return math.floor(self.n / self.eta**self.i + _epsilon), math.floor(self.r * self.eta**self.i + _epsilon)
 
     def increase_i(self):
         """i means the ith round. Increase i by 1"""
@@ -300,7 +300,7 @@ class Hyperband(MsgDispatcherBase):
     """
     def __init__(self, R, eta=3, optimize_mode='maximize'):
         """B = (s_max + 1)R"""
-        super()
+        super(Hyperband, self).__init__()
         self.R = R                        # pylint: disable=invalid-name
         self.eta = eta
         self.brackets = dict()            # dict of Bracket
@@ -320,7 +320,7 @@ class Hyperband(MsgDispatcherBase):
     def load_checkpoint(self):
         pass
 
-    def save_checkpont(self):
+    def save_checkpoint(self):
         pass
 
     def handle_initialize(self, data):
@@ -351,15 +351,7 @@ class Hyperband(MsgDispatcherBase):
         """get one trial job, i.e., one hyperparameter configuration."""
         if not self.generated_hyper_configs:
             if self.curr_s < 0:
-                # have tried all configurations
-                ret = {
-                    'parameter_id': '-1_0_0',
-                    'parameter_source': 'algorithm',
-                    'parameters': ''
-                }
-                send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
-                self.credit += 1
-                return True
+                self.curr_s = self.s_max
             _logger.debug('create a new bracket, self.curr_s=%d', self.curr_s)
             self.brackets[self.curr_s] = Bracket(self.curr_s, self.s_max, self.eta, self.R, self.optimize_mode)
             next_n, next_r = self.brackets[self.curr_s].get_n_r()

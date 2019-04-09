@@ -10,6 +10,11 @@ interface TableObj {
     color?: string;
 }
 
+interface SearchSpace {
+    _value: Array<number | string>;
+    _type: string;
+}
+
 interface FinalType {
     default: string;
 }
@@ -21,6 +26,7 @@ interface ErrorParameter {
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
+    intermediate?: Array<number>;
 }
 
 interface Experiment {
@@ -40,6 +46,7 @@ interface Experiment {
     assessor?: object;
     advisor?: object;
     clusterMetaData?: object;
+    logCollection?: string;
 }
 
 // trial accuracy
@@ -52,6 +59,12 @@ interface DetailAccurPoint {
     acc: number;
     index: number;
     searchSpace: string;
+}
+
+interface TooltipForIntermediate {
+    data: string;
+    seriesName: string;
+    dataIndex: number;
 }
 
 interface TooltipForAccuracy {
@@ -80,16 +93,15 @@ interface Dimobj {
     min?: number;
     type?: string;
     data?: string[];
+    boundaryGap?: boolean;
+    axisTick?: object;
+    axisLabel?: object;
+    axisLine?: object;
 }
 
 interface ParaObj {
     data: number[][];
     parallelAxis: Array<Dimobj>;
-}
-
-interface VisualMapValue {
-    maxAccuracy: number;
-    minAccuracy: number;
 }
 
 interface FinalResult {
@@ -100,5 +112,6 @@ export {
     TableObj, Parameters, Experiment, 
     AccurPoint, TrialNumber, TrialJob,
     DetailAccurPoint, TooltipForAccuracy,
-    ParaObj, VisualMapValue, Dimobj, FinalResult, FinalType
+    ParaObj, Dimobj, FinalResult, FinalType,
+    TooltipForIntermediate, SearchSpace
 };

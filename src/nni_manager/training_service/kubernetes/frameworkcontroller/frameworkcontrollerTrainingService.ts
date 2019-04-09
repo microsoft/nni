@@ -66,11 +66,16 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             throw new Error('kubernetesJobRestServer not initialized!');
         }
         await this.kubernetesJobRestServer.start();
+        this.kubernetesJobRestServer.setEnableVersionCheck = this.versionCheck;
         this.log.info(`frameworkcontroller Training service rest server listening on: ${this.kubernetesJobRestServer.endPoint}`);
         while (!this.stopping) {
             // collect metrics for frameworkcontroller jobs by interacting with Kubernetes API server  
             await delay(3000);
             await this.fcJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
+            if(this.kubernetesJobRestServer.getErrorMessage) {
+                throw new Error(this.kubernetesJobRestServer.getErrorMessage);
+                this.stopping = true;
+            }
         }
     }
 
@@ -269,6 +274,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 break;
             case TrialConfigMetadataKey.VERSION_CHECK:
                 this.versionCheck = (value === 'true' || value === 'True');
+                break;
+            case TrialConfigMetadataKey.LOG_COLLECTION:
+                this.logCollection = value;
                 break;
             default:
                 break;
