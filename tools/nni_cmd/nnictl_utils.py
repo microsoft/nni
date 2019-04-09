@@ -441,18 +441,19 @@ def parse_trial_data(content):
     """output: List[Dict]"""
     trial_records = []
     for trial_data in content:
-        hparam = json.loads(trial_data['hyperParameters'][0])['parameters']
-        if 'finalMetricData' in trial_data.keys():
-            reward = json.loads(trial_data['finalMetricData'][0]['data'])
-            if isinstance(reward, float):
-                dict_tmp = {**hparam, **{'reward': reward}}
-            elif isinstance(reward, dict):
-                dict_tmp = {**hparam, **reward}
+        for phase_i in range(len(trial_data['hyperParameters'])):
+            hparam = json.loads(trial_data['hyperParameters'][phase_i])['parameters']
+            if 'finalMetricData' in trial_data.keys() and phase_i < len(trial_data['finalMetricData']):
+                reward = json.loads(trial_data['finalMetricData'][phase_i]['data'])
+                if isinstance(reward, (float, int)):
+                    dict_tmp = {**hparam, **{'reward': reward}}
+                elif isinstance(reward, dict):
+                    dict_tmp = {**hparam, **reward}
+                else:
+                    raise ValueError("Invalid finalMetricsData format: {}/{}".format(type(reward), reward))
             else:
-                raise ValueError("Invalid finalMetricsData format: {}".format(trial_data['finalMetricData'][0]['data']))
-        else:
-            dict_tmp = hparam
-        trial_records.append(dict_tmp)
+                dict_tmp = hparam
+            trial_records.append(dict_tmp)
     return trial_records
 
 def export_trials_data(args):
