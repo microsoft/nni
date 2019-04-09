@@ -32,12 +32,13 @@ from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, detect_process, detect_port, get_user, get_python_dir
 from .constants import *
 import random
 import site
 import time
 from pathlib import Path
+from .command_utils import check_output_command, kill_command
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -49,14 +50,10 @@ def print_log_content(config_file_name):
     '''print log information'''
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
     print_normal(' Stdout:')
-    stdout_cmds = ['cat', stdout_full_path]
-    stdout_content = check_output(stdout_cmds)
-    print(stdout_content.decode('utf-8'))
+    print(check_output_command(stdout_full_path))
     print('\n\n')
     print_normal(' Stderr:')
-    stderr_cmds = ['cat', stderr_full_path]
-    stderr_content = check_output(stderr_cmds)
-    print(stderr_content.decode('utf-8'))
+    print(check_output_command(stderr_full_path))
 
 def get_nni_installation_path():
     ''' Find nni lib from the following locations in order
@@ -67,7 +64,7 @@ def get_nni_installation_path():
         Return None if nothing is found
         '''
         def _generate_installation_path(sitepackages_path):
-            python_dir = str(Path(sitepackages_path).parents[2])
+            python_dir = get_python_dir(sitepackages_path)
             entry_file = os.path.join(python_dir, 'nni', 'main.js')
             if os.path.isfile(entry_file):
                 return python_dir
@@ -139,7 +136,7 @@ def set_trial_config(experiment_config, port, config_file_name):
     '''set trial configuration'''
     request_data = dict()
     request_data['trial_config'] = experiment_config['trial']
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
     if check_response(response):
         return True
     else:
@@ -159,7 +156,7 @@ def set_remote_config(experiment_config, port, config_file_name):
     #set machine_list
     request_data = dict()
     request_data['machine_list'] = experiment_config['machineList']
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
     err_message = ''
     if not response or not check_response(response):
         if response is not None:
@@ -180,7 +177,7 @@ def setNNIManagerIp(experiment_config, port, config_file_name):
         return True, None
     ip_config_dict = dict()
     ip_config_dict['nni_manager_ip'] = { 'nniManagerIp' : experiment_config['nniManagerIp'] }
-    response = rest_put(cluster_metadata_url(port), json.dumps(ip_config_dict), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(ip_config_dict), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -195,7 +192,7 @@ def set_pai_config(experiment_config, port, config_file_name):
     '''set pai configuration''' 
     pai_config_data = dict()
     pai_config_data['pai_config'] = experiment_config['paiConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(pai_config_data), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(pai_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -214,7 +211,7 @@ def set_kubeflow_config(experiment_config, port, config_file_name):
     '''set kubeflow configuration''' 
     kubeflow_config_data = dict()
     kubeflow_config_data['kubeflow_config'] = experiment_config['kubeflowConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(kubeflow_config_data), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(kubeflow_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -233,7 +230,7 @@ def set_frameworkcontroller_config(experiment_config, port, config_file_name):
     '''set kubeflow configuration''' 
     frameworkcontroller_config_data = dict()
     frameworkcontroller_config_data['frameworkcontroller_config'] = experiment_config['frameworkcontrollerConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), 20)
+    response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -315,7 +312,7 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'trial_config', 'value': experiment_config['trial']}
         )
 
-    response = rest_post(experiment_url(port), json.dumps(request_data), 20)
+    response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT)
     if check_response(response):
         return response
     else:
@@ -347,7 +344,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     nni_config.set_config('restServerPid', rest_process.pid)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
-        path = os.path.join(tempfile.gettempdir(), os.environ['USER'], 'nni', 'annotation')
+        path = os.path.join(tempfile.gettempdir(), get_user(), 'nni', 'annotation')
         if not os.path.isdir(path):
             os.makedirs(path)
         path = tempfile.mkdtemp(dir=path)
@@ -370,8 +367,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         print_error('Restful server start failed!')
         print_log_content(config_file_name)
         try:
-            cmds = ['kill', str(rest_process.pid)]
-            call(cmds)
+            kill_command(rest_process.pid)
         except Exception:
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(1)
@@ -385,8 +381,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         else:
             print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['kill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
             exit(1)
@@ -399,8 +394,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         else:
             print_error('Set local config failed!')
             try:
-                cmds = ['kill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
             exit(1)
@@ -415,8 +409,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['kill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
@@ -431,8 +424,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['pkill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
@@ -447,8 +439,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['pkill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
@@ -483,8 +474,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         print_error('Start experiment failed!')
         print_log_content(config_file_name)
         try:
-            cmds = ['kill', str(rest_process.pid)]
-            call(cmds)
+            kill_command(rest_process.pid)
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
@@ -515,7 +505,7 @@ def resume_experiment(args):
         if experiment_dict.get(args.id) is None:
             print_error('Id %s not exist!' % args.id)
             exit(1)
-        if experiment_dict[args.id]['status'] == 'running':
+        if experiment_dict[args.id]['status'] != 'STOPPED':
             print_error('Experiment %s is running!' % args.id)
             exit(1)
         experiment_id = args.id
