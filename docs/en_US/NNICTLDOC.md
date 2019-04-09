@@ -210,6 +210,22 @@ nnictl support commands:
   |id|  False| |ID of the experiment you want to set|
   |--trialid, -t|  True| |ID of the trial you want to kill.|
 
+  * __nnictl trial export__
+    * Description
+        You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+
+    * Usage
+        ```bash
+        nnictl trial export [OPTIONS]
+        ```
+    * Options
+    
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment    |
+  |--file|  True| |File path of the output csv file     |
+
+
 <a name="top"></a>
 * __nnictl top__
 
