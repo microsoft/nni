@@ -144,6 +144,8 @@ class MsgDispatcher(MsgDispatcherBase):
             _trial_history.pop(trial_job_id)
             if self.assessor is not None:
                 self.assessor.trial_end(trial_job_id, data['event'] == 'SUCCEEDED')
+        if self.tuner is not None:
+            self.tuner.trial_end(json_tricks.loads(data['hyper_params'])['parameter_id'], data['event'] == 'SUCCEEDED')
 
     def _handle_final_metric_data(self, data):
         """Call tuner to process final results
