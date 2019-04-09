@@ -458,7 +458,6 @@ def parse_trial_data(content):
 
 def export_trials_data(args):
     """export experiment metadata to csv
-    :param: csv file path to export
     """
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
