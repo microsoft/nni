@@ -30,9 +30,9 @@ jobs:
     displayName: 'Built-in tuners / assessors tests'
   - script: |
       cd test
-      python config_test.py --ts local --local_gpu --exclude smac,batchtuner
-    displayName: 'Examples and advanced features tests on local machine'
-  - script: |
-      cd test
       python metrics_test.py
     displayName: 'Trial job metrics test'
+  - script: |
+      cd test
+      python config_test.py --ts local --local_gpu --exclude cifar10,smac,batchtuner
+    displayName: 'Examples and advanced features tests on local machine'
