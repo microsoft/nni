@@ -3,6 +3,7 @@ import logging
 import os
 
 from nni.tuner import Tuner
+from nni.utils import extract_scalar_reward
 
 _logger = logging.getLogger('NaiveTuner')
 _logger.info('start')
@@ -21,7 +22,7 @@ class NaiveTuner(Tuner):
         return { 'x': self.cur }
 
     def receive_trial_result(self, parameter_id, parameters, value):
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         _logger.info('receive trial result: %s, %s, %s' % (parameter_id, parameters, reward))
         _result.write('%d %d\n' % (parameters['x'], reward))
         _result.flush()

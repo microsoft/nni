@@ -38,6 +38,7 @@ import nni.metis_tuner.Regression_GP.OutlierDetection as gp_outlier_detection
 import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
 import nni.metis_tuner.Regression_GP.Selection as gp_selection
 from nni.tuner import Tuner
+from nni.utils import extract_scalar_reward
 
 logger = logging.getLogger("Metis_Tuner_AutoML")
 
@@ -126,8 +127,7 @@ class MetisTuner(Tuner):
             for key in search_space:
                 key_type = search_space[key]['_type']
                 key_range = search_space[key]['_value']
-                idx = self.key_order.index(key)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              )
-
+                idx = self.key_order.index(key)
                 if key_type == 'quniform':
                     if key_range[2] == 1:
                         self.x_bounds[idx] = [key_range[0], key_range[1]]
@@ -221,7 +221,7 @@ class MetisTuner(Tuner):
         value : dict/float
             if value is dict, it should have "default" key.
         """
-        value = self.extract_scalar_reward(value)
+        value = extract_scalar_reward(value)
         if self.optimize_mode == OptimizeMode.Maximize:
             value = -value
 
