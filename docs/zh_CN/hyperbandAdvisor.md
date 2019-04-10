@@ -15,22 +15,22 @@
 要使用 Hyperband，需要在 Experiment 的 YAML 配置文件进行如下改动。
 
     advisor:
-      #choice: Hyperband
+      #可选项: Hyperband
       builtinAdvisorName: Hyperband
       classArgs:
-        #R: the maximum trial budget
+        #R: 最大的步骤
         R: 100
-        #eta: proportion of discarded trials
+        #eta: 丢弃的 Trial 的比例
         eta: 3
-        #choice: maximize, minimize
+        #可选项: maximize, minimize
         optimize_mode: maximize
     
 
-注意，一旦使用了 Advisor，就不能在配置文件中添加 Tuner 和 Assessor。 If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received by a trial, there is one more key called `TRIAL_BUDGET` besides the hyperparameters defined by user. **By using this `TRIAL_BUDGET`, the trial can control how long it runs**.
+注意，一旦使用了 Advisor，就不能在配置文件中添加 Tuner 和 Assessor。 使用 Hyperband 时，Trial 代码收到的超参（如键值对）中，除了用户定义的超参，会多一个 `TRIAL_BUDGET`。 **使用 `TRIAL_BUDGET`，Trial 能够控制其运行的时间。</p> 
 
 对于 Trial 代码中 `report_intermediate_result(metric)` 和 `report_final_result(metric)` 的**`指标` 应该是数值，或者用一个 dict，并保证其中有键值为 default 的项目，其值也为数值型**。 这是需要进行最大化或者最小化优化的数值，如精度或者损失度。
 
-`R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` means the maximum trial budget that can be allocated to a configuration. Here, trial budget could mean the number of epochs or mini-batches. This `TRIAL_BUDGET` should be used by the trial to control how long it runs. Refer to the example under `examples/trials/mnist-advisor/` for details.
+`R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` 表示可以分配给 Trial 的最大资源。 这里，资源可以代表 epoch 或 批处理数量。 `TRIAL_BUDGET` 应该被尝试代码用来控制运行的次数。 Refer to the example under `examples/trials/mnist-advisor/` for details.
 
 `eta` means `n/eta` configurations from `n` configurations will survive and rerun using more budgets.
 
