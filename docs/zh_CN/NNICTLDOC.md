@@ -298,7 +298,7 @@ nnictl 支持的命令：
   
   * 样例
     
-    > kill trail job
+    > 结束 Trial 任务
     
     ```bash
     nnictl trial [trial_id] --vexperiment [experiment_id]
