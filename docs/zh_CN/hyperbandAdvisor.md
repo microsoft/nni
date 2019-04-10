@@ -30,9 +30,9 @@
 
 对于 Trial 代码中 `report_intermediate_result(metric)` 和 `report_final_result(metric)` 的**`指标` 应该是数值，或者用一个 dict，并保证其中有键值为 default 的项目，其值也为数值型**。 这是需要进行最大化或者最小化优化的数值，如精度或者损失度。
 
-`R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` 表示可以分配给 Trial 的最大资源。 这里，资源可以代表 epoch 或 批处理数量。 `TRIAL_BUDGET` 应该被尝试代码用来控制运行的次数。 Refer to the example under `examples/trials/mnist-advisor/` for details.
+`R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` 表示可以分配给 Trial 的最大资源。 这里，资源可以代表 epoch 或 批处理数量。 `TRIAL_BUDGET` 应该被尝试代码用来控制运行的次数。 参考样例 `examples/trials/mnist-advisor/` ，了解详细信息。
 
-`eta` means `n/eta` configurations from `n` configurations will survive and rerun using more budgets.
+`eta` 表示 `n` 个配置中的 `n/eta` 个配置会留存下来，并用更多的资源来运行。
 
 下面是 `R=81` 且 `eta=3` 时的样例：
 
@@ -45,7 +45,7 @@
 | 3 | 3 27 | 1 81 |      |      |      |
 | 4 | 1 81 |      |      |      |      |
 
-`s` means bucket, `n` means the number of configurations that are generated, the corresponding `r` means how many budgets these configurations run. `i` 表示轮数，如分组 4 有 5 轮，分组 3 有 4 轮。
+`s` 表示分组， `n` 表示生成的配置数量，相应的 `r` 表示配置使用多少资源来运行。 `i` 表示轮数，如分组 4 有 5 轮，分组 3 有 4 轮。
 
 关于如何实现 Trial 代码，参考 `examples/trials/mnist-hyperband/` 中的说明。
 
