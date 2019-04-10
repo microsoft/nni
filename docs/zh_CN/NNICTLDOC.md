@@ -41,15 +41,15 @@ nnictl 支持的命令：
 
 * 选项
   
-  | Name, shorthand | Required | Default | Description                           |
-  | --------------- | -------- | ------- | ------------------------------------- |
-  | --config, -c    | True     |         | YAML configure file of the experiment |
-  | --port, -p      | False    |         | the port of restful server            |
-  | --debug, -d     | False    |         | set debug mode                        |
+  | 参数及缩写        | 是否必需  | 默认值 | 说明                     |
+  | ------------ | ----- | --- | ---------------------- |
+  | --config, -c | True  |     | Experiment 的 YAML 配置文件 |
+  | --port, -p   | False |     | RESTful 服务的端口          |
+  | --debug, -d  | False |     | 设置为调试模式                |
 
-* Examples
+* 样例
   
-  > create a new experiment with the default port: 8080
+  > 在默认端口 8080 上创建一个新的 Experiment
   
   ```bash
   nnictl create --config nni/examples/trials/mnist/config.yml
