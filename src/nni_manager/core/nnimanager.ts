@@ -347,7 +347,7 @@ class NNIManager implements Manager {
             await delay(1000);
         }
         try {
-            await cpp.exec(`kill ${this.dispatcherPid}`);
+            await cpp.exec(`kill -9 ${this.dispatcherPid}`);
         } catch (error) {
             // this.tunerPid does not exist, do nothing here
         }
