@@ -23,6 +23,7 @@ import nni.protocol
 from nni.protocol import CommandType, send, receive
 from nni.tuner import Tuner
 from nni.msg_dispatcher import MsgDispatcher
+from nni.utils import extract_scalar_reward
 from io import BytesIO
 import json
 from unittest import TestCase, main
@@ -45,11 +46,11 @@ class NaiveTuner(Tuner):
         }
 
     def receive_trial_result(self, parameter_id, parameters, value):
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         self.trial_results.append((parameter_id, parameters['param'], reward, False))
 
     def receive_customized_trial_result(self, parameter_id, parameters, value):
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         self.trial_results.append((parameter_id, parameters['param'], reward, True))
 
     def update_search_space(self, search_space):

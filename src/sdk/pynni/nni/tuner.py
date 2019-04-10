@@ -71,6 +71,13 @@ class Tuner(Recoverable):
         """
         _logger.info('Customized trial job %s ignored by tuner', parameter_id)
 
+    def trial_end(self, parameter_id, success):
+        """Invoked when a trial is completed or terminated. Do nothing by default.
+        parameter_id: int
+        success: True if the trial successfully completed; False if failed or terminated
+        """
+        pass
+
     def update_search_space(self, search_space):
         """Update the search space of tuner. Must override.
         search_space: JSON object
@@ -96,12 +103,3 @@ class Tuner(Recoverable):
 
     def _on_error(self):
         pass
-
-    def extract_scalar_reward(self, value, scalar_key='default'):
-        if isinstance(value, float) or isinstance(value, int):
-            reward = value
-        elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
-            reward = value[scalar_key]
-        else:
-            raise RuntimeError('Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__)) 
-        return reward 
