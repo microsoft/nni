@@ -38,7 +38,7 @@ import nni.metis_tuner.Regression_GP.OutlierDetection as gp_outlier_detection
 import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
 import nni.metis_tuner.Regression_GP.Selection as gp_selection
 from nni.tuner import Tuner
-from nni.utils import *
+from nni.utils import extract_scalar_reward
 
 logger = logging.getLogger("Metis_Tuner_AutoML")
 

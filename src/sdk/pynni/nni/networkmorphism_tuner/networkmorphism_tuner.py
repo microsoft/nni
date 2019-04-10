@@ -23,7 +23,7 @@ import os
 
 
 from nni.tuner import Tuner
-from nni.utils import *
+from nni.utils import extract_scalar_reward
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
 from nni.networkmorphism_tuner.nn import CnnGenerator, MlpGenerator
 from nni.networkmorphism_tuner.utils import Constant, OptimizeMode

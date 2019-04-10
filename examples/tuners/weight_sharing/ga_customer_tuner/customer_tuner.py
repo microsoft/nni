@@ -25,7 +25,7 @@ import os
 from threading import Event, Lock, current_thread
 
 from nni.tuner import Tuner
-from nni.utils import *
+from nni.utils import extract_scalar_reward
 
 from graph import Graph, Layer, LayerType, Enum, graph_dumps, graph_loads, unique
 

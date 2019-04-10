@@ -3,7 +3,7 @@ import logging
 import os
 
 from nni.tuner import Tuner
-from nni.utils import *
+from nni.utils import extract_scalar_reward
 
 _logger = logging.getLogger('NaiveTuner')
 _logger.info('start')

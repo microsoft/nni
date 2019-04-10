@@ -29,7 +29,7 @@ import numpy as np
 
 import hyperopt as hp
 from nni.tuner import Tuner
-from nni.utils import *
+from nni.utils import extract_scalar_reward
 
 logger = logging.getLogger('hyperopt_AutoML')
 

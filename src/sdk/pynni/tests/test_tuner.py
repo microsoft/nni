@@ -23,7 +23,7 @@ import nni.protocol
 from nni.protocol import CommandType, send, receive
 from nni.tuner import Tuner
 from nni.msg_dispatcher import MsgDispatcher
-from nni.utils import *
+from nni.utils import extract_scalar_reward
 from io import BytesIO
 import json
 from unittest import TestCase, main

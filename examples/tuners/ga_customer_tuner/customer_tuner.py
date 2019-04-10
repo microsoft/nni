@@ -24,7 +24,7 @@ import random
 import numpy as np
 
 from nni.tuner import Tuner
-from nni.utils import *
+from nni.utils import extract_scalar_reward
 
 logger = logging.getLogger('ga_customer_tuner')
 

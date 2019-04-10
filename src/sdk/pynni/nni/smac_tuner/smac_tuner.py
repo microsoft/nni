@@ -22,7 +22,7 @@ smac_tuner.py
 """
 
 from nni.tuner import Tuner
-from nni.utils import *
+from nni.utils import extract_scalar_reward
 
 import sys
 import logging
