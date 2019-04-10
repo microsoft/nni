@@ -24,6 +24,7 @@ import random
 import numpy as np
 
 from nni.tuner import Tuner
+from nni.utils import extract_scalar_reward
 
 logger = logging.getLogger('ga_customer_tuner')
 
@@ -115,7 +116,7 @@ class CustomerTuner(Tuner):
         parameters : dict of parameters
         value: final metrics of the trial, including reward
         '''
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         if self.optimize_mode is OptimizeMode.Minimize:
             reward = -reward
 
