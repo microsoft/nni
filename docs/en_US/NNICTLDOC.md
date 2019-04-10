@@ -25,22 +25,21 @@ nnictl support commands:
 ### Manage an experiment
 
 <a name="create"></a>
-
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl create`
 
-  * Description
+* Description
 
-    You can use this command to create a new experiment, using the configuration specified in config file. 
+  You can use this command to create a new experiment, using the configuration specified in config file. 
 
-    After this command is successfully done, the context will be set as this experiment, which means the following command you issued is associated with this experiment, unless you explicitly changes the context(not supported yet).
+  After this command is successfully done, the context will be set as this experiment, which means the following command you issued is associated with this experiment, unless you explicitly changes the context(not supported yet).
 
-  * Usage
+* Usage
 
-    ```bash
-    nnictl create [OPTIONS]
-    ```
+  ```bash
+  nnictl create [OPTIONS]
+  ```
 
-  * Options
+* Options
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------|------|
@@ -48,46 +47,47 @@ nnictl support commands:
   |--port, -p|False| |the port of restful server|
   |--debug, -d|False||set debug mode|
 
-  * Examples
+* Examples
 
-    > create a new experiment with the default port: 8080
+  > create a new experiment with the default port: 8080
 
-    ```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml
-    ```
-
-    > create a new experiment with specified port 8088
-
-    ```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml --port 8088
-    ```
-
-    > create a new experiment with specified port 8088 and debug mode
-
-    ```bash
-    nnictl create --config nni/examples/trials/mnist/config.yml --port 8088 --debug
-    ```
-
-  Note:
+  ```bash
+  nnictl create --config nni/examples/trials/mnist/config.yml
   ```
-  Debug mode will disable version check function in Trialkeeper.
+
+  > create a new experiment with specified port 8088
+
+  ```bash
+  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088
   ```
+
+  > create a new experiment with specified port 8088 and debug mode
+
+  ```bash
+  nnictl create --config nni/examples/trials/mnist/config.yml --port 8088 --debug
+  ```
+
+Note:
+
+```text
+Debug mode will disable version check function in Trialkeeper.
+```
 
 <a name="resume"></a>
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl resume`
 
-  * Description
+* Description
 
-    You can use this command to resume a stopped experiment.
+  You can use this command to resume a stopped experiment.
 
-  * Usage
+* Usage
 
-    ```bash
-    nnictl resume [OPTIONS]
-    ```
+  ```bash
+  nnictl resume [OPTIONS]
+  ```
 
-  * Options
+* Options
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
@@ -95,240 +95,242 @@ nnictl support commands:
   |--port, -p|  False| |Rest port of the experiment you want to resume|
   |--debug, -d|False||set debug mode|
 
-  * Example
+* Example
 
-    > resume an experiment with specified port 8088
+  > resume an experiment with specified port 8088
 
-    ```bash
-    nnictl resume [experiment_id] --port 8088
-    ```
+  ```bash
+  nnictl resume [experiment_id] --port 8088
+  ```
 
 <a name="stop"></a>
-
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl stop`
 
-  * Description
+* Description
 
-    You can use this command to stop a running experiment or multiple experiments.
+  You can use this command to stop a running experiment or multiple experiments.
 
-  * Usage
+* Usage
 
-    ```bash
-    nnictl stop [id]
-    ```
+  ```bash
+  nnictl stop [id]
+  ```
 
-  * Details & Examples
+* Details & Examples
 
-    1. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
+  1. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
 
       ```bash
       nnictl stop
       ```
 
-    2. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
+  1. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
 
       ```bash
       nnictl stop [experiment_id]
       ```
 
-    3. Users could use 'nnictl stop all' to stop all experiments.
+  1. Users could use 'nnictl stop all' to stop all experiments.
 
       ```bash
       nnictl stop all
       ```
-    4. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
-    5. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
-    6. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
+
+  1. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
+  1. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
+  1. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
 
 <a name="update"></a>
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl update`
 
-  * __nnictl update searchspace__
-    * Description
+* __nnictl update searchspace__
+  * Description
 
-      You can use this command to update an experiment's search space.
+    You can use this command to update an experiment's search space.
 
-    * Usage
+  * Usage
 
-      ```bash
-      nnictl update searchspace [OPTIONS]
-      ```
+    ```bash
+    nnictl update searchspace [OPTIONS]
+    ```
 
-    * Options
+  * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
-    |--filename, -f|  True| |the file storing your new search space|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--filename, -f|  True| |the file storing your new search space|
 
-    * Example
+  * Example
 
-      `update experiment's new search space with file dir 'examples/trials/mnist/search_space.json'`
+    `update experiment's new search space with file dir 'examples/trials/mnist/search_space.json'`
 
-      ```bash
-      nnictl update searchspace [experiment_id] --file examples/trials/mnist/search_space.json
-      ```
+    ```bash
+    nnictl update searchspace [experiment_id] --file examples/trials/mnist/search_space.json
+    ```
 
-  * __nnictl update concurrency__  
-    * Description
+* __nnictl update concurrency__  
 
-      You can use this command to update an experiment's concurrency.
+  * Description
 
-    * Usage
+     You can use this command to update an experiment's concurrency.
 
-      ```bash
-      nnictl update concurrency [OPTIONS]
-      ```
+  * Usage
 
-    * Options
+    ```bash
+    nnictl update concurrency [OPTIONS]
+    ```
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
-    |--value, -v|  True| |the number of allowed concurrent trials|
+  * Options
 
-    * Example
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--value, -v|  True| |the number of allowed concurrent trials|
 
-      > update experiment's concurrency
+  * Example
 
-      ```bash
-      nnictl update concurrency [experiment_id] --value [concurrency_number]
-      ```
+    > update experiment's concurrency
 
-  * __nnictl update duration__  
+    ```bash
+    nnictl update concurrency [experiment_id] --value [concurrency_number]
+    ```
 
-    * Description
+* __nnictl update duration__  
 
-      You can use this command to update an experiment's duration.  
+  * Description
 
-    * Usage
+    You can use this command to update an experiment's duration.  
 
-      ```bash
-      nnictl update duration [OPTIONS]
-      ```
+  * Usage
 
-    * Options
+    ```bash
+    nnictl update duration [OPTIONS]
+    ```
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
-    |--value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|
+  * Options
 
-    * Example
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--value, -v|  True| |the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days.|
 
-      > update experiment's duration
+  * Example
 
-      ```bash
-      nnictl update duration [experiment_id] --value [duration]
-      ```
+    > update experiment's duration
 
-  * __nnictl update trialnum__  
-    * Description
+    ```bash
+    nnictl update duration [experiment_id] --value [duration]
+    ```
 
-      You can use this command to update an experiment's maxtrialnum.
+* __nnictl update trialnum__  
+  * Description
 
-    * Usage
+    You can use this command to update an experiment's maxtrialnum.
 
-      ```bash
-      nnictl update trialnum [OPTIONS]
-      ```
+  * Usage
 
-    * Options
+    ```bash
+    nnictl update trialnum [OPTIONS]
+    ```
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
-    |--value, -v|  True| |the new number of maxtrialnum you want to set|
+  * Options
 
-    * Example
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
+  |--value, -v|  True| |the new number of maxtrialnum you want to set|
 
-      > update experiment's trial num
+  * Example
 
-      ```bash
-      nnictl update trialnum --id [experiment_id] --value [trial_num]
-      ```
+    > update experiment's trial num
+
+    ```bash
+    nnictl update trialnum --id [experiment_id] --value [trial_num]
+    ```
 
 <a name="trial"></a>
-
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl trial`
 
-  * __nnictl trial ls__
+* __nnictl trial ls__
 
-    * Description
+  * Description
 
-      You can use this command to show trial's information.
+    You can use this command to show trial's information.
 
-    * Usage
+  * Usage
 
-      ```bash
-      nnictl trial ls
-      ```
+    ```bash
+    nnictl trial ls
+    ```
 
-    * Options
+  * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the experiment you want to set|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment you want to set|
 
-  * __nnictl trial kill__
+* __nnictl trial kill__
 
-    * Description
+  * Description
 
-      You can use this command to kill a trial job.
+    You can use this command to kill a trial job.
 
-    * Usage
+  * Usage
 
-      ```bash
-      nnictl trial kill [OPTIONS]
-      ```
+    ```bash
+    nnictl trial kill [OPTIONS]
+    ```
 
-    * Options
+  * Options
 
-    |Name, shorthand|Required|Default|Description|
-    |------|------|------ |------|
-    |id|  False| |ID of the trial to be killed|
-    |--experiment, -E|  True| |Experiment id of the trial|
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the trial to be killed|
+  |--experiment, -E|  True| |Experiment id of the trial|
 
-    * Example
+  * Example
 
-      > kill trail job
+    > kill trail job
 
-      ```bash
-      nnictl trial [trial_id] --vexperiment [experiment_id]
-      ```
+    ```bash
+    nnictl trial [trial_id] --vexperiment [experiment_id]
+    ```
 
-  * __nnictl trial export__
-    * Description
-        You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+* __nnictl trial export__
+  * Description
 
-    * Usage
-        ```bash
-        nnictl trial export [OPTIONS]
-        ```
-    * Options
-    
+    You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+
+  * Usage
+
+    ```bash
+    nnictl trial export [OPTIONS]
+    ```
+
+  * Options
+
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
   |id|  False| |ID of the experiment    |
   |--file|  True| |File path of the output csv file     |
 
-
 <a name="top"></a>
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
 
-  * Description
+* Description
 
-    Monitor all of running experiments.
+  Monitor all of running experiments.
 
-  * Usage
+* Usage
 
-    ```bash
-    nnictl top
-    ```
+  ```bash
+  nnictl top
+  ```
 
-  * Options  
+* Options  
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
@@ -336,7 +338,6 @@ nnictl support commands:
   |--time, -t|  False| |The interval to update the experiment status, the unit of time is second, and the default value is 3 second.|
 
 <a name="experiment"></a>
-
 ![](https://placehold.it/15/1589F0/000000?text=+) `Manage experiment information`
 
 * __nnictl experiment show__
@@ -388,18 +389,17 @@ nnictl support commands:
     ```
 
 <a name="config"></a>
-
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
 
-  * Description
+* Description
 
-    Display the current context information.
+  Display the current context information.
 
-  * Usage
+* Usage
 
-    ```bash
-    nnictl config show
-    ```
+  ```bash
+  nnictl config show
+  ```
 
 <a name="log"></a>
 
@@ -474,13 +474,11 @@ nnictl support commands:
   |--experiment, -E|  False| |Experiment ID of the trial, required when id is not empty.|
 
 <a name="webui"></a>
-
 ![](https://placehold.it/15/1589F0/000000?text=+) `Manage webui`
 
 * __nnictl webui url__
 
 <a name="tensorboard"></a>
-
 ![](https://placehold.it/15/1589F0/000000?text=+) `Manage tensorboard`
 
 * __nnictl tensorboard start__
@@ -514,7 +512,7 @@ nnictl support commands:
 * __nnictl tensorboard stop__
   * Description
 
-    Stop all of the tensorboard process. 
+    Stop all of the tensorboard process.
 
   * Usage
 
