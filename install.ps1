@@ -1,8 +1,6 @@
 $install_node = $TRUE
 $install_yarn = $TRUE
 
-$PIP_INSTALL = "python -m pip install ."
-
 # nodejs
 $nodeUrl = "https://aka.ms/nni/nodejs-download/win64"
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
@@ -25,8 +23,14 @@ $WHICH_PIP = where.exe pip
 if($WHICH_PIP -eq $null){
     throw "Can not find pip"
 }
-$NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+if($WHICH_PYTHON[0].Length -eq 1){
+    $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+}
+else{
+    $NNI_PYTHON3 = $WHICH_PYTHON[0].SubString(0,$WHICH_PYTHON[0].Length-11)
+}
 $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
+$PIP_INSTALL = "$NNI_PYTHON3\python -m pip install ."
 
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
     New-Item $NNI_DEPENDENCY_FOLDER -ItemType Directory
