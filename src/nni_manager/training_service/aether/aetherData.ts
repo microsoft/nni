@@ -29,11 +29,14 @@ class AetherTrialJobDetail implements TrialJobDetail {
     public readonly id: string;
     public status: TrialJobStatus;
     public readonly submitTime: number;
+    public startTime?: number;
+    public endTime?: number;
     public url: string;
     public guid: Deferred<string>; // GUID of Aether Experiment
     public readonly workingDirectory: string;
     public form: JobApplicationForm;
     public readonly sequenceId: number;
+    public isEarlyStopped?: boolean;
     public clientProc: ChildProcess;
     public readonly aetherConfig: AetherConfig;
 
@@ -55,6 +58,7 @@ class AetherTrialJobDetail implements TrialJobDetail {
         this.workingDirectory = workingDirectory;
         this.form = form;
         this.sequenceId = sequenceId;
+        this.isEarlyStopped = false;
         this.clientProc = clientProc;
         this.aetherConfig = aetherConfig;
     }

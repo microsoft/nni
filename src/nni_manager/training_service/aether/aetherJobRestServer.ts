@@ -81,11 +81,6 @@ export class AetherJobRestServer extends RestServer {
             next();
         });
 
-        router.get('/hello/', (req: Request, res: Response) => {
-            res.status(200);
-            res.send('hello world!');
-        });
-
         // report metric for trial
         router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
@@ -110,6 +105,11 @@ export class AetherJobRestServer extends RestServer {
                     throw Error(`unable to find trial job by Id ${req.params.trialId}`);
                 }
                 trial.status = req.body.status;
+                if (req.body.status === 'RUNNING') {
+                    trial.startTime = Date.now();
+                } else if (req.body.status === 'SUCCEEDED' || req.body.status === 'FAILED' || req.body.status === 'USER_CANCELED') {
+                    trial.endTime = Date.now();
+                }
             } catch (err) {
                 this.log.error(err.message);
                 res.status(500);

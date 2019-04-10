@@ -133,7 +133,7 @@ class AetherTrainingService implements TrainingService {
             const stdout_open: Deferred<void> = new Deferred<void>();
             stdout.on('open', () => {stdout_open.resolve();});
             await Promise.all([stderr_open.promise, stdout_open.promise]);
-            const clientProc: ChildProcess = spawn(this.aetherClientExePath, clientCmdArgs, {stdio: ['ignore', stdout, stderr]});
+            const clientProc: ChildProcess = spawn(this.aetherClientExePath, clientCmdArgs, {stdio: ['pipe', stdout, stderr]});
 
             const trialDetail: AetherTrialJobDetail = new AetherTrialJobDetail(
                 trialJobId,
@@ -166,13 +166,24 @@ class AetherTrainingService implements TrainingService {
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.off('metric', listener);
     }
-    public async cancelTrialJob(trialJobId: string): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trial: AetherTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (!trial) {
             return Promise.reject(new Error(`Trial ${trialJobId} not found`));
         }
-        trial.clientProc.kill();
-        trial.status = 'SYS_CANCELED';  //USER or SYS CANCELLED?
+
+        if (!trial.clientProc.killed) {
+            trial.isEarlyStopped = isEarlyStopped;
+            const deferred_exit = new Deferred<void>();
+            trial.clientProc.on('exit', () => {
+                trial.status = 'USER_CANCELED';  //USER or SYS CANCELLED?
+                deferred_exit.resolve();
+            })
+            trial.clientProc.stdin.write('0');
+            return deferred_exit.promise;
+        }
+
+        this.log.warning(`Daemon Process for Trial ${trialJobId} already exited.`);
 
         return Promise.resolve();
     }
@@ -203,6 +214,7 @@ class AetherTrainingService implements TrainingService {
         this.log.info('Stopping Aether Training Service...');
         this.runDeferred.resolve();
 
+        // cancel running jobs?
         return Promise.resolve();
     }
 
