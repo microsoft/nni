@@ -333,7 +333,6 @@ class Hyperband(MsgDispatcherBase):
         """
         self.handle_update_search_space(data)
         send(CommandType.Initialized, '')
-        return True
 
     def handle_request_trial_jobs(self, data):
         """
@@ -344,8 +343,6 @@ class Hyperband(MsgDispatcherBase):
         """
         for _ in range(data):
             self._request_one_trial_job()
-
-        return True
 
     def _request_one_trial_job(self):
         """get one trial job, i.e., one hyperparameter configuration."""
@@ -372,8 +369,6 @@ class Hyperband(MsgDispatcherBase):
         }
         send(CommandType.NewTrialJob, json_tricks.dumps(ret))
 
-        return True
-
     def handle_update_search_space(self, data):
         """data: JSON object, which is search space
         
@@ -384,8 +379,6 @@ class Hyperband(MsgDispatcherBase):
         """
         self.searchspace_json = data
         self.random_state = np.random.RandomState()
-
-        return True
 
     def handle_trial_end(self, data):
         """
@@ -415,8 +408,6 @@ class Hyperband(MsgDispatcherBase):
                 send(CommandType.NewTrialJob, json_tricks.dumps(ret))
                 self.credit -= 1
 
-        return True
-
     def handle_report_metric_data(self, data):
         """
         Parameters
@@ -441,8 +432,6 @@ class Hyperband(MsgDispatcherBase):
             self.brackets[bracket_id].set_config_perf(int(i), data['parameter_id'], data['sequence'], value)
         else:
             raise ValueError('Data type not supported: {}'.format(data['type']))
-
-        return True
 
     def handle_add_customized_trial(self, data):
         pass
