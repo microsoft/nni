@@ -53,7 +53,7 @@ More details about how to run an experiment, please refer to [Get Started](Quick
 * [How to customize your own tuner?](Customize_Tuner.md)
 * [What are assessors supported by NNI?](Builtin_Assessors.md)
 * [How to customize your own assessor?](Customize_Assessor.md)
-* [How to run an experiment on local?](tutorial_1_CR_exp_local_api.md)
+* [How to run an experiment on local?](LocalMode.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
 * [Examples](mnist_examples.md)

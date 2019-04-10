@@ -13,3 +13,4 @@
     训练平台<training_services>
     如何使用 Docker <HowToUseDocker>
     高级功能<advanced>
+    如何调试<HowToDebug>

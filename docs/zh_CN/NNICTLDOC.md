@@ -50,7 +50,7 @@ nnictl 支持的命令：
   
   注意：
   
-      调试模式会禁用 Trialkeeper 中的版本检查功能。
+      调试模式会禁用 Trialkeeper 中的版本校验功能。
       
 
 <a name="resume"></a>
@@ -462,7 +462,7 @@ nnictl 支持的命令：
 
 <a name="version"></a>
 
-### 检查 NNI 版本
+### NNI 版本校验
 
 * **nnictl --version**
   
