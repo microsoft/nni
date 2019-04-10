@@ -55,49 +55,49 @@ nnictl 支持的命令：
   nnictl create --config nni/examples/trials/mnist/config.yml
   ```
   
-  > create a new experiment with specified port 8088
+  > 在指定的端口 8088 上创建新的 Experiment
   
   ```bash
   nnictl create --config nni/examples/trials/mnist/config.yml --port 8088
   ```
   
-  > create a new experiment with specified port 8088 and debug mode
+  > 在指定的端口 8088 上创建新的 Experiment，并启用调试模式
   
   ```bash
   nnictl create --config nni/examples/trials/mnist/config.yml --port 8088 --debug
   ```
 
-Note:
+注意：
 
 ```text
-Debug mode will disable version check function in Trialkeeper.
+调试模式会禁用 Trialkeeper 中的版本校验功能。
 ```
 
 <a name="resume"></a>
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl resume`
 
-* Description
+* 说明
   
-  You can use this command to resume a stopped experiment.
+  使用此命令恢复已停止的 Experiment。
 
-* Usage
+* 用法
   
   ```bash
   nnictl resume [OPTIONS]
   ```
 
-* Options
+* 选项
   
-  | Name, shorthand | Required | Default | Description                                    |
-  | --------------- | -------- | ------- | ---------------------------------------------- |
-  | id              | True     |         | The id of the experiment you want to resume    |
-  | --port, -p      | False    |         | Rest port of the experiment you want to resume |
-  | --debug, -d     | False    |         | set debug mode                                 |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                               |
+  | ----------- | ----- | --- | -------------------------------- |
+  | id          | True  |     | 要恢复的 Experiment 标识               |
+  | --port, -p  | False |     | 要恢复的 Experiment 使用的 RESTful 服务端口 |
+  | --debug, -d | False |     | 设置为调试模式                          |
 
-* Example
+* 样例
   
-  > resume an experiment with specified port 8088
+  > 在指定的端口 8088 上恢复 Experiment
   
   ```bash
   nnictl resume [experiment_id] --port 8088
@@ -106,43 +106,43 @@ Debug mode will disable version check function in Trialkeeper.
 <a name="stop"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl stop`
 
-* Description
+* 说明
   
-  You can use this command to stop a running experiment or multiple experiments.
+  使用此命令来停止正在运行的单个或多个 Experiment。
 
-* Usage
+* 用法
   
   ```bash
   nnictl stop [id]
   ```
 
-* Details & Examples
+* 详细信息及样例
   
-  1. If there is no id specified, and there is an experiment running, stop the running experiment, or print error message.
+  1. 如果没有指定 id，并且当前有运行的 Experiment，则会停止该 Experiment，否则会输出错误信息。
     
         ```bash
         nnictl stop
         ```
         
   
-  2. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
+  2. 如果指定了 id，并且此 id 匹配正在运行的 Experiment，nnictl 会停止相应的 Experiment，否则会输出错误信息。
     
         ```bash
         nnictl stop [experiment_id]
         ```
         
   
-  3. Users could use 'nnictl stop all' to stop all experiments.
+  3. 可使用 'nnictl stop all' 来停止所有的 Experiment。
     
         ```bash
         nnictl stop all
         ```
         
   
-  4. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
+  4. 如果 id 以 * 结尾，nnictl 会停止所有匹配此通配符的 Experiment。
   
-  5. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
-  6. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
+  5. 如果 id 不存在，但匹配了某个Experiment 的 id 前缀，nnictl 会停止匹配的Experiment 。
+  6. 如果 id 不存在，但匹配了多个 Experiment id 的前缀，nnictl 会输出这些 id 的信息。
 
 <a name="update"></a>
 
@@ -150,26 +150,26 @@ Debug mode will disable version check function in Trialkeeper.
 
 * **nnictl update searchspace**
   
-  * Description
+  * 说明
     
-    You can use this command to update an experiment's search space.
+    可以用此命令来更新 Experiment 的搜索空间。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl update searchspace [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | 参数及缩写          | 是否必需  | 默认值 | 说明                                     |
-  | -------------- | ----- | --- | -------------------------------------- |
-  | id             | False |     | 需要设置的 Experiment 的 id                  |
-  | --filename, -f | True  |     | the file storing your new search space |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                    |
+  | -------------- | ----- | --- | --------------------- |
+  | id             | False |     | 需要设置的 Experiment 的 id |
+  | --filename, -f | True  |     | 新的搜索空间文件名             |
   
-  * Example
+  * 样例
     
-    `update experiment's new search space with file dir 'examples/trials/mnist/search_space.json'`
+    `使用 'examples/trials/mnist/search_space.json' 来更新 Experiment 的搜索空间`
     
     ```bash
     nnictl update searchspace [experiment_id] --file examples/trials/mnist/search_space.json
@@ -177,26 +177,26 @@ Debug mode will disable version check function in Trialkeeper.
 
 * **nnictl update concurrency**
   
-  * Description
+  * 说明
     
-    You can use this command to update an experiment's concurrency.
+    可以用此命令来更新 Experiment 的并发设置。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl update concurrency [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                             |
-  | --------------- | -------- | ------- | --------------------------------------- |
-  | id              | False    |         | ID of the experiment you want to set    |
-  | --value, -v     | True     |         | the number of allowed concurrent trials |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                    |
+  | ----------- | ----- | --- | --------------------- |
+  | id          | False |     | 需要设置的 Experiment 的 id |
+  | --value, -v | True  |     | 允许同时运行的 Trial 的数量     |
   
-  * Example
+  * 样例
     
-    > update experiment's concurrency
+    > 更新 Experiment 的并发数量
     
     ```bash
     nnictl update concurrency [experiment_id] --value [concurrency_number]
@@ -204,26 +204,26 @@ Debug mode will disable version check function in Trialkeeper.
 
 * **nnictl update duration**
   
-  * Description
+  * 说明
     
-    You can use this command to update an experiment's duration.
+    可以用此命令来更新 Experiment 的运行时间。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl update duration [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                                                                                                                  |
-  | --------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-  | id              | False    |         | ID of the experiment you want to set                                                                                                         |
-  | --value, -v     | True     |         | the experiment duration will be NUMBER seconds. SUFFIX may be 's' for seconds (the default), 'm' for minutes, 'h' for hours or 'd' for days. |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                                                                      |
+  | ----------- | ----- | --- | ----------------------------------------------------------------------- |
+  | id          | False |     | 需要设置的 Experiment 的 id                                                   |
+  | --value, -v | True  |     | Experiment 持续时间如没有单位，则为秒。 后缀可以为 's' 即秒 (默认值), 'm' 即分钟, 'h' 即小时或 'd' 即天。 |
   
-  * Example
+  * 样例
     
-    > update experiment's duration
+    > 修改 Experiment 的执行时间
     
     ```bash
     nnictl update duration [experiment_id] --value [duration]
@@ -231,26 +231,26 @@ Debug mode will disable version check function in Trialkeeper.
 
 * **nnictl update trialnum**
   
-  * Description
+  * 说明
     
-    You can use this command to update an experiment's maxtrialnum.
+    可以用此命令来更新 Experiment 的最大 Trial 数量。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl update trialnum [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                   |
-  | --------------- | -------- | ------- | --------------------------------------------- |
-  | id              | False    |         | ID of the experiment you want to set          |
-  | --value, -v     | True     |         | the new number of maxtrialnum you want to set |
+  | 参数及缩写       | 是否必需  | 默认值 | 说明                    |
+  | ----------- | ----- | --- | --------------------- |
+  | id          | False |     | 需要设置的 Experiment 的 id |
+  | --value, -v | True  |     | 需要设置的 maxtrialnum 的数量 |
   
-  * Example
+  * 样例
     
-    > update experiment's trial num
+    > 更新 Experiment 的 Trial 数量
     
     ```bash
     nnictl update trialnum --id [experiment_id] --value [trial_num]
@@ -261,42 +261,42 @@ Debug mode will disable version check function in Trialkeeper.
 
 * **nnictl trial ls**
   
-  * Description
+  * 说明
     
-    You can use this command to show trial's information.
+    使用此命令来查看 Trial 的信息。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl trial ls
     ```
   
-  * Options
+  * 选项
   
-  | 参数及缩写 | 是否必需  | 默认值 | 说明                                   |
-  | ----- | ----- | --- | ------------------------------------ |
-  | id    | False |     | ID of the experiment you want to set |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
+  | ----- | ----- | --- | --------------------- |
+  | id    | False |     | 需要设置的 Experiment 的 id |
 
 * **nnictl trial kill**
   
-  * Description
+  * 说明
     
-    You can use this command to kill a trial job.
+    此命令用于终止 Trial。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl trial kill [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand  | Required | Default | Description                  |
-  | ---------------- | -------- | ------- | ---------------------------- |
-  | id               | False    |         | ID of the trial to be killed |
-  | --experiment, -E | True     |         | Experiment id of the trial   |
+  | 参数及缩写            | 是否必需  | 默认值 | 说明                    |
+  | ---------------- | ----- | --- | --------------------- |
+  | id               | False |     | 要终止的 Trial 的 id       |
+  | --experiment, -E | True  |     | Trial 的 Experiment id |
   
-  * Example
+  * 样例
     
     > kill trail job
     
@@ -367,29 +367,29 @@ Debug mode will disable version check function in Trialkeeper.
 
 * **nnictl experiment status**
   
-  * Description
+  * 说明
     
-    Show the status of experiment.
+    显示 Experiment 的状态。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment status
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
+  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
+  | ----- | ----- | --- | --------------------- |
+  | id    | False |     | 需要设置的 Experiment 的 id |
 
 * **nnictl experiment list**
   
-  * Description
+  * 说明
     
-    Show the information of all the (running) experiments.
+    显示正在运行的 Experiment 的信息
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment list
@@ -398,11 +398,11 @@ Debug mode will disable version check function in Trialkeeper.
 <a name="config"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
 
-* Description
+* 说明
   
-  Display the current context information.
+  显示当前上下文信息。
 
-* Usage
+* 用法
   
   ```bash
   nnictl config show
@@ -410,7 +410,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 <a name="log"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage log`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理日志`
 
 * **nnictl log stdout**
   
