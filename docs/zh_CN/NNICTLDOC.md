@@ -28,11 +28,11 @@ nnictl 支持的命令：
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl create`
 
-    * Description
+    * 说明
     
-      You can use this command to create a new experiment, using the configuration specified in config file. 
+      此命令使用参数中的配置文件，来创建新的 Experiment。 
     
-      After this command is successfully done, the context will be set as this experiment, which means the following command you issued is associated with this experiment, unless you explicitly changes the context(not supported yet).
+      此命令成功完成后，上下文会被设置为此 Experiment。这意味着如果不显式改变上下文（暂不支持），输入的以下命令，都作用于此 Experiment。
     
     * Usage
     
