@@ -478,6 +478,7 @@ def parse_trial_data(content):
     for trial_data in content:
         for phase_i in range(len(trial_data['hyperParameters'])):
             hparam = json.loads(trial_data['hyperParameters'][phase_i])['parameters']
+            hparam['id'] = trial_data['id']
             if 'finalMetricData' in trial_data.keys() and phase_i < len(trial_data['finalMetricData']):
                 reward = json.loads(trial_data['finalMetricData'][phase_i]['data'])
                 if isinstance(reward, (float, int)):
@@ -493,7 +494,6 @@ def parse_trial_data(content):
 
 def export_trials_data(args):
     """export experiment metadata to csv
-    :param: csv file path to export
     """
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
