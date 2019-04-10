@@ -22,6 +22,7 @@ smac_tuner.py
 """
 
 from nni.tuner import Tuner
+from nni.utils import extract_scalar_reward
 
 import sys
 import logging
@@ -166,7 +167,7 @@ class SMACTuner(Tuner):
         RuntimeError
             Received parameter id not in total_data
         """
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         if self.optimize_mode is OptimizeMode.Maximize:
             reward = -reward
 
@@ -192,17 +193,20 @@ class SMACTuner(Tuner):
         Returns
         -------
         dict
-            challenger dict
+            dict which stores copy of challengers
         """
+        converted_dict = {}
         for key, value in challenger_dict.items():
             # convert to loguniform
             if key in self.loguniform_key:
-                challenger_dict[key] = np.exp(challenger_dict[key])
+                converted_dict[key] = np.exp(challenger_dict[key])
             # convert categorical back to original value
-            if key in self.categorical_dict:
+            elif key in self.categorical_dict:
                 idx = challenger_dict[key]
-                challenger_dict[key] = self.categorical_dict[key][idx]
-        return challenger_dict
+                converted_dict[key] = self.categorical_dict[key][idx]
+            else:
+                converted_dict[key] = value
+        return converted_dict
 
     def generate_parameters(self, parameter_id):
         """generate one instance of hyperparameters
@@ -220,13 +224,11 @@ class SMACTuner(Tuner):
         if self.first_one:
             init_challenger = self.smbo_solver.nni_smac_start()
             self.total_data[parameter_id] = init_challenger
-            json_tricks.dumps(init_challenger.get_dictionary())
             return self.convert_loguniform_categorical(init_challenger.get_dictionary())
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
             for challenger in challengers:
                 self.total_data[parameter_id] = challenger
-                json_tricks.dumps(challenger.get_dictionary())
                 return self.convert_loguniform_categorical(challenger.get_dictionary())
 
     def generate_multiple_parameters(self, parameter_id_list):
@@ -247,7 +249,6 @@ class SMACTuner(Tuner):
             for one_id in parameter_id_list:
                 init_challenger = self.smbo_solver.nni_smac_start()
                 self.total_data[one_id] = init_challenger
-                json_tricks.dumps(init_challenger.get_dictionary())
                 params.append(self.convert_loguniform_categorical(init_challenger.get_dictionary()))
         else:
             challengers = self.smbo_solver.nni_smac_request_challengers()
@@ -257,7 +258,6 @@ class SMACTuner(Tuner):
                 if cnt >= len(parameter_id_list):
                     break
                 self.total_data[parameter_id_list[cnt]] = challenger
-                json_tricks.dumps(challenger.get_dictionary())
                 params.append(self.convert_loguniform_categorical(challenger.get_dictionary()))
                 cnt += 1
         return params

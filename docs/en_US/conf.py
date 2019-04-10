@@ -28,7 +28,7 @@ author = 'Microsoft'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v0.5.1'
+release = 'v0.6'
 
 # -- General configuration ---------------------------------------------------
 

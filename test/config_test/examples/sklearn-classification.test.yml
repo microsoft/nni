@@ -7,8 +7,6 @@ searchSpacePath: ../../../examples/trials/sklearn/classification/search_space.js
 
 tuner:
   builtinTunerName: Random
-  classArgs:
-    optimize_mode: maximize
 assessor:
   builtinAssessorName: Medianstop
   classArgs:

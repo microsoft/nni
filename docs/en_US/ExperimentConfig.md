@@ -4,9 +4,10 @@ A config file is needed when create an experiment, the path of the config file i
 The config file is written in YAML format, and need to be written correctly.
 This document describes the rule to write config file, and will provide some examples and templates. 
 
-* [Template](#Template) (the templates of an config file)
-* [Configuration spec](#Configuration) (the configuration specification of every attribute in config file)
-* [Examples](#Examples) (the examples of config file)
+- [Experiment config reference](#experiment-config-reference)
+  - [Template](#template)
+  - [Configuration spec](#configuration-spec)
+  - [Examples](#examples)
 
 <a name="Template"></a>
 ## Template
@@ -203,6 +204,11 @@ machineList:
 
     __logLevel__ sets log level for the experiment, available log levels are: `trace, debug, info, warning, error, fatal`. The default value is `info`.
 
+* __logCollection__
+  * Description
+
+    __logCollection__ set the way to collect log in remote, pai, kubeflow, frameworkcontroller platform. There are two ways to collect log, one way is from `http`, trial keeper will post log content back from http request in this way, but this way may slow down the speed to process logs in trialKeeper. The other way is `none`, trial keeper will not post log content back, and only post job metrics. If your log content is too big, you could consider setting this param be `none`.
+
 * __tuner__
   * Description
 
@@ -211,6 +217,7 @@ machineList:
     * __builtinTunerName__
 
       __builtinTunerName__ specifies the name of system tuner, NNI sdk provides four kinds of tuner, including {__TPE__, __Random__, __Anneal__, __Evolution__, __BatchTuner__, __GridSearch__}
+
     * __classArgs__
 
       __classArgs__ specifies the arguments of tuner algorithm. If the __builtinTunerName__ is in {__TPE__, __Random__, __Anneal__, __Evolution__}, user should set __optimize_mode__.
@@ -227,11 +234,16 @@ machineList:
     * __classArgs__
 
       __classArgs__ specifies the arguments of tuner algorithm.
-    * __gpuNum__
+
+  * __gpuNum__
 
       __gpuNum__ specifies the gpu number to run the tuner process. The value of this field should be a positive number.
 
       Note: users could only specify one way to set tuner, for example, set {tunerName, optimizationMode} or {tunerCommand, tunerCwd}, and could not set them both.
+
+  * __includeIntermediateResults__
+
+      If __includeIntermediateResults__ is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of __includeIntermediateResults__ is false.
 
 * __assessor__
 
@@ -564,7 +576,7 @@ machineList:
 
 * __remote mode__
 
-  If run trial jobs in remote machine, users could specify the remote mahcine information as fllowing format:
+  If run trial jobs in remote machine, users could specify the remote machine information as following format:
 
   ```yaml
   authorName: test

@@ -98,9 +98,13 @@ def parse_args():
     parser_trial_ls.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_ls.set_defaults(func=trial_ls)
     parser_trial_kill = parser_trial_subparsers.add_parser('kill', help='kill trial jobs')
-    parser_trial_kill.add_argument('id', nargs='?', help='the id of experiment')
-    parser_trial_kill.add_argument('--trialid', '-t', required=True, dest='trialid', help='the id of trial to be killed')
+    parser_trial_kill.add_argument('id', nargs='?', help='id of the trial to be killed')
+    parser_trial_kill.add_argument('--experiment', '-E', required=True, dest='experiment', help='experiment id of the trial')
     parser_trial_kill.set_defaults(func=trial_kill)
+    parser_trial_export = parser_trial_subparsers.add_parser('export', help='export trial job results to csv')
+    parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_export.add_argument('--file', '-f', required=True, dest='csv_path', help='target csv file path')
+    parser_trial_export.set_defaults(func=export_trials_data)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
@@ -149,8 +153,8 @@ def parse_args():
     parser_log_stderr.add_argument('--path', action='store_true', default=False, help='get the path of stderr file')
     parser_log_stderr.set_defaults(func=log_stderr)
     parser_log_trial = parser_log_subparsers.add_parser('trial', help='get trial log path')
-    parser_log_trial.add_argument('id', nargs='?', help='the id of experiment')
-    parser_log_trial.add_argument('--trialid', '-T', dest='trialid', help='find trial log path by id')
+    parser_log_trial.add_argument('id', nargs='?', help='id of the trial to be found the log path')
+    parser_log_trial.add_argument('--experiment', '-E', dest='experiment', help='experiment id of the trial, xperiment ID of the trial, required when id is not empty.')
     parser_log_trial.set_defaults(func=log_trial)
 
     #parse package command

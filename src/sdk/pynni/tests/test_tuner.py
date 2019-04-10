@@ -23,6 +23,7 @@ import nni.protocol
 from nni.protocol import CommandType, send, receive
 from nni.tuner import Tuner
 from nni.msg_dispatcher import MsgDispatcher
+from nni.utils import extract_scalar_reward
 from io import BytesIO
 import json
 from unittest import TestCase, main
@@ -45,11 +46,11 @@ class NaiveTuner(Tuner):
         }
 
     def receive_trial_result(self, parameter_id, parameters, value):
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         self.trial_results.append((parameter_id, parameters['param'], reward, False))
 
     def receive_customized_trial_result(self, parameter_id, parameters, value):
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         self.trial_results.append((parameter_id, parameters['param'], reward, True))
 
     def update_search_space(self, search_space):
@@ -88,11 +89,12 @@ class TunerTestCase(TestCase):
 
         tuner = NaiveTuner()
         dispatcher = MsgDispatcher(tuner)
-        try:
-            dispatcher.run()
-        except Exception as e:
-            self.assertIs(type(e), AssertionError)
-            self.assertEqual(e.args[0], 'Unsupported command: CommandType.KillTrialJob')
+        nni.msg_dispatcher_base._worker_fast_exit_on_terminate = False
+
+        dispatcher.run()
+        e = dispatcher.worker_exceptions[0]
+        self.assertIs(type(e), AssertionError)
+        self.assertEqual(e.args[0], 'Unsupported command: CommandType.KillTrialJob')
 
         _reverse_io()  # now we are receiving from Tuner's outgoing stream
         self._assert_params(0, 2, [ ], None)

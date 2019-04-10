@@ -43,7 +43,7 @@ paiConfig:
 
 Note: You should set `trainingServicePlatform: pai` in NNI config YAML file if you want to start experiment in pai mode.
 
-Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have five additional keys:
+Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial configuration in pai mode have these additional keys:
 * cpuNum
     * Required key. Should be positive number based on your trial program's CPU  requirement
 * memoryMB
@@ -55,6 +55,10 @@ Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial con
     * Optional key. It specifies the HDFS data direcotry for trial to download data. The format should be something like hdfs://{your HDFS host}:9000/{your data directory}
 * outputDir 
     * Optional key. It specifies the HDFS output directory for trial. Once the trial is completed (either succeed or fail), trial's stdout, stderr will be copied to this directory by NNI sdk automatically. The format should be something like hdfs://{your HDFS host}:9000/{your output directory}
+* virtualCluster
+    * Optional key. Set the virtualCluster of OpenPAI. If omitted, the job will run on default virtual cluster.
+* shmMB
+    * Optional key. Set the shmMB configuration of OpenPAI, it set the shared memory for one task in the task role.
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 ```
@@ -79,3 +83,13 @@ You can see there're three fils in output folder: stderr, stdout, and trial.log
 If you also want to save trial's other output into HDFS, like model files, you can use environment variable `NNI_OUTPUT_DIR` in your trial code to save your own output files, and NNI SDK will copy all the files in `NNI_OUTPUT_DIR` from trial's container to HDFS. 
 
 Any problems when using NNI in pai mode, please create issues on [NNI github repo](https://github.com/Microsoft/nni).
+
+## version check
+NNI support version check feature in since version 0.6. It is a policy to insure the version of NNIManager is consistent with trialKeeper, and avoid errors caused by version incompatibility.  
+Check policy:  
+1. NNIManager before v0.6 could run any version of trialKeeper, trialKeeper support backward compatibility.
+2. Since version 0.6, NNIManager version should keep same with triakKeeper version. For example, if NNIManager version is 0.6, trialKeeper version should be 0.6 too.  
+3. Note that the version check feature only check first two digits of version.For example, NNIManager v0.6.1 could use trialKeeper v0.6 or trialKeeper v0.6.2, but could not use trialKeeper v0.5.1 or trialKeeper v0.7.  
+  
+If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.  
+![](../img/version_check.png)

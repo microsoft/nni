@@ -23,6 +23,7 @@ import os
 
 
 from nni.tuner import Tuner
+from nni.utils import extract_scalar_reward
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
 from nni.networkmorphism_tuner.nn import CnnGenerator, MlpGenerator
 from nni.networkmorphism_tuner.utils import Constant, OptimizeMode
@@ -161,7 +162,7 @@ class NetworkMorphismTuner(Tuner):
         value : dict/float
             if value is dict, it should have "default" key.
         """
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
 
         if parameter_id not in self.total_data:
             raise RuntimeError("Received parameter_id not in total_data.")

@@ -69,15 +69,16 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
         }
     }
 
-    public cleanUp(): Promise<void> {
+    public async cleanUp(): Promise<void> {
         if (this.gpuScheduler !== undefined) {
-            this.gpuScheduler.stop();
+            await this.gpuScheduler.stop();
         }
 
         return super.cleanUp();
     }
 
     protected onTrialJobStatusChanged(trialJob: LocalTrialJobDetailForGPU, oldStatus: TrialJobStatus): void {
+        super.onTrialJobStatusChanged(trialJob, oldStatus);
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length !== 0 && this.gpuScheduler !== undefined) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
                 for (const index of trialJob.gpuIndices) {
