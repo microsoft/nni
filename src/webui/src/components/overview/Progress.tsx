@@ -83,16 +83,16 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                             updateFile();
                                         }
                                     })
-                                    .catch(error => {
-                                        if (error.response.status === 500) {
-                                            if (error.response.data.error) {
-                                                message.error(error.response.data.error);
-                                            } else {
-                                                message.error(
-                                                    `Update ${CONTROLTYPE[1].toLocaleLowerCase()} failed`);
+                                        .catch(error => {
+                                            if (error.response.status === 500) {
+                                                if (error.response.data.error) {
+                                                    message.error(error.response.data.error);
+                                                } else {
+                                                    message.error(
+                                                        `Update ${CONTROLTYPE[1].toLocaleLowerCase()} failed`);
+                                                }
                                             }
-                                        }
-                                    });
+                                        });
                                     // btn -> edit
                                     this.setState(() => ({
                                         btnName: 'Edit',
