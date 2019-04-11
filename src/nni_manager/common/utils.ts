@@ -434,10 +434,10 @@ async function killPid(pid:any): Promise<void>{
     let deferred : Deferred<void> = new Deferred<void>();
     try {
         if (process.platform === "win32") {
-            await cpp.exec(`powershell.exe kill ${pid}`);
+            await cpp.exec(`cmd /c taskkill /PID ${pid} /F`);
         }
         else{
-            await cpp.exec(`kill ${pid}`);
+            await cpp.exec(`kill -9 ${pid}`);
         }
     } catch (error) {
         // pid does not exist, do nothing here

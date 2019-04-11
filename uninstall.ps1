@@ -2,16 +2,22 @@
 $NNI_DEPENDENCY_FOLDER = "C:\tmp\$env:USERNAME"
 
 $WHICH_PYTHON = where.exe python;
-$NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+if($WHICH_PYTHON[0].Length -eq 1){
+    $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+}
+else{
+    $NNI_PYTHON3 = $WHICH_PYTHON[0].SubString(0,$WHICH_PYTHON[0].Length-11)
+}
+
+$PIP_UNINSTALL = "$NNI_PYTHON3\python -m pip uninstall -y "
 $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
-$LIB_FOLDER = $NNI_PYTHON3 + "\Lib\site-packages"
-$NNI_LIB_FOLDER = $LIB_FOLDER + "\nni*"
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
  
 # uninstall
 Remove-Item $NNI_PKG_FOLDER -Recurse -Force
-Remove-Item $NNI_LIB_FOLDER -Recurse -Force
+cmd /C $PIP_UNINSTALL "nni-sdk"
+cmd /C $PIP_UNINSTALL "nni-tool"
 
 # clean
 Remove-Item "src/nni_manager/dist" -Recurse -Force
