@@ -111,7 +111,7 @@ def update_trialnum(args):
     else:
         print('ERROR: update %s failed!' % 'trialnum')
 
-def feed_data(args):
+def update_feed_data(args):
     validate_file(args.filename)
     content = load_search_space(args.filename)
     args.port = get_experiment_port(args)
