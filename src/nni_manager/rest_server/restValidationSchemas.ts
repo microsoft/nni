@@ -192,4 +192,10 @@ export namespace ValidationSchemas {
             maxSequenceId: joi.number()
         }
     };
+    export const FEEDTUNERDATA = {
+        body: {
+            value: joi.number().required(),
+            param: joi.object().required()
+        }
+    }
 }

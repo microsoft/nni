@@ -166,6 +166,9 @@ class MsgDispatcherBase(Recoverable):
     def handle_update_search_space(self, data):
        raise NotImplementedError('handle_update_search_space not implemented')
 
+    def handle_add_tuner_data(self, data):
+        raise NotImplementedError('handle_add_tuner_data not implemented')
+
     def handle_add_customized_trial(self, data):
         raise NotImplementedError('handle_add_customized_trial not implemented')
 

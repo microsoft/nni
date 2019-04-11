@@ -38,7 +38,7 @@ import {
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getLogLevel } from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
-    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
+    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, FEED_DATA_TO_TUNER
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 
@@ -97,6 +97,17 @@ class NNIManager implements Manager {
         }
 
         return this.storeExperimentProfile();
+    }
+
+    public feedTunerData(data: string): Promise<void> {
+        if (this.dispatcher == undefined) {
+            return Promise.reject(
+                new Error('tuner has not been setup')
+            );
+        }
+        this.dispatcher.sendCommand(FEED_DATA_TO_TUNER, data);
+
+        return Promise.resolve()
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<void> {

@@ -108,6 +108,9 @@ class MsgDispatcher(MsgDispatcherBase):
     def handle_update_search_space(self, data):
         self.tuner.update_search_space(data)
 
+    def handle_add_tuner_data(self, data):
+        self.tuner.feed_tuner_data(data)
+
     def handle_add_customized_trial(self, data):
          # data: parameters
         id_ = _create_parameter_id()

@@ -22,7 +22,7 @@
 import argparse
 import pkg_resources
 from .launcher import create_experiment, resume_experiment
-from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum
+from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, update_feed
 from .nnictl_utils import *
 from .package_management import *
 from .constants import *
@@ -84,6 +84,10 @@ def parse_args():
     parser_updater_trialnum.add_argument('--id', '-i', dest='id', help='the id of experiment')
     parser_updater_trialnum.add_argument('--value', '-v', required=True)
     parser_updater_trialnum.set_defaults(func=update_trialnum)
+    parser_updater_searchspace = parser_updater_subparsers.add_parser('feed', help='feed data to tuner')
+    parser_updater_searchspace.add_argument('id', nargs='?', help='the id of experiment')
+    parser_updater_searchspace.add_argument('--filename', '-f', required=True)
+    parser_updater_searchspace.set_defaults(func=update_feed)
 
     #parse stop command
     parser_stop = subparsers.add_parser('stop', help='stop the experiment')

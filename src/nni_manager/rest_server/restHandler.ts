@@ -63,6 +63,7 @@ class NNIRestHandler {
         this.checkStatus(router);
         this.getExperimentProfile(router);
         this.updateExperimentProfile(router);
+        this.feedTunerData(router);
         this.startExperiment(router);
         this.getTrialJobStatistics(router);
         this.setClusterMetaData(router);
@@ -138,6 +139,16 @@ class NNIRestHandler {
     private updateExperimentProfile(router: Router): void {
         router.put('/experiment', expressJoi(ValidationSchemas.UPDATEEXPERIMENT), (req: Request, res: Response) => {
             this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
+                res.send();
+            }).catch((err: Error) => {
+                this.handle_error(err, res);
+            });
+        });
+    }
+    
+    private feedTunerData(router: Router): void {
+        router.put('/experiment/tuner-data', expressJoi(ValidationSchemas.FEEDTUNERDATA), (req: Request, res: Response) => {
+            this.nniManager.feedTunerData(req.body).then(() => {
                 res.send();
             }).catch((err: Error) => {
                 this.handle_error(err, res);
