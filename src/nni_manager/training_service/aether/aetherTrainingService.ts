@@ -53,7 +53,7 @@ class AetherTrainingService implements TrainingService {
     }
 
     public  readonly trialJobsMap: Map<string, AetherTrialJobDetail>;
-    private aetherClientExePath: string = 'C:\\Users\\yann\\Desktop\\code\\AetherClient\\bin\\Debug\\AetherClient.exe';
+    private aetherClientExePath: string = 'C:\\Users\\yann\\Desktop\\NNIAetherClient\\bin\\Debug\\AetherClient.exe';
     private readonly metricsEmitter: EventEmitter;
     private nextTrialSequenceId: number;
     private readonly log!: Logger;
