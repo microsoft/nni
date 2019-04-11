@@ -410,9 +410,13 @@ async function isAlive(pid:any): Promise<boolean>{
     let deferred : Deferred<boolean> = new Deferred<boolean>();
     let alive: boolean = false;
     if(process.platform ==='win32'){
-        const str = cp.execSync(`tasklist /FI ${'"PID eq '+pid +'"'}`).toString();
-        if(!str.includes("No tasks")){
-            alive = true;
+        try {
+            const str = cp.execSync(`powershell.exe Get-Process -Id ${pid}`).toString();
+            if (str) {
+                alive = true;
+            }
+        }
+        catch (error) {
         }
     }
     else{
