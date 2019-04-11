@@ -58,7 +58,7 @@ paiConfig:
     * 可选。 指定了 Trial 用于下载数据的 HDFS 数据目录。 格式应为 hdfs://{your HDFS host}:9000/{数据目录}
 * outputDir 
     * 可选。 指定了 Trial 的 HDFS 输出目录。 Trial 在完成（成功或失败）后，Trial 的 stdout， stderr 会被 NNI 自动复制到此目录中。 格式应为 hdfs://{your HDFS host}:9000/{输出目录}
-* virturlCluster 
+* virtualCluster 
     * 可选。 设置 OpenPAI 的 virtualCluster，即虚拟集群。 如果未设置此参数，将使用默认的虚拟集群。
 * shmMB 
     * 可选。 设置 OpenPAI 的 shmMB，即 Docker 中的共享内存。
@@ -83,3 +83,15 @@ paiConfig:
 如果希望将 Trial 的模型数据等其它输出保存到HDFS中，可在 Trial 代码中使用 `NNI_OUTPUT_DIR` 来自己保存输出文件，NNI SDK会从 Trial 的容器中将 `NNI_OUTPUT_DIR` 中的文件复制到 HDFS 中。
 
 如果在使用 pai 模式时遇到任何问题，请到 [NNI Github](https://github.com/Microsoft/nni) 中创建问题。
+
+## 版本校验
+
+从 0.6 开始，NNI 支持版本校验。确保 NNIManager 与 trialKeeper 的版本一致，避免兼容性错误。  
+检查策略：
+
+1. 0.6 以前的 NNIManager 可与任何版本的 trialKeeper 一起运行，trialKeeper 支持向后兼容。
+2. 从 NNIManager 0.6 开始，与 triakKeeper 的版本必须一致。 例如，如果 NNIManager 是 0.6 版，则 trialKeeper 也必须是 0.6 版。 
+3. 注意，只有版本的前两位数字才会被检查。例如，NNIManager 0.6.1 可以和 trialKeeper 的 0.6 或 0.6.2 一起使用，但不能与 trialKeeper 的 0.5.1 或 0.7 版本一起使用。 
+
+如果 Experiment 无法运行，而且不能确认是否是因为版本不匹配造成的，可以在 Web 界面检查是否有相关的错误消息。  
+![](../img/version_check.png)

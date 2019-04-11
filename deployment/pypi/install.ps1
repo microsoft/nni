@@ -19,14 +19,16 @@ $NNI_VERSION_TEMPLATE = "999.0.0-developing"
 python -m pip install --user --upgrade setuptools wheel
 
 $nodeUrl = "https://aka.ms/nni/nodejs-download/win64"
-$NNI_NODE_TARBALL = "$CWD\node-$OS_SPEC-x64.tar.gz"
+$NNI_NODE_ZIP = "$CWD\node-$OS_SPEC-x64.zip"
 $NNI_NODE_FOLDER = "$CWD\node-$OS_SPEC-x64"
-(New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_TARBALL)
+$unzipNodeDir = "node-v*"
+(New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_ZIP)
 if(Test-Path $NNI_NODE_FOLDER){
     Remove-Item $NNI_NODE_FOLDER -Recurse -Force
 }
-New-Item $NNI_NODE_FOLDER -ItemType Directory
-cmd /c tar -xf $NNI_NODE_TARBALL -C $NNI_NODE_FOLDER --strip-components 1
+Expand-Archive $NNI_NODE_ZIP -DestinationPath $CWD
+$unzipNodeDir = Get-ChildItem "$CWD\$unzipNodeDir"
+Rename-Item $unzipNodeDir $NNI_NODE_FOLDER
 
 cd $CWD\..\..\src\nni_manager
 yarn
