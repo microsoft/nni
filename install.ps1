@@ -4,6 +4,8 @@ $install_yarn = $TRUE
 # nodejs
 $nodeUrl = "https://aka.ms/nni/nodejs-download/win64"
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
+$unzipNodeDir = "node-v*"
+$unzipYarnDir = "yarn-v*"
 
 $NNI_DEPENDENCY_FOLDER = "C:\tmp\$env:USERNAME"
 
@@ -35,7 +37,7 @@ $PIP_INSTALL = "$NNI_PYTHON3\python -m pip install ."
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
     New-Item $NNI_DEPENDENCY_FOLDER -ItemType Directory
 }
-$NNI_NODE_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-node.tar.gz"
+$NNI_NODE_ZIP = $NNI_DEPENDENCY_FOLDER+"\nni-node.zip"
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-yarn.tar.gz"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
@@ -45,9 +47,9 @@ $NNI_YARN = $NNI_YARN_FOLDER +"\bin\yarn"
 $NNI_VERSION_VALUE = $(git describe --tags)
 $NNI_VERSION_TEMPLATE = "999.0.0-developing"
 
-if(!(Test-Path $NNI_NODE_TARBALL)){
+if(!(Test-Path $NNI_NODE_ZIP)){
     Write-Host "Downloading Node..."
-    (New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_TARBALL)
+    (New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_ZIP)
 }
 
 if(!(Test-Path $NNI_YARN_TARBALL)){
@@ -55,20 +57,31 @@ if(!(Test-Path $NNI_YARN_TARBALL)){
     (New-Object Net.WebClient).DownloadFile($yarnUrl, $NNI_YARN_TARBALL)
 }
 
+$NNI_YARN_TARBALL = $NNI_YARN_TARBALL -split '\\' -join '\\'
+$NNI_DEPENDENCY_FOLDER = $NNI_DEPENDENCY_FOLDER -split '\\' -join '\\'
+$SCRIPT_PATH = $NNI_DEPENDENCY_FOLDER + '\extract.py'
+$SCRIPT =  "import tarfile",
+       ("tar = tarfile.open(""{0}"")" -f $NNI_YARN_TARBALL),
+       ("tar.extractall(""{0}"")" -f $NNI_DEPENDENCY_FOLDER),
+        "tar.close()"
+[System.IO.File]::WriteAllLines($SCRIPT_PATH, $SCRIPT)
+
 if ($install_node) {
     ### nodejs install
     if(Test-Path $NNI_NODE_FOLDER){
         Remove-Item $NNI_NODE_FOLDER -Recurse -Force
     }
-    New-Item $NNI_NODE_FOLDER -ItemType Directory
-	cmd /c tar -xf $NNI_NODE_TARBALL -C $NNI_NODE_FOLDER --strip-components 1
+	Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
+    $unzipNodeDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir"
+    Rename-Item $unzipNodeDir "nni-node"
      
     ### yarn install
     if(Test-Path $NNI_YARN_FOLDER){
         Remove-Item $NNI_YARN_FOLDER -Recurse -Force
     }
-    New-Item $NNI_YARN_FOLDER -ItemType Directory
-	cmd /c tar -xf $NNI_YARN_TARBALL -C $NNI_YARN_FOLDER --strip-components 1
+    cmd /C "$NNI_PYTHON3\python" $SCRIPT_PATH
+    $unzipYarnDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipYarnDir"
+    Rename-Item $unzipYarnDir "nni-yarn"
 }
 
 ### add to PATH
