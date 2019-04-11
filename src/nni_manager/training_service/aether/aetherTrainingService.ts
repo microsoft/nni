@@ -18,8 +18,8 @@
  */
 'use strict';
 
-import { ChildProcess, spawn } from 'child_process';
-// import * as fs from 'fs';
+import { ChildProcess, spawn} from 'child_process';
+import * as fs from 'fs';
 // import * as request from 'request';
 import * as path from 'path';
 import * as component from '../../common/component';
@@ -35,7 +35,7 @@ import {
     TrainingService,
     TrialJobMetric
 } from '../../common/trainingService';
-import { delay, getExperimentRootDir, uniqueString } from '../../common/utils';
+import { delay, getExperimentRootDir, uniqueString, mkDirP } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
 import { AetherConfig, AetherTrialJobDetail } from './aetherData';
 import { AetherJobRestServer } from './aetherJobRestServer';
@@ -53,7 +53,7 @@ class AetherTrainingService implements TrainingService {
     }
 
     public  readonly trialJobsMap: Map<string, AetherTrialJobDetail>;
-    private aetherClientExePath: string = 'echo';
+    private aetherClientExePath: string = 'C:\\Users\\yann\\Desktop\\code\\AetherClient\\bin\\Debug\\AetherClient.exe';
     private readonly metricsEmitter: EventEmitter;
     private nextTrialSequenceId: number;
     private readonly log!: Logger;
@@ -74,7 +74,7 @@ class AetherTrainingService implements TrainingService {
     public async run(): Promise<void> {
         this.log.info('Run Aether training service.');
         const restServer: AetherJobRestServer = component.get(AetherJobRestServer);
-        this.restServerAddress = restServer.endPoint;
+        this.restServerAddress = `http://${this.nniManagerIpConfig.nniManagerIp}:${restServer.clusterRestServerPort}`;
         await restServer.start();
 
         this.log.info(`Aether Training service rest server listening on: ${restServer.endPoint}`);
@@ -117,27 +117,41 @@ class AetherTrainingService implements TrainingService {
             return Promise.reject(new Error('Training Service Restful server for Aether Client not initialized'));
         }
 
-        const trialJobId: string = uniqueString(5);
-        const trialSequencdId: number = this.generateSequenceId();
-        const trialWorkingDirectory: string = path.join(getExperimentRootDir(), 'trials', trialJobId);
-        const clientCmdArgs: string[] = [this.restServerAddress, getExperimentId(), trialJobId];
-        this.log.info(`execute command: ${this.aetherClientExePath} ${clientCmdArgs.join(' ')}`);
-        const clientProc: ChildProcess = spawn(this.aetherClientExePath, clientCmdArgs);
-        const trialDetail: AetherTrialJobDetail = new AetherTrialJobDetail(
-            trialJobId,
-            'WAITING',
-            Date.now(),
-            trialWorkingDirectory,
-            form,
-            trialSequencdId,
-            clientProc,
-            this.aetherJobConfig
-        );
-        this.trialJobsMap.set(trialJobId, trialDetail);
-        const guid: string = await trialDetail.guid.promise;
-        trialDetail.url = `aether:\\experiment\\${guid}`;
-        deferred.resolve(trialDetail);
+        try {
+            const trialJobId: string = uniqueString(5);
+            const trialSequencdId: number = this.generateSequenceId();
+            const trialWorkingDirectory: string = path.join(getExperimentRootDir(), 'trials', trialJobId);
+            await mkDirP(trialWorkingDirectory);
 
+            // prepare daemon process, redirect stdout & stderr
+            const clientCmdArgs: string[] = [this.restServerAddress, getExperimentId(), trialJobId];
+            this.log.info(`execute command: ${this.aetherClientExePath} ${clientCmdArgs.join(' ')}`);
+            const stderr = fs.createWriteStream(path.join(trialWorkingDirectory, 'stderr'), );
+            const stderr_open: Deferred<void> = new Deferred<void>();
+            stderr.on('open', () => {stderr_open.resolve();});
+            const stdout = fs.createWriteStream(path.join(trialWorkingDirectory, 'stdout'));
+            const stdout_open: Deferred<void> = new Deferred<void>();
+            stdout.on('open', () => {stdout_open.resolve();});
+            await Promise.all([stderr_open.promise, stdout_open.promise]);
+            const clientProc: ChildProcess = spawn(this.aetherClientExePath, clientCmdArgs, {stdio: ['pipe', stdout, stderr]});
+
+            const trialDetail: AetherTrialJobDetail = new AetherTrialJobDetail(
+                trialJobId,
+                'WAITING',
+                Date.now(),
+                trialWorkingDirectory,
+                form,
+                trialSequencdId,
+                clientProc,
+                this.aetherJobConfig
+            );
+            this.trialJobsMap.set(trialJobId, trialDetail);
+            const guid: string = await trialDetail.guid.promise;
+            trialDetail.url = `aether:\\experiment\\${guid}`;
+            deferred.resolve(trialDetail);
+        } catch (err) {
+            return Promise.reject(err);
+        }
         return deferred.promise;
     }
 
@@ -152,13 +166,24 @@ class AetherTrainingService implements TrainingService {
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.off('metric', listener);
     }
-    public async cancelTrialJob(trialJobId: string): Promise<void> {
+    public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trial: AetherTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (!trial) {
             return Promise.reject(new Error(`Trial ${trialJobId} not found`));
         }
-        trial.clientProc.kill();
-        trial.status = 'SYS_CANCELED';  //USER or SYS CANCELLED?
+
+        if (!trial.clientProc.killed) {
+            trial.isEarlyStopped = isEarlyStopped;
+            const deferred_exit = new Deferred<void>();
+            trial.clientProc.on('exit', () => {
+                trial.status = 'USER_CANCELED';  //USER or SYS CANCELLED?
+                deferred_exit.resolve();
+            })
+            trial.clientProc.stdin.write('0');
+            return deferred_exit.promise;
+        }
+
+        this.log.warning(`Daemon Process for Trial ${trialJobId} already exited.`);
 
         return Promise.resolve();
     }
@@ -189,6 +214,7 @@ class AetherTrainingService implements TrainingService {
         this.log.info('Stopping Aether Training Service...');
         this.runDeferred.resolve();
 
+        // cancel running jobs?
         return Promise.resolve();
     }
 
