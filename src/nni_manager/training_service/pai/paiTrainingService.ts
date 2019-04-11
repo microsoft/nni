@@ -542,7 +542,9 @@ class PAITrainingService implements TrainingService {
                         deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
                     }
                 }
-                this.paiToken = body.token;
+                if(body.token) {
+                    this.paiToken = body.token;
+                }
                 this.paiTokenUpdateTime = new Date().getTime();
                 deferred.resolve();
             }
