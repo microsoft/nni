@@ -291,9 +291,11 @@ class PAITrainingService implements TrainingService {
         };
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
             if (error || response.statusCode >= 400) {
-                this.log.error(`PAI Training service: Submit trial ${trialJobId} to PAI Cluster failed!`);
+                const errorMessage : string = error ? error.message : 
+                    `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body}`;
+                this.log.error(errorMessage);
                 trialJobDetail.status = 'FAILED';
-                deferred.reject(error ? error.message : 'Submit trial failed, http code: ' + response.statusCode);                
+                deferred.reject(new Error(errorMessage));
             } else {
                 trialJobDetail.submitTime = Date.now();
                 deferred.resolve(trialJobDetail);
