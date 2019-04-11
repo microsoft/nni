@@ -505,10 +505,11 @@ class PAITrainingService implements TrainingService {
         };
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
             if (error || response.statusCode >= 400) {
-                this.log.error(`PAI Training service: Submit trial ${trialJobId} to PAI Cluster failed,
-                    error: ${error}, response: ${response}`);
+                const errorMessage : string = error ? error.message :
+                    `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body}`;
+                this.log.error(errorMessage);
                 trialJobDetail.status = 'FAILED';
-                deferred.reject(error ? error.message : `Submit trial failed, http code: ${response.statusCode}`);
+                deferred.reject(new Error(errorMessage));
             } else {
                 trialJobDetail.submitTime = Date.now();
                 deferred.resolve(true);
@@ -540,7 +541,7 @@ class PAITrainingService implements TrainingService {
 
     private async submitJobLoop(): Promise<void> {
         while (!this.stopping) {
-            while (this.jobQueue.length > 0) {
+            while (!this.stopping && this.jobQueue.length > 0) {
                 const trialJobId: string = this.jobQueue[0];
                 if (await this.submitTrialJobToPAI(trialJobId)) {
                     // Remove trial job with trialJobId from job queue
