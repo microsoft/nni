@@ -530,11 +530,17 @@ class PAITrainingService implements TrainingService {
         request(authentication_req, (error: Error, response: request.Response, body: any) => {
             if (error) {
                 this.log.error(`Get PAI token failed: ${error.message}`);
-                deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
+                //only throw error when update paiToken first time
+                if(!this.paiToken) {
+                    deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
+                }   
             } else {
                 if(response.statusCode !== 200){
                     this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
-                    deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
+                    //only throw error when update paiToken first time
+                    if(!this.paiToken) {
+                        deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
+                    }
                 }
                 this.paiToken = body.token;
                 this.paiTokenUpdateTime = new Date().getTime();
@@ -544,10 +550,17 @@ class PAITrainingService implements TrainingService {
         
         let timeoutId: NodeJS.Timer;
         const timeoutDelay: Promise<void> = new Promise<void>((resolve: Function, reject: Function): void => {
-            // Set timeout and reject the promise once reach timeout (5 seconds)
-            timeoutId = setTimeout(
-                () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
-                5000);
+            if(!this.paiToken) {
+                // Set timeout and reject the promise once reach timeout (5 seconds) when update paiToken first time
+                timeoutId = setTimeout(
+                    () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
+                    5000); 
+            }else {
+                // Do not reject Error message when paiToken is initialized, and set timeout be 50 seconds
+                timeoutId = setTimeout(
+                    () => resolve(),
+                    50000); 
+            }
         });
 
         return Promise.race([timeoutDelay, deferred.promise]).finally(() => clearTimeout(timeoutId));
