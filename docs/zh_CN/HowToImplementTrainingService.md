@@ -1,4 +1,4 @@
-# **怎样实现NNI的TrainingService**
+# **实现 NNI TrainingService**
 
 ## 概述
 
@@ -142,7 +142,7 @@ The run() function is a main loop function in TrainingService, users could set a
 **cleanUp()**  
 This function is called to clean up the environment when a experiment is stopped. Users should do the platform-related cleaning operation in this function.
 
-## TrialKeeper工具
+## TrialKeeper 工具
 
 NNI offers a TrialKeeper tool to help maintaining trial jobs. Users can find the source code in `nni/tools/nni_trial_tool`. If users want to run trial jobs in cloud platform, this tool will be a fine choice to help keeping trial running in the platform. The running architecture of TrialKeeper is show as follow:  
 ![](../img/trialkeeper.jpg)  
