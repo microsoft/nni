@@ -62,8 +62,6 @@ class MsgDispatcherBase(Recoverable):
 
         while True:
             command, data = receive()
-            _logger.info(data)
-            _logger.info(type(data))
             if data:
                 data = json_tricks.loads(data)
 
