@@ -114,6 +114,9 @@ Optional('assessor'): Or({
     Optional('classArgs'): dict,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 }),
+Optional('localConfig'): {
+    Optional('gpuIndices'): str
+}
 }
 
 common_trial_schema = {
@@ -254,7 +257,8 @@ Optional('machineList'):[Or({
     Optional('port'): And(int, lambda x: 0 < x < 65535),
     'username': str,
     'sshKeyPath': os.path.exists,
-    Optional('passphrase'): str
+    Optional('passphrase'): str,
+    Optional('gpuIndices'): str
 })]
 }
 

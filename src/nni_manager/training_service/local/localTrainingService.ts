@@ -99,6 +99,18 @@ class LocalTrialJobDetail implements TrialJobDetail {
 }
 
 /**
+ * Local training service config
+ */
+class LocalConfig {
+    public gpuIndices?: string;
+    constructor(gpuIndices?: string) {
+        if (gpuIndices !== undefined) {
+            this.gpuIndices = gpuIndices;
+        }
+    }
+}
+
+/**
  * Local machine training service
  */
 class LocalTrainingService implements TrainingService {
@@ -110,9 +122,11 @@ class LocalTrainingService implements TrainingService {
     private rootDir!: string;
     private trialSequenceId: number;
     private gpuScheduler!: GPUScheduler;
-    private availableGPUIndices: boolean[];
+    private availableGPUIndices: Set<number>;
+    private specifiedGPUIndices!: Set<number>;
     private log: Logger;
     private localTrailConfig?: TrialConfig;
+    private localConfig?: LocalConfig;
     private isMultiPhase: boolean = false;
     private jobStreamMap: Map<string, ts.Stream>;
 
@@ -126,8 +140,7 @@ class LocalTrainingService implements TrainingService {
         this.trialSequenceId = -1;
         this.jobStreamMap = new Map<string, ts.Stream>();
         this.log.info('Construct local machine training service.');
-        this.availableGPUIndices = Array(16)
-            .fill(false); // Assume the maximum gpu number is 16
+        this.availableGPUIndices = new Set<number>();
     }
 
     public async run(): Promise<void> {
@@ -256,7 +269,7 @@ class LocalTrainingService implements TrainingService {
         if (trialJob === undefined) {
             throw new NNIError(NNIErrorNames.NOT_FOUND, 'Trial job not found');
         }
-        if (trialJob.pid === undefined){
+        if (trialJob.pid === undefined) {
             this.setTrialJobStatus(trialJob, 'USER_CANCELED');
 
             return Promise.resolve();
@@ -289,6 +302,14 @@ class LocalTrainingService implements TrainingService {
                 this.log.info(`required GPU number is ${this.localTrailConfig.gpuNum}`);
                 if (this.gpuScheduler === undefined && this.localTrailConfig.gpuNum > 0) {
                     this.gpuScheduler = new GPUScheduler();
+                }
+                break;
+            case TrialConfigMetadataKey.LOCAL_CONFIG:
+                this.localConfig = <LocalConfig>JSON.parse(value);
+                this.log.info(`Specified GPU indices: ${this.localConfig.gpuIndices}`);
+                if (this.localConfig.gpuIndices !== undefined) {
+                    this.specifiedGPUIndices = new Set(this.localConfig.gpuIndices.split(',')
+                            .map((x: string) => parseInt(x, 10)));
                 }
                 break;
             case TrialConfigMetadataKey.MULTI_PHASE:
@@ -342,7 +363,7 @@ class LocalTrainingService implements TrainingService {
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length > 0 && this.gpuScheduler !== undefined) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
                 for (const index of trialJob.gpuIndices) {
-                    this.availableGPUIndices[index] = false;
+                    this.availableGPUIndices.add(index);
                 }
             }
         }
@@ -384,8 +405,13 @@ class LocalTrainingService implements TrainingService {
             return [true, resource];
         }
 
-        const availableGPUIndices: number[] = this.gpuScheduler.getAvailableGPUIndices();
-        const selectedGPUIndices: number[] = availableGPUIndices.filter((index: number) => this.availableGPUIndices[index] === false);
+        let selectedGPUIndices: number[] = this.gpuScheduler.getAvailableGPUIndices()
+            .filter((index: number) => this.availableGPUIndices.has(index));
+
+        if (this.specifiedGPUIndices !== undefined) {
+            this.checkSpecifiedGpuIndices();
+            selectedGPUIndices = selectedGPUIndices.filter((index: number) => this.specifiedGPUIndices.has(index));
+        }
 
         if (selectedGPUIndices.length < this.localTrailConfig.gpuNum) {
             return [false, resource];
@@ -397,10 +423,21 @@ class LocalTrainingService implements TrainingService {
         return [true, resource];
     }
 
+    private checkSpecifiedGpuIndices(): void {
+        const gpuCount: number = this.gpuScheduler.getSystemGpuCount();
+        if (this.specifiedGPUIndices !== undefined) {
+            for (const index of this.specifiedGPUIndices) {
+                if (index >= gpuCount) {
+                    throw new Error(`Specified GPU index not found: ${index}`);
+                }
+            }
+        }
+    }
+
     private occupyResource(resource: {gpuIndices: number[]}): void {
         if (this.gpuScheduler !== undefined) {
             for (const index of resource.gpuIndices) {
-                this.availableGPUIndices[index] = true;
+                this.availableGPUIndices.delete(index);
             }
         }
     }
@@ -454,7 +491,8 @@ class LocalTrainingService implements TrainingService {
         await cpp.exec(`mkdir -p ${trialJobDetail.workingDirectory}`);
         await cpp.exec(`mkdir -p ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
         await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
-        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
+        await fs.promises.writeFile(
+            path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
         const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
 

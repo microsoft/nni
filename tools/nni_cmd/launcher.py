@@ -152,6 +152,20 @@ def set_trial_config(experiment_config, port, config_file_name):
 
 def set_local_config(experiment_config, port, config_file_name):
     '''set local configuration'''
+    #set machine_list
+    request_data = dict()
+    if experiment_config.get('localConfig'):
+        request_data['local_config'] = experiment_config['localConfig']
+        response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
+        err_message = ''
+        if not response or not check_response(response):
+            if response is not None:
+                err_message = response.text
+                _, stderr_full_path = get_log_path(config_file_name)
+                with open(stderr_full_path, 'a+') as fout:
+                    fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+            return False, err_message
+
     return set_trial_config(experiment_config, port, config_file_name)
 
 def set_remote_config(experiment_config, port, config_file_name):

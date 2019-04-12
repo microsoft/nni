@@ -66,6 +66,14 @@ class GPUScheduler {
         return [];
     }
 
+    public getSystemGpuCount(): number {
+        if (this.gpuSummary !== undefined) {
+            return this.gpuSummary.gpuCount;
+        }
+
+        return 0;
+    }
+
     public async stop(): Promise<void> {
         this.stopping = true;
         try {

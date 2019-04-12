@@ -30,8 +30,12 @@ export namespace ValidationSchemas {
                 port: joi.number().min(1).max(65535).required(),
                 passwd: joi.string(),
                 sshKeyPath: joi.string(),
-                passphrase: joi.string()
+                passphrase: joi.string(),
+                gpuIndices: joi.string()
             })),
+            local_config: joi.object({
+                gpuIndices: joi.string()
+            }),
             trial_config: joi.object({
                 image: joi.string().min(1),
                 codeDir: joi.string().min(1).required(),
