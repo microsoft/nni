@@ -59,7 +59,8 @@ class GPUScheduler {
 
     public getAvailableGPUIndices(): number[] {
         if (this.gpuSummary !== undefined) {
-            return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => info.activeProcessNum === 0).map((info: GPUInfo) => info.index);
+            return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => info.activeProcessNum === 0)
+                .map((info: GPUInfo) => info.index);
         }
 
         return [];
@@ -87,7 +88,7 @@ class GPUScheduler {
         const gpuMetricsCollectorScriptContent: string = String.Format(
             GPU_INFO_COLLECTOR_FORMAT,
             this.gpuMetricCollectorScriptFolder,
-            path.join(this.gpuMetricCollectorScriptFolder, 'pid'),
+            path.join(this.gpuMetricCollectorScriptFolder, 'pid')
         );
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
         cp.exec(`bash ${gpuMetricsCollectorScriptPath}`);
