@@ -77,7 +77,8 @@ TRIAL_MONITOR_CONTENT = '%-15s %-25s %-25s %-15s'
 TRIAL_MONITOR_TAIL = '-------------------------------------------------------------------------------------\n\n\n'
 
 PACKAGE_REQUIREMENTS = {
-    'SMAC': 'smac_tuner'
+    'SMAC': 'smac_tuner',
+    'BOHB': 'bohb_advisor'
 }
 
 COLOR_RED_FORMAT = Fore.RED + '%s'
