@@ -60,7 +60,8 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="docs/zh_CN/Builtin_Tuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a></li>
           <li><a href="docs/zh_CN/Builtin_Tuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
-        </ul> 
+          <li><a href="docs/en_US/Builtin_Tuner.md#BOHB">BOHB</a></li>
+        </ul>
           <a href="docs/zh_CN/Builtin_Assessors.md#assessor">Assessor（评估器）</a> 
         <ul>
           <li><a href="docs/zh_CN/Builtin_Assessors.md#Medianstop">Median Stop</a></li>
