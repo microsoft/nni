@@ -1,5 +1,5 @@
 authorName: default
-experimentName: example_mnist
+experimentName: example_mnist_hyperband
 trialConcurrency: 2
 maxExecDuration: 100h
 maxTrialNum: 10000
