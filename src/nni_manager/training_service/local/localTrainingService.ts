@@ -117,8 +117,8 @@ class LocalTrainingService implements TrainingService {
     private rootDir!: string;
     private trialSequenceId: number;
     private gpuScheduler!: GPUScheduler;
-    private availableGPUIndices: Set<number>;
-    private specifiedGPUIndices!: Set<number>;
+    private occupiedGpuIndices: Set<number>;
+    private specifiedGpuIndices!: Set<number>;
     private log: Logger;
     private localTrailConfig?: TrialConfig;
     private localConfig?: LocalConfig;
@@ -135,7 +135,7 @@ class LocalTrainingService implements TrainingService {
         this.trialSequenceId = -1;
         this.jobStreamMap = new Map<string, ts.Stream>();
         this.log.info('Construct local machine training service.');
-        this.availableGPUIndices = new Set<number>();
+        this.occupiedGpuIndices = new Set<number>();
     }
 
     public async run(): Promise<void> {
@@ -303,7 +303,7 @@ class LocalTrainingService implements TrainingService {
                 this.localConfig = <LocalConfig>JSON.parse(value);
                 this.log.info(`Specified GPU indices: ${this.localConfig.gpuIndices}`);
                 if (this.localConfig.gpuIndices !== undefined) {
-                    this.specifiedGPUIndices = new Set(this.localConfig.gpuIndices.split(',')
+                    this.specifiedGpuIndices = new Set(this.localConfig.gpuIndices.split(',')
                             .map((x: string) => parseInt(x, 10)));
                 }
                 break;
@@ -358,7 +358,7 @@ class LocalTrainingService implements TrainingService {
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length > 0 && this.gpuScheduler !== undefined) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
                 for (const index of trialJob.gpuIndices) {
-                    this.availableGPUIndices.add(index);
+                    this.occupiedGpuIndices.delete(index);
                 }
             }
         }
@@ -401,11 +401,11 @@ class LocalTrainingService implements TrainingService {
         }
 
         let selectedGPUIndices: number[] = this.gpuScheduler.getAvailableGPUIndices()
-            .filter((index: number) => this.availableGPUIndices.has(index));
+            .filter((index: number) => !this.occupiedGpuIndices.has(index));
 
-        if (this.specifiedGPUIndices !== undefined) {
+        if (this.specifiedGpuIndices !== undefined) {
             this.checkSpecifiedGpuIndices();
-            selectedGPUIndices = selectedGPUIndices.filter((index: number) => this.specifiedGPUIndices.has(index));
+            selectedGPUIndices = selectedGPUIndices.filter((index: number) => this.specifiedGpuIndices.has(index));
         }
 
         if (selectedGPUIndices.length < this.localTrailConfig.gpuNum) {
@@ -420,8 +420,8 @@ class LocalTrainingService implements TrainingService {
 
     private checkSpecifiedGpuIndices(): void {
         const gpuCount: number = this.gpuScheduler.getSystemGpuCount();
-        if (this.specifiedGPUIndices !== undefined) {
-            for (const index of this.specifiedGPUIndices) {
+        if (this.specifiedGpuIndices !== undefined) {
+            for (const index of this.specifiedGpuIndices) {
                 if (index >= gpuCount) {
                     throw new Error(`Specified GPU index not found: ${index}`);
                 }
@@ -432,7 +432,7 @@ class LocalTrainingService implements TrainingService {
     private occupyResource(resource: {gpuIndices: number[]}): void {
         if (this.gpuScheduler !== undefined) {
             for (const index of resource.gpuIndices) {
-                this.availableGPUIndices.delete(index);
+                this.occupiedGpuIndices.add(index);
             }
         }
     }
