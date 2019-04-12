@@ -62,6 +62,8 @@ class MsgDispatcherBase(Recoverable):
 
         while True:
             command, data = receive()
+            _logger.info(data)
+            _logger.info(type(data))
             if data:
                 data = json_tricks.loads(data)
 
@@ -142,6 +144,7 @@ class MsgDispatcherBase(Recoverable):
             CommandType.Initialize: self.handle_initialize,
             CommandType.RequestTrialJobs: self.handle_request_trial_jobs,
             CommandType.UpdateSearchSpace: self.handle_update_search_space,
+            CommandType.FeedDataToTuner: self.handle_feed_tuner_data,
             CommandType.AddCustomizedTrialJob: self.handle_add_customized_trial,
 
             # Tunner/Assessor commands:
@@ -166,7 +169,7 @@ class MsgDispatcherBase(Recoverable):
     def handle_update_search_space(self, data):
        raise NotImplementedError('handle_update_search_space not implemented')
 
-    def handle_add_tuner_data(self, data):
+    def handle_feed_tuner_data(self, data):
         raise NotImplementedError('handle_add_tuner_data not implemented')
 
     def handle_add_customized_trial(self, data):

@@ -105,7 +105,7 @@ class NNIManager implements Manager {
                 new Error('tuner has not been setup')
             );
         }
-        this.dispatcher.sendCommand(FEED_DATA_TO_TUNER, data);
+        this.dispatcher.sendCommand(FEED_DATA_TO_TUNER, JSON.stringify(data));
 
         return Promise.resolve()
     }
