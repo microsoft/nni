@@ -144,7 +144,7 @@ export namespace ValidationSchemas {
             versionCheck: joi.boolean(),
             logCollection: joi.string(),
             advisor: joi.object({
-                builtinAdvisorName: joi.string().valid('Hyperband'),
+                builtinAdvisorName: joi.string().valid('Hyperband', 'BOHB'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
