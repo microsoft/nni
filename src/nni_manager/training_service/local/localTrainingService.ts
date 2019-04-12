@@ -51,17 +51,12 @@ function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
     if (data.length < 8) {
         return [false, '', '', data];
     }
-    const commandType: string = data.slice(0, 2)
-                                    .toString();
-    const contentLength: number = parseInt(
-        data.slice(2, 8)
-            .toString(),
-        10);
+    const commandType: string = data.slice(0, 2).toString();
+    const contentLength: number = parseInt(data.slice(2, 8).toString(), 10);
     if (data.length < contentLength + 8) {
         return [false, '', '', data];
     }
-    const content: string = data.slice(8, contentLength + 8)
-                                .toString();
+    const content: string = data.slice(8, contentLength + 8).toString();
     const remain: Buffer = data.slice(contentLength + 8);
 
     return [true, commandType, content, remain];
@@ -381,7 +376,7 @@ class LocalTrainingService implements TrainingService {
             { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
 
-        if (resource !== undefined) {
+        if (resource !== undefined && resource.gpuIndices.length > 0) {
             envVariables.push({
                     key: 'CUDA_VISIBLE_DEVICES',
                     value: this.gpuScheduler === undefined ? '' : resource.gpuIndices.join(',')
