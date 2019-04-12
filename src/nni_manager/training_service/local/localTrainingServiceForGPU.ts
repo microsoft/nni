@@ -94,7 +94,7 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
         const variables: { key: string; value: string }[] = super.getEnvironmentVariables(trialJobDetail, resource);
         variables.push({
             key: 'CUDA_VISIBLE_DEVICES',
-            value: this.gpuScheduler === undefined ? '' : resource.gpuIndices.join(',')
+            value: this.gpuScheduler === undefined ? '-1' : resource.gpuIndices.join(',')
         });
 
         return variables;
