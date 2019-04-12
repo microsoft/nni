@@ -50,3 +50,6 @@ Advisor
 ------------------------
 ..  autoclass:: nni.hyperband_advisor.hyperband_advisor.Hyperband
     :members:
+
+..  autoclass:: nni.bohb_advisor.bohb_advisor.BOHB
+    :members:
