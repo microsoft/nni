@@ -1,10 +1,5 @@
-trigger:
-- master
-- dev-remote-ci
-
 jobs:
-
-- job: 'Ubuntu_16_04'
+- job: 'basic_test_pr_ubuntu'
   pool:
     vmImage: 'Ubuntu 16.04'
   strategy:
@@ -13,7 +8,7 @@ jobs:
         PYTHON_VERSION: '3.6'
 
   steps:
-  - script: python3 -m pip install --upgrade pip setuptools
+  - script: python3 -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
   - script: |
       source install.sh
@@ -25,13 +20,17 @@ jobs:
   - script: |
       cd test
       PATH=$HOME/.local/bin:$PATH python3 naive_test.py
-    displayName: 'Integration tests'
+    displayName: 'Naive test'
   - script: |
       cd test
-      PATH=$HOME/.local/bin:$PATH python3 sdk_test.py
-    displayName: 'Built-in dispatcher tests'
+      PATH=$HOME/.local/bin:$PATH python3 tuner_test.py
+    displayName: 'Built-in tuners / assessors tests'
+  - script: |
+      cd test
+      PATH=$HOME/.local/bin:$PATH python3 metrics_test.py
+    displayName: 'Trial job metrics test'
 
-- job: 'macOS_10_13'
+- job: 'basic_test_pr_macOS'
   pool:
     vmImage: 'macOS 10.13'
   strategy:
@@ -52,8 +51,8 @@ jobs:
   - script: |
       cd test
       PATH=$HOME/Library/Python/3.7/bin:$PATH python3 naive_test.py
-    displayName: 'Integration tests'
+    displayName: 'Naive test'
   - script: |
       cd test
-      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 sdk_test.py
-    displayName: 'Built-in dispatcher tests'
+      PATH=$HOME/Library/Python/3.7/bin:$PATH python3 tuner_test.py
+    displayName: 'Built-in tuners / assessors tests'

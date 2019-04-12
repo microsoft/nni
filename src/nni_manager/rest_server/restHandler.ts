@@ -30,20 +30,18 @@ import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics} from '../common/manager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
-import { TensorBoard } from './tensorboard';
+import { getVersion } from '../common/utils';
 
 const expressJoi = require('express-joi-validator');
 
 class NNIRestHandler {
     private restServer: NNIRestServer;
     private nniManager: Manager;
-    private tb: TensorBoard;
     private log: Logger;
 
     constructor(rs: NNIRestServer) {
         this.nniManager = component.get(Manager);
         this.restServer = rs;
-        this.tb = new TensorBoard();
         this.log = getLogger();
     }
 
@@ -52,10 +50,7 @@ class NNIRestHandler {
 
         // tslint:disable-next-line:typedef
         router.use((req: Request, res: Response, next) => {
-            // Don't log useless empty body content
-            if(req.body &&  Object.keys(req.body).length > 0) {
-                this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
-            }
+            this.log.debug(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
             res.header('Access-Control-Allow-Methods', 'PUT,POST,GET,DELETE,OPTIONS');
@@ -76,10 +71,6 @@ class NNIRestHandler {
         this.addTrialJob(router);
         this.cancelTrialJob(router);
         this.getMetricData(router);
-        this.getExample(router);
-        this.getTriedParameters(router);
-        this.startTensorBoard(router);
-        this.stopTensorBoard(router);
 
         // Express-joi-validator configuration
         router.use((err: any, req: Request, res: Response, next: any) => {
@@ -104,18 +95,18 @@ class NNIRestHandler {
         });
 
         // If it's a fatal error, exit process
-        if(isFatal) {
-            this.log.critical(err);
+        if (isFatal) {
+            this.log.fatal(err);
             process.exit(1);
+        } else {
+            this.log.error(err);
         }
-
-        this.log.error(err);
     }
 
     private version(router: Router): void {
         router.get('/version', async (req: Request, res: Response) => {
-            const pkg = await import(path.join(__dirname, '..', 'package.json'));
-            res.send(pkg.version);
+            const version = await getVersion();
+            res.send(version);
         });
     }
 
@@ -128,7 +119,7 @@ class NNIRestHandler {
             }).catch(async (err: Error) => {
                 this.handle_error(err, res);
                 this.log.error(err.message);
-                this.log.error(`Database initialize failed, stopping rest server...`);
+                this.log.error(`Datastore initialize failed, stopping rest server...`);
                 await this.restServer.stop();
             });
         });
@@ -256,41 +247,6 @@ class NNIRestHandler {
             }).catch((err: Error) => {
                 this.handle_error(err, res);
             });
-        });
-    }
-
-    private startTensorBoard(router: Router): void {
-        router.post('/tensorboard', expressJoi(ValidationSchemas.STARTTENSORBOARD), async (req: Request, res: Response) => {
-            const jobIds: string[] = req.query.job_ids.split(',');
-            const tensorboardCmd: string | undefined = req.query.tensorboard_cmd;
-            this.tb.startTensorBoard(jobIds, tensorboardCmd).then((endPoint: string) => {
-                res.send({endPoint: endPoint});
-            }).catch((err: Error) => {
-                this.handle_error(err, res);
-            });
-        });
-    }
-
-    private stopTensorBoard(router: Router): void {
-        router.delete('/tensorboard', expressJoi(ValidationSchemas.STOPTENSORBOARD), async (req: Request, res: Response) => {
-            const endPoint: string = req.query.endpoint;
-            this.tb.stopTensorBoard(endPoint).then(() => {
-                res.send();
-            }).catch((err: Error) => {
-                this.handle_error(err, res);
-            });
-        });
-    }
-
-    private getExample(router: Router): void {
-        // tslint:disable-next-line:no-empty
-        router.get('/example', async (req: Request, res: Response) => {
-        });
-    }
-
-    private getTriedParameters(router: Router): void {
-        // tslint:disable-next-line:no-empty
-        router.get('/tried-parameters', async (req: Request, res: Response) => {
         });
     }
 

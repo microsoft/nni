@@ -90,7 +90,7 @@ class LocalTrialJobDetail implements TrialJobDetail {
 }
 
 /**
- * Local training service
+ * Local machine training service
  */
 class LocalTrainingService implements TrainingService {
     private eventEmitter: EventEmitter;
@@ -103,7 +103,7 @@ class LocalTrainingService implements TrainingService {
     protected log: Logger;
     protected localTrailConfig?: TrialConfig;
     private isMultiPhase: boolean = false;
-    private streams: Array<ts.Stream>;
+    protected jobStreamMap: Map<string, ts.Stream>;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -113,10 +113,12 @@ class LocalTrainingService implements TrainingService {
         this.stopping = false;
         this.log = getLogger();
         this.trialSequenceId = -1;
-        this.streams = new Array<ts.Stream>();
+        this.jobStreamMap = new Map<string, ts.Stream>();
+        this.log.info('Construct local machine training service.');
     }
 
     public async run(): Promise<void> {
+        this.log.info('Run local machine training service.');
         while (!this.stopping) {
             while (this.jobQueue.length !== 0) {
                 const trialJobId: string = this.jobQueue[0];
@@ -133,6 +135,7 @@ class LocalTrainingService implements TrainingService {
             }
             await delay(5000);
         }
+        this.log.info('Local machine training service exit.');
     }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -180,7 +183,7 @@ class LocalTrainingService implements TrainingService {
                 } catch (error) {
                     //ignore
                 }
-                this.log.info(`trailJob status update: ${trialJobId}, ${trialJob.status}`);
+                this.log.debug(`trailJob status update: ${trialJobId}, ${trialJob.status}`);
             }
         }
 
@@ -196,7 +199,6 @@ class LocalTrainingService implements TrainingService {
     }
 
     public submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
         if (form.jobType === 'HOST') {
             return this.runHostJob(<HostJobApplicationForm>form);
         } else if (form.jobType === 'TRIAL') {
@@ -247,14 +249,13 @@ class LocalTrainingService implements TrainingService {
     }
 
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
-        this.log.info(`cancelTrialJob: ${trialJobId}`);
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
         if (trialJob === undefined) {
             throw new NNIError(NNIErrorNames.NOT_FOUND, 'Trial job not found');
         }
         if (trialJob.pid === undefined){
             this.setTrialJobStatus(trialJob, 'USER_CANCELED');
-            return;
+            return Promise.resolve();
         }
         if (trialJob.form.jobType === 'TRIAL') {
             await tkill(trialJob.pid, 'SIGKILL');
@@ -264,6 +265,7 @@ class LocalTrainingService implements TrainingService {
             throw new Error(`Job type not supported: ${trialJob.form.jobType}`);
         }
         this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
+        return Promise.resolve();
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
@@ -303,15 +305,26 @@ class LocalTrainingService implements TrainingService {
     }
 
     public cleanUp(): Promise<void> {
+        this.log.info('Stopping local machine training service...');
         this.stopping = true;
-        for (const stream of this.streams) {
+        for (const stream of this.jobStreamMap.values()) {
             stream.destroy();
         }
         return Promise.resolve();
     }
 
     protected onTrialJobStatusChanged(trialJob: TrialJobDetail, oldStatus: TrialJobStatus): void {
-        //abstract
+        //if job is not running, destory job stream
+        if(['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'].includes(trialJob.status)) {
+            if(this.jobStreamMap.has(trialJob.id)) {
+                const stream = this.jobStreamMap.get(trialJob.id);
+                if(!stream) {
+                    throw new Error(`Could not find stream in trial ${trialJob.id}`);
+                }
+                stream.destroy();
+                this.jobStreamMap.delete(trialJob.id);
+            }
+        }
     }
 
     protected getEnvironmentVariables(trialJobDetail: TrialJobDetail, _: {}): { key: string; value: string }[] {
@@ -393,7 +406,8 @@ class LocalTrainingService implements TrainingService {
                 buffer = remain;
             }
         });
-        this.streams.push(stream);
+        
+        this.jobStreamMap.set(trialJobDetail.id, stream);
     }
 
     private async runHostJob(form: HostJobApplicationForm): Promise<TrialJobDetail> {

@@ -32,12 +32,13 @@ import {
     TrialJobDetail, NNIManagerIpConfig
 } from '../../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
-import { NFSConfig, KubernetesClusterConfigNFS, KubernetesClusterConfigAzure, KubernetesClusterConfigFactory } from '../kubernetesConfig'
+import { NFSConfig } from '../kubernetesConfig'
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { validateCodeDir } from '../../common/util';
 import { AzureStorageClientUtility } from '../azureStorageClientUtils';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
-import { FrameworkControllerTrialConfig } from './frameworkcontrollerConfig';
+import { FrameworkControllerTrialConfig, FrameworkControllerClusterConfig, FrameworkControllerClusterConfigAzure, FrameworkControllerClusterConfigNFS, 
+    FrameworkControllerClusterConfigFactory} from './frameworkcontrollerConfig';
 import { FrameworkControllerJobRestServer } from './frameworkcontrollerJobRestServer';
 import { FrameworkControllerClient } from './frameworkcontrollerApiClient';
 import { FrameworkControllerJobInfoCollector } from './frameworkcontrollerJobInfoCollector';
@@ -50,6 +51,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
     private fcTrialConfig?: FrameworkControllerTrialConfig; // frameworkcontroller trial configuration
     private fcJobInfoCollector: FrameworkControllerJobInfoCollector; // frameworkcontroller job info collector
     private fcContainerPortMap = new Map<string, number>(); // store frameworkcontroller container port
+    private fcClusterConfig?: FrameworkControllerClusterConfig;
 
     constructor() {
         super();
@@ -64,16 +66,21 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             throw new Error('kubernetesJobRestServer not initialized!');
         }
         await this.kubernetesJobRestServer.start();
+        this.kubernetesJobRestServer.setEnableVersionCheck = this.versionCheck;
         this.log.info(`frameworkcontroller Training service rest server listening on: ${this.kubernetesJobRestServer.endPoint}`);
         while (!this.stopping) {
             // collect metrics for frameworkcontroller jobs by interacting with Kubernetes API server  
             await delay(3000);
             await this.fcJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
+            if(this.kubernetesJobRestServer.getErrorMessage) {
+                throw new Error(this.kubernetesJobRestServer.getErrorMessage);
+                this.stopping = true;
+            }
         }
     }
 
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
-        if(!this.kubernetesClusterConfig) {
+        if(!this.fcClusterConfig) {
             throw new Error('frameworkcontrollerClusterConfig is not initialized');
         }
         if(!this.kubernetesCRDClient) {
@@ -129,13 +136,13 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
      * return: trialJobOutputUrl
      */
     private async uploadCodeFiles(trialJobId: string, trialLocalTempFolder: string): Promise<string> {
-        if(!this.kubernetesClusterConfig) {
+        if(!this.fcClusterConfig) {
             throw new Error('Kubeflow Cluster config is not initialized');
         }
 
         let trialJobOutputUrl: string = '';
 
-        if(this.kubernetesClusterConfig.storageType === 'azureStorage') {
+        if(this.fcClusterConfig.storageType === 'azureStorage') {
             try{
                 //upload local files to azure storage
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient, 
@@ -146,8 +153,8 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 this.log.error(error);
                 return Promise.reject(error);
             }
-        } else if(this.kubernetesClusterConfig.storageType === 'nfs') {
-            let nfsFrameworkControllerClusterConfig: KubernetesClusterConfigNFS = <KubernetesClusterConfigNFS>this.kubernetesClusterConfig;
+        } else if(this.fcClusterConfig.storageType === 'nfs') {
+            let nfsFrameworkControllerClusterConfig: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
             // Creat work dir for current trial in NFS directory 
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
             // Copy code files from local dir to NFS mounted dir
@@ -170,7 +177,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             throw new Error('frameworkcontroller trial config is not initialized');
         }
         for(let taskRole of this.fcTrialConfig.taskRoles) {
-            portScript += `${taskRole.name}_port=${this.fcContainerPortMap.get(taskRole.name)} `;
+            portScript += `FB_${taskRole.name.toUpperCase()}_PORT=${this.fcContainerPortMap.get(taskRole.name)} `;
         }
         return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
     }
@@ -189,7 +196,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
 
         for(let taskRole of this.fcTrialConfig.taskRoles) {
-            const runScriptContent: string = this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder, 
+            const runScriptContent: string = await this.generateRunScript('frameworkcontroller', trialJobId, trialWorkingFolder, 
             this.generateCommandScript(taskRole.command), curTrialSequenceId.toString(), taskRole.name, taskRole.gpuNum);
             await fs.promises.writeFile(path.join(trialLocalTempFolder, `run_${taskRole.name}.sh`), runScriptContent, { encoding: 'utf8' });
         }
@@ -229,9 +236,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             
             case TrialConfigMetadataKey.FRAMEWORKCONTROLLER_CLUSTER_CONFIG:
                 let frameworkcontrollerClusterJsonObject = JSON.parse(value);
-                this.kubernetesClusterConfig = KubernetesClusterConfigFactory.generateKubernetesClusterConfig(frameworkcontrollerClusterJsonObject);
-                if(this.kubernetesClusterConfig.storageType === 'azureStorage') {
-                    let azureFrameworkControllerClusterConfig = <KubernetesClusterConfigAzure>this.kubernetesClusterConfig;
+                this.fcClusterConfig = FrameworkControllerClusterConfigFactory.generateFrameworkControllerClusterConfig(frameworkcontrollerClusterJsonObject);
+                if(this.fcClusterConfig.storageType === 'azureStorage') {
+                    let azureFrameworkControllerClusterConfig = <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
                     this.azureStorageAccountName = azureFrameworkControllerClusterConfig.azureStorage.accountName;
                     this.azureStorageShare = azureFrameworkControllerClusterConfig.azureStorage.azureShare;
                     await this.createAzureStorage(
@@ -240,8 +247,8 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         azureFrameworkControllerClusterConfig.azureStorage.accountName,
                         azureFrameworkControllerClusterConfig.azureStorage.azureShare
                     );
-                } else if(this.kubernetesClusterConfig.storageType === 'nfs') {
-                    let nfsFrameworkControllerClusterConfig = <KubernetesClusterConfigNFS>this.kubernetesClusterConfig;
+                } else if(this.fcClusterConfig.storageType === 'nfs') {
+                    let nfsFrameworkControllerClusterConfig = <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
                     await this.createNFSStorage(
                         nfsFrameworkControllerClusterConfig.nfs.server,
                         nfsFrameworkControllerClusterConfig.nfs.path
@@ -264,6 +271,12 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                     this.log.error(error);
                     return Promise.reject(new Error(error));                    
                 }
+                break;
+            case TrialConfigMetadataKey.VERSION_CHECK:
+                this.versionCheck = (value === 'true' || value === 'True');
+                break;
+            case TrialConfigMetadataKey.LOG_COLLECTION:
+                this.logCollection = value;
                 break;
             default:
                 break;
@@ -292,7 +305,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
      * @param podResources  pod template
      */
     private generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName : string, podResources : any) : any {
-        if(!this.kubernetesClusterConfig) {
+        if(!this.fcClusterConfig) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }
 
@@ -346,16 +359,16 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
     
 
     private generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string, podResources: any, containerPort: number): any {
-        if(!this.kubernetesClusterConfig) {
+        if(!this.fcClusterConfig) {
             throw new Error('frameworkcontroller Cluster config is not initialized');
         }
 
         if(!this.fcTrialConfig) {
             throw new Error('frameworkcontroller trial config is not initialized');
         }
-
+ 
         let volumeSpecMap = new Map<string, object>();
-        if(this.kubernetesClusterConfig.storageType === 'azureStorage'){
+        if(this.fcClusterConfig.storageType === 'azureStorage'){
             volumeSpecMap.set('nniVolumes', [
             {
                     name: 'nni-vol',
@@ -369,7 +382,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 emptyDir: {}
             }])
         }else {
-            let frameworkcontrollerClusterConfigNFS: KubernetesClusterConfigNFS = <KubernetesClusterConfigNFS> this.kubernetesClusterConfig;
+            let frameworkcontrollerClusterConfigNFS: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS> this.fcClusterConfig;
             volumeSpecMap.set('nniVolumes', [
             {
                 name: 'nni-vol',
@@ -382,41 +395,49 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 emptyDir: {}
             }])
         }
+        
+        let containers = [
+            {
+                name: 'framework',
+                image: replicaImage,
+                command: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
+                volumeMounts: [
+                {
+                    name: 'nni-vol',
+                    mountPath: this.CONTAINER_MOUNT_PATH
+                },{
+                    name: 'frameworkbarrier-volume',
+                    mountPath: '/mnt/frameworkbarrier'
+                }],
+                resources: podResources,
+                ports: [{
+                    containerPort: containerPort
+                }]
+        }]
+
+        let initContainers = [
+            {
+                name: 'frameworkbarrier',
+                image: 'frameworkcontroller/frameworkbarrier',
+                volumeMounts: [
+                {   
+                    name: 'frameworkbarrier-volume',
+                    mountPath: '/mnt/frameworkbarrier'
+                }]
+        }]
+        let spec: any = {
+                containers: containers,
+                initContainers: initContainers,
+                restartPolicy: 'OnFailure',
+                volumes: volumeSpecMap.get('nniVolumes'),
+                hostNetwork: false
+        };
+        if(this.fcClusterConfig.serviceAccountName) {    
+            spec.serviceAccountName = this.fcClusterConfig.serviceAccountName;   
+        }
         let taskRole = {
             pod: {
-                spec: {
-                    containers: [
-                    {
-                        name: 'framework',
-                        image: replicaImage,
-                        command: ["sh", `${path.join(trialWorkingFolder, runScriptFile)}`],
-                        volumeMounts: [
-                        {
-                            name: 'nni-vol',
-                            mountPath: this.CONTAINER_MOUNT_PATH
-                        },{
-                            name: 'frameworkbarrier-volume',
-                            mountPath: '/mnt/frameworkbarrier'
-                        }],
-                        resources: podResources,
-                        ports: [{
-                            containerPort: containerPort
-                        }]
-                    }],
-                    initContainers: [
-                    {
-                        name: 'frameworkbarrier',
-                        image: 'frameworkcontroller/frameworkbarrier',
-                        volumeMounts: [
-                        {   
-                            name: 'frameworkbarrier-volume',
-                            mountPath: '/mnt/frameworkbarrier'
-                        }]
-                    }],
-                    restartPolicy: 'OnFailure',
-                    volumes: volumeSpecMap.get('nniVolumes'),
-                    hostNetwork: false
-                }
+                spec: spec
             }
         }
         return taskRole;

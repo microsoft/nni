@@ -25,7 +25,7 @@ import * as path from 'path';
 import { EventEmitter } from 'events';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { getExperimentRootDir, uniqueString, getJobCancelStatus, getIPV4Address } from '../../common/utils';
+import { getExperimentRootDir, uniqueString, getJobCancelStatus, getIPV4Address, getVersion } from '../../common/utils';
 import {
     TrialJobDetail, TrialJobMetric, NNIManagerIpConfig
 } from '../../common/trainingService';
@@ -61,6 +61,8 @@ abstract class KubernetesTrainingService {
     protected kubernetesCRDClient?: KubernetesCRDClient;
     protected kubernetesJobRestServer?: KubernetesJobRestServer;
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
+    protected versionCheck: boolean = true;
+    protected logCollection: string;
     
     constructor() {
         this.log = getLogger();
@@ -71,6 +73,7 @@ abstract class KubernetesTrainingService {
         this.nextTrialSequenceId = -1;
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.genericK8sClient = new GeneralK8sClient();
+        this.logCollection = 'none';
     }
 
     public generatePodResource(memory: number, cpuNum: number, gpuNum: number) {
@@ -179,8 +182,8 @@ abstract class KubernetesTrainingService {
      * @param command 
      * @param trialSequenceId sequence id
      */
-    protected generateRunScript(platform: string, trialJobId: string, trialWorkingFolder: string, 
-                command: string, trialSequenceId: string, roleName: string, gpuNum: number): string {
+    protected async generateRunScript(platform: string, trialJobId: string, trialWorkingFolder: string, 
+                command: string, trialSequenceId: string, roleName: string, gpuNum: number): Promise<string> {
         let nvidia_script: string = '';
         // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
         // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
@@ -189,6 +192,7 @@ abstract class KubernetesTrainingService {
             nvidia_script = `export CUDA_VISIBLE_DEVICES='0'`;
         }
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
+        const version = this.versionCheck? await getVersion(): '';
         const runScript: string = String.Format(
             KubernetesScriptFormat,
             platform,
@@ -201,9 +205,11 @@ abstract class KubernetesTrainingService {
             nvidia_script,
             command,
             nniManagerIp,
-            this.kubernetesRestServerPort
+            this.kubernetesRestServerPort,
+            version,
+            this.logCollection
         );
-        return runScript;
+        return Promise.resolve(runScript);
     }
     protected async createNFSStorage(nfsServer: string, nfsPath: string): Promise<void> {
         await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);

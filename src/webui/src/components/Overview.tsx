@@ -2,11 +2,8 @@ import * as React from 'react';
 import axios from 'axios';
 import { Row, Col } from 'antd';
 import { MANAGER_IP } from '../static/const';
-import {
-    Experiment, TableObj,
-    Parameters, TrialNumber
-} from '../static/interface';
-import { getFinalResult } from '../static/function';
+import { Experiment, TableObj, Parameters, TrialNumber } from '../static/interface';
+import { getFinal } from '../static/function';
 import SuccessTable from './overview/SuccessTable';
 import Title1 from './overview/Title1';
 import Progressed from './overview/Progress';
@@ -23,6 +20,7 @@ require('../static/style/overviewTitle.scss');
 
 interface OverviewState {
     tableData: Array<TableObj>;
+    experimentAPI: object;
     searchSpace: object;
     status: string;
     errorStr: string;
@@ -36,6 +34,8 @@ interface OverviewState {
     isTop10: boolean;
     titleMaxbgcolor: string;
     titleMinbgcolor?: string;
+    // trial stdout is content(false) or link(true)
+    isLogCollection: boolean;
 }
 
 class Overview extends React.Component<{}, OverviewState> {
@@ -48,6 +48,7 @@ class Overview extends React.Component<{}, OverviewState> {
         super(props);
         this.state = {
             searchSpace: {},
+            experimentAPI: {},
             status: '',
             errorStr: '',
             trialProfile: {
@@ -62,17 +63,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 tuner: {},
                 trainingServicePlatform: ''
             },
-            tableData: [{
-                key: 0,
-                sequenceId: 0,
-                id: '',
-                duration: 0,
-                status: '',
-                acc: 0,
-                description: {
-                    parameters: {}
-                }
-            }],
+            tableData: [],
             option: {},
             noData: '',
             // accuracy
@@ -89,7 +80,8 @@ class Overview extends React.Component<{}, OverviewState> {
                 totalCurrentTrial: 0
             },
             isTop10: true,
-            titleMaxbgcolor: '#999'
+            titleMaxbgcolor: '#999',
+            isLogCollection: false
         };
     }
 
@@ -108,6 +100,12 @@ class Overview extends React.Component<{}, OverviewState> {
                     const endTimenum = sessionData.endTime;
                     const assessor = sessionData.params.assessor;
                     const advisor = sessionData.params.advisor;
+                     // default logCollection is true
+                    const logCollection = res.data.params.logCollection;
+                    let expLogCollection: boolean = false;
+                    if (logCollection !== undefined && logCollection !== 'none') {
+                        expLogCollection = true;
+                    }
                     trialPro.push({
                         id: sessionData.id,
                         author: sessionData.params.authorName,
@@ -124,10 +122,13 @@ class Overview extends React.Component<{}, OverviewState> {
                         tuner: sessionData.params.tuner,
                         assessor: assessor ? assessor : undefined,
                         advisor: advisor ? advisor : undefined,
-                        clusterMetaData: clusterMetaData ? clusterMetaData : undefined
+                        clusterMetaData: clusterMetaData ? clusterMetaData : undefined,
+                        logCollection: logCollection
                     });
                     // search space format loguniform max and min
-                    const searchSpace = JSON.parse(sessionData.params.searchSpace);
+                    const temp = sessionData.params.searchSpace;
+                    const searchSpace = temp !== undefined
+                        ? JSON.parse(temp) : {};
                     Object.keys(searchSpace).map(item => {
                         const key = searchSpace[item]._type;
                         let value = searchSpace[item]._value;
@@ -144,8 +145,10 @@ class Overview extends React.Component<{}, OverviewState> {
                     });
                     if (this._isMounted) {
                         this.setState({
+                            experimentAPI: res.data,
                             trialProfile: trialPro[0],
-                            searchSpace: searchSpace
+                            searchSpace: searchSpace,
+                            isLogCollection: expLogCollection
                         });
                     }
                 }
@@ -224,7 +227,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                     parameters: {}
                                 };
                                 const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
-                                const acc = getFinalResult(tableData[item].finalMetricData);
+                                const acc = getFinal(tableData[item].finalMetricData);
                                 // if hyperparameters is undefine, show error message, else, show parameters value
                                 if (tableData[item].hyperParameters) {
                                     const parameters = JSON.parse(tableData[item].hyperParameters[0]).parameters;
@@ -256,16 +259,16 @@ class Overview extends React.Component<{}, OverviewState> {
                     const { isTop10 } = this.state;
                     if (isTop10 === true) {
                         topTableData.sort((a: TableObj, b: TableObj) => {
-                            if (a.acc && b.acc) {
-                                return b.acc - a.acc;
+                            if (a.acc !== undefined && b.acc !== undefined) {
+                                return JSON.parse(b.acc.default) - JSON.parse(a.acc.default);
                             } else {
                                 return NaN;
                             }
                         });
                     } else {
                         topTableData.sort((a: TableObj, b: TableObj) => {
-                            if (a.acc && b.acc) {
-                                return a.acc - b.acc;
+                            if (a.acc !== undefined && b.acc !== undefined) {
+                                return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
                             } else {
                                 return NaN;
                             }
@@ -275,7 +278,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     let bestDefaultMetric = 0;
                     if (topTableData[0] !== undefined) {
                         if (topTableData[0].acc !== undefined) {
-                            bestDefaultMetric = topTableData[0].acc;
+                            bestDefaultMetric = JSON.parse(topTableData[0].acc.default);
                         }
                     }
                     if (this._isMounted) {
@@ -308,7 +311,7 @@ class Overview extends React.Component<{}, OverviewState> {
         const indexarr: Array<number> = [];
         Object.keys(sourcePoint).map(item => {
             const items = sourcePoint[item];
-            accarr.push(items.acc);
+            accarr.push(items.acc.default);
             indexarr.push(items.sequenceId);
         });
         const accOption = {
@@ -390,7 +393,7 @@ class Overview extends React.Component<{}, OverviewState> {
         const {
             trialProfile, searchSpace, tableData, accuracyData,
             accNodata, status, errorStr, trialNumber, bestAccuracy,
-            titleMaxbgcolor, titleMinbgcolor
+            titleMaxbgcolor, titleMinbgcolor, isLogCollection, experimentAPI
         } = this.state;
 
         return (
@@ -421,13 +424,11 @@ class Overview extends React.Component<{}, OverviewState> {
                         </Row>
                     </Col>
                     <Col span={8} className="overviewBoder">
-                        <Title1 text="Trial Profile" icon="4.png" />
+                        <Title1 text="Profile" icon="4.png" />
                         <Row className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
                             <div className="experiment searchSpace">
-                                <TrialPro
-                                    tiralProInfo={trialProfile}
-                                />
+                            <TrialPro experiment={experimentAPI} />
                             </div>
                         </Row>
                     </Col>
@@ -464,6 +465,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     <Col span={16} id="succeTable">
                         <SuccessTable
                             tableSource={tableData}
+                            logCollection={isLogCollection}
                             trainingPlatform={trialProfile.trainingServicePlatform}
                         />
                     </Col>

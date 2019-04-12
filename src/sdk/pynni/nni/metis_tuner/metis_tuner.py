@@ -24,28 +24,29 @@ import os
 import random
 import statistics
 import sys
-
 from enum import Enum, unique
 from multiprocessing.dummy import Pool as ThreadPool
 
-from nni.tuner import Tuner
+import numpy as np
 
-import nni.metis_tuner.lib_data as lib_data
 import nni.metis_tuner.lib_constraint_summation as lib_constraint_summation
-import nni.metis_tuner.Regression_GP.CreateModel as gp_create_model
-import nni.metis_tuner.Regression_GP.Selection as gp_selection
-import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
-import nni.metis_tuner.Regression_GP.OutlierDetection as gp_outlier_detection
+import nni.metis_tuner.lib_data as lib_data
 import nni.metis_tuner.Regression_GMM.CreateModel as gmm_create_model
 import nni.metis_tuner.Regression_GMM.Selection as gmm_selection
+import nni.metis_tuner.Regression_GP.CreateModel as gp_create_model
+import nni.metis_tuner.Regression_GP.OutlierDetection as gp_outlier_detection
+import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
+import nni.metis_tuner.Regression_GP.Selection as gp_selection
+from nni.tuner import Tuner
+from nni.utils import extract_scalar_reward
 
 logger = logging.getLogger("Metis_Tuner_AutoML")
 
 @unique
 class OptimizeMode(Enum):
-    '''
+    """
     Optimize Mode class
-    '''
+    """
     Minimize = 'minimize'
     Maximize = 'maximize'
 
@@ -57,30 +58,45 @@ CONSTRAINT_PARAMS_IDX = []
 
 
 class MetisTuner(Tuner):
-    '''
+    """
     Metis Tuner
-    '''
+
+    More algorithm information you could reference here:
+    https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
+    """
 
     def __init__(self, optimize_mode="maximize", no_resampling=True, no_candidates=True,
-                 selection_num_starting_points=10, cold_start_num=10):
-        '''
-        optimize_mode: is a string that including two mode "maximize" and "minimize"
-        
-        no_resampling: True or False. Should Metis consider re-sampling as part of the search strategy?
+                 selection_num_starting_points=600, cold_start_num=10, exploration_probability=0.9):
+        """
+        Parameters
+        ----------
+        optimize_mode : str
+            optimize_mode is a string that including two mode "maximize" and "minimize"
+
+        no_resampling : bool
+            True or False. Should Metis consider re-sampling as part of the search strategy?
         If you are confident that the training dataset is noise-free, then you do not need re-sampling.
-        
-        no_candidates: True or False. Should Metis suggest parameters for the next benchmark?
+
+        no_candidates: bool
+            True or False. Should Metis suggest parameters for the next benchmark?
         If you do not plan to do more benchmarks, Metis can skip this step.
-        
-        selection_num_starting_points: how many times Metis should try to find the global optimal in the search space?
+
+        selection_num_starting_points: int
+            how many times Metis should try to find the global optimal in the search space?
         The higher the number, the longer it takes to output the solution.
-        
-        cold_start_num: Metis need some trial result to get cold start. when the number of trial result is less than
+
+        cold_start_num: int
+            Metis need some trial result to get cold start. when the number of trial result is less than
         cold_start_num, Metis will randomly sample hyper-parameter for trial.
-        '''
+
+        exploration_probability: float
+            The probability of Metis to select parameter from exploration instead of exploitation.
+        """
+
         self.samples_x = []
         self.samples_y = []
         self.samples_y_aggregation = []
+        self.history_parameters = []
         self.space = None
         self.no_resampling = no_resampling
         self.no_candidates = no_candidates
@@ -88,14 +104,18 @@ class MetisTuner(Tuner):
         self.key_order = []
         self.cold_start_num = cold_start_num
         self.selection_num_starting_points = selection_num_starting_points
+        self.exploration_probability = exploration_probability
         self.minimize_constraints_fun = None
         self.minimize_starting_points = None
 
 
     def update_search_space(self, search_space):
-        '''
-        Update the self.x_bounds and self.x_types by the search_space.json
-        '''
+        """Update the self.x_bounds and self.x_types by the search_space.json
+
+        Parameters
+        ----------
+        search_space : dict
+        """
         self.x_bounds = [[] for i in range(len(search_space))]
         self.x_types = [NONE_TYPE for i in range(len(search_space))]
 
@@ -107,23 +127,17 @@ class MetisTuner(Tuner):
             for key in search_space:
                 key_type = search_space[key]['_type']
                 key_range = search_space[key]['_value']
-                try:
-                    idx = self.key_order.index(key)
-                except Exception as ex:
-                    logger.exception(ex)
-                    raise RuntimeError("The format search space contains \
-                                        some key that didn't define in key_order.")
-
+                idx = self.key_order.index(key)
                 if key_type == 'quniform':
                     if key_range[2] == 1:
                         self.x_bounds[idx] = [key_range[0], key_range[1]]
                         self.x_types[idx] = 'range_int'
                     else:
                         bounds = []
-                        for value in range(key_range[0], key_range[1], key_range[2]):
+                        for value in np.arange(key_range[0], key_range[1], key_range[2]):
                             bounds.append(value)
                         self.x_bounds[idx] = bounds
-                        self.x_types[idx] = 'discrete_int'        
+                        self.x_types[idx] = 'discrete_int'
                 elif key_type == 'randint':
                     self.x_bounds[idx] = [0, key_range[0]]
                     self.x_types[idx] = 'range_int'
@@ -150,9 +164,16 @@ class MetisTuner(Tuner):
 
 
     def _pack_output(self, init_parameter):
-        '''
-        Pack the output
-        '''
+        """Pack the output
+
+        Parameters
+        ----------
+        init_parameter : dict
+
+        Returns
+        -------
+        output : dict
+        """
         output = {}
         for i, param in enumerate(init_parameter):
             output[self.key_order[i]] = param
@@ -160,40 +181,53 @@ class MetisTuner(Tuner):
 
 
     def generate_parameters(self, parameter_id):
-        '''
-        This function is for generate parameters to trial. 
+        """Generate next parameter for trial
         If the number of trial result is lower than cold start number,
         metis will first random generate some parameters.
         Otherwise, metis will choose the parameters by the Gussian Process Model and the Gussian Mixture Model.
-        '''
-        if self.samples_x or len(self.samples_x) < self.cold_start_num:
+
+        Parameters
+        ----------
+        parameter_id : int
+
+        Returns
+        -------
+        result : dict
+        """
+        if len(self.samples_x) < self.cold_start_num:
             init_parameter = _rand_init(self.x_bounds, self.x_types, 1)[0]
             results = self._pack_output(init_parameter)
         else:
+            self.minimize_starting_points = _rand_init(self.x_bounds, self.x_types, \
+                                                       self.selection_num_starting_points)
             results = self._selection(self.samples_x, self.samples_y_aggregation, self.samples_y,
                                       self.x_bounds, self.x_types,
                                       threshold_samplessize_resampling=(None if self.no_resampling is True else 50),
                                       no_candidates=self.no_candidates,
                                       minimize_starting_points=self.minimize_starting_points,
                                       minimize_constraints_fun=self.minimize_constraints_fun)
-        
-        logger.info("Generate paramageters:\n", str(results))
+
+        logger.info("Generate paramageters:\n" + str(results))
         return results
 
 
     def receive_trial_result(self, parameter_id, parameters, value):
-        '''
-        Tuner receive result from trial.
-        An value example as follow:
-            value: 99.5%
-        '''
-        value = self.extract_scalar_reward(value)
+        """Tuner receive result from trial.
+
+        Parameters
+        ----------
+        parameter_id : int
+        parameters : dict
+        value : dict/float
+            if value is dict, it should have "default" key.
+        """
+        value = extract_scalar_reward(value)
         if self.optimize_mode == OptimizeMode.Maximize:
             value = -value
 
         logger.info("Received trial result.")
-        logger.info("value is :", str(value))
-        logger.info("parameter is : ", str(parameters))
+        logger.info("value is :" + str(value))
+        logger.info("parameter is : " + str(parameters))
 
         # parse parameter to sample_x
         sample_x = [0 for i in range(len(self.key_order))]
@@ -211,7 +245,7 @@ class MetisTuner(Tuner):
 
             # calculate y aggregation
             median = get_median(temp_y)
-            self.samples_y_aggregation[idx] = median
+            self.samples_y_aggregation[idx] = [median]
         else:
             self.samples_x.append(sample_x)
             self.samples_y.append([value])
@@ -230,17 +264,20 @@ class MetisTuner(Tuner):
         candidates = []
         samples_size_all = sum([len(i) for i in samples_y])
         samples_size_unique = len(samples_y)
-        
+
         # ===== STEP 1: Compute the current optimum =====
-        #sys.stderr.write("[%s] Predicting the optimal configuration from the current training dataset...\n" % (os.path.basename(__file__)))
         gp_model = gp_create_model.create_model(samples_x, samples_y_aggregation)
-        lm_current = gp_selection.selection("lm", samples_y_aggregation, x_bounds,
-                                                       x_types, gp_model['model'],
-                                                       minimize_starting_points,
-                                                       minimize_constraints_fun=minimize_constraints_fun)
+        lm_current = gp_selection.selection(
+            "lm",
+            samples_y_aggregation,
+            x_bounds,
+            x_types,
+            gp_model['model'],
+            minimize_starting_points,
+            minimize_constraints_fun=minimize_constraints_fun)
         if not lm_current:
             return None
-        
+
         if no_candidates is False:
             candidates.append({'hyperparameter': lm_current['hyperparameter'],
                                'expected_mu': lm_current['expected_mu'],
@@ -248,12 +285,14 @@ class MetisTuner(Tuner):
                                'reason': "exploitation_gp"})
 
             # ===== STEP 2: Get recommended configurations for exploration =====
-            #sys.stderr.write("[%s] Getting candidates for exploration...\n"
-            #% \(os.path.basename(__file__)))
-            results_exploration = gp_selection.selection("lc", samples_y_aggregation,
-                                                                    x_bounds, x_types, gp_model['model'],
-                                                                    minimize_starting_points,
-                                                                    minimize_constraints_fun=minimize_constraints_fun)
+            results_exploration = gp_selection.selection(
+                "lc",
+                samples_y_aggregation,
+                x_bounds,
+                x_types,
+                gp_model['model'],
+                minimize_starting_points,
+                minimize_constraints_fun=minimize_constraints_fun)
 
             if results_exploration is not None:
                 if _num_past_samples(results_exploration['hyperparameter'], samples_x, samples_y) == 0:
@@ -262,24 +301,21 @@ class MetisTuner(Tuner):
                                        'expected_sigma': results_exploration['expected_sigma'],
                                        'reason': "exploration"})
                     logger.info("DEBUG: 1 exploration candidate selected\n")
-                    #sys.stderr.write("[%s] DEBUG: 1 exploration candidate selected\n" % (os.path.basename(__file__)))
             else:
                 logger.info("DEBUG: No suitable exploration candidates were")
-                # sys.stderr.write("[%s] DEBUG: No suitable exploration candidates were \
-                #                                 found\n" % (os.path.basename(__file__)))
 
             # ===== STEP 3: Get recommended configurations for exploitation =====
             if samples_size_all >= threshold_samplessize_exploitation:
-                #sys.stderr.write("[%s] Getting candidates for exploitation...\n" % (os.path.basename(__file__)))
                 print("Getting candidates for exploitation...\n")
                 try:
                     gmm = gmm_create_model.create_model(samples_x, samples_y_aggregation)
-                    results_exploitation = gmm_selection.selection(x_bounds,
-                                                                              x_types,
-                                                                              gmm['clusteringmodel_good'],
-                                                                              gmm['clusteringmodel_bad'],
-                                                                              minimize_starting_points,
-                                                                              minimize_constraints_fun=minimize_constraints_fun)
+                    results_exploitation = gmm_selection.selection(
+                        x_bounds,
+                        x_types,
+                        gmm['clusteringmodel_good'],
+                        gmm['clusteringmodel_bad'],
+                        minimize_starting_points,
+                        minimize_constraints_fun=minimize_constraints_fun)
 
                     if results_exploitation is not None:
                         if _num_past_samples(results_exploitation['hyperparameter'], samples_x, samples_y) == 0:
@@ -292,9 +328,9 @@ class MetisTuner(Tuner):
                         logger.info("DEBUG: No suitable exploitation_gmm candidates were found\n")
 
                 except ValueError as exception:
-                    # The exception: ValueError: Fitting the mixture model failed 
-                    # because some components have ill-defined empirical covariance 
-                    # (for instance caused by singleton or collapsed samples). 
+                    # The exception: ValueError: Fitting the mixture model failed
+                    # because some components have ill-defined empirical covariance
+                    # (for instance caused by singleton or collapsed samples).
                     # Try to decrease the number of components, or increase reg_covar.
                     logger.info("DEBUG: No suitable exploitation_gmm candidates were found due to exception.")
                     logger.info(exception)
@@ -306,8 +342,6 @@ class MetisTuner(Tuner):
                 results_outliers = gp_outlier_detection.outlierDetection_threaded(samples_x, samples_y_aggregation)
 
                 if results_outliers is not None:
-                    temp = len(candidates)
-
                     for results_outlier in results_outliers:
                         if _num_past_samples(samples_x[results_outlier['samples_idx']], samples_x, samples_y) < max_resampling_per_x:
                             candidates.append({'hyperparameter': samples_x[results_outlier['samples_idx']],\
@@ -323,7 +357,10 @@ class MetisTuner(Tuner):
                 logger.info("Evaluating information gain of %d candidates...\n")
                 next_improvement = 0
 
-                threads_inputs = [[candidate, samples_x, samples_y, x_bounds, x_types, minimize_constraints_fun, minimize_starting_points] for candidate in candidates]
+                threads_inputs = [[
+                    candidate, samples_x, samples_y, x_bounds, x_types,
+                    minimize_constraints_fun, minimize_starting_points
+                ] for candidate in candidates]
                 threads_pool = ThreadPool(4)
                 # Evaluate what would happen if we actually sample each candidate
                 threads_results = threads_pool.map(_calculate_lowest_mu_threaded, threads_inputs)
@@ -334,21 +371,16 @@ class MetisTuner(Tuner):
                     if threads_result['expected_lowest_mu'] < lm_current['expected_mu']:
                         # Information gain
                         temp_improvement = threads_result['expected_lowest_mu'] - lm_current['expected_mu']
-    
-                        if next_improvement > temp_improvement:
-                            logger.infor("DEBUG: \"next_candidate\" changed: \
-                                            lowest mu might reduce from %f (%s) to %f (%s), %s\n" %\
-                                            lm_current['expected_mu'], str(lm_current['hyperparameter']),\
-                                            threads_result['expected_lowest_mu'],\
-                                            str(threads_result['candidate']['hyperparameter']),\
-                                            threads_result['candidate']['reason'])
 
+                        if next_improvement > temp_improvement:
                             next_improvement = temp_improvement
                             next_candidate = threads_result['candidate']
             else:
                 # ===== STEP 6: If we have no candidates, randomly pick one =====
-                logger.info("DEBUG: No candidates from exploration, exploitation,\
-                                 and resampling. We will random a candidate for next_candidate\n")
+                logger.info(
+                    "DEBUG: No candidates from exploration, exploitation,\
+                                 and resampling. We will random a candidate for next_candidate\n"
+                )
 
                 next_candidate = _rand_with_constraints(x_bounds, x_types) \
                                     if minimize_starting_points is None else minimize_starting_points[0]
@@ -357,7 +389,16 @@ class MetisTuner(Tuner):
                 next_candidate = {'hyperparameter': next_candidate, 'reason': "random",
                                   'expected_mu': expected_mu, 'expected_sigma': expected_sigma}
 
+        # ===== STEP 7: If current optimal hyperparameter occurs in the history or exploration probability is less than the threshold, take next config as exploration step  =====
         outputs = self._pack_output(lm_current['hyperparameter'])
+        ap = random.uniform(0, 1)
+        if outputs in self.history_parameters or ap<=self.exploration_probability:
+            if next_candidate is not None:
+                outputs = self._pack_output(next_candidate['hyperparameter'])
+            else:
+                random_parameter = _rand_init(x_bounds, x_types, 1)[0]
+                outputs = self._pack_output(random_parameter)
+        self.history_parameters.append(outputs)
         return outputs
 
 
@@ -383,8 +424,6 @@ def _rand_with_constraints(x_bounds, x_types):
 def _calculate_lowest_mu_threaded(inputs):
     [candidate, samples_x, samples_y, x_bounds, x_types, minimize_constraints_fun, minimize_starting_points] = inputs
 
-    sys.stderr.write("[%s] Evaluating information gain of %s (%s)...\n" % \
-                        (os.path.basename(__file__), candidate['hyperparameter'], candidate['reason']))
     outputs = {"candidate": candidate, "expected_lowest_mu": None}
 
     for expected_mu in [candidate['expected_mu'] + 1.96 * candidate['expected_sigma'],
@@ -403,10 +442,14 @@ def _calculate_lowest_mu_threaded(inputs):
         # Aggregates multiple observation of the sample sampling points
         temp_y_aggregation = [statistics.median(temp_sample_y) for temp_sample_y in temp_samples_y]
         temp_gp = gp_create_model.create_model(temp_samples_x, temp_y_aggregation)
-        temp_results = gp_selection.selection("lm", temp_y_aggregation,
-                                                         x_bounds, x_types, temp_gp['model'],
-                                                         minimize_starting_points,
-                                                         minimize_constraints_fun=minimize_constraints_fun)
+        temp_results = gp_selection.selection(
+            "lm",
+            temp_y_aggregation,
+            x_bounds,
+            x_types,
+            temp_gp['model'],
+            minimize_starting_points,
+            minimize_constraints_fun=minimize_constraints_fun)
 
         if outputs["expected_lowest_mu"] is None or outputs["expected_lowest_mu"] > temp_results['expected_mu']:
             outputs["expected_lowest_mu"] = temp_results['expected_mu']
@@ -432,9 +475,8 @@ def _rand_init(x_bounds, x_types, selection_num_starting_points):
 
 
 def get_median(temp_list):
-    '''
-    Return median
-    '''
+    """Return median
+    """
     num = len(temp_list)
     temp_list.sort()
     print(temp_list)
