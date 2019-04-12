@@ -118,7 +118,7 @@ class LocalTrainingService implements TrainingService {
     private trialSequenceId: number;
     private gpuScheduler!: GPUScheduler;
     private occupiedGpuIndices: Set<number>;
-    private specifiedGpuIndices!: Set<number>;
+    private designatedGpuIndices!: Set<number>;
     private log: Logger;
     private localTrailConfig?: TrialConfig;
     private localConfig?: LocalConfig;
@@ -303,8 +303,11 @@ class LocalTrainingService implements TrainingService {
                 this.localConfig = <LocalConfig>JSON.parse(value);
                 this.log.info(`Specified GPU indices: ${this.localConfig.gpuIndices}`);
                 if (this.localConfig.gpuIndices !== undefined) {
-                    this.specifiedGpuIndices = new Set(this.localConfig.gpuIndices.split(',')
+                    this.designatedGpuIndices = new Set(this.localConfig.gpuIndices.split(',')
                             .map((x: string) => parseInt(x, 10)));
+                    if (this.designatedGpuIndices.size === 0) {
+                        throw new Error('gpuIndices can not be empty if specified.');
+                    }
                 }
                 break;
             case TrialConfigMetadataKey.MULTI_PHASE:
@@ -403,9 +406,9 @@ class LocalTrainingService implements TrainingService {
         let selectedGPUIndices: number[] = this.gpuScheduler.getAvailableGPUIndices()
             .filter((index: number) => !this.occupiedGpuIndices.has(index));
 
-        if (this.specifiedGpuIndices !== undefined) {
+        if (this.designatedGpuIndices !== undefined) {
             this.checkSpecifiedGpuIndices();
-            selectedGPUIndices = selectedGPUIndices.filter((index: number) => this.specifiedGpuIndices.has(index));
+            selectedGPUIndices = selectedGPUIndices.filter((index: number) => this.designatedGpuIndices.has(index));
         }
 
         if (selectedGPUIndices.length < this.localTrailConfig.gpuNum) {
@@ -420,8 +423,8 @@ class LocalTrainingService implements TrainingService {
 
     private checkSpecifiedGpuIndices(): void {
         const gpuCount: number = this.gpuScheduler.getSystemGpuCount();
-        if (this.specifiedGpuIndices !== undefined) {
-            for (const index of this.specifiedGpuIndices) {
+        if (this.designatedGpuIndices !== undefined) {
+            for (const index of this.designatedGpuIndices) {
                 if (index >= gpuCount) {
                     throw new Error(`Specified GPU index not found: ${index}`);
                 }

@@ -39,6 +39,7 @@ export class RemoteMachineMeta {
     public gpuSummary : GPUSummary | undefined;
     /* GPU Reservation info, the key is GPU index, the value is the job id which reserves this GPU*/
     public gpuReservation : Map<number, string>;
+    public readonly gpuIndices?: string;
 
     constructor(ip : string, port : number, username : string, passwd : string, 
         sshKeyPath : string, passphrase : string) {
@@ -49,6 +50,19 @@ export class RemoteMachineMeta {
         this.sshKeyPath = sshKeyPath;
         this.passphrase = passphrase;
         this.gpuReservation = new Map<number, string>();
+    }
+
+    // undefined result means gpu indices is not specified.
+    public getDesignatedGpuIndices(): Set<number> | undefined {
+        if (this.gpuIndices !== undefined) {
+            const indices: number[] = this.gpuIndices.split(',')
+                .map((x: string) => parseInt(x, 10));
+            if (indices.length > 0) {
+                return new Set(indices);
+            } else {
+                throw new Error('gpuIndices can not be empty if specified.');
+            }
+        }
     }
 }
 

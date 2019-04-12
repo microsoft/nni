@@ -120,11 +120,13 @@ export class GPUScheduler {
                 if (rmMeta.gpuReservation === undefined) {
                     rmMeta.gpuReservation = new Map<number, string>();
                 }
-
+                const designatedGpuIndices: Set<number> | undefined = rmMeta.getDesignatedGpuIndices();
                 rmMeta.gpuSummary.gpuInfos.forEach((gpuInfo: GPUInfo) => {
                     // if the GPU has active process, OR be reserved by a job,
+                    // or index not in gpuIndices configuration in machineList,
                     // We should NOT allocate this GPU
-                    if (gpuInfo.activeProcessNum === 0 && !rmMeta.gpuReservation.has(gpuInfo.index)) {
+                    if (gpuInfo.activeProcessNum === 0 && !rmMeta.gpuReservation.has(gpuInfo.index)
+                        && (designatedGpuIndices === undefined || designatedGpuIndices.has(gpuInfo.index))) {
                         availableGPUs.push(gpuInfo);
                     }
                 });
