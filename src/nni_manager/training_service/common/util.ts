@@ -67,14 +67,27 @@ export async function execMkdir(directory: string): Promise<void> {
 }
 
 /**
+ * crete a new file
+ * @param filename 
+ */
+export async function execNewFile(filename: string): Promise<void> {
+    if (process.platform === 'win32') {
+        await cpp.exec(`powershell.exe New-Item -Path ${filename} -ItemType "file" -Force`);
+    } else {
+        await cpp.exec(`touch ${filename}`);
+    }
+    return Promise.resolve();
+}
+
+/**
  * run script
  * @param filePath
  */
-export function execScript(filePath: string): void {
+export function execScript(filePath: string): cp.ChildProcess {
     if (process.platform === 'win32') {
-        cp.exec(`powershell.exe -file ${filePath}`);
+        return cp.exec(`powershell.exe -file ${filePath}`);
     } else {
-        cp.exec(`bash ${filePath}`);
+        return cp.exec(`bash ${filePath}`);
     }
 }
 
@@ -113,11 +126,25 @@ export async function execRemove(directory: string): Promise<void>{
  */
 export async function execKill(pid: string): Promise<void>{
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe kill ${pid}`);
+        await cpp.exec(`cmd /c taskkill /PID ${pid} /T`);
     } else {
         await cpp.exec(`pkill -P ${pid}`);
     }
     return Promise.resolve();
+}
+
+/**
+ * set environment variable
+ * @param  variable
+ * @returns command string  
+ */
+export function setEnvironmentVariable(variable: { key: string; value: string }): string{
+    if (process.platform === 'win32') {
+        return `$env:${variable.key}="${variable.value}"`;
+    }
+    else{
+        return `export ${variable.key}=${variable.value}`;
+    }
 }
 
 

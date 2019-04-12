@@ -157,7 +157,7 @@ machineList:
   
   - 说明
     
-    NNI 会检查 remote, pai 和 Kubernetes 模式下管理器以及 trialKeeper 进程的版本。 如果需要禁用版本检查，debug 应设置为 true。
+    NNI 会校验 remote, pai 和 Kubernetes 模式下 NNIManager 与 trialKeeper 进程的版本。 如果需要禁用版本校验，debug 应设置为 true。
 
 - **maxTrialNum**
   

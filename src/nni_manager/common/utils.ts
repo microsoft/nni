@@ -385,7 +385,7 @@ async function getVersion(): Promise<string> {
 /**
  * run command as ChildProcess
  */
-function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any):ChildProcess{
+function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any): ChildProcess{
     let cmd: string = command;
     let arg: string[] = [];
     let newShell: boolean = true;
@@ -406,13 +406,17 @@ function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newE
 /**
  * judge whether the process is alive
  */
-async function isAlive(pid:any):Promise<boolean>{
+async function isAlive(pid:any): Promise<boolean>{
     let deferred : Deferred<boolean> = new Deferred<boolean>();
     let alive: boolean = false;
     if(process.platform ==='win32'){
-        const str = cp.execSync(`tasklist /FI ${'"PID eq '+pid +'"'}`).toString();
-        if(!str.includes("No tasks")){
-            alive = true;
+        try {
+            const str = cp.execSync(`powershell.exe Get-Process -Id ${pid}`).toString();
+            if (str) {
+                alive = true;
+            }
+        }
+        catch (error) {
         }
     }
     else{
@@ -430,14 +434,14 @@ async function isAlive(pid:any):Promise<boolean>{
 /**
  * kill process 
  */
-async function killPid(pid:any):Promise<void>{
+async function killPid(pid:any): Promise<void>{
     let deferred : Deferred<void> = new Deferred<void>();
     try {
         if (process.platform === "win32") {
-            await cpp.exec(`powershell.exe kill ${pid}`);
+            await cpp.exec(`cmd /c taskkill /PID ${pid} /F`);
         }
         else{
-            await cpp.exec(`kill ${pid}`);
+            await cpp.exec(`kill -9 ${pid}`);
         }
     } catch (error) {
         // pid does not exist, do nothing here
@@ -446,6 +450,15 @@ async function killPid(pid:any):Promise<void>{
     return deferred.promise;
 }
 
+function getNewLine(): string{
+    if (process.platform === "win32") {
+        return "\r\n";
+    }
+    else{
+        return "\n";
+    }
+}
+
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine };

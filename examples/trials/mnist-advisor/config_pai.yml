@@ -9,10 +9,11 @@ searchSpacePath: search_space.json
 #choice: true, false
 useAnnotation: false
 advisor:
-  #choice: Hyperband
+  #choice: Hyperband, BOHB
+  #(BOHB should be installed through nnictl)
   builtinAdvisorName: Hyperband
   classArgs:
-    #R: the maximum STEPS
+    #R: the maximum trial budget
     R: 100
     #eta: proportion of discarded trials
     eta: 3
