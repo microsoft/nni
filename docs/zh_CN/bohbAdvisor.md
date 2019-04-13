@@ -4,17 +4,17 @@
 
 BOHB是由[此篇参考论文](https://arxiv.org/abs/1807.01774)提出的一种高效而稳定的调参算法。 BO 是贝叶斯优化的缩写，HB是强盗算法Hyperband的缩写。
 
-BOHB 依赖 HB（Hyperband）来决定每次跑多少组参数和每组参数分配多少资源（budget），**它的改进之处是它将Hyperband在每个循环开始时随机选择参数的方法替换成了依赖之前的数据建立模型（贝叶斯优化） 进行参数选择**. Once the desired number of configurations for the iteration is reached, the standard successive halving procedure is carried out using these configurations. We keep track of the performance of all function evaluations g(x, b) of configurations x on all budgets b to use as a basis for our models in later iterations.
+BOHB 依赖 HB（Hyperband）来决定每次跑多少组参数和每组参数分配多少资源（budget），**它的改进之处是它将Hyperband在每个循环开始时随机选择参数的方法替换成了依赖之前的数据建立模型（贝叶斯优化） 进行参数选择**. 一旦贝叶斯优化生成的参数达到迭代所需的配置数, 就会使用这些配置开始执行标准的连续减半过程（successive halving）。 我们观察这些参数在不同资源配置（budget）下的表现g(x, b)，用于在以后的迭代中用作我们贝叶斯优化模型选择参数的基准数据。
 
-Below we divide introduction of the BOHB process into two parts:
+接下来我们将份两部分来介绍BOHB过程涉及的原理:
 
-### HB (Hyperband)
+### HB（Hyperband）
 
-We follow Hyperband’s way of choosing the budgets and continue to use SuccessiveHalving, for more details, you can refer to the [Hyperband in NNI](hyperbandAdvisor.md) and [reference paper of Hyperband](https://arxiv.org/abs/1603.06560). This procedure is summarized by the pseudocode below.
+我们按照Hyperband 的方式来选择每次跑的参数个数与分配多少资源（budget），并继续使用“连续减半（SuccessiveHalving）”策略，更多有关Hyperband算法的细节，请参考[NNI中的Hyperband](hyperbandAdvisor.md)和[Hyperband 的参考论文](https://arxiv.org/abs/1603.06560)。 下面的伪代码描述了这个过程。
 
 ![](../img/bohb_1.png)
 
-### BO (Bayesian Optimization)
+### BO（贝叶斯优化）
 
 The BO part of BOHB closely resembles TPE, with one major difference: we opted for a single multidimensional KDE compared to the hierarchy of one-dimensional KDEs used in TPE in order to better handle interaction effects in the input space.
 
