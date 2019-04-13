@@ -16,9 +16,9 @@ BOHB 依赖 HB（Hyperband）来决定每次跑多少组参数和每组参数分
 
 ### BO（贝叶斯优化）
 
-The BO part of BOHB closely resembles TPE, with one major difference: we opted for a single multidimensional KDE compared to the hierarchy of one-dimensional KDEs used in TPE in order to better handle interaction effects in the input space.
+BOHB 的 BO 部分与 TPE 非常相似, 它们的主要区别是: BOHB中我们使用一个多维的KDE, 而不是TPE那样带有权重的一维 KDEs, 以便更好地处理搜索空间中超参之间的互相影响。
 
-Tree Parzen Estimator(TPE): uses a KDE(kernel density estimator) to model the densities.
+树形超参评估器 (TPE): 使用 KDE (核密度估计) 来对密度进行建模。
 
 ![](../img/bohb_2.png)
 
