@@ -75,8 +75,8 @@ advisor:
 * **min_points_in_model**(*整数, 可选项, 默认值为None*): 建立核密度估计（KDE）要求的最小观察到的点。 默认值‘’ None ” 的意思是 dim+1，当在该计算资源（budget）下试验过的参数已经大于等于`max{dim+1, min_points_in_model}`时，BOHB将会开始建立这个计算资源（budget）下对应的核密度估计（KDE）模型，然后用这个模型来指导参数的选取。 该参数必须为正数。（dim指的是搜索空间中超参数的维度）
 * **top_n_percent**(*整数, 可选项, 默认值为15*): 认为观察点为好点的百分数(在1到99之间，默认值为15)。 区分表现好的点与表现坏的点是为了建立我们的树形核密度估计模型。 比如，如果你已经观察到了100个点的表现情况，同时把top_n_percent 设置为15，那么表现最好的15个点将会用于创建表现好的点的分布“l（x）”，剩下的85个点将用于创建表现坏的点的分布“g（x）”。
 * **num_samples**(*整数, 可选项, 默认值为64*): 用于优化EI值的采样个数（默认值为64）。 在这个例子中，我们将根据l（x）的分布采样“num_samples”（默认值为64）个点。若优化的目标为最大化指标，则会返回其中l(x)/g(x) 的值最大的点作为下一个试验的参数。 否则，我们使用值最小的点。
-* **random_fraction**(*float, optional, default = 0.33*): fraction of purely random configurations that are sampled from the prior without the model.
-* **bandwidth_factor**(*float, optional, default = 3.0*): to encourage diversity, the points proposed to optimize EI, are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor. Suggest to use default value if you are not familiar with KDE.
+* **random_fraction**(*浮点数, 可选项, 默认值为0.33*): 使用模型的先验（通常是均匀）来随机采样的比例。
+* **bandwidth_factor**(< 1>浮点数, 可选, 默认值为3.0 </em>): 为了鼓励多样性, 我们将会把优化EI的点加宽，即把KDE中采样的点乘以这个因子，从而增加KDE中的带宽。 Suggest to use default value if you are not familiar with KDE.
 * **min_bandwidth**(*float, optional, default = 0.001*): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (default: 1e-3) is used instead of zero. Suggest to use default value if you are not familiar with KDE.
 
 *Please note that currently float type only support decimal representation, you have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*
