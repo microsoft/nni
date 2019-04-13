@@ -34,21 +34,21 @@ BOHB 的 BO 部分与 TPE 非常相似, 它们的主要区别是: BOHB中我们�
 
 ![](../img/bohb_6.jpg)
 
-以上这张图展示了BOHB的工作流程。 这里我们将每次训练的最大资源配置（max_budget）设为9，最小资源配置设为（min_budget）1，逐次减半比例（eta）设为3，其他的超参数为默认值。 In this case, s_max = 2, so we will continuesly run the {s=2, s=1, s=0, s=2, s=1, s=0, ...} cycle. In each stage of SuccessiveHalving (the orange box), we will pick the top 1/eta configurations and run them again with more budget, repeated SuccessiveHalving stage until the end of this iteration. At the same time, we collect the configurations, budgets and final metrics of each trial, and use this to build a multidimensional KDEmodel with the key "budget". Multidimensional KDE is used to guide the selection of configurations for the next iteration.
+以上这张图展示了BOHB的工作流程。 这里我们将每次训练的最大资源配置（max_budget）设为9，最小资源配置设为（min_budget）1，逐次减半比例（eta）设为3，其他的超参数为默认值。 那么在这个例子中，s_max 计算的值为 2, 所以我们会持续地进行{s=2, s=1, s=0, s=2, s=1, s=0, ...} 这样的循环。 在“逐次减半”（SuccessiveHalving）算法的每一个阶段，即图中橙色框，我们都讲选取表现最好的前 1/eta 个参数，并在赋予他们更多计算资源（budget）的情况下让他们运行。我们不断重复“逐次减半” （SuccessiveHalving）过程，直到这个循环结束。 同时，我们将收集这些试验的超参数组合，使用了计算资源（budget）和他们使用了这些资源之后的表现（metrics），使用这些数据来建立一个以使用了多少计算资源（budget）为维度的多维核密度估计（KDE）模型。 这个多维的核密度估计（KDE）模型将用于指导下一个循环的参数选择。
 
-The way of sampling procedure(use Multidimensional KDE to guide the selection) is summarized by the pseudocode below.
+有关我们如何使用多维的KDE模型来指导参数选择的采样规程，我们使用了以下的伪代码来描述这一细节。
 
 ![](../img/bohb_4.png)
 
-## 3. Usage
+## 3. 用法
 
-BOHB advisor requires [ConfigSpace](https://github.com/automl/ConfigSpace) package, ConfigSpace need to be installed by following command before first use.
+BOHB advisor的使用依赖[ConfigSpace](https://github.com/automl/ConfigSpace)这个包，在第一次使用BOHB的时候，你可以通过在命令行运行以下的指令来安装要求的ConfigSpace包。
 
 ```bash
-nnictl package install --name=BOHB
+nnictl package install --name=SMAC
 ```
 
-To use BOHB, you should add the following spec in your experiment's YAML config file:
+要使用 BOHB，需要在 Experiment 的 YAML 配置文件进行如下改动。
 
 ```yml
 advisor:
@@ -66,9 +66,9 @@ advisor:
     min_bandwidth: 0.001
 ```
 
-**Requirement of classArg**
+**参数**
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will target to maximize metrics. If 'minimize', tuner will target to minimize metrics.
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **min_budget** (*int, optional, default = 1*) - The smallest budget assign to a trial job, (budget could be the number of mini-batches or epochs). Needs to be positive.
 * **max_budget** (*int, optional, default = 3*) - The largest budget assign to a trial job, (budget could be the number of mini-batches or epochs). Needs to be larger than min_budget.
 * **eta** (*int, optional, default = 3*) - In each iteration, a complete run of sequential halving is executed. In it, after evaluating each configuration on the same subset size, only a fraction of 1/eta of them 'advances' to the next round. Must be greater or equal to 2.
