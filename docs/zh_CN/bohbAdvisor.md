@@ -1,10 +1,10 @@
-# BOHB Advisor on NNI
+# NNI中的BOHB Advisor
 
 ## 1. Introduction
 
-BOHB is a robust and efficient hyperparameter tuning algorithm mentioned in [reference paper](https://arxiv.org/abs/1807.01774). BO is the abbreviation of Bayesian optimization and HB is the abbreviation of Hyperband.
+BOHB是由[此篇参考论文](https://arxiv.org/abs/1807.01774)提出的一种高效而稳定的调参算法。 BO 是贝叶斯优化的缩写，HB是强盗算法Hyperband的缩写。
 
-BOHB relies on HB(Hyperband) to determine how many configurations to evaluate with which budget, but it **replaces the random selection of configurations at the beginning of each HB iteration by a model-based search(Byesian Optimization)**. Once the desired number of configurations for the iteration is reached, the standard successive halving procedure is carried out using these configurations. We keep track of the performance of all function evaluations g(x, b) of configurations x on all budgets b to use as a basis for our models in later iterations.
+BOHB 依赖 HB（Hyperband）来决定每次跑多少组参数和每组参数分配多少资源（budget），**它的改进之处是它将Hyperband在每个循环开始时随机选择参数的方法替换成了依赖之前的数据建立模型（贝叶斯优化） 进行参数选择**. Once the desired number of configurations for the iteration is reached, the standard successive halving procedure is carried out using these configurations. We keep track of the performance of all function evaluations g(x, b) of configurations x on all budgets b to use as a basis for our models in later iterations.
 
 Below we divide introduction of the BOHB process into two parts:
 
