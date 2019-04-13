@@ -70,6 +70,7 @@ class LocalTrainingServiceForGPU extends LocalTrainingService {
     }
 
     public async cleanUp(): Promise<void> {
+        console.log('-----------------73-----------------')
         if (this.gpuScheduler !== undefined) {
             await this.gpuScheduler.stop();
         }
