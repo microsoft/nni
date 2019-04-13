@@ -1,0 +1,8 @@
+{
+    "combine_params":
+    {
+        "_type" : "choice",
+        "_value" : [{"x": 1},
+                    {"x": 100}]
+    }
+}
