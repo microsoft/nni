@@ -52,6 +52,52 @@ net = build_graph_from_json(RCV_CONFIG)
 nni.report_final_result(best_acc)
 ```
 
+如果需要保存并**读取最佳模型**，推荐采用以下方法。
+
+```python
+# 1. 使用 NNI API
+## 从 Web 界面获取最佳模型的 ID 
+## 或查看 `nni/experiments/experiment_id/log/model_path/best_model.txt' 文件
+
+## 从 JSON 文件中读取，并使用 NNI API 来加载
+with open("best-model.json") as json_file:
+    json_of_model = json_file.read()
+model = build_graph_from_json(json_of_model)
+
+# 2. 使用框架的 API (与具体框架相关) 
+## 2.1 Keras API
+
+## 在 Trial 代码中使用 Keras API 保存
+## 最好保存 NNI 的 ID
+model_id = nni.get_sequence_id()
+## 将模型序列化为 JSON
+model_json = model.to_json()
+with open("model-{}.json".format(model_id), "w") as json_file:
+    json_file.write(model_json)
+## 将权重序列化至 HDF5
+model.save_weights("model-{}.h5".format(model_id))
+
+## 重用模型时，使用 Keras API 读取
+## 读取 JSON 文件，并创建模型
+model_id = "" # 需要重用的模型 ID
+with open('model-{}.json'.format(model_id), 'r') as json_file:
+    loaded_model_json = json_file.read()
+loaded_model = model_from_json(loaded_model_json)
+## 将权重加载到新模型中
+loaded_model.load_weights("model-{}.h5".format(model_id))
+
+## 2.2 PyTorch API
+
+## 在 Trial 代码中使用 PyTorch API 保存
+model_id = nni.get_sequence_id()
+torch.save(model, "model-{}.pt".format(model_id))
+
+## 重用模型时，使用 PyTorch API 读取
+model_id = "" # 需要重用的模型 ID
+loaded_model = torch.load("model-{}.pt".format(model_id))
+
+```
+
 ## 3. 文件结构
 
 Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文件：
@@ -77,7 +123,7 @@ Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文�
 
 ## 4. 网络表示的 JSON 样例
 
-这是样例定义的中间表示 JSON 文件，它会在架构搜索过程中从 Tuner 传到 Trial。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。 样例如下。
+这是定义的中间表示 JSON 样例，在架构搜索过程中会从 Tuner 传到 Trial。 可调用 "json\_to\_graph()" 函数来将 JSON 文件转化为 Pytoch 或 Keras 模型。 样例如下。
 
 ```json
 {

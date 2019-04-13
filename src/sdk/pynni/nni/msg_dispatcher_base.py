@@ -152,8 +152,7 @@ class MsgDispatcherBase(Recoverable):
         }
         if command not in command_handlers:
             raise AssertionError('Unsupported command: {}'.format(command))
-
-        return command_handlers[command](data)
+        command_handlers[command](data)
 
     def handle_ping(self, data):
         pass

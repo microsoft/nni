@@ -30,6 +30,8 @@ WARNING_INFO = 'WARNING: %s'
 
 DEFAULT_REST_PORT = 8080
 
+REST_TIME_OUT = 20
+
 EXPERIMENT_SUCCESS_INFO = '\033[1;32;32mSuccessfully started experiment!\n\033[0m' \
                           '-----------------------------------------------------------------------\n' \
                           'The experiment id is %s\n'\
@@ -74,7 +76,8 @@ TRIAL_MONITOR_CONTENT = '%-15s %-25s %-25s %-15s'
 TRIAL_MONITOR_TAIL = '-------------------------------------------------------------------------------------\n\n\n'
 
 PACKAGE_REQUIREMENTS = {
-    'SMAC': 'smac_tuner'
+    'SMAC': 'smac_tuner',
+    'BOHB': 'bohb_advisor'
 }
 
 COLOR_RED_FORMAT = '\033[1;31;31m%s\033[0m'
