@@ -34,7 +34,7 @@ BOHB 的 BO 部分与 TPE 非常相似, 它们的主要区别是: BOHB中我们�
 
 ![](../img/bohb_6.jpg)
 
-以上这张图展示了BOHB的工作流程。 Here we set max_budget = 9, min_budget = 1, eta = 3, others as default. In this case, s_max = 2, so we will continuesly run the {s=2, s=1, s=0, s=2, s=1, s=0, ...} cycle. In each stage of SuccessiveHalving (the orange box), we will pick the top 1/eta configurations and run them again with more budget, repeated SuccessiveHalving stage until the end of this iteration. At the same time, we collect the configurations, budgets and final metrics of each trial, and use this to build a multidimensional KDEmodel with the key "budget". Multidimensional KDE is used to guide the selection of configurations for the next iteration.
+以上这张图展示了BOHB的工作流程。 这里我们将每次训练的最大资源配置（max_budget）设为9，最小资源配置设为（min_budget）1，逐次减半比例（eta）设为3，其他的超参数为默认值。 In this case, s_max = 2, so we will continuesly run the {s=2, s=1, s=0, s=2, s=1, s=0, ...} cycle. In each stage of SuccessiveHalving (the orange box), we will pick the top 1/eta configurations and run them again with more budget, repeated SuccessiveHalving stage until the end of this iteration. At the same time, we collect the configurations, budgets and final metrics of each trial, and use this to build a multidimensional KDEmodel with the key "budget". Multidimensional KDE is used to guide the selection of configurations for the next iteration.
 
 The way of sampling procedure(use Multidimensional KDE to guide the selection) is summarized by the pseudocode below.
 
