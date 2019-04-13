@@ -22,7 +22,7 @@ BOHB 的 BO 部分与 TPE 非常相似, 它们的主要区别是: BOHB中我们�
 
 ![](../img/bohb_2.png)
 
-To fit useful KDEs, we require a minimum number of data points Nmin; this is set to d + 1 for our experiments, where d is the number of hyperparameters. To build a model as early as possible, we do not wait until Nb = |Db|, the number of observations for budget b, is large enough to satisfy q · Nb ≥ Nmin. Instead, after initializing with Nmin + 2 random configurations, we choose the
+为了建模有效的核密度估计（KDE），我们设置了一个建立模型所需的最小观察点数（Nmin），在我们的实验中它的默认值为d+1（d是搜索空间的维度），其中d也是一个可以设置的超参数。 To build a model as early as possible, we do not wait until Nb = |Db|, the number of observations for budget b, is large enough to satisfy q · Nb ≥ Nmin. Instead, after initializing with Nmin + 2 random configurations, we choose the
 
 ![](../img/bohb_3.png)
 
