@@ -1,5 +1,5 @@
-$install_node = $TRUE
-$install_yarn = $TRUE
+$install_node = $true
+$install_yarn = $true
 
 # nodejs
 $nodeUrl = "https://aka.ms/nni/nodejs-download/win64"
@@ -31,8 +31,8 @@ if($WHICH_PYTHON[0].Length -eq 1){
 else{
     $NNI_PYTHON3 = $WHICH_PYTHON[0].SubString(0,$WHICH_PYTHON[0].Length-11)
 }
-$NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
-$PIP_INSTALL = "$NNI_PYTHON3\python -m pip install ."
+$NNI_PKG_FOLDER = $NNI_PYTHON3 + "\nni"
+$PIP_INSTALL = """$NNI_PYTHON3\python"" -m pip install ."
 
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
     New-Item $NNI_DEPENDENCY_FOLDER -ItemType Directory
@@ -68,20 +68,18 @@ $SCRIPT =  "import tarfile",
 
 if ($install_node) {
     ### nodejs install
-    if(Test-Path $NNI_NODE_FOLDER){
-        Remove-Item $NNI_NODE_FOLDER -Recurse -Force
+    if(!(Test-Path $NNI_NODE_FOLDER)){
+        Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
+        $unzipNodeDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir"
+        Rename-Item $unzipNodeDir "nni-node"
     }
-	Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
-    $unzipNodeDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir"
-    Rename-Item $unzipNodeDir "nni-node"
-     
+
     ### yarn install
-    if(Test-Path $NNI_YARN_FOLDER){
-        Remove-Item $NNI_YARN_FOLDER -Recurse -Force
+    if(!(Test-Path $NNI_YARN_FOLDER)){
+        cmd /C "$NNI_PYTHON3\python" $SCRIPT_PATH
+        $unzipYarnDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipYarnDir"
+        Rename-Item $unzipYarnDir "nni-yarn"
     }
-    cmd /C "$NNI_PYTHON3\python" $SCRIPT_PATH
-    $unzipYarnDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipYarnDir"
-    Rename-Item $unzipYarnDir "nni-yarn"
 }
 
 ### add to PATH
@@ -135,8 +133,8 @@ cd ..
 Remove-Item $NNI_PKG_FOLDER -Recurse -Force
 Copy-Item "src\nni_manager\dist" $NNI_PKG_FOLDER -Recurse
 Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER
-$PKG_JSON = $NNI_PKG_FOLDER+"\package.json"
+$PKG_JSON = $NNI_PKG_FOLDER + "\package.json"
 (Get-Content $PKG_JSON).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content $PKG_JSON
 cmd /c $NNI_YARN --prod --cwd $NNI_PKG_FOLDER
-$NNI_PKG_FOLDER_STATIC = $NNI_PKG_FOLDER+"\static"
+$NNI_PKG_FOLDER_STATIC = $NNI_PKG_FOLDER + "\static"
 Copy-Item "src\webui\build" $NNI_PKG_FOLDER_STATIC -Recurse 
