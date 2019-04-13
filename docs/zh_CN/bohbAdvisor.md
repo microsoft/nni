@@ -1,6 +1,6 @@
 # NNI中的BOHB Advisor
 
-## 1. Introduction
+## 1. 介绍
 
 BOHB是由[此篇参考论文](https://arxiv.org/abs/1807.01774)提出的一种高效而稳定的调参算法。 BO 是贝叶斯优化的缩写，HB是强盗算法Hyperband的缩写。
 
@@ -22,19 +22,19 @@ BOHB 的 BO 部分与 TPE 非常相似, 它们的主要区别是: BOHB中我们�
 
 ![](../img/bohb_2.png)
 
-为了建模有效的核密度估计（KDE），我们设置了一个建立模型所需的最小观察点数（Nmin），在我们的实验中它的默认值为d+1（d是搜索空间的维度），其中d也是一个可以设置的超参数。 To build a model as early as possible, we do not wait until Nb = |Db|, the number of observations for budget b, is large enough to satisfy q · Nb ≥ Nmin. Instead, after initializing with Nmin + 2 random configurations, we choose the
+为了建模有效的核密度估计（KDE），我们设置了一个建立模型所需的最小观察点数（Nmin），在我们的实验中它的默认值为d+1（d是搜索空间的维度），其中d也是一个可以设置的超参数。 因为我们希望尽早地建立模型，所以当Nb = |Db|，即当已经观察到的计算资源（budget）为b的点数满足q · Nb ≥ Nmin时，我们立马建立模型来指导之后参数的选择。所以，在我们使用了刚开始Nmin + 2 个随机选择的参数之后，我们会按照下式将我们观察到的点进行分类
 
 ![](../img/bohb_3.png)
 
-best and worst configurations, respectively, to model the two densities.
+按照这个式子将观察到的点分成好的点与坏的点两类，来分别拟合两个不同的密度分布。
 
-Note that we alse sample a constant fraction named **random fraction** of the configurations uniformly at random.
+注意为了鼓励更多的探索防止陷入局部极小，在建立模型之后我们仍然有**随机比例（random faction）**这样比例的参数是由随机选择生成的。
 
-## 2. Workflow
+## 2. 工作流程
 
 ![](../img/bohb_6.jpg)
 
-This image shows the workflow of BOHB. Here we set max_budget = 9, min_budget = 1, eta = 3, others as default. In this case, s_max = 2, so we will continuesly run the {s=2, s=1, s=0, s=2, s=1, s=0, ...} cycle. In each stage of SuccessiveHalving (the orange box), we will pick the top 1/eta configurations and run them again with more budget, repeated SuccessiveHalving stage until the end of this iteration. At the same time, we collect the configurations, budgets and final metrics of each trial, and use this to build a multidimensional KDEmodel with the key "budget". Multidimensional KDE is used to guide the selection of configurations for the next iteration.
+以上这张图展示了BOHB的工作流程。 Here we set max_budget = 9, min_budget = 1, eta = 3, others as default. In this case, s_max = 2, so we will continuesly run the {s=2, s=1, s=0, s=2, s=1, s=0, ...} cycle. In each stage of SuccessiveHalving (the orange box), we will pick the top 1/eta configurations and run them again with more budget, repeated SuccessiveHalving stage until the end of this iteration. At the same time, we collect the configurations, budgets and final metrics of each trial, and use this to build a multidimensional KDEmodel with the key "budget". Multidimensional KDE is used to guide the selection of configurations for the next iteration.
 
 The way of sampling procedure(use Multidimensional KDE to guide the selection) is summarized by the pseudocode below.
 
