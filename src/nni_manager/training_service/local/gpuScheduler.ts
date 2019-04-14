@@ -70,7 +70,9 @@ class GPUScheduler {
         console.log(this.gpuMetricCollectorScriptFolder)
         console.log(gpuMetricsCollectorScriptContent)
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
-        execScript(gpuMetricsCollectorScriptPath)
+        let process = execScript(gpuMetricsCollectorScriptPath)
+        console.log('---------------------------74-------------------')
+        console.log(process.pid)
     }
 
     public getAvailableGPUIndices(): number[] {
