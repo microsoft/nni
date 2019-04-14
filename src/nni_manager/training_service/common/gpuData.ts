@@ -70,6 +70,6 @@ python3 -m nni_gpu_tool.gpu_metrics_collector
 export const GPU_INFO_COLLECTOR_FORMAT_WINDOWS: string = 
 `
 $env:METRIC_OUTPUT_DIR="{0}"
-Write $PID | Out-File {1} -NoNewline -encoding utf8
-cmd /c python -m nni_gpu_tool.gpu_metrics_collector
+$app = Start-Process "python" -ArgumentList "-m nni_gpu_tool.gpu_metrics_collector" -passthru
+Write $app.ID | Out-File {1} -NoNewline -encoding utf8
 `
