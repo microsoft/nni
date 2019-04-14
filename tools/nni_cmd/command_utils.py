@@ -27,7 +27,7 @@ def check_output_command(file_path, head=None, tail=None):
 def kill_command(pid):
     '''kill command'''
     if sys.platform == 'win32':
-        cmds = ['powershell.exe', 'kill', str(pid)]
+        cmds = ['taskkill', '/pid', str(pid), '/F']
     else:
         cmds = ['kill', str(pid)]
     call(cmds)
