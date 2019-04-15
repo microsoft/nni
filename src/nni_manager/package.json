@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "test": "nyc mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
+    "preinstall": "yarn global add node-pre-gyp",
     "start": "node dist/main.js",
     "tslint": "tslint -p ."
   },
