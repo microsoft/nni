@@ -112,6 +112,7 @@ const killJob = (key: number, id: string, status: string, updateList: Function) 
     })
         .then(res => {
             if (res.status === 200) {
+                message.destroy();
                 message.success('Cancel the job successfully');
                 // render the table
                 updateList();

@@ -60,6 +60,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                             const trialConcurrency = experimentFile.params.trialConcurrency;
                             if (userInputVal !== undefined) {
                                 if (userInputVal === trialConcurrency.toString() || userInputVal === '0') {
+                                    message.destroy();
                                     message.info(
                                         `trialConcurrency's value is ${trialConcurrency}, you did not modify it`, 2);
                                 } else {
@@ -76,6 +77,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                         }
                                     }).then(res => {
                                         if (res.status === 200) {
+                                            message.destroy();
                                             message.success(`Update ${CONTROLTYPE[1].toLocaleLowerCase()} 
                                             successfully`);
                                             // rerender trial profile message

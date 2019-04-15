@@ -5,7 +5,7 @@ import DefaultMetric from '../public-child/DefaultMetrc';
 import { TableObj } from '../../static/interface';
 import { convertDuration } from '../../static/function';
 import '../../static/style/tableStatus.css';
-import '../../static/style/tableList.scss';
+import '../../static/style/openRow.scss';
 
 interface SuccessTableProps {
     tableSource: Array<TableObj>;
@@ -52,7 +52,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             width: 140,
             className: 'tableHead'
         }, {
-            title: 'Id',
+            title: 'ID',
             dataIndex: 'id',
             key: 'id',
             width: 60,
