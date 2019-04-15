@@ -352,3 +352,6 @@ class HyperoptTuner(Tuner):
         # remove '_index' from json2parameter and save params-id
         total_params = json2parameter(self.json, parameter)
         return total_params
+
+    def feed_tuner_data(self, data):
+        pass
