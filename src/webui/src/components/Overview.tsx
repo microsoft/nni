@@ -100,7 +100,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     const endTimenum = sessionData.endTime;
                     const assessor = sessionData.params.assessor;
                     const advisor = sessionData.params.advisor;
-                     // default logCollection is true
+                    // default logCollection is true
                     const logCollection = res.data.params.logCollection;
                     let expLogCollection: boolean = false;
                     if (logCollection !== undefined && logCollection !== 'none') {
@@ -315,6 +315,10 @@ class Overview extends React.Component<{}, OverviewState> {
             indexarr.push(items.sequenceId);
         });
         const accOption = {
+            grid: {
+                left: 40,
+                right: 40
+            },
             tooltip: {
                 trigger: 'item'
             },
@@ -428,7 +432,7 @@ class Overview extends React.Component<{}, OverviewState> {
                         <Row className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
                             <div className="experiment searchSpace">
-                            <TrialPro experiment={experimentAPI} />
+                                <TrialPro experiment={experimentAPI} />
                             </div>
                         </Row>
                     </Col>
@@ -436,7 +440,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 <Row className="overGraph">
                     <Row className="top10bg">
                         <Col span={4} className="top10Title">
-                            <Title1 text="Top10 trials" icon="7.png" />
+                            <Title1 text="Top10  trials" icon="7.png" />
                         </Col>
                         <Col
                             span={2}
@@ -453,22 +457,24 @@ class Overview extends React.Component<{}, OverviewState> {
                             <Title1 text="Minimal" icon="min.png" bgcolor={titleMinbgcolor} />
                         </Col>
                     </Row>
-                    <Col span={8} className="overviewBoder">
-                        <Row className="accuracy">
-                            <Accuracy
-                                accuracyData={accuracyData}
-                                accNodata={accNodata}
-                                height={324}
+                    <Row>
+                        <Col span={8} className="overviewBoder">
+                            <Row className="accuracy">
+                                <Accuracy
+                                    accuracyData={accuracyData}
+                                    accNodata={accNodata}
+                                    height={324}
+                                />
+                            </Row>
+                        </Col>
+                        <Col span={16} id="succeTable">
+                            <SuccessTable
+                                tableSource={tableData}
+                                logCollection={isLogCollection}
+                                trainingPlatform={trialProfile.trainingServicePlatform}
                             />
-                        </Row>
-                    </Col>
-                    <Col span={16} id="succeTable">
-                        <SuccessTable
-                            tableSource={tableData}
-                            logCollection={isLogCollection}
-                            trainingPlatform={trialProfile.trainingServicePlatform}
-                        />
-                    </Col>
+                        </Col>
+                    </Row>
                 </Row>
             </div>
         );

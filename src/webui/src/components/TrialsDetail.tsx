@@ -52,7 +52,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     private titleOfIntermediate = (
         <div className="panelTitle">
             <Icon type="line-chart" />
-            <span>Intermediate Result</span>
+            <span>Intermediate result</span>
         </div>
     );
 
@@ -360,7 +360,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     </Tabs>
                 </div>
                 {/* trial table list */}
-                <Title1 text="Trial Jobs" icon="6.png" />
+                <Title1 text="Trial jobs" icon="6.png" />
                 <Row className="allList">
                     <Col span={12}>
                         <span>Show</span>

@@ -24,11 +24,11 @@ class Accuracy extends React.Component<AccuracyProps, {}> {
     render() {
         const { accNodata, accuracyData, height } = this.props;
         return (
-            <div>
+            <div className="cc">
                 <ReactEcharts
                     option={accuracyData}
                     style={{
-                        width: '100%',
+                        width: '90%',
                         height: height,
                         margin: '0 auto',
                     }}
