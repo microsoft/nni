@@ -31,13 +31,13 @@ class LogPath extends React.Component<LogpathProps, {}> {
                             />
                             <LogPathChild
                                 eachLogpath={logStr.split(',')[1]}
-                                logName="hdfsLogPath:"
+                                logName="hdfs log path:"
                             />
                         </div>
                         :
                         <LogPathChild
                             eachLogpath={logStr}
-                            logName="LogPath:"
+                            logName="Log path:"
                         />
                 }
             </div>

@@ -131,13 +131,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const wantResult: Array<string> = [];
         Object.keys(checkedValues).map(m => {
             switch (checkedValues[m]) {
-                case 'Trial No.':
+                case 'Trial no.':
                 case 'ID':
                 case 'Duration':
                 case 'Status':
                 case 'Operation':
                 case 'Default':
-                case 'Intermediate Result':
+                case 'Intermediate result':
                     break;
                 default:
                     finalKeys.push(checkedValues[m]);
@@ -226,9 +226,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
         Object.keys(columnSelected).map(key => {
             const item = columnSelected[key];
             switch (item) {
-                case 'Trial No.':
+                case 'Trial no.':
                     showColumn.push({
-                        title: 'Trial No.',
+                        title: 'Trial no.',
                         dataIndex: 'sequenceId',
                         key: 'sequenceId',
                         width: 120,
@@ -298,7 +298,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     break;
                 case 'Default':
                     showColumn.push({
-                        title: 'Default Metric',
+                        title: 'Default metric',
                         className: 'leftTitle',
                         dataIndex: 'acc',
                         key: 'acc',
@@ -360,9 +360,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     });
                     break;
 
-                case 'Intermediate Result':
+                case 'Intermediate result':
                     showColumn.push({
-                        title: 'Intermediate Result',
+                        title: 'Intermediate result',
                         dataIndex: 'intermediate',
                         key: 'intermediate',
                         width: '16%',
@@ -414,7 +414,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     />
                     {/* Intermediate Result Modal */}
                     <Modal
-                        title="Intermediate Result"
+                        title="Intermediate result"
                         visible={modalVisible}
                         onCancel={this.hideIntermediateModal}
                         footer={null}

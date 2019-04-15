@@ -61,7 +61,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
             ?
             record.description.logPath
             :
-            'This trial\'s logPath are not available.';
+            'This trial\'s log path are not available.';
         return (
             <Row className="openRowContent hyperpar">
                 <Tabs tabPosition="left" className="card">
@@ -88,7 +88,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                         <Button
                                             onClick={this.copyParams.bind(this, record)}
                                         >
-                                            Copy as Python
+                                            Copy as python
                                         </Button>
                                     </Row>
                                 </Row>

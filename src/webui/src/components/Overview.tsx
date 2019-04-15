@@ -324,7 +324,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 data: indexarr
             },
             yAxis: {
-                name: 'Default Metric',
+                name: 'Default metric',
                 type: 'value',
                 scale: true,
                 data: accarr
@@ -405,7 +405,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 </Row>
                 <Row className="overMessage">
                     {/* status graph */}
-                    <Col span={8} className="prograph overviewBoder">
+                    <Col span={9} className="prograph overviewBoder">
                         <Title1 text="Status" icon="5.png" />
                         <Progressed
                             trialNumber={trialNumber}
@@ -417,8 +417,8 @@ class Overview extends React.Component<{}, OverviewState> {
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}
-                    <Col span={8} className="overviewBoder">
-                        <Title1 text="Search Space" icon="10.png" />
+                    <Col span={7} className="overviewBoder">
+                        <Title1 text="Search space" icon="10.png" />
                         <Row className="experiment">
                             <SearchSpace searchSpace={searchSpace} />
                         </Row>
@@ -436,7 +436,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 <Row className="overGraph">
                     <Row className="top10bg">
                         <Col span={4} className="top10Title">
-                            <Title1 text="Top10  Trials" icon="7.png" />
+                            <Title1 text="Top10 trials" icon="7.png" />
                         </Col>
                         <Col
                             span={2}

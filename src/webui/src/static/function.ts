@@ -90,7 +90,7 @@ const intermediateGraphOption = (intermediateArr: number[], id: string) => {
             data: sequence
         },
         yAxis: {
-            name: 'Default Metric',
+            name: 'Default metric',
             type: 'value',
             data: intermediateArr
         },

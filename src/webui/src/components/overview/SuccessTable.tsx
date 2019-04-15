@@ -46,7 +46,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
 
         let bgColor = '';
         const columns = [{
-            title: 'Trial No.',
+            title: 'Trial no.',
             dataIndex: 'sequenceId',
             key: 'sequenceId',
             width: 140,
@@ -92,7 +92,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                 );
             }
         }, {
-            title: 'Default Metric',
+            title: 'Default metric',
             dataIndex: 'acc',
             key: 'acc',
             sorter: (a: TableObj, b: TableObj) => {

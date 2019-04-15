@@ -401,7 +401,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                     <Col span={6} />
                     <Col span={18}>
                         <Row className="meline">
-                            <span>top</span>
+                            <span>Top</span>
                             <Select
                                 style={{ width: '20%', marginRight: 10 }}
                                 placeholder="100%"
