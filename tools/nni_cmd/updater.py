@@ -22,7 +22,7 @@
 import json
 import os
 from .rest_utils import rest_put, rest_post, rest_get, check_rest_server_quick, check_response
-from .url_utils import experiment_url, tuner_data_url
+from .url_utils import experiment_url, tuning_data_url
 from .config_utils import Config
 from .common_utils import get_json_content
 from .nnictl_utils import check_experiment_id, get_experiment_port, get_config_filename
@@ -128,7 +128,7 @@ def feed_tuning_data_to_restful_server(args, content):
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)
     if running:
-        response = rest_post(tuner_data_url(rest_port), content, REST_TIME_OUT)
+        response = rest_post(tuning_data_url(rest_port), content, REST_TIME_OUT)
         if response and check_response(response):
             return response
     else:
