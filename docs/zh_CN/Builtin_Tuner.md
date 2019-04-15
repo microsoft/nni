@@ -323,13 +323,13 @@ tuner:
 
 <a name="BOHB"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) < 0>BOHB Adivisor</0 >
+![](https://placehold.it/15/1589F0/000000?text=+) `BOHB Adivisor`
 
 > 名称：**BOHB**
 
 **安装**
 
-BOHB advisor 的使用依赖 [ConfigSpace](https://github.com/automl/ConfigSpace) 包，在第一次使用 BOHB 的时候，在命令行运行以下的指令来安装要求的 ConfigSpace 包。
+BOHB Advisor 的使用依赖 [ConfigSpace](https://github.com/automl/ConfigSpace) 包，在第一次使用 BOHB 的时候，在命令行运行以下的指令来安装 ConfigSpace。
 
 ```bash
 nnictl package install --name=BOHB
@@ -337,7 +337,7 @@ nnictl package install --name=BOHB
 
 **建议场景**
 
-与 "Hyperband" 类似, 当计算资源有限但搜索空间相对较大时, 建议使用此方法。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 在这种情况下, 由于贝叶斯优化使用, 它可能会收敛到更好的配置。
+与 Hyperband 类似, 当计算资源有限但搜索空间相对较大时, 建议使用此方法。 中间结果能够很好的反映最终结果的情况下，此算法会非常有效。 在这种情况下, 由于贝叶斯优化使用, 它可能会收敛到更好的配置。
 
 **参数**
 
@@ -352,7 +352,7 @@ nnictl package install --name=BOHB
 * **bandwidth_factor**(< 1>浮点数, 可选, 默认值为3.0 </em>): 为了鼓励多样性，把优化EI的点加宽，即把KDE中采样的点乘以这个因子，从而增加KDE中的带宽。 如果不熟悉 KDE，建议保留默认值。
 * **min_bandwidth**(< 1>float, 可选, 默认值 = 0.001 </em>): 为了保持多样性, 即使所有好的样本对其中一个参数具有相同的值，使用最小带宽 (默认值: 1e-3) 而不是零。 如果不熟悉 KDE，建议保留默认值。
 
-*请注意, 目前 Nni 的浮点类型仅支持十进制表示，必须使用0.333 来代替1/3，0.001来代替1e-3。*
+*目前 NNI 的浮点类型仅支持十进制表示，必须使用 0.333 来代替 1/3，0.001代替 1e-3。*
 
 **使用样例：**
 
