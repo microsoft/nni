@@ -18,11 +18,13 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import csv
 import os
 import psutil
 import json
 import datetime
 import time
+
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
@@ -468,3 +470,50 @@ def monitor_experiment(args):
         except Exception as exception:
             print_error(exception)
             exit(1)
+
+
+def parse_trial_data(content):
+    """output: List[Dict]"""
+    trial_records = []
+    for trial_data in content:
+        for phase_i in range(len(trial_data['hyperParameters'])):
+            hparam = json.loads(trial_data['hyperParameters'][phase_i])['parameters']
+            hparam['id'] = trial_data['id']
+            if 'finalMetricData' in trial_data.keys() and phase_i < len(trial_data['finalMetricData']):
+                reward = json.loads(trial_data['finalMetricData'][phase_i]['data'])
+                if isinstance(reward, (float, int)):
+                    dict_tmp = {**hparam, **{'reward': reward}}
+                elif isinstance(reward, dict):
+                    dict_tmp = {**hparam, **reward}
+                else:
+                    raise ValueError("Invalid finalMetricsData format: {}/{}".format(type(reward), reward))
+            else:
+                dict_tmp = hparam
+            trial_records.append(dict_tmp)
+    return trial_records
+
+def export_trials_data(args):
+    """export experiment metadata to csv
+    """
+    nni_config = Config(get_config_filename(args))
+    rest_port = nni_config.get_config('restServerPort')
+    rest_pid = nni_config.get_config('restServerPid')
+    if not detect_process(rest_pid):
+        print_error('Experiment is not running...')
+        return
+    running, response = check_rest_server_quick(rest_port)
+    if running:
+        response = rest_get(trial_jobs_url(rest_port), 20)
+        if response is not None and check_response(response):
+            content = json.loads(response.text)
+            # dframe = pd.DataFrame.from_records([parse_trial_data(t_data) for t_data in content])
+            # dframe.to_csv(args.csv_path, sep='\t')
+            records = parse_trial_data(content)
+            with open(args.csv_path, 'w') as f_csv:
+                writer = csv.DictWriter(f_csv, set.union(*[set(r.keys()) for r in records]))
+                writer.writeheader()
+                writer.writerows(records)
+        else:
+            print_error('Export failed...')
+    else:
+        print_error('Restful server is not Running')

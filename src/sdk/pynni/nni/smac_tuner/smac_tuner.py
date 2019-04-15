@@ -22,6 +22,7 @@ smac_tuner.py
 """
 
 from nni.tuner import Tuner
+from nni.utils import extract_scalar_reward
 
 import sys
 import logging
@@ -166,7 +167,7 @@ class SMACTuner(Tuner):
         RuntimeError
             Received parameter id not in total_data
         """
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         if self.optimize_mode is OptimizeMode.Maximize:
             reward = -reward
 
