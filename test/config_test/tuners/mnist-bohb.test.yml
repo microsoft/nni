@@ -6,11 +6,12 @@ trialConcurrency: 1
 searchSpacePath: search_space_advisor.json
 
 advisor:
-  builtinAdvisorName: Hyperband
+  builtinAdvisorName: BOHB
   classArgs:
-    optimize_mode: maximize
-    R: 60
+    max_budget: 27
+    min_budget: 1
     eta: 3
+    optimize_mode: maximize
 trial:
   codeDir: ../../../examples/trials/mnist-advisor
   command: python3 mnist.py
