@@ -573,3 +573,6 @@ class BOHB(MsgDispatcherBase):
 
     def handle_add_customized_trial(self, data):
         pass
+
+    def handle_feed_tuner_data(self, data):
+        pass
