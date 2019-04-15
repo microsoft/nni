@@ -103,8 +103,6 @@ Add2Path -fileName "$NNI_YARN_FOLDER\bin"
 
 # Refresh Path environment in this session
  $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-npm install -g node-pre-gyp
-npm install -g react-scripts-ts-antd
 
 # Building NNI Manager
 cd src\nni_manager
