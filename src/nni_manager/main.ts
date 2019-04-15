@@ -151,23 +151,3 @@ process.on('SIGTERM', async () => {
         process.exit(hasError?1:0);
     }
 })
-
-process.on('WM_CLOSE', async () => {
-    console.log('------------------main.ts----------------136---------------')
-    const log: Logger = getLogger();
-    let hasError: boolean = false;
-    try{
-        const nniManager: Manager = component.get(Manager);
-        await nniManager.stopExperiment();
-        const ds: DataStore = component.get(DataStore);
-        await ds.close();
-        const restServer: NNIRestServer = component.get(NNIRestServer);
-        await restServer.stop();
-    }catch(err){
-        hasError = true;
-        log.error(`${err.stack}`);
-    }finally{
-        await log.close();
-        process.exit(hasError?1:0);
-    }
-})
