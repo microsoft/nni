@@ -147,7 +147,7 @@ class NNIRestHandler {
     }
     
     private feedTuningData(router: Router): void {
-        router.post('/experiment/tuner-data', (req: Request, res: Response) => {
+        router.post('/experiment/tuning-data', (req: Request, res: Response) => {
             this.nniManager.feedTuningData(req.body).then(() => {
                 res.send();
             }).catch((err: Error) => {

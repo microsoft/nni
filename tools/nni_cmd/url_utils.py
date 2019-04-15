@@ -29,7 +29,7 @@ EXPERIMENT_API = '/experiment'
 
 CLUSTER_METADATA_API = '/experiment/cluster-metadata'
 
-TUNER_DATA_API = '/experiment/tuner-data'
+TUNER_DATA_API = '/experiment/tuning-data'
 
 CHECK_STATUS_API = '/check-status'
 
