@@ -1,17 +1,17 @@
-# **How to Implement TrainingService in NNI**
+# **实现 NNI TrainingService**
 
-## Overview
+## 概述
 
 TrainingService is a module related to platform management and job schedule in NNI. TrainingService is designed to be easily implemented, we define an abstract class TrainingService as the parent class of all kinds of TrainignService, users just need to inherit the parent class and complete their own clild class if they want to implement customized TrainingService.
 
-## System architecture
+## 系统架构
 
 ![](../img/NNIDesign.jpg)
 
 The brief system architecture of NNI is shown in the picture. NNIManager is the core management module of system, in charge of calling TrainingService to manage trial jobs and the communication between different modules. Dispatcher is a message processing center responsible for message dispatch. TrainingService is a module to manage trial jobs, it communicates with nniManager module, and has different instance according to different training platform. For the time being, NNI supports local platfrom, [remote platfrom](RemoteMachineMode.md), [PAI platfrom](PAIMode.md), [kubeflow platform](KubeflowMode.md) and [FrameworkController platfrom](FrameworkController.md).  
 In this document, we introduce the brief design of TrainingService. If users want to add a new TrainingService instance, they just need to complete a child class to implement TrainingService, don't need to understand the code detail of NNIManager, Dispatcher or other modules.
 
-## Folder structure of code
+## 代码文件夹结构
 
 NNI's folder structure is shown below:
 
@@ -46,7 +46,7 @@ NNI's folder structure is shown below:
 
 `nni/src/` folder stores the most source code of NNI. The code in this folder is related to NNIManager, TrainingService, SDK, WebUI and other modules. Users could find the abstract class of TrainingService in `nni/src/nni_manager/common/trainingService.ts` file, and they should put their own implemented TrainingService in `nni/src/nni_manager/training_service` folder. If users have implemented their own TrainingService code, they should also supplement the unit test of the code, and place them in `nni/src/nni_manager/training_service/test` folder.
 
-## Function annotation of TrainingService
+## TrainingService 函数解释
 
     abstract class TrainingService {
         public abstract listTrialJobs(): Promise<TrialJobDetail[]>;
@@ -142,13 +142,13 @@ The run() function is a main loop function in TrainingService, users could set a
 **cleanUp()**  
 This function is called to clean up the environment when a experiment is stopped. Users should do the platform-related cleaning operation in this function.
 
-## TrialKeeper tool
+## TrialKeeper 工具
 
 NNI offers a TrialKeeper tool to help maintaining trial jobs. Users can find the source code in `nni/tools/nni_trial_tool`. If users want to run trial jobs in cloud platform, this tool will be a fine choice to help keeping trial running in the platform. The running architecture of TrialKeeper is show as follow:  
 ![](../img/trialkeeper.jpg)  
 When users submit a trial job to cloud platform, they should wrap their trial command into TrialKeeper, and start a TrialKeeper process in cloud platform. Notice that TrialKeeper use restful server to communicate with TrainingService, users should start a restful server in local machine to receive metrics sent from TrialKeeper. The source code about restful server could be found in `nni/src/nni_manager/training_service/common/clusterJobRestServer.ts`.
 
-## Reference
+## 参考
 
 For more information about how to debug, please [refer](HowToDebug.md).  
 The guide line of how to contribute, please [refer](CONTRIBUTING).
