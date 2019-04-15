@@ -10,6 +10,6 @@
 
 # NNI in Recommenders
 
-In the fourth tasks mentioned above, NNI is utilized for hyperparameter tuning of the matrix factorization method SVD from [Surprise library](https://surprise.readthedocs.io/en/stable/) on Movielens100k. In this notebook, different NNI tuning algorithms are used, including `Annealing`, `SMAC`, `Random Search`, `TPE`, `Hyperband`, `Metis` and `Evolution`. Finally, the results of different tuning algorithms are compared.
+In the fourth task mentioned above, NNI is utilized for hyperparameter tuning of the matrix factorization method SVD from [Surprise library](https://surprise.readthedocs.io/en/stable/) on Movielens100k. In this notebook, different NNI tuning algorithms are used, including `Annealing`, `SMAC`, `Random Search`, `TPE`, `Hyperband`, `Metis` and `Evolution`. Finally, the results of different tuning algorithms are compared.
 
-This is demonstrated by a [jupyter notebook](https://github.com/Microsoft/Recommenders), which menas that it also shows how to use NNI and communicate with NNI restful server in a jupyter notebook
+This is demonstrated by a jupyter notebook, which means that it also shows how to use NNI and communicate with NNI restful server in a jupyter notebook
