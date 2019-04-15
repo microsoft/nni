@@ -230,6 +230,9 @@ def validate_all_content(experiment_config, config_path):
     validate_pai_trial_conifg(experiment_config)
     experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])
     if experiment_config.get('advisor'):
+        if experiment_config.get('assessor'):
+            print_error('Could not set advisor and assessor simultaneously!')
+            exit(1)
         parse_advisor_content(experiment_config)
         validate_annotation_content(experiment_config, 'advisor', 'builtinAdvisorName')
     else:
