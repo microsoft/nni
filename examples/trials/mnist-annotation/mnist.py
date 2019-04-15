@@ -8,8 +8,6 @@ import time
 
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
 
 FLAGS = None
 
@@ -191,7 +189,7 @@ def main(params):
     train_writer.add_graph(tf.get_default_graph())
 
     test_acc = 0.0
-    with tf.Session(config = config) as sess:
+    with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         """@nni.variable(nni.choice(16, 32), name=batch_size)"""
         batch_size = params['batch_size']

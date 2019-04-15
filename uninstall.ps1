@@ -9,7 +9,7 @@ else{
     $NNI_PYTHON3 = $WHICH_PYTHON[0].SubString(0,$WHICH_PYTHON[0].Length-11)
 }
 
-$PIP_UNINSTALL = "$NNI_PYTHON3\python -m pip uninstall -y "
+$PIP_UNINSTALL = """$NNI_PYTHON3\python"" -m pip uninstall -y "
 $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
