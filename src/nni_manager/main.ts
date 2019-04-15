@@ -132,7 +132,7 @@ mkDirP(getLogDir()).then(async () => {
     console.error(`Failed to create log dir: ${err.stack}`);
 });
 
-process.on('SIGTERM', async () => {
+process.on('SIGBREAK', async () => {
     console.log('------------------main.ts----------------136---------------')
     const log: Logger = getLogger();
     let hasError: boolean = false;
