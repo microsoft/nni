@@ -99,7 +99,7 @@ class NNIManager implements Manager {
         return this.storeExperimentProfile();
     }
 
-    public feedTunerData(data: string): Promise<void> {
+    public feedTuningData(data: string): Promise<void> {
         if (this.dispatcher == undefined) {
             return Promise.reject(
                 new Error('tuner has not been setup')

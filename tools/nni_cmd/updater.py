@@ -111,18 +111,18 @@ def update_trialnum(args):
     else:
         print('ERROR: update %s failed!' % 'trialnum')
 
-def update_feed_data(args):
+def update_feed_tuning_data(args):
     validate_file(args.filename)
     content = load_search_space(args.filename)
     args.port = get_experiment_port(args)
     if args.port is not None:
-        if feed_tuner_data(args, content):
-            print('INFO: feed data to tuner success!')
+        if feed_tuning_data(args, content):
+            print('INFO: feed data for tuning success!')
         else:
-            print('ERROR: feed data to tuner failed!')
+            print('ERROR: feed data for tuning failed!')
 
-def feed_tuner_data(args, content):
-    '''call restful server to feed data to tuner'''
+def feed_tuning_data(args, content):
+    '''call restful server to feed data for tuning'''
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)

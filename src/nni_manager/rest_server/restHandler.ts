@@ -63,7 +63,7 @@ class NNIRestHandler {
         this.checkStatus(router);
         this.getExperimentProfile(router);
         this.updateExperimentProfile(router);
-        this.feedTunerData(router);
+        this.feedTuningData(router);
         this.startExperiment(router);
         this.getTrialJobStatistics(router);
         this.setClusterMetaData(router);
@@ -146,9 +146,9 @@ class NNIRestHandler {
         });
     }
     
-    private feedTunerData(router: Router): void {
+    private feedTuningData(router: Router): void {
         router.post('/experiment/tuner-data', (req: Request, res: Response) => {
-            this.nniManager.feedTunerData(req.body).then(() => {
+            this.nniManager.feedTuningData(req.body).then(() => {
                 res.send();
             }).catch((err: Error) => {
                 this.handle_error(err, res);
