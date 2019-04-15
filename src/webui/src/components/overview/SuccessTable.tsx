@@ -56,7 +56,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             dataIndex: 'id',
             key: 'id',
             width: 60,
-            className: 'tableHead idtitle',
+            className: 'tableHead leftTitle',
             render: (text: string, record: TableObj) => {
                 return (
                     <div>{record.id}</div>

@@ -19,7 +19,6 @@ interface OpenRowState {
 
 class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
 
-    public wei: Row | null;
     constructor(props: OpenRowProps) {
         super(props);
         this.state = {
