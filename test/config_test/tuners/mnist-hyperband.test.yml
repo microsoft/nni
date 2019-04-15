@@ -3,7 +3,7 @@ experimentName: default_test
 maxExecDuration: 5m
 maxTrialNum: 2
 trialConcurrency: 1
-searchSpacePath: search_space_hyperband.json
+searchSpacePath: search_space_advisor.json
 
 advisor:
   builtinAdvisorName: Hyperband
