@@ -22,7 +22,7 @@
 import argparse
 import pkg_resources
 from .launcher import create_experiment, resume_experiment
-from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, update_feed_tuning_data
+from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, feed_tuning_data
 from .nnictl_utils import *
 from .package_management import *
 from .constants import *
@@ -84,10 +84,12 @@ def parse_args():
     parser_updater_trialnum.add_argument('--id', '-i', dest='id', help='the id of experiment')
     parser_updater_trialnum.add_argument('--value', '-v', required=True)
     parser_updater_trialnum.set_defaults(func=update_trialnum)
-    parser_updater_feed_tuning_data = parser_updater_subparsers.add_parser('feed', help='feed additional data for tuning')
-    parser_updater_feed_tuning_data.add_argument('id', nargs='?', help='the id of experiment')
-    parser_updater_feed_tuning_data.add_argument('--filename', '-f', required=True)
-    parser_updater_feed_tuning_data.set_defaults(func=update_feed_tuning_data)
+
+    #feed tuning data
+    parser_feed_tuning_data = subparsers.add_parser('feed', help='feed additional data for tuning')
+    parser_feed_tuning_data.add_argument('id', nargs='?', help='the id of experiment')
+    parser_feed_tuning_data.add_argument('--filename', '-f', required=True)
+    parser_feed_tuning_data.set_defaults(func=feed_tuning_data)
 
     #parse stop command
     parser_stop = subparsers.add_parser('stop', help='stop the experiment')

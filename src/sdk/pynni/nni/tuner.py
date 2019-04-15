@@ -98,7 +98,7 @@ class Tuner(Recoverable):
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Save checkpoint ignored by tuner, checkpoint path: %s' % checkpoin_path)
 
-    def feed_tuner_data(self, data):
+    def feed_tuning_data(self, data):
         _logger.info('Feeding...')
         pass
 

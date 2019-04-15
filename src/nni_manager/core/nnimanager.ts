@@ -38,7 +38,7 @@ import {
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getLogLevel } from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
-    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, FEED_DATA_TO_TUNER
+    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, FEED_TUNING_DATA
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 
@@ -105,9 +105,10 @@ class NNIManager implements Manager {
                 new Error('tuner has not been setup')
             );
         }
-        this.dispatcher.sendCommand(FEED_DATA_TO_TUNER, JSON.stringify(data));
+        data = JSON.stringify(data)
+        this.dispatcher.sendCommand(FEED_TUNING_DATA, data);
 
-        return Promise.resolve()
+        return this.dataStore.storeTrialJobEvent('FEED_TUNING_DATA', '', data);
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<void> {
