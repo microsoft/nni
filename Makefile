@@ -112,6 +112,7 @@ dev-install:
 .PHONY: uninstall
 uninstall:
 	-cd build && $(PIP_UNINSTALL) -y nni
+	-rm -rf build
 	-rm -rf $(NNI_PKG_FOLDER)
 	-rm -f $(BIN_FOLDER)/node
 	-rm -f $(BIN_FOLDER)/nnictl
