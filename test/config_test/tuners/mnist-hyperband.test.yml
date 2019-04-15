@@ -16,7 +16,7 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-hyperband
+  codeDir: ../../../examples/trials/mnist-advisor
   command: python3 mnist.py
   gpuNum: 0
 
