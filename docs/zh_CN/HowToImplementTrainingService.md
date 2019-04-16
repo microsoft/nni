@@ -131,24 +131,24 @@ SubmitTrialJob 是用来提交 Trial 任务的方法，用户需要在这个方�
 用户需要在这个方法中把所有的 Trial 实例放入一个列表中，并返回。
 
 **addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)**  
-NNI会启动一个EventEmitter来处理作业的metrics数据，如果有检测到有新的数据，EventEmitter就会被触发，来执行相应的事件。 用户需要在这个方法中设置EventEmitter。
+NNI 会启动一个 EventEmitter 来处理作业的指标数据，如果有检测到有新的数据，EventEmitter就会被触发，来执行相应的事件。 用户需要在这个方法中开始 EventEmitter。
 
 **removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void)**  
-关闭 EventEmitter.
+移除 EventEmitter。
 
 **run()**  
-Run() 函数是TrainingService的主循环，用户可以在这个函数中循环执行他们的代码逻辑，这个函数在实验结束前会一直循环执行。
+Run() 函数是 TrainingService 的主循环，用户可以在这个函数中循环执行他们的代码逻辑，这个函数在实验结束前会一直循环执行。
 
 **cleanUp()**  
 当实验结束后，这个方法用来清除实验环境。 用户需要在这个方法中实现与平台相关的清除操作。
 
 ## TrialKeeper 工具
 
-NNI提供了一个TrialKeeper工具，用来帮助维护Trial作业。 用户可以在`nni/tools/nni_trial_tool`文件夹中找到TrialKeeper的源代码。 如果用户想要把作业运行在云平台上，这个工具对于维护作业是一个好的选择。 The running architecture of TrialKeeper is show as follow:  
+NNI 提供了 TrialKeeper 工具，用来帮助维护 Trial 任务。 可以在 `nni/tools/nni_trial_tool` 文件夹中找到 TrialKeeper 的源代码。 如果想要运行在云平台上，这是维护任务的好工具。 TrialKeeper 的架构如下：  
 ![](../img/trialkeeper.jpg)  
-当用户需要在远程云平台上运行作业，他们需要把作业启动的命令行传入TrailKeeper中，并在远程云平台上启动TriakKeeper进程。 注意，TrialKeeper在远程平台中使用restful服务来和TrainingService进行通信，用户需要在本地机器启动一个Restful服务来接受TrialKeeper的请求。 关于Restful服务的源代码可以在`nni/src/nni_manager/training_service/common/clusterJobRestServer.ts`文件夹中找到.
+当用户需要在远程云平台上运行作业，要把作业启动的命令行传入 TrailKeeper 中，并在远程云平台上启动 TriakKeeper 进程。 注意，TrialKeeper 在远程平台中使用 RESTful 服务来和 TrainingService 进行通信，用户需要在本地机器启动一个 RESTful 服务来接受 TrialKeeper 的请求。 关于 RESTful 服务的源代码可以在 `nni/src/nni_manager/training_service/common/clusterJobRestServer.ts` 文件夹中找到.
 
 ## 参考
 
-更多关于如何debug的信息，请[参考](HowToDebug.md).  
-。 关于如何贡献代码，请 [参考](CONTRIBUTING).
+更多关于如何调试的信息，请[参考这里](HowToDebug.md)。  
+关于如何贡献代码，请[参考这里](CONTRIBUTING)。
