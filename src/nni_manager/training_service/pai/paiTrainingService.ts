@@ -532,6 +532,7 @@ class PAITrainingService implements TrainingService {
             try{
                 await this.updatePaiToken();
             }catch(error){
+                this.log.error(`${error}`);
                 //only throw error when initlize paiToken first time
                 if(!this.paiToken) {
                     throw new Error(error);
