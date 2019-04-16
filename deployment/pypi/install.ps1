@@ -1,4 +1,5 @@
 param([bool]$version_ts=$false)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $CWD = $PWD
 
 $OS_SPEC = "windows"
