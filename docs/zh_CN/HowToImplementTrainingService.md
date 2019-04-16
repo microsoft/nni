@@ -8,12 +8,12 @@ TrainingService是一个与平台和作业管理相关的模块。 TrainingServi
 
 ![](../img/NNIDesign.jpg)
 
-NNI的架构如图所示。 NNIManager是系统的核心管理模块，负责调用TrainingService来管理Trial作业，并负责不同模块之间的通信。 Dispatcher是消息处理中心。 TrainingService是一个管理作业的模块，它和NNIManager进行通信，并且根据平台的特点有不同的实例。 For the time being, NNI supports local platfrom, [remote platfrom](RemoteMachineMode.md), [PAI platfrom](PAIMode.md), [kubeflow platform](KubeflowMode.md) and [FrameworkController platfrom](FrameworkController.md).  
-In this document, we introduce the brief design of TrainingService. If users want to add a new TrainingService instance, they just need to complete a child class to implement TrainingService, don't need to understand the code detail of NNIManager, Dispatcher or other modules.
+NNI的架构如图所示。 NNIManager是系统的核心管理模块，负责调用TrainingService来管理Trial作业，并负责不同模块之间的通信。 Dispatcher是消息处理中心。 TrainingService是一个管理作业的模块，它和NNIManager进行通信，并且根据平台的特点有不同的实例。 现在，NNI支持本地平台、[远程平台](RemoteMachineMode.md)、[PAI平台](PAIMode.md)、[Kubeflow平台](KubeflowMode.md)和[FrameworkController平台](FrameworkController.md)。  
+在这个文档中，简要介绍TrainingService的实现。 如果用户想要添加一个新的TrainingService，他们只需要继承TrainingServcie父类并实现相应的方法，不需要理解NNIManager、Dispatcher等其他模块的内容。
 
 ## 代码文件夹结构
 
-NNI's folder structure is shown below:
+NNI的文件夹结构如下：
 
     nni
       |- deployment
@@ -44,7 +44,7 @@ NNI's folder structure is shown below:
       | |-nni_trial_tool
     
 
-`nni/src/` folder stores the most source code of NNI. The code in this folder is related to NNIManager, TrainingService, SDK, WebUI and other modules. Users could find the abstract class of TrainingService in `nni/src/nni_manager/common/trainingService.ts` file, and they should put their own implemented TrainingService in `nni/src/nni_manager/training_service` folder. If users have implemented their own TrainingService code, they should also supplement the unit test of the code, and place them in `nni/src/nni_manager/training_service/test` folder.
+`nni/src`文件夹存储NNI相关的大部分源代码。 The code in this folder is related to NNIManager, TrainingService, SDK, WebUI and other modules. Users could find the abstract class of TrainingService in `nni/src/nni_manager/common/trainingService.ts` file, and they should put their own implemented TrainingService in `nni/src/nni_manager/training_service` folder. If users have implemented their own TrainingService code, they should also supplement the unit test of the code, and place them in `nni/src/nni_manager/training_service/test` folder.
 
 ## TrainingService 函数解释
 
