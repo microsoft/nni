@@ -122,7 +122,7 @@ SubmitTrialJob是用来提交Trial任务的方法，用户需要在这个方法�
 如果这个方法被调用，trial应该被取消执行。 不同的平台有不同的取消作业的方式，这个方法应该根据不同平台的特点，实现相应的细节。
 
 **updateTrialJob(trialJobId: string, form: JobApplicationForm)**  
-This function is called to update the trial job's status, trial job's status should be detected according to different platform, and be updated to `RUNNING`, `SUCCEED`, `FAILED` etc.
+这个方法用来更新Trial的作业状态，不同平台有不同的检测作业状态的方法，并把状态更新为`RUNNING`, `SUCCEED`, `FAILED` 等。
 
 **getTrialJob(trialJobId: string)**  
 This function returns a trialJob detail instance according to trialJobId.
