@@ -150,5 +150,5 @@ NNI提供了一个TrialKeeper工具，用来帮助维护Trial作业。 用户可
 
 ## 参考
 
-For more information about how to debug, please [refer](HowToDebug.md).  
-The guide line of how to contribute, please [refer](CONTRIBUTING).
+更多关于如何debug的信息，请[参考](HowToDebug.md).  
+。 关于如何贡献代码，请 [参考](CONTRIBUTING).
