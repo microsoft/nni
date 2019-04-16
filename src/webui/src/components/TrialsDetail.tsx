@@ -390,7 +390,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             <Col span={12}>
                                 <Input
                                     type="text"
-                                    placeholder="Search by id, trial no. or status"
+                                    placeholder="Search by id, trial No. or status"
                                     onChange={this.searchTrial}
                                     style={{ width: 230, marginLeft: 6 }}
                                 />

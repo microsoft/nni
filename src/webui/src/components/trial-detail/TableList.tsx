@@ -131,7 +131,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const wantResult: Array<string> = [];
         Object.keys(checkedValues).map(m => {
             switch (checkedValues[m]) {
-                case 'Trial no.':
+                case 'Trial No.':
                 case 'ID':
                 case 'Duration':
                 case 'Status':
@@ -226,9 +226,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
         Object.keys(columnSelected).map(key => {
             const item = columnSelected[key];
             switch (item) {
-                case 'Trial no.':
+                case 'Trial No.':
                     showColumn.push({
-                        title: 'Trial no.',
+                        title: 'Trial No.',
                         dataIndex: 'sequenceId',
                         key: 'sequenceId',
                         width: 120,

@@ -46,7 +46,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
 
         let bgColor = '';
         const columns = [{
-            title: 'Trial no.',
+            title: 'Trial No.',
             dataIndex: 'sequenceId',
             key: 'sequenceId',
             width: 140,
