@@ -28,10 +28,10 @@ def check_output_command(file_path, head=None, tail=None):
 def kill_command(pid):
     '''kill command'''
     if sys.platform == 'win32':
-        cmds = ['taskkill', '/pid', str(pid), '/F', '/T']
+        os.kill(pid, signal.CTRL_C_EVENT)
     else:
         cmds = ['kill', str(pid)]
-    call(cmds)
+        call(cmds)
 
 def install_package_command(package_name):
     '''install python package from pip'''
