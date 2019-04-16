@@ -300,7 +300,6 @@ class LocalTrainingService implements TrainingService {
     }
 
     public cleanUp(): Promise<void> {
-        console.log("-------------------------303-----------------")
         this.log.info('Stopping local machine training service...');
         this.stopping = true;
         for (const stream of this.jobStreamMap.values()) {
@@ -400,8 +399,6 @@ class LocalTrainingService implements TrainingService {
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
         trialJobDetail.startTime = Date.now();
         trialJobDetail.pid = trialJobProcess.pid;
-        console.log('------------------------------403-------------------')
-        console.log(trialJobDetail.pid)
         this.setExtraProperties(trialJobDetail, resource);
 
         let buffer: Buffer = Buffer.alloc(0);
