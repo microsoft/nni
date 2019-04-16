@@ -99,7 +99,7 @@ Metadata中包括了主机地址，用户名和其他平台相关配置。 用�
 这个方法返回metadata的内容，如果用户不需要使用这个方法的话，可以把方法内容设置为空。
 
 **submitTrialJob(form: JobApplicationForm)**  
-SubmitTrialJob is a function to submit new trial jobs, users should generate a job instance in TrialJobDetail type. TrialJobDetail is defined as follow:
+SubmitTrialJob是用来提交Trial任务的方法，用户需要在这个方法中生成TrialJobDetail类型的Trial实例。 TrialJobDetail定义如下：
 
     interface TrialJobDetail {
         readonly id: string;
@@ -116,10 +116,10 @@ SubmitTrialJob is a function to submit new trial jobs, users should generate a j
     }
     
 
-According to different kinds of implementation, users could put the job detail into a job queue, and keep fetching the job from the queue and start preparing and running them. Or they could finish preparing and running process in this function, and return job detail after the submit work.
+根据不同的实现，用户可能需要把Trial作业放入队列中，并不断地从队里中取出任务进行提交。 或者也可以直接在这个方法中完成作业提交过程。
 
 **cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean)**  
-If this function is called, the trial started by the platform should be canceled. Different kind of platform has diffenent methods to calcel a running job, this function should be implemented according to specific platform.
+如果这个方法被调用，trial应该被取消执行。 不同的平台有不同的取消作业的方式，这个方法应该根据不同平台的特点，实现相应的细节。
 
 **updateTrialJob(trialJobId: string, form: JobApplicationForm)**  
 This function is called to update the trial job's status, trial job's status should be detected according to different platform, and be updated to `RUNNING`, `SUCCEED`, `FAILED` etc.
