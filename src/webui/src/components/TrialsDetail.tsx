@@ -25,7 +25,6 @@ interface TrialDetailState {
     experimentLogCollection: boolean;
     entriesTable: number;
     searchSpace: string;
-    defaultMetric?: Array<number>;
 }
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
@@ -69,8 +68,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             experimentLogCollection: false,
             entriesTable: 20,
             isHasSearch: false,
-            searchSpace: '',
-            defaultMetric: [0, 1]
+            searchSpace: ''
         };
     }
 
@@ -87,7 +85,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     const metricSource = res1.data;
                     const trialTable: Array<TableObj> = [];
                     Object.keys(trialJobs).map(item => {
-                        // only succeeded trials have finalMetricData
                         let desc: Parameters = {
                             parameters: {},
                             intermediate: []
@@ -148,32 +145,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             description: desc
                         });
                     });
-                    // get acc max and min for hyper-parameters graph color bar max and min
-                    const sortSource = JSON.parse(JSON.stringify(trialTable));
-                    sortSource.sort((a: TableObj, b: TableObj) => {
-                        if (a.acc !== undefined && b.acc !== undefined) {
-                            return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
-                        } else {
-                            return NaN;
-                        }
-                    });
-
-                    if (this._isMounted && sortSource !== undefined) {
-
-                        const hyperMin = sortSource[0].acc !== undefined
-                            ?
-                            sortSource[0].acc.default
-                            :
-                            '0';
-                        const max = sortSource[sortSource.length - 1].acc;
-                        let maxResult = '1';
-                        if (max !== undefined) {
-                            maxResult = max.default;
-                        }
-                        this.setState(() => ({
-                            defaultMetric: [JSON.parse(hyperMin), JSON.parse(maxResult)]
-                        }));
-                    }
                     // update search data result
                     const { searchResultSource } = this.state;
                     if (searchResultSource.length !== 0) {
@@ -326,8 +297,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
         const {
             tableListSource, searchResultSource, isHasSearch,
-            entriesTable, experimentPlatform, searchSpace,
-            defaultMetric, experimentLogCollection
+            entriesTable, experimentPlatform, searchSpace, experimentLogCollection
         } = this.state;
         const source = isHasSearch ? searchResultSource : tableListSource;
         return (
@@ -347,7 +317,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 <Para
                                     dataSource={source}
                                     expSearchSpace={searchSpace}
-                                    defaultMetric={defaultMetric}
                                 />
                             </Row>
                         </TabPane>
