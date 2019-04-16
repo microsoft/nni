@@ -80,6 +80,8 @@ def get_nni_installation_path():
         # if 'virtualenv' package is used, `site` has not attr getsitepackages, so we will instead use VIRTUAL_ENV
         # Note that conda venv will not have VIRTUAL_ENV
         python_dir = os.getenv('VIRTUAL_ENV')
+        if sys.platform == "win32":
+            python_dir += '\Scripts'
     else:
         python_sitepackage = site.getsitepackages()[0]
         # If system-wide python is used, we will give priority to using `local sitepackage`--"usersitepackages()" given that nni exists there
