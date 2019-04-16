@@ -133,7 +133,6 @@ mkDirP(getLogDir()).then(async () => {
 });
 
 process.on('SIGBREAK', async () => {
-    console.log('------------------main.ts----------------136---------------')
     const log: Logger = getLogger();
     let hasError: boolean = false;
     try{

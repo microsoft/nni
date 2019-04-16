@@ -70,9 +70,7 @@ class GPUScheduler {
         console.log(this.gpuMetricCollectorScriptFolder)
         console.log(gpuMetricsCollectorScriptContent)
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
-        let process = execScript(gpuMetricsCollectorScriptPath)
-        console.log('---------------------------74-------------------')
-        console.log(process.pid)
+        execScript(gpuMetricsCollectorScriptPath)
     }
 
     public getAvailableGPUIndices(): number[] {
@@ -87,9 +85,6 @@ class GPUScheduler {
         this.stopping = true;
         try {
             const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
-            console.log('-----------------------88-----------')
-            console.log(this.gpuMetricCollectorScriptFolder)
-            console.log(pid)
             await execKill(pid);
             await execRemove(this.gpuMetricCollectorScriptFolder);
         } catch (error){
