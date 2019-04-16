@@ -54,11 +54,11 @@
 | --------- | ------------ |:----------------:|:----------------:|:--------------:|:-----------:|
 | CIFAR- 10 | 88.56(best)  |   96.13(best)    |   97.11(best)    | 97.17(average) | 96.47(best) |
 
-For AutoKeras, it has relatively worse performance across all datasets due to its random factor on network morphism.
+对于AutoKeras，由于其算法中的随机因素，它在所有数据集中的表现相对较差。
 
-For ENAS, ENAS (macro) shows good results in OUI-Adience-Age and ENAS (micro) shows good results in CIFAR-10.
+对于ENAS，ENAS（macro）在 OUI-Adience-Age 数据集中表现较好，并且 ENAS（micro）在 CIFAR-10 数据集中表现较好。
 
-For DARTS, it has a good performance on some datasets but we found its high variance in other datasets. The difference among three runs of benchmarks can be up to 5.37% in OUI-Adience-Age and 4.36% in ImageNet-10-1.
+对于DARTS，它在某些数据集上具有良好的结果，但我们发现它在某些数据集中具有比较大的方差。 The difference among three runs of benchmarks can be up to 5.37% in OUI-Adience-Age and 4.36% in ImageNet-10-1.
 
 For NAO-WS, it shows good results in ImageNet-10-2 but it can perform very poorly in OUI-Adience-Age.
 
