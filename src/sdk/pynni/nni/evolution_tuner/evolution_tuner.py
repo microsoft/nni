@@ -212,6 +212,7 @@ class EvolutionTuner(Tuner):
         self.random_state = None
         self.population = None
         self.space = None
+        self.feed_data_num = 0
 
     def update_search_space(self, search_space):
         """Update search space. 
@@ -300,5 +301,12 @@ class EvolutionTuner(Tuner):
         indiv = Individual(config=params, result=reward)
         self.population.append(indiv)
 
-    def feed_tuner_data(self, data):
-        pass
+    def feed_tuning_data(self, data):
+        assert "parameter" in data
+        _params = data["parameter"]
+        assert "value" in data
+        _value = extract_scalar_reward(data['value'])
+        self.feed_data_num += 1
+        _parameter_id = '_'.join(["FeedData", str(self.feed_data_num)])
+        self.total_data[_parameter_id] = _params
+        self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)

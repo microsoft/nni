@@ -20,6 +20,7 @@ nnictl support commands:
 * [nnictl webui](#webui)
 * [nnictl tensorboard](#tensorboard)
 * [nnictl package](#package)
+* [nnictl feed](#feed)
 * [nnictl --version](#version)
 
 ### Manage an experiment
@@ -566,6 +567,54 @@ Debug mode will disable version check function in Trialkeeper.
     ```bash
     nnictl package show
     ```
+
+<a name="feed"></a>
+![](https://placehold.it/15/1589F0/000000?text=+) `nnictl feed`
+
+* Description
+
+  You can use this command to feed several prior or supplementary trial hyperparameters and results for NNI hyperparameter tuning.
+
+* Usage
+
+  ```bash
+  nnictl feed [OPTIONS]
+  ```
+* Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------|------|
+  |id|  False| |The id of the experiment you want to resume|
+  |--file, -f|  True| |the json file storing your feed data|
+
+* Details
+
+  **When using `nnictl feed`, make sure your data's search space is consistent with the experiment you're going to feed. The json file should be written as a tuple consisting of several trial results. Each results is the dict type including `"parameter"` and `value`.**
+
+  For example, here is a valid feed data json file:
+
+  ```json
+  [
+    {"paramter": {"x": 0.5, "y": 0.9}, "value": 0.03},
+    {"paramter": {"x": 0.4, "y": 0.8}, "value": 0.05},
+    {"paramter": {"x": 0.3, "y": 0.7}, "value": 0.04}
+  ]
+  ```
+
+  Currenctly, following tuner and advisor supports feed data:
+
+  ```yml
+  builtinTunerName: TPE, Anneal, Evolution, SMAC, Network Morphism, Metis Tuner
+  builtinAdvisorName: BOHB
+  ```
+
+* Examples
+
+  > feed data to a running experiment
+
+  ```bash
+  nnictl feed [experiment_id] -f feed_data.json
+  ```
 
 <a name="version"></a>
 

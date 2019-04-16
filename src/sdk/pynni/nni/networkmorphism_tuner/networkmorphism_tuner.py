@@ -308,6 +308,6 @@ class NetworkMorphismTuner(Tuner):
                 return item["metric_value"]
         return None
 
-    def feed_tuner_data(self, data):
+    def feed_tuning_data(self, data):
         pass
 

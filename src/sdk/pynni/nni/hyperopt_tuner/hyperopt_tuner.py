@@ -172,6 +172,7 @@ class HyperoptTuner(Tuner):
         self.json = None
         self.total_data = {}
         self.rval = None
+        self.feed_data_num = 0
 
     def _choose_tuner(self, algorithm_name):
         """
@@ -354,5 +355,14 @@ class HyperoptTuner(Tuner):
         total_params = json2parameter(self.json, parameter)
         return total_params
 
-    def feed_tuner_data(self, data):
-        pass
+    def feed_tuning_data(self, data):
+        if self.algorithm_name == 'random_search':
+            return
+        assert "parameter" in data
+        _params = data["parameter"]
+        assert "value" in data
+        _value = extract_scalar_reward(data['value'])
+        self.feed_data_num += 1
+        _parameter_id = '_'.join(["FeedData", str(self.feed_data_num)])
+        self.total_data[_parameter_id] = _params
+        self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)

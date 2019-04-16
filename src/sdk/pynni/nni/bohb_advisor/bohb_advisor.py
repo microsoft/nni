@@ -574,5 +574,29 @@ class BOHB(MsgDispatcherBase):
     def handle_add_customized_trial(self, data):
         pass
 
-    def handle_feed_tuner_data(self, data):
-        pass
+    def handle_feed_tuning_data(self, data):
+        """
+        Parameters
+        ----------
+        data:
+            it is an object which has keys 'parameter', 'value'
+
+        Raises
+        ------
+        AssertionError
+            data doesn't have required key "parameter" and "value"
+        """
+        assert "parameter" in data
+        _params = data["parameter"]
+        assert "value" in data
+        _value = extract_scalar_reward(data['value'])
+        if _KEY in _params:
+            if self.optimize_mode is OptimizeMode.Maximize:
+                reward = -_value
+            else:
+                reward = _value
+            _budget = _params[_KEY]
+            self.cg.new_result(loss=reward, budget=_budget, parameters=_params, update_model=True)
+            logger.info("Useful data. Successfully feed tuning data to BOHB advisor.")
+        else:
+            logger.warning("Missing key \"TRIAL_BUDGET\", BOHB reject the data. Feed tuning data failed.")

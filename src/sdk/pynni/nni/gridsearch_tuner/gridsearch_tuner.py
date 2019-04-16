@@ -142,5 +142,5 @@ class GridSearchTuner(Tuner):
     def receive_trial_result(self, parameter_id, parameters, value):
         pass
 
-    def feed_tuner_data(self, data):
+    def feed_tuning_data(self, data):
         pass

@@ -421,5 +421,5 @@ class Hyperband(MsgDispatcherBase):
     def handle_add_customized_trial(self, data):
         pass
 
-    def handle_feed_tuner_data(self, data):
+    def handle_feed_tuning_data(self, data):
         pass

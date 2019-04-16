@@ -401,7 +401,7 @@ class MetisTuner(Tuner):
         self.history_parameters.append(outputs)
         return outputs
     
-    def feed_tuner_data(self, data):
+    def feed_tuning_data(self, data):
         pass
 
 def _rand_with_constraints(x_bounds, x_types):
