@@ -20,7 +20,7 @@ class TrialLog extends React.Component<TrialLogProps, {}> {
             <div>
                 <LogPathChild
                     eachLogpath={logStr}
-                    logName="LogPath:"
+                    logName="Log path:"
                 />
             </div>
         );
