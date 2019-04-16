@@ -236,7 +236,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                     </Col>
                     <Col span={6}>
                         <Row className="basic colorOfbasic">
-                            <p>Succeed</p>
+                            <p>Succeeded</p>
                             <div>{trialNumber.succTrial}</div>
                         </Row>
                     </Col>

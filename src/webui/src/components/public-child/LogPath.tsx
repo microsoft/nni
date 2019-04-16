@@ -31,7 +31,7 @@ class LogPath extends React.Component<LogpathProps, {}> {
                             />
                             <LogPathChild
                                 eachLogpath={logStr.split(',')[1]}
-                                logName="hdfs log path:"
+                                logName="Log on HDFS:"
                             />
                         </div>
                         :
