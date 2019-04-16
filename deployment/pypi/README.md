@@ -61,12 +61,12 @@ This is the PyPI build and upload tool for NNI project.
 
   **upload for testing**
   ```bash
-  powershell upload.ps1
+  powershell ./upload.ps1
   ```
   You may need to input the account and password of https://test.pypi.org during this process.
 
   **upload for release**
   ```bash
-  powershell upload.ps1 -test $False
+  powershell ./upload.ps1 -test $False
   ```
   You may need to input the account and password of https://pypi.org during this process.

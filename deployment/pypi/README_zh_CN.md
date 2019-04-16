@@ -61,12 +61,12 @@
 
   **上传测试包**
   ```bash
-  powershell upload.ps1
+  powershell ./upload.ps1
   ```
   上传过程中，可能需要输入 https://test.pypi.org 的用户和密码。
 
   **上传发布包**
   ```bash
-  powershell upload.ps1 -test $False
+  powershell ./upload.ps1 -test $False
   ```
   上传过程中，可能需要输入 https://pypi.org 的用户和密码。
