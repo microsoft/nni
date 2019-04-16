@@ -18,7 +18,7 @@ jobs:
     displayName: 'generate config files'
   - script: |
       cd test
-      python config_test.py --ts local --local_gpu --exclude smac,batchtuner,cifar10
+      python config_test.py --ts local --local_gpu --exclude smac,batchtuner,BOHB
     displayName: 'Examples and advanced features tests on local machine'
   - script: |
       cd test
