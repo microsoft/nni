@@ -584,7 +584,7 @@ class BOHB(MsgDispatcherBase):
         Raises
         ------
         AssertionError
-            data doesn't have required key "parameter" and "value"
+            data doesn't have required key 'parameter' and 'value'
         """
         assert "parameter" in data
         _params = data["parameter"]

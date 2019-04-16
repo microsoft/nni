@@ -589,7 +589,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 * Details
 
-  **When using `nnictl feed`, make sure your data's search space is consistent with the experiment you're going to feed. The json file should be written as a tuple consisting of several trial results. Each results is the dict type including `"parameter"` and `value`.**
+  **When using `nnictl feed`, make sure your data's search space is consistent with the experiment you're going to feed. The json file should be written as a tuple consisting of several trial results. Each results is the dict type including `"parameter"` and `"value"`.**
 
   For example, here is a valid feed data json file:
 
@@ -601,10 +601,10 @@ Debug mode will disable version check function in Trialkeeper.
   ]
   ```
 
-  Currenctly, following tuner and advisor supports feed data:
+  Currenctly, following tuner and advisor support feed data:
 
   ```yml
-  builtinTunerName: TPE, Anneal, Evolution, SMAC, Network Morphism, Metis Tuner
+  builtinTunerName: TPE, Anneal, Evolution, SMAC, NetworkMorphism, MetisTuner
   builtinAdvisorName: BOHB
   ```
 
