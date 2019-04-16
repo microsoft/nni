@@ -44,7 +44,7 @@ NNI的文件夹结构如下：
       | |-nni_trial_tool
     
 
-`nni/src`文件夹存储NNI相关的大部分源代码。 The code in this folder is related to NNIManager, TrainingService, SDK, WebUI and other modules. Users could find the abstract class of TrainingService in `nni/src/nni_manager/common/trainingService.ts` file, and they should put their own implemented TrainingService in `nni/src/nni_manager/training_service` folder. If users have implemented their own TrainingService code, they should also supplement the unit test of the code, and place them in `nni/src/nni_manager/training_service/test` folder.
+`nni/src`文件夹存储NNI相关的大部分源代码。 在这个文件夹中的代码和NNIManager、TrainingService、SDK、WebUI等模块有关。 用户可以在`nni/src/nni_manager/common/trainingService.ts`文件中找到TrainingService抽象类的代码，并且把自己实现的子类放到 `nni/src/nni_manager/training_service`文件夹下。 如果用户实现了自己的TrainingService代码，也需要同时实现相应的单元测试代码，并把单元测试放到`nni/src/nni_manager/training_service/test` 文件夹下。
 
 ## TrainingService 函数解释
 
@@ -64,10 +64,10 @@ NNI的文件夹结构如下：
     }
     
 
-The parent class of TrainingService has a few abstract functions, users need to inherit the parent class and implement all of these abstract functions.
+TrainingService父类有一些抽象方法，用户需要继承父类并实现这些抽象方法。
 
 **setClusterMetadata(key: string, value: string)**  
-ClusterMetadata is the data related to platform details, for examples, the ClusterMetadata defined in remote machine server is:
+CllusterMetadata是与平台数据有关的方法，例如，在远程平台上的ClusterMetadata定义是：
 
     export class RemoteMachineMeta {
         public readonly ip : string;
@@ -93,10 +93,10 @@ ClusterMetadata is the data related to platform details, for examples, the Clust
     }
     
 
-The metadata includes the host address, the username or other configuration related to the platform. Users need to define their own metadata format, and set the metadata instance in this function. This function is called before the experiment is started to set the configuration of remote machines.
+Metadata中包括了主机地址，用户名和其他平台相关配置。 用户需要定义他们自己的metadata格式，并在这个方法中设置相应的内容。 这个方法在实验启动之前调用。
 
 **getClusterMetadata(key: string)**  
-This function will return the metadata value according to the values, it could be left empty if users don't need to use it.
+这个方法返回metadata的内容，如果用户不需要使用这个方法的话，可以把方法内容设置为空。
 
 **submitTrialJob(form: JobApplicationForm)**  
 SubmitTrialJob is a function to submit new trial jobs, users should generate a job instance in TrialJobDetail type. TrialJobDetail is defined as follow:
