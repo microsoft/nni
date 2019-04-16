@@ -49,6 +49,10 @@ def switch(dispatch_type, dispatch_name):
                 'optimize_mode': 'maximize'
             }
         }
+    if dispatch_name == 'BatchTuner':
+        experiment_config['searchSpacePath'] = 'batchtuner_search_space.json'
+    else:
+        experiment_config['searchSpacePath'] = 'search_space.json'
     dump_yml_content(config_path, experiment_config)
 
 def test_builtin_dispatcher(dispatch_type, dispatch_name):

@@ -4,7 +4,6 @@ import * as ReactDOM from 'react-dom';
 import App from './App';
 import { Router, Route, browserHistory, IndexRedirect } from 'react-router';
 import registerServiceWorker from './registerServiceWorker';
-import Control from './components/Control';
 import Overview from './components/Overview';
 import TrialsDetail from './components/TrialsDetail';
 import './index.css';
@@ -15,7 +14,6 @@ ReactDOM.render(
             <IndexRedirect to="/oview" />
             <Route path="/oview" component={Overview} />
             <Route path="/detail" component={TrialsDetail} />
-            <Route path="/control" component={Control} />
         </Route>
     </Router>,
     document.getElementById('root') as HTMLElement
