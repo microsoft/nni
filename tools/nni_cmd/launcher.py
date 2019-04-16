@@ -156,6 +156,9 @@ def set_local_config(experiment_config, port, config_file_name):
     request_data = dict()
     if experiment_config.get('localConfig'):
         request_data['local_config'] = experiment_config['localConfig']
+        if request_data['local_config'] and request_data['local_config']['gpuIndices'] \
+            and isinstance(request_data['local_config']['gpuIndices'], int):
+            request_data['local_config']['gpuIndices'] = str(request_data['local_config']['gpuIndices'])
         response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
         err_message = ''
         if not response or not check_response(response):
@@ -173,6 +176,10 @@ def set_remote_config(experiment_config, port, config_file_name):
     #set machine_list
     request_data = dict()
     request_data['machine_list'] = experiment_config['machineList']
+    if request_data['machine_list']:
+        for i in range(len(request_data['machine_list'])):
+            if isinstance(request_data['machine_list'][i]['gpuIndices'], int):
+                request_data['machine_list'][i]['gpuIndices'] = str(request_data['machine_list'][i]['gpuIndices'])
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
     err_message = ''
     if not response or not check_response(response):
