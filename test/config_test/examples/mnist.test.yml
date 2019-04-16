@@ -14,7 +14,7 @@ assessor:
 trial:
   codeDir: ../../../examples/trials/mnist
   command: python3 mnist.py --batch_num 100
-  gpuNum: 1
+  gpuNum: 0
 
 useAnnotation: false
 multiPhase: false
