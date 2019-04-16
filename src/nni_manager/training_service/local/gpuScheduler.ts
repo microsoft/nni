@@ -67,8 +67,6 @@ class GPUScheduler {
         //generate gpu_metrics_collector script
         let gpuMetricsCollectorScriptPath: string = path.join(this.gpuMetricCollectorScriptFolder, getScriptName('gpu_metrics_collector'));
         const gpuMetricsCollectorScriptContent: string = getgpuMetricsCollectorScriptContent(this.gpuMetricCollectorScriptFolder);
-        console.log(this.gpuMetricCollectorScriptFolder)
-        console.log(gpuMetricsCollectorScriptContent)
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
         execScript(gpuMetricsCollectorScriptPath)
     }
