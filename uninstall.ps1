@@ -16,8 +16,7 @@ $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
  
 # uninstall
 Remove-Item $NNI_PKG_FOLDER -Recurse -Force
-cmd /C $PIP_UNINSTALL "nni-sdk"
-cmd /C $PIP_UNINSTALL "nni-tool"
+cmd /C $PIP_UNINSTALL "nni"
 
 # clean
 Remove-Item "src/nni_manager/dist" -Recurse -Force

@@ -24,7 +24,7 @@ import os
 import sys
 import shutil
 import string
-from subprocess import Popen, PIPE, call, check_output, check_call, CREATE_NEW_PROCESS_GROUP
+from subprocess import Popen, PIPE, call, check_output, check_call
 import tempfile
 from nni.constants import ModuleName
 from nni_annotation import *
@@ -132,6 +132,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     stdout_file.write(log_header)
     stderr_file.write(log_header)
     if sys.platform == 'win32':
+        from subprocess import CREATE_NEW_PROCESS_GROUP
         process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
     else:
         process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
