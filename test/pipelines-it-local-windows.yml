@@ -18,7 +18,7 @@ jobs:
     displayName: 'generate config files'
   - script: |
       cd test
-      python config_test.py --ts local --local_gpu --exclude smac,batchtuner,BOHB
+      python config_test.py --ts local --local_gpu --exclude smac,BOHB
     displayName: 'Examples and advanced features tests on local machine'
   - script: |
       cd test
