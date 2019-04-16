@@ -63,8 +63,8 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 },
                 formatter: function (data: TooltipForAccuracy) {
                     const result = '<div class="tooldetailAccuracy">' +
-                        '<div>Trial No: ' + data.data[0] + '</div>' +
-                        '<div>Default Metric: ' + data.data[1] + '</div>' +
+                        '<div>Trial No.: ' + data.data[0] + '</div>' +
+                        '<div>Default metric: ' + data.data[1] + '</div>' +
                         '<div>Parameters: ' +
                         '<pre>' + JSON.stringify(data.data[2], null, 4) + '</pre>' +
                         '</div>' +
@@ -77,7 +77,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 type: 'category',
             },
             yAxis: {
-                name: 'Default Metric',
+                name: 'Default metric',
                 type: 'value',
             },
             series: [{
