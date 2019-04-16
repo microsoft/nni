@@ -32,7 +32,7 @@ interface OverviewState {
     accNodata: string;
     trialNumber: TrialNumber;
     isTop10: boolean;
-    titleMaxbgcolor: string;
+    titleMaxbgcolor?: string;
     titleMinbgcolor?: string;
     // trial stdout is content(false) or link(true)
     isLogCollection: boolean;
@@ -80,7 +80,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 totalCurrentTrial: 0
             },
             isTop10: true,
-            titleMaxbgcolor: '#999',
+            // titleMaxbgcolor: '#999',
             isLogCollection: false
         };
     }
@@ -103,6 +103,24 @@ class Overview extends React.Component<{}, OverviewState> {
                     // default logCollection is true
                     const logCollection = res.data.params.logCollection;
                     let expLogCollection: boolean = false;
+                    const optimizeMode = res.data.params.tuner.classArgs.optimize_mode;
+                    if (optimizeMode !== undefined) {
+                        if (optimizeMode === 'minimize') {
+                            if (this._isMounted) {
+                                this.setState({
+                                    isTop10: false,
+                                    titleMinbgcolor: '#999'
+                                });
+                            }
+                        } else {
+                            if (this._isMounted) {
+                                this.setState({
+                                    isTop10: true,
+                                    titleMaxbgcolor: '#999'
+                                });
+                            }
+                        }
+                    }
                     if (logCollection !== undefined && logCollection !== 'none') {
                         expLogCollection = true;
                     }
@@ -315,8 +333,9 @@ class Overview extends React.Component<{}, OverviewState> {
             indexarr.push(items.sequenceId);
         });
         const accOption = {
+            // support max show 0.0000000
             grid: {
-                left: 40,
+                left: 67,
                 right: 40
             },
             tooltip: {
