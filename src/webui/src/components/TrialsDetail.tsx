@@ -42,7 +42,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     );
 
     private titleOfhyper = (
-        <Title1 text="Hyper parameter" icon="1.png" />
+        <Title1 text="Hyper-parameter" icon="1.png" />
     );
 
     private titleOfDuration = (
