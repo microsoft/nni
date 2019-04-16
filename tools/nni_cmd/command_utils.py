@@ -28,9 +28,7 @@ def check_output_command(file_path, head=None, tail=None):
 def kill_command(pid):
     '''kill command'''
     if sys.platform == 'win32':
-        os.kill(pid, signal.CTRL_C_EVENT)
         os.kill(pid, signal.CTRL_BREAK_EVENT)
-        os.kill(pid, signal.SIGTERM)
     else:
         cmds = ['kill', str(pid)]
         call(cmds)
