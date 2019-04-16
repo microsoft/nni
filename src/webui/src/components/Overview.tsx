@@ -80,7 +80,6 @@ class Overview extends React.Component<{}, OverviewState> {
                 totalCurrentTrial: 0
             },
             isTop10: true,
-            // titleMaxbgcolor: '#999',
             isLogCollection: false
         };
     }
@@ -336,7 +335,7 @@ class Overview extends React.Component<{}, OverviewState> {
             // support max show 0.0000000
             grid: {
                 left: 67,
-                right: 40
+                right: 30
             },
             tooltip: {
                 trigger: 'item'
