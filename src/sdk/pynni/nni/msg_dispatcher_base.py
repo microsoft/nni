@@ -26,11 +26,14 @@ from multiprocessing.dummy import Pool as ThreadPool
 from queue import Queue, Empty
 import json_tricks
 
-from .common import init_logger, multi_thread_enabled
+from .common import multi_thread_enabled
+from .env_vars import dispatcher_env_vars
+from .utils import init_dispatcher_logger
 from .recoverable import Recoverable
 from .protocol import CommandType, receive
 
-init_logger('dispatcher.log')
+init_dispatcher_logger()
+
 _logger = logging.getLogger(__name__)
 
 QUEUE_LEN_WARNING_MARK = 20
@@ -56,8 +59,7 @@ class MsgDispatcherBase(Recoverable):
         This function will never return unless raise.
         """
         _logger.info('Start dispatcher')
-        mode = os.getenv('NNI_MODE')
-        if mode == 'resume':
+        if dispatcher_env_vars.nni_mode == 'resume':
             self.load_checkpoint()
 
         while True:

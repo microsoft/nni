@@ -19,28 +19,28 @@
 # ==================================================================================================
 
 import os
-from .common import init_logger
-from .env_vars import dispatcher_env_vars
+from collections import namedtuple
 
-def extract_scalar_reward(value, scalar_key='default'):
-    """
-    Raises
-    ------
-    RuntimeError
-        Incorrect final result: the final result should be float/int,
-        or a dict which has a key named "default" whose value is float/int.
-    """
-    if isinstance(value, float) or isinstance(value, int):
-        reward = value
-    elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
-        reward = value[scalar_key]
-    else:
-        raise RuntimeError('Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__)) 
-    return reward
+_trial_env_var_dict = {
+    'platform': os.environ.get('NNI_PLATFORM'),
+    'trial_job_id': os.environ.get('NNI_TRIAL_JOB_ID'),
+    'nni_sys_dir': os.environ.get('NNI_SYS_DIR'),
+    'output_dir': os.environ.get('NNI_OUTPUT_DIR'),
+    'trial_sequence_id': os.environ.get('NNI_TRIAL_SEQ_ID'),
+    'multi_phase': os.environ.get('MULTI_PHASE')
+}
 
-def init_dispatcher_logger():
-    """ Initialize dispatcher logging configuration"""
-    logger_file_path = 'dispatcher.log'
-    if dispatcher_env_vars.log_dir is not None:
-        logger_file_path = os.path.join(dispatcher_env_vars.log_dir, logger_file_path)
-    init_logger(logger_file_path, dispatcher_env_vars.log_level)
+_dispatcher_env_var_dict = {
+    'nni_mode': os.environ.get('NNI_MODE'),
+    'nni_checkpoint_dir': os.environ.get('NNI_CHECKPOINT_DIRECTORY'),
+    'log_dir': os.environ.get('NNI_LOG_DIRECTORY'),
+    'log_level': os.environ.get('NNI_LOG_LEVEL'),
+    'include_intermediate_results': os.environ.get('NNI_INCLUDE_INTERMEDIATE_RESULTS')
+}
+
+def _load_env_vars(env_var_dict):
+    return namedtuple('EnvVars', env_var_dict.keys())(**env_var_dict)
+
+trial_env_vars = _load_env_vars(_trial_env_var_dict)
+
+dispatcher_env_vars = _load_env_vars(_dispatcher_env_var_dict)

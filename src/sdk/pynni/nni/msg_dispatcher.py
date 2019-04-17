@@ -27,6 +27,7 @@ from .protocol import CommandType, send
 from .msg_dispatcher_base import MsgDispatcherBase
 from .assessor import AssessResult
 from .common import multi_thread_enabled
+from .env_vars import dispatcher_env_vars
 
 _logger = logging.getLogger(__name__)
 
@@ -190,8 +191,8 @@ class MsgDispatcher(MsgDispatcherBase):
             _logger.debug('BAD, kill %s', trial_job_id)
             send(CommandType.KillTrialJob, json_tricks.dumps(trial_job_id))
             # notify tuner
-            _logger.debug('env var: NNI_INCLUDE_INTERMEDIATE_RESULTS: [%s]', os.environ.get('NNI_INCLUDE_INTERMEDIATE_RESULTS'))
-            if os.environ.get('NNI_INCLUDE_INTERMEDIATE_RESULTS') == 'true':
+            _logger.debug('env var: NNI_INCLUDE_INTERMEDIATE_RESULTS: [%s]', dispatcher_env_vars.include_intermediate_results)
+            if dispatcher_env_vars.include_intermediate_results == 'true':
                 self._earlystop_notify_tuner(data)
         else:
             _logger.debug('GOOD')
