@@ -112,6 +112,10 @@ class MultiPhaseMsgDispatcher(MsgDispatcherBase):
         self.tuner.update_search_space(data)
         return True
 
+    def handle_feed_tuning_data(self, data):
+        self.tuner.feed_tuning_data(data)
+        return True
+
     def handle_add_customized_trial(self, data):
          # data: parameters
         id_ = _create_parameter_id()

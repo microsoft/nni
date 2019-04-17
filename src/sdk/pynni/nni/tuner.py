@@ -99,6 +99,9 @@ class Tuner(Recoverable):
         _logger.info('Save checkpoint ignored by tuner, checkpoint path: %s' % checkpoin_path)
 
     def feed_tuning_data(self, data):
+        """Feed additional data for tuning
+        data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
         _logger.info('Feeding...')
         pass
 
