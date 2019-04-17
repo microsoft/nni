@@ -86,10 +86,10 @@ COLOR_GREEN_FORMAT = '\033[1;32;32m%s\033[0m'
 
 COLOR_YELLOW_FORMAT = '\033[1;33;33m%s\033[0m'
 
-SCHEMA_TYPE_ERROR = 'ERROR: %s should be %s type!'
+SCHEMA_TYPE_ERROR = '%s should be %s type!'
 
-SCHEMA_RANGE_ERROR = 'ERROR: %s should be in range of %s!'
+SCHEMA_RANGE_ERROR = '%s should be in range of %s!'
 
-SCHEMA_PATH_ERROR = 'ERROR: %s path not exist!'
+SCHEMA_PATH_ERROR = '%s path not exist!'
 
-SCHEMA_KEY_ERROR = 'ERROR: miss keys or wrong keys in %s'
+SCHEMA_DICT_ERROR = '%s error, miss keys or wrong keys'

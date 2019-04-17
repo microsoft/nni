@@ -21,6 +21,7 @@
 import os
 import json
 from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA
+from schema import SchemaMissingKeyError, SchemaForbiddenKeyError, SchemaUnexpectedTypeError, SchemaWrongKeyError, SchemaError
 from .common_utils import get_json_content, print_error, print_warning, print_normal
 
 def expand_path(experiment_config, key):
@@ -145,9 +146,21 @@ def validate_common_content(experiment_config):
             for index in range(len(experiment_config['machineList'])):
                 if experiment_config['machineList'][index].get('port') is None:
                     experiment_config['machineList'][index]['port'] = 22
-                
-    except Exception as exception:
-        print_error('Your config file is not correct, please check your config file content!\n%s' % exception)
+    except SchemaMissingKeyError as error:
+        print_error('Miss key in config file!')
+        print_error(error)
+        exit(1)
+    except SchemaWrongKeyError as error:
+        print_error('Wrong key in config file!')
+        print_error(error)
+        exit(1)
+    except SchemaUnexpectedTypeError as error:
+        print_error('Unexpected type in config file!')
+        print_error(error)
+        exit(1)
+    except SchemaError as error:
+        print_error('Your config file is not correct, please check your config file content!')
+        print_error(error)
         exit(1)
 
 def validate_customized_file(experiment_config, spec_key):

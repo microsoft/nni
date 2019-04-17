@@ -20,25 +20,26 @@
 
 import os
 from schema import Schema, And, Use, Optional, Regex, Or
-from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR, SCHEMA_KEY_ERROR
+from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR, SCHEMA_DICT_ERROR
 
 
 def setType(key, type):
+    '''check key type'''
     return And(type, error=SCHEMA_TYPE_ERROR % (key, type.__name__))
 
-def setChoice(key, keyType, *args):
-    return And(
-        And(keyType, error=SCHEMA_TYPE_ERROR % (key, keyType.__name__)),
-        And(lambda n: n in args, error=SCHEMA_RANGE_ERROR % (key, str(args))),
-    )
+def setChoice(key, *args):
+    '''check choice'''
+    return And(lambda n: n in args, error=SCHEMA_RANGE_ERROR % (key, str(args)))
 
 def setNumberRange(key, keyType, start, end):
+    '''check number range'''
     return And(
         And(keyType, error=SCHEMA_TYPE_ERROR % (key, keyType.__name__)),
         And(lambda n: start <= n <= end, error=SCHEMA_RANGE_ERROR % (key, '(%s,%s)' % (start, end))),
     )
 
 def setPathCheck(key):
+    '''check if path exist'''
     return And(os.path.exists, error=SCHEMA_PATH_ERROR % key)
 
 common_schema = {
@@ -48,29 +49,29 @@ Optional('description'): setType('description', str),
 'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
 Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$',error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
 Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
-'trainingServicePlatform': setChoice('trainingServicePlatform', str, 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller'),
+'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller'),
 Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
 Optional('multiPhase'): setType('multiPhase', bool),
 Optional('multiThread'): setType('multiThread', bool),
 Optional('nniManagerIp'): setType('nniManagerIp', str),
 Optional('logDir'): And(os.path.isdir, error=SCHEMA_PATH_ERROR % 'logDir'),
 Optional('debug'): setType('debug', bool),
-Optional('logLevel'): setChoice('logLevel', str, 'trace', 'debug', 'info', 'warning', 'error', 'fatal'),
-Optional('logCollection'): setChoice('logCollection', str, 'http', 'none'),
+Optional('logLevel'): setChoice('logLevel', 'trace', 'debug', 'info', 'warning', 'error', 'fatal'),
+Optional('logCollection'): setChoice('logCollection', 'http', 'none'),
 'useAnnotation': setType('useAnnotation', bool),
-Optional('advisor'): Or({
+Optional('advisor'): And(Or({
     'builtinAdvisorName': Or('Hyperband'),
-    'classArgs': {
-        'optimize_mode': setChoice('optimize_mode', str, 'maximize', 'minimize'),
+    'classArgs': And({
+        'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
         Optional('R'): setType('R', int),
         Optional('eta'): setType('eta', int)
-    },
+    }, error=SCHEMA_DICT_ERROR % 'classArgs'),
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
 },
 {
     'builtinAdvisorName': Or('BOHB'),
-    'classArgs': {
-        'optimize_mode': setChoice('optimize_mode', str, 'maximize', 'minimize'),
+    'classArgs': And({
+        'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
         Optional('min_budget'): setNumberRange('min_budget', int, 0, 9999),
         Optional('max_budget'): setNumberRange('max_budget', int, 0, 9999),
         Optional('eta'):setNumberRange('eta', int, 0, 9999), 
@@ -80,7 +81,7 @@ Optional('advisor'): Or({
         Optional('random_fraction'): setNumberRange('random_fraction', float, 0, 9999),
         Optional('bandwidth_factor'): setNumberRange('bandwidth_factor', float, 0, 9999),
         Optional('min_bandwidth'): setNumberRange('min_bandwidth', float, 0, 9999),
-    },
+    }, error=SCHEMA_DICT_ERROR % 'classArgs'),
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
 },
 {
@@ -89,36 +90,36 @@ Optional('advisor'): Or({
     'className': setType('className', str),
     Optional('classArgs'): dict,
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-}),
-Optional('tuner'): Or({
-    'builtinTunerName': setChoice('builtinTunerName', str, 'TPE', 'Anneal', 'SMAC', 'Evolution'),
-    Optional('classArgs'): {
-        'optimize_mode': setChoice('optimize_mode', str, 'maximize', 'minimize'),
-    },
+}), error=SCHEMA_DICT_ERROR % 'advisor'),
+Optional('tuner'): And(Or({
+    'builtinTunerName': setChoice('builtinTunerName', 'TPE', 'Anneal', 'SMAC', 'Evolution'),
+    Optional('classArgs'): And({
+        'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+    }, error=SCHEMA_DICT_ERROR % 'classArgs'),
     Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
 },{
-    'builtinTunerName': setChoice('builtinTunerName', str, 'BatchTuner', 'GridSearch', 'Random'),
+    'builtinTunerName': setChoice('builtinTunerName', 'BatchTuner', 'GridSearch', 'Random'),
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
 },{
     'builtinTunerName': 'NetworkMorphism',
-    'classArgs': {
-        Optional('optimize_mode'): setChoice('optimize_mode', str, 'maximize', 'minimize'),
-        Optional('task'): setChoice('task', str, 'cv','nlp','common'),
+    'classArgs': And({
+        Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
+        Optional('task'): setChoice('task', 'cv','nlp','common'),
         Optional('input_width'): setType('input_width', int),
         Optional('input_channel'): setType('input_channel', int),
         Optional('n_output_node'): setType('n_output_node', int),
-        },
+        }, error=SCHEMA_DICT_ERROR % 'classArgs'),
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
 },{
     'builtinTunerName': 'MetisTuner',
-    'classArgs': {
-        Optional('optimize_mode'): setChoice('optimize_mode', str, 'maximize', 'minimize'),
+    'classArgs': And({
+        Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
         Optional('no_resampling'): setType('no_resampling', bool),
         Optional('no_candidates'): setType('no_candidates', bool),
         Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
         Optional('cold_start_num'): setType('cold_start_num', int),
-        },
+        }, error=SCHEMA_DICT_ERROR % 'classArgs'),
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
 },{
     'codeDir': setPathCheck('codeDir'),
@@ -126,31 +127,31 @@ Optional('tuner'): Or({
     'className': setType('className', str),
     Optional('classArgs'): dict,
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-}),
-Optional('assessor'): Or({
+}), error=SCHEMA_DICT_ERROR % 'tuner'),
+Optional('assessor'): And(Or({
     'builtinAssessorName': 'Medianstop',
-    Optional('classArgs'): {
-        Optional('optimize_mode'): setChoice('optimize_mode', str, 'maximize', 'minimize'),
+    Optional('classArgs'): And({
+        Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
         Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
-    },
+    }, error=SCHEMA_DICT_ERROR % 'classArgs'),
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
 },{
     'builtinAssessorName': 'Curvefitting',
-    Optional('classArgs'): {
+    Optional('classArgs'): And({
         'epoch_num': setNumberRange('epoch_num', int, 0, 9999),
-        Optional('optimize_mode'): setChoice('optimize_mode', str, 'maximize', 'minimize'),
+        Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
         Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
         Optional('threshold'): setNumberRange('threshold', float, 0, 9999),
         Optional('gap'): setNumberRange('gap', int, 1, 9999),
-    },
+    }, error=SCHEMA_DICT_ERROR % 'classArgs'),
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
 },{
     'codeDir': setPathCheck('codeDir'),
     'classFileName': setType('classFileName', str),
     'className': setType('className', str),
-    Optional('classArgs'): dict,
+    Optional('classArgs'): And(dict, error=SCHEMA_DICT_ERROR % 'classArgs'),
     Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999)
-}),
+}), error=SCHEMA_DICT_ERROR % 'assessor')
 }
 
 common_trial_schema = {
@@ -218,17 +219,17 @@ kubeflow_trial_schema = {
 
 kubeflow_config_schema = {
     'kubeflowConfig':Or({
-        'operator': setChoice('operator', str, 'tf-operator', 'pytorch-operator'),
+        'operator': setChoice('operator', 'tf-operator', 'pytorch-operator'),
         'apiVersion': setType('apiVersion', str),
-        Optional('storage'): setChoice('storage', str, 'nfs', 'azureStorage'),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
         'nfs': {
             'server': setType('server', str),
             'path': setType('path', str)
         }
     },{
-        'operator': setChoice('operator', str, 'tf-operator', 'pytorch-operator'),
+        'operator': setChoice('operator', 'tf-operator', 'pytorch-operator'),
         'apiVersion': setType('apiVersion', str),
-        Optional('storage'): setChoice('storage', str, 'nfs', 'azureStorage'),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
         'keyVault': {
             'vaultName': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),\
                          error='ERROR: vaultName format error, vaultName support using (0-9|a-z|A-Z|-)'),
@@ -265,14 +266,14 @@ frameworkcontroller_trial_schema = {
 
 frameworkcontroller_config_schema = {
     'frameworkcontrollerConfig':Or({
-        Optional('storage'): setChoice('storage', str, 'nfs', 'azureStorage'),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'nfs': {
             'server': setType('server', str),
             'path': setType('path', str)
         }
     },{
-        Optional('storage'): setChoice('storage', str, 'nfs', 'azureStorage'),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'keyVault': {
             'vaultName': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),\
