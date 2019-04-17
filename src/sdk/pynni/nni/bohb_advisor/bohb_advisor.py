@@ -594,7 +594,7 @@ class BOHB(MsgDispatcherBase):
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
             assert "value" in trial_info
-            _value = extract_scalar_reward(trial_info['value'])
+            _value = trial_info['value']
             if _KEY in _params:
                 if self.optimize_mode is OptimizeMode.Maximize:
                     reward = -_value

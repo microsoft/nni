@@ -604,8 +604,16 @@ Debug mode will disable version check function in Trialkeeper.
   Currenctly, following tuner and advisor support feed data:
 
   ```yml
-  builtinTunerName: TPE, Anneal, Evolution, SMAC, NetworkMorphism, MetisTuner
-  builtinAdvisorName: BOHB(should include "TRIAL_BUDGET" in parameters)
+  builtinTunerName: TPE, Anneal, SMAC, NetworkMorphism, MetisTuner
+  builtinAdvisorName: BOHB
+  ```
+
+  *If you want to feed data to BOHB advisor, user are suggested to add "TRIAL_BUDGET" in parameter as NNI do, otherwise, BOHB will use max_budget as "TRIAL_BUDGET". Here is an example:*
+
+  ```json
+  [
+    {"parameter": {"x": 0.5, "y": 0.9, "TRIAL_BUDGET": 27}, "value": 0.03}
+  ]
   ```
 
 * Examples

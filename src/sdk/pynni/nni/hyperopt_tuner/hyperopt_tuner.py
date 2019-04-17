@@ -372,7 +372,7 @@ class HyperoptTuner(Tuner):
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
             assert "value" in trial_info
-            _value = extract_scalar_reward(trial_info['value'])
+            _value = trial_info['value']
             self.feed_data_num += 1
             _parameter_id = '_'.join(["FeedData", str(self.feed_data_num)])
             self.total_data[_parameter_id] = _params
