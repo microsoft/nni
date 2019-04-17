@@ -34,6 +34,7 @@ else{
     $NNI_PYTHON3 = $WHICH_PYTHON[0].SubString(0,$WHICH_PYTHON[0].Length-11)
 }
 $NNI_PKG_FOLDER = $NNI_PYTHON3 + "\nni"
+$NNI_PYTHON_SCRIPTS =  $NNI_PYTHON3 + "\Scripts"
 $PIP_INSTALL = """$NNI_PYTHON3\python"" -m pip install ."
 
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
@@ -74,6 +75,7 @@ if ($install_node) {
         Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
         $unzipNodeDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir"
         Rename-Item $unzipNodeDir "nni-node"
+        Copy-Item "$NNI_NODE_FOLDER\node.exe" $NNI_PYTHON_SCRIPTS -Recurse -Force
     }
 
     ### yarn install
@@ -84,27 +86,10 @@ if ($install_node) {
     }
 }
 
-### add to PATH
-function Add2Path {
-    param ($fileName)
-    $PathVariable = [System.Environment]::GetEnvironmentVariable("Path","User")
-    $PathFolders = $PathVariable.Split(";")
-    if(!$PathFolders.Contains($fileName)){
-        if($PathVariable.Trim().EndsWith(";")){
-            $PathVariable = $PathVariable + $fileName
-        }
-        else {
-            $PathVariable = $PathVariable + ";" + $fileName
-        }
-        [System.Environment]::SetEnvironmentVariable("Path",$PathVariable,"User")
-    }
-}
-
-Add2Path -fileName $NNI_NODE_FOLDER
-Add2Path -fileName "$NNI_YARN_FOLDER\bin"
-
-# Refresh Path environment in this session
- $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+## install-python-modules:
+### Installing Python SDK
+(Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
+cmd /c $PIP_INSTALL
 
 # Building NNI Manager
 cd src\nni_manager
@@ -116,11 +101,7 @@ cd ..\webui
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
 
-## install-python-modules:
-### Installing Python SDK
 cd ..\..
-(Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
-cmd /c $PIP_INSTALL
 
 ## install-node-modules
 if(!(Test-Path $NNI_PKG_FOLDER)){

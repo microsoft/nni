@@ -11,6 +11,7 @@ else{
 
 $PIP_UNINSTALL = """$NNI_PYTHON3\python"" -m pip uninstall -y "
 $NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
+Remove-Item "$NNI_PYTHON3\Scripts\node.exe" -Force
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
  
@@ -25,16 +26,3 @@ Remove-Item "src/webui/build" -Recurse -Force
 Remove-Item "src/webui/node_modules" -Recurse -Force
 Remove-Item $NNI_YARN_FOLDER -Recurse -Force
 Remove-Item $NNI_NODE_FOLDER -Recurse -Force
-
-function Delete2Path {
-    param ($fileName)
-    $PathVariable = [System.Environment]::GetEnvironmentVariable("Path","User")
-    $PathFolders = $PathVariable -split $fileName
-    $PathVariable = $PathFolders -join ''
-    [System.Environment]::SetEnvironmentVariable("Path",$PathVariable,"User")
-}
-
-$NNI_NODE_FOLDER = $NNI_NODE_FOLDER -split '\\' -join '\\'
-$NNI_YARN_FOLDER = $NNI_YARN_FOLDER -split '\\' -join '\\'
-Delete2Path -fileName $NNI_NODE_FOLDER
-Delete2Path -fileName "$NNI_YARN_FOLDER\\bin"

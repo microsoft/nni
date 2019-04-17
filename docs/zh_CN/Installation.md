@@ -39,7 +39,11 @@
 * **通过源代码安装 NNI**
     
     先决条件：`python >=3.5, git, powershell`
-    
+    如果你第一次使用 powershell 运行脚本，那么需要以管理员的身份执行此命令：
+    ```bash
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+    ```
+    接着可以用管理员或普通用户的身份执行下面的安装命令：
     ```bash
     git clone https://github.com/Microsoft/nni.git
     cd nni

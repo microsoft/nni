@@ -36,6 +36,11 @@ Currently we support installation on Linux Mac & Windows.
 * __Install NNI through source code__
 
   Prerequisite: `python >=3.5, git, powershell`
+  When you use powershell to run script for the first time, you need run powershell as Administrator with this command:
+  ```bash
+  Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+  ```
+  Then you can install nni as administrator or current user as follows:
   ```bash
   git clone https://github.com/Microsoft/nni.git
   cd nni
