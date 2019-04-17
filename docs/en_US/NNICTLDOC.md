@@ -604,7 +604,7 @@ Debug mode will disable version check function in Trialkeeper.
   Currenctly, following tuner and advisor support feed data:
 
   ```yml
-  builtinTunerName: TPE, Anneal, SMAC, NetworkMorphism, MetisTuner
+  builtinTunerName: TPE, Anneal, SMAC, GridSearch, NetworkMorphism, MetisTuner
   builtinAdvisorName: BOHB
   ```
 

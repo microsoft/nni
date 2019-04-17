@@ -24,6 +24,7 @@ gridsearch_tuner.py including:
 
 import copy
 import numpy as np
+import logging
 
 import nni
 from nni.tuner import Tuner
@@ -32,6 +33,7 @@ TYPE = '_type'
 CHOICE = 'choice'
 VALUE = '_value'
 
+logger = logging.getLogger('grid_search_AutoML')
 
 class GridSearchTuner(Tuner):
     '''
@@ -51,6 +53,7 @@ class GridSearchTuner(Tuner):
     def __init__(self):
         self.count = -1
         self.expanded_search_space = []
+        self.feed_data = dict()
 
     def json2paramater(self, ss_spec):
         '''
@@ -135,12 +138,32 @@ class GridSearchTuner(Tuner):
 
     def generate_parameters(self, parameter_id):
         self.count += 1
-        if self.count > len(self.expanded_search_space)-1:
-            raise nni.NoMoreTrialError('no more parameters now.')
-        return self.expanded_search_space[self.count]
+        while 1:
+            if self.count > len(self.expanded_search_space)-1:
+                raise nni.NoMoreTrialError('no more parameters now.')
+            _params_tuple = tuple(sorted(self.expanded_search_space[self.count].items()))
+            if self.feed_data[_params_tuple]:
+                self.count += 1
+            else:
+                return self.expanded_search_space[self.count]
 
     def receive_trial_result(self, parameter_id, parameters, value):
         pass
 
     def feed_tuning_data(self, data):
-        pass
+        """Feed additional data for tuning
+
+        Parameters
+        ----------
+        data:
+            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        _completed_num = 0
+        for trial_info in data:
+            logger.info("Start to feed data, the current progrss number %s" %_completed_num)
+            _completed_num += 1
+            assert "parameter" in trial_info
+            _params = trial_info["parameter"]
+            _params_tuple = tuple(sorted(_params.items()))
+            self.feed_data[_params_tuple] = True
+            logger.info("Successfully feed date to grid search tuner.")

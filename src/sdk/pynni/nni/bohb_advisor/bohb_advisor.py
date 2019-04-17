@@ -595,13 +595,13 @@ class BOHB(MsgDispatcherBase):
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
-            if _KEY in _params:
-                if self.optimize_mode is OptimizeMode.Maximize:
-                    reward = -_value
-                else:
-                    reward = _value
-                _budget = _params[_KEY]
-                self.cg.new_result(loss=reward, budget=_budget, parameters=_params, update_model=True)
-                logger.info("Useful data. Successfully feed tuning data to BOHB advisor.")
+            if _KEY not in _params:
+                _params[_KEY] = self.max_budget
+                logger.info("Set \"TRIAL_BUDGET\" value to %s (max budget)" %self.max_budget)
+            if self.optimize_mode is OptimizeMode.Maximize:
+                reward = -_value
             else:
-                logger.warning("Missing key \"TRIAL_BUDGET\", BOHB reject the data. Feed tuning data failed.")
+                reward = _value
+            _budget = _params[_KEY]
+            self.cg.new_result(loss=reward, budget=_budget, parameters=_params, update_model=True)
+            logger.info("Useful data. Successfully feed tuning data to BOHB advisor.")
