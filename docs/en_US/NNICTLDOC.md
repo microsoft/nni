@@ -573,7 +573,7 @@ Debug mode will disable version check function in Trialkeeper.
 
 * Description
 
-  You can use this command to feed several prior or supplementary trial hyperparameters and results for NNI hyperparameter tuning.
+  You can use this command to feed several prior or supplementary trial hyperparameters and results for NNI hyperparameter tuning. The data are fed to the tuning algorithm (e.g., tuner or advisor).
 
 * Usage
 
@@ -584,14 +584,12 @@ Debug mode will disable version check function in Trialkeeper.
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------|------|
-  |id|  False| |The id of the experiment you want to resume|
-  |--file, -f|  True| |the json file storing your feed data|
+  |id|  False| |The id of the experiment you want to feed data into|
+  |--file, -f|  True| |a file with data you want to feed in json format|
 
 * Details
 
-  **When using `nnictl feed`, make sure your data's search space is consistent with the experiment you're going to feed. The json file should be written as a tuple consisting of several trial results. Each results is the dict type including `"parameter"` and `"value"`.**
-
-  For example, here is a valid feed data json file:
+  The file with feed data must in json format, an example is shown below:
 
   ```json
   [
@@ -601,11 +599,13 @@ Debug mode will disable version check function in Trialkeeper.
   ]
   ```
 
+  Every element in the top level list is a sample. For our built-in tuners/advisors, each sample should have at least two keys: `parameter` and `value`. The `parameter` must match this experiment's search space, that is, all the keys (or hyperparameters) in `parameter` must match the keys in the search space. Otherwise, tuner/advisor may have unpredictable behavior. `Value` should follow the same rule of the input in `nni.report_final_result`, that is, either a number or a dict with a key named `default`. For your customized tuner/advisor, the file could have any json content depending on how you implement the corresponding methods (e.g., `feed_tuning_data`).
+
   Currenctly, following tuner and advisor support feed data:
 
   ```yml
   builtinTunerName: TPE, Anneal, Evolution, SMAC, NetworkMorphism, MetisTuner
-  builtinAdvisorName: BOHB
+  builtinAdvisorName: BOHB(should include "TRIAL_BUDGET" in parameters)
   ```
 
 * Examples
