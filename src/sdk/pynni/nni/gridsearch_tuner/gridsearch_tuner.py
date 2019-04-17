@@ -140,7 +140,7 @@ class GridSearchTuner(Tuner):
         self.count += 1
         while (self.count <= len(self.expanded_search_space)-1):
             _params_tuple = tuple(sorted(self.expanded_search_space[self.count].items()))
-            if self.feed_data[_params_tuple]:
+            if _params_tuple in self.feed_data:
                 self.count += 1
             else:
                 return self.expanded_search_space[self.count]
