@@ -46,6 +46,7 @@ jobs:
       python3 -m pip install tensorflow==1.12.0 --user
       sudo apt-get install swig -y
       PATH=$HOME/.local/bin:$PATH nnictl package install --name=SMAC
+      PATH=$HOME/.local/bin:$PATH nnictl package install --name=BOHB
     displayName: 'Install dependencies for integration tests in Kubeflow mode'
 
   - script: |
