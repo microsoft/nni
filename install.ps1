@@ -75,9 +75,8 @@ if ($install_node) {
         Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
         $unzipNodeDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir"
         Rename-Item $unzipNodeDir "nni-node"
-        Copy-Item "$NNI_NODE_FOLDER\node.exe" $NNI_PYTHON_SCRIPTS -Recurse -Force
     }
-
+    Copy-Item "$NNI_NODE_FOLDER\node.exe" $NNI_PYTHON_SCRIPTS -Recurse -Force
     ### yarn install
     if(!(Test-Path $NNI_YARN_FOLDER)){
         cmd /C "$NNI_PYTHON3\python" $SCRIPT_PATH
