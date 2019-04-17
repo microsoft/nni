@@ -593,9 +593,9 @@ Debug mode will disable version check function in Trialkeeper.
 
   ```json
   [
-    {"paramter": {"x": 0.5, "y": 0.9}, "value": 0.03},
-    {"paramter": {"x": 0.4, "y": 0.8}, "value": 0.05},
-    {"paramter": {"x": 0.3, "y": 0.7}, "value": 0.04}
+    {"parameter": {"x": 0.5, "y": 0.9}, "value": 0.03},
+    {"parameter": {"x": 0.4, "y": 0.8}, "value": 0.05},
+    {"parameter": {"x": 0.3, "y": 0.7}, "value": 0.04}
   ]
   ```
 
