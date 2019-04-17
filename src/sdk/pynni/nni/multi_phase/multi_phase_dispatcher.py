@@ -113,6 +113,9 @@ class MultiPhaseMsgDispatcher(MsgDispatcherBase):
         return True
 
     def handle_feed_tuning_data(self, data):
+        """Feed additional data for tuning
+        data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
         self.tuner.feed_tuning_data(data)
         return True
 
