@@ -91,6 +91,7 @@ if ($install_node) {
 cmd /c $PIP_INSTALL
 
 # Building NNI Manager
+$env:PATH=$NNI_PYTHON_SCRIPTS+';'+$env:PATH
 cd src\nni_manager
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
