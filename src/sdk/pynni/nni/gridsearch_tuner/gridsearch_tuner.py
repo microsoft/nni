@@ -138,14 +138,13 @@ class GridSearchTuner(Tuner):
 
     def generate_parameters(self, parameter_id):
         self.count += 1
-        while 1:
-            if self.count > len(self.expanded_search_space)-1:
-                raise nni.NoMoreTrialError('no more parameters now.')
+        while (self.count <= len(self.expanded_search_space)-1):
             _params_tuple = tuple(sorted(self.expanded_search_space[self.count].items()))
             if self.feed_data[_params_tuple]:
                 self.count += 1
             else:
                 return self.expanded_search_space[self.count]
+        raise nni.NoMoreTrialError('no more parameters now.')
 
     def receive_trial_result(self, parameter_id, parameters, value):
         pass
