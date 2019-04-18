@@ -112,8 +112,8 @@ dev-install:
 
 .PHONY: uninstall
 uninstall:
-	-$(PIP_UNINSTALL) -y nni
-	-$(PIP_UNINSTALL) -y nnictl
+	-cd build && $(PIP_UNINSTALL) -y nni
+	-rm -rf build
 	-rm -rf $(NNI_PKG_FOLDER)
 	-rm -f $(BIN_FOLDER)/node
 	-rm -f $(BIN_FOLDER)/nnictl
@@ -165,7 +165,18 @@ install-python-modules:
 .PHONY: dev-install-python-modules
 dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) -e .
+	mkdir -p build
+	ln -sf ../src/sdk/pynni/nni build/nni
+	ln -sf ../tools/nni_annotation build/nni_annotation
+	ln -sf ../tools/nni_cmd build/nni_cmd
+	ln -sf ../tools/nni_trial_tool build/nni_trial_tool
+	ln -sf ../tools/nni_gpu_tool build/nni_gpu_tool
+	cp setup.py build/
+	cp README.md build/
+	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' build/setup.py
+	sed -ie 's/src\/sdk\/pynni\/nni/nni/g' build/setup.py
+	sed -ie 's/tools\///g' build/setup.py
+	cd build && $(PIP_INSTALL) $(PIP_MODE) -e .
 
 
 .PHONY: install-node-modules
