@@ -24,7 +24,7 @@ import os
 from .rest_utils import rest_put, rest_post, rest_get, check_rest_server_quick, check_response
 from .url_utils import experiment_url, tuning_data_url
 from .config_utils import Config
-from .common_utils import get_json_content
+from .common_utils import get_json_content, print_normal, print_error
 from .nnictl_utils import check_experiment_id, get_experiment_port, get_config_filename
 from .launcher_utils import parse_time
 from .constants import REST_TIME_OUT
@@ -71,7 +71,7 @@ def update_experiment_profile(args, key, value):
             if response and check_response(response):
                 return response
     else:
-        print('ERROR: restful server is not running...')
+        print_error('Restful server is not running...')
     return None
 
 def update_searchspace(args):
@@ -80,9 +80,9 @@ def update_searchspace(args):
     args.port = get_experiment_port(args)
     if args.port is not None:
         if update_experiment_profile(args, 'searchSpace', content):
-            print('INFO: update %s success!' % 'searchSpace')
+            print_normal('Update %s success!' % 'searchSpace')
         else:
-            print('ERROR: update %s failed!' % 'searchSpace')
+            print_error('Update %s failed!' % 'searchSpace')
 
 
 def update_concurrency(args):
@@ -90,9 +90,9 @@ def update_concurrency(args):
     args.port = get_experiment_port(args)
     if args.port is not None:
         if update_experiment_profile(args, 'trialConcurrency', int(args.value)):
-            print('INFO: update %s success!' % 'concurrency')
+            print_normal('Update %s success!' % 'concurrency')
         else:
-            print('ERROR: update %s failed!' % 'concurrency')
+            print_error('Update %s failed!' % 'concurrency')
 
 def update_duration(args):
     #parse time, change time unit to seconds 
@@ -100,16 +100,16 @@ def update_duration(args):
     args.port = get_experiment_port(args)
     if args.port is not None:
         if update_experiment_profile(args, 'maxExecDuration', int(args.value)):
-            print('INFO: update %s success!' % 'duration')
+            print_normal('Update %s success!' % 'duration')
         else:
-            print('ERROR: update %s failed!' % 'duration')
+            print_error('Update %s failed!' % 'duration')
 
 def update_trialnum(args):
     validate_digit(args.value, 1, 999999999)
     if update_experiment_profile(args, 'maxTrialNum', int(args.value)):
-        print('INFO: update %s success!' % 'trialnum')
+        print_normal('Update %s success!' % 'trialnum')
     else:
-        print('ERROR: update %s failed!' % 'trialnum')
+        print_error('Update %s failed!' % 'trialnum')
 
 def import_data(args):
     '''import additional data to the experiment'''
@@ -118,9 +118,9 @@ def import_data(args):
     args.port = get_experiment_port(args)
     if args.port is not None:
         if import_data_to_restful_server(args, content):
-            print('INFO: import data success!')
+            print_normal('Import data success!')
         else:
-            print('ERROR: import data failed!')
+            print_error('Import data failed!')
 
 def import_data_to_restful_server(args, content):
     '''call restful server to import data to the experiment'''
@@ -132,5 +132,5 @@ def import_data_to_restful_server(args, content):
         if response and check_response(response):
             return response
     else:
-        print('ERROR: restful server is not running...')
+        print_error('Restful server is not running...')
     return None
