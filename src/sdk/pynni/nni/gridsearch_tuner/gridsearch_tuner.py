@@ -28,6 +28,7 @@ import logging
 
 import nni
 from nni.tuner import Tuner
+from nni.utils import convert_dict2tuple
 
 TYPE = '_type'
 CHOICE = 'choice'
@@ -53,7 +54,7 @@ class GridSearchTuner(Tuner):
     def __init__(self):
         self.count = -1
         self.expanded_search_space = []
-        self.import_data = dict()
+        self.supplement_data = dict()
 
     def json2paramater(self, ss_spec):
         '''
@@ -139,8 +140,8 @@ class GridSearchTuner(Tuner):
     def generate_parameters(self, parameter_id):
         self.count += 1
         while (self.count <= len(self.expanded_search_space)-1):
-            _params_tuple = tuple(sorted(self.expanded_search_space[self.count].items()))
-            if _params_tuple in self.import_data:
+            _params_tuple = convert_dict2tuple(self.expanded_search_space[self.count])
+            if _params_tuple in self.supplement_data:
                 self.count += 1
             else:
                 return self.expanded_search_space[self.count]
@@ -163,6 +164,6 @@ class GridSearchTuner(Tuner):
             _completed_num += 1
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
-            _params_tuple = tuple(sorted(_params.items()))
-            self.import_data[_params_tuple] = True
+            _params_tuple = convert_dict2tuple(_params)
+            self.supplement_data[_params_tuple] = True
             logger.info("Successfully import date to grid search tuner.")

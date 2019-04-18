@@ -20,6 +20,8 @@
 
 def extract_scalar_reward(value, scalar_key='default'):
     """
+    Extract scalar reward from trial result.
+
     Raises
     ------
     RuntimeError
@@ -31,5 +33,16 @@ def extract_scalar_reward(value, scalar_key='default'):
     elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
         reward = value[scalar_key]
     else:
-        raise RuntimeError('Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__)) 
+        raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.')
     return reward
+
+def convert_dict2tuple(value):
+    """
+    convert dict type to tuple to solve unhashable problem.
+    """
+    if isinstance(value, dict):
+        for _keys in value:
+            value[_keys] = convert_dict2tuple(value[_keys])
+        return tuple(sorted(value.items()))
+    else:
+        return value
