@@ -509,10 +509,19 @@ def export_trials_data(args):
             # dframe = pd.DataFrame.from_records([parse_trial_data(t_data) for t_data in content])
             # dframe.to_csv(args.csv_path, sep='\t')
             records = parse_trial_data(content)
-            with open(args.csv_path, 'w') as f_csv:
-                writer = csv.DictWriter(f_csv, set.union(*[set(r.keys()) for r in records]))
-                writer.writeheader()
-                writer.writerows(records)
+            if args.type == 'json':
+                json_records = []
+                for trial in records:
+                    value = trial.pop('reward', None)
+                    del trial['id']
+                    json_records.append({'parameter': trial, 'value': value})
+            with open(args.path, 'w') as file:
+                if args.type == 'csv':
+                    writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in records]))
+                    writer.writeheader()
+                    writer.writerows(records)
+                else:
+                    json.dump(json_records, file)
         else:
             print_error('Export failed...')
     else:

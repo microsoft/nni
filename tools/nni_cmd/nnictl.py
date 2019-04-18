@@ -123,7 +123,8 @@ def parse_args():
     #export trial data
     parser_trial_export = parser_experiment_subparsers.add_parser('export', help='export trial job results to csv')
     parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
-    parser_trial_export.add_argument('--filename', '-f', required=True, dest='csv_path', help='target csv file path')
+    parser_trial_export.add_argument('--type', '-t', choices=['json', 'csv'], required=True, dest='type', help='target file type')
+    parser_trial_export.add_argument('--filename', '-f', required=True, dest='path', help='target file path')
     parser_trial_export.set_defaults(func=export_trials_data)
 
     #TODO:finish webui function
