@@ -46,7 +46,7 @@ export class MockedNNIManager extends Manager {
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
         return Promise.resolve();
     }
-    public feedTuningData(data: string): Promise<void> {
+    public importData(data: string): Promise<void> {
         return Promise.resolve();
     }
     public getTrialJobStatistics(): Promise<TrialJobStatistics[]> {

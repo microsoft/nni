@@ -142,7 +142,7 @@ class MsgDispatcherBase(Recoverable):
             CommandType.Initialize: self.handle_initialize,
             CommandType.RequestTrialJobs: self.handle_request_trial_jobs,
             CommandType.UpdateSearchSpace: self.handle_update_search_space,
-            CommandType.FeedTuningData: self.handle_import_data,
+            CommandType.ImportData: self.handle_import_data,
             CommandType.AddCustomizedTrialJob: self.handle_add_customized_trial,
 
             # Tunner/Assessor commands:
