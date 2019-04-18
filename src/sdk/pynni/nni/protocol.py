@@ -30,7 +30,7 @@ class CommandType(Enum):
     RequestTrialJobs = b'GE'
     ReportMetricData = b'ME'
     UpdateSearchSpace = b'SS'
-    importData = b'FD'
+    ImportData = b'FD'
     AddCustomizedTrialJob = b'AD'
     TrialEnd = b'EN'
     Terminate = b'TE'
