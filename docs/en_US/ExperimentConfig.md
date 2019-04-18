@@ -393,6 +393,7 @@ machineList:
       __image__ set the image to be used in __worker__.
 
 * __localConfig__
+
   __localConfig__ is applicable only if __trainingServicePlatform__ is set to ```local```, otherwise there should not be __localConfig__ section in configuration file.
   * __gpuIndices__
   
