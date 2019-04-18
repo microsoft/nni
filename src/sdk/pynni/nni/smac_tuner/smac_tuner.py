@@ -64,7 +64,6 @@ class SMACTuner(Tuner):
         self.update_ss_done = False
         self.loguniform_key = set()
         self.categorical_dict = {}
-        self.supplement_data_num = 0
 
     def _main_cli(self):
         """Main function of SMAC for CLI interface
@@ -266,22 +265,4 @@ class SMACTuner(Tuner):
         return params
 
     def import_data(self, data):
-        """Import additional data for tuning
-
-        Parameters
-        ----------
-        data:
-            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
-        """
-        _completed_num = 0
-        for trial_info in data:
-            logger.info("Start to import data, the current progrss number %s" %_completed_num)
-            _completed_num += 1
-            assert "parameter" in trial_info
-            _params = trial_info["parameter"]
-            assert "value" in trial_info
-            _value = trial_info['value']
-            self.supplement_data_num += 1
-            _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
-            self.total_data[_parameter_id] = _params
-            self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
+        pass
