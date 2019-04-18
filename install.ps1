@@ -34,6 +34,9 @@ else{
     $NNI_PYTHON3 = $WHICH_PYTHON[0].SubString(0,$WHICH_PYTHON[0].Length-11)
 }
 $NNI_PKG_FOLDER = $NNI_PYTHON3 + "\nni"
+if($env:VIRTUAL_ENV){
+    $NNI_PKG_FOLDER = $env:VIRTUAL_ENV + "\nni"
+}
 $NNI_PYTHON_SCRIPTS =  $NNI_PYTHON3 + "\Scripts"
 $PIP_INSTALL = """$NNI_PYTHON3\python"" -m pip install ."
 
