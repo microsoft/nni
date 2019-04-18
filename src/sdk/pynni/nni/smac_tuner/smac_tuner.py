@@ -266,7 +266,7 @@ class SMACTuner(Tuner):
         return params
 
     def import_data(self, data):
-        """Feed additional data for tuning
+        """Import additional data for tuning
 
         Parameters
         ----------
@@ -282,6 +282,6 @@ class SMACTuner(Tuner):
             assert "value" in trial_info
             _value = trial_info['value']
             self.import_data_num += 1
-            _parameter_id = '_'.join(["FeedData", str(self.import_data_num)])
+            _parameter_id = '_'.join(["ImportData", str(self.import_data_num)])
             self.total_data[_parameter_id] = _params
             self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)

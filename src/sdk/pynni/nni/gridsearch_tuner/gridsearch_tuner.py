@@ -150,7 +150,7 @@ class GridSearchTuner(Tuner):
         pass
 
     def import_data(self, data):
-        """Feed additional data for tuning
+        """Import additional data for tuning
 
         Parameters
         ----------
