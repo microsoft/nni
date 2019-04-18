@@ -109,7 +109,7 @@ class MsgDispatcher(MsgDispatcherBase):
         self.tuner.update_search_space(data)
 
     def handle_import_data(self, data):
-        """Feed additional data for tuning
+        """Import additional data for tuning
         data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
         self.tuner.import_data(data)

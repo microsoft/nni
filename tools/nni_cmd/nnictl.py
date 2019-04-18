@@ -116,10 +116,10 @@ def parse_args():
     parser_experiment_list.add_argument('all', nargs='?', help='list all of experiments')
     parser_experiment_list.set_defaults(func=experiment_list)
     #import tuning data
-    parser_import_tuning_data = parser_experiment_subparsers.add_parser('import', help='import additional data for tuning')
-    parser_import_tuning_data.add_argument('id', nargs='?', help='the id of experiment')
-    parser_import_tuning_data.add_argument('--filename', '-f', required=True)
-    parser_import_tuning_data.set_defaults(func=import_data)
+    parser_import_data = parser_experiment_subparsers.add_parser('import', help='import additional data')
+    parser_import_data.add_argument('id', nargs='?', help='the id of experiment')
+    parser_import_data.add_argument('--filename', '-f', required=True)
+    parser_import_data.set_defaults(func=import_data)
     #export trial data
     parser_trial_export = parser_experiment_subparsers.add_parser('export', help='export trial job results to csv')
     parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')

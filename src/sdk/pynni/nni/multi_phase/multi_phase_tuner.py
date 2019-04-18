@@ -77,7 +77,7 @@ class MultiPhaseTuner(Recoverable):
         raise NotImplementedError('Tuner: update_search_space not implemented')
 
     def import_data(self, data):
-        """Feed additional data for tuning
+        """Import additional data for tuning
         data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
         _logger.info('Feeding...')

@@ -113,7 +113,7 @@ class MultiPhaseMsgDispatcher(MsgDispatcherBase):
         return True
 
     def handle_import_data(self, data):
-        """Feed additional data for tuning
+        """import additional data for tuning
         data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
         self.tuner.import_data(data)
