@@ -300,5 +300,5 @@ class EvolutionTuner(Tuner):
         indiv = Individual(config=params, result=reward)
         self.population.append(indiv)
 
-    def feed_tuning_data(self, data):
+    def import_data(self, data):
         pass

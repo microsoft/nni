@@ -265,7 +265,7 @@ class SMACTuner(Tuner):
                 cnt += 1
         return params
 
-    def feed_tuning_data(self, data):
+    def import_data(self, data):
         """Feed additional data for tuning
 
         Parameters

@@ -20,7 +20,6 @@ nnictl support commands:
 * [nnictl webui](#webui)
 * [nnictl tensorboard](#tensorboard)
 * [nnictl package](#package)
-* [nnictl feed](#feed)
 * [nnictl --version](#version)
 
 ### Manage an experiment
@@ -125,21 +124,21 @@ Debug mode will disable version check function in Trialkeeper.
       nnictl stop
       ```
 
-  1. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
+  2. If there is an id specified, and the id matches the running experiment, nnictl will stop the corresponding experiment, or will print error message.
 
       ```bash
       nnictl stop [experiment_id]
       ```
 
-  1. Users could use 'nnictl stop all' to stop all experiments.
+  3. Users could use 'nnictl stop all' to stop all experiments.
 
       ```bash
       nnictl stop all
       ```
 
-  1. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
-  1. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
-  1. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
+  4. If the id ends with *, nnictl will stop all experiments whose ids matchs the regular.
+  5. If the id does not exist but match the prefix of an experiment id, nnictl will stop the matched experiment.
+  6. If the id does not exist but match multiple prefix of the experiment ids, nnictl will give id information.
 
 <a name="update"></a>
 
@@ -299,24 +298,6 @@ Debug mode will disable version check function in Trialkeeper.
     nnictl trial [trial_id] --vexperiment [experiment_id]
     ```
 
-* __nnictl trial export__
-  * Description
-
-    You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
-
-  * Usage
-
-    ```bash
-    nnictl trial export [OPTIONS]
-    ```
-
-  * Options
-
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |id|  False| |ID of the experiment    |
-  |--file|  True| |File path of the output csv file     |
-
 <a name="top"></a>
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
@@ -387,6 +368,92 @@ Debug mode will disable version check function in Trialkeeper.
 
     ```bash
     nnictl experiment list
+    ```
+
+<a name="export"></a>
+
+* __nnictl experiment export__
+  * Description
+
+    You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+
+  * Usage
+
+    ```bash
+    nnictl experiment export [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment    |
+  |--file|  True| |File path of the output file     |
+  |--type|  True| |Type of output file, only support "csv" and "json"|
+
+  * Examples
+
+  > export all trial data in an experiment as json format
+
+  ```bash
+  nnictl experiment export [experiment_id] --file [file_path] --type json
+  ```
+
+* __nnictl experiment import__
+  * Description
+
+    You can use this command to import several prior or supplementary trial hyperparameters & results for NNI hyperparameter tuning. The data are fed to the tuning algorithm (e.g., tuner or advisor).
+
+  * Usage
+
+    ```bash
+    nnictl experiment import [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------|------|
+  |id|  False| |The id of the experiment you want to import data into|
+  |--file, -f|  True| |a file with data you want to import in json format|
+
+  * Details
+
+    The file with import data must in specified json format, you can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
+
+    NNI also supports users to import their own data, please express the data in the correct format. An example is shown below:
+
+    ```json
+    [
+      {"parameter": {"x": 0.5, "y": 0.9}, "value": 0.03},
+      {"parameter": {"x": 0.4, "y": 0.8}, "value": 0.05},
+      {"parameter": {"x": 0.3, "y": 0.7}, "value": 0.04}
+    ]
+    ```
+
+    Every element in the top level list is a sample. For our built-in tuners/advisors, each sample should have at least two keys: `parameter` and `value`. The `parameter` must match this experiment's search space, that is, all the keys (or hyperparameters) in `parameter` must match the keys in the search space. Otherwise, tuner/advisor may have unpredictable behavior. `Value` should follow the same rule of the input in `nni.report_final_result`, that is, either a number or a dict with a key named `default`. For your customized tuner/advisor, the file could have any json content depending on how you implement the corresponding methods (e.g., `import_data`).
+
+    Currenctly, following tuner and advisor support import data:
+
+    ```yml
+    builtinTunerName: TPE, Anneal, SMAC, GridSearch, NetworkMorphism, MetisTuner
+    builtinAdvisorName: BOHB
+    ```
+
+    *If you want to import data to BOHB advisor, user are suggested to add "TRIAL_BUDGET" in parameter as NNI do, otherwise, BOHB will use max_budget as "TRIAL_BUDGET". Here is an example:*
+
+    ```json
+    [
+      {"parameter": {"x": 0.5, "y": 0.9, "TRIAL_BUDGET": 27}, "value": 0.03}
+    ]
+    ```
+
+  * Examples
+
+    > import data to a running experiment
+
+    ```bash
+    nnictl experiment [experiment_id] -f experiment_data.json
     ```
 
 <a name="config"></a>
@@ -567,62 +634,6 @@ Debug mode will disable version check function in Trialkeeper.
     ```bash
     nnictl package show
     ```
-
-<a name="feed"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `nnictl feed`
-
-* Description
-
-  You can use this command to feed several prior or supplementary trial hyperparameters and results for NNI hyperparameter tuning. The data are fed to the tuning algorithm (e.g., tuner or advisor).
-
-* Usage
-
-  ```bash
-  nnictl feed [OPTIONS]
-  ```
-* Options
-
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------|------|
-  |id|  False| |The id of the experiment you want to feed data into|
-  |--file, -f|  True| |a file with data you want to feed in json format|
-
-* Details
-
-  The file with feed data must in json format, an example is shown below:
-
-  ```json
-  [
-    {"parameter": {"x": 0.5, "y": 0.9}, "value": 0.03},
-    {"parameter": {"x": 0.4, "y": 0.8}, "value": 0.05},
-    {"parameter": {"x": 0.3, "y": 0.7}, "value": 0.04}
-  ]
-  ```
-
-  Every element in the top level list is a sample. For our built-in tuners/advisors, each sample should have at least two keys: `parameter` and `value`. The `parameter` must match this experiment's search space, that is, all the keys (or hyperparameters) in `parameter` must match the keys in the search space. Otherwise, tuner/advisor may have unpredictable behavior. `Value` should follow the same rule of the input in `nni.report_final_result`, that is, either a number or a dict with a key named `default`. For your customized tuner/advisor, the file could have any json content depending on how you implement the corresponding methods (e.g., `feed_tuning_data`).
-
-  Currenctly, following tuner and advisor support feed data:
-
-  ```yml
-  builtinTunerName: TPE, Anneal, SMAC, GridSearch, NetworkMorphism, MetisTuner
-  builtinAdvisorName: BOHB
-  ```
-
-  *If you want to feed data to BOHB advisor, user are suggested to add "TRIAL_BUDGET" in parameter as NNI do, otherwise, BOHB will use max_budget as "TRIAL_BUDGET". Here is an example:*
-
-  ```json
-  [
-    {"parameter": {"x": 0.5, "y": 0.9, "TRIAL_BUDGET": 27}, "value": 0.03}
-  ]
-  ```
-
-* Examples
-
-  > feed data to a running experiment
-
-  ```bash
-  nnictl feed [experiment_id] -f feed_data.json
-  ```
 
 <a name="version"></a>
 

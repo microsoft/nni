@@ -154,7 +154,7 @@ class MultiPhaseMsgDispatcher(MsgDispatcherBase):
             self.tuner.trial_end(json_tricks.loads(data['hyper_params'])['parameter_id'], data['event'] == 'SUCCEEDED', trial_job_id)
         return True
 
-    def handle_feed_tuning_data(self, data):
+    def handle_import_data(self, data):
         pass
 
     def _handle_intermediate_metric_data(self, data):

@@ -355,7 +355,7 @@ class HyperoptTuner(Tuner):
         total_params = json2parameter(self.json, parameter)
         return total_params
 
-    def feed_tuning_data(self, data):
+    def import_data(self, data):
         """Feed additional data for tuning
 
         Parameters
