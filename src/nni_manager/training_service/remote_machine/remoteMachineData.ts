@@ -19,12 +19,11 @@
 
 'use strict';
 
-import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
-import { GPUSummary } from '../common/gpuData';
+import * as fs from 'fs';
 import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
-import * as fs from 'fs';
-
+import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { GPUSummary } from '../common/gpuData';
 
 /**
  * Metadata of remote machine for configuration and statuc query
@@ -37,11 +36,12 @@ export class RemoteMachineMeta {
     public readonly sshKeyPath?: string;
     public readonly passphrase?: string;
     public gpuSummary : GPUSummary | undefined;
-    /* GPU Reservation info, the key is GPU index, the value is the job id which reserves this GPU*/
+    // GPU Reservation info, the key is GPU index, the value is the job id which reserves this GPU
     public gpuReservation : Map<number, string>;
+    public readonly gpuIndices?: string;
 
-    constructor(ip : string, port : number, username : string, passwd : string, 
-        sshKeyPath : string, passphrase : string) {
+    constructor(ip : string, port : number, username : string, passwd : string,
+                sshKeyPath: string, passphrase : string, gpuIndices?: string) {
         this.ip = ip;
         this.port = port;
         this.username = username;
@@ -49,6 +49,19 @@ export class RemoteMachineMeta {
         this.sshKeyPath = sshKeyPath;
         this.passphrase = passphrase;
         this.gpuReservation = new Map<number, string>();
+        this.gpuIndices = gpuIndices;
+    }
+}
+
+export function parseGpuIndices(gpuIndices?: string): Set<number> | undefined {
+    if (gpuIndices !== undefined) {
+        const indices: number[] = gpuIndices.split(',')
+            .map((x: string) => parseInt(x, 10));
+        if (indices.length > 0) {
+            return new Set(indices);
+        } else {
+            throw new Error('gpuIndices can not be empty if specified.');
+        }
     }
 }
 
