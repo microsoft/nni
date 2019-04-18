@@ -335,7 +335,7 @@ class Overview extends React.Component<{}, OverviewState> {
             // support max show 0.0000000
             grid: {
                 left: 67,
-                right: 30
+                right: 40
             },
             tooltip: {
                 trigger: 'item'
