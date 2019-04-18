@@ -81,7 +81,6 @@ class MultiPhaseTuner(Recoverable):
         data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
         _logger.info('Feeding...')
-        pass
 
     def load_checkpoint(self):
         """Load the checkpoint of tuner.
