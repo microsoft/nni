@@ -103,7 +103,6 @@ class Tuner(Recoverable):
         data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
         _logger.info('Feeding...')
-        pass
 
     def _on_exit(self):
         pass
