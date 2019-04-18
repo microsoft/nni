@@ -575,7 +575,7 @@ class BOHB(MsgDispatcherBase):
         pass
 
     def handle_import_data(self, data):
-        """Feed additional data for tuning
+        """Import additional data for tuning
 
         Parameters
         ----------
@@ -589,7 +589,7 @@ class BOHB(MsgDispatcherBase):
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Start to feed data, the current progrss number %s" %_completed_num)
+            logger.info("Start to import data, the current progrss number %s" %_completed_num)
             _completed_num += 1
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
@@ -604,4 +604,4 @@ class BOHB(MsgDispatcherBase):
                 reward = _value
             _budget = _params[_KEY]
             self.cg.new_result(loss=reward, budget=_budget, parameters=_params, update_model=True)
-            logger.info("Useful data. Successfully feed tuning data to BOHB advisor.")
+            logger.info("Useful data. Successfully import tuning data to BOHB advisor.")

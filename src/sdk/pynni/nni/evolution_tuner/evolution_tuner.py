@@ -211,7 +211,6 @@ class EvolutionTuner(Tuner):
         self.random_state = None
         self.population = None
         self.space = None
-        self.feed_data_num = 0
 
     def update_search_space(self, search_space):
         """Update search space. 
