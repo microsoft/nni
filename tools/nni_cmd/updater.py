@@ -112,18 +112,18 @@ def update_trialnum(args):
         print('ERROR: update %s failed!' % 'trialnum')
 
 def import_data(args):
-    '''feed additional data for tuning'''
+    '''import additional data to the experiment'''
     validate_file(args.filename)
     content = load_search_space(args.filename)
     args.port = get_experiment_port(args)
     if args.port is not None:
         if import_data_to_restful_server(args, content):
-            print('INFO: feed data for tuning success!')
+            print('INFO: import data success!')
         else:
-            print('ERROR: feed data for tuning failed!')
+            print('ERROR: import data failed!')
 
 def import_data_to_restful_server(args, content):
-    '''call restful server to feed data for tuning'''
+    '''call restful server to import data to the experiment'''
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     running, _ = check_rest_server_quick(rest_port)

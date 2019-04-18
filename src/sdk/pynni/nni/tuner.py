@@ -102,7 +102,7 @@ class Tuner(Recoverable):
         """Import additional data for tuning
         data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
-        _logger.info('Feeding...')
+        _logger.info('Importing data...')
 
     def _on_exit(self):
         pass
