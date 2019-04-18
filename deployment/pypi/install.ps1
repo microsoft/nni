@@ -22,14 +22,12 @@ python -m pip install --user --upgrade setuptools wheel
 $nodeUrl = "https://aka.ms/nni/nodejs-download/win64"
 $NNI_NODE_ZIP = "$CWD\node-$OS_SPEC-x64.zip"
 $NNI_NODE_FOLDER = "$CWD\node-$OS_SPEC-x64"
-$unzipNodeDir = "node-v*"
 (New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_ZIP)
 if(Test-Path $NNI_NODE_FOLDER){
     Remove-Item $NNI_NODE_FOLDER -Recurse -Force
 }
-Expand-Archive $NNI_NODE_ZIP -DestinationPath $CWD
-$unzipNodeDir = Get-ChildItem "$CWD\$unzipNodeDir"
-Rename-Item $unzipNodeDir $NNI_NODE_FOLDER
+New-Item $NNI_NODE_FOLDER -ItemType Directory
+cmd /c tar -xf $NNI_NODE_ZIP -C $NNI_NODE_FOLDER --strip-components 1
 
 cd $CWD\..\..\src\nni_manager
 yarn

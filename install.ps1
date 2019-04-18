@@ -72,10 +72,15 @@ $SCRIPT =  "import tarfile",
         "tar.close()"
 [System.IO.File]::WriteAllLines($SCRIPT_PATH, $SCRIPT)
 
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+function Unzip{
+    param([string]$zipfile, [string]$outpath)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
+}
 if ($install_node) {
     ### nodejs install
     if(!(Test-Path $NNI_NODE_FOLDER)){
-        Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
+        Unzip $NNI_NODE_ZIP $NNI_DEPENDENCY_FOLDER
         $unzipNodeDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir"
         Rename-Item $unzipNodeDir "nni-node"
     }
