@@ -529,7 +529,15 @@ class PAITrainingService implements TrainingService {
 
     private async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
-            await this.updatePaiToken();
+            try{
+                await this.updatePaiToken();
+            }catch(error){
+                this.log.error(`${error}`);
+                //only throw error when initlize paiToken first time
+                if(!this.paiToken) {
+                    throw new Error(error);
+                }
+            }
             await this.paiJobCollector.retrieveTrialStatus(this.paiToken, this.paiClusterConfig);
             const restServer: PAIJobRestServer = component.get(PAIJobRestServer);
             if (restServer.getErrorMessage) {

@@ -17,7 +17,7 @@ require('../../static/style/logPath.scss');
 require('../../static/style/search.scss');
 require('../../static/style/table.scss');
 require('../../static/style/button.scss');
-require('../../static/style/tableList.scss');
+require('../../static/style/openRow.scss');
 const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
@@ -132,12 +132,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
         Object.keys(checkedValues).map(m => {
             switch (checkedValues[m]) {
                 case 'Trial No.':
-                case 'Id':
+                case 'ID':
                 case 'Duration':
                 case 'Status':
                 case 'Operation':
                 case 'Default':
-                case 'Intermediate Result':
+                case 'Intermediate result':
                     break;
                 default:
                     finalKeys.push(checkedValues[m]);
@@ -238,13 +238,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 (a.sequenceId as number) - (b.sequenceId as number)
                     });
                     break;
-                case 'Id':
+                case 'ID':
                     showColumn.push({
-                        title: 'Id',
+                        title: 'ID',
                         dataIndex: 'id',
                         key: 'id',
                         width: 60,
-                        className: 'tableHead idtitle',
+                        className: 'tableHead leftTitle',
                         // the sort of string
                         sorter: (a: TableObj, b: TableObj): number => a.id.localeCompare(b.id),
                         render: (text: string, record: TableObj) => {
@@ -298,10 +298,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     break;
                 case 'Default':
                     showColumn.push({
-                        title: 'Default Metric',
+                        title: 'Default metric',
+                        className: 'leftTitle',
                         dataIndex: 'acc',
                         key: 'acc',
-                        width: 160,
+                        width: 120,
                         sorter: (a: TableObj, b: TableObj) => {
                             const aa = a.description.intermediate;
                             const bb = b.description.intermediate;
@@ -359,9 +360,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     });
                     break;
 
-                case 'Intermediate Result':
+                case 'Intermediate result':
                     showColumn.push({
-                        title: 'Intermediate Result',
+                        title: 'Intermediate result',
                         dataIndex: 'intermediate',
                         key: 'intermediate',
                         width: '16%',
@@ -413,7 +414,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     />
                     {/* Intermediate Result Modal */}
                     <Modal
-                        title="Intermediate Result"
+                        title="Intermediate result"
                         visible={modalVisible}
                         onCancel={this.hideIntermediateModal}
                         footer={null}
@@ -446,7 +447,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         className="titleColumn"
                     />
                 </Modal>
-
             </Row>
         );
     }
