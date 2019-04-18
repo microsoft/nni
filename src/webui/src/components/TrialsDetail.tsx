@@ -38,21 +38,21 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     public tableList: TableList | null;
 
     private titleOfacc = (
-        <Title1 text="Default Metric" icon="3.png" />
+        <Title1 text="Default metric" icon="3.png" />
     );
 
     private titleOfhyper = (
-        <Title1 text="Hyper Parameter" icon="1.png" />
+        <Title1 text="Hyper-parameter" icon="1.png" />
     );
 
     private titleOfDuration = (
-        <Title1 text="Trial Duration" icon="2.png" />
+        <Title1 text="Trial duration" icon="2.png" />
     );
 
     private titleOfIntermediate = (
         <div className="panelTitle">
             <Icon type="line-chart" />
-            <span>Intermediate Result</span>
+            <span>Intermediate result</span>
         </div>
     );
 
@@ -360,10 +360,10 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     </Tabs>
                 </div>
                 {/* trial table list */}
-                <Title1 text="Trial Jobs" icon="6.png" />
+                <Title1 text="Trial jobs" icon="6.png" />
                 <Row className="allList">
                     <Col span={12}>
-                        <span>show</span>
+                        <span>Show</span>
                         <Select
                             className="entry"
                             onSelect={this.handleEntriesSelect}
@@ -384,13 +384,13 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                     className="tableButton editStyle"
                                     onClick={this.tableList ? this.tableList.addColumn : this.test}
                                 >
-                                    AddColumn
+                                    Add column
                                 </Button>
                             </Col>
                             <Col span={12}>
                                 <Input
                                     type="text"
-                                    placeholder="search by Id, Trial No. or Status"
+                                    placeholder="Search by id, trial No. or status"
                                     onChange={this.searchTrial}
                                     style={{ width: 230, marginLeft: 6 }}
                                 />

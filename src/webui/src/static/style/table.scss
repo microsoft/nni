@@ -1,5 +1,4 @@
-
-/* react-json-view background */
+/* react-json-tree background */
 #description ul, #allList ul{
     background: none !important;
 }
@@ -10,10 +9,10 @@
     #succeTable .commonTableStyle{
         overflow-y: scroll;
     }
-
 }
+
 #succeTable, #tableList{
-    .commonTableStyle .idtitle div{
+    .commonTableStyle .leftTitle div{
         text-align: left;
     }
     .durationsty{
@@ -52,7 +51,6 @@
     }
 
     tr:hover{ 
-
         /* cancel antd table default hover style */
         td{
             background-color: transparent;
@@ -85,7 +83,8 @@
     }
 }
 
-pre.hyperpar{
+/* let openrow content left*/
+.hyperpar{
     text-align: left;
     line-height: 18px;
     font-size: 14px;
