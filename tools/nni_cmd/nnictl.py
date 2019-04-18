@@ -22,7 +22,7 @@
 import argparse
 import pkg_resources
 from .launcher import create_experiment, resume_experiment
-from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, feed_tuning_data
+from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import *
 from .package_management import *
 from .constants import *
@@ -119,7 +119,7 @@ def parse_args():
     parser_import_tuning_data = parser_experiment_subparsers.add_parser('import', help='import additional data for tuning')
     parser_import_tuning_data.add_argument('id', nargs='?', help='the id of experiment')
     parser_import_tuning_data.add_argument('--filename', '-f', required=True)
-    parser_import_tuning_data.set_defaults(func=feed_tuning_data)
+    parser_import_tuning_data.set_defaults(func=import_data)
     #export trial data
     parser_trial_export = parser_experiment_subparsers.add_parser('export', help='export trial job results to csv')
     parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
