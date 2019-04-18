@@ -42,7 +42,7 @@ __all__ = [
 
 # pylint: disable=unused-argument
 
-if trial_env_vars.platform is None:
+if trial_env_vars.NNI_PLATFORM is None:
     def choice(*options, name=None):
         return random.choice(options)
 

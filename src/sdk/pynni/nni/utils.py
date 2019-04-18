@@ -41,6 +41,6 @@ def extract_scalar_reward(value, scalar_key='default'):
 def init_dispatcher_logger():
     """ Initialize dispatcher logging configuration"""
     logger_file_path = 'dispatcher.log'
-    if dispatcher_env_vars.log_dir is not None:
-        logger_file_path = os.path.join(dispatcher_env_vars.log_dir, logger_file_path)
-    init_logger(logger_file_path, dispatcher_env_vars.log_level)
+    if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
+        logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
+    init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)

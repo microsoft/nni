@@ -59,7 +59,7 @@ class MsgDispatcherBase(Recoverable):
         This function will never return unless raise.
         """
         _logger.info('Start dispatcher')
-        if dispatcher_env_vars.nni_mode == 'resume':
+        if dispatcher_env_vars.NNI_MODE == 'resume':
             self.load_checkpoint()
 
         while True:

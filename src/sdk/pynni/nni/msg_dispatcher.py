@@ -191,7 +191,7 @@ class MsgDispatcher(MsgDispatcherBase):
             _logger.debug('BAD, kill %s', trial_job_id)
             send(CommandType.KillTrialJob, json_tricks.dumps(trial_job_id))
             # notify tuner
-            _logger.debug('env var: NNI_INCLUDE_INTERMEDIATE_RESULTS: [%s]', dispatcher_env_vars.include_intermediate_results)
+            _logger.debug('env var: NNI_INCLUDE_INTERMEDIATE_RESULTS: [%s]', dispatcher_env_vars.NNI_INCLUDE_INTERMEDIATE_RESULTS)
             if dispatcher_env_vars.include_intermediate_results == 'true':
                 self._earlystop_notify_tuner(data)
         else:
