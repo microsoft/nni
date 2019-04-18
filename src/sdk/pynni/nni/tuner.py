@@ -97,12 +97,6 @@ class Tuner(Recoverable):
         """
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Save checkpoint ignored by tuner, checkpoint path: %s' % checkpoin_path)
-    
-    def import_data(self, data):
-        """Import additional data for tuning
-        data: additional data for tuner
-        """
-        raise NotImplementedError('Tuner: import_data not implemented')
 
     def _on_exit(self):
         pass
