@@ -1,6 +1,6 @@
 # Installation of NNI
 
-Currently we support installation on Linux Mac & Windows.
+Currently we support installation on Linux, Mac and Windows.
 
 ## **Installation on Linux & Mac**
 
@@ -13,7 +13,7 @@ Currently we support installation on Linux Mac & Windows.
 
 * __Install NNI through source code__
 
-  Prerequisite: `python >=3.5, git, wget`
+  Prerequisite: `python >=3.5`, `git`, `wget`
   ```bash
   git clone -b v0.6 https://github.com/Microsoft/nni.git
   cd nni
@@ -35,7 +35,7 @@ Currently we support installation on Linux Mac & Windows.
 
 * __Install NNI through source code__
 
-  Prerequisite: `python >=3.5, git, powershell`
+  Prerequisite: `python >=3.5`, `git`, `powershell`    
   When you use powershell to run script for the first time, you need run powershell as Administrator with this command:
   ```bash
   Set-ExecutionPolicy -ExecutionPolicy Unrestricted
