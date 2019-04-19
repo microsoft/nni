@@ -25,6 +25,7 @@ interface TrialDetailState {
     experimentLogCollection: boolean;
     entriesTable: number;
     searchSpace: string;
+    isMultiPhase: boolean;
 }
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
@@ -68,7 +69,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             experimentLogCollection: false,
             entriesTable: 20,
             isHasSearch: false,
-            searchSpace: ''
+            searchSpace: '',
+            isMultiPhase: false
         };
     }
 
@@ -105,8 +107,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 duration = (new Date().getTime() - begin) / 1000;
                             }
                         }
-                        if (trialJobs[item].hyperParameters !== undefined) {
-                            const getPara = JSON.parse(trialJobs[item].hyperParameters[0]).parameters;
+                        const tempHyper = trialJobs[item].hyperParameters;
+                        if (tempHyper !== undefined) {
+                            const getPara = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
                             if (typeof getPara === 'string') {
                                 desc.parameters = JSON.parse(getPara);
                             } else {
@@ -266,6 +269,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     // default logCollection is true
                     const logCollection = res.data.params.logCollection;
                     let expLogCollection: boolean = false;
+                    const isMultiy: boolean = res.data.params.multiPhase !== undefined
+                    ? res.data.params.multiPhase : false;
                     if (logCollection !== undefined && logCollection !== 'none') {
                         expLogCollection = true;
                     }
@@ -273,7 +278,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         this.setState({
                             experimentPlatform: trainingPlatform,
                             searchSpace: res.data.params.searchSpace,
-                            experimentLogCollection: expLogCollection
+                            experimentLogCollection: expLogCollection,
+                            isMultiPhase: isMultiy
                         });
                     }
                 }
@@ -296,7 +302,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     render() {
 
         const {
-            tableListSource, searchResultSource, isHasSearch,
+            tableListSource, searchResultSource, isHasSearch, isMultiPhase,
             entriesTable, experimentPlatform, searchSpace, experimentLogCollection
         } = this.state;
         const source = isHasSearch ? searchResultSource : tableListSource;
@@ -370,6 +376,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 <TableList
                     entries={entriesTable}
                     tableSource={source}
+                    isMultiPhase={isMultiPhase}
                     platform={experimentPlatform}
                     updateList={this.getDetailSource}
                     logCollection={experimentLogCollection}
