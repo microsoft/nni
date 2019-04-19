@@ -32,12 +32,14 @@ $env:PYTHONIOENCODING = "UTF-8"
 if($env:VIRTUAL_ENV){
     $NNI_PYTHON3 = $env:VIRTUAL_ENV + "\Scripts"
     $NNI_PKG_FOLDER = $env:VIRTUAL_ENV + "\nni"
+    $NNI_PYTHON_SCRIPTS = $NNI_PYTHON3
 }
 else{
     $NNI_PYTHON3 = $(python -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]))')
     $NNI_PKG_FOLDER = $NNI_PYTHON3 + "\nni"
+    $NNI_PYTHON_SCRIPTS =  $NNI_PYTHON3 + "\Scripts"
 }
-$NNI_PYTHON_SCRIPTS =  $NNI_PYTHON3 + "\Scripts"
+
 $PIP_INSTALL = """$NNI_PYTHON3\python"" -m pip install ."
 
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
