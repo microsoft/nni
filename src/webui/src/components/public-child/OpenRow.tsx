@@ -72,13 +72,11 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                             multiphase
                                 ?
                                 <Row className="link">
-                                    <Row>
-                                        Trails for multiphase experiment will return a set of parameters,
-                                        we are listing the latest parameter in webportal.
-                                        <br />
-                                        For the entire parameter set, please refer to the following "
-                                        <a href={trialink} target="_blank">{trialink}</a>".
-                                    </Row>
+                                    Trails for multiphase experiment will return a set of parameters,
+                                    we are listing the latest parameter in webportal.
+                                    <br />
+                                    For the entire parameter set, please refer to the following "
+                                    <a href={trialink} target="_blank">{trialink}</a>".
                                 </Row>
                                 :
                                 <div />
