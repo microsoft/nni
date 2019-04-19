@@ -86,3 +86,9 @@ COLOR_RED_FORMAT = Fore.RED + '%s'
 COLOR_GREEN_FORMAT = Fore.GREEN + '%s'
 
 COLOR_YELLOW_FORMAT = Fore.YELLOW + '%s'
+
+SCHEMA_TYPE_ERROR = '%s should be %s type!'
+
+SCHEMA_RANGE_ERROR = '%s should be in range of %s!'
+
+SCHEMA_PATH_ERROR = '%s path not exist!'

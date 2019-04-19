@@ -326,12 +326,12 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
 
-    response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT)
+    response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)
     if check_response(response):
         return response
     else:
         _, stderr_full_path = get_log_path(config_file_name)
-        if response:
+        if response is not None:
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
             print_error('Setting experiment error, error message is {}'.format(response.text))

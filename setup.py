@@ -51,7 +51,7 @@ setup(
         'json_tricks',
         'numpy',
         'psutil',
-        'pyyaml',
+        'ruamel.yaml',
         'requests',
         'scipy',
         'schema',

@@ -21,7 +21,7 @@
 import os
 import sys
 import json
-import yaml
+import ruamel.yaml as yaml
 import psutil
 import socket
 from pathlib import Path
@@ -31,7 +31,7 @@ def get_yml_content(file_path):
     '''Load yaml file content'''
     try:
         with open(file_path, 'r') as file:
-            return yaml.load(file)
+            return yaml.load(file, Loader=yaml.Loader)
     except TypeError as err:
         print('Error: ', err)
         return None

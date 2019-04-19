@@ -34,7 +34,6 @@ from nni.tuner import Tuner
 from nni.utils import extract_scalar_reward
 from .. import parameter_expressions
 
-
 @unique
 class OptimizeMode(Enum):
     """Optimize Mode class
@@ -299,3 +298,6 @@ class EvolutionTuner(Tuner):
 
         indiv = Individual(config=params, result=reward)
         self.population.append(indiv)
+
+    def import_data(self, data):
+        pass

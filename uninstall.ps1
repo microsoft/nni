@@ -5,14 +5,15 @@ $env:PYTHONIOENCODING = "UTF-8"
 if($env:VIRTUAL_ENV){
     $NNI_PYTHON3 = $env:VIRTUAL_ENV + "\Scripts"
     $NNI_PKG_FOLDER = $env:VIRTUAL_ENV + "\nni"
+    Remove-Item "$NNI_PYTHON3\node.exe" -Force
 }
 else{
     $NNI_PYTHON3 = $(python -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]))')
     $NNI_PKG_FOLDER = $NNI_PYTHON3 + "\nni"
+    Remove-Item "$NNI_PYTHON3\Scripts\node.exe" -Force
 }
 
 $PIP_UNINSTALL = """$NNI_PYTHON3\python"" -m pip uninstall -y "
-Remove-Item "$NNI_PYTHON3\Scripts\node.exe" -Force
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
  
