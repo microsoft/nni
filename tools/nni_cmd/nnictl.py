@@ -121,7 +121,7 @@ def parse_args():
     parser_import_data.add_argument('--filename', '-f', required=True)
     parser_import_data.set_defaults(func=import_data)
     #export trial data
-    parser_trial_export = parser_experiment_subparsers.add_parser('export', help='export trial job results to csv')
+    parser_trial_export = parser_experiment_subparsers.add_parser('export', help='export trial job results to csv or json')
     parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_export.add_argument('--type', '-t', choices=['json', 'csv'], required=True, dest='type', help='target file type')
     parser_trial_export.add_argument('--filename', '-f', required=True, dest='path', help='target file path')
