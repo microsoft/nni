@@ -37,7 +37,7 @@ Trial 代码中使用多阶段非常容易，样例如下：
 
 要启用多阶段，需要在 Experiment 的 YAML 配置文件中增加 `multiPhase: true`。 如果不添加此参数，`nni.get_next_parameter()` 会一直返回同样的配置。 对于所有内置的 Tuner 和 Advisor，不需要修改任何代码，就直接支持多阶段请求配置。
 
-### Write a tuner that leverages multi-phase:
+### 编写使用多阶段的 Tuner：
 
 Before writing a multi-phase tuner, we highly suggest you to go through [Customize Tuner](https://nni.readthedocs.io/en/latest/Customize_Tuner.html). Different from writing a normal tuner, your tuner needs to inherit from `MultiPhaseTuner` (in nni.multi_phase_tuner). The key difference between `Tuner` and `MultiPhaseTuner` is that the methods in MultiPhaseTuner are aware of additional information, that is, `trial_job_id`. With this information, the tuner could know which trial is requesting a configuration, and which trial is reporting results. This information provides enough flexibility for your tuner to deal with different trials and different phases. For example, you may want to use the trial_job_id parameter of generate_parameters method to generate hyperparameters for a specific trial job.
 
