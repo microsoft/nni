@@ -152,6 +152,23 @@ def set_trial_config(experiment_config, port, config_file_name):
 
 def set_local_config(experiment_config, port, config_file_name):
     '''set local configuration'''
+    #set machine_list
+    request_data = dict()
+    if experiment_config.get('localConfig'):
+        request_data['local_config'] = experiment_config['localConfig']
+        if request_data['local_config'] and request_data['local_config'].get('gpuIndices') \
+            and isinstance(request_data['local_config'].get('gpuIndices'), int):
+            request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
+        response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
+        err_message = ''
+        if not response or not check_response(response):
+            if response is not None:
+                err_message = response.text
+                _, stderr_full_path = get_log_path(config_file_name)
+                with open(stderr_full_path, 'a+') as fout:
+                    fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+            return False, err_message
+
     return set_trial_config(experiment_config, port, config_file_name)
 
 def set_remote_config(experiment_config, port, config_file_name):
@@ -159,6 +176,10 @@ def set_remote_config(experiment_config, port, config_file_name):
     #set machine_list
     request_data = dict()
     request_data['machine_list'] = experiment_config['machineList']
+    if request_data['machine_list']:
+        for i in range(len(request_data['machine_list'])):
+            if isinstance(request_data['machine_list'][i].get('gpuIndices'), int):
+                request_data['machine_list'][i]['gpuIndices'] = str(request_data['machine_list'][i].get('gpuIndices'))
     response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
     err_message = ''
     if not response or not check_response(response):
@@ -304,12 +325,12 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
 
-    response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT)
+    response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)
     if check_response(response):
         return response
     else:
         _, stderr_full_path = get_log_path(config_file_name)
-        if response:
+        if response is not None:
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
             print_error('Setting experiment error, error message is {}'.format(response.text))

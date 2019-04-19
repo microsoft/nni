@@ -172,6 +172,7 @@ class HyperoptTuner(Tuner):
         self.json = None
         self.total_data = {}
         self.rval = None
+        self.supplement_data_num = 0
 
     def _choose_tuner(self, algorithm_name):
         """
@@ -353,3 +354,27 @@ class HyperoptTuner(Tuner):
         # remove '_index' from json2parameter and save params-id
         total_params = json2parameter(self.json, parameter)
         return total_params
+
+    def import_data(self, data):
+        """Import additional data for tuning
+
+        Parameters
+        ----------
+        data:
+            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        _completed_num = 0
+        for trial_info in data:
+            logger.info("Importing data, current processing progress %s / %s" %(_completed_num), len(data))
+            _completed_num += 1
+            if self.algorithm_name == 'random_search':
+                return
+            assert "parameter" in trial_info
+            _params = trial_info["parameter"]
+            assert "value" in trial_info
+            _value = trial_info['value']
+            self.supplement_data_num += 1
+            _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
+            self.total_data[_parameter_id] = _params
+            self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
+        logger.info("Successfully import data to TPE/Anneal tuner.")

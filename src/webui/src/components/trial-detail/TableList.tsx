@@ -32,6 +32,7 @@ interface TableListProps {
     updateList: Function;
     platform: string;
     logCollection: boolean;
+    isMultiPhase: boolean;
 }
 
 interface TableListState {
@@ -175,12 +176,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     openRow = (record: TableObj) => {
-        const { platform, logCollection } = this.props;
+        const { platform, logCollection, isMultiPhase } = this.props;
         return (
             <OpenRow
                 trainingPlatform={platform}
                 record={record}
                 logCollection={logCollection}
+                multiphase={isMultiPhase}
             />
         );
     }
@@ -386,16 +388,23 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         key: item,
                         width: 150,
                         render: (text: string, record: TableObj) => {
-                            return (
-                                <div>
-                                    {
-                                        record.acc
-                                            ?
-                                            record.acc[item]
-                                            :
-                                            '--'
+                            const temp = record.acc;
+                            let decimals = 0;
+                            let other = '';
+                            if (temp !== undefined) {
+                                if (temp[item].toString().indexOf('.') !== -1) {
+                                    decimals = temp[item].toString().length - temp[item].toString().indexOf('.') - 1;
+                                    if (decimals > 6) {
+                                        other = `${temp[item].toFixed(6)}`;
+                                    } else {
+                                        other = temp[item].toString();
                                     }
-                                </div>
+                                }
+                            } else {
+                                other = '--';
+                            }
+                            return (
+                                <div>{other}</div>
                             );
                         }
                     });
