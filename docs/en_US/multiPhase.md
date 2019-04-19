@@ -1,4 +1,4 @@
-## Create multi-phase experiment
+## What is multi-phase experiment
 
 Typically each trial job gets a single configuration (e.g., hyperparameters) from tuner, tries this configuration and reports result, then exits. But sometimes a trial job may wants to request multiple configurations from tuner. We find this is a very compelling feature. For example:
 
@@ -9,6 +9,8 @@ Typically each trial job gets a single configuration (e.g., hyperparameters) fro
 The above cases can be supported by the same feature, i.e., multi-phase execution. To support those cases, basically a trial job should be able to request multiple configurations from tuner. Tuner is aware of whether two configuration requests are from the same trial job or different ones. Also in multi-phase a trial job can report multiple final results. 
 
 Note that, `nni.get_next_parameter()` and `nni.report_final_result()` should be called sequentially: __call the former one, then call the later one; and repeat this pattern__. If `nni.get_next_parameter()` is called multiple times consecutively, and then `nni.report_final_result()` is called once, the result is associated to the last configuration, which is retrieved from the last get_next_parameter call. So there is no result associated to previous get_next_parameter calls, and it may cause some multi-phase algorithm broken.
+
+## Create multi-phase experiment
 
 ### Write trial code which leverages multi-phase:
 
