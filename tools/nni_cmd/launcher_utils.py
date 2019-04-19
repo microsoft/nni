@@ -20,8 +20,11 @@
 
 import os
 import json
-from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA
+from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, \
+tuner_schema_dict, advisor_schema_dict, assessor_schema_dict               
+from schema import SchemaMissingKeyError, SchemaForbiddenKeyError, SchemaUnexpectedTypeError, SchemaWrongKeyError, SchemaError
 from .common_utils import get_json_content, print_error, print_warning, print_normal
+from schema import Schema, And, Use, Optional, Regex, Or
 
 def expand_path(experiment_config, key):
     '''Change '~' to user home directory'''
@@ -134,21 +137,49 @@ def validate_common_content(experiment_config):
             'kubeflow': KUBEFLOW_CONFIG_SCHEMA,
             'frameworkcontroller': FRAMEWORKCONTROLLER_CONFIG_SCHEMA
         }
+    separate_schema_dict = {
+        'tuner': tuner_schema_dict,
+        'advisor': advisor_schema_dict,
+        'assessor': assessor_schema_dict
+    }
+    separate_builtInName_dict = {
+        'tuner': 'builtinTunerName',
+        'advisor': 'builtinAdvisorName',
+        'assessor': 'builtinAssessorName'
+    }
     try:
         schema_dict.get(experiment_config['trainingServicePlatform']).validate(experiment_config)
-        #set default value
-        if experiment_config.get('maxExecDuration') is None:
-            experiment_config['maxExecDuration'] = '999d'
-        if experiment_config.get('maxTrialNum') is None:
-            experiment_config['maxTrialNum'] = 99999
-        if experiment_config['trainingServicePlatform'] == 'remote':
-            for index in range(len(experiment_config['machineList'])):
-                if experiment_config['machineList'][index].get('port') is None:
-                    experiment_config['machineList'][index]['port'] = 22
-                
-    except Exception as exception:
-        print_error('Your config file is not correct, please check your config file content!\n%s' % exception)
+        for separate_key in separate_schema_dict.keys():
+            if experiment_config.get(separate_key):
+                if experiment_config[separate_key].get(separate_builtInName_dict[separate_key]):
+                    validate = False
+                    for key in separate_schema_dict[separate_key].keys():
+                        if key.__contains__(experiment_config[separate_key][separate_builtInName_dict[separate_key]]):
+                            Schema({**separate_schema_dict[separate_key][key]}).validate(experiment_config[separate_key])
+                            validate = True
+                            break
+                    if not validate:
+                        print_error('%s %s error!' % (separate_key, separate_builtInName_dict[separate_key]))
+                        exit(1)
+                else:
+                    Schema({**separate_schema_dict[separate_key]['customized']}).validate(experiment_config[separate_key])
+    except SchemaError as error:
+        print_error('Your config file is not correct, please check your config file content!')
+        if error.__str__().__contains__('Wrong key'):
+            print_error(' '.join(error.__str__().split()[:3]))
+        else:
+            print_error(error)
         exit(1)
+    
+    #set default value
+    if experiment_config.get('maxExecDuration') is None:
+        experiment_config['maxExecDuration'] = '999d'
+    if experiment_config.get('maxTrialNum') is None:
+        experiment_config['maxTrialNum'] = 99999
+    if experiment_config['trainingServicePlatform'] == 'remote':
+        for index in range(len(experiment_config['machineList'])):
+            if experiment_config['machineList'][index].get('port') is None:
+                experiment_config['machineList'][index]['port'] = 22
 
 def validate_customized_file(experiment_config, spec_key):
     '''
@@ -230,6 +261,9 @@ def validate_all_content(experiment_config, config_path):
     validate_pai_trial_conifg(experiment_config)
     experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])
     if experiment_config.get('advisor'):
+        if experiment_config.get('assessor') or experiment_config.get('tuner'):
+            print_error('advisor could not be set with assessor or tuner simultaneously!')
+            exit(1)
         parse_advisor_content(experiment_config)
         validate_annotation_content(experiment_config, 'advisor', 'builtinAdvisorName')
     else:
