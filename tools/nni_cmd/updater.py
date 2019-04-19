@@ -24,7 +24,7 @@ import os
 from .rest_utils import rest_put, rest_post, rest_get, check_rest_server_quick, check_response
 from .url_utils import experiment_url, import_data_url
 from .config_utils import Config
-from .common_utils import get_json_content, print_normal, print_error
+from .common_utils import get_json_content, print_normal, print_error, print_warning
 from .nnictl_utils import check_experiment_id, get_experiment_port, get_config_filename
 from .launcher_utils import parse_time
 from .constants import REST_TIME_OUT, DISPATCHERS_SUPPORTING_IMPORT_DATA, DISPATCHERS_NO_NEED_TO_IMPORT_DATA
@@ -41,16 +41,17 @@ def validate_file(path):
 
 def validate_dispatcher(args):
     '''validate if the dispatcher of the experiment supports importing data'''
-    nni_config = Config(get_config_filename(args))
-    if nni_config.get_config('tuner') and nni_config.get_config['tuner'].get('builtinTunerName'):
-        dispatcher_name = nni_config.get_config('tuner')['builtinTunerName']
-    elif nni_config.get_config('advisor') and nni_config.get_config['advisor'].get('builtinAdvisorName'):
-        dispatcher_name = nni_config.get_config('advisor')['builtinAdvisorName']
+    nni_config = Config(get_config_filename(args)).get_config('experimentConfig')
+    if nni_config.get('tuner') and nni_config['tuner'].get('builtinTunerName'):
+        dispatcher_name = nni_config['tuner']['builtinTunerName']
+    elif nni_config.get('advisor') and nni_config['advisor'].get('builtinAdvisorName'):
+        dispatcher_name = nni_config['advisor']['builtinAdvisorName']
     else: # otherwise it should be a customized one
         return
     if dispatcher_name not in DISPATCHERS_SUPPORTING_IMPORT_DATA:
         if dispatcher_name in DISPATCHERS_NO_NEED_TO_IMPORT_DATA:
             print_warning("There is no need to import data for %s" % dispatcher_name)
+            exit(0)
         else:
             print_error("%s does not support importing addtional data" % dispatcher_name)
             exit(1)
