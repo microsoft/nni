@@ -36,6 +36,7 @@ interface OverviewState {
     titleMinbgcolor?: string;
     // trial stdout is content(false) or link(true)
     isLogCollection: boolean;
+    isMultiPhase: boolean;
 }
 
 class Overview extends React.Component<{}, OverviewState> {
@@ -80,7 +81,8 @@ class Overview extends React.Component<{}, OverviewState> {
                 totalCurrentTrial: 0
             },
             isTop10: true,
-            isLogCollection: false
+            isLogCollection: false,
+            isMultiPhase: false
         };
     }
 
@@ -102,6 +104,8 @@ class Overview extends React.Component<{}, OverviewState> {
                     // default logCollection is true
                     const logCollection = res.data.params.logCollection;
                     let expLogCollection: boolean = false;
+                    const isMultiy: boolean = res.data.params.multiPhase !== undefined
+                    ? res.data.params.multiPhase : false;
                     const optimizeMode = res.data.params.tuner.classArgs.optimize_mode;
                     if (optimizeMode !== undefined) {
                         if (optimizeMode === 'minimize') {
@@ -165,7 +169,8 @@ class Overview extends React.Component<{}, OverviewState> {
                             experimentAPI: res.data,
                             trialProfile: trialPro[0],
                             searchSpace: searchSpace,
-                            isLogCollection: expLogCollection
+                            isLogCollection: expLogCollection,
+                            isMultiPhase: isMultiy
                         });
                     }
                 }
@@ -246,8 +251,10 @@ class Overview extends React.Component<{}, OverviewState> {
                                 const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
                                 const acc = getFinal(tableData[item].finalMetricData);
                                 // if hyperparameters is undefine, show error message, else, show parameters value
-                                if (tableData[item].hyperParameters) {
-                                    const parameters = JSON.parse(tableData[item].hyperParameters[0]).parameters;
+                                const tempara = tableData[item].hyperParameters;
+                                if (tempara !== undefined) {
+                                    const tempLength = tempara.length;
+                                    const parameters = JSON.parse(tempara[tempLength - 1]).parameters;
                                     if (typeof parameters === 'string') {
                                         desJobDetail.parameters = JSON.parse(parameters);
                                     } else {
@@ -414,7 +421,7 @@ class Overview extends React.Component<{}, OverviewState> {
 
         const {
             trialProfile, searchSpace, tableData, accuracyData,
-            accNodata, status, errorStr, trialNumber, bestAccuracy,
+            accNodata, status, errorStr, trialNumber, bestAccuracy, isMultiPhase,
             titleMaxbgcolor, titleMinbgcolor, isLogCollection, experimentAPI
         } = this.state;
 
@@ -488,6 +495,7 @@ class Overview extends React.Component<{}, OverviewState> {
                         <Col span={16} id="succeTable">
                             <SuccessTable
                                 tableSource={tableData}
+                                multiphase={isMultiPhase}
                                 logCollection={isLogCollection}
                                 trainingPlatform={trialProfile.trainingServicePlatform}
                             />

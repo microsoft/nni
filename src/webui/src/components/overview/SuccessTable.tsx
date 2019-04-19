@@ -11,6 +11,7 @@ interface SuccessTableProps {
     tableSource: Array<TableObj>;
     trainingPlatform: string;
     logCollection: boolean;
+    multiphase: boolean;
 }
 
 class SuccessTable extends React.Component<SuccessTableProps, {}> {
@@ -23,12 +24,13 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
     }
 
     openRow = (record: TableObj) => {
-        const { trainingPlatform, logCollection } = this.props;
+        const { trainingPlatform, logCollection, multiphase } = this.props;
         return (
             <OpenRow
                 trainingPlatform={trainingPlatform}
                 record={record}
                 logCollection={logCollection}
+                multiphase={multiphase}
             />
         );
     }

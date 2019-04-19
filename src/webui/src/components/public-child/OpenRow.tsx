@@ -4,6 +4,8 @@ import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
 import { TableObj } from '../../static/interface';
 import { Row, Tabs, Button, message } from 'antd';
+import { MANAGER_IP } from '../../static/const';
+import '../../static/style/overview.scss';
 import JSONTree from 'react-json-tree';
 const TabPane = Tabs.TabPane;
 
@@ -11,6 +13,7 @@ interface OpenRowProps {
     trainingPlatform: string;
     record: TableObj;
     logCollection: boolean;
+    multiphase: boolean;
 }
 
 interface OpenRowState {
@@ -46,7 +49,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     }
 
     render() {
-        const { trainingPlatform, record, logCollection } = this.props;
+        const { trainingPlatform, record, logCollection, multiphase } = this.props;
         const { idList } = this.state;
         let isClick = false;
         let isHasParameters = true;
@@ -54,9 +57,8 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         if (record.description.parameters.error) {
             isHasParameters = false;
         }
-        const openRowDataSource = {
-            parameters: record.description.parameters
-        };
+        const openRowDataSource = record.description.parameters;
+        const trialink: string = `${MANAGER_IP}/trial-jobs/${record.id}`;
         const logPathRow = record.description.logPath !== undefined
             ?
             record.description.logPath
@@ -67,6 +69,19 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                 <Tabs tabPosition="left" className="card">
                     <TabPane tab="Parameters" key="1">
                         {
+                            multiphase
+                                ?
+                                <Row className="link">
+                                    Trails for multiphase experiment will return a set of parameters,
+                                    we are listing the latest parameter in webportal.
+                                    <br />
+                                    For the entire parameter set, please refer to the following "
+                                    <a href={trialink} target="_blank">{trialink}</a>".
+                                </Row>
+                                :
+                                <div />
+                        }
+                        {
                             isHasParameters
                                 ?
                                 <Row id="description">
@@ -74,13 +89,13 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                         {
                                             isClick
                                                 ?
-                                                <pre>{JSON.stringify(openRowDataSource.parameters, null, 4)}</pre>
+                                                <pre>{JSON.stringify(openRowDataSource, null, 4)}</pre>
                                                 :
                                                 <JSONTree
                                                     hideRoot={true}
                                                     shouldExpandNode={() => true}  // default expandNode
                                                     getItemString={() => (<span />)}  // remove the {} items
-                                                    data={openRowDataSource.parameters}
+                                                    data={openRowDataSource}
                                                 />
                                         }
                                     </Row>

@@ -32,6 +32,7 @@ interface TableListProps {
     updateList: Function;
     platform: string;
     logCollection: boolean;
+    isMultiPhase: boolean;
 }
 
 interface TableListState {
@@ -175,12 +176,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     openRow = (record: TableObj) => {
-        const { platform, logCollection } = this.props;
+        const { platform, logCollection, isMultiPhase } = this.props;
         return (
             <OpenRow
                 trainingPlatform={platform}
                 record={record}
                 logCollection={logCollection}
+                multiphase={isMultiPhase}
             />
         );
     }
