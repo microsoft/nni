@@ -291,10 +291,10 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写            | 是否必需  | 默认值 | 说明                    |
-  | ---------------- | ----- | --- | --------------------- |
-  | id               | False |     | 要终止的 Trial 的 id       |
-  | --experiment, -E | True  |     | Trial 的 Experiment id |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                                |
+  | -------------- | ----- | --- | --------------------------------- |
+  | id             | False |     | Experiment ID of the trial        |
+  | --trial_id, -T | True  |     | ID of the trial you want to kill. |
   
   * 样例
     
@@ -545,10 +545,10 @@ nnictl 支持的命令：
   
   * Options
   
-  | Name, shorthand  | Required | Default | Description                                                |
-  | ---------------- | -------- | ------- | ---------------------------------------------------------- |
-  | id               | False    |         | ID of the trial to be found the log path                   |
-  | --experiment, -E | False    |         | Experiment ID of the trial, required when id is not empty. |
+  | Name, shorthand | Required | Default | Description                                                              |
+  | --------------- | -------- | ------- | ------------------------------------------------------------------------ |
+  | id              | False    |         | Experiment ID of the trial                                               |
+  | --trial_id, -T  | False    |         | ID of the trial to be found the log path, required when id is not empty. |
 
 <a name="webui"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `Manage webui`
@@ -572,11 +572,11 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写     | 是否必需  | 默认值  | 说明                                   |
-  | --------- | ----- | ---- | ------------------------------------ |
-  | id        | False |      | ID of the experiment you want to set |
-  | --trialid | False |      | ID of the trial                      |
-  | --port    | False | 6006 | The port of the tensorboard process  |
+  | 参数及缩写          | 是否必需  | 默认值  | 说明                                   |
+  | -------------- | ----- | ---- | ------------------------------------ |
+  | id             | False |      | ID of the experiment you want to set |
+  | --trial_id, -T | False |      | ID of the trial                      |
+  | --port         | False | 6006 | The port of the tensorboard process  |
   
   * Detail
     
@@ -584,7 +584,7 @@ nnictl 支持的命令：
     2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path. 
     3. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
     4. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
-    5. If there is only one trial job, you don't need to set trialid. If there are multiple trial jobs running, you should set the trialid, or you could use [nnictl tensorboard start --trialid all] to map --logdir to all trial log paths.
+    5. If there is only one trial job, you don't need to set trial id. If there are multiple trial jobs running, you should set the trial id, or you could use [nnictl tensorboard start --trial_id all] to map --logdir to all trial log paths.
 
 * **nnictl tensorboard stop**
   
