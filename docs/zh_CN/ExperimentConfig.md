@@ -419,11 +419,11 @@ machineList:
 
 - **localConfig**
   
-  **localConfig** is applicable only if **trainingServicePlatform** is set to `local`, otherwise there should not be **localConfig** section in configuration file.
+  **localConfig** 仅在 **trainingServicePlatform** 设为 `local` 时有效，否则，配置文件中不应该有 **localConfig** 部分。
   
   - **gpuIndices**
     
-    **gpuIndices** is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`.
+    **gpuIndices** 用于指定 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可指定单个或多个 GPU 的索引，多个 GPU 之间用逗号（,）隔开，例如 `1` 或 `0,1,3`。
 
 - **machineList**
   
@@ -459,7 +459,7 @@ machineList:
   
   - **gpuIndices**
     
-    **gpuIndices** is used to specify designated GPU devices for NNI on this remote machine, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or `0,1,3`.
+    **gpuIndices** 用于指定 GPU。设置此值后，远程计算机上只有指定的 GPU 会被用来运行 Trial 任务。 可指定单个或多个 GPU 的索引，多个 GPU 之间用逗号（,）隔开，例如 `1` 或 `0,1,3`。
 
 - **kubeflowConfig**:
   
