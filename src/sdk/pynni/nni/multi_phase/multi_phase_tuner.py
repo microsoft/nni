@@ -80,7 +80,7 @@ class MultiPhaseTuner(Recoverable):
         """Import additional data for tuning
         data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
-        _logger.info('Importing data...')
+        pass
 
     def load_checkpoint(self):
         """Load the checkpoint of tuner.
