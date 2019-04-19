@@ -52,6 +52,27 @@ Optional('advisor'): Or({
     'className': str,
     Optional('classArgs'): dict,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'builtinAdvisorName': Or('BOHB'),
+    'classArgs': {
+        'optimize_mode': Or('maximize', 'minimize'),
+        Optional('min_budget'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('max_budget'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('eta'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('min_points_in_model'): And(int, lambda x: 0 <= x <= 9999),
+        Optional('top_n_percent'): And(int, lambda x: 1 <= x <= 99),
+        Optional('num_samples'): And(int, lambda x: 1 <= x <= 9999),
+        Optional('random_fraction'): And(float, lambda x: 0.0 <= x <= 9999.0),
+        Optional('bandwidth_factor'): And(float, lambda x: 0.0 <= x <= 9999.0),
+        Optional('min_bandwidth'): And(float, lambda x: 0.0 <= x <= 9999.0)
+    },
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
+},{
+    'codeDir': os.path.exists,
+    'classFileName': str,
+    'className': str,
+    Optional('classArgs'): dict,
+    Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 }),
 Optional('tuner'): Or({
     'builtinTunerName': Or('TPE', 'Anneal', 'SMAC', 'Evolution'),
@@ -114,6 +135,9 @@ Optional('assessor'): Or({
     Optional('classArgs'): dict,
     Optional('gpuNum'): And(int, lambda x: 0 <= x <= 99999),
 }),
+Optional('localConfig'): {
+    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0))
+}
 }
 
 common_trial_schema = {
@@ -248,13 +272,15 @@ Optional('machineList'):[Or({
     'ip': str,
     Optional('port'): And(int, lambda x: 0 < x < 65535),
     'username': str,
-    'passwd': str
+    'passwd': str,
+    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0))
     },{
     'ip': str,
     Optional('port'): And(int, lambda x: 0 < x < 65535),
     'username': str,
     'sshKeyPath': os.path.exists,
-    Optional('passphrase'): str
+    Optional('passphrase'): str,
+    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0))
 })]
 }
 
