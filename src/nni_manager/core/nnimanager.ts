@@ -105,7 +105,6 @@ class NNIManager implements Manager {
                 new Error('tuner has not been setup')
             );
         }
-        data = JSON.stringify(data)
         this.dispatcher.sendCommand(IMPORT_DATA, data);
 
         return this.dataStore.storeTrialJobEvent('IMPORT_DATA', '', data);

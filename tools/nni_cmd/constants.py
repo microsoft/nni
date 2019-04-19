@@ -79,6 +79,21 @@ PACKAGE_REQUIREMENTS = {
     'SMAC': 'smac_tuner'
 }
 
+DISPATCHERS_SUPPORTING_IMPORT_DATA = {
+    'TPE',
+    'Anneal',
+    'NetworkMorphism',
+    'GridSearch',
+    'MetisTuner',
+    'BOHB'
+}
+
+DISPATCHERS_NO_NEED_TO_IMPORT_DATA = {
+    'Random',
+    'Batch_tuner',
+    'Hyperband'
+}
+
 COLOR_RED_FORMAT = '\033[1;31;31m%s\033[0m'
 
 COLOR_GREEN_FORMAT = '\033[1;32;32m%s\033[0m'

@@ -513,8 +513,8 @@ def export_trials_data(args):
                 json_records = []
                 for trial in records:
                     value = trial.pop('reward', None)
-                    del trial['id']
-                    json_records.append({'parameter': trial, 'value': value})
+                    trial_id =  trial.pop('id', None)
+                    json_records.append({'parameter': trial, 'value': value, 'id': trial_id})
             with open(args.path, 'w') as file:
                 if args.type == 'csv':
                     writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in records]))

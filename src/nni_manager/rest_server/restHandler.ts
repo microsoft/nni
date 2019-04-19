@@ -147,8 +147,8 @@ class NNIRestHandler {
     }
     
     private importData(router: Router): void {
-        router.post('/experiment/tuning-data', (req: Request, res: Response) => {
-            this.nniManager.importData(req.body).then(() => {
+        router.post('/experiment/import-data', (req: Request, res: Response) => {
+            this.nniManager.importData(JSON.stringify(req.body)).then(() => {
                 res.send();
             }).catch((err: Error) => {
                 this.handle_error(err, res);

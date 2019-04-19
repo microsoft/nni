@@ -29,7 +29,7 @@ EXPERIMENT_API = '/experiment'
 
 CLUSTER_METADATA_API = '/experiment/cluster-metadata'
 
-TUNING_DATA_API = '/experiment/tuning-data'
+IMPORT_DATA_API = '/experiment/import-data'
 
 CHECK_STATUS_API = '/check-status'
 
@@ -48,9 +48,9 @@ def cluster_metadata_url(port):
     return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, CLUSTER_METADATA_API)
 
 
-def tuning_data_url(port):
-    '''get tuning_data_url'''
-    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, TUNING_DATA_API)
+def import_data_url(port):
+    '''get import_data_url'''
+    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, IMPORT_DATA_API)
 
 
 def experiment_url(port):
