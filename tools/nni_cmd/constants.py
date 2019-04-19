@@ -80,6 +80,20 @@ PACKAGE_REQUIREMENTS = {
     'BOHB': 'bohb_advisor'
 }
 
+TUNERS_SUPPORTING_IMPORT_DATA = {
+    'TPE',
+    'Anneal',
+    'GridSearch',
+    'MetisTuner',
+    'BOHB'
+}
+
+TUNERS_NO_NEED_TO_IMPORT_DATA = {
+    'Random',
+    'Batch_tuner',
+    'Hyperband'
+}
+
 COLOR_RED_FORMAT = '\033[1;31;31m%s\033[0m'
 
 COLOR_GREEN_FORMAT = '\033[1;32;32m%s\033[0m'
