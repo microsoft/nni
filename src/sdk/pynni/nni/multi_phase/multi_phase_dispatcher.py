@@ -112,6 +112,13 @@ class MultiPhaseMsgDispatcher(MsgDispatcherBase):
         self.tuner.update_search_space(data)
         return True
 
+    def handle_import_data(self, data):
+        """import additional data for tuning
+        data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        self.tuner.import_data(data)
+        return True
+
     def handle_add_customized_trial(self, data):
          # data: parameters
         id_ = _create_parameter_id()

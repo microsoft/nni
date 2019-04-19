@@ -22,7 +22,7 @@
 import argparse
 import pkg_resources
 from .launcher import create_experiment, resume_experiment
-from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum
+from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import *
 from .package_management import *
 from .constants import *
@@ -103,10 +103,6 @@ def parse_args():
     parser_trial_kill.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_kill.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to be killed')
     parser_trial_kill.set_defaults(func=trial_kill)
-    parser_trial_export = parser_trial_subparsers.add_parser('export', help='export trial job results to csv')
-    parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
-    parser_trial_export.add_argument('--file', '-f', required=True, dest='csv_path', help='target csv file path')
-    parser_trial_export.set_defaults(func=export_trials_data)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
@@ -121,6 +117,17 @@ def parse_args():
     parser_experiment_list = parser_experiment_subparsers.add_parser('list', help='list all of running experiment ids')
     parser_experiment_list.add_argument('all', nargs='?', help='list all of experiments')
     parser_experiment_list.set_defaults(func=experiment_list)
+    #import tuning data
+    parser_import_data = parser_experiment_subparsers.add_parser('import', help='import additional data')
+    parser_import_data.add_argument('id', nargs='?', help='the id of experiment')
+    parser_import_data.add_argument('--filename', '-f', required=True)
+    parser_import_data.set_defaults(func=import_data)
+    #export trial data
+    parser_trial_export = parser_experiment_subparsers.add_parser('export', help='export trial job results to csv or json')
+    parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_export.add_argument('--type', '-t', choices=['json', 'csv'], required=True, dest='type', help='target file type')
+    parser_trial_export.add_argument('--filename', '-f', required=True, dest='path', help='target file path')
+    parser_trial_export.set_defaults(func=export_trials_data)
 
     #TODO:finish webui function
     #parse board command
