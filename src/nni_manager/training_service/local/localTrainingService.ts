@@ -369,7 +369,7 @@ class LocalTrainingService implements TrainingService {
 
     private getEnvironmentVariables(
         trialJobDetail: TrialJobDetail,
-        resource?: { gpuIndices: number[] }): { key: string; value: string }[] {
+        resource: { gpuIndices: number[] }): { key: string; value: string }[] {
         const envVariables: { key: string; value: string }[] = [
             { key: 'NNI_PLATFORM', value: 'local' },
             { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
@@ -379,12 +379,10 @@ class LocalTrainingService implements TrainingService {
             { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() }
         ];
 
-        if (resource !== undefined && resource.gpuIndices.length > 0) {
-            envVariables.push({
-                    key: 'CUDA_VISIBLE_DEVICES',
-                    value: this.gpuScheduler === undefined ? '' : resource.gpuIndices.join(',')
-            });
-        }
+        envVariables.push({
+            key: 'CUDA_VISIBLE_DEVICES',
+            value: this.gpuScheduler === undefined ? '' : resource.gpuIndices.join(',')
+        });
 
         return envVariables;
     }
