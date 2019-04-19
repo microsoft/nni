@@ -27,7 +27,7 @@ from .config_utils import Config
 from .common_utils import get_json_content, print_normal, print_error, print_warning
 from .nnictl_utils import check_experiment_id, get_experiment_port, get_config_filename
 from .launcher_utils import parse_time
-from .constants import REST_TIME_OUT, DISPATCHERS_SUPPORTING_IMPORT_DATA, DISPATCHERS_NO_NEED_TO_IMPORT_DATA
+from .constants import REST_TIME_OUT, TUNERS_SUPPORTING_IMPORT_DATA, TUNERS_NO_NEED_TO_IMPORT_DATA
 
 def validate_digit(value, start, end):
     '''validate if a digit is valid'''
@@ -48,8 +48,8 @@ def validate_dispatcher(args):
         dispatcher_name = nni_config['advisor']['builtinAdvisorName']
     else: # otherwise it should be a customized one
         return
-    if dispatcher_name not in DISPATCHERS_SUPPORTING_IMPORT_DATA:
-        if dispatcher_name in DISPATCHERS_NO_NEED_TO_IMPORT_DATA:
+    if dispatcher_name not in TUNERS_SUPPORTING_IMPORT_DATA:
+        if dispatcher_name in TUNERS_NO_NEED_TO_IMPORT_DATA:
             print_warning("There is no need to import data for %s" % dispatcher_name)
             exit(0)
         else:

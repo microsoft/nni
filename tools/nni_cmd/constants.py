@@ -79,16 +79,15 @@ PACKAGE_REQUIREMENTS = {
     'SMAC': 'smac_tuner'
 }
 
-DISPATCHERS_SUPPORTING_IMPORT_DATA = {
+TUNERS_SUPPORTING_IMPORT_DATA = {
     'TPE',
     'Anneal',
-    'NetworkMorphism',
     'GridSearch',
     'MetisTuner',
     'BOHB'
 }
 
-DISPATCHERS_NO_NEED_TO_IMPORT_DATA = {
+TUNERS_NO_NEED_TO_IMPORT_DATA = {
     'Random',
     'Batch_tuner',
     'Hyperband'
