@@ -444,11 +444,11 @@ nnictl 支持的命令：
     当前，以下 Tuner 和 Advisor 支持导入数据：
     
     ```yml
-    builtinTunerName: TPE, Anneal, GridSearch, MetisTuner
-    builtinAdvisorName: BOHB
+    内置 Tuner: TPE, Anneal, GridSearch, MetisTuner
+    内置 Advisor: BOHB
     ```
     
-    *If you want to import data to BOHB advisor, user are suggested to add "TRIAL_BUDGET" in parameter as NNI do, otherwise, BOHB will use max_budget as "TRIAL_BUDGET". Here is an example:*
+    *如果要将数据导入到 BOHB Advisor，建议像 NNI 一样，增加 "TRIAL_BUDGET" 参数，否则，BOHB 会使用 max_budget 作为 "TRIAL_BUDGET"。 样例如下：*
     
     ```json
     [
@@ -456,9 +456,9 @@ nnictl 支持的命令：
     ]
     ```
   
-  * Examples
+  * 样例
     
-    > import data to a running experiment
+    > 将数据导入运行中的 Experiment
     
     ```bash
     nnictl experiment [experiment_id] -f experiment_data.json
@@ -467,11 +467,11 @@ nnictl 支持的命令：
 <a name="config"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
 
-* Description
+* 说明
   
-  Display the current context information.
+  显示当前上下文信息。
 
-* Usage
+* 用法
   
   ```bash
   nnictl config show
@@ -479,7 +479,7 @@ nnictl 支持的命令：
 
 <a name="log"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage log`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理日志`
 
 * **nnictl log stdout**
   
