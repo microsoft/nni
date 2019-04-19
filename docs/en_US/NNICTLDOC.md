@@ -298,24 +298,6 @@ Debug mode will disable version check function in Trialkeeper.
     nnictl trial [trial_id] --experiment [experiment_id]
     ```
 
-* __nnictl trial export__
-  * Description
-
-    You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
-
-  * Usage
-
-    ```bash
-    nnictl trial export [OPTIONS]
-    ```
-
-  * Options
-
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |id|  False| |ID of the experiment    |
-  |--file|  True| |File path of the output csv file     |
-
 <a name="top"></a>
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
@@ -386,6 +368,92 @@ Debug mode will disable version check function in Trialkeeper.
 
     ```bash
     nnictl experiment list
+    ```
+
+<a name="export"></a>
+
+* __nnictl experiment export__
+  * Description
+
+    You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+
+  * Usage
+
+    ```bash
+    nnictl experiment export [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment    |
+  |--file|  True| |File path of the output file     |
+  |--type|  True| |Type of output file, only support "csv" and "json"|
+
+  * Examples
+
+  > export all trial data in an experiment as json format
+
+  ```bash
+  nnictl experiment export [experiment_id] --file [file_path] --type json
+  ```
+
+* __nnictl experiment import__
+  * Description
+
+    You can use this command to import several prior or supplementary trial hyperparameters & results for NNI hyperparameter tuning. The data are fed to the tuning algorithm (e.g., tuner or advisor).
+
+  * Usage
+
+    ```bash
+    nnictl experiment import [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------|------|
+  |id|  False| |The id of the experiment you want to import data into|
+  |--file, -f|  True| |a file with data you want to import in json format|
+
+  * Details
+
+    NNI supports users to import their own data, please express the data in the correct format. An example is shown below:
+
+    ```json
+    [
+      {"parameter": {"x": 0.5, "y": 0.9}, "value": 0.03},
+      {"parameter": {"x": 0.4, "y": 0.8}, "value": 0.05},
+      {"parameter": {"x": 0.3, "y": 0.7}, "value": 0.04}
+    ]
+    ```
+
+    Every element in the top level list is a sample. For our built-in tuners/advisors, each sample should have at least two keys: `parameter` and `value`. The `parameter` must match this experiment's search space, that is, all the keys (or hyperparameters) in `parameter` must match the keys in the search space. Otherwise, tuner/advisor may have unpredictable behavior. `Value` should follow the same rule of the input in `nni.report_final_result`, that is, either a number or a dict with a key named `default`. For your customized tuner/advisor, the file could have any json content depending on how you implement the corresponding methods (e.g., `import_data`).
+
+    You also can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
+
+    Currenctly, following tuner and advisor support import data:
+
+    ```yml
+    builtinTunerName: TPE, Anneal, GridSearch, MetisTuner
+    builtinAdvisorName: BOHB
+    ```
+
+    *If you want to import data to BOHB advisor, user are suggested to add "TRIAL_BUDGET" in parameter as NNI do, otherwise, BOHB will use max_budget as "TRIAL_BUDGET". Here is an example:*
+
+    ```json
+    [
+      {"parameter": {"x": 0.5, "y": 0.9, "TRIAL_BUDGET": 27}, "value": 0.03}
+    ]
+    ```
+
+  * Examples
+
+    > import data to a running experiment
+
+    ```bash
+    nnictl experiment [experiment_id] -f experiment_data.json
     ```
 
 <a name="config"></a>

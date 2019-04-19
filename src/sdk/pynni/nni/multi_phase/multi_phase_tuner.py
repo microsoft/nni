@@ -95,3 +95,6 @@ class MultiPhaseTuner(Recoverable):
 
     def _on_error(self):
         pass
+
+    def import_data(self, data):
+        pass
