@@ -291,10 +291,10 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写          | 是否必需  | 默认值 | 说明                                |
-  | -------------- | ----- | --- | --------------------------------- |
-  | id             | False |     | Experiment ID of the trial        |
-  | --trial_id, -T | True  |     | ID of the trial you want to kill. |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                    |
+  | -------------- | ----- | --- | --------------------- |
+  | id             | False |     | Trial 的 Experiment ID |
+  | --trial_id, -T | True  |     | 需要终止的 Trial 的 ID。     |
   
   * 样例
     
@@ -380,27 +380,27 @@ nnictl 支持的命令：
 
 * **nnictl experiment export**
   
-  * Description
+  * 说明
     
-    You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+    使用此命令，可将 Trial 的 reward 和超参导出为 csv 文件。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment export [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                        |
-  | --------------- | -------- | ------- | -------------------------------------------------- |
-  | id              | False    |         | ID of the experiment                               |
-  | --file          | True     |         | File path of the output file                       |
-  | --type          | True     |         | Type of output file, only support "csv" and "json" |
+  | 参数及缩写  | 是否必需  | 默认值 | 说明                        |
+  | ------ | ----- | --- | ------------------------- |
+  | id     | False |     | Experiment ID             |
+  | --file | True  |     | 文件的输出路径                   |
+  | --type | True  |     | 输出文件类型，仅支持 "csv" 和 "json" |
   
-  * Examples
+  * 样例
   
-  > export all trial data in an experiment as json format
+  > 将 Experiment 中所有 Trial 数据导出为 JSON 格式
   
   ```bash
   nnictl experiment export [experiment_id] --file [file_path] --type json
@@ -408,22 +408,22 @@ nnictl 支持的命令：
 
 * **nnictl experiment import**
   
-  * Description
+  * 说明
     
-    You can use this command to import several prior or supplementary trial hyperparameters & results for NNI hyperparameter tuning. The data are fed to the tuning algorithm (e.g., tuner or advisor).
+    可使用此命令将以前的 Trial 超参和结果导入到 Tuner 中。 数据会传入调参算法中（即 Tuner 或 Advisor）。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl experiment import [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                           |
-  | --------------- | -------- | ------- | ----------------------------------------------------- |
-  | id              | False    |         | The id of the experiment you want to import data into |
-  | --file, -f      | True     |         | a file with data you want to import in json format    |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                                                    |
+  | ---------- | ----- | --- | ----------------------------------------------------- |
+  | id         | False |     | The id of the experiment you want to import data into |
+  | --file, -f | True  |     | a file with data you want to import in json format    |
   
   * Details
     
