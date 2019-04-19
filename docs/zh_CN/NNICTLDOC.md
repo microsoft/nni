@@ -420,14 +420,14 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写      | 是否必需  | 默认值 | 说明                                                    |
-  | ---------- | ----- | --- | ----------------------------------------------------- |
-  | id         | False |     | The id of the experiment you want to import data into |
-  | --file, -f | True  |     | a file with data you want to import in json format    |
+  | 参数及缩写      | 是否必需  | 默认值 | 说明                       |
+  | ---------- | ----- | --- | ------------------------ |
+  | id         | False |     | 需要将数据导入的 Experiment 的 ID |
+  | --file, -f | True  |     | 需要导入的 JSON 格式的数据文件       |
   
-  * Details
+  * 详细说明
     
-    NNI supports users to import their own data, please express the data in the correct format. An example is shown below:
+    NNI 支持导入用户的数据，确保数据格式正确。 样例如下：
     
     ```json
     [
@@ -437,7 +437,7 @@ nnictl 支持的命令：
     ]
     ```
     
-    Every element in the top level list is a sample. For our built-in tuners/advisors, each sample should have at least two keys: `parameter` and `value`. The `parameter` must match this experiment's search space, that is, all the keys (or hyperparameters) in `parameter` must match the keys in the search space. Otherwise, tuner/advisor may have unpredictable behavior. `Value` should follow the same rule of the input in `nni.report_final_result`, that is, either a number or a dict with a key named `default`. For your customized tuner/advisor, the file could have any json content depending on how you implement the corresponding methods (e.g., `import_data`).
+    最顶层列表的每个元素都是一个样例。 对于内置的 Tuner 和 Advisor，每个样本至少需要两个主键：`parameter` 和 `value`。 `parameter` 必须与 Experiment 的搜索空间相匹配，`parameter` 中的所有的主键（或超参）都必须与搜索空间中的主键相匹配。 否则， Tuner 或 Advisor 可能会有无法预期的行为。 `Value` 应当遵循与 `nni.report_final_result` 的输入值一样的规则，即要么时一个数字，或者是包含 `default` 主键的 dict。 对于自定义的 Tuner 或 Advisor，根据实现的不同，此文件可以是任意的 JSON 内容（例如，`import_data`）。
     
     You also can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
     
@@ -524,31 +524,31 @@ nnictl 支持的命令：
   
   * Options
   
-  | Name, shorthand | Required | Default | Description                          |
-  | --------------- | -------- | ------- | ------------------------------------ |
-  | id              | False    |         | ID of the experiment you want to set |
-  | --head, -h      | False    |         | show head lines of stderr            |
-  | --tail, -t      | False    |         | show tail lines of stderr            |
-  | --path, -p      | False    |         | show the path of stderr file         |
+  | Name, shorthand | Required | 默认值 | 说明                    |
+  | --------------- | -------- | --- | --------------------- |
+  | id              | False    |     | 需要设置的 Experiment 的 id |
+  | --head, -h      | False    |     | 显示 stderr 开始的若干行      |
+  | --tail, -t      | False    |     | 显示 stderr 结尾的若干行      |
+  | --path, -p      | False    |     | 显示 stderr 文件的路径       |
 
 * **nnictl log trial**
   
-  * Description
+  * 说明
     
-    Show trial log path.
+    显示 Trial 日志的路径。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl log trial [options]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                                              |
-  | --------------- | -------- | ------- | ------------------------------------------------------------------------ |
-  | id              | False    |         | Experiment ID of the trial                                               |
-  | --trial_id, -T  | False    |         | ID of the trial to be found the log path, required when id is not empty. |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                                     |
+  | -------------- | ----- | --- | -------------------------------------- |
+  | id             | False |     | Trial 的 Experiment ID                  |
+  | --trial_id, -T | False |     | 所需要找日志路径的 Trial 的 ID，当 id 不为空时，此值也为必需。 |
 
 <a name="webui"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `Manage webui`
