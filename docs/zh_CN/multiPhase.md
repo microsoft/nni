@@ -1,43 +1,46 @@
-## 创建多阶段的 Experiment
+## What is multi-phase experiment
 
-通常情况下，每个 Trial 作业只从 Tuner 获得一组配置（如超参），然后运行 Experiment。也就是说，通过这组超参来训练模型，并返回结果给 Tuner。 有时候，可能需要在一个 Trial 作业中训练多个模型，并在它们之间共享信息，或者通过创建更少的 Trial 任务来节省资源。例如：
+Typically each trial job gets a single configuration (e.g., hyperparameters) from tuner, tries this configuration and reports result, then exits. But sometimes a trial job may wants to request multiple configurations from tuner. We find this is a very compelling feature. For example:
 
-1. 在一个 Trial 作业中依次训练多个模型。这样，后面的模型可以利用先前模型的权重和其它信息，并可以使用不同的超参组合。
-2. 在有限的资源上训练大量的模型，将多个模型放到一个 Trial 作业中训练，能够节约系统创建 Trial 作业的时间。
-3. 还有的情况，希望在一个 Trial 任务中训练多个需要不同超参的模型。注意，如果为一个 Trial 作业分配多个 GPU，并且会并发训练模型，需要在代码中正确分配 GPU 资源。
+1. Job launch takes tens of seconds in some training platform. If a configuration takes only around a minute to finish, running only one configuration in a trial job would be every inefficient. An appealing way is that a trial job requests a configuration and finishes it, then requests another configuration and run. The extreme case is that a trial job can run infinite configurations. If you set concurrency to be for example 6, there would be 6 **long running** jobs keeping trying different configurations.
 
-在上述情况中，可利用 NNI 的多阶段 Experiment 来在同一个 Trial 任务中训练具有不同超参的多个模型。
+2. Some types of models have to be trained phase by phase, the configuration of next phase depends on the results of previous phase(s). For example, to find the best quantization for a model, the training procedure is often as follows: the auto-quantization algorithm (i.e., tuner in NNI) chooses a size of bits (e.g., 16 bits), a trial job gets this configuration and trains the model for some epochs and reports result (e.g., accuracy). The algorithm receives this result and makes decision of changing 16 bits to 8 bits, or changing back to 32 bits. This process is repeated for a configured times.
 
-多阶段 Experiment，是指 Trial 作业会从 Tuner 请求多次超参，并多次返回最终结果。
+The above cases can be supported by the same feature, i.e., multi-phase execution. To support those cases, basically a trial job should be able to request multiple configurations from tuner. Tuner is aware of whether two configuration requests are from the same trial job or different ones. Also in multi-phase a trial job can report multiple final results.
 
-参考以下步骤来使用多阶段 Experiment：
+Note that, `nni.get_next_parameter()` and `nni.report_final_result()` should be called sequentially: **call the former one, then call the later one; and repeat this pattern**. If `nni.get_next_parameter()` is called multiple times consecutively, and then `nni.report_final_result()` is called once, the result is associated to the last configuration, which is retrieved from the last get_next_parameter call. So there is no result associated to previous get_next_parameter calls, and it may cause some multi-phase algorithm broken.
 
-1. 实现 nni.multi_phase.MultiPhaseTuner。 如，[ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py) 是实现了 nni.multi_phase.MultiPhaseTuner 的 Tuner。 在实现多阶段 Tuner 时，可能要用 generate_parameters 中的 trial_job_id 参数来为每个 Trial 作业生成超参。
+## Create multi-phase experiment
 
-2. 设置 `multiPhase` 的值为 `true`，并将第一步中实现的 Tuner 作为自定义 Tuner 进行配置，例如：
-    
-    ```yaml
-    ...
-    multiPhase: true
-    tuner:
-      codeDir: tuners/enas
-      classFileName: nni_controller_ptb.py
-      className: ENASTuner
-      classArgs:
-        say_hello: "hello"
-    ...
-    ```
+### Write trial code which leverages multi-phase:
 
-3. 根据需要，在 Trial 代码中可多次调用 nni.get_next_parameter() API，例如：
-    
+**1. Update trial code**
+
+It is pretty simple to use multi-phase in trial code, an example is shown below:
+
     ```python
+    # ...
     for i in range(5):
-        # 从 Tuner 中获得参数
+        # get parameter from tuner
         tuner_param = nni.get_next_parameter()
     
-        # 使用参数
+        # consume the params
         # ...
-        # 为上面获取的参数返回最终结果
+        # report final result somewhere for the parameter retrieved above
         nni.report_final_result()
         # ...
+    # ...
     ```
+    
+
+**2. Modify experiment configuration**
+
+To enable multi-phase, you should also add `multiPhase: true` in your experiment yaml configure file. If this line is not added, `nni.get_next_parameter()` would always return the same configuration. For all the built-in tuners/advisors, you can use multi-phase in your trial code without modification of tuner/advisor spec in the yaml configure file.
+
+### Write a tuner that leverages multi-phase:
+
+Before writing a multi-phase tuner, we highly suggest you to go through [Customize Tuner](https://nni.readthedocs.io/en/latest/Customize_Tuner.html). Different from writing a normal tuner, your tuner needs to inherit from `MultiPhaseTuner` (in nni.multi_phase_tuner). The key difference between `Tuner` and `MultiPhaseTuner` is that the methods in MultiPhaseTuner are aware of additional information, that is, `trial_job_id`. With this information, the tuner could know which trial is requesting a configuration, and which trial is reporting results. This information provides enough flexibility for your tuner to deal with different trials and different phases. For example, you may want to use the trial_job_id parameter of generate_parameters method to generate hyperparameters for a specific trial job.
+
+Of course, to use your multi-phase tuner, **you should add `multiPhase: true` in your experiment yaml configure file**.
+
+[ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py) is an example of a multi-phase tuner.
