@@ -301,7 +301,7 @@ nnictl 支持的命令：
     > 结束 Trial 任务
     
     ```bash
-    nnictl trial [trial_id] --vexperiment [experiment_id]
+    nnictl trial [trial_id] --experiment [experiment_id]
     ```
 
 * **nnictl trial export**
