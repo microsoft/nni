@@ -295,7 +295,7 @@ Debug mode will disable version check function in Trialkeeper.
     > kill trail job
 
     ```bash
-    nnictl trial [trial_id] --vexperiment [experiment_id]
+    nnictl trial [trial_id] --experiment [experiment_id]
     ```
 
 * __nnictl trial export__
