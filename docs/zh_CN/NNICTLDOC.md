@@ -304,25 +304,6 @@ nnictl 支持的命令：
     nnictl trial [trial_id] --experiment [experiment_id]
     ```
 
-* **nnictl trial export**
-  
-  * 说明
-    
-    使用此命令，可将 Trial 的 reward 和超参导出为 csv 文件。
-  
-  * 用法
-    
-    ```bash
-    nnictl trial export [OPTIONS]
-    ```
-  
-  * 选项
-  
-  | 参数及缩写  | 是否必需  | 默认值 | 说明            |
-  | ------ | ----- | --- | ------------- |
-  | id     | False |     | Experiment ID |
-  | --file | True  |     | csv 文件的输出路径   |
-
 <a name="top"></a>
 
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl top`
@@ -395,14 +376,102 @@ nnictl 支持的命令：
     nnictl experiment list
     ```
 
+<a name="export"></a>
+
+* **nnictl experiment export**
+  
+  * Description
+    
+    You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+  
+  * Usage
+    
+    ```bash
+    nnictl experiment export [OPTIONS]
+    ```
+  
+  * Options
+  
+  | Name, shorthand | Required | Default | Description                                        |
+  | --------------- | -------- | ------- | -------------------------------------------------- |
+  | id              | False    |         | ID of the experiment                               |
+  | --file          | True     |         | File path of the output file                       |
+  | --type          | True     |         | Type of output file, only support "csv" and "json" |
+  
+  * Examples
+  
+  > export all trial data in an experiment as json format
+  
+  ```bash
+  nnictl experiment export [experiment_id] --file [file_path] --type json
+  ```
+
+* **nnictl experiment import**
+  
+  * Description
+    
+    You can use this command to import several prior or supplementary trial hyperparameters & results for NNI hyperparameter tuning. The data are fed to the tuning algorithm (e.g., tuner or advisor).
+  
+  * Usage
+    
+    ```bash
+    nnictl experiment import [OPTIONS]
+    ```
+  
+  * Options
+  
+  | Name, shorthand | Required | Default | Description                                           |
+  | --------------- | -------- | ------- | ----------------------------------------------------- |
+  | id              | False    |         | The id of the experiment you want to import data into |
+  | --file, -f      | True     |         | a file with data you want to import in json format    |
+  
+  * Details
+    
+    NNI supports users to import their own data, please express the data in the correct format. An example is shown below:
+    
+    ```json
+    [
+      {"parameter": {"x": 0.5, "y": 0.9}, "value": 0.03},
+      {"parameter": {"x": 0.4, "y": 0.8}, "value": 0.05},
+      {"parameter": {"x": 0.3, "y": 0.7}, "value": 0.04}
+    ]
+    ```
+    
+    Every element in the top level list is a sample. For our built-in tuners/advisors, each sample should have at least two keys: `parameter` and `value`. The `parameter` must match this experiment's search space, that is, all the keys (or hyperparameters) in `parameter` must match the keys in the search space. Otherwise, tuner/advisor may have unpredictable behavior. `Value` should follow the same rule of the input in `nni.report_final_result`, that is, either a number or a dict with a key named `default`. For your customized tuner/advisor, the file could have any json content depending on how you implement the corresponding methods (e.g., `import_data`).
+    
+    You also can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
+    
+    Currenctly, following tuner and advisor support import data:
+    
+    ```yml
+    builtinTunerName: TPE, Anneal, GridSearch, MetisTuner
+    builtinAdvisorName: BOHB
+    ```
+    
+    *If you want to import data to BOHB advisor, user are suggested to add "TRIAL_BUDGET" in parameter as NNI do, otherwise, BOHB will use max_budget as "TRIAL_BUDGET". Here is an example:*
+    
+    ```json
+    [
+      {"parameter": {"x": 0.5, "y": 0.9, "TRIAL_BUDGET": 27}, "value": 0.03}
+    ]
+    ```
+  
+  * Examples
+    
+    > import data to a running experiment
+    
+    ```bash
+    nnictl experiment [experiment_id] -f experiment_data.json
+    ```
+
 <a name="config"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `nnictl config show`
 
-* 说明
+* Description
   
-  显示当前上下文信息。
+  Display the current context information.
 
-* 用法
+* Usage
   
   ```bash
   nnictl config show
@@ -410,32 +479,32 @@ nnictl 支持的命令：
 
 <a name="log"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `管理日志`
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage log`
 
 * **nnictl log stdout**
   
-  * 说明
+  * Description
     
-    显示 stdout 日志内容。
+    Show the stdout log content.
   
-  * 用法
+  * Usage
     
     ```bash
     nnictl log stdout [options]
     ```
   
-  * 选项
+  * Options
   
-  | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
-  | ---------- | ----- | --- | --------------------- |
-  | id         | False |     | 需要设置的 Experiment 的 id |
-  | --head, -h | False |     | 显示 stdout 开始的若干行      |
-  | --tail, -t | False |     | 显示 stdout 结尾的若干行      |
-  | --path, -p | False |     | 显示 stdout 文件的路径       |
+  | Name, shorthand | Required | Default | Description                          |
+  | --------------- | -------- | ------- | ------------------------------------ |
+  | id              | False    |         | ID of the experiment you want to set |
+  | --head, -h      | False    |         | show head lines of stdout            |
+  | --tail, -t      | False    |         | show tail lines of stdout            |
+  | --path, -p      | False    |         | show the path of stdout file         |
   
-  * 样例
+  * Example
     
-    > 显示 stdout 结尾的若干行
+    > Show the tail of stdout log content
     
     ```bash
     nnictl log stdout [experiment_id] --tail [lines_number]
@@ -443,57 +512,57 @@ nnictl 支持的命令：
 
 * **nnictl log stderr**
   
-  * 说明
+  * Description
     
-    显示 stderr 日志内容。
+    Show the stderr log content.
   
-  * 用法
+  * Usage
     
     ```bash
     nnictl log stderr [options]
     ```
   
-  * 选项
+  * Options
   
-  | 参数及缩写      | 是否必需  | 默认值 | 说明                    |
-  | ---------- | ----- | --- | --------------------- |
-  | id         | False |     | 需要设置的 Experiment 的 id |
-  | --head, -h | False |     | 显示 stderr 开始的若干行      |
-  | --tail, -t | False |     | 显示 stderr 结尾的若干行      |
-  | --path, -p | False |     | 显示 stderr 文件的路径       |
+  | Name, shorthand | Required | Default | Description                          |
+  | --------------- | -------- | ------- | ------------------------------------ |
+  | id              | False    |         | ID of the experiment you want to set |
+  | --head, -h      | False    |         | show head lines of stderr            |
+  | --tail, -t      | False    |         | show tail lines of stderr            |
+  | --path, -p      | False    |         | show the path of stderr file         |
 
 * **nnictl log trial**
   
-  * 说明
+  * Description
     
-    显示 Trial 日志的路径。
+    Show trial log path.
   
-  * 用法
+  * Usage
     
     ```bash
     nnictl log trial [options]
     ```
   
-  * 选项
+  * Options
   
-  | 参数及缩写            | 是否必需  | 默认值 | 说明                            |
-  | ---------------- | ----- | --- | ----------------------------- |
-  | id               | False |     | 需要显示日志路径的 Trial id            |
-  | --experiment, -E | False |     | 如果 id 为空，则需要添加 Experiment id。 |
+  | Name, shorthand  | Required | Default | Description                                                |
+  | ---------------- | -------- | ------- | ---------------------------------------------------------- |
+  | id               | False    |         | ID of the trial to be found the log path                   |
+  | --experiment, -E | False    |         | Experiment ID of the trial, required when id is not empty. |
 
 <a name="webui"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `管理 Web 界面`
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage webui`
 
 * **nnictl webui url**
 
 <a name="tensorboard"></a>
-![](https://placehold.it/15/1589F0/000000?text=+) `管理 TensorBoard`
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage tensorboard`
 
 * **nnictl tensorboard start**
   
   * 说明
     
-    启动 tensorboard 进程。
+    Start the tensorboard process.
   
   * 用法
     
@@ -503,25 +572,25 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写     | 是否必需  | 默认值  | 说明                    |
-  | --------- | ----- | ---- | --------------------- |
-  | id        | False |      | 需要设置的 Experiment 的 id |
-  | --trialid | False |      | Trial 的 id            |
-  | --port    | False | 6006 | tensorboard 进程的端口     |
+  | 参数及缩写     | 是否必需  | 默认值  | 说明                                   |
+  | --------- | ----- | ---- | ------------------------------------ |
+  | id        | False |      | ID of the experiment you want to set |
+  | --trialid | False |      | ID of the trial                      |
+  | --port    | False | 6006 | The port of the tensorboard process  |
   
-  * 详细说明
+  * Detail
     
-    1. NNICTL 当前仅支持本机和远程平台的 tensorboard，其它平台暂不支持。 
-    2. 如果要使用 tensorboard，需要将 tensorboard 日志输出到环境变量 [NNI_OUTPUT_DIR] 路径下。 
-    3. 在 local 模式中，nnictl 会直接设置 --logdir=[NNI_OUTPUT_DIR] 并启动 tensorboard 进程。
-    4. 在 remote 模式中，nnictl 会创建一个 ssh 客户端来将日志数据从远程计算机复制到本机临时目录中，然后在本机开始 tensorboard 进程。 需要注意的是，nnictl 只在使用此命令时复制日志数据，如果要查看最新的 tensorboard 结果，需要再次执行 nnictl tensorboard 命令。
-    5. 如果只有一个 Trial 任务，不需要设置 trialid。 如果有多个运行的 Trial 作业，需要设置 trialid，或使用 [nnictl tensorboard start --trialid all] 来将 --logdir 映射到所有 Trial 的路径。
+    1. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later. 
+    2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path. 
+    3. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
+    4. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
+    5. If there is only one trial job, you don't need to set trialid. If there are multiple trial jobs running, you should set the trialid, or you could use [nnictl tensorboard start --trialid all] to map --logdir to all trial log paths.
 
 * **nnictl tensorboard stop**
   
   * 说明
     
-    停止所有 tensorboard 进程。
+    Stop all of the tensorboard process.
   
   * 用法
     
@@ -529,21 +598,21 @@ nnictl 支持的命令：
     nnictl tensorboard stop
     ```
   
-  * 选项
+  * Options
   
-  | 参数及缩写 | 是否必需  | 默认值 | 说明                    |
-  | ----- | ----- | --- | --------------------- |
-  | id    | False |     | 需要设置的 Experiment 的 id |
+  | Name, shorthand | Required | Default | Description                          |
+  | --------------- | -------- | ------- | ------------------------------------ |
+  | id              | False    |         | ID of the experiment you want to set |
 
 <a name="package"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `管理包`
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage package`
 
 * **nnictl package install**
   
   * 说明
     
-    安装 NNI 实验所需要的包。
+    Install the packages needed in nni experiments.
   
   * 用法
     
@@ -551,15 +620,15 @@ nnictl 支持的命令：
     nnictl package install [OPTIONS]
     ```
   
-  * 选项
+  * Options
   
-  | 参数及缩写  | 是否必需 | 默认值 | 说明      |
-  | ------ | ---- | --- | ------- |
-  | --name | True |     | 要安装的包名称 |
+  | Name, shorthand | Required | Default | Description                         |
+  | --------------- | -------- | ------- | ----------------------------------- |
+  | --name          | True     |         | The name of package to be installed |
   
-  * 样例
+  * Example
     
-    > 安装 SMAC Tuner 所需要的包
+    > Install the packages needed in tuner SMAC
     
     ```bash
     nnictl package install --name=SMAC
@@ -567,11 +636,11 @@ nnictl 支持的命令：
 
 * **nnictl package show**
   
-  * 说明
+  * Description
     
-    列出支持的安装包
+    List the packages supported.
   
-  * 用法
+  * Usage
     
     ```bash
     nnictl package show
@@ -579,15 +648,15 @@ nnictl 支持的命令：
 
 <a name="version"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `检查 NNI 版本`
+![](https://placehold.it/15/1589F0/000000?text=+) `Check NNI version`
 
 * **nnictl --version**
   
-  * 说明
+  * Description
     
-    显示当前安装的 NNI 的版本。
+    Describe the current version of NNI installed.
   
-  * 用法
+  * Usage
     
     ```bash
     nnictl --version
