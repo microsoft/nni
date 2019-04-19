@@ -166,4 +166,4 @@ class GridSearchTuner(Tuner):
             _params = trial_info["parameter"]
             _params_tuple = convert_dict2tuple(_params)
             self.supplement_data[_params_tuple] = True
-            logger.info("Successfully import date to grid search tuner.")
+        logger.info("Successfully import date to grid search tuner.")

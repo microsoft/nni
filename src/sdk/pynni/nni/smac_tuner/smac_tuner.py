@@ -37,8 +37,6 @@ from smac.facade.smac_facade import SMAC
 from smac.facade.roar_facade import ROAR
 from smac.facade.epils_facade import EPILS
 
-logger = logging.getLogger('smac_AutoML')
-
 @unique
 class OptimizeMode(Enum):
     """Oprimize Mode class"""

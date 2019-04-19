@@ -604,4 +604,4 @@ class BOHB(MsgDispatcherBase):
                 reward = _value
             _budget = _params[_KEY]
             self.cg.new_result(loss=reward, budget=_budget, parameters=_params, update_model=True)
-            logger.info("Useful data. Successfully import tuning data to BOHB advisor.")
+        logger.info("Successfully import tuning data to BOHB advisor.")

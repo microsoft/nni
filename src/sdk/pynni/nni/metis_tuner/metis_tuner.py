@@ -421,6 +421,7 @@ class MetisTuner(Tuner):
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
             self.total_data.append(_params)
             self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
+        logger.info("Successfully import date to metis tuner.")
 
 def _rand_with_constraints(x_bounds, x_types):
     outputs = None

@@ -377,3 +377,4 @@ class HyperoptTuner(Tuner):
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
             self.total_data[_parameter_id] = _params
             self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
+        logger.info("Successfully import date to TPE/Anneal tuner.")
