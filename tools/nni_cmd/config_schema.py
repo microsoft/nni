@@ -43,133 +43,136 @@ def setPathCheck(key):
     return And(os.path.exists, error=SCHEMA_PATH_ERROR % key)
 
 common_schema = {
-'authorName': setType('authorName', str),
-'experimentName': setType('experimentName', str),
-Optional('description'): setType('description', str),
-'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
-Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$',error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
-Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
-'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller'),
-Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
-Optional('multiPhase'): setType('multiPhase', bool),
-Optional('multiThread'): setType('multiThread', bool),
-Optional('nniManagerIp'): setType('nniManagerIp', str),
-Optional('logDir'): And(os.path.isdir, error=SCHEMA_PATH_ERROR % 'logDir'),
-Optional('debug'): setType('debug', bool),
-Optional('logLevel'): setChoice('logLevel', 'trace', 'debug', 'info', 'warning', 'error', 'fatal'),
-Optional('logCollection'): setChoice('logCollection', 'http', 'none'),
-'useAnnotation': setType('useAnnotation', bool),
-Optional('tuner'): dict,
-Optional('advisor'): dict,
-Optional('assessor'): dict,
-Optional('localConfig'): {
-    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!')
-}
+    'authorName': setType('authorName', str),
+    'experimentName': setType('experimentName', str),
+    Optional('description'): setType('description', str),
+    'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
+    Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$',error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
+    Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
+    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller'),
+    Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
+    Optional('multiPhase'): setType('multiPhase', bool),
+    Optional('multiThread'): setType('multiThread', bool),
+    Optional('nniManagerIp'): setType('nniManagerIp', str),
+    Optional('logDir'): And(os.path.isdir, error=SCHEMA_PATH_ERROR % 'logDir'),
+    Optional('debug'): setType('debug', bool),
+    Optional('logLevel'): setChoice('logLevel', 'trace', 'debug', 'info', 'warning', 'error', 'fatal'),
+    Optional('logCollection'): setChoice('logCollection', 'http', 'none'),
+    'useAnnotation': setType('useAnnotation', bool),
+    Optional('tuner'): dict,
+    Optional('advisor'): dict,
+    Optional('assessor'): dict,
+    Optional('localConfig'): {
+        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!')
+    }
 }
 tuner_schema_dict = {
-('TPE', 'Anneal', 'SMAC', 'Evolution'): {
-    'builtinTunerName': setChoice('builtinTunerName', 'TPE', 'Anneal', 'SMAC', 'Evolution'),
-    Optional('classArgs'): And({
-        'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-    }, error=SCHEMA_DICT_ERROR % 'classArgs'),
-    Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-},
-('BatchTuner', 'GridSearch', 'Random'): {
-    'builtinTunerName': setChoice('builtinTunerName', 'BatchTuner', 'GridSearch', 'Random'),
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-},
-'NetworkMorphism': {
-    'builtinTunerName': 'NetworkMorphism',
-    'classArgs': And({
-        Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-        Optional('task'): setChoice('task', 'cv','nlp','common'),
-        Optional('input_width'): setType('input_width', int),
-        Optional('input_channel'): setType('input_channel', int),
-        Optional('n_output_node'): setType('n_output_node', int),
+    ('TPE', 'Anneal', 'SMAC', 'Evolution'): {
+        'builtinTunerName': setChoice('builtinTunerName', 'TPE', 'Anneal', 'SMAC', 'Evolution'),
+        Optional('classArgs'): And({
+            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
         }, error=SCHEMA_DICT_ERROR % 'classArgs'),
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-},
-'MetisTuner': {
-    'builtinTunerName': 'MetisTuner',
-    'classArgs': And({
-        Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-        Optional('no_resampling'): setType('no_resampling', bool),
-        Optional('no_candidates'): setType('no_candidates', bool),
-        Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
-        Optional('cold_start_num'): setType('cold_start_num', int),
-        }, error=SCHEMA_DICT_ERROR % 'classArgs'),
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-},
-'customized': {
-    'codeDir': setPathCheck('codeDir'),
-    'classFileName': setType('classFileName', str),
-    'className': setType('className', str),
-    Optional('classArgs'): dict,
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-}}
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    ('BatchTuner', 'GridSearch', 'Random'): {
+        'builtinTunerName': setChoice('builtinTunerName', 'BatchTuner', 'GridSearch', 'Random'),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    'NetworkMorphism': {
+        'builtinTunerName': 'NetworkMorphism',
+        'classArgs': And({
+            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('task'): setChoice('task', 'cv','nlp','common'),
+            Optional('input_width'): setType('input_width', int),
+            Optional('input_channel'): setType('input_channel', int),
+            Optional('n_output_node'): setType('n_output_node', int),
+            }, error=SCHEMA_DICT_ERROR % 'classArgs'),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    'MetisTuner': {
+        'builtinTunerName': 'MetisTuner',
+        'classArgs': And({
+            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('no_resampling'): setType('no_resampling', bool),
+            Optional('no_candidates'): setType('no_candidates', bool),
+            Optional('selection_num_starting_points'):  setType('selection_num_starting_points', int),
+            Optional('cold_start_num'): setType('cold_start_num', int),
+            }, error=SCHEMA_DICT_ERROR % 'classArgs'),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    'customized': {
+        'codeDir': setPathCheck('codeDir'),
+        'classFileName': setType('classFileName', str),
+        'className': setType('className', str),
+        Optional('classArgs'): dict,
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    }
+}
 
 advisor_schema_dict = {
-'Hyperband':{
-    'builtinAdvisorName': Or('Hyperband'),
-    'classArgs': And({
-        'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-        Optional('R'): setType('R', int),
-        Optional('eta'): setType('eta', int)
-    }, error=SCHEMA_DICT_ERROR % 'classArgs'),
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-},
-'BOHB':{
-    'builtinAdvisorName': Or('BOHB'),
-    'classArgs': And({
-        'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
-        Optional('min_budget'): setNumberRange('min_budget', int, 0, 9999),
-        Optional('max_budget'): setNumberRange('max_budget', int, 0, 9999),
-        Optional('eta'):setNumberRange('eta', int, 0, 9999), 
-        Optional('min_points_in_model'): setNumberRange('min_points_in_model', int, 0, 9999),
-        Optional('top_n_percent'): setNumberRange('top_n_percent', int, 1, 99),
-        Optional('num_samples'): setNumberRange('num_samples', int, 1, 9999),
-        Optional('random_fraction'): setNumberRange('random_fraction', float, 0, 9999),
-        Optional('bandwidth_factor'): setNumberRange('bandwidth_factor', float, 0, 9999),
-        Optional('min_bandwidth'): setNumberRange('min_bandwidth', float, 0, 9999),
-    }, error=SCHEMA_DICT_ERROR % 'classArgs'),
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-},
-'customized':{
-    'codeDir': setPathCheck('codeDir'),
-    'classFileName': setType('classFileName', str),
-    'className': setType('className', str),
-    Optional('classArgs'): dict,
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-}}
+    'Hyperband':{
+        'builtinAdvisorName': Or('Hyperband'),
+        'classArgs': And({
+            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('R'): setType('R', int),
+            Optional('eta'): setType('eta', int)
+        }, error=SCHEMA_DICT_ERROR % 'classArgs'),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    'BOHB':{
+        'builtinAdvisorName': Or('BOHB'),
+        'classArgs': And({
+            'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('min_budget'): setNumberRange('min_budget', int, 0, 9999),
+            Optional('max_budget'): setNumberRange('max_budget', int, 0, 9999),
+            Optional('eta'):setNumberRange('eta', int, 0, 9999), 
+            Optional('min_points_in_model'): setNumberRange('min_points_in_model', int, 0, 9999),
+            Optional('top_n_percent'): setNumberRange('top_n_percent', int, 1, 99),
+            Optional('num_samples'): setNumberRange('num_samples', int, 1, 9999),
+            Optional('random_fraction'): setNumberRange('random_fraction', float, 0, 9999),
+            Optional('bandwidth_factor'): setNumberRange('bandwidth_factor', float, 0, 9999),
+            Optional('min_bandwidth'): setNumberRange('min_bandwidth', float, 0, 9999),
+        }, error=SCHEMA_DICT_ERROR % 'classArgs'),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    'customized':{
+        'codeDir': setPathCheck('codeDir'),
+        'classFileName': setType('classFileName', str),
+        'className': setType('className', str),
+        Optional('classArgs'): dict,
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    }
+}
 
 assessor_schema_dict = {
-'Medianstop': {
-    'builtinAssessorName': 'Medianstop',
-    Optional('classArgs'): And({
-        Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-        Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
-    }, error=SCHEMA_DICT_ERROR % 'classArgs'),
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-},
-'Curvefitting': {
-    'builtinAssessorName': 'Curvefitting',
-    Optional('classArgs'): And({
-        'epoch_num': setNumberRange('epoch_num', int, 0, 9999),
-        Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
-        Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
-        Optional('threshold'): setNumberRange('threshold', float, 0, 9999),
-        Optional('gap'): setNumberRange('gap', int, 1, 9999),
-    }, error=SCHEMA_DICT_ERROR % 'classArgs'),
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
-},
-'customized': {
-    'codeDir': setPathCheck('codeDir'),
-    'classFileName': setType('classFileName', str),
-    'className': setType('className', str),
-    Optional('classArgs'): And(dict, error=SCHEMA_DICT_ERROR % 'classArgs'),
-    Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999)
-}}
+    'Medianstop': {
+        'builtinAssessorName': 'Medianstop',
+        Optional('classArgs'): And({
+            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
+        }, error=SCHEMA_DICT_ERROR % 'classArgs'),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    'Curvefitting': {
+        'builtinAssessorName': 'Curvefitting',
+        Optional('classArgs'): And({
+            'epoch_num': setNumberRange('epoch_num', int, 0, 9999),
+            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('start_step'): setNumberRange('start_step', int, 0, 9999),
+            Optional('threshold'): setNumberRange('threshold', float, 0, 9999),
+            Optional('gap'): setNumberRange('gap', int, 1, 9999),
+        }, error=SCHEMA_DICT_ERROR % 'classArgs'),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    'customized': {
+        'codeDir': setPathCheck('codeDir'),
+        'classFileName': setType('classFileName', str),
+        'className': setType('className', str),
+        Optional('classArgs'): And(dict, error=SCHEMA_DICT_ERROR % 'classArgs'),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999)
+    }
+}
 
 common_trial_schema = {
 'trial':{
@@ -197,11 +200,11 @@ pai_trial_schema = {
 }
 
 pai_config_schema = {
-'paiConfig':{
-  'userName': setType('userName', str),
-  'passWord': setType('passWord', str),
-  'host': setType('host', str)
-}
+    'paiConfig':{
+        'userName': setType('userName', str),
+        'passWord': setType('passWord', str),
+        'host': setType('host', str)
+    }
 }
 
 kubeflow_trial_schema = {
