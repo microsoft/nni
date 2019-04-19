@@ -99,6 +99,7 @@ abstract class Manager {
     public abstract stopExperiment(): Promise<void>;
     public abstract getExperimentProfile(): Promise<ExperimentProfile>;
     public abstract updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void>;
+    public abstract importData(data: string): Promise<void>;
 
     public abstract addCustomizedTrialJob(hyperParams: string): Promise<void>;
     public abstract cancelTrialJobByUser(trialJobId: string): Promise<void>;

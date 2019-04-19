@@ -46,6 +46,9 @@ export class MockedNNIManager extends Manager {
     public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
         return Promise.resolve();
     }
+    public importData(data: string): Promise<void> {
+        return Promise.resolve();
+    }
     public getTrialJobStatistics(): Promise<TrialJobStatistics[]> {
         const deferred: Deferred<TrialJobStatistics[]> = new Deferred<TrialJobStatistics[]>();
         deferred.resolve([{
