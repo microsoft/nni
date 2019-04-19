@@ -92,7 +92,6 @@ def update_experiment_profile(args, key, value):
 
 def update_searchspace(args):
     validate_file(args.filename)
-    validate_dispatcher(args)
     content = load_search_space(args.filename)
     args.port = get_experiment_port(args)
     if args.port is not None:
@@ -131,7 +130,7 @@ def update_trialnum(args):
 def import_data(args):
     '''import additional data to the experiment'''
     validate_file(args.filename)
-    validate_tuner(args)
+    validate_dispatcher(args)
     content = load_search_space(args.filename)
     args.port = get_experiment_port(args)
     if args.port is not None:
