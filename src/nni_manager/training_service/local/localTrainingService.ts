@@ -376,7 +376,7 @@ class LocalTrainingService implements TrainingService {
 
         envVariables.push({
             key: 'CUDA_VISIBLE_DEVICES',
-            value: this.gpuScheduler === undefined ? '' : resource.gpuIndices.join(',')
+            value: this.gpuScheduler === undefined ? '-1' : resource.gpuIndices.join(',')
         });
 
         return envVariables;
