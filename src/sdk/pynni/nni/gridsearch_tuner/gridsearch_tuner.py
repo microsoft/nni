@@ -160,10 +160,10 @@ class GridSearchTuner(Tuner):
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Start to import data, the current progrss number %s" %_completed_num)
+            logger.info("Importing data, current processing progress %s / %s" %(_completed_num), len(data))
             _completed_num += 1
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
             _params_tuple = convert_dict2tuple(_params)
             self.supplement_data[_params_tuple] = True
-        logger.info("Successfully import date to grid search tuner.")
+        logger.info("Successfully import data to grid search tuner.")

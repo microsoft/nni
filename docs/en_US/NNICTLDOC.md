@@ -419,9 +419,7 @@ Debug mode will disable version check function in Trialkeeper.
 
   * Details
 
-    The file with import data must in specified json format, you can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
-
-    NNI also supports users to import their own data, please express the data in the correct format. An example is shown below:
+    NNI supports users to import their own data, please express the data in the correct format. An example is shown below:
 
     ```json
     [
@@ -432,6 +430,8 @@ Debug mode will disable version check function in Trialkeeper.
     ```
 
     Every element in the top level list is a sample. For our built-in tuners/advisors, each sample should have at least two keys: `parameter` and `value`. The `parameter` must match this experiment's search space, that is, all the keys (or hyperparameters) in `parameter` must match the keys in the search space. Otherwise, tuner/advisor may have unpredictable behavior. `Value` should follow the same rule of the input in `nni.report_final_result`, that is, either a number or a dict with a key named `default`. For your customized tuner/advisor, the file could have any json content depending on how you implement the corresponding methods (e.g., `import_data`).
+
+    You also can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
 
     Currenctly, following tuner and advisor support import data:
 
