@@ -357,7 +357,7 @@ def log_trial(args):
     if args.id:
         if args.trial_id:
             if trial_id_path_dict.get(args.trial_id):
-                print('id:' + args.trial_id + ' path:' + trial_id_path_dict[args.trial_id])
+                print_normal('id:' + args.trial_id + ' path:' + trial_id_path_dict[args.trial_id])
             else:
                 print_error('trial id is not valid!')
                 exit(1)
