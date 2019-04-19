@@ -417,6 +417,14 @@ machineList:
       
       **image** 设置了 **worker** 使用的 docker 映像。
 
+- **localConfig**
+  
+  **localConfig** 仅在 **trainingServicePlatform** 设置为 ```local```时有效，否则配置文件中不应该有 **localConfig** 部分。
+  
+  - **gpuIndices**
+    
+    **gpuIndices** 用于指定特定的 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可以指定单个或多个 GPU 索引，多个索引间使用逗号（,）隔开，例如： ```1``` 或 ```0,1,3```83。
+
 - **machineList**
   
   如果 **trainingServicePlatform** 为 remote，则需要设置 **machineList**。否则应将其置为空。
@@ -448,6 +456,10 @@ machineList:
   - **passphrase**
     
     **passphrase** 用于保护 ssh 密钥，如果没有使用，可为空。
+  
+  - **gpuIndices**
+    
+    **gpuIndices** 用于指定远程计算机上特定的 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可以指定单个或多个 GPU 索引，多个索引间使用逗号（,）隔开，例如： ```1``` 或者 ```0,1,3```96。
 
 - **kubeflowConfig**:
   
