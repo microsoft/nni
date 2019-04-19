@@ -439,9 +439,9 @@ nnictl 支持的命令：
     
     最顶层列表的每个元素都是一个样例。 对于内置的 Tuner 和 Advisor，每个样本至少需要两个主键：`parameter` 和 `value`。 `parameter` 必须与 Experiment 的搜索空间相匹配，`parameter` 中的所有的主键（或超参）都必须与搜索空间中的主键相匹配。 否则， Tuner 或 Advisor 可能会有无法预期的行为。 `Value` 应当遵循与 `nni.report_final_result` 的输入值一样的规则，即要么时一个数字，或者是包含 `default` 主键的 dict。 对于自定义的 Tuner 或 Advisor，根据实现的不同，此文件可以是任意的 JSON 内容（例如，`import_data`）。
     
-    You also can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
+    也可以用 [nnictl experiment export](#export) 命令导出 Experiment 已经运行过的 Trial 超参和结果。
     
-    Currenctly, following tuner and advisor support import data:
+    当前，以下 Tuner 和 Advisor 支持导入数据：
     
     ```yml
     builtinTunerName: TPE, Anneal, GridSearch, MetisTuner
