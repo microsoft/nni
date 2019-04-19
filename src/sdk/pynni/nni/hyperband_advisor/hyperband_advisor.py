@@ -31,7 +31,6 @@ import json_tricks
 
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.common import init_logger
 from nni.utils import extract_scalar_reward
 from .. import parameter_expressions
 

@@ -18,6 +18,10 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
+import os
+from .common import init_logger
+from .env_vars import dispatcher_env_vars
+
 def extract_scalar_reward(value, scalar_key='default'):
     """
     Extract scalar reward from trial result.
@@ -46,3 +50,10 @@ def convert_dict2tuple(value):
         return tuple(sorted(value.items()))
     else:
         return value
+
+def init_dispatcher_logger():
+    """ Initialize dispatcher logging configuration"""
+    logger_file_path = 'dispatcher.log'
+    if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
+        logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
+    init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)
