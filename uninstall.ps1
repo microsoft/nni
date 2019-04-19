@@ -1,19 +1,17 @@
 
 $NNI_DEPENDENCY_FOLDER = "C:\tmp\$env:USERNAME"
 
-$WHICH_PYTHON = where.exe python;
-if($WHICH_PYTHON[0].Length -eq 1){
-    $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+set PYTHONIOENCODING = UTF-8
+if($env:VIRTUAL_ENV){
+    $NNI_PYTHON3 = $env:VIRTUAL_ENV + "\Scripts"
+    $NNI_PKG_FOLDER = $env:VIRTUAL_ENV + "\nni"
 }
 else{
-    $NNI_PYTHON3 = $WHICH_PYTHON[0].SubString(0,$WHICH_PYTHON[0].Length-11)
+    $NNI_PYTHON3 = $(python -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]))')
+    $NNI_PKG_FOLDER = $NNI_PYTHON3 + "\nni"
 }
 
 $PIP_UNINSTALL = """$NNI_PYTHON3\python"" -m pip uninstall -y "
-$NNI_PKG_FOLDER = $NNI_PYTHON3 +"\nni"
-if($env:VIRTUAL_ENV){
-    $NNI_PKG_FOLDER = $env:VIRTUAL_ENV + "\nni"
-}
 Remove-Item "$NNI_PYTHON3\Scripts\node.exe" -Force
 $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"

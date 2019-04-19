@@ -27,15 +27,15 @@ $WHICH_PIP = where.exe pip
 if($WHICH_PIP -eq $null){
     throw "Can not find pip"
 }
-if($WHICH_PYTHON[0].Length -eq 1){
-    $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+
+set PYTHONIOENCODING = UTF-8
+if($env:VIRTUAL_ENV){
+    $NNI_PYTHON3 = $env:VIRTUAL_ENV + "\Scripts"
+    $NNI_PKG_FOLDER = $env:VIRTUAL_ENV + "\nni"
 }
 else{
-    $NNI_PYTHON3 = $WHICH_PYTHON[0].SubString(0,$WHICH_PYTHON[0].Length-11)
-}
-$NNI_PKG_FOLDER = $NNI_PYTHON3 + "\nni"
-if($env:VIRTUAL_ENV){
-    $NNI_PKG_FOLDER = $env:VIRTUAL_ENV + "\nni"
+    $NNI_PYTHON3 = $(python -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]))')
+    $NNI_PKG_FOLDER = $NNI_PYTHON3 + "\nni"
 }
 $NNI_PYTHON_SCRIPTS =  $NNI_PYTHON3 + "\Scripts"
 $PIP_INSTALL = """$NNI_PYTHON3\python"" -m pip install ."
@@ -87,7 +87,7 @@ if ($install_node) {
     Copy-Item "$NNI_NODE_FOLDER\node.exe" $NNI_PYTHON_SCRIPTS -Recurse -Force
     ### yarn install
     if(!(Test-Path $NNI_YARN_FOLDER)){
-        cmd /C "$NNI_PYTHON3\python" $SCRIPT_PATH
+        cmd /C """$NNI_PYTHON3\python""" $SCRIPT_PATH
         $unzipYarnDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipYarnDir"
         Rename-Item $unzipYarnDir "nni-yarn"
     }

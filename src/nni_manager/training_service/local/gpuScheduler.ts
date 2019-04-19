@@ -94,7 +94,7 @@ class GPUScheduler {
             const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
             await execKill(pid);
             await execRemove(this.gpuMetricCollectorScriptFolder);
-        } catch (error){
+        } catch (error) {
             this.log.error(`GPU scheduler error: ${error}`);
         }
     }
