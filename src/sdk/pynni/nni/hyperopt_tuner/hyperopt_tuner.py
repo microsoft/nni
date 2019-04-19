@@ -347,7 +347,7 @@ class HyperoptTuner(Tuner):
         for key in vals:
             try:
                 parameter[key] = vals[key][0].item()
-            except KeyError:
+            except (KeyError, IndexError):
                 parameter[key] = None
 
         # remove '_index' from json2parameter and save params-id

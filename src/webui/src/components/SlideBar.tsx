@@ -209,7 +209,7 @@ class SlideBar extends React.Component<{}, SliderState> {
             </li>
             <li className="tab">
               <Link to={'/detail'} activeClassName="high">
-                Trials Detail
+                Trials detail
             </Link>
             </li>
           </ul>
