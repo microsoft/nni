@@ -61,6 +61,11 @@
     div{
         color: #0573bc;
     }
+    .time{
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
 }
 
 .mess{
