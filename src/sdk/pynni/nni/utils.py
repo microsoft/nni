@@ -18,6 +18,10 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
+import os
+from .common import init_logger
+from .env_vars import dispatcher_env_vars
+
 def extract_scalar_reward(value, scalar_key='default'):
     """
     Raises
@@ -33,3 +37,10 @@ def extract_scalar_reward(value, scalar_key='default'):
     else:
         raise RuntimeError('Incorrect final result: the final result for %s should be float/int, or a dict which has a key named "default" whose value is float/int.' % str(self.__class__)) 
     return reward
+
+def init_dispatcher_logger():
+    """ Initialize dispatcher logging configuration"""
+    logger_file_path = 'dispatcher.log'
+    if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
+        logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
+    init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)
