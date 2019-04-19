@@ -18,49 +18,31 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-
 import os
-from setuptools import setup, find_packages
+from collections import namedtuple
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname), encoding='utf-8').read()
 
-setup(
-    name = 'nni',
-    version = '999.0.0-developing',
-    author = 'Microsoft NNI Team',
-    author_email = 'nni@microsoft.com',
-    description = 'Neural Network Intelligence project',
-    long_description = read('README.md'),
-    license = 'MIT',
-    url = 'https://github.com/Microsoft/nni',
+_trial_env_var_names = [
+    'NNI_PLATFORM',
+    'NNI_TRIAL_JOB_ID',
+    'NNI_SYS_DIR',
+    'NNI_OUTPUT_DIR',
+    'NNI_TRIAL_SEQ_ID',
+    'MULTI_PHASE'
+]
 
-    packages = find_packages('src/sdk/pynni', exclude=['tests']) + find_packages('tools'),
-    package_dir = {
-        'nni': 'src/sdk/pynni/nni',
-        'nni_annotation': 'tools/nni_annotation',
-        'nni_cmd': 'tools/nni_cmd',
-        'nni_trial_tool':'tools/nni_trial_tool',
-        'nni_gpu_tool':'tools/nni_gpu_tool'
-    },
-    package_data = {'nni': ['**/requirements.txt']},
-    python_requires = '>=3.5',
-    install_requires = [
-        'astor',
-        'hyperopt',
-        'json_tricks',
-        'numpy',
-        'psutil',
-        'ruamel.yaml',
-        'requests',
-        'scipy',
-        'schema',
-        'PythonWebHDFS'
-    ],
+_dispatcher_env_var_names = [
+    'NNI_MODE',
+    'NNI_CHECKPOINT_DIRECTORY',
+    'NNI_LOG_DIRECTORY',
+    'NNI_LOG_LEVEL',
+    'NNI_INCLUDE_INTERMEDIATE_RESULTS'
+]
 
-    entry_points = {
-        'console_scripts' : [
-            'nnictl = nni_cmd.nnictl:parse_args'
-        ]
-    }
-)
+def _load_env_vars(env_var_names):
+    env_var_dict = {k: os.environ.get(k) for k in env_var_names}
+    return namedtuple('EnvVars', env_var_names)(**env_var_dict)
+
+trial_env_vars = _load_env_vars(_trial_env_var_names)
+
+dispatcher_env_vars = _load_env_vars(_dispatcher_env_var_names)

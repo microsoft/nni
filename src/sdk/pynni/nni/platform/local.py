@@ -21,32 +21,33 @@
 import os
 import json
 import time
-import json_tricks
 import subprocess
+import json_tricks
 
-from ..common import init_logger, env_args
+from ..common import init_logger
+from ..env_vars import trial_env_vars
 
-_sysdir = os.environ['NNI_SYS_DIR']
+_sysdir = trial_env_vars.NNI_SYS_DIR
 if not os.path.exists(os.path.join(_sysdir, '.nni')):
     os.makedirs(os.path.join(_sysdir, '.nni'))
 _metric_file = open(os.path.join(_sysdir, '.nni', 'metrics'), 'wb')
 
-_outputdir = os.environ['NNI_OUTPUT_DIR']
+_outputdir = trial_env_vars.NNI_OUTPUT_DIR
 if not os.path.exists(_outputdir):
     os.makedirs(_outputdir)
 
-_nni_platform = os.environ['NNI_PLATFORM']
+_nni_platform = trial_env_vars.NNI_PLATFORM
 if _nni_platform == 'local':
    _log_file_path = os.path.join(_outputdir, 'trial.log')
    init_logger(_log_file_path)
 
-_multiphase = os.environ.get('MULTI_PHASE')
+_multiphase = trial_env_vars.MULTI_PHASE
 
 _param_index = 0
 
 def request_next_parameter():
     metric = json_tricks.dumps({
-        'trial_job_id': env_args.trial_job_id,
+        'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'REQUEST_PARAMETER',
         'sequence': 0,
         'parameter_index': _param_index
@@ -89,4 +90,4 @@ def send_metric(string):
         subprocess.run(['touch', _metric_file.name], check = True)
 
 def get_sequence_id():
-    return os.environ['NNI_TRIAL_SEQ_ID']
+    return trial_env_vars.NNI_TRIAL_SEQ_ID
