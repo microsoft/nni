@@ -91,5 +91,3 @@ SCHEMA_TYPE_ERROR = '%s should be %s type!'
 SCHEMA_RANGE_ERROR = '%s should be in range of %s!'
 
 SCHEMA_PATH_ERROR = '%s path not exist!'
-
-SCHEMA_DICT_ERROR = '%s error, miss keys or wrong keys'
