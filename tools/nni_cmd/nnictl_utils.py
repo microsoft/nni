@@ -103,14 +103,11 @@ def check_experiment_id(args):
             return None
         else:
             return running_experiment_list[0]
-    if hasattr(args, "experiment"):
-        if experiment_dict.get(args.experiment):
-            return args.experiment
-    elif hasattr(args, "id"):
-        if experiment_dict.get(args.id):
-            return args.id
-    print_error('Id not correct!')
-    return None
+    if experiment_dict.get(args.id):
+        return args.id
+    else:
+        print_error('Id not correct!')
+        return None
 
 def parse_ids(args):
     '''Parse the arguments for nnictl stop
@@ -357,16 +354,15 @@ def log_trial(args):
     else:
         print_error('Restful server is not running...')
         exit(1)
-    if args.experiment:
-        if args.id:
-            if trial_id_path_dict.get(args.id):
-                print('id:' + args.id + ' path:' + trial_id_path_dict[args.id])
+    if args.id:
+        if args.trial_id:
+            if trial_id_path_dict.get(args.trial_id):
+                print_normal('id:' + args.trial_id + ' path:' + trial_id_path_dict[args.trial_id])
             else:
                 print_error('trial id is not valid!')
                 exit(1)
         else:
             print_error('please specific the trial id!')
-            print_error("trial id list in this experiment: " + str(list(trial_id_path_dict.keys())))
             exit(1)
     else:
         for key in trial_id_path_dict:
