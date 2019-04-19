@@ -287,8 +287,8 @@ Debug mode will disable version check function in Trialkeeper.
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id|  False| |ID of the trial to be killed|
-  |--experiment, -E|  True| |Experiment id of the trial|
+  |id|  False| |Experiment ID of the trial|
+  |--trial_id, -T|  True| |ID of the trial you want to kill.|
 
   * Example
 
@@ -297,24 +297,6 @@ Debug mode will disable version check function in Trialkeeper.
     ```bash
     nnictl trial [trial_id] --experiment [experiment_id]
     ```
-
-* __nnictl trial export__
-  * Description
-
-    You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
-
-  * Usage
-
-    ```bash
-    nnictl trial export [OPTIONS]
-    ```
-
-  * Options
-
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |id|  False| |ID of the experiment    |
-  |--file|  True| |File path of the output csv file     |
 
 <a name="top"></a>
 
@@ -386,6 +368,92 @@ Debug mode will disable version check function in Trialkeeper.
 
     ```bash
     nnictl experiment list
+    ```
+
+<a name="export"></a>
+
+* __nnictl experiment export__
+  * Description
+
+    You can use this command to export reward & hyper-parameter of trial jobs to a csv file.
+
+  * Usage
+
+    ```bash
+    nnictl experiment export [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |id|  False| |ID of the experiment    |
+  |--file|  True| |File path of the output file     |
+  |--type|  True| |Type of output file, only support "csv" and "json"|
+
+  * Examples
+
+  > export all trial data in an experiment as json format
+
+  ```bash
+  nnictl experiment export [experiment_id] --file [file_path] --type json
+  ```
+
+* __nnictl experiment import__
+  * Description
+
+    You can use this command to import several prior or supplementary trial hyperparameters & results for NNI hyperparameter tuning. The data are fed to the tuning algorithm (e.g., tuner or advisor).
+
+  * Usage
+
+    ```bash
+    nnictl experiment import [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------|------|
+  |id|  False| |The id of the experiment you want to import data into|
+  |--file, -f|  True| |a file with data you want to import in json format|
+
+  * Details
+
+    NNI supports users to import their own data, please express the data in the correct format. An example is shown below:
+
+    ```json
+    [
+      {"parameter": {"x": 0.5, "y": 0.9}, "value": 0.03},
+      {"parameter": {"x": 0.4, "y": 0.8}, "value": 0.05},
+      {"parameter": {"x": 0.3, "y": 0.7}, "value": 0.04}
+    ]
+    ```
+
+    Every element in the top level list is a sample. For our built-in tuners/advisors, each sample should have at least two keys: `parameter` and `value`. The `parameter` must match this experiment's search space, that is, all the keys (or hyperparameters) in `parameter` must match the keys in the search space. Otherwise, tuner/advisor may have unpredictable behavior. `Value` should follow the same rule of the input in `nni.report_final_result`, that is, either a number or a dict with a key named `default`. For your customized tuner/advisor, the file could have any json content depending on how you implement the corresponding methods (e.g., `import_data`).
+
+    You also can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
+
+    Currenctly, following tuner and advisor support import data:
+
+    ```yml
+    builtinTunerName: TPE, Anneal, GridSearch, MetisTuner
+    builtinAdvisorName: BOHB
+    ```
+
+    *If you want to import data to BOHB advisor, user are suggested to add "TRIAL_BUDGET" in parameter as NNI do, otherwise, BOHB will use max_budget as "TRIAL_BUDGET". Here is an example:*
+
+    ```json
+    [
+      {"parameter": {"x": 0.5, "y": 0.9, "TRIAL_BUDGET": 27}, "value": 0.03}
+    ]
+    ```
+
+  * Examples
+
+    > import data to a running experiment
+
+    ```bash
+    nnictl experiment [experiment_id] -f experiment_data.json
     ```
 
 <a name="config"></a>
@@ -470,8 +538,8 @@ Debug mode will disable version check function in Trialkeeper.
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |id|  False| |ID of the trial to be found the log path|
-  |--experiment, -E|  False| |Experiment ID of the trial, required when id is not empty.|
+  |id|  False| |Experiment ID of the trial|
+  |--trial_id, -T|  False| |ID of the trial to be found the log path, required when id is not empty.|
 
 <a name="webui"></a>
 ![](https://placehold.it/15/1589F0/000000?text=+) `Manage webui`
@@ -498,7 +566,7 @@ Debug mode will disable version check function in Trialkeeper.
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
   |id|  False| |ID of the experiment you want to set|
-  |--trialid|  False| |ID of the trial|
+  |--trial_id, -T|  False| |ID of the trial|
   |--port|  False| 6006|The port of the tensorboard process|
 
   * Detail
@@ -507,7 +575,7 @@ Debug mode will disable version check function in Trialkeeper.
     2. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path.  
     3. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
     4. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
-    5. If there is only one trial job, you don't need to set trialid. If there are multiple trial jobs running, you should set the trialid, or you could use [nnictl tensorboard start --trialid all] to map --logdir to all trial log paths.
+    5. If there is only one trial job, you don't need to set trial id. If there are multiple trial jobs running, you should set the trial id, or you could use [nnictl tensorboard start --trial_id all] to map --logdir to all trial log paths.
 
 * __nnictl tensorboard stop__
   * Description

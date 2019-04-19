@@ -103,14 +103,11 @@ def check_experiment_id(args):
             return None
         else:
             return running_experiment_list[0]
-    if hasattr(args, "experiment"):
-        if experiment_dict.get(args.experiment):
-            return args.experiment
-    elif hasattr(args, "id"):
-        if experiment_dict.get(args.id):
-            return args.id
-    print_error('Id not correct!')
-    return None
+    if experiment_dict.get(args.id):
+        return args.id
+    else:
+        print_error('Id not correct!')
+        return None
 
 def parse_ids(args):
     '''Parse the arguments for nnictl stop
@@ -357,16 +354,15 @@ def log_trial(args):
     else:
         print_error('Restful server is not running...')
         exit(1)
-    if args.experiment:
-        if args.id:
-            if trial_id_path_dict.get(args.id):
-                print('id:' + args.id + ' path:' + trial_id_path_dict[args.id])
+    if args.id:
+        if args.trial_id:
+            if trial_id_path_dict.get(args.trial_id):
+                print_normal('id:' + args.trial_id + ' path:' + trial_id_path_dict[args.trial_id])
             else:
                 print_error('trial id is not valid!')
                 exit(1)
         else:
             print_error('please specific the trial id!')
-            print_error("trial id list in this experiment: " + str(list(trial_id_path_dict.keys())))
             exit(1)
     else:
         for key in trial_id_path_dict:
@@ -509,10 +505,19 @@ def export_trials_data(args):
             # dframe = pd.DataFrame.from_records([parse_trial_data(t_data) for t_data in content])
             # dframe.to_csv(args.csv_path, sep='\t')
             records = parse_trial_data(content)
-            with open(args.csv_path, 'w') as f_csv:
-                writer = csv.DictWriter(f_csv, set.union(*[set(r.keys()) for r in records]))
-                writer.writeheader()
-                writer.writerows(records)
+            if args.type == 'json':
+                json_records = []
+                for trial in records:
+                    value = trial.pop('reward', None)
+                    trial_id =  trial.pop('id', None)
+                    json_records.append({'parameter': trial, 'value': value, 'id': trial_id})
+            with open(args.path, 'w') as file:
+                if args.type == 'csv':
+                    writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in records]))
+                    writer.writeheader()
+                    writer.writerows(records)
+                else:
+                    json.dump(json_records, file)
         else:
             print_error('Export failed...')
     else:
