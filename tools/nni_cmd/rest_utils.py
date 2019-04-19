@@ -23,39 +23,48 @@ import time
 import requests
 from .url_utils import check_status_url
 from .constants import REST_TIME_OUT
+from .common_utils import print_error
 
-def rest_put(url, data, timeout):
+def rest_put(url, data, timeout, show_error=False):
     '''Call rest put method'''
     try:
         response = requests.put(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
                                 data=data, timeout=timeout)
         return response
-    except Exception:
+    except Exception as exception:
+        if show_error:
+            print_error(exception)
         return None
 
-def rest_post(url, data, timeout):
+def rest_post(url, data, timeout, show_error=False):
     '''Call rest post method'''
     try:
         response = requests.post(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
                                  data=data, timeout=timeout)
         return response
-    except Exception:
+    except Exception as exception:
+        if show_error:
+            print_error(exception)
         return None
 
-def rest_get(url, timeout):
+def rest_get(url, timeout, show_error=False):
     '''Call rest get method'''
     try:
         response = requests.get(url, timeout=timeout)
         return response
-    except Exception:
+    except Exception as exception:
+        if show_error:
+            print_error(exception)
         return None
 
-def rest_delete(url, timeout):
+def rest_delete(url, timeout, show_error=False):
     '''Call rest delete method'''
     try:
         response = requests.delete(url, timeout=timeout)
         return response
-    except Exception:
+    except Exception as exception:
+        if show_error:
+            print_error(exception)
         return None
 
 def check_rest_server(rest_port):

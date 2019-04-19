@@ -161,13 +161,14 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         const bar2Percent = (bar2 / trialProfile.MaxTrialNum) * 100;
         const percent = (trialProfile.execDuration / trialProfile.maxDuration) * 100;
         const runDuration = convertTime(trialProfile.execDuration);
+        const temp = trialProfile.maxDuration - trialProfile.execDuration;
         let remaining;
-        if (status === 'DONE') {
+        let errorContent;
+        if (temp < 0) {
             remaining = '0';
         } else {
-            remaining = convertTime(trialProfile.maxDuration - trialProfile.execDuration);
+            remaining = convertTime(temp);
         }
-        let errorContent;
         if (errors !== '') {
             errorContent = (
                 <div className="errors">
@@ -225,33 +226,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                     <Col span={6}>
                         <Row className="basic colorOfbasic">
                             <p>Remaining</p>
-                            <div>{remaining}</div>
-                        </Row>
-                    </Col>
-                    <Col span={6}>
-                        <Row className="basic colorOfbasic">
-                            <p>Running</p>
-                            <div>{trialNumber.runTrial}</div>
-                        </Row>
-                    </Col>
-                    <Col span={6}>
-                        <Row className="basic colorOfbasic">
-                            <p>Succeeded</p>
-                            <div>{trialNumber.succTrial}</div>
-                        </Row>
-                    </Col>
-                </Row>
-                <Row className="mess">
-                    <Col span={6}>
-                        <Row className="basic">
-                            <p>Stopped</p>
-                            <div>{trialNumber.stopTrial}</div>
-                        </Row>
-                    </Col>
-                    <Col span={6}>
-                        <Row className="basic">
-                            <p>Failed</p>
-                            <div>{trialNumber.failTrial}</div>
+                            <div className="time">{remaining}</div>
                         </Row>
                     </Col>
                     <Col span={12}>
@@ -281,6 +256,33 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                             </Button>
                         </Row>
                     </Col>
+                </Row>
+                <Row className="mess">
+                    <Col span={6}>
+                        <Row className="basic colorOfbasic">
+                            <p>Running</p>
+                            <div>{trialNumber.runTrial}</div>
+                        </Row>
+                    </Col>
+                    <Col span={6}>
+                        <Row className="basic colorOfbasic">
+                            <p>Succeeded</p>
+                            <div>{trialNumber.succTrial}</div>
+                        </Row>
+                    </Col>
+                    <Col span={6}>
+                        <Row className="basic">
+                            <p>Stopped</p>
+                            <div>{trialNumber.stopTrial}</div>
+                        </Row>
+                    </Col>
+                    <Col span={6}>
+                        <Row className="basic">
+                            <p>Failed</p>
+                            <div>{trialNumber.failTrial}</div>
+                        </Row>
+                    </Col>
+
                 </Row>
             </Row>
         );

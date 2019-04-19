@@ -19,16 +19,30 @@
 # ==================================================================================================
 
 import os
+from collections import namedtuple
 
-class Recoverable:
-    def load_checkpoint(self):
-        pass
 
-    def save_checkpoint(self):
-        pass
+_trial_env_var_names = [
+    'NNI_PLATFORM',
+    'NNI_TRIAL_JOB_ID',
+    'NNI_SYS_DIR',
+    'NNI_OUTPUT_DIR',
+    'NNI_TRIAL_SEQ_ID',
+    'MULTI_PHASE'
+]
 
-    def get_checkpoint_path(self):
-        ckp_path = os.getenv('NNI_CHECKPOINT_DIRECTORY')
-        if ckp_path is not None and os.path.isdir(ckp_path):
-            return ckp_path
-        return None
+_dispatcher_env_var_names = [
+    'NNI_MODE',
+    'NNI_CHECKPOINT_DIRECTORY',
+    'NNI_LOG_DIRECTORY',
+    'NNI_LOG_LEVEL',
+    'NNI_INCLUDE_INTERMEDIATE_RESULTS'
+]
+
+def _load_env_vars(env_var_names):
+    env_var_dict = {k: os.environ.get(k) for k in env_var_names}
+    return namedtuple('EnvVars', env_var_names)(**env_var_dict)
+
+trial_env_vars = _load_env_vars(_trial_env_var_names)
+
+dispatcher_env_vars = _load_env_vars(_dispatcher_env_var_names)

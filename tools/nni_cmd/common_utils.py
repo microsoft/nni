@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import json
-import yaml
+import ruamel.yaml as yaml
 import psutil
 import socket
 from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO, COLOR_RED_FORMAT, COLOR_YELLOW_FORMAT
@@ -28,7 +28,7 @@ def get_yml_content(file_path):
     '''Load yaml file content'''
     try:
         with open(file_path, 'r') as file:
-            return yaml.load(file)
+            return yaml.load(file, Loader=yaml.Loader)
     except TypeError as err:
         print('Error: ', err)
         return None
