@@ -28,7 +28,7 @@ if($WHICH_PIP -eq $null){
     throw "Can not find pip"
 }
 
-set PYTHONIOENCODING = UTF-8
+$env:PYTHONIOENCODING = "UTF-8"
 if($env:VIRTUAL_ENV){
     $NNI_PYTHON3 = $env:VIRTUAL_ENV + "\Scripts"
     $NNI_PKG_FOLDER = $env:VIRTUAL_ENV + "\nni"
