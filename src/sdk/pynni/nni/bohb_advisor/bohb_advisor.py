@@ -589,7 +589,7 @@ class BOHB(MsgDispatcherBase):
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s" %(_completed_num), len(data))
+            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
             _completed_num += 1
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
