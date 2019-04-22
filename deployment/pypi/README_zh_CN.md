@@ -2,11 +2,11 @@
 
 这是用于 NNI 项目的 PyPI 生成和上传的工具。
 
-## **For Linux**
+## **Linux**
 
-* **Prepare environment**
+* **准备环境**
     
-    Before build and upload NNI package, make sure the below OS and tools are available.
+    在生成和上传 NNI 包之前，确保使用了下列环境。
     
         Ubuntu 16.04 LTS
         make
@@ -17,35 +17,35 @@
         Yarn
         
 
-* **How to build**
+* **如何生成**
     
     ```bash
     make
     ```
 
-* **How to upload**
+* **如何上传**
     
-    **upload for testing**
+    **上传测试包**
     
     ```bash
     TWINE_REPOSITORY_URL=https://test.pypi.org/legacy/ make upload
     ```
     
-    You may need to input the account and password of https://test.pypi.org during this process.
+    上传过程中，可能需要输入 https://test.pypi.org 的用户和密码。
     
-    **upload for release**
+    **上传发布包**
     
     ```bash
     make upload
     ```
     
-    You may need to input the account and password of https://pypi.org during this process.
+    上传过程中，可能需要输入 https://pypi.org 的用户和密码。
 
-## **For Windows**
+## **Windows**
 
-* **Prepare environment**
+* **准备环境**
     
-    Before build and upload NNI package, make sure the below OS and tools are available.
+    在生成和上传 NNI 包之前，确保使用了下列环境。
     
         Windows 10
         powershell
@@ -56,13 +56,13 @@
         tar
         
 
-* **How to build**
+* **如何生成**
     
     ```bash
     powershell ./install.ps1
     ```
 
-* **How to upload**
+* **如何上传**
     
     **upload for testing**
     
@@ -70,12 +70,12 @@
     powershell ./upload.ps1
     ```
     
-    You may need to input the account and password of https://test.pypi.org during this process.
+    上传过程中，可能需要输入 https://test.pypi.org 的用户和密码。
     
-    **upload for release**
+    **上传发布包**
     
     ```bash
     powershell ./upload.ps1 -test $False
     ```
     
-    You may need to input the account and password of https://pypi.org during this process.
+    上传过程中，可能需要输入 https://pypi.org 的用户和密码。
