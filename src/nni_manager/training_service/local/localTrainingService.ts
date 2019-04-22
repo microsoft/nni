@@ -18,7 +18,6 @@
  */
 
 'use strict';
-
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { EventEmitter } from 'events';
@@ -32,7 +31,8 @@ import {
     HostJobApplicationForm, HyperParameters, JobApplicationForm, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
-import { delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, uniqueString } from '../../common/utils';
+import { delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, uniqueString, isAlive, getNewLine } from '../../common/utils';
+import { execMkdir, getScriptName, execScript, setEnvironmentVariable, execNewFile } from '../common/util'
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { GPUScheduler } from './gpuScheduler';
@@ -169,14 +169,7 @@ class LocalTrainingService implements TrainingService {
             return this.getHostJob(trialJobId);
         }
         if (trialJob.status === 'RUNNING') {
-            let alive: boolean = false;
-            try {
-                await cpp.exec(`kill -0 ${trialJob.pid}`);
-                alive = true;
-            } catch (error) {
-                //ignore
-            }
-
+            let alive: boolean = await isAlive(trialJob.pid);
             if (!alive) {
                 trialJob.endTime = Date.now();
                 this.setTrialJobStatus(trialJob, 'FAILED');
@@ -284,7 +277,9 @@ class LocalTrainingService implements TrainingService {
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (!this.initialized) {
             this.rootDir = getExperimentRootDir();
-            await cpp.exec(`mkdir -p ${this.rootDir}`);
+            if(!fs.existsSync(this.rootDir)){
+                await cpp.exec(`powershell.exe mkdir ${this.rootDir}`);
+            }
             this.initialized = true;
         }
         switch (key) {
@@ -381,7 +376,7 @@ class LocalTrainingService implements TrainingService {
 
         envVariables.push({
             key: 'CUDA_VISIBLE_DEVICES',
-            value: this.gpuScheduler === undefined ? '' : resource.gpuIndices.join(',')
+            value: this.gpuScheduler === undefined ? '-1' : resource.gpuIndices.join(',')
         });
 
         return envVariables;
@@ -465,36 +460,52 @@ class LocalTrainingService implements TrainingService {
         }
     }
 
+    private getScript(localTrailConfig: TrialConfig, workingDirectory: string): string[]{
+        let script: string[] = [];
+        if (process.platform === "win32") {
+            script.push(
+                `cmd /c ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
+                `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
+                `$NOW_DATE = "$NOW_DATE" + "000"`,
+                `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`);
+        }
+        else{
+            script.push(
+                `eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
+                `echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`);
+        }
+        return script;
+    }
+
     private async runTrialJob(trialJobId: string, resource: {gpuIndices: number[]}): Promise<void> {
         const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
         const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource);
 
-        const runScriptLines: string[] = [];
-
         if (!this.localTrailConfig) {
             throw new Error('trial config is not initialized');
         }
-        runScriptLines.push(
-            '#!/bin/bash',
-            `cd ${this.localTrailConfig.codeDir}`);
-        for (const variable of variables) {
-            runScriptLines.push(`export ${variable.key}=${variable.value}`);
+        const runScriptLines: string[] = [];
+        if (process.platform !== "win32"){
+            runScriptLines.push('#!/bin/bash');
         }
-        runScriptLines.push(
-            `eval ${this.localTrailConfig.command} 2>${path.join(trialJobDetail.workingDirectory, 'stderr')}`,
-            `echo $? \`date +%s000\` >${path.join(trialJobDetail.workingDirectory, '.nni', 'state')}`);
-
-        await cpp.exec(`mkdir -p ${trialJobDetail.workingDirectory}`);
-        await cpp.exec(`mkdir -p ${path.join(trialJobDetail.workingDirectory, '.nni')}`);
-        await cpp.exec(`touch ${path.join(trialJobDetail.workingDirectory, '.nni', 'metrics')}`);
-        await fs.promises.writeFile(
-            path.join(trialJobDetail.workingDirectory, 'run.sh'), runScriptLines.join('\n'), { encoding: 'utf8', mode: 0o777 });
+        runScriptLines.push(`cd ${this.localTrailConfig.codeDir}`);
+        for (const variable of variables) {
+            runScriptLines.push(setEnvironmentVariable(variable));
+        }
+        const scripts: string[] = this.getScript(this.localTrailConfig, trialJobDetail.workingDirectory);
+        scripts.forEach(script => {
+            runScriptLines.push(script); 
+        });
+        await execMkdir(trialJobDetail.workingDirectory);
+        await execMkdir(path.join(trialJobDetail.workingDirectory, '.nni'));
+        await execNewFile(path.join(trialJobDetail.workingDirectory, '.nni', 'metrics'));
+        const scriptName: string = getScriptName('run');
+        await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, scriptName), runScriptLines.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
-        const process: cp.ChildProcess = cp.exec(`bash ${path.join(trialJobDetail.workingDirectory, 'run.sh')}`);
-
+        const trialJobProcess: cp.ChildProcess = execScript(path.join(trialJobDetail.workingDirectory, scriptName));
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
         trialJobDetail.startTime = Date.now();
-        trialJobDetail.pid = process.pid;
+        trialJobDetail.pid = trialJobProcess.pid;
         this.setExtraProperties(trialJobDetail, resource);
 
         let buffer: Buffer = Buffer.alloc(0);
