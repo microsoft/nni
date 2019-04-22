@@ -65,7 +65,7 @@ setuptools.setup(
     python_requires = '>=3.5',
     install_requires = [
         'schema',
-        'pyyaml',
+        'ruamel.yaml',
         'psutil',
         'requests',
         'astor',
