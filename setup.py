@@ -55,7 +55,8 @@ setup(
         'requests',
         'scipy',
         'schema',
-        'PythonWebHDFS'
+        'PythonWebHDFS',
+        'colorama'
     ],
 
     entry_points = {
