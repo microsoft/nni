@@ -610,6 +610,5 @@ class BOHB(MsgDispatcherBase):
                 reward = -_value
             else:
                 reward = _value
-            logger.info("import data params = %s", _params)
             self.cg.new_result(loss=reward, budget=_budget, parameters=barely_params, update_model=True)
         logger.info("Successfully import tuning data to BOHB advisor.")
