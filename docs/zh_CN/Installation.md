@@ -59,7 +59,7 @@
 * [使用 NNIBoard](WebUI.md)
 * [定制搜索空间](SearchSpaceSpec.md)
 * [配置 Experiment](ExperimentConfig.md)
-* [如何在本机运行 Experiment (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](LocalMode.md)
 * [如何在多机上运行 Experiment？](RemoteMachineMode.md)
 * [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
 * [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](KubeflowMode.md)

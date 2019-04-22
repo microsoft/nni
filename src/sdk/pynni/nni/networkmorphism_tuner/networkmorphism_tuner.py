@@ -307,3 +307,7 @@ class NetworkMorphismTuner(Tuner):
             if item["model_id"] == model_id:
                 return item["metric_value"]
         return None
+
+    def import_data(self, data):
+        pass
+

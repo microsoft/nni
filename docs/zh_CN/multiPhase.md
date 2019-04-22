@@ -1,36 +1,25 @@
+## 多阶段 Experiment
+
+通常，每个 Trial 任务只需要从 Tuner 获取一个配置（超参等），然后使用这个配置执行并报告结果，然后退出。 但有时，一个 Trial 任务可能需要从 Tuner 请求多次配置。 这是一个非常有用的功能。 例如：
+
+1. 在一些训练平台上，需要数十秒来启动一个任务。 如果一个配置只需要一分钟就能完成，那么每个 Trial 任务中只运行一个配置就会非常低效。 这种情况下，可以在同一个 Trial 任务中，完成一个配置后，再请求并完成另一个配置。 极端情况下，一个 Trial 任务可以运行无数个配置。 如果设置了并发（例如设为 6），那么就会有 6 个**长时间**运行的任务来不断尝试不同的配置。
+
+2. 有些类型的模型需要进行多阶段的训练，而下一个阶段的配置依赖于前一个阶段的结果。 例如，为了找到模型最好的量化结果，训练过程通常为：自动量化算法（例如 NNI 中的 TunerJ）选择一个位宽（如 16 位）， Trial 任务获得此配置，并训练数个 epoch，并返回结果（例如精度）。 算法收到结果后，决定是将 16 位改为 8 位，还是 32 位。 此过程会重复多次。
+
+上述情况都可以通过多阶段执行的功能来支持。 为了支持这些情况，一个 Trial 任务需要能从 Tuner 请求多个配置。 Tuner 需要知道两次配置请求是否来自同一个 Trial 任务。 同时，多阶段中的 Trial 任务需要多次返回最终结果。
+
+注意， `nni.get_next_parameter()` 和 `nni.report_final_result()` 需要被依次调用：**先调用前者，然后调用后者，并按此顺序重复调用**。 如果 `nni.get_next_parameter()` 被连续多次调用，然后再调用 `nni.report_final_result()`，这会造成最终结果只会与 get_next_parameter 所返回的最后一个配置相关联。 因此，前面的 get_next_parameter 调用都没有关联的结果，这可能会造成一些多阶段算法出问题。
+
 ## 创建多阶段的 Experiment
 
-通常情况下，每个 Trial 作业只从 Tuner 获得一组配置（如超参），然后运行 Experiment。也就是说，通过这组超参来训练模型，并返回结果给 Tuner。 有时候，可能需要在一个 Trial 作业中训练多个模型，并在它们之间共享信息，或者通过创建更少的 Trial 任务来节省资源。例如：
+### 编写使用多阶段的 Trial 代码：
 
-1. 在一个 Trial 作业中依次训练多个模型。这样，后面的模型可以利用先前模型的权重和其它信息，并可以使用不同的超参组合。
-2. 在有限的资源上训练大量的模型，将多个模型放到一个 Trial 作业中训练，能够节约系统创建 Trial 作业的时间。
-3. 还有的情况，希望在一个 Trial 任务中训练多个需要不同超参的模型。注意，如果为一个 Trial 作业分配多个 GPU，并且会并发训练模型，需要在代码中正确分配 GPU 资源。
+**1. 更新 Trial 代码**
 
-在上述情况中，可利用 NNI 的多阶段 Experiment 来在同一个 Trial 任务中训练具有不同超参的多个模型。
+Trial 代码中使用多阶段非常容易，样例如下：
 
-多阶段 Experiment，是指 Trial 作业会从 Tuner 请求多次超参，并多次返回最终结果。
-
-参考以下步骤来使用多阶段 Experiment：
-
-1. 实现 nni.multi_phase.MultiPhaseTuner。 如，[ENAS tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py) 是实现了 nni.multi_phase.MultiPhaseTuner 的 Tuner。 在实现多阶段 Tuner 时，可能要用 generate_parameters 中的 trial_job_id 参数来为每个 Trial 作业生成超参。
-
-2. 设置 `multiPhase` 的值为 `true`，并将第一步中实现的 Tuner 作为自定义 Tuner 进行配置，例如：
-    
-    ```yaml
-    ...
-    multiPhase: true
-    tuner:
-      codeDir: tuners/enas
-      classFileName: nni_controller_ptb.py
-      className: ENASTuner
-      classArgs:
-        say_hello: "hello"
-    ...
-    ```
-
-3. 根据需要，在 Trial 代码中可多次调用 nni.get_next_parameter() API，例如：
-    
     ```python
+    # ...
     for i in range(5):
         # 从 Tuner 中获得参数
         tuner_param = nni.get_next_parameter()
@@ -40,4 +29,18 @@
         # 为上面获取的参数返回最终结果
         nni.report_final_result()
         # ...
+    # ...
     ```
+    
+
+**2. 修改 Experiment 配置**
+
+要启用多阶段，需要在 Experiment 的 YAML 配置文件中增加 `multiPhase: true`。 如果不添加此参数，`nni.get_next_parameter()` 会一直返回同样的配置。 对于所有内置的 Tuner 和 Advisor，不需要修改任何代码，就直接支持多阶段请求配置。
+
+### 编写使用多阶段的 Tuner：
+
+强烈建议首先阅读[自定义 Tuner](https://nni.readthedocs.io/en/latest/Customize_Tuner.html)，再开始编写多阶段 Tuner。 与普通 Tuner 不同的是，必须继承于 `MultiPhaseTuner`（在 nni.multi_phase_tuner 中）。 `Tuner` 与 `MultiPhaseTuner` 之间最大的不同是，MultiPhaseTuner 多了一些信息，即 `trial_job_id`。 有了这个信息， Tuner 能够知道哪个 Trial 在请求配置信息， 返回的结果是哪个 Trial 的。 通过此信息，Tuner 能够灵活的为不同的 Trial 及其阶段实现功能。 例如，可在 generate_parameters 方法中使用 trial_job_id 来为特定的 Trial 任务生成超参。
+
+当然，要使用自定义的多阶段 Tuner ，也需要**在 Experiment 的 YAML 配置文件中增加`multiPhase: true`**。
+
+[ENAS Tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py) 是多阶段 Tuner 的样例。

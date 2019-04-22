@@ -394,10 +394,10 @@ machineList:
 
 * __localConfig__
 
-  __localConfig__ is applicable only if __trainingServicePlatform__ is set to ```local```, otherwise there should not be __localConfig__ section in configuration file.
+  __localConfig__ is applicable only if __trainingServicePlatform__ is set to `local`, otherwise there should not be __localConfig__ section in configuration file.
   * __gpuIndices__
   
-    __gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as ```1``` or  ```0,1,3```.
+    __gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
 
 * __machineList__
 
@@ -431,7 +431,7 @@ machineList:
 
   * __gpuIndices__
   
-    __gpuIndices__ is used to specify designated GPU devices for NNI on this remote machine, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as ```1``` or  ```0,1,3```.
+    __gpuIndices__ is used to specify designated GPU devices for NNI on this remote machine, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
 
 * __kubeflowConfig__:
 

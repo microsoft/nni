@@ -24,7 +24,7 @@ class Recoverable:
     def load_checkpoint(self):
         pass
 
-    def save_checkpont(self):
+    def save_checkpoint(self):
         pass
 
     def get_checkpoint_path(self):
