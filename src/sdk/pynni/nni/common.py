@@ -33,7 +33,8 @@ log_level_map = {
     'debug': logging.DEBUG
 }
 
-_time_format = '%m/%d/%Y, %I:%M:%S %P'
+_time_format = '%m/%d/%Y, %I:%M:%S %p'
+    
 class _LoggerFileWrapper(TextIOBase):
     def __init__(self, logger_file):
         self.file = logger_file
