@@ -60,7 +60,8 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="docs/zh_CN/Builtin_Tuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a></li>
           <li><a href="docs/zh_CN/Builtin_Tuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
-        </ul> 
+          <li><a href="docs/zh_CN/Builtin_Tuner.md#BOHB">BOHB</a></li>
+        </ul>
           <a href="docs/zh_CN/Builtin_Assessors.md#assessor">Assessor（评估器）</a> 
         <ul>
           <li><a href="docs/zh_CN/Builtin_Assessors.md#Medianstop">Median Stop</a></li>
@@ -69,7 +70,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
       </td>
       <td>
       <ul>
-        <li><a href="docs/zh_CN/tutorial_1_CR_exp_local_api.md">本地计算机</a></li>
+        <li><a href="docs/zh_CN/LocalMode.md">本地计算机</a></li>
         <li><a href="docs/zh_CN/RemoteMachineMode.md">远程计算机</a></li>
         <li><a href="docs/zh_CN/PAIMode.md">OpenPAI</a></li>
         <li><a href="docs/zh_CN/KubeflowMode.md">Kubeflow</a></li>
@@ -193,7 +194,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **教程**
 
-* [在本机运行 Experiment (支持多 GPU 卡)](docs/zh_CN/tutorial_1_CR_exp_local_api.md)
+* [在本机运行 Experiment (支持多 GPU 卡)](docs/zh_CN/LocalMode.md)
 * [在多机上运行 Experiment](docs/zh_CN/RemoteMachineMode.md)
 * [在 OpenPAI 上运行 Experiment](docs/zh_CN/PAIMode.md)
 * [在 Kubeflow 上运行 Experiment。](docs/zh_CN/KubeflowMode.md)
