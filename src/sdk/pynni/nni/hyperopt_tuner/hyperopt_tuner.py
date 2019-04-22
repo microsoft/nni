@@ -139,6 +139,27 @@ def json2vals(in_x, vals, out_y, name=ROOT):
         for i, temp in enumerate(in_x):
             json2vals(temp, vals[i], out_y, name + '[%d]' % i)
 
+def nni_params2tuner_params(in_x, parameter):
+    """
+    change parameters in NNI format to parameters in hyperopt format.
+    For example, NNI receive parameters like:
+        {'dropout_rate': 0.8, 'conv_size': 3, 'hidden_size': 512}
+    Will change to format in hyperopt, like:
+        {'dropout_rate': 0.8, 'conv_size': {'_index': 1, '_value': 3}, 'hidden_size': {'_index': 1, '_value': 512}}
+    """
+    tuner_params = dict()
+    for key in parameter.keys():
+        value = parameter[key]
+        _type = in_x[key][TYPE]
+        if _type == 'choice':
+            _idx = in_x[key][VALUE].index(value)
+            tuner_params[key] = {
+                INDEX: _idx,
+                VALUE: value
+            }
+        else:
+            tuner_params[key] = value
+    return tuner_params
 
 def _split_index(params):
     """
@@ -375,6 +396,6 @@ class HyperoptTuner(Tuner):
             _value = trial_info['value']
             self.supplement_data_num += 1
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
-            self.total_data[_parameter_id] = _params
+            self.total_data[_parameter_id] = nni_params2tuner_params(_params)
             self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
         logger.info("Successfully import data to TPE/Anneal tuner.")
