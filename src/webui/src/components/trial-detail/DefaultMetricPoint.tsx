@@ -114,7 +114,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     componentWillUnmount() {
         this._isMounted = false;
     }
-    
+
     render() {
         const { height } = this.props;
         const { defaultSource, accNodata } = this.state;

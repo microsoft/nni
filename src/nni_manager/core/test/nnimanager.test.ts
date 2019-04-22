@@ -104,7 +104,7 @@ describe('Unit test for nnimanager', function () {
         maxSequenceId: 0,
         revision: 0
     }
-    
+
 
     before(async () => {
         await initContainer();

@@ -96,7 +96,7 @@ tuner:
   classFileName: my_customized_tuner.py
   className: CustomizedTuner
   # Any parameter need to pass to your tuner class __init__ constructor
-  # can be specified in this optional classArgs field, for example 
+  # can be specified in this optional classArgs field, for example
   classArgs:
     arg1: value1
 

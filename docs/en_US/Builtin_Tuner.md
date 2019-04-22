@@ -190,8 +190,8 @@ Note that the search space that BatchTuner supported like:
         "_value" : [{"optimizer": "Adam", "learning_rate": 0.00001},
                     {"optimizer": "Adam", "learning_rate": 0.0001},
                     {"optimizer": "Adam", "learning_rate": 0.001},
-                    {"optimizer": "SGD", "learning_rate": 0.01}, 
-                    {"optimizer": "SGD", "learning_rate": 0.005}, 
+                    {"optimizer": "SGD", "learning_rate": 0.01},
+                    {"optimizer": "SGD", "learning_rate": 0.005},
                     {"optimizer": "SGD", "learning_rate": 0.0002}]
     }
 }

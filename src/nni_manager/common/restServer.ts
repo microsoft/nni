@@ -29,7 +29,7 @@ import { getBasePort } from './experimentStartupInfo';
 
 /**
  * Abstraction class to create a RestServer
- * The module who wants to use a RestServer could <b>extends</b> this abstract class 
+ * The module who wants to use a RestServer could <b>extends</b> this abstract class
  * And implement its own registerRestHandler() function to register routers
  */
 export abstract class RestServer {
@@ -43,7 +43,7 @@ export abstract class RestServer {
     protected app: express.Application = express();
     protected log: Logger = getLogger();
     protected basePort?: number;
-    
+
     constructor() {
         this.port = getBasePort();
         assert(this.port && this.port > 1024);
@@ -91,9 +91,9 @@ export abstract class RestServer {
         } else {
             this.startTask.promise.then(
                 () => { // Started
-                    //Stops the server from accepting new connections and keeps existing connections. 
-                    //This function is asynchronous, the server is finally closed when all connections 
-                    //are ended and the server emits a 'close' event. 
+                    //Stops the server from accepting new connections and keeps existing connections.
+                    //This function is asynchronous, the server is finally closed when all connections
+                    //are ended and the server emits a 'close' event.
                     //Refer https://nodejs.org/docs/latest/api/net.html#net_server_close_callback
                     this.server.close().on('close', () => {
                         this.log.info('Rest server stopped.');

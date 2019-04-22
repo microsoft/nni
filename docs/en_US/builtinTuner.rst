@@ -3,7 +3,7 @@ Builtin-Tuners
 
 ..  toctree::
     :maxdepth: 1
-    
+
     Overview<Builtin_Tuner>
     TPE<hyperoptTuner>
     Random Search<hyperoptTuner>

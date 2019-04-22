@@ -63,7 +63,7 @@ describe('Unit Test for LocalTrainingService', () => {
         //trial jobs should be empty, since there are no submitted jobs
         chai.expect(await localTrainingService.listTrialJobs()).to.be.empty;
     });
-    
+
     it('setClusterMetadata and getClusterMetadata', async () => {
         await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
         localTrainingService.getClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG).then((data)=>{
@@ -87,7 +87,7 @@ describe('Unit Test for LocalTrainingService', () => {
         await localTrainingService.cancelTrialJob(jobDetail.id);
         chai.expect(jobDetail.status).to.be.equals('USER_CANCELED');
     }).timeout(20000);
-    
+
     it('Read metrics, Add listener, and remove listener', async () => {
         // set meta data
         const trialConfig: string = `{\"command\":\"python3 mockedTrial.py\", \"codeDir\":\"${localCodeDir}\",\"gpuNum\":0}`

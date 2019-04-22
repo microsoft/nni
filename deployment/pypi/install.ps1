@@ -32,7 +32,7 @@ cmd /c tar -xf $NNI_NODE_ZIP -C $NNI_NODE_FOLDER --strip-components 1
 cd $CWD\..\..\src\nni_manager
 yarn
 yarn build
-cd $CWD\..\..\src\webui 
+cd $CWD\..\..\src\webui
 yarn
 yarn build
 if(Test-Path $CWD\nni){

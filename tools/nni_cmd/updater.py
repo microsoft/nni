@@ -112,7 +112,7 @@ def update_concurrency(args):
             print_error('Update %s failed!' % 'concurrency')
 
 def update_duration(args):
-    #parse time, change time unit to seconds 
+    #parse time, change time unit to seconds
     args.value = parse_time(args.value)
     args.port = get_experiment_port(args)
     if args.port is not None:

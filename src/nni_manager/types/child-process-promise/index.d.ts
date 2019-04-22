@@ -7,5 +7,5 @@ declare module 'child-process-promise' {
             stderr: string,
             message: string
         }
-    }    
+    }
 }

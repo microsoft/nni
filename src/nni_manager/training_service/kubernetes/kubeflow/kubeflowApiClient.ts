@@ -27,7 +27,7 @@ abstract class KubeflowOperatorClient extends KubernetesCRDClient{
     /**
      * Factory method to generate operator cliet
      */
-    public static generateOperatorClient(kubeflowOperator: KubeflowOperator, 
+    public static generateOperatorClient(kubeflowOperator: KubeflowOperator,
                                     operatorApiVersion: string): KubernetesCRDClient {
         if(kubeflowOperator === 'tf-operator') {
             if(operatorApiVersion == 'v1alpha2') {
@@ -63,7 +63,7 @@ class TFOperatorClientV1Alpha2 extends KubeflowOperatorClient {
 
     public get containerName(): string {
         return 'tensorflow';
-    }    
+    }
 }
 
 class TFOperatorClientV1Beta1 extends KubernetesCRDClient {
@@ -82,7 +82,7 @@ class TFOperatorClientV1Beta1 extends KubernetesCRDClient {
 
     public get containerName(): string {
         return 'tensorflow';
-    }    
+    }
 }
 
 class PytorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {

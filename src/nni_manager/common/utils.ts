@@ -167,7 +167,7 @@ function getCmdPy():string{
 }
 
 /**
- * Generate command line to start automl algorithm(s), 
+ * Generate command line to start automl algorithm(s),
  * either start advisor or start a process which runs tuner and assessor
  * @param tuner : For builtin tuner:
  *     {
@@ -359,7 +359,7 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     let fileCount: number = -1;
     cpp.exec(`find ${directory} -type f | wc -l`).then((result) => {
         if(result.stdout && parseInt(result.stdout)) {
-            fileCount = parseInt(result.stdout);            
+            fileCount = parseInt(result.stdout);
         }
         deferred.resolve(fileCount);
     });
@@ -380,7 +380,7 @@ async function getVersion(): Promise<string> {
         deferred.reject(error);
     });
     return deferred.promise;
-} 
+}
 
 /**
  * run command as ChildProcess
@@ -432,7 +432,7 @@ async function isAlive(pid:any): Promise<boolean>{
 }
 
 /**
- * kill process 
+ * kill process
  */
 async function killPid(pid:any): Promise<void>{
     let deferred : Deferred<void> = new Deferred<void>();
@@ -460,5 +460,5 @@ function getNewLine(): string{
 }
 
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address,
     mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine };

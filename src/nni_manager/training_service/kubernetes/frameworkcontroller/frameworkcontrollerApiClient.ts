@@ -47,7 +47,7 @@ class FrameworkControllerClientV1 extends FrameworkControllerClient {
 
     public get containerName(): string {
         return 'framework';
-    }    
+    }
 }
 
 export { FrameworkControllerClient, GeneralK8sClient };

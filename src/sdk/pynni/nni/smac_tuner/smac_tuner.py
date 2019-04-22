@@ -65,7 +65,7 @@ class SMACTuner(Tuner):
 
     def _main_cli(self):
         """Main function of SMAC for CLI interface
-        
+
         Returns
         -------
         instance
@@ -152,7 +152,7 @@ class SMACTuner(Tuner):
 
     def receive_trial_result(self, parameter_id, parameters, value):
         """receive_trial_result
-       
+
         Parameters
         ----------
         parameter_id: int
@@ -161,7 +161,7 @@ class SMACTuner(Tuner):
             parameters
         value:
             value
-        
+
         Raises
         ------
         RuntimeError
@@ -184,7 +184,7 @@ class SMACTuner(Tuner):
         Also, we convert categorical:
         categorical values in search space are changed to list of numbers before,
         those original values will be changed back in this function
-        
+
         Parameters
         ----------
         challenger_dict: dict
@@ -210,12 +210,12 @@ class SMACTuner(Tuner):
 
     def generate_parameters(self, parameter_id):
         """generate one instance of hyperparameters
-        
+
         Parameters
         ----------
         parameter_id: int
             parameter id
-        
+
         Returns
         -------
         list
@@ -233,12 +233,12 @@ class SMACTuner(Tuner):
 
     def generate_multiple_parameters(self, parameter_id_list):
         """generate mutiple instances of hyperparameters
-        
+
         Parameters
         ----------
         parameter_id_list: list
             list of parameter id
-        
+
         Returns
         -------
         list

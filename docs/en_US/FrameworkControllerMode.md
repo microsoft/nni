@@ -9,8 +9,8 @@ NNI supports running experiment using [FrameworkController](https://github.com/M
 4. Prepare a **NFS server** and export a general purpose mount (we recommend to map your NFS server path in `root_squash option`, otherwise permission issue may raise when NNI copies files to NFS. Refer this [page](https://linux.die.net/man/5/exports) to learn what root_squash option is), or **Azure File Storage**.
 5. Install **NFS client** on the machine where you install NNI and run nnictl to create experiment. Run this command to install NFSv4 client:
     ```
-    apt-get install nfs-common 
-    ```     
+    apt-get install nfs-common
+    ```
 
 6. Install **NNI**, follow the install guide [here](QuickStart.md).
 
@@ -82,9 +82,9 @@ frameworkcontrollerConfig:
     accountName: {your_storage_account_name}
     azureShare: {your_azure_share_name}
 ```
-Note: You should explicitly set `trainingServicePlatform: frameworkcontroller` in NNI config YAML file if you want to start experiment in frameworkcontrollerConfig mode. 
+Note: You should explicitly set `trainingServicePlatform: frameworkcontroller` in NNI config YAML file if you want to start experiment in frameworkcontrollerConfig mode.
 
-The trial's config format for NNI frameworkcontroller mode is a simple version of frameworkcontroller's offical config, you could refer the [tensorflow example of frameworkcontroller](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) for deep understanding.  
+The trial's config format for NNI frameworkcontroller mode is a simple version of frameworkcontroller's offical config, you could refer the [tensorflow example of frameworkcontroller](https://github.com/Microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/cpu/tensorflowdistributedtrainingwithcpu.yaml) for deep understanding.
 Trial configuration in frameworkcontroller mode have the following configuration keys:
 * taskRoles: you could set multiple task roles in config file, and each task role is a basic unit to process in kubernetes cluster.
    * name: the name of task role specified, like "worker", "ps", "master".

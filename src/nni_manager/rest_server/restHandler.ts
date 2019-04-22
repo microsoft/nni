@@ -145,7 +145,7 @@ class NNIRestHandler {
             });
         });
     }
-    
+
     private importData(router: Router): void {
         router.post('/experiment/import-data', (req: Request, res: Response) => {
             this.nniManager.importData(JSON.stringify(req.body)).then(() => {

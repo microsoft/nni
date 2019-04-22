@@ -41,8 +41,8 @@ export class KubeflowClusterConfig extends KubernetesClusterConfig {
 export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly operator: KubeflowOperator;
     constructor(
-            operator: KubeflowOperator, 
-            apiVersion: string, 
+            operator: KubeflowOperator,
+            apiVersion: string,
             nfs: NFSConfig,
             storage?: KubernetesStorageKind
         ) {
@@ -68,12 +68,12 @@ export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
 
 export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure{
     public readonly operator: KubeflowOperator;
-    
+
     constructor(
-            operator: KubeflowOperator, 
-            apiVersion: string, 
-            keyVault: keyVaultConfig, 
-            azureStorage: AzureStorage, 
+            operator: KubeflowOperator,
+            apiVersion: string,
+            keyVault: keyVaultConfig,
+            azureStorage: AzureStorage,
             storage?: KubernetesStorageKind
         ) {
         super(apiVersion, keyVault, azureStorage,storage);
@@ -124,7 +124,7 @@ export class KubeflowTrialConfig extends KubernetesTrialConfig {
 
 export class KubeflowTrialConfigTemplate extends KubernetesTrialConfigTemplate{
     public readonly replicas: number;
-    constructor(replicas: number, command : string, gpuNum : number, 
+    constructor(replicas: number, command : string, gpuNum : number,
         cpuNum: number, memoryMB: number, image: string) {
         super(command, gpuNum, cpuNum, memoryMB, image);
         this.replicas = replicas;

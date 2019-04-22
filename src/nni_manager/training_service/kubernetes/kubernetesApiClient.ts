@@ -39,7 +39,7 @@ class GeneralK8sClient {
     }
 
     public async createSecret(secretManifest: any): Promise<boolean> {
-        let result: Promise<boolean>;        
+        let result: Promise<boolean>;
         const response : any = await this.client.api.v1.namespaces('default').secrets.post({body: secretManifest});
         if(response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
@@ -65,8 +65,8 @@ abstract class KubernetesCRDClient {
     public abstract get containerName(): string;
 
     public get jobKind(): string {
-        if(this.crdSchema 
-            && this.crdSchema.spec 
+        if(this.crdSchema
+            && this.crdSchema.spec
             && this.crdSchema.spec.names
             && this.crdSchema.spec.names.kind) {
             return this.crdSchema.spec.names.kind;
@@ -76,15 +76,15 @@ abstract class KubernetesCRDClient {
     }
 
     public get apiVersion(): string {
-        if(this.crdSchema 
-            && this.crdSchema.spec 
+        if(this.crdSchema
+            && this.crdSchema.spec
             && this.crdSchema.spec.version) {
             return this.crdSchema.spec.version;
         } else {
             throw new Error('KubeflowOperatorClient: get apiVersion failed, version is undefined in crd schema!');
         }
     }
-    
+
     public async createKubernetesJob(jobManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
         const response : any = await this.operator.post({body: jobManifest});
@@ -117,7 +117,7 @@ abstract class KubernetesCRDClient {
                  qs: {
                       labelSelector: matchQuery,
                       propagationPolicy: "Background"
-                     } 
+                     }
             });
             if(deleteResult.statusCode && deleteResult.statusCode >= 200 && deleteResult.statusCode <= 299) {
                 result = Promise.resolve(true);

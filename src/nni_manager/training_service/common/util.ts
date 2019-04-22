@@ -31,7 +31,7 @@ import { file } from "../../node_modules/@types/tmp";
 
 /**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
- * 
+ *
  * @param codeDir codeDir in nni config file
  * @returns file number under codeDir
  */
@@ -45,9 +45,9 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
     }
 
     if(fileCount && fileCount > 1000) {
-        const errMessage: string = `Too many files(${fileCount} found}) in ${codeDir},` 
+        const errMessage: string = `Too many files(${fileCount} found}) in ${codeDir},`
                                     + ` please check if it's a valid code dir`;
-        throw new Error(errMessage);        
+        throw new Error(errMessage);
     }
 
     return fileCount;
@@ -55,7 +55,7 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
 
 /**
  * crete a new directory
- * @param directory 
+ * @param directory
  */
 export async function execMkdir(directory: string): Promise<void> {
     if (process.platform === 'win32') {
@@ -68,7 +68,7 @@ export async function execMkdir(directory: string): Promise<void> {
 
 /**
  * crete a new file
- * @param filename 
+ * @param filename
  */
 export async function execNewFile(filename: string): Promise<void> {
     if (process.platform === 'win32') {
@@ -95,7 +95,7 @@ export function execScript(filePath: string): cp.ChildProcess {
 
 /**
  * output the last line of a file
- * @param filePath 
+ * @param filePath
  */
 export async function execTail(filePath: string): Promise<cpp.childProcessPromise.Result> {
     let cmdresult: cpp.childProcessPromise.Result;
@@ -109,7 +109,7 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
 
 /**
  * delete a directory
- * @param directory 
+ * @param directory
  */
 export async function execRemove(directory: string): Promise<void>{
     if (process.platform === 'win32') {
@@ -122,7 +122,7 @@ export async function execRemove(directory: string): Promise<void>{
 
 /**
  * kill a process
- * @param directory 
+ * @param directory
  */
 export async function execKill(pid: string): Promise<void>{
     if (process.platform === 'win32') {
@@ -136,7 +136,7 @@ export async function execKill(pid: string): Promise<void>{
 /**
  * set environment variable
  * @param  variable
- * @returns command string  
+ * @returns command string
  */
 export function setEnvironmentVariable(variable: { key: string; value: string }): string{
     if (process.platform === 'win32') {
@@ -150,7 +150,7 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
 
 /**
  * generate script file name
- * @param fileNamePrefix 
+ * @param fileNamePrefix
  */
 export function getScriptName(fileNamePrefix: string): string {
     if (process.platform === 'win32') {
@@ -162,7 +162,7 @@ export function getScriptName(fileNamePrefix: string): string {
 
 /**
  * generate script file
- * @param gpuMetricCollectorScriptFolder 
+ * @param gpuMetricCollectorScriptFolder
  */
 export function getgpuMetricsCollectorScriptContent(gpuMetricCollectorScriptFolder: string): string {
     if(process.platform === 'win32') {

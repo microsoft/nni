@@ -48,7 +48,7 @@ class OptimizeMode(Enum):
 
 def create_parameter_id():
     """Create an id
-    
+
     Returns
     -------
     int
@@ -60,7 +60,7 @@ def create_parameter_id():
 
 def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-1):
     """Create a full id for a specific bracket's hyperparameter configuration
-    
+
     Parameters
     ----------
     brackets_id: int
@@ -84,7 +84,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
 
 def json2paramater(ss_spec, random_state):
     """Randomly generate values for hyperparameters from hyperparameter space i.e., x.
-    
+
     Parameters
     ----------
     ss_spec:
@@ -121,7 +121,7 @@ def json2paramater(ss_spec, random_state):
 
 class Bracket():
     """A bracket in Hyperband, all the information of a bracket is managed by an instance of this class
-    
+
     Parameters
     ----------
     s: int
@@ -137,7 +137,7 @@ class Bracket():
     optimize_mode: str
         optimize mode, 'maximize' or 'minimize'
     """
-    
+
     def __init__(self, s, s_max, eta, R, optimize_mode):
         self.bracket_id = s
         self.s_max = s_max
@@ -168,7 +168,7 @@ class Bracket():
 
     def set_config_perf(self, i, parameter_id, seq, value):
         """update trial's latest result with its sequence number, e.g., epoch number or batch number
-        
+
         Parameters
         ----------
         i: int
@@ -189,7 +189,7 @@ class Bracket():
                 self.configs_perf[i][parameter_id] = [seq, value]
         else:
             self.configs_perf[i][parameter_id] = [seq, value]
-            
+
 
     def inform_trial_end(self, i):
         """If the trial is finished and the corresponding round (i.e., i) has all its trials finished,
@@ -235,7 +235,7 @@ class Bracket():
         ----------
         num: int
             the number of hyperparameter configurations
-        
+
         Returns
         -------
         list
@@ -355,7 +355,7 @@ class Hyperband(MsgDispatcherBase):
 
     def handle_update_search_space(self, data):
         """data: JSON object, which is search space
-        
+
         Parameters
         ----------
         data: int
@@ -396,9 +396,9 @@ class Hyperband(MsgDispatcherBase):
         """
         Parameters
         ----------
-        data: 
+        data:
             it is an object which has keys 'parameter_id', 'value', 'trial_job_id', 'type', 'sequence'.
-        
+
         Raises
         ------
         ValueError

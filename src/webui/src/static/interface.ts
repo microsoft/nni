@@ -109,7 +109,7 @@ interface FinalResult {
 }
 
 export {
-    TableObj, Parameters, Experiment, 
+    TableObj, Parameters, Experiment,
     AccurPoint, TrialNumber, TrialJob,
     DetailAccurPoint, TooltipForAccuracy,
     ParaObj, Dimobj, FinalResult, FinalType,

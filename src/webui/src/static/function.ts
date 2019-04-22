@@ -52,7 +52,7 @@ const getFinalResult = (final: Array<FinalResult>) => {
     }
 };
 
-// get final result value // acc obj 
+// get final result value // acc obj
 const getFinal = (final: Array<FinalResult>) => {
     let showDefault: FinalType;
     if (final) {

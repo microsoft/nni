@@ -94,7 +94,7 @@ def start_tensorboard_process(args, nni_config, path_list, temp_nni_path):
     if detect_port(args.port):
         print_error('Port %s is used by another process, please reset port!' % str(args.port))
         exit(1)
-    
+
     stdout_file = open(os.path.join(temp_nni_path, 'tensorboard_stdout'), 'a+')
     stderr_file = open(os.path.join(temp_nni_path, 'tensorboard_stderr'), 'a+')
     cmds = ['tensorboard', '--logdir', format_tensorboard_log_path(path_list), '--port', str(args.port)]

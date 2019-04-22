@@ -8,7 +8,7 @@ However, for those individuals who want a bit more guidance on the best way to c
 
 Looking for a quickstart, get acquainted with our [Get Started](./QuickStart.md) guide.
 
-There are a few simple guidelines that you need to follow before providing your hacks. 
+There are a few simple guidelines that you need to follow before providing your hacks.
 
 ## Raising Issues
 
@@ -20,9 +20,9 @@ When raising issues, please specify the following:
 
 ## Submit Proposals for New Features
 
-- There is always something more that is required, to make it easier to suit your use-cases. Feel free to join the discussion on new features or raise a PR with your proposed change. 
+- There is always something more that is required, to make it easier to suit your use-cases. Feel free to join the discussion on new features or raise a PR with your proposed change.
 
-- Fork the repository under your own github handle. After cloning the repository. Add, commit, push and sqaush (if necessary) the changes with detailed commit messages to your fork. From where you can proceed to making a pull request. 
+- Fork the repository under your own github handle. After cloning the repository. Add, commit, push and sqaush (if necessary) the changes with detailed commit messages to your fork. From where you can proceed to making a pull request.
 
 ## Contributing to Source Code and Bug Fixes
 
@@ -33,15 +33,15 @@ If you are looking for How to develop and debug the NNI source code, you can ref
 Similarly for [Quick Start](QuickStart.md). For everything else, refer to [NNI Home page](http://nni.readthedocs.io).
 
 ## Solve Existing Issues
-Head over to [issues](https://github.com/Microsoft/nni/issues) to find issues where help is needed from contributors. You can find issues tagged with 'good-first-issue' or 'help-wanted' to contribute in. 
+Head over to [issues](https://github.com/Microsoft/nni/issues) to find issues where help is needed from contributors. You can find issues tagged with 'good-first-issue' or 'help-wanted' to contribute in.
 
-A person looking to contribute can take up an issue by claiming it as a comment/assign their Github ID to it. In case there is no PR or update in progress for a week on the said issue, then the issue reopens for anyone to take up again. We need to consider high priority issues/regressions where response time must be a day or so. 
+A person looking to contribute can take up an issue by claiming it as a comment/assign their Github ID to it. In case there is no PR or update in progress for a week on the said issue, then the issue reopens for anyone to take up again. We need to consider high priority issues/regressions where response time must be a day or so.
 
-## Code Styles & Naming Conventions  
+## Code Styles & Naming Conventions
 * We follow [PEP8](https://www.python.org/dev/peps/pep-0008/) for Python code and naming conventions, do try to adhere to the same when making a pull request or making a change. One can also take the help of linters such as `flake8` or `pylint`
 * We also follow [NumPy Docstring Style](https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy) for Python Docstring Conventions. During the [documentation building](CONTRIBUTING.md#documentation), we use [sphinx.ext.napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) to generate Python API documentation from Docstring.
 
-## Documentation 
+## Documentation
 Our documentation is built with [sphinx](http://sphinx-doc.org/), supporting [Markdown](https://guides.github.com/features/mastering-markdown/) and [reStructuredText](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) format. All our documentations are placed under [docs/en_US](https://github.com/Microsoft/nni/tree/master/docs).
 
 * Before submitting the documentation change, please __build homepage locally__: `cd docs/en_US && make html`, then you can see all the built documentation webpage under the folder `docs/en_US/_build/html`. It's also highly recommended taking care of __every WARNING__ during the build, which is very likely the signal of a __deadlink__ and other annoying issues.

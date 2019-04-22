@@ -26,11 +26,11 @@ import { getLogger } from '../../common/log';
 import { mkDirP } from '../../common/utils';
 
 export namespace AzureStorageClientUtility {
-    
+
     /**
      * create azure share
-     * @param fileServerClient 
-     * @param azureShare 
+     * @param fileServerClient
+     * @param azureShare
      */
     export async function createShare(fileServerClient: any, azureShare: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
@@ -44,12 +44,12 @@ export namespace AzureStorageClientUtility {
         })
         return deferred.promise;
     }
-    
+
     /**
      * Create a new directory (NOT recursively) in azure file storage.
-     * @param fileServerClient 
-     * @param azureFoler 
-     * @param azureShare 
+     * @param fileServerClient
+     * @param azureFoler
+     * @param azureShare
      */
     export async function createDirectory(fileServerClient: any, azureFoler: any, azureShare: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
@@ -67,7 +67,7 @@ export namespace AzureStorageClientUtility {
     /**
      * Create a new directory recursively in azure file storage
      * @param fileServerClient
-     * @param azureDirectory 
+     * @param azureDirectory
      */
     export async function createDirectoryRecursive(fileServerClient: any, azureDirectory: any, azureShare: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
@@ -81,14 +81,14 @@ export namespace AzureStorageClientUtility {
         deferred.resolve();
         return deferred.promise;
     }
-    
+
     /**
      * upload a file to azure storage
-     * @param fileServerClient 
-     * @param azureDirectory 
-     * @param azureFileName 
-     * @param azureShare 
-     * @param localFilePath 
+     * @param fileServerClient
+     * @param azureDirectory
+     * @param azureFileName
+     * @param azureShare
+     * @param localFilePath
      */
     async function uploadFileToAzure(fileServerClient: any, azureDirectory: any, azureFileName: any, azureShare: any, localFilePath: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
@@ -96,20 +96,20 @@ export namespace AzureStorageClientUtility {
             if(error){
                 getLogger().error(`Upload file failed:, ${error}`);
                 deferred.reject(error);
-            }else{          
+            }else{
                 deferred.resolve();
             }
         })
         return deferred.promise;
     }
-    
+
     /**
      * download a file from azure storage
-     * @param fileServerClient 
-     * @param azureDirectory 
-     * @param azureFileName 
-     * @param azureShare 
-     * @param localFilePath 
+     * @param fileServerClient
+     * @param azureDirectory
+     * @param azureFileName
+     * @param azureShare
+     * @param localFilePath
      */
     async function downloadFile(fileServerClient: any, azureDirectory: any, azureFileName: any, azureShare: any, localFilePath: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
@@ -118,7 +118,7 @@ export namespace AzureStorageClientUtility {
                 getLogger().error(`Download file failed:, ${error}`);
                 deferred.reject(error);
             }else{
-                deferred.resolve();    
+                deferred.resolve();
             }
         })
         return deferred.promise;
@@ -153,13 +153,13 @@ export namespace AzureStorageClientUtility {
         deferred.resolve();
         return deferred.promise;
     }
-    
+
     /**
      * downlod a directory from azure
-     * @param fileServerClient 
-     * @param azureDirectory 
-     * @param azureShare 
-     * @param localDirectory 
+     * @param fileServerClient
+     * @param azureDirectory
+     * @param azureShare
+     * @param localDirectory
      */
     export async function downloadDirectory(fileServerClient: any, azureDirectory:any, azureShare: any, localDirectory: any): Promise<void>{
         const deferred: Deferred<void> = new Deferred<void>();
@@ -184,7 +184,7 @@ export namespace AzureStorageClientUtility {
                 const fullFilePath: string = path.join(localDirectory, fileName.name);
                 downloadFile(fileServerClient, azureDirectory, fileName.name, azureShare, fullFilePath)
             }
-            
+
             for(var directoryName of result['entries']['directories']){
                 const fullDirectoryPath: string = path.join(localDirectory, directoryName.name)
                 const fullAzureDirectory: string = path.join(azureDirectory, directoryName.name)

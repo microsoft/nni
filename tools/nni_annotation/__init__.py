@@ -31,7 +31,7 @@ __all__ = ['generate_search_space', 'expand_annotations']
 
 slash = '/'
 if sys.platform == "win32":
-    slash = '\\'        
+    slash = '\\'
 
 def generate_search_space(code_dir):
     """Generate search space from Python source code.
@@ -39,7 +39,7 @@ def generate_search_space(code_dir):
     code_dir: directory path of source files (str)
     """
     search_space = {}
-    
+
     if code_dir.endswith(slash):
         code_dir = code_dir[:-1]
 
@@ -82,7 +82,7 @@ def expand_annotations(src_dir, dst_dir):
     """
     if src_dir[-1] == slash:
         src_dir = src_dir[:-1]
-    
+
     if dst_dir[-1] == slash:
         dst_dir = dst_dir[:-1]
 

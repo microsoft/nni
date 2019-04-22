@@ -45,7 +45,7 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 left: '1%',
                 right: '4%'
             },
-           
+
             dataZoom: [{
                 type: 'slider',
                 name: 'trial',

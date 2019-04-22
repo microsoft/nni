@@ -44,7 +44,7 @@ in the scape input. Simultaneously, intermediate result inputs can limit the int
 
 ![](../img/webui-img/filter_intermediate.png)
 
-## View trials status 
+## View trials status
 
 Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 

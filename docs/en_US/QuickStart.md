@@ -119,7 +119,7 @@ useAnnotation: false
 tuner:
   builtinTunerName: TPE
 # The path and the running command of trial
-trial:  
+trial:
   command: python3 mnist.py
   codeDir: .
   gpuNum: 0

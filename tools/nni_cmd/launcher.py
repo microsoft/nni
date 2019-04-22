@@ -102,7 +102,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         print_error('Port %s is used by another process, please reset the port!\n' \
         'You could use \'nnictl create --help\' to get help information' % port)
         exit(1)
-    
+
     if (platform != 'local') and detect_port(int(port) + 1):
         print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
         'You could set another port to start experiment!\n' \
@@ -110,7 +110,7 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
         exit(1)
 
     print_normal('Starting restful server...')
-    
+
     entry_dir = get_nni_installation_path()
     entry_file = os.path.join(entry_dir, 'main.js')
 
@@ -214,7 +214,7 @@ def setNNIManagerIp(experiment_config, port, config_file_name):
     return True, None
 
 def set_pai_config(experiment_config, port, config_file_name):
-    '''set pai configuration''' 
+    '''set pai configuration'''
     pai_config_data = dict()
     pai_config_data['pai_config'] = experiment_config['paiConfig']
     response = rest_put(cluster_metadata_url(port), json.dumps(pai_config_data), REST_TIME_OUT)
@@ -233,7 +233,7 @@ def set_pai_config(experiment_config, port, config_file_name):
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
 def set_kubeflow_config(experiment_config, port, config_file_name):
-    '''set kubeflow configuration''' 
+    '''set kubeflow configuration'''
     kubeflow_config_data = dict()
     kubeflow_config_data['kubeflow_config'] = experiment_config['kubeflowConfig']
     response = rest_put(cluster_metadata_url(port), json.dumps(kubeflow_config_data), REST_TIME_OUT)
@@ -252,7 +252,7 @@ def set_kubeflow_config(experiment_config, port, config_file_name):
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
 def set_frameworkcontroller_config(experiment_config, port, config_file_name):
-    '''set kubeflow configuration''' 
+    '''set kubeflow configuration'''
     frameworkcontroller_config_data = dict()
     frameworkcontroller_config_data['frameworkcontroller_config'] = experiment_config['frameworkcontrollerConfig']
     response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT)
@@ -312,7 +312,7 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'pai':
         request_data['clusterMetaData'].append(
-            {'key': 'pai_config', 'value': experiment_config['paiConfig']})        
+            {'key': 'pai_config', 'value': experiment_config['paiConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'kubeflow':
@@ -412,7 +412,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             except Exception:
                 raise Exception(ERROR_INFO % 'Rest server stopped!')
             exit(1)
-    
+
     #set pai config
     if experiment_config['trainingServicePlatform'] == 'pai':
         print_normal('Setting pai config...')
@@ -427,7 +427,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
-    
+
     #set kubeflow config
     if experiment_config['trainingServicePlatform'] == 'kubeflow':
         print_normal('Setting kubeflow config...')
@@ -442,7 +442,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
-    
+
         #set kubeflow config
     if experiment_config['trainingServicePlatform'] == 'frameworkcontroller':
         print_normal('Setting frameworkcontroller config...')
@@ -481,7 +481,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
     else:
         web_ui_url_list = get_local_urls(args.port)
     nni_config.set_config('webuiUrl', web_ui_url_list)
-    
+
     #save experiment information
     nnictl_experiment_config = Experiments()
     nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time, config_file_name, experiment_config['trainingServicePlatform'])

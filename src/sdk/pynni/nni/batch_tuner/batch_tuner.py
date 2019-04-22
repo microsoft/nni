@@ -46,7 +46,7 @@ class BatchTuner(Tuner):
                           }
     }
     """
-    
+
     def __init__(self):
         self.count = -1
         self.values = []
@@ -54,14 +54,14 @@ class BatchTuner(Tuner):
     def is_valid(self, search_space):
         """
         Check the search space is valid: only contains 'choice' type
-        
+
         Parameters
         ----------
         search_space : dict
         """
         if not len(search_space) == 1:
             raise RuntimeError('BatchTuner only supprt one combined-paramreters key.')
-        
+
         for param in search_space:
             param_type = search_space[param][TYPE]
             if not param_type == CHOICE:
@@ -73,8 +73,8 @@ class BatchTuner(Tuner):
         return None
 
     def update_search_space(self, search_space):
-        """Update the search space 
-                
+        """Update the search space
+
         Parameters
         ----------
         search_space : dict

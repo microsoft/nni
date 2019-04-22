@@ -54,7 +54,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Copy a local file to hdfs directory
-     * 
+     *
      * @param localFilePath local file path(source)
      * @param hdfsFilePath hdfs file path(target)
      * @param hdfsClient hdfs client
@@ -84,7 +84,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Recursively copy local directory to hdfs directory
-     * 
+     *
      * @param localDirectory local directory
      * @param hdfsDirectory HDFS directory
      * @param hdfsClient   HDFS client
@@ -115,7 +115,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Read content from HDFS file
-     * 
+     *
      * @param hdfsPath HDFS file path
      * @param hdfsClient HDFS client
      */
@@ -138,7 +138,7 @@ export namespace HDFSClientUtility {
             // Concat the data chunk to buffer
             buffer = Buffer.concat([buffer, chunk]);
         });
-        
+
         remoteFileStream.on('finish', function onFinish () {
             // Upload is done, resolve
             deferred.resolve(buffer);
@@ -149,7 +149,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Check if an HDFS path already exists
-     * 
+     *
      * @param hdfsPath target path need to check in HDFS
      * @param hdfsClient HDFS client
      */
@@ -161,7 +161,7 @@ export namespace HDFSClientUtility {
 
         let timeoutId : NodeJS.Timer
         const delayTimeout : Promise<boolean> = new Promise<boolean>((resolve : Function, reject : Function) : void => {
-            // Set timeout and reject the promise once reach timeout (5 seconds)        
+            // Set timeout and reject the promise once reach timeout (5 seconds)
             timeoutId = setTimeout(() => deferred.reject(`Check HDFS path ${hdfsPath} exists timeout`), 5000);
         });
 
@@ -170,9 +170,9 @@ export namespace HDFSClientUtility {
 
     /**
      * Mkdir in HDFS, use default permission 755
-     * 
+     *
      * @param hdfsPath the path in HDFS. It could be either file or directory
-     * @param hdfsClient 
+     * @param hdfsClient
      */
     export function mkdir(hdfsPath : string, hdfsClient : any) : Promise<boolean> {
         const deferred : Deferred<boolean> = new Deferred<boolean>();
@@ -190,9 +190,9 @@ export namespace HDFSClientUtility {
 
     /**
      * Read directory contents
-     * 
+     *
      * @param hdfsPath the path in HDFS. It could be either file or directory
-     * @param hdfsClient 
+     * @param hdfsClient
      */
     export async function readdir(hdfsPath : string, hdfsClient : any) : Promise<string[]> {
         const deferred : Deferred<string[]> = new Deferred<string[]>();
@@ -215,7 +215,7 @@ export namespace HDFSClientUtility {
     /**
      * Delete HDFS path
      * @param hdfsPath the path in HDFS. It could be either file or directory
-     * @param hdfsClient 
+     * @param hdfsClient
      * @param recursive Mark if need to delete recursively
      */
     export function deletePath(hdfsPath : string, hdfsClient : any, recursive : boolean = true) : Promise<boolean> {

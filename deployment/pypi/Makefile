@@ -7,7 +7,7 @@ ifeq ($(UNAME_S), Linux)
 else ifeq ($(UNAME_S), Darwin)
 	OS_SPEC := darwin
 	WHEEL_SPEC := macosx_10_9_x86_64
-else 
+else
 	$(error platform $(UNAME_S) not supported)
 endif
 

@@ -36,7 +36,7 @@ export class PAITaskRole {
     public readonly command: string;
     //Shared memory for one task in the task role
     public readonly shmMB?: number;
-    
+
     /**
      * Constructor
      * @param name Name for the task role
@@ -52,7 +52,7 @@ export class PAITaskRole {
         this.cpuNumber = cpuNumber;
         this.memoryMB = memoryMB;
         this.gpuNumber = gpuNumber;
-        this.command = command;    
+        this.command = command;
         this.shmMB = shmMB;
     }
 }
@@ -83,7 +83,7 @@ export class PAIJobConfig{
      * @param outputDir Output directory on HDFS
      * @param taskRoles List of taskRole, one task role at least
      */
-    constructor(jobName: string, image : string, dataDir : string, outputDir : string, codeDir : string, 
+    constructor(jobName: string, image : string, dataDir : string, outputDir : string, codeDir : string,
             taskRoles : PAITaskRole[], virtualCluster: string) {
         this.jobName = jobName;
         this.image = image;
@@ -117,7 +117,7 @@ export class NNIPAITrialConfig extends TrialConfig{
     public readonly cpuNum: number;
     public readonly memoryMB: number;
     public readonly image: string;
-    public readonly dataDir: string; 
+    public readonly dataDir: string;
     public outputDir: string;
 
     //The virtual cluster job runs on. If omitted, the job will run on default virtual cluster
@@ -125,7 +125,7 @@ export class NNIPAITrialConfig extends TrialConfig{
     //Shared memory for one task in the task role
     public shmMB?: number;
 
-    constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number, 
+    constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number,
             image: string, dataDir: string, outputDir: string, virtualCluster?: string, shmMB?: number) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
