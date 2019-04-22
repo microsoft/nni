@@ -25,6 +25,9 @@ import time
 from xml.dom import minidom
 
 def check_ready_to_run():
+    #TODO check process in windows
+    if sys.platform == 'win32':
+        return True
     pgrep_output =subprocess.check_output('pgrep -fx \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
     pidList = []
     for pid in pgrep_output.splitlines():

@@ -21,14 +21,14 @@
 import os
 from .common_utils import print_error
 from subprocess import call
+from .command_utils import install_package_command
 
 def check_environment():
     '''check if paramiko is installed'''
     try:
         import paramiko
     except:
-        cmds = 'python3 -m pip install --user paramiko'
-        call(cmds, shell=True)
+        install_package_command('paramiko')
 
 def copy_remote_directory_to_local(sftp, remote_path, local_path):
     '''copy remote directory to local machine'''
