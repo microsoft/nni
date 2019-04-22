@@ -95,18 +95,26 @@ class Overview extends React.Component<{}, OverviewState> {
                 if (res.status === 200) {
                     let sessionData = res.data;
                     let trialPro = [];
-                    const trainingPlatform = sessionData.params.trainingServicePlatform;
+                    const tempara = sessionData.params;
+                    const trainingPlatform = tempara.trainingServicePlatform;
                     // assessor clusterMeteData
-                    const clusterMetaData = sessionData.params.clusterMetaData;
+                    const clusterMetaData = tempara.clusterMetaData;
                     const endTimenum = sessionData.endTime;
-                    const assessor = sessionData.params.assessor;
-                    const advisor = sessionData.params.advisor;
+                    const assessor = tempara.assessor;
+                    const advisor = tempara.advisor;
+                    let optimizeMode = 'other';
+                    if (tempara.tuner !== undefined) {
+                        if (tempara.tuner.classArgs !== undefined) {
+                            if (tempara.tuner.classArgs.optimize_mode !== undefined) {
+                                optimizeMode = tempara.tuner.classArgs.optimize_mode;
+                            }
+                        }
+                    }
                     // default logCollection is true
-                    const logCollection = res.data.params.logCollection;
+                    const logCollection = tempara.logCollection;
                     let expLogCollection: boolean = false;
-                    const isMultiy: boolean = res.data.params.multiPhase !== undefined
-                    ? res.data.params.multiPhase : false;
-                    const optimizeMode = res.data.params.tuner.classArgs.optimize_mode;
+                    const isMultiy: boolean = tempara.multiPhase !== undefined
+                        ? tempara.multiPhase : false;
                     if (optimizeMode !== undefined) {
                         if (optimizeMode === 'minimize') {
                             if (this._isMounted) {
@@ -129,25 +137,25 @@ class Overview extends React.Component<{}, OverviewState> {
                     }
                     trialPro.push({
                         id: sessionData.id,
-                        author: sessionData.params.authorName,
+                        author: tempara.authorName,
                         revision: sessionData.revision,
-                        experName: sessionData.params.experimentName,
-                        runConcurren: sessionData.params.trialConcurrency,
+                        experName: tempara.experimentName,
+                        runConcurren: tempara.trialConcurrency,
                         logDir: sessionData.logDir ? sessionData.logDir : 'undefined',
-                        maxDuration: sessionData.params.maxExecDuration,
+                        maxDuration: tempara.maxExecDuration,
                         execDuration: sessionData.execDuration,
-                        MaxTrialNum: sessionData.params.maxTrialNum,
+                        MaxTrialNum: tempara.maxTrialNum,
                         startTime: sessionData.startTime,
                         endTime: endTimenum ? endTimenum : undefined,
                         trainingServicePlatform: trainingPlatform,
-                        tuner: sessionData.params.tuner,
+                        tuner: tempara.tuner,
                         assessor: assessor ? assessor : undefined,
                         advisor: advisor ? advisor : undefined,
                         clusterMetaData: clusterMetaData ? clusterMetaData : undefined,
                         logCollection: logCollection
                     });
                     // search space format loguniform max and min
-                    const temp = sessionData.params.searchSpace;
+                    const temp = tempara.searchSpace;
                     const searchSpace = temp !== undefined
                         ? JSON.parse(temp) : {};
                     Object.keys(searchSpace).map(item => {
