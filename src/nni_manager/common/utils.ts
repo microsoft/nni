@@ -68,11 +68,7 @@ function mkDirP(dirPath: string): Promise<void> {
         } else {
             const parent: string = path.dirname(dirPath);
             mkDirP(parent).then(() => {
-<<<<<<< HEAD
-                fs.mkdir(dirPath, (err: NodeJS.ErrnoException | null) => {
-=======
                 fs.mkdir(dirPath, (err: Error | null) => {
->>>>>>> cfda0dae8cd5df5ef96c53ce4d488579322deebb
                     if (err) {
                         deferred.reject(err);
                     } else {
