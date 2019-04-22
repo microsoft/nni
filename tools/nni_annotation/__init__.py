@@ -20,6 +20,7 @@
 
 
 import os
+import sys
 import shutil
 
 from . import code_generator
@@ -28,6 +29,9 @@ from . import search_space_generator
 
 __all__ = ['generate_search_space', 'expand_annotations']
 
+slash = '/'
+if sys.platform == "win32":
+    slash = '\\'        
 
 def generate_search_space(code_dir):
     """Generate search space from Python source code.
@@ -35,8 +39,8 @@ def generate_search_space(code_dir):
     code_dir: directory path of source files (str)
     """
     search_space = {}
-
-    if code_dir.endswith('/'):
+    
+    if code_dir.endswith(slash):
         code_dir = code_dir[:-1]
 
     for subdir, _, files in os.walk(code_dir):
@@ -44,9 +48,9 @@ def generate_search_space(code_dir):
         if subdir == code_dir:
             package = ''
         else:
-            assert subdir.startswith(code_dir + '/'), subdir
+            assert subdir.startswith(code_dir + slash), subdir
             prefix_len = len(code_dir) + 1
-            package = subdir[prefix_len:].replace('/', '.') + '.'
+            package = subdir[prefix_len:].replace(slash, '.') + '.'
 
         for file_name in files:
             if file_name.endswith('.py'):
@@ -76,9 +80,10 @@ def expand_annotations(src_dir, dst_dir):
     src_dir: directory path of user code (str)
     dst_dir: directory to place generated files (str)
     """
-    if src_dir[-1] == '/':
+    if src_dir[-1] == slash:
         src_dir = src_dir[:-1]
-    if dst_dir[-1] == '/':
+    
+    if dst_dir[-1] == slash:
         dst_dir = dst_dir[:-1]
 
     annotated = False
