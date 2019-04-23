@@ -225,7 +225,7 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 可�
 * [尝试不同的 Assessor](Builtin_Assessors.md)
 * [使用命令行工具 nnictl](NNICTLDOC.md)
 * [如何编写 Trial 代码](Trials.md)
-* [如何在本机运行 Experiment (支持多 GPU 卡)？](tutorial_1_CR_exp_local_api.md)
+* [如何在本机运行 Experiment (支持多 GPU 卡)？](LocalMode.md)
 * [如何在多机上运行 Experiment？](RemoteMachineMode.md)
 * [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
 * [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](KubeflowMode.md)

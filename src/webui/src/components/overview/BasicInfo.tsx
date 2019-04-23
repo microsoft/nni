@@ -27,11 +27,11 @@ class BasicInfo extends React.Component<BasicInfoProps, {}> {
                     <div>{trialProfile.id}</div>
                 </Col>
                 <Col span={8} className="padItem basic">
-                    <p>Start Time</p>
+                    <p>Start time</p>
                     <div className="nowrap">
                         {new Date(trialProfile.startTime).toLocaleString('en-US')}
                     </div>
-                    <p>End Time</p>
+                    <p>End time</p>
                     <div className="nowrap">
                         {
                             trialProfile.endTime
@@ -43,13 +43,13 @@ class BasicInfo extends React.Component<BasicInfoProps, {}> {
                     </div>
                 </Col>
                 <Col span={8} className="padItem basic">
-                    <p>Log Directory</p>
+                    <p>Log directory</p>
                     <div className="nowrap">
                         <Tooltip placement="top" title={trialProfile.logDir}>
                             {trialProfile.logDir}
                         </Tooltip>
                     </div>
-                    <p>TrainingPlatform</p>
+                    <p>Training platform</p>
                     <div className="nowrap">
                         {
                             trialProfile.trainingServicePlatform

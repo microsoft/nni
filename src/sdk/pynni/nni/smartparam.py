@@ -19,11 +19,9 @@
 # ==================================================================================================
 
 
-import inspect
-import math
 import random
 
-from .common import env_args
+from .env_vars import trial_env_vars
 from . import trial
 
 
@@ -44,7 +42,7 @@ __all__ = [
 
 # pylint: disable=unused-argument
 
-if env_args.platform is None:
+if trial_env_vars.NNI_PLATFORM is None:
     def choice(*options, name=None):
         return random.choice(options)
 

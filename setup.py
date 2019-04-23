@@ -51,11 +51,12 @@ setup(
         'json_tricks',
         'numpy',
         'psutil',
-        'pyyaml',
+        'ruamel.yaml',
         'requests',
         'scipy',
         'schema',
-        'PythonWebHDFS'
+        'PythonWebHDFS',
+        'colorama'
     ],
 
     entry_points = {
