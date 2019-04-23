@@ -6,7 +6,7 @@ $OS_SPEC = "windows"
 $WHEEL_SPEC = "win_amd64"
 
 $TIME_STAMP = date -u "+%y%m%d%H%M"
-$NNI_VERSION_VALUE = git describe --tags --abbrev=0
+$NNI_VERSION_VALUE = "v0.7"
 
 # To include time stamp in version value, run:
 # make version_ts=true build

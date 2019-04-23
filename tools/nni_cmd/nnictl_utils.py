@@ -505,3 +505,9 @@ def export_trials_data(args):
             print_error('Export failed...')
     else:
         print_error('Restful server is not Running')
+
+def hdfs_list(args):
+    pass
+
+def hdfs_file(args):
+    pass
