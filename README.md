@@ -102,23 +102,29 @@ We encourage researchers and students leverage these projects to accelerate the 
 ## **Install & Verify**
 
 **Install through pip** 	
-* We support Linux and MacOS in current stage, Ubuntu 16.04 or higher, along with MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.	
+* We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1, along with Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.	
 
 ```bash
     python3 -m pip install --upgrade nni
 ```
 Note:
-
+* For Windows you need use python instead of python3
 * `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
 * If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/FAQ.md)
 
 **Install through source code**
-* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) in our current stage. 
-* Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
+* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1), Windows local mode (10.1809) in our current stage. 
+* For Linux and MacOS run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
 ```bash	
-    git clone -b v0.6 https://github.com/Microsoft/nni.git
+    git clone -b v0.7 https://github.com/Microsoft/nni.git
     cd nni	
     source install.sh	
+```
+* For Windows run the following commands in an environment that has `python >= 3.5`, `git` and `powershell`.
+```bash	
+    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    cd nni	
+    powershell install.ps1	
 ```
 
 For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)
@@ -128,13 +134,16 @@ For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Ins
 The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.	
 * Download the examples via clone the source code.	
 ```bash	
-    git clone -b v0.6 https://github.com/Microsoft/nni.git
+    git clone -b v0.7 https://github.com/Microsoft/nni.git
 ```
 * Run the mnist example.
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
-
+* For Windows run the mnist example.
+```bash
+    nnictl create --config nni/examples/trials/mnist/config_windows.yml
+```
 * Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
 
 ```

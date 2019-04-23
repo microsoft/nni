@@ -15,7 +15,7 @@ Currently we support installation on Linux, Mac and Windows.
 
   Prerequisite: `python >=3.5`, `git`, `wget`
   ```bash
-  git clone -b v0.6 https://github.com/Microsoft/nni.git
+  git clone -b v0.7 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
@@ -42,7 +42,7 @@ Currently we support installation on Linux, Mac and Windows.
   ```
   Then you can install nni as administrator or current user as follows:
   ```bash
-  git clone https://github.com/Microsoft/nni.git
+  git clone -b v0.7 https://github.com/Microsoft/nni.git
   cd nni
   powershell ./install.ps1
   ```
@@ -73,7 +73,7 @@ Below are the minimum system requirements for NNI on macOS. Due to potential pro
 |**Internet**|Boardband internet connection|
 |**Resolution**|1024 x 768 minimum display resolution|
 
-Below are the minimum system requirements for NNI on Windows. Due to potential programming changes, the minimum system requirements for NNI may change over time.
+Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is well tested and recommend. Due to potential programming changes, the minimum system requirements for NNI may change over time.
 
 ||Minimum Requirements|Recommended Specifications|
 |---|---|---|

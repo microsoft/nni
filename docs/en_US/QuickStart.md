@@ -2,15 +2,18 @@
 
 ## Installation
 
-We support Linux and MacOS in current stage, Ubuntu 16.04 or higher and MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
-
+We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher MacOS 10.14.1 Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+#### Linux and MacOS
 ```bash
     python3 -m pip install --upgrade nni
 ```
-
+#### Windows
+```bash
+    python -m pip install --upgrade nni
+```
 Note:
 
-* `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
+* For Linux and MacOS `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
 * If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
 * For the `system requirements` of NNI, please refer to [Install NNI](Installation.md)
 
@@ -124,6 +127,8 @@ trial:
   codeDir: .
   gpuNum: 0
 ```
+Note:
+* For Windows, you need to change trial command python3 to python
 
 *Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
@@ -133,6 +138,11 @@ When these things are done, **run the config.yml file from your command line to 
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
+```
+If you use windows local mode and have not changed the trial command python3 to python in config.yml, **then run the config_windows.yml file from your command line to start the experiment**.
+
+```bash
+    nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
 Note: **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](NNICTLDOC.md) for more usage of `nnictl`
