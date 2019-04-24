@@ -139,7 +139,7 @@ def json2vals(in_x, vals, out_y, name=ROOT):
         for i, temp in enumerate(in_x):
             json2vals(temp, vals[i], out_y, name + '[%d]' % i)
 
-def nni_params2tuner_params(in_x, parameter):
+def params2tuner_params(in_x, parameter):
     """
     change parameters in NNI format to parameters in hyperopt format.
     For example, NNI receive parameters like:
@@ -399,6 +399,6 @@ class HyperoptTuner(Tuner):
                 continue
             self.supplement_data_num += 1
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
-            self.total_data[_parameter_id] = nni_params2tuner_params(self.json, _params)
+            self.total_data[_parameter_id] = params2tuner_params(self.json, _params)
             self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
         logger.info("Successfully import data to TPE/Anneal tuner.")
