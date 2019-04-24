@@ -21,7 +21,7 @@
 
 import json_tricks
 
-from .common import env_args
+from .env_vars import trial_env_vars
 from . import platform
 
 
@@ -65,7 +65,7 @@ def report_intermediate_result(metric):
     assert _params is not None, 'nni.get_next_parameter() needs to be called before report_intermediate_result'
     metric = json_tricks.dumps({
         'parameter_id': _params['parameter_id'],
-        'trial_job_id': env_args.trial_job_id,
+        'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'PERIODICAL',
         'sequence': _intermediate_seq,
         'value': metric
@@ -81,7 +81,7 @@ def report_final_result(metric):
     assert _params is not None, 'nni.get_next_parameter() needs to be called before report_final_result'
     metric = json_tricks.dumps({
         'parameter_id': _params['parameter_id'],
-        'trial_job_id': env_args.trial_job_id,
+        'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'FINAL',
         'sequence': 0,  # TODO: may be unnecessary
         'value': metric

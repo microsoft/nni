@@ -1,0 +1,9 @@
+Introduction to NNI Training Services
+=====================================
+
+..  toctree::
+    Local<LocalMode>
+    Remote<RemoteMachineMode>
+    OpenPAI<PAIMode>
+    Kubeflow<KubeflowMode>
+    FrameworkController<FrameworkControllerMode>

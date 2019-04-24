@@ -22,7 +22,7 @@
 import * as assert from 'assert';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
-import { cleanupUnitTest, prepareUnitTest, getMsgDispatcherCommand } from '../../common/utils';
+import { cleanupUnitTest, prepareUnitTest, getMsgDispatcherCommand, getTunerProc } from '../../common/utils';
 import * as CommandType from '../commands';
 import { createDispatcherInterface, IpcInterface } from '../ipcInterface';
 
@@ -50,9 +50,7 @@ function startProcess(): void {
         // advisor
         undefined
     );
-
-    const proc: ChildProcess = spawn(dispatcherCmd, [], { stdio, cwd: 'core/test', shell: true });
-
+    const proc: ChildProcess = getTunerProc(dispatcherCmd, stdio,  'core/test', process.env);
     proc.on('error', (error: Error): void => {
         procExit = true;
         procError = true;
@@ -106,7 +104,7 @@ describe('core/ipcInterface.terminate', (): void => {
                 assert.ok(!procError);
                 deferred.resolve();
             },
-            2000);
+            5000);
 
         return deferred.promise;
     });

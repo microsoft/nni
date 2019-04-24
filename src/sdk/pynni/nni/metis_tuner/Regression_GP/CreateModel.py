@@ -40,7 +40,7 @@ def create_model(samples_x, samples_y_aggregation,
     regressor = gp.GaussianProcessRegressor(kernel=kernel,
                                             n_restarts_optimizer=n_restarts_optimizer,
                                             normalize_y=True,
-                                            alpha=0)
+                                            alpha=1e-10)
     regressor.fit(numpy.array(samples_x), numpy.array(samples_y_aggregation))
 
     model = {}

@@ -20,25 +20,24 @@
 'use strict';
 
 import * as assert from 'assert';
-import { Client } from 'ssh2';
 import { getLogger, Logger } from '../../common/log';
 import { randomSelect } from '../../common/utils';
 import { GPUInfo } from '../common/gpuData';
-import { RemoteMachineMeta, RemoteMachineScheduleResult, ScheduleResultType } from './remoteMachineData';
+import { parseGpuIndices, RemoteMachineMeta, RemoteMachineScheduleResult, ScheduleResultType, SSHClientManager } from './remoteMachineData';
 
 /**
  * A simple GPU scheduler implementation
  */
 export class GPUScheduler {
 
-    private readonly machineSSHClientMap : Map<RemoteMachineMeta, Client>;
+    private readonly machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>;
     private log: Logger = getLogger();
 
     /**
      * Constructor
      * @param machineSSHClientMap map from remote machine to sshClient
      */
-    constructor(machineSSHClientMap : Map<RemoteMachineMeta, Client>) {
+    constructor(machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>) {
         this.machineSSHClientMap = machineSSHClientMap;
     }
 
@@ -85,6 +84,20 @@ export class GPUScheduler {
         };
     }
 
+    /**
+     * remove the job's gpu reversion
+     */
+    public removeGpuReservation(trialJobId: string, rmMeta?: RemoteMachineMeta): void {
+        // If remote machine has no GPU, gpuReservcation is not initialized, so check if it's undefined
+        if (rmMeta !== undefined && rmMeta.gpuReservation !== undefined) {
+            rmMeta.gpuReservation.forEach((reserveTrialJobId : string, gpuIndex : number) => {
+                if (reserveTrialJobId === trialJobId) {
+                    rmMeta.gpuReservation.delete(gpuIndex);
+                }
+            });
+        }
+    }
+
     private scheduleGPUHost(requiredGPUNum: number, trialJobId: string): RemoteMachineScheduleResult | undefined {
         const totalResourceMap: Map<RemoteMachineMeta, GPUInfo[]> = this.gpuResourceDetection();
         const qualifiedRMs: RemoteMachineMeta[] = [];
@@ -113,18 +126,21 @@ export class GPUScheduler {
      */
     private gpuResourceDetection() : Map<RemoteMachineMeta, GPUInfo[]> {
         const totalResourceMap : Map<RemoteMachineMeta, GPUInfo[]> = new Map<RemoteMachineMeta, GPUInfo[]>();
-        this.machineSSHClientMap.forEach((client: Client, rmMeta: RemoteMachineMeta) => {
+        this.machineSSHClientMap.forEach((sshClientManager: SSHClientManager, rmMeta: RemoteMachineMeta) => {
             // Assgin totoal GPU count as init available GPU number
             if (rmMeta.gpuSummary !== undefined) {
                 const availableGPUs: GPUInfo[] = [];
                 if (rmMeta.gpuReservation === undefined) {
                     rmMeta.gpuReservation = new Map<number, string>();
                 }
-
+                const designatedGpuIndices: Set<number> | undefined = parseGpuIndices(rmMeta.gpuIndices);
+                this.log.debug(`designated gpu indices: ${designatedGpuIndices}`);
                 rmMeta.gpuSummary.gpuInfos.forEach((gpuInfo: GPUInfo) => {
                     // if the GPU has active process, OR be reserved by a job,
+                    // or index not in gpuIndices configuration in machineList,
                     // We should NOT allocate this GPU
-                    if (gpuInfo.activeProcessNum === 0 && !rmMeta.gpuReservation.has(gpuInfo.index)) {
+                    if (gpuInfo.activeProcessNum === 0 && !rmMeta.gpuReservation.has(gpuInfo.index)
+                        && (designatedGpuIndices === undefined || designatedGpuIndices.has(gpuInfo.index))) {
                         availableGPUs.push(gpuInfo);
                     }
                 });
@@ -163,4 +179,5 @@ export class GPUScheduler {
             }
         };
     }
+
 }

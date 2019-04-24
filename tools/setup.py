@@ -1,18 +1,19 @@
 import setuptools
 
 setuptools.setup(
-    name = 'nnictl',
+    name = 'nni-tool',
     version = '999.0.0-developing',
     packages = setuptools.find_packages(exclude=['*test*']),
 
     python_requires = '>=3.5',
     install_requires = [
         'requests',
-        'pyyaml',
+        'ruamel.yaml',
         'psutil',
         'astor',
         'schema',
-        'pyhdfs'
+        'PythonWebHDFS',
+        'colorama'
     ],
 
     author = 'Microsoft NNI Team',

@@ -22,6 +22,8 @@
 import * as assert from 'assert';
 import { randomBytes } from 'crypto';
 import * as cpp from 'child-process-promise';
+import * as cp from 'child_process';
+import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -30,17 +32,24 @@ import { Container } from 'typescript-ioc';
 import * as util from 'util';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, getExperimentId, setExperimentStartupInfo } from './experimentStartupInfo';
+import { ExperimentStartupInfo, getExperimentId, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { Manager } from './manager';
+import { TrialConfig } from '../training_service/common/trialConfig';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { getLogger } from './log';
 
 function getExperimentRootDir(): string {
-    return path.join(os.homedir(), 'nni', 'experiments', getExperimentId());
+    return getExperimentStartupInfo()
+            .getLogDir();
 }
 
 function getLogDir(): string{
     return path.join(getExperimentRootDir(), 'log');
+}
+
+function getLogLevel(): string{
+    return getExperimentStartupInfo()
+    .getLogLevel();
 }
 
 function getDefaultDatabaseDir(): string {
@@ -140,6 +149,23 @@ function parseArg(names: string[]): string {
     return '';
 }
 
+function encodeCmdLineArgs(args:any):any{
+    if(process.platform === 'win32'){
+        return JSON.stringify(args);
+    }
+    else{
+        return JSON.stringify(JSON.stringify(args));
+    }
+}
+
+function getCmdPy():string{
+    let cmd = 'python3';
+    if(process.platform === 'win32'){
+        cmd = 'python';
+    }
+    return cmd;
+}
+
 /**
  * Generate command line to start automl algorithm(s), 
  * either start advisor or start a process which runs tuner and assessor
@@ -173,8 +199,7 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
     if (!tuner && !advisor) {
         throw new Error('Error: specify neither tuner nor advisor is not allowed');
     }
-
-    let command: string = `python3 -m nni`;
+    let command: string = `${getCmdPy()} -m nni`;
     if (multiPhase) {
         command += ' --multi_phase';
     }
@@ -186,7 +211,7 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
     if (advisor) {
         command += ` --advisor_class_name ${advisor.className}`;
         if (advisor.classArgs !== undefined) {
-            command += ` --advisor_args ${JSON.stringify(JSON.stringify(advisor.classArgs))}`;
+            command += ` --advisor_args ${encodeCmdLineArgs(advisor.classArgs)}`;
         }
         if (advisor.codeDir !== undefined && advisor.codeDir.length > 1) {
             command += ` --advisor_directory ${advisor.codeDir}`;
@@ -197,7 +222,7 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
     } else {
         command += ` --tuner_class_name ${tuner.className}`;
         if (tuner.classArgs !== undefined) {
-            command += ` --tuner_args ${JSON.stringify(JSON.stringify(tuner.classArgs))}`;
+            command += ` --tuner_args ${encodeCmdLineArgs(tuner.classArgs)}`;
         }
         if (tuner.codeDir !== undefined && tuner.codeDir.length > 1) {
             command += ` --tuner_directory ${tuner.codeDir}`;
@@ -209,7 +234,7 @@ function getMsgDispatcherCommand(tuner: any, assessor: any, advisor: any, multiP
         if (assessor !== undefined && assessor.className !== undefined) {
             command += ` --assessor_class_name ${assessor.className}`;
             if (assessor.classArgs !== undefined) {
-                command += ` --assessor_args ${JSON.stringify(JSON.stringify(assessor.classArgs))}`;
+                command += ` --assessor_args ${encodeCmdLineArgs(assessor.classArgs)}`;
             }
             if (assessor.codeDir !== undefined && assessor.codeDir.length > 1) {
                 command += ` --assessor_directory ${assessor.codeDir}`;
@@ -344,6 +369,96 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     });
 }
 
+/**
+ * get the version of current package
+ */
+async function getVersion(): Promise<string> {
+    const deferred : Deferred<string> = new Deferred<string>();
+    import(path.join(__dirname, '..', 'package.json')).then((pkg)=>{
+        deferred.resolve(pkg.version);
+    }).catch((error)=>{
+        deferred.reject(error);
+    });
+    return deferred.promise;
+} 
+
+/**
+ * run command as ChildProcess
+ */
+function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any): ChildProcess{
+    let cmd: string = command;
+    let arg: string[] = [];
+    let newShell: boolean = true;
+    if(process.platform === "win32"){
+        cmd = command.split(" ", 1)[0];
+        arg = command.substr(cmd.length+1).split(" ");
+        newShell = false;
+    }
+    const tunerProc: ChildProcess = spawn(cmd, arg, {
+        stdio,
+        cwd: newCwd,
+        env: newEnv,
+        shell: newShell
+    });
+    return tunerProc;
+}
+
+/**
+ * judge whether the process is alive
+ */
+async function isAlive(pid:any): Promise<boolean>{
+    let deferred : Deferred<boolean> = new Deferred<boolean>();
+    let alive: boolean = false;
+    if(process.platform ==='win32'){
+        try {
+            const str = cp.execSync(`powershell.exe Get-Process -Id ${pid} -ErrorAction SilentlyContinue`).toString();
+            if (str) {
+                alive = true;
+            }
+        }
+        catch (error) {
+        }
+    }
+    else{
+        try {
+            await cpp.exec(`kill -0 ${pid}`);
+            alive = true;
+        } catch (error) {
+            //ignore
+        }
+    }
+    deferred.resolve(alive);
+    return deferred.promise;
+}
+
+/**
+ * kill process 
+ */
+async function killPid(pid:any): Promise<void>{
+    let deferred : Deferred<void> = new Deferred<void>();
+    try {
+        if (process.platform === "win32") {
+            await cpp.exec(`cmd /c taskkill /PID ${pid} /F`);
+        }
+        else{
+            await cpp.exec(`kill -9 ${pid}`);
+        }
+    } catch (error) {
+        // pid does not exist, do nothing here
+    }
+    deferred.resolve();
+    return deferred.promise;
+}
+
+function getNewLine(): string{
+    if (process.platform === "win32") {
+        return "\r\n";
+    }
+    else{
+        return "\n";
+    }
+}
+
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
-    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect };
+    mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine };

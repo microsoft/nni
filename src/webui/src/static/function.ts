@@ -1,3 +1,8 @@
+import axios from 'axios';
+import {
+    message
+} from 'antd';
+import { MANAGER_IP } from './const';
 import { FinalResult, FinalType } from './interface';
 
 const convertTime = (num: number) => {
@@ -29,11 +34,11 @@ const convertDuration = (num: number) => {
 
 // get final result value
 // draw Accuracy point graph
-const getFinalResult = (final: FinalResult) => {
+const getFinalResult = (final: Array<FinalResult>) => {
     let acc;
     let showDefault = 0;
     if (final) {
-        acc = JSON.parse(final[0].data);
+        acc = JSON.parse(final[final.length - 1].data);
         if (typeof (acc) === 'object') {
             if (acc.default) {
                 showDefault = acc.default;
@@ -48,10 +53,10 @@ const getFinalResult = (final: FinalResult) => {
 };
 
 // get final result value // acc obj 
-const getFinal = (final: FinalResult) => {
+const getFinal = (final: Array<FinalResult>) => {
     let showDefault: FinalType;
     if (final) {
-        showDefault = JSON.parse(final[0].data);
+        showDefault = JSON.parse(final[final.length - 1].data);
         if (typeof showDefault === 'number') {
             showDefault = { default: showDefault };
         }
@@ -61,7 +66,72 @@ const getFinal = (final: FinalResult) => {
     }
 };
 
+// detail page table intermediate button
+const intermediateGraphOption = (intermediateArr: number[], id: string) => {
+    const sequence: number[] = [];
+    const lengthInter = intermediateArr.length;
+    for (let i = 1; i <= lengthInter; i++) {
+        sequence.push(i);
+    }
+    return {
+        title: {
+            text: id,
+            left: 'center',
+            textStyle: {
+                fontSize: 16,
+                color: '#333',
+            }
+        },
+        tooltip: {
+            trigger: 'item'
+        },
+        xAxis: {
+            name: 'Trial',
+            data: sequence
+        },
+        yAxis: {
+            name: 'Default metric',
+            type: 'value',
+            data: intermediateArr
+        },
+        series: [{
+            symbolSize: 6,
+            type: 'scatter',
+            data: intermediateArr
+        }]
+    };
+};
+
+// kill job
+const killJob = (key: number, id: string, status: string, updateList: Function) => {
+    axios(`${MANAGER_IP}/trial-jobs/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+        }
+    })
+        .then(res => {
+            if (res.status === 200) {
+                message.destroy();
+                message.success('Cancel the job successfully');
+                // render the table
+                updateList();
+            } else {
+                message.error('fail to cancel the job');
+            }
+        })
+        .catch(error => {
+            if (error.response.status === 500) {
+                if (error.response.data.error) {
+                    message.error(error.response.data.error);
+                } else {
+                    message.error('500 error, fail to cancel the job');
+                }
+            }
+        });
+};
+
 export {
     convertTime, convertDuration, getFinalResult,
-    getFinal
+    getFinal, intermediateGraphOption, killJob
 };

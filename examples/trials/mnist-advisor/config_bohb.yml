@@ -1,0 +1,23 @@
+authorName: default
+experimentName: example_mnist_bohb
+trialConcurrency: 1
+maxExecDuration: 10h
+maxTrialNum: 1000
+#choice: local, remote, pai
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+advisor:
+  #choice: Hyperband, BOHB
+  #(BOHB should be installed through nnictl)
+  builtinAdvisorName: BOHB
+  classArgs:
+    max_budget: 27
+    min_budget: 1
+    eta: 3
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 0

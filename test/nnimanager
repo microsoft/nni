@@ -1,2 +1,0 @@
-#!/bin/sh
-cd ../../src/nni_manager && node dist/main.js $@

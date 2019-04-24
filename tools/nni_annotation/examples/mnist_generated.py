@@ -1,10 +1,14 @@
-import nni
 """A deep MNIST classifier using convolutional layers."""
 import logging
 import math
 import tempfile
+import time
+
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
+
+import nni
+
 FLAGS = None
 logger = logging.getLogger('mnist_AutoML')
 
@@ -123,14 +127,25 @@ def bias_variable(shape):
     initial = tf.constant(0.1, shape=shape)
     return tf.Variable(initial)
 
+def download_mnist_retry(data_dir, max_num_retries=20):
+    """Try to download mnist dataset and avoid errors"""
+    for _ in range(max_num_retries):
+        try:
+            return input_data.read_data_sets(data_dir, one_hot=True)
+        except tf.errors.AlreadyExistsError:
+            time.sleep(1)
+    raise Exception("Failed to download MNIST.")
 
 def main(params):
     """
     Main function, build mnist network, run and send result to NNI.
     """
-    mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    print('Mnist download data down.')
-    logger.debug('Mnist download data down.')
+
+def main(params):
+    # Import data
+    mnist = download_mnist_retry(params['data_dir'])
+    print('Mnist download data done.')
+    logger.debug('Mnist download data done.')
     mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'],
         channel_2_num=params['channel_2_num'], conv_size=params['conv_size'
         ], hidden_size=params['hidden_size'], pool_size=params['pool_size'],

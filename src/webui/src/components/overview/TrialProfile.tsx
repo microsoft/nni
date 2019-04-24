@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { Experiment } from '../../static/interface';
 import MonacoEditor from 'react-monaco-editor';
 import { MONACO } from '../../static/const';
 
 interface TrialInfoProps {
-    tiralProInfo: Experiment;
+    experiment: object;
 }
 
 class TrialInfo extends React.Component<TrialInfoProps, {}> {
@@ -13,26 +12,40 @@ class TrialInfo extends React.Component<TrialInfoProps, {}> {
         super(props);
     }
 
-    render() {
-        const { tiralProInfo } = this.props;
-        const showProInfo = [];
-        showProInfo.push({
-            revision: tiralProInfo.revision,
-            authorName: tiralProInfo.author,
-            trialConcurrency: tiralProInfo.runConcurren,
-            tuner: tiralProInfo.tuner,
-            assessor: tiralProInfo.assessor ? tiralProInfo.assessor : undefined,
-            advisor: tiralProInfo.advisor ? tiralProInfo.advisor : undefined,
-            clusterMetaData: tiralProInfo.clusterMetaData ? tiralProInfo.clusterMetaData : undefined
+    componentWillReceiveProps(nextProps: TrialInfoProps) {
+        const experiments = nextProps.experiment;
+        Object.keys(experiments).map(key => {
+            switch (key) {
+                case 'id':
+                case 'logDir':
+                case 'startTime':
+                case 'endTime':
+                    experiments[key] = undefined;
+                    break;
+                case 'params':
+                    const params = experiments[key];
+                    Object.keys(params).map(item => {
+                        if (item === 'experimentName' || item === 'searchSpace'
+                            || item === 'trainingServicePlatform') {
+                            params[item] = undefined;
+                        }
+                    });
+                    break;
+                default:
+            }
         });
+    }
+
+    render() {
+        const { experiment } = this.props;
         return (
             <div className="profile">
                 <MonacoEditor
                     width="100%"
-                    height="380"
+                    height="361"
                     language="json"
                     theme="vs-light"
-                    value={JSON.stringify(showProInfo[0], null, 2)}
+                    value={JSON.stringify(experiment, null, 2)}
                     options={MONACO}
                 />
             </div>

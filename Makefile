@@ -1,6 +1,6 @@
 # Setting variables
 SHELL := /bin/bash
-PIP_INSTALL := python3 -m pip install --no-cache-dir
+PIP_INSTALL := python3 -m pip install
 PIP_UNINSTALL := python3 -m pip uninstall
 
 ## Colorful output
@@ -19,22 +19,25 @@ else
 endif
 
 ## Install directories
-ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
-IS_SYS_PYTHON ?= $(shell [[ $(ROOT_FOLDER) == /usr* || $(ROOT_FOLDER) == /Library* ]] && echo TRUE || echo FALSE)
 
-ifeq ($(shell id -u), 0)  # is root
-    _ROOT := 1
-    BASH_COMP_PREFIX ?= /usr/share/bash-completion/completions
-else  # is normal user
-    ifeq (TRUE, $(IS_SYS_PYTHON))
-        ROOT_FOLDER := $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getusersitepackages()).parents[2])')
-    endif
-    ifndef VIRTUAL_ENV
-        ifeq (, $(shell echo $$PATH | grep 'conda'))
+## For apt-get or pip installed virtualenv
+ifdef VIRTUAL_ENV
+    ROOT_FOLDER ?= $(VIRTUAL_ENV)
+    BASH_COMP_PREFIX ?= ${HOME}/.bash_completion.d
+else
+    ROOT_FOLDER ?= $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]).parents[2])')
+    IS_SYS_PYTHON ?= $(shell [[ $(ROOT_FOLDER) == /usr* || $(ROOT_FOLDER) == /Library* ]] && echo TRUE || echo FALSE)
+
+    ifeq ($(shell id -u), 0)  # is root
+        _ROOT := 1
+        BASH_COMP_PREFIX ?= /usr/share/bash-completion/completions
+    else  # is normal user
+        ifeq (TRUE, $(IS_SYS_PYTHON))
+            ROOT_FOLDER := $(shell python3 -c 'import site; from pathlib import Path; print(Path(site.getusersitepackages()).parents[2])')
             PIP_MODE ?= --user
         endif
+        BASH_COMP_PREFIX ?= ${HOME}/.bash_completion.d
     endif
-    BASH_COMP_PREFIX ?= ${HOME}/.bash_completion.d
 endif
 BASH_COMP_SCRIPT := $(BASH_COMP_PREFIX)/nnictl
 
@@ -63,6 +66,7 @@ NNI_VERSION_TEMPLATE = 999.0.0-developing
 build:
 	#$(_INFO) Building NNI Manager $(_END)
 	cd src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
+	cp -rf src/nni_manager/config src/nni_manager/dist/
 	#$(_INFO) Building WebUI $(_END)
 	cd src/webui && $(NNI_YARN) && $(NNI_YARN) build
 
@@ -106,19 +110,10 @@ dev-install: install-scripts
 dev-install:
 	#$(_INFO) Complete! You may want to add $(BIN_FOLDER) to your PATH environment $(_END)
 
-# Target for setup.py
-# Do not invoke this manually
-.PHONY: pip-install
-pip-install: install-dependencies
-pip-install: build
-pip-install: install-node-modules
-pip-install: install-scripts
-pip-install: update-bash-config
-
 .PHONY: uninstall
 uninstall:
-	-$(PIP_UNINSTALL) -y nni
-	-$(PIP_UNINSTALL) -y nnictl
+	-cd build && $(PIP_UNINSTALL) -y nni
+	-rm -rf build
 	-rm -rf $(NNI_PKG_FOLDER)
 	-rm -f $(BIN_FOLDER)/node
 	-rm -f $(BIN_FOLDER)/nnictl
@@ -165,18 +160,24 @@ install-dependencies: $(NNI_NODE_TARBALL) $(NNI_YARN_TARBALL)
 .PHONY: install-python-modules
 install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	cd src/sdk/pynni && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
-	
-	#$(_INFO) Installing nnictl $(_END)
-	cd tools && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
+	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) .
 
 .PHONY: dev-install-python-modules
 dev-install-python-modules:
 	#$(_INFO) Installing Python SDK $(_END)
-	cd src/sdk/pynni && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) -e .
-	
-	#$(_INFO) Installing nnictl $(_END)
-	cd tools && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && $(PIP_INSTALL) $(PIP_MODE) -e .
+	mkdir -p build
+	ln -sf ../src/sdk/pynni/nni build/nni
+	ln -sf ../tools/nni_annotation build/nni_annotation
+	ln -sf ../tools/nni_cmd build/nni_cmd
+	ln -sf ../tools/nni_trial_tool build/nni_trial_tool
+	ln -sf ../tools/nni_gpu_tool build/nni_gpu_tool
+	cp setup.py build/
+	cp README.md build/
+	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' build/setup.py
+	sed -ie 's/src\/sdk\/pynni\/nni/nni/g' build/setup.py
+	sed -ie 's/tools\///g' build/setup.py
+	cd build && $(PIP_INSTALL) $(PIP_MODE) -e .
+
 
 .PHONY: install-node-modules
 install-node-modules:

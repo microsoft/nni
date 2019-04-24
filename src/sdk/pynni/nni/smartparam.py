@@ -19,11 +19,9 @@
 # ==================================================================================================
 
 
-import inspect
-import math
 import random
 
-from .common import env_args
+from .env_vars import trial_env_vars
 from . import trial
 
 
@@ -44,7 +42,7 @@ __all__ = [
 
 # pylint: disable=unused-argument
 
-if env_args.platform is None:
+if trial_env_vars.NNI_PLATFORM is None:
     def choice(*options, name=None):
         return random.choice(options)
 
@@ -82,52 +80,40 @@ if env_args.platform is None:
 
 else:
 
-    def choice(options, name=None):
-        return options[_get_param('choice', name)]
+    def choice(options, name=None, key=None):
+        return options[_get_param(key)]
 
-    def randint(upper, name=None):
-        return _get_param('randint', name)
+    def randint(upper, name=None, key=None):
+        return _get_param(key)
 
-    def uniform(low, high, name=None):
-        return _get_param('uniform', name)
+    def uniform(low, high, name=None, key=None):
+        return _get_param(key)
 
-    def quniform(low, high, q, name=None):
-        return _get_param('quniform', name)
+    def quniform(low, high, q, name=None, key=None):
+        return _get_param(key)
 
-    def loguniform(low, high, name=None):
-        return _get_param('loguniform', name)
+    def loguniform(low, high, name=None, key=None):
+        return _get_param(key)
 
-    def qloguniform(low, high, q, name=None):
-        return _get_param('qloguniform', name)
+    def qloguniform(low, high, q, name=None, key=None):
+        return _get_param(key)
 
-    def normal(mu, sigma, name=None):
-        return _get_param('normal', name)
+    def normal(mu, sigma, name=None, key=None):
+        return _get_param(key)
 
-    def qnormal(mu, sigma, q, name=None):
-        return _get_param('qnormal', name)
+    def qnormal(mu, sigma, q, name=None, key=None):
+        return _get_param(key)
 
-    def lognormal(mu, sigma, name=None):
-        return _get_param('lognormal', name)
+    def lognormal(mu, sigma, name=None, key=None):
+        return _get_param(key)
 
-    def qlognormal(mu, sigma, q, name=None):
-        return _get_param('qlognormal', name)
+    def qlognormal(mu, sigma, q, name=None, key=None):
+        return _get_param(key)
 
-    def function_choice(funcs, name=None):
-        return funcs[_get_param('function_choice', name)]()
+    def function_choice(funcs, name=None, key=None):
+        return funcs[_get_param(key)]()
 
-    def _get_param(func, name):
-        # frames:
-        #   layer 0: this function
-        #   layer 1: the API function (caller of this function)
-        #   layer 2: caller of the API function
-        frame = inspect.stack(0)[2]
-        filename = frame.filename
-        lineno = frame.lineno  # NOTE: this is the lineno of caller's last argument
-        del frame  # see official doc
-        module = inspect.getmodulename(filename)
-        if name is None:
-            name = '__line{:d}'.format(lineno)
-        key = '{}/{}/{}'.format(module, name, func)
+    def _get_param(key):
         if trial._params is None:
             trial.get_next_parameter()
         return trial.get_current_parameter(key)

@@ -30,9 +30,11 @@ class CommandType(Enum):
     RequestTrialJobs = b'GE'
     ReportMetricData = b'ME'
     UpdateSearchSpace = b'SS'
+    ImportData = b'FD'
     AddCustomizedTrialJob = b'AD'
     TrialEnd = b'EN'
     Terminate = b'TE'
+    Ping = b'PI'
 
     # out
     Initialized = b'ID'
@@ -41,11 +43,10 @@ class CommandType(Enum):
     NoMoreTrialJobs = b'NO'
     KillTrialJob = b'KI'
 
-
+_lock = threading.Lock()
 try:
     _in_file = open(3, 'rb')
     _out_file = open(4, 'wb')
-    _lock = threading.Lock()
 except OSError:
     _msg = 'IPC pipeline not exists, maybe you are importing tuner/assessor from trial code?'
     import logging
@@ -59,8 +60,7 @@ def send(command, data):
     """
     global _lock
     try:
-        if multi_thread_enabled():
-            _lock.acquire()
+        _lock.acquire()
         data = data.encode('utf8')
         assert len(data) < 1000000, 'Command too long'
         msg = b'%b%06d%b' % (command.value, len(data), data)
@@ -68,8 +68,7 @@ def send(command, data):
         _out_file.write(msg)
         _out_file.flush()
     finally:
-        if multi_thread_enabled():
-            _lock.release()
+        _lock.release()
 
 
 def receive():
