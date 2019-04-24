@@ -25,8 +25,8 @@
 
 ### 改进
 
-* [日志目录](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md)可配置。
-* 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md)，使其更易于调试。 
+* [日志目录](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)可配置。
+* 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)，使其更易于调试。 
 
 ### 文档
 

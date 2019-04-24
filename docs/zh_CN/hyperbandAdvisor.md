@@ -26,13 +26,13 @@
         optimize_mode: maximize
     
 
-注意，一旦使用了 Advisor，就不能在配置文件中添加 Tuner 和 Assessor。 使用 Hyperband 时，Trial 代码收到的超参（如键值对）中，除了用户定义的超参，会多一个 `STEPS`。 **使用 `STEPS`，Trial 能够控制其运行的时间。</p> 
+注意，一旦使用了 Advisor，就不能在配置文件中添加 Tuner 和 Assessor。 使用 Hyperband 时，Trial 代码收到的超参（如键值对）中，除了用户定义的超参，会多一个 `TRIAL_BUDGET`。 **使用 `TRIAL_BUDGET`，Trial 能够控制其运行的时间。</p> 
 
 对于 Trial 代码中 `report_intermediate_result(metric)` 和 `report_final_result(metric)` 的**`指标` 应该是数值，或者用一个 dict，并保证其中有键值为 default 的项目，其值也为数值型**。 这是需要进行最大化或者最小化优化的数值，如精度或者损失度。
 
-`R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` 表示可以分配给配置的最大步数（STEPS）。 这里，STEPS 可以代表 epoch 或 批处理数量。 `STEPS` 应该被 Trial 代码用来控制运行的次数。 参考样例 `examples/trials/mnist-hyperband/` ，了解详细信息。
+`R` 和 `eta` 是 Hyperband 中可以改动的参数。 `R` 表示可以分配给 Trial 的最大资源。 这里，资源可以代表 epoch 或 批处理数量。 `TRIAL_BUDGET` 应该被尝试代码用来控制运行的次数。 参考样例 `examples/trials/mnist-advisor/` ，了解详细信息。
 
-`eta` 表示 `n` 个配置中的 `n/eta` 个配置会留存下来，并用更多的 STEPS 来运行。
+`eta` 表示 `n` 个配置中的 `n/eta` 个配置会留存下来，并用更多的资源来运行。
 
 下面是 `R=81` 且 `eta=3` 时的样例：
 
@@ -45,7 +45,7 @@
 | 3 | 3 27 | 1 81 |      |      |      |
 | 4 | 1 81 |      |      |      |      |
 
-`s` 表示分组， `n` 表示生成的配置数量，相应的 `r` 表示配置会运行多少 STEPS。 `i` 表示轮数，如分组 4 有 5 轮，分组 3 有 4 轮。
+`s` 表示分组， `n` 表示生成的配置数量，相应的 `r` 表示配置使用多少资源来运行。 `i` 表示轮数，如分组 4 有 5 轮，分组 3 有 4 轮。
 
 关于如何实现 Trial 代码，参考 `examples/trials/mnist-hyperband/` 中的说明。
 
