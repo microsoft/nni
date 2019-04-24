@@ -1,9 +1,9 @@
 # Windows Local Mode (experimental feature)
-Up to now we only support local mode on Windows. Windows 10.1809 is well tested and recommended.
+Currently we only support local mode on Windows. Windows 10.1809 is well tested and recommended.
 
 ## **Installation on Windows**
 
-  **Anaconda python(64-bit) is highly recommended**  
+  **Anaconda python(64-bit) is highly recommended.**  
   If you use official python and pip install nni, make sure you have one of `Visual Studio`, `MATLAB`, `MKL` and `Intel Distribution for Python` installed on Windows before running nni.  
   If not, scipy install problem missing LIBIFCOREMD.DLL and LIBMMD.DLL will happen, you'd better install one of the softwares above to solve it or change to use Anaconda python(64-bit).
   
@@ -11,6 +11,7 @@ When you use powershell to run script for the first time, you need run powershel
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
+Make sure C++ 14.0 compiler is installed
 
 * __Install NNI through pip__
 
@@ -27,8 +28,6 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
   cd nni
   powershell ./install.ps1
   ```
-Note
-  * install simple json package?
 
 When these things are done, run the **config_windows.yml** file from your command line to start the experiment.
 
