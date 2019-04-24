@@ -26,6 +26,7 @@ import datetime
 import time
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
+from pyhdfs import HdfsClient
 from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
@@ -507,7 +508,5 @@ def export_trials_data(args):
         print_error('Restful server is not Running')
 
 def hdfs_list(args):
-    pass
-
-def hdfs_file(args):
-    pass
+    client = HdfsClient(hosts='10.151.40.179:80/webhdfs', user_name='openmindstudio')
+    print(client.listdir('/openmindstudio'))

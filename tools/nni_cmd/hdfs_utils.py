@@ -60,6 +60,3 @@ def copyHdfsFileToLocal(hdfsFilePath, localFilePath, hdfsClient, override=True):
         hdfsClient.copy_to_local(hdfsFilePath, localFilePath)
     except Exception as exception:
         print(exception)
-
-client = HdfsClient(hosts='10.151.40.179:80/webhdfs', user_name='openmindstudio')
-print(client.listdir('/openmindstudio'))

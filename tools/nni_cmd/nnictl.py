@@ -194,6 +194,11 @@ def parse_args():
     'the unit is second')
     parser_top.set_defaults(func=monitor_experiment)
 
+    parser_hdfs = subparsers.add_parser('hdfs', help='monitor hdfs files')
+    parser_hdfs_subparsers = parser_hdfs.add_subparsers()
+    parser_hdfs_list = parser_hdfs_subparsers.add_parser('list', help='list hdfs files')
+    parser_hdfs_list.set_defaults(func=hdfs_list)
+
     args = parser.parse_args()
     args.func(args)
 
