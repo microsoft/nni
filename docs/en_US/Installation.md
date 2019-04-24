@@ -25,7 +25,10 @@ Currently we support installation on Linux, Mac and Windows.
   You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
 ## **Installation on Windows**
-
+  When you use powershell to run script for the first time, you need run powershell as Administrator with this command:
+  ```bash
+  Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+  ```
 * __Install NNI through pip__
 
   Prerequisite: `python >= 3.5`
@@ -36,11 +39,7 @@ Currently we support installation on Linux, Mac and Windows.
 * __Install NNI through source code__
 
   Prerequisite: `python >=3.5`, `git`, `powershell`    
-  When you use powershell to run script for the first time, you need run powershell as Administrator with this command:
-  ```bash
-  Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-  ```
-  Then you can install nni as administrator or current user as follows:
+  you can install nni as administrator or current user as follows:
   ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
   cd nni

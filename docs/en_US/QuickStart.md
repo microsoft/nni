@@ -2,7 +2,7 @@
 
 ## Installation
 
-We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher MacOS 10.14.1 Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
 #### Linux and MacOS
 ```bash
     python3 -m pip install --upgrade nni
@@ -128,18 +128,22 @@ trial:
   gpuNum: 0
 ```
 Note:
-* For Windows, you need to change trial command python3 to python
+* For Windows, you need to change trial command `python3` to `python`
 
 *Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
 All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
 
+If you choose Windows local mode and use powershell to run script for the first time, you need run powershell as Administrator with this command
+```bash
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
 When these things are done, **run the config.yml file from your command line to start the experiment**.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
-If you use windows local mode and have not changed the trial command python3 to python in config.yml, **then run the config_windows.yml file from your command line to start the experiment**.
+If you use windows local mode and forget to change the trial command `python3` to `python` in config.yml, **then run the config_windows.yml file from your command line to start the experiment**.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
