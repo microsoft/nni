@@ -394,6 +394,9 @@ class HyperoptTuner(Tuner):
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
+            if not _value:
+                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                continue
             self.supplement_data_num += 1
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
             self.total_data[_parameter_id] = nni_params2tuner_params(self.json, _params)
