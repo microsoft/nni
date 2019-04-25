@@ -49,6 +49,7 @@ This is the PyPI build and upload tool for NNI project.
   Pip
   Node.js
   Yarn
+  tar
   ```
 
 * __How to build__
