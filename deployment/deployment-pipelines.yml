@@ -172,7 +172,7 @@ jobs:
     condition: eq( variables['upload_package'], 'true')
     displayName: 'upload nni package to pypi/testpypi'
 
-- job: 'Build_upload_nni_windows'
+- job: 'Build_upload_nni_win32'
   dependsOn: version_number_validation
   condition: succeeded()
   pool:
@@ -193,11 +193,54 @@ jobs:
         # NNI build scripts (powershell) uses branch tag as package version number
         git tag $env:BUILD_VERSION
         Write-Host 'building prerelease package...'
-        .\install.ps1 -version_ts $True
+        .\install.ps1 -version_os 32 -version_ts $True
       }
       else{
         Write-Host 'building release package...'
-        .\install.ps1 -version_ts $False
+        .\install.ps1 -version_os 32 -version_ts $False
+      }
+    condition: eq( variables['upload_package'], 'true')
+    displayName: 'build nni bdsit_wheel'
+
+  - powershell: |
+      cd deployment\pypi
+      if($env:BUILD_TYPE -eq 'prerelease'){
+        Write-Host 'uploading prerelease package to testpypi...'
+        python -m twine upload -u $env:TESTPYPI_USER -p $env:TESTPYPI_PWD --repository-url https://test.pypi.org/legacy/ dist/*
+      }
+      else{
+        Write-Host 'uploading release package to pypi...'
+        python -m twine upload -u $env:PYPI_USER -p $env:PYPI_PWD dist/*
+      }
+    condition: eq( variables['upload_package'], 'true')
+    displayName: 'upload nni package to pypi/testpypi'
+
+- job: 'Build_upload_nni_win_amd64'
+  dependsOn: version_number_validation
+  condition: succeeded()
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python36:
+        PYTHON_VERSION: '3.6'
+  steps:
+  - powershell: |
+      python -m pip install --upgrade pip setuptools
+      python -m pip install twine
+    displayName: 'Install twine'
+
+  - powershell: |
+      cd deployment\pypi
+      if($env:BUILD_TYPE -eq 'prerelease'){
+        # NNI build scripts (powershell) uses branch tag as package version number
+        git tag $env:BUILD_VERSION
+        Write-Host 'building prerelease package...'
+        .\install.ps1 -version_os 64 -version_ts $True
+      }
+      else{
+        Write-Host 'building release package...'
+        .\install.ps1 -version_os 64 -version_ts $False
       }
     condition: eq( variables['upload_package'], 'true')
     displayName: 'build nni bdsit_wheel'

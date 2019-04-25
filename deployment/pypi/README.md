@@ -41,7 +41,7 @@ This is the PyPI build and upload tool for NNI project.
 
 * __Prepare environment__
 
-  Before build and upload NNI package, make sure the below OS and tools are available.
+  Before build and upload NNI package, make sure the below OS and tools are available, when you choose Windows version 32-bit, you need install Node.js 32-bit as environment and Node.js 64-bit for Windows 64-bit.  
   ```
   Windows 10
   powershell
@@ -49,13 +49,13 @@ This is the PyPI build and upload tool for NNI project.
   Pip
   Node.js
   Yarn
-  tar
   ```
 
 * __How to build__
-
+ 
+  parameter `version_os` is used to choose Windows version 64-bit or 32-bit, `version_ts` is used to build for test or not. 
   ```bash
-  powershell ./install.ps1
+  powershell ./install.ps1 -version_os [64/32] -version_ts [$True/$False]
   ```
 
 * __How to upload__
