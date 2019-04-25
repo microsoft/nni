@@ -4,14 +4,11 @@ Currently we only support local mode on Windows. Windows 10.1809 is well tested 
 ## **Installation on Windows**
 
   **Anaconda python(64-bit) is highly recommended.**  
-  If you use official python and pip install nni, make sure you have one of `Visual Studio`, `MATLAB`, `MKL` and `Intel Distribution for Python` installed on Windows before running nni.  
-  If not, scipy install problem missing LIBIFCOREMD.DLL and LIBMMD.DLL will happen, you'd better install one of the softwares above to solve it or change to use Anaconda python(64-bit).
-  
-When you use powershell to run script for the first time, you need run powershell as Administrator with this command:
+
+When you use powershell to run script for the first time, you need **run powershell as administrator** with this command:
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
-Make sure C++ 14.0 compiler is installed
 
 * __Install NNI through pip__
 
@@ -35,4 +32,41 @@ When these things are done, run the **config_windows.yml** file from your comman
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 For other examples you need to change trial command `python3` into `python` in each example yaml.
-  
+
+## **Frequent met errors and answers**
+
+### pip install wrong nni version
+When you run experiment with this error below, that means you install python 32-bit and install wrong nni through pip. Try to reinstall python 64-bit or install nni from source.
+> KeyError: 'HOME'
+
+### simplejson failed when installing nni
+Make sure C++ 14.0 compiler installed.
+>builging 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
+
+### Fail to run powershell when install nni from source
+If you run powershell script for the first time and did not set the execution policies for executing the script, you will meet this error below. Try to run powershell as administrator with this command first:
+```bash
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
+>...cannot be loaded because running scripts is disabled on this system.
+
+### Trial failed with missing DLL in cmd or powershell
+This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install scipy. Anaconda python is highly recommended. If you use official python, make sure you have one of `Visual Studio`, `MATLAB`, `MKL` and `Intel Distribution for Python` installed on Windows before running nni. If not, try to install one of the softwares above or change to use Anaconda python(64-bit).
+>ImportError: DLL load failed
+
+### Trial failed on webUI
+Please check the trial log file stderr for more details. If there is no such file and you use pip install nni, then you need to run powershell as administrator with this command first:
+```bash
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
+If there is stderr file, please check out. Two possible cases are as follows:
+* forget to change the trial command `python3` into `python` in each experiment yaml.
+* forget to install experiment dependencies such as tensorflow, keras and so on.
+
+### Support tuner on Windows
+* SMAC is not supported
+* BOHB is supported, make sure C++ 14.0 compiler and dependencies installed successfully.
+
+Note:
+
+* If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
