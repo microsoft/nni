@@ -172,7 +172,7 @@ nnictl 支持的命令：
     `使用 'examples/trials/mnist/search_space.json' 来更新 Experiment 的搜索空间`
     
     ```bash
-    nnictl update searchspace [experiment_id] --file examples/trials/mnist/search_space.json
+    nnictl update searchspace [experiment_id] --filename examples/trials/mnist/search_space.json
     ```
 
 * **nnictl update concurrency**
@@ -392,18 +392,18 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写  | 是否必需  | 默认值 | 说明                        |
-  | ------ | ----- | --- | ------------------------- |
-  | id     | False |     | Experiment ID             |
-  | --file | True  |     | 文件的输出路径                   |
-  | --type | True  |     | 输出文件类型，仅支持 "csv" 和 "json" |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                        |
+  | -------------- | ----- | --- | ------------------------- |
+  | id             | False |     | Experiment ID             |
+  | --filename, -f | True  |     | 文件的输出路径                   |
+  | --type         | True  |     | 输出文件类型，仅支持 "csv" 和 "json" |
   
   * 样例
   
   > 将 Experiment 中所有 Trial 数据导出为 JSON 格式
   
   ```bash
-  nnictl experiment export [experiment_id] --file [file_path] --type json
+  nnictl experiment export [experiment_id] --filename [file_path] --type json
   ```
 
 * **nnictl experiment import**
@@ -420,10 +420,10 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写      | 是否必需  | 默认值 | 说明                       |
-  | ---------- | ----- | --- | ------------------------ |
-  | id         | False |     | 需要将数据导入的 Experiment 的 ID |
-  | --file, -f | True  |     | 需要导入的 JSON 格式的数据文件       |
+  | 参数及缩写          | 是否必需  | 默认值 | 说明                       |
+  | -------------- | ----- | --- | ------------------------ |
+  | id             | False |     | 需要将数据导入的 Experiment 的 ID |
+  | --filename, -f | True  |     | 需要导入的 JSON 格式的数据文件       |
   
   * 详细说明
     
