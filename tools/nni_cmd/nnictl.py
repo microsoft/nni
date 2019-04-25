@@ -208,7 +208,7 @@ def parse_args():
     parser_hdfs_download.add_argument('--local_path', dest='local_path', required=True, help='local path to save files')
     parser_hdfs_download.set_defaults(func=hdfs_download)
     parser_hdfs_delete = parser_hdfs_subparsers.add_parser('delete', help='delete hdfs directory or file')
-    parser_hdfs_delete.add_argument('path', nargs='?', default='/',help='the path to be listed')
+    parser_hdfs_delete.add_argument('path', nargs='?', default='/',help='the path to be deleted')
     parser_hdfs_delete.set_defaults(func=hdfs_delete)
 
     args = parser.parse_args()

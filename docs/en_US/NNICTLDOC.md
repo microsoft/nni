@@ -650,3 +650,77 @@ Debug mode will disable version check function in Trialkeeper.
     ```bash
     nnictl --version
     ```
+
+<a name="hdfs"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage hdfs`
+
+* __nnictl hdfs set__
+  * Description
+
+    set the host and userName of hdfs
+
+  * Usage
+
+    ```bash
+    nnictl hdfs set [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--host|  True| |The host of hdfs|
+  |--user_name|  True| |The userName of hdfs|
+
+* __nnictl hdfs list__
+
+  * Description
+
+    List the files and directories.
+
+  * Usage
+
+    ```bash
+    nnictl hdfs list [OPTIONS]
+    ```
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |path|  True| /|the path to be listed|
+
+* __nnictl hdfs download__
+
+  * Description
+
+    Download files and directories form hdfs.
+
+  * Usage
+
+    ```bash
+    nnictl hdfs download [OPTIONS]
+    ```
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--hdfs_path|  True| |the hdfs path to be downloaded|
+  |--local_path|  True| /|the local path to be save files|
+
+* __nnictl hdfs delete__
+
+  * Description
+
+    Delete files and directories in hdfs.
+
+  * Usage
+
+    ```bash
+    nnictl hdfs delete [OPTIONS]
+    ```
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |path|  True| |the hdfs path to be deleted|
