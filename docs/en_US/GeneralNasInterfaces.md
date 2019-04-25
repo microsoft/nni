@@ -23,7 +23,9 @@ When designing the following model there might be several choices in the fourth 
 
 ### Example: choose input connections for a layer
 
+Designing connections of layers is critical for making a high performance model. With our provided interface, users could annotate which connections a layer takes (as inputs). They could choose several ones from a set of connections. Below is an example which chooses two inputs from three candidate inputs for `concat`. Here `concat` always takes the output of its previous layer using the input argument `connected_out`.
 
+![](../img/example_connectchoice.png)
 
 ## Unified NAS search space representation
 
