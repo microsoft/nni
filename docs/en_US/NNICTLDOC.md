@@ -21,6 +21,7 @@ nnictl support commands:
 * [nnictl tensorboard](#tensorboard)
 * [nnictl package](#package)
 * [nnictl --version](#version)
+* [nnictl hdfs](#hdfs)
 
 ### Manage an experiment
 
