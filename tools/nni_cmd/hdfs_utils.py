@@ -21,6 +21,7 @@
 import os
 import posixpath
 from pyhdfs import HdfsClient
+from .command_utils import print_error
 
 def copyHdfsDirectoryToLocal(hdfsDirectory, localDirectory, hdfsClient):
     '''Copy directory from HDFS to local'''
@@ -29,7 +30,8 @@ def copyHdfsDirectoryToLocal(hdfsDirectory, localDirectory, hdfsClient):
     try:
         listing = hdfsClient.list_status(hdfsDirectory)
     except Exception as exception:
-        print(exception)
+        print_error(exception)
+        exit(1)
 
     for f in listing:
         if f.type == 'DIRECTORY':
@@ -41,22 +43,28 @@ def copyHdfsDirectoryToLocal(hdfsDirectory, localDirectory, hdfsClient):
             localFilePath = os.path.join(localDirectory, f.pathSuffix)            
             copyHdfsFileToLocal(hdfsFilePath, localFilePath, hdfsClient)
         else: 
-            raise AssertionError('unexpected type {}'.format(f.type))
+            print_error('unexpected type {}'.format(f.type))
+            exit(1)
 
 def copyHdfsFileToLocal(hdfsFilePath, localFilePath, hdfsClient, override=True):
     '''Copy file from HDFS to local'''
     if not hdfsClient.exists(hdfsFilePath):
-        raise Exception('HDFS file {} does not exist!'.format(hdfsFilePath))
+        print_error('HDFS file {} does not exist!'.format(hdfsFilePath))
     try: 
         file_status = hdfsClient.get_file_status(hdfsFilePath)
         if file_status.type != 'FILE':
-            raise Exception('HDFS file path {} is not a file'.format(hdfsFilePath))
+            print_error('HDFS file path {} is not a file'.format(hdfsFilePath))
+            exit(1)
     except Exception as exception:
-        print(exception)
-
+        print_error(exception)
+        exit(1)
     if os.path.exists(localFilePath) and override:
         os.remove(localFilePath)
     try:
         hdfsClient.copy_to_local(hdfsFilePath, localFilePath)
+    except IsADirectoryError as error:
+        print_error('local path could not be a directory!')
+        exit(1)
     except Exception as exception:
-        print(exception)
+        print_error(exception)
+        exit(1)
