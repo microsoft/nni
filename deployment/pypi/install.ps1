@@ -36,7 +36,7 @@ if(Test-Path $NNI_NODE_FOLDER){
 New-Item $NNI_NODE_FOLDER -ItemType Directory
 cmd /c tar -xf $NNI_NODE_ZIP -C $NNI_NODE_FOLDER --strip-components 1
 
-$env:$NNI_NODE_FOLDER+';'+$env:PATH
+$env:PATH = $NNI_NODE_FOLDER+';'+$env:PATH
 cd $CWD\..\..\src\nni_manager
 yarn
 yarn build
