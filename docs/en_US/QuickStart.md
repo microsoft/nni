@@ -128,15 +128,15 @@ trial:
   gpuNum: 0
 ```
 Note:
-* For Windows, you need to change trial command `python3` to `python`
+* **For Windows, you need to change trial command `python3` to `python`**
 
 *Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
 All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
 
-If you choose Windows local mode and use powershell to run script for the first time, you need run powershell as Administrator with this command
+If you choose Windows local mode and use powershell to run script for the first time, you need run powershell as administrator with this command
 ```bash
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
 When these things are done, **run the config.yml file from your command line to start the experiment**.
 

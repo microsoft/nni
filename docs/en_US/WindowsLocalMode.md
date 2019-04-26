@@ -55,11 +55,11 @@ This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install 
 >ImportError: DLL load failed
 
 ### Trial failed on webUI
-Please check the trial log file stderr for more details. If there is no such file and you use pip install nni, then you need to run powershell as administrator with this command first:
+Please check the trial log file stderr for more details. If there is no such file and nni is installed through pip, then you need to run powershell as administrator with this command first:
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
-If there is stderr file, please check out. Two possible cases are as follows:
+If there is a stderr file, please check out. Two possible cases are as follows:
 * forget to change the trial command `python3` into `python` in each experiment yaml.
 * forget to install experiment dependencies such as tensorflow, keras and so on.
 
