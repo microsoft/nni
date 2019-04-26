@@ -150,7 +150,7 @@ def convert2tuner_params(in_x, parameter, father_object=None, father_key=None):
     if TYPE not in in_x:
         # if at the top level
         for key, value in parameter.items():
-            params2tuner_params(in_x[key], value, parameter, key)
+            convert2tuner_params(in_x[key], value, parameter, key)
     elif isinstance(in_x, dict):
         value_type = in_x[TYPE]
         value_format = in_x[VALUE]
@@ -161,7 +161,7 @@ def convert2tuner_params(in_x, parameter, father_object=None, father_key=None):
                     choice_key = item[0]
                     choice_value_format = item[1]
                     if choice_key == choice_name:
-                        params2tuner_params(choice_value_format, parameter[choice_name], parameter, choice_name)
+                        convert2tuner_params(choice_value_format, parameter[choice_name], parameter, choice_name)
                         break
                 elif choice_name == item:
                     if isinstance(parameter, dict):
