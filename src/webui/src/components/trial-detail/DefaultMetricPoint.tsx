@@ -30,13 +30,15 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         const accSource: Array<DetailAccurPoint> = [];
         Object.keys(showSource).map(item => {
             const temp = showSource[item];
-            if (temp.status === 'SUCCEEDED' && temp.acc.default !== undefined) {
-                const searchSpace = temp.description.parameters;
-                accSource.push({
-                    acc: temp.acc.default,
-                    index: temp.sequenceId,
-                    searchSpace: JSON.stringify(searchSpace)
-                });
+            if (temp.status === 'SUCCEEDED' && temp.acc !== undefined) {
+                if (temp.acc.default !== undefined) {
+                    const searchSpace = temp.description.parameters;
+                    accSource.push({
+                        acc: temp.acc.default,
+                        index: temp.sequenceId,
+                        searchSpace: JSON.stringify(searchSpace)
+                    });
+                }
             }
         });
         const resultList: Array<number | string>[] = [];
