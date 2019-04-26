@@ -147,6 +147,23 @@ def params2tuner_params(in_x, parameter):
     Will change to format in hyperopt, like:
         {'dropout_rate': 0.8, 'conv_size': {'_index': 1, '_value': 3}, 'hidden_size': {'_index': 1, '_value': 512}}
     """
+    if isinstance(in_x, dict):
+        tuner_params = dict()
+        for _key in parameter:
+            _type = in_x[_key][TYPE]
+            if _type == 'choice':
+                tuner_params[_key] = params2tuner_params(in_x[_key][VALUE], parameter[_key][VALUE])
+            else:
+                tuner_params[_key] = parameter[_key]
+        return tuner_params
+    elif isinstance(in_x, list):
+        _idx = in_x.index(parameter)
+        return {
+            INDEX: _idx,
+            VALUE: parameter
+        }
+
+    """
     tuner_params = dict()
     for key in parameter.keys():
         value = parameter[key]
@@ -160,6 +177,7 @@ def params2tuner_params(in_x, parameter):
         else:
             tuner_params[key] = value
     return tuner_params
+    """
 
 def _split_index(params):
     """
