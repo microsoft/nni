@@ -139,7 +139,7 @@ def json2vals(in_x, vals, out_y, name=ROOT):
         for i, temp in enumerate(in_x):
             json2vals(temp, vals[i], out_y, name + '[%d]' % i)
 
-def convert2tuner_params(in_x, parameter, father_object=None, father_key=None):
+def convert2tuner_params(in_x, parameter):
     """
     change parameters in NNI format to parameters in hyperopt format(This function also support nested dict.).
     For example, receive parameters like:
@@ -147,10 +147,11 @@ def convert2tuner_params(in_x, parameter, father_object=None, father_key=None):
     Will change to format in hyperopt, like:
         {'dropout_rate': 0.8, 'conv_size': {'_index': 1, '_value': 3}, 'hidden_size': {'_index': 1, '_value': 512}}
     """
-    if TYPE not in in_x:
-        # if at the top level
+    if TYPE not in in_x: # if at the top level
+        out_y = dict()
         for key, value in parameter.items():
-            convert2tuner_params(in_x[key], value, parameter, key)
+            out_y[key] = convert2tuner_params(in_x[key], value)
+        return out_y
     elif isinstance(in_x, dict):
         value_type = in_x[TYPE]
         value_format = in_x[VALUE]
@@ -158,17 +159,14 @@ def convert2tuner_params(in_x, parameter, father_object=None, father_key=None):
             choice_name = list(parameter.keys())[0] if isinstance(parameter, dict) else parameter
             for pos, item in enumerate(value_format): # here value_format is a list
                 if isinstance(item, list): # this format is ["choice_key", format_dict]
-                    choice_key = item[0]
-                    choice_value_format = item[1]
+                    choice_key = item[0]  # eg: "Conv"
+                    choice_value_format = item[1] # eg: {"_type":"choice","_value":[2,3,5]}
                     if choice_key == choice_name:
-                        convert2tuner_params(choice_value_format, parameter[choice_name], parameter, choice_name)
-                        break
+                        return {choice_key: convert2tuner_params(choice_value_format, parameter[choice_name])}
                 elif choice_name == item:
-                    if isinstance(parameter, dict):
-                        parameter[choice_name] = {INDEX: pos, VALUE: item}
-                    else:
-                        father_object[father_key] = {INDEX: pos, VALUE: item}
-                    break
+                    return {INDEX: pos, VALUE: item}
+        else:
+            return parameter
 
 def _split_index(params):
     """
@@ -408,7 +406,6 @@ class HyperoptTuner(Tuner):
                 continue
             self.supplement_data_num += 1
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
-            convert2tuner_params(in_x=self.json, parameter=_params)
-            self.total_data[_parameter_id] = _params
+            self.total_data[_parameter_id] = convert2tuner_params(in_x=self.json, parameter=_params)
             self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
         logger.info("Successfully import data to TPE/Anneal tuner.")
