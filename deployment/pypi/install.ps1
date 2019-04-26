@@ -1,4 +1,5 @@
 param([int]$version_os, [bool]$version_ts=$false)
+[System.Net.ServicePointManager]::DefaultConnectionLimit = 100
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $CWD = $PWD
 
@@ -29,12 +30,14 @@ python -m pip install --upgrade setuptools wheel
 $nodeUrl = "https://aka.ms/nni/nodejs-download/" + $OS_VERSION
 $NNI_NODE_ZIP = "$CWD\node-$OS_SPEC.zip"
 $NNI_NODE_FOLDER = "$CWD\node-$OS_SPEC"
+$unzipNodeDir = "node-v*"
 (New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_ZIP)
 if(Test-Path $NNI_NODE_FOLDER){
     Remove-Item $NNI_NODE_FOLDER -Recurse -Force
 }
-New-Item $NNI_NODE_FOLDER -ItemType Directory
-cmd /c tar -xf $NNI_NODE_ZIP -C $NNI_NODE_FOLDER --strip-components 1
+Expand-Archive $NNI_NODE_ZIP -DestinationPath $CWD
+$unzipNodeDir = Get-ChildItem "$CWD\$unzipNodeDir"
+Rename-Item $unzipNodeDir $NNI_NODE_FOLDER
 
 $env:PATH = $NNI_NODE_FOLDER+';'+$env:PATH
 cd $CWD\..\..\src\nni_manager
