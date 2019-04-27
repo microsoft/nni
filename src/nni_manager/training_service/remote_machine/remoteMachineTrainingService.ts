@@ -48,7 +48,7 @@ import {
 } from './remoteMachineData';
 import { GPU_INFO_COLLECTOR_FORMAT_LINUX } from '../common/gpuData';
 import { SSHClientUtility } from './sshClientUtility';
-import { validateCodeDir } from '../common/util';
+import { validateCodeDir, execRemove } from '../common/util';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { mkDirP, getVersion } from '../../common/utils';
@@ -354,7 +354,7 @@ class RemoteMachineTrainingService implements TrainingService {
             case TrialConfigMetadataKey.MACHINE_LIST:
                 await this.setupConnections(value);
                 //remove local temp files
-                await cpp.exec(`rm -rf ${this.getLocalGpuMetricCollectorDir()}`);
+                await execRemove(this.getLocalGpuMetricCollectorDir());
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
@@ -438,7 +438,7 @@ class RemoteMachineTrainingService implements TrainingService {
      */
     private getLocalGpuMetricCollectorDir(): string {
         let userName: string = path.basename(os.homedir()); //get current user name of os
-        return `${os.tmpdir()}/${userName}/nni/scripts/`;
+        return path.join(os.tmpdir(), userName, 'nni', 'scripts');
     }
 
     /**
