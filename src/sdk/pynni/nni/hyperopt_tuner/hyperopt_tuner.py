@@ -139,7 +139,7 @@ def json2vals(in_x, vals, out_y, name=ROOT):
         for i, temp in enumerate(in_x):
             json2vals(temp, vals[i], out_y, name + '[%d]' % i)
 
-def convert2tuner_params(in_x, parameter):
+def _add_index(in_x, parameter):
     """
     change parameters in NNI format to parameters in hyperopt format(This function also support nested dict.).
     For example, receive parameters like:
@@ -150,7 +150,7 @@ def convert2tuner_params(in_x, parameter):
     if TYPE not in in_x: # if at the top level
         out_y = dict()
         for key, value in parameter.items():
-            out_y[key] = convert2tuner_params(in_x[key], value)
+            out_y[key] = _add_index(in_x[key], value)
         return out_y
     elif isinstance(in_x, dict):
         value_type = in_x[TYPE]
@@ -162,7 +162,7 @@ def convert2tuner_params(in_x, parameter):
                     choice_key = item[0]
                     choice_value_format = item[1]
                     if choice_key == choice_name:
-                        return {INDEX: pos, VALUE: [choice_name, convert2tuner_params(choice_value_format, parameter[1])]}
+                        return {INDEX: pos, VALUE: [choice_name, _add_index(choice_value_format, parameter[1])]}
                 elif choice_name == item:
                     return {INDEX: pos, VALUE: item}
         else:
@@ -409,6 +409,6 @@ class HyperoptTuner(Tuner):
                 continue
             self.supplement_data_num += 1
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
-            self.total_data[_parameter_id] = convert2tuner_params(in_x=self.json, parameter=_params)
+            self.total_data[_parameter_id] = _add_index(in_x=self.json, parameter=_params)
             self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
         logger.info("Successfully import data to TPE/Anneal tuner.")
