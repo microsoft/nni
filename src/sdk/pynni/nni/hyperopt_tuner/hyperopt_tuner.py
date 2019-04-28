@@ -172,14 +172,17 @@ def _split_index(params):
     """
     Delete index infromation from params
     """
-    result = {}
-    for key in params:
-        if isinstance(params[key], dict):
-            value = params[key][VALUE]
-        else:
-            value = params[key]
-        result[key] = value
-    return result
+    if isinstance(params, list):
+        return {params[0]: _split_index(params[1])}
+    elif isinstance(params, dict):
+        if INDEX in params.keys():
+            return _split_index(params[VALUE])
+        result = dict()
+        for key in params:
+            result[key] = _split_index(params[key])
+        return result
+    else:
+        return params
 
 
 class HyperoptTuner(Tuner):
