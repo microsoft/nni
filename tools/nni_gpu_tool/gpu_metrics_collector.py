@@ -32,12 +32,13 @@ def check_ready_to_run():
         pidList = list(map(int, pidList))
         pidList.remove(os.getpid())
         return len(pidList) == 0
-    pgrep_output =subprocess.check_output('pgrep -fx \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
-    pidList = []
-    for pid in pgrep_output.splitlines():
-        pidList.append(int(pid))
-    pidList.remove(os.getpid())
-    return len(pidList) == 0
+    else:
+        pgrep_output =subprocess.check_output('pgrep -fx \'python3 -m nni_gpu_tool.gpu_metrics_collector\'', shell=True)
+        pidList = []
+        for pid in pgrep_output.splitlines():
+            pidList.append(int(pid))
+        pidList.remove(os.getpid())
+        return len(pidList) == 0
 
 def main(argv):
     metrics_output_dir = os.environ['METRIC_OUTPUT_DIR']
