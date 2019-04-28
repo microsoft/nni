@@ -156,13 +156,13 @@ def convert2tuner_params(in_x, parameter):
         value_type = in_x[TYPE]
         value_format = in_x[VALUE]
         if value_type == "choice":
-            choice_name = list(parameter.keys())[0] if isinstance(parameter, dict) else parameter
+            choice_name = parameter[0] if isinstance(parameter, dict) else parameter
             for pos, item in enumerate(value_format): # here value_format is a list
                 if isinstance(item, list): # this format is ["choice_key", format_dict]
-                    choice_key = item[0]  # eg: "Conv"
-                    choice_value_format = item[1] # eg: {"_type":"choice","_value":[2,3,5]}
+                    choice_key = item[0]
+                    choice_value_format = item[1]
                     if choice_key == choice_name:
-                        return {INDEX: pos, VALUE: [choice_name, convert2tuner_params(choice_value_format, parameter[choice_name])]}
+                        return {INDEX: pos, VALUE: [choice_name, convert2tuner_params(choice_value_format, parameter[1])]}
                 elif choice_name == item:
                     return {INDEX: pos, VALUE: item}
         else:
