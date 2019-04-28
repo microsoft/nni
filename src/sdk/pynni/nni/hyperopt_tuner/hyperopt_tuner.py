@@ -173,7 +173,7 @@ def _split_index(params):
     Delete index infromation from params
     """
     if isinstance(params, list):
-        return {params[0]: _split_index(params[1])}
+        return [params[0], _split_index(params[1])]
     elif isinstance(params, dict):
         if INDEX in params.keys():
             return _split_index(params[VALUE])
