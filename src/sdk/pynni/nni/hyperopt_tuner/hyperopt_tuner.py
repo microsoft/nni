@@ -156,7 +156,7 @@ def _add_index(in_x, parameter):
         value_type = in_x[TYPE]
         value_format = in_x[VALUE]
         if value_type == "choice":
-            choice_name = parameter[0] if isinstance(parameter, dict) else parameter
+            choice_name = parameter[0] if isinstance(parameter, list) else parameter
             for pos, item in enumerate(value_format): # here value_format is a list
                 if isinstance(item, list): # this format is ["choice_key", format_dict]
                     choice_key = item[0]
