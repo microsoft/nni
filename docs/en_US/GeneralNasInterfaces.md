@@ -16,9 +16,9 @@ When designing the following model there might be several choices in the fourth 
 
 ![](../img/example_layerchoice.png)
 
-* __layer_choice__: It is a list of function calls, each function should have defined in user's script or imported libraries. The input arguments of the function should follow the format: `def XXX(inputs, arg2, arg3, ...)`, where `inputs` is a list with two elements. One is the list of `fixed_inputs`, and the other is a list of the chosen inputs from the next field `input_candidates`. `conv` and `pool` in the figure are examples of function definition. In the function calls in this field, no need to write the first argument (i.e., `inputs`). Note that only one of the function calls are chosen for this layer.
-* __fixed_inputs__: It is a list of variables, the variable could be an output tensor from a previous layer. The variable could be `layer_output` of another nni.mutable_layer before this layer, or other python variables before this layer. All the variables in this list will be fed into the chosen function in `layer_choice`.
-* __input_candidates__: It is a list of variables, the variable could be an output tensor from a previous layer. The variable could be `layer_output` of another nni.mutable_layer before this layer, or other python variables before this layer. Only `input_num` variables will be fed into the chosen function in `layer_choice`.
+* __layer_choice__: It is a list of function calls, each function should have defined in user's script or imported libraries. The input arguments of the function should follow the format: `def XXX(inputs, arg2, arg3, ...)`, where `inputs` is a list with two elements. One is the list of `fixed_inputs`, and the other is a list of the chosen inputs from `input_candidates`. `conv` and `pool` in the figure are examples of function definition. For the function calls in this list, no need to write the first argument (i.e., `input`). Note that only one of the function calls are chosen for this layer.
+* __fixed_inputs__: It is a list of variables, the variable could be an output tensor from a previous layer. The variable could be `layer_output` of another nni.mutable_layer before this layer, or other python variables before this layer. All the variables in this list will be fed into the chosen function in `layer_choice` (as the first element of the `input` list).
+* __input_candidates__: It is a list of variables, the variable could be an output tensor from a previous layer. The variable could be `layer_output` of another nni.mutable_layer before this layer, or other python variables before this layer. Only `input_num` variables will be fed into the chosen function in `layer_choice` (as the second element of the `input` list).
 * __input_num__: It indicates how many inputs are chosen from `input_candidates`. It could be a number or a range. A range [1,3] means it chooses 1, 2, or 3 inputs.
 * __layer_output__: The name of the output(s) of this layer, in this case it represents the return of the function call in `layer_choice`. This will be a variable name that can be used in the following python code or nni.mutable_layer(s).
 
@@ -26,27 +26,54 @@ There are two ways to write annotation for this example. For the upper one, `inp
 
 ### Example: choose input connections for a layer
 
-Designing connections of layers is critical for making a high performance model. With our provided interface, users could annotate which connections a layer takes (as inputs). They could choose several ones from a set of connections. Below is an example which chooses two inputs from three candidate inputs for `concat`. Here `concat` always takes the output of its previous layer using the input argument `connected_out`.
+Designing connections of layers is critical for making a high performance model. With our provided interface, users could annotate which connections a layer takes (as inputs). They could choose several ones from a set of connections. Below is an example which chooses two inputs from three candidate inputs for `concat`. Here `concat` always takes the output of its previous layer using `fixed_inputs`.
 
 ![](../img/example_connectchoice.png)
 
-### Example: auxiliary functions for annotation
+### Example: choose both operators and connections
 
-Basically, with the approach of expressing OPs and connections (i.e., the above two examples), users could express most choices of architectures they want to try through our annotation. To make expressing NAS search space easier, we provide two optional fields in `nni.mutable_layer`:
+In this example, we choose one from the three operators and choose two connections for it. As there are multiple variables in `inputs`, we call `concat` at the beginning of the functions.
 
-![](../img/example_auxiliary.png)
-
-* __input_aggregate__ (optional): It is a function call whose definition should follow the same rule as the ones in `layer_choice`. If it is specified, the inputs of this function call are the chosen inputs from `input_candidates`, its return is fed into the chosen function (from `layer_choice`) as the first input argument. Users could do some preprocessing (e.g., concating inputs, reshaping inputs) in this function.
-* __post_process__ (optional): It is a function call whose definition should follow the same rule as the ones in `layer_choice`. The first input argument of this function would be a list with only two elements. The frist element is the return of the chosen function (from `layer_choice`), the second element is the chosen inputs from `input_candidates`.
-
-With these two fields, user could easily add some necessary preprocess and postprocess logic without writing more `nni.mutable_layer`.
+![](../img/example_combined.png)
 
 ### Example: [ENAS][1] macro search space
 
+To illustrate the convenience of the programming interface, we use the interface to implement the trial code of "ENAS + macro search space". The left figure is the macro search space in ENAS paper.
+
 ![](../img/example_enas.png)
+
 
 ## Unified NAS search space representation
 
+After finishing the trial code through the annotation above, users have implicitly specified the search space of neural architectures in the code. Based on the code, NNI will automatcailly generate a search space file which could be fed into tuning algorithms. This search space file follows the following `json` format.
+
+```json
+mutable_1: {
+    layer_1: {
+        layer_choice: [A, B, C],
+        input_candidates: [a, b, c],
+        input_num: 2,
+    }
+    layer_2: {
+        ...
+    }
+}
+```
+
+Accordingly, a specified neural architecture (generated by tuning algorithm) is expressed as follows:
+
+```json
+mutable_1: {
+    layer_1: {
+        layer_choice: A,
+        input_choice: [a, c]
+    }
+    layer_2: {
+        ...
+    }
+}
+
+With the specification of the format of search space and specific neural architecture expression, users are free to implement various tuning algorithms that 
 
 
 [1]: https://arxiv.org/abs/1802.03268
