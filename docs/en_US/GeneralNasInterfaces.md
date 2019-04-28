@@ -72,8 +72,9 @@ mutable_1: {
         ...
     }
 }
+```
 
-With the specification of the format of search space and specific neural architecture expression, users are free to implement various tuning algorithms that 
+With the specification of the format of search space and specific architecture (choice) expression, users are free to implement various (general) tuning algorithms for neural architecture search on NNI. We have implemented a general NAS algorihtm by extracting the controller from ENAS.
 
 
 [1]: https://arxiv.org/abs/1802.03268
