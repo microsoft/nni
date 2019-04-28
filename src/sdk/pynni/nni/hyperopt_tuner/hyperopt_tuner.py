@@ -162,7 +162,7 @@ def convert2tuner_params(in_x, parameter):
                     choice_key = item[0]  # eg: "Conv"
                     choice_value_format = item[1] # eg: {"_type":"choice","_value":[2,3,5]}
                     if choice_key == choice_name:
-                        return {choice_key: convert2tuner_params(choice_value_format, parameter[choice_name])}
+                        return {INDEX: pos, VALUE: [choice_name, convert2tuner_params(choice_value_format, parameter[choice_name])]}
                 elif choice_name == item:
                     return {INDEX: pos, VALUE: item}
         else:
