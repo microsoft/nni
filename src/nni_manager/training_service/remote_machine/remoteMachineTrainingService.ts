@@ -48,7 +48,7 @@ import {
 } from './remoteMachineData';
 import { GPU_INFO_COLLECTOR_FORMAT_LINUX } from '../common/gpuData';
 import { SSHClientUtility } from './sshClientUtility';
-import { validateCodeDir, execRemove, execMkdir, execCopydir, getScriptName, execScript, setEnvironmentVariable, execNewFile } from '../common/util';
+import { validateCodeDir, execRemove, execMkdir, execCopydir } from '../common/util';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { mkDirP, getVersion } from '../../common/utils';

@@ -67,7 +67,7 @@ export async function execMkdir(directory: string): Promise<void> {
 }
 
 /**
- * copy a new directory
+ * copy files to the directory
  * @param source
  * @param destination
  */
@@ -163,6 +163,25 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
 
 
 /**
+ * Compress files in directory to tar file
+ * @param  source_path
+ * @param  tar_path
+ */
+export async function tarAdd(tar_path: string, source_path: string): Promise<void>{
+    if (process.platform === 'win32') {
+        const tarScriptContent: string = String.Format(
+            TAR_SCRIPT, 
+            tar_path, 
+            source_path
+        );
+        await cpp.exec(`python -c ${tarScriptContent}`);
+    } else {
+        await cpp.exec(`tar -czf ${tar_path} -C ${source_path} .`);
+    }
+    return Promise.resolve();
+}
+
+/**
  * generate script file name
  * @param fileNamePrefix 
  */
@@ -193,3 +212,14 @@ export function getgpuMetricsCollectorScriptContent(gpuMetricCollectorScriptFold
         );
     }
 }
+
+const TAR_SCRIPT: string = 
+`
+import tarfile
+tar = tarfile.open("{0}","w:gz")
+for root,dir,files in os.walk("{1}"):
+    for file in files:
+        fullpath = os.path.join(root,file)
+        tar.add(fullpath)
+tar.close()
+ `

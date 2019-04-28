@@ -30,6 +30,7 @@ import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { uniqueString, getRemoteTmpDir } from '../../common/utils';
 import { RemoteCommandResult } from './remoteMachineData';
+import { execRemove, tarAdd, execMkdir, execCopydir } from '../common/util';
 
 /**
  *
@@ -50,10 +51,10 @@ export namespace SSHClientUtility {
         const remoteTarPath: string = path.join(getRemoteTmpDir(remoteOS), tmpTarName);
 
         // Compress files in local directory to experiment root directory
-        await cpp.exec(`tar -czf ${localTarPath} -C ${localDirectory} .`);
+        await tarAdd(localTarPath, localDirectory);
         // Copy the compressed file to remoteDirectory and delete it
         await copyFileToRemote(localTarPath, remoteTarPath, sshClient);
-        await cpp.exec(`rm ${localTarPath}`);
+        await execRemove(localTarPath);
         // Decompress the remote compressed file in and delete it
         await remoteExeCommand(`tar -oxzf ${remoteTarPath} -C ${remoteDirectory}`, sshClient);
         await remoteExeCommand(`rm ${remoteTarPath}`, sshClient);
