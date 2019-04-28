@@ -52,9 +52,9 @@ This is the PyPI build and upload tool for NNI project.
 
 * __How to build__
  
-  parameter `version_os` is used to choose Windows version 64-bit or 32-bit, `version_ts` is used to build for test or not. 
+  parameter `version_os` is used to build for Windows 64-bit or 32-bit. 
   ```bash
-  powershell ./install.ps1 -version_os [64/32] -version_ts [$True/$False]
+  powershell ./install.ps1 -version_os [64/32]
   ```
 
 * __How to upload__
