@@ -48,7 +48,7 @@ import {
 } from './remoteMachineData';
 import { GPU_INFO_COLLECTOR_FORMAT_LINUX } from '../common/gpuData';
 import { SSHClientUtility } from './sshClientUtility';
-import { validateCodeDir, execRemove } from '../common/util';
+import { validateCodeDir, execRemove, execMkdir, execCopydir, getScriptName, execScript, setEnvironmentVariable, execNewFile } from '../common/util';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { mkDirP, getVersion } from '../../common/utils';
@@ -447,7 +447,7 @@ class RemoteMachineTrainingService implements TrainingService {
      */
     private async generateGpuMetricsCollectorScript(userName: string): Promise<void> {
         let gpuMetricCollectorScriptFolder : string = this.getLocalGpuMetricCollectorDir();
-        await cpp.exec(`mkdir -p ${path.join(gpuMetricCollectorScriptFolder, userName)}`);
+        await execMkdir(path.join(gpuMetricCollectorScriptFolder, userName));
         //generate gpu_metrics_collector.sh
         let gpuMetricsCollectorScriptPath: string = path.join(gpuMetricCollectorScriptFolder, userName, 'gpu_metrics_collector.sh');
         const remoteGPUScriptsDir: string = this.getRemoteScriptsPath(userName); // This directory is used to store gpu_metrics and pid created by script
@@ -582,11 +582,11 @@ class RemoteMachineTrainingService implements TrainingService {
 
         let command: string;
         // Set CUDA_VISIBLE_DEVICES environment variable based on cuda_visible_device
-        // If no valid cuda_visible_device is defined, set CUDA_VISIBLE_DEVICES to empty string to hide GPU device
+        // If no valid cuda_visible_device is defined, set CUDA_VISIBLE_DEVICES to '-1' to hide GPU device
         if(typeof cuda_visible_device === 'string' && cuda_visible_device.length > 0) {
             command = `CUDA_VISIBLE_DEVICES=${cuda_visible_device} ${this.trialConfig.command}`;
         } else {
-            command = `CUDA_VISIBLE_DEVICES=" " ${this.trialConfig.command}`;
+            command = `CUDA_VISIBLE_DEVICES='-1' ${this.trialConfig.command}`;
         }
         
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
@@ -613,10 +613,10 @@ class RemoteMachineTrainingService implements TrainingService {
         )
 
         //create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${path.join(trialLocalTempFolder, '.nni')}`);
+        await execMkdir(path.join(trialLocalTempFolder, '.nni'));
 
         //create tmp trial working folder locally.
-        await cpp.exec(`cp -r ${this.trialConfig.codeDir}/* ${trialLocalTempFolder}`);
+        await execCopydir(this.trialConfig.codeDir+'/*',trialLocalTempFolder);
         const installScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files
         await fs.promises.writeFile(path.join(trialLocalTempFolder, 'install_nni.sh'), installScriptContent, { encoding: 'utf8' });
