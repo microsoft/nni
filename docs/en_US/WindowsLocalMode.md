@@ -35,10 +35,6 @@ For other examples you need to change trial command `python3` into `python` in e
 
 ## **Frequent met errors and answers**
 
-### pip install wrong nni version
-When you run experiment with this error below, that means you install python 32-bit and install wrong nni through pip. Try to reinstall python 64-bit or install nni from source.
-> KeyError: 'HOME'
-
 ### simplejson failed when installing nni
 Make sure C++ 14.0 compiler installed.
 >builging 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
