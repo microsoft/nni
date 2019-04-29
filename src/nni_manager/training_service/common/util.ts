@@ -127,7 +127,7 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
  */
 export async function execRemove(directory: string): Promise<void>{
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe Remove-Item ${directory}`);
+        await cpp.exec(`powershell.exe Remove-Item ${directory} -Recurse -Force`);
     } else {
         await cpp.exec(`rm -rf ${directory}`);
     }
