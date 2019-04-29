@@ -23,7 +23,8 @@ interface TrialDetailState {
     experimentStatus: string;
     experimentPlatform: string;
     experimentLogCollection: boolean;
-    entriesTable: number;
+    entriesTable: number; // table components val
+    entriesInSelect: string;
     searchSpace: string;
     isMultiPhase: boolean;
 }
@@ -68,6 +69,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             experimentPlatform: '',
             experimentLogCollection: false,
             entriesTable: 20,
+            entriesInSelect: '20',
             isHasSearch: false,
             searchSpace: '',
             isMultiPhase: false
@@ -82,7 +84,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 axios.get(`${MANAGER_IP}/metric-data`)
             ])
             .then(axios.spread((res, res1) => {
-                if (res.status === 200) {
+                if (res.status === 200 && res1.status === 200) {
                     const trialJobs = res.data;
                     const metricSource = res1.data;
                     const trialTable: Array<TableObj> = [];
@@ -149,7 +151,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         });
                     });
                     // update search data result
-                    const { searchResultSource } = this.state;
+                    const { searchResultSource, entriesInSelect } = this.state;
                     if (searchResultSource.length !== 0) {
                         const temp: Array<number> = [];
                         Object.keys(searchResultSource).map(index => {
@@ -176,6 +178,11 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             tableListSource: trialTable
                         }));
                     }
+                    if (entriesInSelect === 'all' && this._isMounted) {
+                        this.setState(() => ({
+                            entriesTable: trialTable.length
+                        }));
+                    }
                 }
             }));
     }
@@ -196,9 +203,10 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             const searchResultList: Array<TableObj> = [];
             Object.keys(tableListSource).map(key => {
                 const item = tableListSource[key];
+                const upperVal = targetValue.toUpperCase();
                 if (item.sequenceId.toString() === targetValue
-                    || item.id.includes(targetValue)
-                    || item.status.includes(targetValue)
+                    || item.id.toUpperCase().includes(upperVal)
+                    || item.status.toUpperCase().includes(upperVal)
                 ) {
                     searchResultList.push(item);
                 }
@@ -244,7 +252,10 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 break;
             case 'all':
                 const { tableListSource } = this.state;
-                this.setState(() => ({ entriesTable: tableListSource.length }));
+                this.setState(() => ({
+                    entriesInSelect: 'all',
+                    entriesTable: tableListSource.length
+                }));
                 break;
             default:
         }
@@ -270,7 +281,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     const logCollection = res.data.params.logCollection;
                     let expLogCollection: boolean = false;
                     const isMultiy: boolean = res.data.params.multiPhase !== undefined
-                    ? res.data.params.multiPhase : false;
+                        ? res.data.params.multiPhase : false;
                     if (logCollection !== undefined && logCollection !== 'none') {
                         expLogCollection = true;
                     }
