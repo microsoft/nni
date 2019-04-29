@@ -76,6 +76,7 @@ mutable_1: {
 
 With the specification of the format of search space and architecture (choice) expression, users are free to implement various (general) tuning algorithms for neural architecture search on NNI. We have implemented a [general NAS algorihtm]() by extracting the RNN controller from ENAS.
 
+=============================================================
 
 ## Neural architecture search on NNI
 
@@ -87,6 +88,8 @@ NNI's annotation compiler transforms the annotated trial code to the code that c
 
 The above figure shows how the trial code runs on NNI. `nnictl` processes user trial code to generate a search space file and compiled trial code. The former is fed to tuner, and the latter is used to run trilas. 
 
+[__TODO__] Simple example of NAS on NNI.
+
 ### Weight sharing
 
 Sharing weights among chosen architectures (i.e., trials) could speedup model search. For example, properly inheriting weights of completed trials could speedup the converge of new trials. One-Shot NAS (e.g., ENAS, Darts) is more aggressive, the training of different architectures (i.e., subgraphs) shares the same copy of the weights in full graph.
@@ -95,25 +98,36 @@ Sharing weights among chosen architectures (i.e., trials) could speedup model se
 
 We believe weight sharing (transferring) plays a key role on speeding up NAS, while finding efficient ways of sharing weights is still a hot research topic. We provide a key-value store for users to store and load weights. Tuners and Trials use a provided KV client lib to access the storage.
 
+[__TODO__] Example of weight sharing on NNI.
+
 ### Support of One-Shot NAS
 
-One-Shot NAS is a popular approach to find good neural architecture within a limited time and resource budget. Basically, it build a full graph based on the search space, and uses gradient descent to at last find the best subgraph. There are different training approaches, e.g., [training subgraphs][1], [training through dropout][6], [training with architecture weights (regularization)][3]. 
+One-Shot NAS is a popular approach to find good neural architecture within a limited time and resource budget. Basically, it build a full graph based on the search space, and uses gradient descent to at last find the best subgraph. There are different training approaches, such as [training subgraphs (per mini-batch)][1], [training full graph through dropout][6], [training with architecture weights (regularization)][3]. Here we focus on the first approach, i.e., training subgraphs (ENAS).
 
-
+With the same annotated trial code, users could choose One-Shot NAS as execution mode on NNI. Specifically, the compiled trial code builds the full graph (rather than subgraph demonstrated above), it receives a chosen architecture and training this architecture on the full graph for a mini-batch, then request another chosen architecture. It is supported by [NNI multi-phase](./multiPhase.md). We support this training approach because training a subgraph is very fast, building the graph every time training a subgraph induces too much overhead.
 
 ![](../img/one-shot_training.png)
+
+The design of One-Shot NAS on NNI is shown in the above figure. One-Shot NAS usually only has one trial job with full graph. NNI supports running multiple such trial jobs each of which runs independently. As One-Shot NAS is not stable, running multiple instances helps find better model. Moreover, trial jobs are also able to synchronize weights during running (i.e., there is only one copy of weights, like asynchroneous parameter-server mode). This may speedup converge.
+
+[__TODO__] Example of One-Shot NAS on NNI.
 
 
 ## General tuning algorithms for NAS
 
+We have generalized the RL controller of ENAS. It could deal with almost all the search space expressed through our defined programming interface. Of course, it is hard to make it perform good on every search space, we expect efforts from community to design and implement better NAS algorithms.
 
+[__TODO__] Detail of this RL controller.
 
 ## Export best neural architecture and code
 
+After the NNI experiment is done, users could run `nnictl experiment export --code` to export the trial code with the best neural architecture.
 
+## Conclusion and Future work
 
-## Future works
+There could be different NAS algorithms and execution modes, but they could be supported with the same programming interface as demonstrated above. 
 
+There are many interesting research topics in this area, both system and machine learning. 
 
 
 [1]: https://arxiv.org/abs/1802.03268
