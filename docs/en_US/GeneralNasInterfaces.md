@@ -97,7 +97,9 @@ We believe weight sharing (transferring) plays a key role on speeding up NAS, wh
 
 ### Support of One-Shot NAS
 
-One-Shot
+One-Shot NAS is a popular approach to find good neural architecture within a limited time and resource budget. Basically, it build a full graph based on the search space, and uses gradient descent to at last find the best subgraph. There are different training approaches, e.g., [training subgraphs][1], [training through dropout][6], [training with architecture weights (regularization)][3]. 
+
+
 
 ![](../img/one-shot_training.png)
 
@@ -119,3 +121,4 @@ One-Shot
 [3]: https://arxiv.org/abs/1806.09055
 [4]: https://arxiv.org/abs/1806.10282
 [5]: https://arxiv.org/abs/1703.01041 
+[6]: http://proceedings.mlr.press/v80/bender18a/bender18a.pdf
