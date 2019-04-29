@@ -102,6 +102,9 @@ export namespace SSHClientUtility {
      */
     export function remoteExeCommand(command : string, client : Client): Promise<RemoteCommandResult> {
         const log: Logger = getLogger();
+        if(process.platform === 'win32'){
+            command = command.split('\\').join('/');
+        }
         log.debug(`remoteExeCommand: command: [${command}]`);
         const deferred : Deferred<RemoteCommandResult> = new Deferred<RemoteCommandResult>();
         let stdout: string = '';
