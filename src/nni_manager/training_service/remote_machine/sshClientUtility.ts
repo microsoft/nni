@@ -30,7 +30,7 @@ import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
 import { uniqueString, getRemoteTmpDir } from '../../common/utils';
 import { RemoteCommandResult } from './remoteMachineData';
-import { execRemove, tarAdd, execMkdir, execCopydir } from '../common/util';
+import { execRemove, tarAdd, getLinuxDir } from '../common/util';
 
 /**
  *
@@ -48,7 +48,7 @@ export namespace SSHClientUtility {
         const deferred: Deferred<void> = new Deferred<void>();
         const tmpTarName: string = `${uniqueString(10)}.tar.gz`;
         const localTarPath: string = path.join(os.tmpdir(), tmpTarName);
-        const remoteTarPath: string = path.join(getRemoteTmpDir(remoteOS), tmpTarName);
+        const remoteTarPath: string = getLinuxDir(path.join(getRemoteTmpDir(remoteOS), tmpTarName));
 
         // Compress files in local directory to experiment root directory
         await tarAdd(localTarPath, localDirectory);
@@ -71,6 +71,7 @@ export namespace SSHClientUtility {
      */
     export function copyFileToRemote(localFilePath : string, remoteFilePath : string, sshClient : Client) : Promise<boolean> {
         const log: Logger = getLogger();
+        remoteFilePath = getLinuxDir(remoteFilePath);
         log.debug(`copyFileToRemote: localFilePath: ${localFilePath}, remoteFilePath: ${remoteFilePath}`);
         assert(sshClient !== undefined);
         const deferred: Deferred<boolean> = new Deferred<boolean>();
@@ -102,9 +103,7 @@ export namespace SSHClientUtility {
      */
     export function remoteExeCommand(command : string, client : Client): Promise<RemoteCommandResult> {
         const log: Logger = getLogger();
-        if(process.platform === 'win32'){
-            command = command.split('\\').join('/');
-        }
+        command = getLinuxDir(command);
         log.debug(`remoteExeCommand: command: [${command}]`);
         const deferred : Deferred<RemoteCommandResult> = new Deferred<RemoteCommandResult>();
         let stdout: string = '';
@@ -140,6 +139,7 @@ export namespace SSHClientUtility {
 
     export function getRemoteFileContent(filePath: string, sshClient: Client): Promise<string> {
         const deferred: Deferred<string> = new Deferred<string>();
+        filePath = getLinuxDir(filePath);
         sshClient.sftp((err: Error, sftp : SFTPWrapper) => {
             if (err) {
                 getLogger().error(`getRemoteFileContent: ${err.message}`);

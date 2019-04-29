@@ -163,6 +163,20 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
 
 
 /**
+ * 
+ * @param  variable
+ * @returns command string  
+ */
+export function getLinuxDir(directory: string): string{
+    if (process.platform === 'win32') {
+        return directory.split('\\').join('/');
+    }
+    else{
+        return directory;
+    }
+}
+
+/**
  * Compress files in directory to tar file
  * @param  source_path
  * @param  tar_path
