@@ -43,7 +43,7 @@ To illustrate the convenience of the programming interface, we use the interface
 ![](../img/example_enas.png)
 
 
-## Unified NAS search space representation
+## Unified NAS search space specification
 
 After finishing the trial code through the annotation above, users have implicitly specified the search space of neural architectures in the code. Based on the code, NNI will automatcailly generate a search space file which could be fed into tuning algorithms. This search space file follows the following `json` format.
 
@@ -74,7 +74,44 @@ mutable_1: {
 }
 ```
 
-With the specification of the format of search space and specific architecture (choice) expression, users are free to implement various (general) tuning algorithms for neural architecture search on NNI. We have implemented a general NAS algorihtm by extracting the controller from ENAS.
+With the specification of the format of search space and architecture (choice) expression, users are free to implement various (general) tuning algorithms for neural architecture search on NNI. We have implemented a [general NAS algorihtm]() by extracting the RNN controller from ENAS.
+
+
+## Neural architecture search on NNI
+
+### Basic flow of experiment execution
+
+NNI's annotation compiler transforms the annotated trial code to the code that could receive architecture choice and build the corresponding model (i.e., graph). The NAS search space can be seen as a full graph, the architecture chosen by the tuning algorithm is a subgraph in it. By default, the compiled trial code only builds and executes the subgraph.
+
+![](../img/nas_on_nni.png)
+
+The above figure shows how the trial code runs on NNI. `nnictl` processes user trial code to generate a search space file and compiled trial code. The former is fed to tuner, and the latter is used to run trilas. 
+
+### Weight sharing
+
+Sharing weights among chosen architectures (i.e., trials) could speedup model search. For example, properly inheriting weights of completed trials could speedup the converge of new trials. One-Shot NAS (e.g., ENAS, Darts) is more aggressive, the training of different architectures (i.e., subgraphs) shares the same copy of the weights in full graph.
+
+![](../img/nas_weight_share.png)
+
+We believe weight sharing (transferring) plays a key role on speeding up NAS, while finding efficient ways of sharing weights is still a hot research topic. We provide a key-value store for users to store and load weights. Tuners and Trials use a provided KV client lib to access the storage.
+
+### Support of One-Shot NAS
+
+One-Shot
+
+![](../img/one-shot_training.png)
+
+
+## General tuning algorithms for NAS
+
+
+
+## Export best neural architecture and code
+
+
+
+## Future works
+
 
 
 [1]: https://arxiv.org/abs/1802.03268
