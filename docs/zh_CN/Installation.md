@@ -1,6 +1,6 @@
 # 安装 NNI
 
-当前支持在 Linux，Mac 和 Windows 下安装。
+Currently we support installation on Linux, Mac and Windows(local mode).
 
 ## **在 Linux 和 Mac 下安装**
 
@@ -28,9 +28,14 @@
 
 ## **在 Windows 上安装**
 
+When you use powershell to run script for the first time, you need **run powershell as administrator** with this command: 
+
+    bash
+      Set-ExecutionPolicy -ExecutionPolicy Unrestricted Anaconda is highly recommanded.
+
 * **通过 pip 命令安装 NNI**
     
-    先决条件：`python >= 3.5`
+    Prerequisite: `python(64-bit) >= 3.5`
     
     ```bash
     python -m pip install --upgrade nni
@@ -38,24 +43,18 @@
 
 * **通过源代码安装 NNI**
     
-    先决条件：`python >=3.5`, `git`, `powershell`  
-    在第一次使用 PowerShell 时，需要作为管理员运行此命令：
+    Prerequisite: `python >=3.5`, `git`, `powershell`  
+    you can install nni as administrator or current user as follows:
     
     ```bash
-    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-    ```
-    
-    然后可以使用管理员或当前用户安装 NNI：
-    
-    ```bash
-    git clone https://github.com/Microsoft/nni.git
+    git clone -b v0.7 https://github.com/Microsoft/nni.git
     cd nni
     powershell ./install.ps1
     ```
 
 ## **系统需求**
 
-以下是 NNI 在 Linux 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
+Below are the minimum system requirements for NNI on Linux. 由于程序变更，NNI 的最低配置会有所更改。
 
 |          | 最低配置                                  | 推荐配置                                      |
 | -------- | ------------------------------------- | ----------------------------------------- |
@@ -67,7 +66,7 @@
 | **网络**   | 宽带连接                                  |                                           |
 | **分辨率**  | 1024 x 768 以上                         |                                           |
 
-以下是 NNI 在 MacOS 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
+Below are the minimum system requirements for NNI on macOS. 由于程序变更，NNI 的最低配置会有所更改。
 
 |          | 最低配置                                               | 推荐配置                     |
 | -------- | -------------------------------------------------- | ------------------------ |
@@ -79,7 +78,7 @@
 | **网络**   | 宽带连接                                               |                          |
 | **分辨率**  | 1024 x 768 以上                                      |                          |
 
-以下是 NNI 在 Windows 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
+Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is well tested and recommend. Due to potential programming changes, the minimum system requirements for NNI may change over time.
 
 |          | 最低配置                                  | 推荐配置                                      |
 | -------- | ------------------------------------- | ----------------------------------------- |
