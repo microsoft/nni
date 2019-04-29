@@ -98,23 +98,41 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **安装和验证**
 
-**通过 pip 命令安装**
+If you choose NNI Windows local mode and you use powershell to run script for the first time, you need to **run powershell as administrator** with this command first:
 
-* 当前支持 Linux 和 MacOS。测试并支持的版本包括：Ubuntu 16.04 及更高版本，MacOS 10.14.1。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。 
+```bash
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
+
+**Install through pip**
+
+* We support Linux, MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+
+Linux and MacOS
 
 ```bash
     python3 -m pip install --upgrade nni
 ```
 
-注意：
+Windows
+
+```bash
+    python -m pip install --upgrade nni
+```
+
+Note:
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
-* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/FAQ.md)。
+* Currently NNI on Windows only support local mode. Anaconda is highly recommanded to install NNI on Windows. 
+* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/FAQ.md)
 
-**通过源代码安装**
+**Install through source code**
 
-* 当前支持 Linux（Ubuntu 16.04 及更高版本） 和 MacOS（10.14.1）。 
-* 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
+* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) and Windows local mode (10.1809) in our current stage. 
+
+Linux and MacOS
+
+* Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
 
 ```bash
     git clone -b v0.7 https://github.com/Microsoft/nni.git
@@ -122,27 +140,41 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
     source install.sh   
 ```
 
-参考[安装 NNI](docs/zh_CN/Installation.md) 了解系统需求。
+Windows * Run the following commands in an environment that has `python >=3.5`, `git` and `powershell`
 
-**验证安装**
+```bash
+  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  cd nni
+  powershell ./install.ps1
+```
 
-以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow**。
+For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)  
+For NNI Windows local mode, please refer to [NNI Windows local mode](docs/en_US/WindowsLocalMode.md)
 
-* 通过克隆源代码下载示例。 
+**Verify install**
+
+The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
+
+* Download the examples via clone the source code. 
 
 ```bash
     git clone -b v0.7 https://github.com/Microsoft/nni.git
 ```
 
-* 运行 mnist 示例。
+Linux and MacOS * Run the mnist example.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
+Windows * Run the mnist example.
+
+```bash
+    nnictl create --config nni/examples/trials/mnist/config_windows.yml
+```
+
 * 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
-    ```
     INFO: Starting restful server...
     INFO: Successfully started Restful server!
     INFO: Setting local config...
@@ -206,16 +238,16 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **贡献**
 
-欢迎贡献代码或提交建议，可在 [GitHub issues](https://github.com/Microsoft/nni/issues) 跟踪需求和 Bug。
+This project welcomes contributions and suggestions, we use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
 
-推荐新贡献者从标有 **good first issue** 的简单需求开始。
+Issues with the **good first issue** label are simple and easy-to-start ones that we recommend new contributors to start with.
 
-如要安装 NNI 开发环境，参考： [配置 NNI 开发环境](docs/zh_CN/SetupNNIDeveloperEnvironment.md)。
+To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/en_US/SetupNNIDeveloperEnvironment.md)
 
-在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/zh_CN/CONTRIBUTING.md)。
+Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/en_US/CONTRIBUTING.md)
 
-我们正在编写[如何调试](docs/zh_CN/HowToDebug.md) 的页面，欢迎提交建议和问题。
+We are in construction of the instruction for [How to Debug](docs/en_US/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
 
 ## **许可协议**
 
-代码库遵循 [MIT 许可协议](LICENSE)
+The entire codebase is under [MIT license](LICENSE)
