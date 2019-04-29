@@ -51,15 +51,15 @@
         powershell
         Python >= 3.5
         Pip
-        Node.js
         Yarn
-        tar
         
 
 * **如何生成**
     
+    parameter `version_os` is used to build for Windows 64-bit or 32-bit.
+    
     ```bash
-    powershell ./install.ps1
+    powershell ./install.ps1 -version_os [64/32]
     ```
 
 * **如何上传**
