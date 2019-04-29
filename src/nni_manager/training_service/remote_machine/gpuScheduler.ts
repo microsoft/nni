@@ -134,6 +134,13 @@ export class GPUScheduler {
                     rmMeta.gpuReservation = new Map<number, string>();
                 }
                 const designatedGpuIndices: Set<number> | undefined = parseGpuIndices(rmMeta.gpuIndices);
+                if (designatedGpuIndices !== undefined) {
+                    for (const gpuIndex of designatedGpuIndices) {
+                        if (gpuIndex >= rmMeta.gpuSummary.gpuCount) {
+                            throw new Error(`Specified GPU index not found: ${gpuIndex}`);
+                        }
+                    }
+                }
                 this.log.debug(`designated gpu indices: ${designatedGpuIndices}`);
                 rmMeta.gpuSummary.gpuInfos.forEach((gpuInfo: GPUInfo) => {
                     // if the GPU has active process, OR be reserved by a job,
@@ -179,5 +186,4 @@ export class GPUScheduler {
             }
         };
     }
-
 }

@@ -3,8 +3,14 @@
 $install_node = $true
 $install_yarn = $true
 
+if([Environment]::Is64BitOperatingSystem){
+    $OS_VERSION = 'win64'
+}
+else{
+    $OS_VERSION = 'win32'
+}
 # nodejs
-$nodeUrl = "https://aka.ms/nni/nodejs-download/win64"
+$nodeUrl = "https://aka.ms/nni/nodejs-download/" + $OS_VERSION
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
 $unzipNodeDir = "node-v*"
 $unzipYarnDir = "yarn-v*"

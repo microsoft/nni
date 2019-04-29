@@ -47,15 +47,14 @@ This is the PyPI build and upload tool for NNI project.
   powershell
   Python >= 3.5
   Pip
-  Node.js
   Yarn
-  tar
   ```
 
 * __How to build__
-
+ 
+  parameter `version_os` is used to build for Windows 64-bit or 32-bit. 
   ```bash
-  powershell ./install.ps1
+  powershell ./install.ps1 -version_os [64/32]
   ```
 
 * __How to upload__
