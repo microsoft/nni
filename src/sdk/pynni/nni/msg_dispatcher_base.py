@@ -77,6 +77,8 @@ class MsgDispatcherBase(Recoverable):
                     break
             else:
                 self.enqueue_command(command, data)
+                if self.worker_exceptions:
+                    break
 
         _logger.info('Dispatcher exiting...')
         self.stopping = True
