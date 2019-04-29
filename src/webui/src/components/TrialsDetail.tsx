@@ -203,10 +203,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             const searchResultList: Array<TableObj> = [];
             Object.keys(tableListSource).map(key => {
                 const item = tableListSource[key];
-                const upperVal = targetValue.toUpperCase();
                 if (item.sequenceId.toString() === targetValue
-                    || item.id.toUpperCase().includes(upperVal)
-                    || item.status.toUpperCase().includes(upperVal)
+                    || item.id.includes(targetValue)
+                    || item.status.toUpperCase().includes(targetValue.toUpperCase())
                 ) {
                     searchResultList.push(item);
                 }
@@ -252,10 +251,12 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 break;
             case 'all':
                 const { tableListSource } = this.state;
-                this.setState(() => ({
-                    entriesInSelect: 'all',
-                    entriesTable: tableListSource.length
-                }));
+                if (this._isMounted) {
+                    this.setState(() => ({
+                        entriesInSelect: 'all',
+                        entriesTable: tableListSource.length
+                    }));
+                }
                 break;
             default:
         }
