@@ -1,20 +1,20 @@
-# Windows Local Mode (experimental feature)
+# Windows 本地模式（测试中）
 
-Currently we only support local mode on Windows. Windows 10.1809 is well tested and recommended.
+当前 Windows 下仅支持本机模式。 推荐 Windows 10 的 1809 版，其经过了测试。
 
-## **Installation on Windows**
+## **在 Windows 上安装**
 
-**Anaconda python(64-bit) is highly recommended.**
+**强烈推荐使用 Anaconda python(64 位)。**
 
-When you use powershell to run script for the first time, you need **run powershell as administrator** with this command:
+在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
 
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
 
-* **Install NNI through pip**
+* **通过 pip 命令安装 NNI**
     
-    Prerequisite: `python(64-bit) >= 3.5`
+    先决条件：`python(64-bit) >= 3.5`
 
 ```bash
   python -m pip install --upgrade nni
