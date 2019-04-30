@@ -39,15 +39,15 @@ When these things are done, run the **config_windows.yml** file from your comman
 
 ## **Frequent met errors and answers**
 
-### simplejson failed when installing nni
+### 安装 NNI 时出现 simplejson 错误
 
-Make sure C++ 14.0 compiler installed.
+确保安装了 C++ 14.0 编译器。
 
-> builging 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
+> building 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
 
-### Fail to run powershell when install nni from source
+### 从源代码安装 NNI 时，遇到 PowerShell 错误
 
-If you run powershell script for the first time and did not set the execution policies for executing the script, you will meet this error below. Try to run powershell as administrator with this command first:
+如果第一次运行 PowerShell 脚本，且没有设置过执行脚本的策略，会遇到下列错误。 需要以管理员身份运行此命令：
 
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
@@ -55,13 +55,13 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 > ...cannot be loaded because running scripts is disabled on this system.
 
-### Trial failed with missing DLL in cmd or powershell
+### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
 
-This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install scipy. Anaconda python is highly recommended. If you use official python, make sure you have one of `Visual Studio`, `MATLAB`, `MKL` and `Intel Distribution for Python` installed on Windows before running nni. If not, try to install one of the softwares above or change to use Anaconda python(64-bit).
+此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 强烈推荐使用 Anaconda python。 如果要使用官方的 Python，确保运行 NNI 前，在 `Visual Studio`，`MATLAB`，`MKL` 和`Intel Distribution for Python` 中至少安装了一个。 如果没有，则需要安装其中之一，或使用 Anaconda Python （64位）。
 
 > ImportError: DLL load failed
 
-### Trial failed on webUI
+### Web 界面上的 Trial 错误
 
 Please check the trial log file stderr for more details. If there is no such file and nni is installed through pip, then you need to run powershell as administrator with this command first:
 
