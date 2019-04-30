@@ -31,7 +31,7 @@ If you upgrade your NNI or you delete some config files of NNI when there is an 
 Config the network mode to bridge mode or other mode that could make virtual machine's host accessible from external machine, and make sure the port of virtual machine is not forbidden by firewall. 
 
 ### Windows local mode problems
-Please refer to [NNI Windows local mode](docs/en_US/WindowsLocalMode.md) 
+Please refer to [NNI Windows local mode](WindowsLocalMode.md) 
 
 ### Help us improve
 Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.
