@@ -14,40 +14,40 @@
 * [可为 NNI Trial 任务指定 GPU](./ExperimentConfig.md#localConfig) 
     * 通过 gpuIndices 配置来为 Trial 任务指定GPU。如果 Experiment 配置文件中有 gpuIndices，则只有指定的 GPU 会被用于 NNI 的 Trial 任务。
 * 改进 Web 界面 
-    * Decimal format of metrics other than default on the Web UI
+    * 在 Web 界面上使用十进制格式的指标
     * 添加多阶段训练相关的提示
     * 可将超参复制为 Python dict 格式
     * 可将提前终止的 Trial 数据传入 Tuner。
 * 为 nnictl 提供更友好的错误消息 
-    * nnictl provide more meaningful error message for yaml file format error
+    * 为 YAML 文件格式错误提供更有意义的错误信息
 
-### Bug fix
+### Bug 修复
 
-* Unable to kill all python threads after nnictl stop in async dispatcher mode
-* nnictl --version does not work with make dev-instal
-* All trail jobs status stays on 'waiting' for long time on PAI platform
+* 运行 nnictl stop 的异步 Dispatcher 模式时，无法杀掉所有的 Python 线程
+* nnictl --version 不能在 make dev-install 下使用
+* OpenPAI 平台下所有的 Trial 任务状态都是 'WAITING'
 
 ## 发布 0.6 - 4/2/2019
 
 ### 主要功能
 
 * [版本检查](https://github.com/Microsoft/nni/blob/master/docs/en_US/PAIMode.md#version-check) 
-    * check whether the version is consistent between nniManager and trialKeeper
-* [Report final metrics for early stop job](https://github.com/Microsoft/nni/issues/776) 
-    * If includeIntermediateResults is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of includeIntermediateResults is false.
-* [Separate Tuner/Assessor](https://github.com/Microsoft/nni/issues/841) 
-    * Adds two pipes to separate message receiving channels for tuner and assessor.
-* Make log collection feature configurable
-* Add intermediate result graph for all trials
+    * 检查 nniManager 和 trialKeeper 的版本是否一致
+* [提前终止的任务也可返回最终指标](https://github.com/Microsoft/nni/issues/776) 
+    * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
+* [分离 Tuner/Assessor](https://github.com/Microsoft/nni/issues/841) 
+    * 增加两个管道来分离 Tuner 和 Assessor 的消息
+* 使日志集合功能可配置
+* 为所有 Trial 增加中间结果的视图
 
-### Bug fix
+### Bug 修复
 
-* [Add shmMB config key for PAI](https://github.com/Microsoft/nni/issues/842)
-* Fix the bug that doesn't show any result if metrics is dict
-* Fix the number calculation issue for float types in hyperband
-* Fix a bug in the search space conversion in SMAC tuner
-* Fix the WebUI issue when parsing experiment.json with illegal format
-* Fix cold start issue in Metis Tuner
+* [为 OpenPAI 增加 shmMB 配置](https://github.com/Microsoft/nni/issues/842)
+* 修复在指标为 dict 时，无法显示任何结果的 Bug。
+* 修复 hyperband 中浮点类型的计算问题
+* 修复 SMAC Tuner 中搜索空间转换的错误
+* 修复 Web 界面中解析 Experiment 的错误格式
+* 修复 Metis Tuner 冷启动时的错误
 
 ## 发布 0.5.2 - 3/4/2019
 
