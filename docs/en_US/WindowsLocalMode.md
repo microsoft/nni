@@ -38,7 +38,7 @@ nnictl create --config nni/examples/trials/mnist/config_windows.yml
 
 For other examples you need to change trial command `python3` into `python` in each example YAML.
 
-## **Frequent met errors and answers**
+## **FAQ**
 
 ### simplejson failed when installing NNI
 
