@@ -139,13 +139,13 @@ Note:
 
 All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
 
-Linux and MacOS:   
+#### Linux and MacOS   
 Run the **config.yml** file from your command line to start mnist experiment.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
-Windows:   
+#### Windows   
 Run the **config_windows.yml** file from your command line to start mnist experiment.
 
 ```bash
