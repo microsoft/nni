@@ -15,10 +15,10 @@
     * 通过 gpuIndices 配置来为 Trial 任务指定GPU。如果 Experiment 配置文件中有 gpuIndices，则只有指定的 GPU 会被用于 NNI 的 Trial 任务。
 * 改进 Web 界面 
     * Decimal format of metrics other than default on the Web UI
-    * Hints in WebUI about Multi-phase
-    * Enable copy/paste for hyperparameters as python dict
-    * Enable early stopped trials data for tuners.
-* NNICTL provide better error message 
+    * 添加多阶段训练相关的提示
+    * 可将超参复制为 Python dict 格式
+    * 可将提前终止的 Trial 数据传入 Tuner。
+* 为 nnictl 提供更友好的错误消息 
     * nnictl provide more meaningful error message for yaml file format error
 
 ### Bug fix
