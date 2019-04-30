@@ -132,25 +132,25 @@ tuner:
 
 > 名称：**SMAC**
 
-**Please note that SMAC doesn't support running on windows currently. The specific reason can be referred to this [github issue](https://github.com/automl/SMAC3/issues/483).**
+**当前 SMAC 不支持在 WIndows 下运行。 原因参考：[github issue](https://github.com/automl/SMAC3/issues/483).**
 
-**Installation**
+**安装**
 
-SMAC need to be installed by following command before first use.
+SMAC 在第一次使用前，必须用下面的命令先安装。
 
 ```bash
 nnictl package install --name=SMAC
 ```
 
-**Suggested scenario**
+**建议场景**
 
-Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.
+与 TPE 类似，SMAC 也是一个可以被用在各种场景中的黑盒 Tuner。在计算资源有限时，也可以使用。 此算法为离散超参而优化，因此，如果大部分超参是离散值时，建议使用此算法。
 
-**Requirement of classArg**
+**参数**
 
 * **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
-**Usage example**
+**使用样例：**
 
 ```yaml
 # config.yml
