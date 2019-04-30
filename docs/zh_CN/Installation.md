@@ -1,6 +1,6 @@
 # 安装 NNI
 
-Currently we support installation on Linux, Mac and Windows(local mode).
+当前支持在 Linux，Mac 和 Windows（本机模式）下安装。
 
 ## **在 Linux 和 Mac 下安装**
 
