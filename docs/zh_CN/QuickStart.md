@@ -152,15 +152,15 @@ trial:
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
-If you use windows local mode and forget to change the trial command `python3` to `python` in config.yml, **then run the config_windows.yml file from your command line to start the experiment**.
+在 Windows 的本机模式下，可**使用 config_windows.yml 来启动 Experiment**。此配置文件仅将 `python3` 改为了 `python`，以适应 Windows 中不同的的可执行文件名。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
-Note: **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](NNICTLDOC.md) for more usage of `nnictl`
+注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](NNICTLDOC.md)，了解 `nnictl` 更多用法。
 
-Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
+在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
 
     INFO: Starting restful server...
     INFO: Successfully started Restful server!
@@ -188,47 +188,47 @@ Wait for the message `INFO: Successfully started experiment!` in the command lin
     -----------------------------------------------------------------------
     
 
-If you prepare `trial`, `search space` and `config` according to the above steps and successfully create a NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameters sets for each trial according to the requirements you set. You can clearly sees its progress by NNI WebUI.
+如果根据上述步骤准备好了相应 `Trial`, `搜索空间` 和 `配置`，并成功创建的 NNI 任务。NNI 会自动开始通过配置的搜索空间来运行不同的超参集合，搜索最好的超参。 通过 Web 界面可看到 NNI 的进度。
 
 ## Web 界面
 
-After you start your experiment in NNI successfully, you can find a message in the command-line interface to tell you `Web UI url` like this:
+启动 Experiment 后，可以在命令行界面找到如下的 `Web 界面地址`：
 
-    The Web UI urls are: [Your IP]:8080
+    The Web UI urls are: [IP 地址]:8080
     
 
-Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
+在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。
 
-#### View summary page
+#### 查看概要页面
 
-Click the tab "Overview".
+点击标签 "Overview"。
 
-Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also support `download these information and parameters` through the **Download** button. You can download the experiment result anytime in the middle for the running or at the end of the execution, etc.
+Experiment 相关信息会显示在界面上，配置和搜索空间等。 可通过 **Download** 按钮来`下载信息和参数`。 可以在运行中或结束后，随时下载 Experiment 的结果。
 
 ![](../img/QuickStart1.png)
 
-Top 10 trials will be listed in the Overview page, you can browse all the trials in "Trials Detail" page.
+前 10 个 Trial 结果也会列在 Overview 页面中，可以在 "Trials Detail" 部分浏览所有的 Trial。
 
 ![](../img/QuickStart2.png)
 
-#### View trials detail page
+#### 查看 Trial 详情页面
 
-Click the tab "Default Metric" to see the point graph of all trials. Hover to see its specific default metric and search space message.
+点击 "Default Metric" 来查看所有 Trial 的点图。 悬停鼠标来查看默认指标和搜索空间信息。
 
 ![](../img/QuickStart3.png)
 
-Click the tab "Hyper Parameter" to see the parallel graph.
+点击 "Hyper Parameter" 标签查看图像。
 
 * 可选择百分比查看最好的 Trial。
 * 选择两个轴来交换位置。
 
 ![](../img/QuickStart4.png)
 
-Click the tab "Trial Duration" to see the bar graph.
+点击 "Trial Duration" 标签来查看柱状图。
 
 ![](../img/QuickStart5.png)
 
-Below is the status of the all trials. Specifically:
+下面是所有 Trial 的状态。 包括：
 
 * Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间。
 * 如果在 OpenPAI 平台上运行，还可以看到 hdfsLog。
