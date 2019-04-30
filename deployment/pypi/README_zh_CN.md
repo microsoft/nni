@@ -56,7 +56,7 @@
 
 * **如何生成**
     
-    parameter `version_os` is used to build for Windows 64-bit or 32-bit.
+    参数 `version_os` 用来选择使用 64 位还是 32 位 Windows 来生成。
     
     ```bash
     powershell ./install.ps1 -version_os [64/32]
