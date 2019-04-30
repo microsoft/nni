@@ -250,4 +250,4 @@ Windows * 运行 MNIST 样例。
 
 ## **许可协议**
 
-The entire codebase is under [MIT license](LICENSE)
+代码库遵循 [MIT 许可协议](LICENSE)
