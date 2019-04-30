@@ -63,22 +63,22 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ### Web 界面上的 Trial 错误
 
-Please check the trial log file stderr for more details. If there is no such file and nni is installed through pip, then you need to run powershell as administrator with this command first:
+检查 Trial 日志文件来了解详情。 如果没有日志文件，且 NNI 是通过 pip 安装的，则需要在管理员权限下先运行以下命令：
 
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
 
-If there is a stderr file, please check out. Two possible cases are as follows:
+如果存在 stderr 文件，也需要查看其内容。 可能的错误情况包括：
 
-* forget to change the trial command `python3` into `python` in each experiment yaml.
-* forget to install experiment dependencies such as tensorflow, keras and so on.
+* 忘记将 Experiment 配置的 Trial 命令中的 `python3` 改为 `python`。
+* 忘记安装 Experiment 的依赖，如 TensorFlow，Keras 等。
 
-### Support tuner on Windows
+### Windows 上支持的 Tuner
 
-* SMAC is not supported
-* BOHB is supported, make sure C++ 14.0 compiler and dependencies installed successfully.
+* 不支持 SMAC
+* 支持 BOHB，但需要确保安装了 C++ 14.0 编译器。
 
-Note:
+注意：
 
-* If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
+* 如果遇到 `Segmentation fault` 这样的错误，参考[常见问答](FAQ.md)。
