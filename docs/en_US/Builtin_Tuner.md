@@ -132,6 +132,8 @@ tuner:
 
 > Builtin Tuner Name: **SMAC**
 
+**Please note that SMAC doesn't support running on windows currently. The specific reason can be referred to this [github issue](https://github.com/automl/SMAC3/issues/483).**
+
 **Installation**
 
 SMAC need to be installed by following command before first use.
