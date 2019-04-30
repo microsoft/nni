@@ -595,6 +595,9 @@ class BOHB(MsgDispatcherBase):
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
+            if not _value:
+                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                continue
             budget_exist_flag = False
             barely_params = dict()
             for keys in _params:

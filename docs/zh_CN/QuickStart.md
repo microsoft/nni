@@ -2,15 +2,23 @@
 
 ## 安装
 
-当前支持 Linux 和 MacOS。测试并支持的版本包括：Ubuntu 16.04 及更高版本，MacOS 10.14.1。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+当前支持 Linux，MacOS 和 Windows（本机模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+
+#### Linux 和 MacOS
 
 ```bash
     python3 -m pip install --upgrade nni
 ```
 
+#### Windows
+
+```bash
+    python -m pip install --upgrade nni
+```
+
 注意：
 
-* 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
+* 在 Linux 和 MacOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 `--user`，则不需要特殊权限。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](FAQ.md)。
 * 参考[安装 NNI](Installation.md)，来了解`系统需求`。
 
@@ -126,14 +134,28 @@ trial:
   gpuNum: 0
 ```
 
+注意： * **在 Windows 上，需要将 Trial 命令的 `python3` 改为 `python`**
+
 *实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
 上面的代码都已准备好，并保存在 [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)。
+
+使用 Windows 本机模式，并且是第一次使用 PowerShell 来运行脚本，需要使用管理员权限运行下列命令
+
+```bash
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
 
 上述步骤完成后，**从命令行运行 config.yml 文件来开始 Experiment**。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
+```
+
+在 Windows 的本机模式下，可**使用 config_windows.yml 来启动 Experiment**。此配置文件仅将 `python3` 改为了 `python`，以适应 Windows 中不同的的可执行文件名。
+
+```bash
+    nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
 注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](NNICTLDOC.md)，了解 `nnictl` 更多用法。
