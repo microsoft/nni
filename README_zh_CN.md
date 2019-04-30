@@ -10,7 +10,7 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
-### **NNI [v0.7](https://github.com/Microsoft/nni/releases) has been released!**
+### **NNI [v0.7](https://github.com/Microsoft/nni/releases) 已发布！**
 
 <p align="center">
   <a href="#nni-v05-has-been-released"><img src="docs/img/overview.svg" /></a>
@@ -98,17 +98,17 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **安装和验证**
 
-If you choose NNI Windows local mode and you use powershell to run script for the first time, you need to **run powershell as administrator** with this command first:
+在 Windows 本机模式下，并且是第一次使用 PowerShell 来运行脚本，需要**使用管理员权限**运行一次下列命令：
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
 
-**Install through pip**
+**通过 pip 命令安装**
 
-* We support Linux, MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+* 当前支持 Linux，MacOS 和 Windows（本机模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-Linux and MacOS
+Linux 和 MacOS
 
 ```bash
     python3 -m pip install --upgrade nni
@@ -120,19 +120,19 @@ Windows
     python -m pip install --upgrade nni
 ```
 
-Note:
+注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
-* Currently NNI on Windows only support local mode. Anaconda is highly recommanded to install NNI on Windows. 
-* If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/FAQ.md)
+* 当前 NNI 在 Windows 上仅支持本机模式。 强烈推荐使用 Anaconda 来在 Windows 上安装 NNI。 
+* 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/FAQ.md)。
 
-**Install through source code**
+**通过源代码安装**
 
-* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) and Windows local mode (10.1809) in our current stage. 
+* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）下的本机模式。 
 
-Linux and MacOS
+Linux 和 MacOS
 
-* Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
+* 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
     git clone -b v0.7 https://github.com/Microsoft/nni.git
@@ -140,7 +140,7 @@ Linux and MacOS
     source install.sh   
 ```
 
-Windows * Run the following commands in an environment that has `python >=3.5`, `git` and `powershell`
+Windows * 在具有 `python >= 3.5`，`git` 和 `wget` 的环境中运行命令：
 
 ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
@@ -148,26 +148,26 @@ Windows * Run the following commands in an environment that has `python >=3.5`, 
   powershell ./install.ps1
 ```
 
-For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)  
-For NNI Windows local mode, please refer to [NNI Windows local mode](docs/en_US/WindowsLocalMode.md)
+NNI 的系统需求参考 [安装 NNI](docs/zh_CN/Installation.md)  
+NNI 的 Windows 本机模式，参考 [NNI Windows 本机模式](docs/zh_CN/WindowsLocalMode.md)
 
-**Verify install**
+**验证安装**
 
-The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
+以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow**。
 
-* Download the examples via clone the source code. 
+* 通过克隆源代码下载示例。 
 
 ```bash
     git clone -b v0.7 https://github.com/Microsoft/nni.git
 ```
 
-Linux and MacOS * Run the mnist example.
+Linux 和 MacOS * 运行 MNIST 样例。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
-Windows * Run the mnist example.
+Windows * 运行 MNIST 样例。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
@@ -238,15 +238,15 @@ Windows * Run the mnist example.
 
 ## **贡献**
 
-This project welcomes contributions and suggestions, we use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
+欢迎贡献代码或提交建议，可在 [GitHub issues](https://github.com/Microsoft/nni/issues) 跟踪需求和 Bug。
 
-Issues with the **good first issue** label are simple and easy-to-start ones that we recommend new contributors to start with.
+推荐新贡献者从标有 **good first issue** 的简单需求开始。
 
-To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/en_US/SetupNNIDeveloperEnvironment.md)
+如要安装 NNI 开发环境，参考： [配置 NNI 开发环境](docs/zh_CN/SetupNNIDeveloperEnvironment.md)。
 
-Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/en_US/CONTRIBUTING.md)
+在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/zh_CN/CONTRIBUTING.md)。
 
-We are in construction of the instruction for [How to Debug](docs/en_US/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
+我们正在编写[如何调试](docs/zh_CN/HowToDebug.md) 的页面，欢迎提交建议和问题。
 
 ## **许可协议**
 
