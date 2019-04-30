@@ -27,11 +27,11 @@
 * nnictl --version does not work with make dev-instal
 * All trail jobs status stays on 'waiting' for long time on PAI platform
 
-## Release 0.6 - 4/2/2019
+## 发布 0.6 - 4/2/2019
 
-### Major Features
+### 主要功能
 
-* [Version checking](https://github.com/Microsoft/nni/blob/master/docs/en_US/PAIMode.md#version-check) 
+* [版本检查](https://github.com/Microsoft/nni/blob/master/docs/en_US/PAIMode.md#version-check) 
     * check whether the version is consistent between nniManager and trialKeeper
 * [Report final metrics for early stop job](https://github.com/Microsoft/nni/issues/776) 
     * If includeIntermediateResults is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of includeIntermediateResults is false.
@@ -49,22 +49,22 @@
 * Fix the WebUI issue when parsing experiment.json with illegal format
 * Fix cold start issue in Metis Tuner
 
-## Release 0.5.2 - 3/4/2019
+## 发布 0.5.2 - 3/4/2019
 
-### Improvements
+### 改进
 
-* Curve fitting assessor performance improvement.
+* 提升 Curve fitting Assessor 的性能。
 
-### Documentation
+### 文档
 
-* Chinese version document: https://nni.readthedocs.io/zh/latest/
-* Debuggability/serviceability document: https://nni.readthedocs.io/en/latest/HowToDebug.html
-* Tuner assessor reference: https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
+* 发布中文文档网站：https://nni.readthedocs.io/zh/latest/
+* 调试和维护：https://nni.readthedocs.io/en/latest/HowToDebug.html
+* Tuner、Assessor 参考：https://nni.readthedocs.io/en/latest/sdk_reference.html#tuner
 
-### Bug Fixes and Other Changes
+### Bug 修复和其它更新
 
-* Fix a race condition bug that does not store trial job cancel status correctly.
-* Fix search space parsing error when using SMAC tuner.
+* 修复了在某些极端条件下，不能正确存储任务的取消状态。
+* 修复在使用 SMAC Tuner 时，解析搜索空间的错误。
 * Fix cifar10 example broken pipe issue.
 * Add unit test cases for nnimanager and local training service.
 * Add integration test azure pipelines for remote machine, OpenPAI and kubeflow training services.
@@ -231,44 +231,44 @@
 
 ## Release 0.2.0 - 9/29/2018
 
-### Major Features
+### 主要功能
 
-* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode) 
-    * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
-    * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
-* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](smacTuner.md) for instructions about how to use SMAC tuner) 
-    * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO to handle categorical parameters. The SMAC supported by NNI is a wrapper on [SMAC3](https://github.com/automl/SMAC3)
-* Support NNI installation on [conda](https://conda.io/docs/index.html) and python virtual environment
-* Others 
-    * Update ga squad example and related documentation
-    * WebUI UX small enhancement and bug fix
+* 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练服务 (参考[这里](./PAIMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
+    * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
+    * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
+* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](smacTuner.md)，了解如何使用 SMAC Tuner) 
+    * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
+* 支持将 NNI 安装在 [conda](https://conda.io/docs/index.html) 和 Python 虚拟环境中。
+* 其它 
+    * 更新 ga squad 样例与相关文档
+    * 用户体验改善及 Bug 修复
 
-### Known Issues
+### 已知问题
 
 [0.2.0 的已知问题](https://github.com/Microsoft/nni/labels/nni020knownissues)。
 
-## Release 0.1.0 - 9/10/2018 (initial release)
+## 发布 0.1.0 - 9/10/2018 (首个版本)
 
 首次发布 Neural Network Intelligence (NNI)。
 
-### Major Features
+### 主要功能
 
-* Installation and Deployment 
-    * Support pip install and source codes install
-    * Support training services on local mode(including Multi-GPU mode) as well as multi-machines mode
-* Tuners, Assessors and Trial 
-    * Support AutoML algorithms including: hyperopt_tpe, hyperopt_annealing, hyperopt_random, and evolution_tuner
-    * Support assessor(early stop) algorithms including: medianstop algorithm
-    * Provide Python API for user defined tuners and assessors
-    * Provide Python API for user to wrap trial code as NNI deployable codes
-* Experiments 
-    * Provide a command line toolkit 'nnictl' for experiments management
-    * Provide a WebUI for viewing experiments details and managing experiments
-* Continuous Integration 
-    * Support CI by providing out-of-box integration with [travis-ci](https://github.com/travis-ci) on ubuntu
-* Others 
-    * Support simple GPU job scheduling
+* 安装和部署 
+    * 支持 pip 和源代码安装
+    * 支持本机（包括多 GPU 卡）训练和远程多机训练模式
+* Tuner ，Assessor 和 Trial 
+    * 支持的自动机器学习算法包括： hyperopt_tpe, hyperopt_annealing, hyperopt_random, 和 evolution_tuner。
+    * 支持 Assessor（提前终止）算法包括：medianstop。
+    * 提供 Python API 来自定义 Tuner 和 Assessor
+    * 提供 Python API 来包装 Trial 代码，以便能在 NNI 中运行
+* Experiment 
+    * 提供命令行工具 'nnictl' 来管理 Experiment
+    * 提供网页界面来查看并管理 Experiment
+* 持续集成 
+    * 使用 Ubuntu 的 [travis-ci](https://github.com/travis-ci) 来支持持续集成
+* 其它 
+    * 支持简单的 GPU 任务调度
 
-### Known Issues
+### 已知问题
 
 [0.1.0 的已知问题](https://github.com/Microsoft/nni/labels/nni010knownissues)。
