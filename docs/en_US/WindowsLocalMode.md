@@ -60,10 +60,10 @@ If there is a stderr file, please check out. Two possible cases are as follows:
 * forget to install experiment dependencies such as tensorflow, keras and so on.
 
 ### Fail to use BOHB on Windows
-* Make sure C++ 14.0 compiler installed then try to run `nnictl package install --name=BOHB` to install the dependencies.
+Make sure C++ 14.0 compiler installed then try to run `nnictl package install --name=BOHB` to install the dependencies.
 
 ### Not supported tuner on Windows
-* SMAC is not supported currently, the specific reason can be referred to this [github issue](https://github.com/automl/SMAC3/issues/483).
+SMAC is not supported currently, the specific reason can be referred to this [github issue](https://github.com/automl/SMAC3/issues/483).
 
 
 Note:
