@@ -2,9 +2,9 @@
 
 ## 安装
 
-We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 and Windows 10.1809 are tested and supported. 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+当前支持 Linux，MacOS 和 Windows（本机模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-#### Linux and MacOS
+#### Linux 和 MacOS
 
 ```bash
     python3 -m pip install --upgrade nni
@@ -18,7 +18,7 @@ We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or
 
 注意：
 
-* For Linux and MacOS `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
+* 在 Linux 和 MacOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 `--user`，则不需要特殊权限。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](FAQ.md)。
 * 参考[安装 NNI](Installation.md)，来了解`系统需求`。
 
@@ -30,17 +30,17 @@ NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进
 
 ```python
 def run_trial(params):
-    # Input data
+    # 输入数据
     mnist = input_data.read_data_sets(params['data_dir'], one_hot=True)
-    # Build network
+    # 构建网络
     mnist_network = MnistNetwork(channel_1_num=params['channel_1_num'], channel_2_num=params['channel_2_num'], conv_size=params['conv_size'], hidden_size=params['hidden_size'], pool_size=params['pool_size'], learning_rate=params['learning_rate'])
     mnist_network.build_network()
 
     test_acc = 0.0
     with tf.Session() as sess:
-        # Train network
+        # 训练网络
         mnist_network.train(sess, mnist)
-        # Evaluate network
+        # 评估网络
         test_acc = mnist_network.evaluate(mnist)
 
 if __name__ == '__main__':
@@ -54,16 +54,16 @@ if __name__ == '__main__':
 
 NNI 就是用来帮助调优工作的。它的工作流程如下：
 
-    input: search space, trial code, config file
-    output: one optimal hyperparameter configuration
+    输入: 搜索空间, Trial 代码, 配置文件
+    输出: 一组最佳的超参配置
     
     1: For t = 0, 1, 2, ..., maxTrialNum,
-    2:      hyperparameter = chose a set of parameter from search space
+    2:      hyperparameter = 从搜索空间选择一组参数
     3:      final result = run_trial_and_evaluate(hyperparameter)
-    4:      report final result to NNI
-    5:      If reach the upper limit time,
-    6:          Stop the experiment
-    7: return hyperparameter value with best final result
+    4:      返回最终结果给 NNI
+    5:      If 时间达到上限,
+    6:          停止实验
+    7: return 最好的实验结果
     
 
 如果需要使用 NNI 来自动训练模型，找到最佳超参，需要如下三步：
@@ -122,31 +122,31 @@ trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
 trainingServicePlatform: local
-# The path to Search Space
+# 搜索空间文件
 searchSpacePath: search_space.json
 useAnnotation: false
 tuner:
   builtinTunerName: TPE
-# The path and the running command of trial
+# 运行的命令，以及 Trial 代码的路径
 trial:  
   command: python3 mnist.py
   codeDir: .
   gpuNum: 0
 ```
 
-Note: * **For Windows, you need to change trial command `python3` to `python`**
+注意： * **在 Windows 上，需要将 Trial 命令的 `python3` 改为 `python`**
 
-*Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
+*实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
-All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
+上面的代码都已准备好，并保存在 [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)。
 
-If you choose Windows local mode and use powershell to run script for the first time, you need run powershell as administrator with this command
+使用 Windows 本机模式，并且是第一次使用 PowerShell 来运行脚本，需要使用管理员权限运行下列命令
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
 
-When these things are done, **run the config.yml file from your command line to start the experiment**.
+上述步骤完成后，**从命令行运行 config.yml 文件来开始 Experiment**。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
