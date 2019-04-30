@@ -8,11 +8,11 @@ We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or
     python3 -m pip install --upgrade nni
 ```
 #### Windows
-If you use powershell to run script for the first time, try to run powershell as administrator with this command first
+If you use powershell to run script for the first time, try to run powershell as administrator with this command first:
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
-Then install nni through pip
+Then install nni through pip:
 ```bash
     python -m pip install --upgrade nni
 ```
@@ -139,13 +139,13 @@ Note:
 
 All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
 
-Linux and MacOS   
+Linux and MacOS:   
 Run the **config.yml** file from your command line to start mnist experiment.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
-Windows   
+Windows:   
 Run the **config_windows.yml** file from your command line to start mnist experiment.
 
 ```bash
