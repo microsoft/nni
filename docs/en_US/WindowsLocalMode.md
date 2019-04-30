@@ -46,6 +46,7 @@ Make sure C++ 14.0 compiler installed.
 >building 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
 
 ### Fail to run PowerShell when install NNI from source
+
 If you run PowerShell script for the first time and did not set the execution policies for executing the script, you will meet this error below. Try to run PowerShell as administrator with this command first:
 
 ```bash
