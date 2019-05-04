@@ -24,7 +24,10 @@ import { getLogger } from "common/log";
 import { countFilesRecursively } from '../../common/utils'
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
-import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData'
+import * as os from 'os';
+import * as fs from 'fs';
+import { getNewLine } from '../../common/utils';
+import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
 import { file } from "../../node_modules/@types/tmp";
@@ -183,12 +186,18 @@ export function getLinuxDir(directory: string): string{
  */
 export async function tarAdd(tar_path: string, source_path: string): Promise<void>{
     if (process.platform === 'win32') {
-        const tarScriptContent: string = String.Format(
-            TAR_SCRIPT, 
-            tar_path, 
-            source_path
-        );
-        await cpp.exec(`python -c ${tarScriptContent}`);
+        let script: string[] = [];
+        script.push(
+        `import tarfile`,
+        String.Format(`tar = tarfile.open("{0}","w:gz")`,tar_path),
+        String.Format(`for root,dir,files in os.walk("{1}"):`,source_path),
+        `    for file in files:`,
+        `        fullpath = os.path.join(root,file)`,
+        `        tar.add(fullpath)`,
+        `tar.close()`);
+        await fs.promises.writeFile(path.join(os.tmpdir(), 'tar.py'), script.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
+        const tarScript: string = path.join(os.tmpdir(), 'tar.py');
+        await cpp.exec(`python -c ${tarScript}`);
     } else {
         await cpp.exec(`tar -czf ${tar_path} -C ${source_path} .`);
     }
@@ -226,14 +235,3 @@ export function getgpuMetricsCollectorScriptContent(gpuMetricCollectorScriptFold
         );
     }
 }
-
-const TAR_SCRIPT: string = 
-`
-import tarfile
-tar = tarfile.open("{0}","w:gz")
-for root,dir,files in os.walk("{1}"):
-    for file in files:
-        fullpath = os.path.join(root,file)
-        tar.add(fullpath)
-tar.close()
- `
