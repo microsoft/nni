@@ -646,7 +646,7 @@ class RemoteMachineTrainingService implements TrainingService {
         );
         await fs.promises.writeFile(path.join(localDir, 'run.sh'), runScriptContent, { encoding: 'utf8' });
         await SSHClientUtility.copyFileToRemote(
-            path.join(localDir, 'run.sh'), path.join(remoteDir, 'run.sh'), sshClient);
+            path.join(localDir, 'run.sh'), getLinuxDir(path.join(remoteDir, 'run.sh')), sshClient);
         SSHClientUtility.remoteExeCommand(`bash ${path.join(remoteDir, 'run.sh')}`, sshClient);
 
         const jobDetail: RemoteMachineTrialJobDetail =  new RemoteMachineTrialJobDetail(
