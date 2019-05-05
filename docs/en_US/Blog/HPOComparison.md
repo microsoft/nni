@@ -155,29 +155,7 @@ Nonconvex problem on the hyper-parameter search of AutoGBDT example.
   },
   "max_depth": {
     "_type": "choice",
-    "_value": [
-      -1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      8,
-      10,
-      12,
-      14,
-      16,
-      18,
-      20,
-      22,
-      24,
-      28,
-      32,
-      48,
-      64,
-      96,
-      128
-    ]
+    "_value": [-1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 28, 32, 48, 64, 96, 128]
   },
   "feature_fraction": {
     "_type": "choice",
@@ -327,7 +305,7 @@ The search space is enormous (about 10^40) and we set the maximum number of tria
 
 Figure:
 
-![](../img/hpo_rocksdb_fillrandom.PNG)
+![](../../img/hpo_rocksdb_fillrandom.PNG)
 
 #### 'readrandom' Benchmark
 
@@ -342,4 +320,4 @@ Figure:
 
 Figure:
 
-![](../img/hpo_rocksdb_readrandom.PNG)
+![](../../img/hpo_rocksdb_readrandom.PNG)
