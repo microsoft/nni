@@ -1,5 +1,6 @@
-# NAS Algorithms Comparison
-Train and Compare NAS models including Autokeras, DARTS, ENAS and NAO.
+# Neural Architecture Search Comparison
+
+Train and Compare NAS (Neural Architecture Search) models including Autokeras, DARTS, ENAS and NAO.
 
 Their source code link is as below:
 
@@ -14,8 +15,6 @@ Their source code link is as below:
 ## Experiment Description
 
 To avoid over-fitting in **CIFAR-10**, we also compare the models in the other five datasets including Fashion-MNIST, CIFAR-100, OUI-Adience-Age, ImageNet-10-1 (subset of ImageNet), ImageNet-10-2 (another subset of ImageNet). We just sample a subset with 10 different labels from ImageNet to make ImageNet-10-1 or ImageNet-10-2.
-
-
 
 | Dataset                                                      | Training Size | Numer of Classes | Descriptions                                                 |
 | :----------------------------------------------------------- | ------------- | ---------------- | ------------------------------------------------------------ |
@@ -36,7 +35,7 @@ For NAO, it requires too much computing resources, so we only use NAO-WS which p
 
 For AutoKeras, we used  0.2.18 version because it was the latest version when we started the experiment.
 
-## NAS Performance 
+## NAS Performance
 
 | NAS             | AutoKeras (%) | ENAS (macro) (%) | ENAS (micro) (%) | DARTS (%) | NAO-WS (%) |
 | --------------- | :-----------: | :--------------: | :--------------: | :-------: | :--------: |
@@ -47,17 +46,13 @@ For AutoKeras, we used  0.2.18 version because it was the latest version when we
 | ImageNet-10-1   |     61.80     |      77.07       |      79.80       | **80.48** |   77.20    |
 | ImageNet-10-2   |     37.20     |      58.13       |      56.47       |   60.53   | **61.20**  |
 
-
-
-Unfortunately, we cannot reproduce all the results in the paper. 
+Unfortunately, we cannot reproduce all the results in the paper.
 
 The best or average results reported in the paper:
 
 | NAS       | AutoKeras(%) | ENAS (macro) (%) | ENAS (micro) (%) |   DARTS (%)    | NAO-WS (%)  |
 | --------- | ------------ | :--------------: | :--------------: | :------------: | :---------: |
 | CIFAR- 10 | 88.56(best)  |   96.13(best)    |   97.11(best)    | 97.17(average) | 96.47(best) |
-
-
 
 For AutoKeras, it has relatively worse performance across all datasets due to its random factor on network morphism.
 
@@ -76,6 +71,3 @@ For NAO-WS, it shows good results in ImageNet-10-2 but it can perform very poorl
 3. Pham, Hieu, et al. "Efficient Neural Architecture Search via Parameters Sharing." international conference on machine learning (2018): 4092-4101.
 
 4. Luo, Renqian, et al. "Neural Architecture Optimization." neural information processing systems (2018): 7827-7838.
-
-   
-
