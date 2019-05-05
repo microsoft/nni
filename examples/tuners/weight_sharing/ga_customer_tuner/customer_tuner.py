@@ -25,6 +25,7 @@ import os
 from threading import Event, Lock, current_thread
 
 from nni.tuner import Tuner
+from nni.utils import extract_scalar_reward
 
 from graph import Graph, Layer, LayerType, Enum, graph_dumps, graph_loads, unique
 
@@ -205,7 +206,7 @@ class CustomerTuner(Tuner):
         logger.debug('acquiring lock for param {}'.format(parameter_id))
         self.thread_lock.acquire()
         logger.debug('lock for current acquired')
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         if self.optimize_mode is OptimizeMode.Minimize:
             reward = -reward
 

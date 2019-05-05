@@ -15,3 +15,4 @@
     Hyperband<hyperbandAdvisor>
     Network Morphism<networkmorphismTuner>
     Metis Tuner<metisTuner>
+    BOHB<bohbAdvisor>

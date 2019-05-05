@@ -43,7 +43,7 @@ def init_params(net):
 
 term_width = 0
 try:
-    _, term_width = os.popen('stty size', 'r').read().split()
+    term_width = os.get_terminal_size().columns
 except Exception as exception:
     term_width = 200
 term_width = int(term_width)

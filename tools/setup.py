@@ -8,11 +8,12 @@ setuptools.setup(
     python_requires = '>=3.5',
     install_requires = [
         'requests',
-        'pyyaml',
+        'ruamel.yaml',
         'psutil',
         'astor',
         'schema',
-        'PythonWebHDFS'
+        'PythonWebHDFS',
+        'colorama'
     ],
 
     author = 'Microsoft NNI Team',

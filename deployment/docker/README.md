@@ -12,7 +12,7 @@ PyTorch 0.4.1
 scikit-learn 0.20.0
 pandas 0.23.4
 lightgbm 2.2.2
-NNI v0.5.1
+NNI v0.7
 ```
 You can take this Dockerfile as a reference for your own customized Dockerfile. 
 

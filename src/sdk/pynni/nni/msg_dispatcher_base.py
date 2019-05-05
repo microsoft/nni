@@ -26,11 +26,14 @@ from multiprocessing.dummy import Pool as ThreadPool
 from queue import Queue, Empty
 import json_tricks
 
-from .common import init_logger, multi_thread_enabled
+from .common import multi_thread_enabled
+from .env_vars import dispatcher_env_vars
+from .utils import init_dispatcher_logger
 from .recoverable import Recoverable
 from .protocol import CommandType, receive
 
-init_logger('dispatcher.log')
+init_dispatcher_logger()
+
 _logger = logging.getLogger(__name__)
 
 QUEUE_LEN_WARNING_MARK = 20
@@ -56,8 +59,7 @@ class MsgDispatcherBase(Recoverable):
         This function will never return unless raise.
         """
         _logger.info('Start dispatcher')
-        mode = os.getenv('NNI_MODE')
-        if mode == 'resume':
+        if dispatcher_env_vars.NNI_MODE == 'resume':
             self.load_checkpoint()
 
         while True:
@@ -75,6 +77,8 @@ class MsgDispatcherBase(Recoverable):
                     break
             else:
                 self.enqueue_command(command, data)
+                if self.worker_exceptions:
+                    break
 
         _logger.info('Dispatcher exiting...')
         self.stopping = True
@@ -142,6 +146,7 @@ class MsgDispatcherBase(Recoverable):
             CommandType.Initialize: self.handle_initialize,
             CommandType.RequestTrialJobs: self.handle_request_trial_jobs,
             CommandType.UpdateSearchSpace: self.handle_update_search_space,
+            CommandType.ImportData: self.handle_import_data,
             CommandType.AddCustomizedTrialJob: self.handle_add_customized_trial,
 
             # Tunner/Assessor commands:
@@ -152,8 +157,7 @@ class MsgDispatcherBase(Recoverable):
         }
         if command not in command_handlers:
             raise AssertionError('Unsupported command: {}'.format(command))
-
-        return command_handlers[command](data)
+        command_handlers[command](data)
 
     def handle_ping(self, data):
         pass
@@ -166,6 +170,9 @@ class MsgDispatcherBase(Recoverable):
 
     def handle_update_search_space(self, data):
        raise NotImplementedError('handle_update_search_space not implemented')
+
+    def handle_import_data(self, data):
+        raise NotImplementedError('handle_import_data not implemented')
 
     def handle_add_customized_trial(self, data):
         raise NotImplementedError('handle_add_customized_trial not implemented')

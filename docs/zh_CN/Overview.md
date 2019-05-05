@@ -53,7 +53,7 @@ Experiment 的运行过程为：Tuner 接收搜索空间并生成配置。 这�
 * [如何自定义 Tuner？](Customize_Tuner.md)
 * [NNI 支持哪些 Assessor？](Builtin_Assessors.md)
 * [如何自定义 Assessor？](Customize_Assessor.md)
-* [如何在本机上运行 Experiment？](tutorial_1_CR_exp_local_api.md)
+* [如何在本机上运行 Experiment？](LocalMode.md)
 * [如何在多机上运行 Experiment？](RemoteMachineMode.md)
 * [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
 * [样例](mnist_examples.md)

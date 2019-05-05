@@ -1,4 +1,5 @@
 # Neural Architecture Search Comparison
+*Posted by Anonymous Author*
 
 Train and Compare NAS (Neural Architecture Search) models including Autokeras, DARTS, ENAS and NAO.
 

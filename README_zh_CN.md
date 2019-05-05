@@ -10,7 +10,7 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
-### **NNI [v0.5.2](https://github.com/Microsoft/nni/releases) 已发布！**
+### **NNI [v0.6](https://github.com/Microsoft/nni/releases) 已发布！**
 
 <p align="center">
   <a href="#nni-v05-has-been-released"><img src="docs/img/overview.svg" /></a>
@@ -60,7 +60,8 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="docs/zh_CN/Builtin_Tuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a></li>
           <li><a href="docs/zh_CN/Builtin_Tuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
-        </ul> 
+          <li><a href="docs/zh_CN/Builtin_Tuner.md#BOHB">BOHB</a></li>
+        </ul>
           <a href="docs/zh_CN/Builtin_Assessors.md#assessor">Assessor（评估器）</a> 
         <ul>
           <li><a href="docs/zh_CN/Builtin_Assessors.md#Medianstop">Median Stop</a></li>
@@ -69,7 +70,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
       </td>
       <td>
       <ul>
-        <li><a href="docs/zh_CN/tutorial_1_CR_exp_local_api.md">本地计算机</a></li>
+        <li><a href="docs/zh_CN/LocalMode.md">本地计算机</a></li>
         <li><a href="docs/zh_CN/RemoteMachineMode.md">远程计算机</a></li>
         <li><a href="docs/zh_CN/PAIMode.md">OpenPAI</a></li>
         <li><a href="docs/zh_CN/KubeflowMode.md">Kubeflow</a></li>
@@ -116,7 +117,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
-    git clone -b v0.5.2 https://github.com/Microsoft/nni.git
+    git clone -b v0.6 https://github.com/Microsoft/nni.git
     cd nni  
     source install.sh   
 ```
@@ -130,7 +131,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 * 通过克隆源代码下载示例。 
 
 ```bash
-    git clone -b v0.5.2 https://github.com/Microsoft/nni.git
+    git clone -b v0.6 https://github.com/Microsoft/nni.git
 ```
 
 * 运行 mnist 示例。
@@ -193,7 +194,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **教程**
 
-* [在本机运行 Experiment (支持多 GPU 卡)](docs/zh_CN/tutorial_1_CR_exp_local_api.md)
+* [在本机运行 Experiment (支持多 GPU 卡)](docs/zh_CN/LocalMode.md)
 * [在多机上运行 Experiment](docs/zh_CN/RemoteMachineMode.md)
 * [在 OpenPAI 上运行 Experiment](docs/zh_CN/PAIMode.md)
 * [在 Kubeflow 上运行 Experiment。](docs/zh_CN/KubeflowMode.md)

@@ -109,7 +109,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                             obj = temp.hyperPara;
                         }
                         return '<div class="tooldetailAccuracy">' +
-                            '<div>Trial Id: ' + trialId + '</div>' +
+                            '<div>Trial ID: ' + trialId + '</div>' +
                             '<div>Intermediate: ' + data.data + '</div>' +
                             '<div>Parameters: ' +
                             '<pre>' + JSON.stringify(obj, null, 4) + '</pre>' +
@@ -252,7 +252,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                                     />
                                 </Col>
                                 <Col className="range" span={10}>
-                                    <span>Intermediate Result</span>
+                                    <span>Intermediate result</span>
                                     <input
                                         placeholder="number"
                                         ref={input => this.minValInput = input}

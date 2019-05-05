@@ -2,15 +2,18 @@
 
 ## Installation
 
-We support Linux and MacOS in current stage, Ubuntu 16.04 or higher and MacOS 10.14.1 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
-
+We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+#### Linux and MacOS
 ```bash
     python3 -m pip install --upgrade nni
 ```
-
+#### Windows
+```bash
+    python -m pip install --upgrade nni
+```
 Note:
 
-* `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
+* For Linux and MacOS `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
 * If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
 * For the `system requirements` of NNI, please refer to [Install NNI](Installation.md)
 
@@ -124,15 +127,26 @@ trial:
   codeDir: .
   gpuNum: 0
 ```
+Note:
+* **For Windows, you need to change trial command `python3` to `python`**
 
 *Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
 All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
 
+If you choose Windows local mode and use powershell to run script for the first time, you need run powershell as administrator with this command
+```bash
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
 When these things are done, **run the config.yml file from your command line to start the experiment**.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
+```
+If you use windows local mode and forget to change the trial command `python3` to `python` in config.yml, **then run the config_windows.yml file from your command line to start the experiment**.
+
+```bash
+    nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
 Note: **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](NNICTLDOC.md) for more usage of `nnictl`
@@ -225,7 +239,7 @@ Below is the status of the all trials. Specifically:
 * [Try different Assessors](Builtin_Assessors.md)
 * [How to use command line tool nnictl](NNICTLDOC.md)
 * [How to write a trial](Trials.md)
-* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
+* [How to run an experiment on local (with multiple GPUs)?](LocalMode.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
 * [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)

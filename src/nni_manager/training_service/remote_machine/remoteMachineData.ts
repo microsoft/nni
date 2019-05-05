@@ -19,12 +19,11 @@
 
 'use strict';
 
-import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
-import { GPUSummary } from '../common/gpuData';
+import * as fs from 'fs';
 import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
-import * as fs from 'fs';
-
+import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { GPUSummary } from '../common/gpuData';
 
 /**
  * Metadata of remote machine for configuration and statuc query
@@ -37,11 +36,12 @@ export class RemoteMachineMeta {
     public readonly sshKeyPath?: string;
     public readonly passphrase?: string;
     public gpuSummary : GPUSummary | undefined;
-    /* GPU Reservation info, the key is GPU index, the value is the job id which reserves this GPU*/
+    // GPU Reservation info, the key is GPU index, the value is the job id which reserves this GPU
     public gpuReservation : Map<number, string>;
+    public readonly gpuIndices?: string;
 
-    constructor(ip : string, port : number, username : string, passwd : string, 
-        sshKeyPath : string, passphrase : string) {
+    constructor(ip : string, port : number, username : string, passwd : string,
+                sshKeyPath: string, passphrase : string, gpuIndices?: string) {
         this.ip = ip;
         this.port = port;
         this.username = username;
@@ -49,6 +49,19 @@ export class RemoteMachineMeta {
         this.sshKeyPath = sshKeyPath;
         this.passphrase = passphrase;
         this.gpuReservation = new Map<number, string>();
+        this.gpuIndices = gpuIndices;
+    }
+}
+
+export function parseGpuIndices(gpuIndices?: string): Set<number> | undefined {
+    if (gpuIndices !== undefined) {
+        const indices: number[] = gpuIndices.split(',')
+            .map((x: string) => parseInt(x, 10));
+        if (indices.length > 0) {
+            return new Set(indices);
+        } else {
+            throw new Error('gpuIndices can not be empty if specified.');
+        }
     }
 }
 
@@ -250,7 +263,7 @@ export NNI_PLATFORM=remote NNI_SYS_DIR={0} NNI_OUTPUT_DIR={1} NNI_TRIAL_JOB_ID={
 cd $NNI_SYS_DIR
 sh install_nni.sh
 echo $$ >{6}
-python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' --version '{10}' --log_collection '{11}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
+python3 -m nni_trial_tool.trial_keeper --trial_command '{7}' --nnimanager_ip '{8}' --nnimanager_port '{9}' --nni_manager_version '{10}' --log_collection '{11}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
 echo $? \`date +%s%3N\` >{12}`;
 
 export const HOST_JOB_SHELL_FORMAT: string =
@@ -259,11 +272,3 @@ cd {0}
 echo $$ >{1}
 eval {2} >stdout 2>stderr
 echo $? \`date +%s%3N\` >{3}`;
-
-export const GPU_COLLECTOR_FORMAT: string = 
-`
-#!/bin/bash
-export METRIC_OUTPUT_DIR={0}
-echo $$ >{1}
-python3 -m nni_gpu_tool.gpu_metrics_collector
-`
