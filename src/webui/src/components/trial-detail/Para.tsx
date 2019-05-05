@@ -17,14 +17,13 @@ interface ParaState {
     swapAxisArr: Array<string>;
     percent: number;
     paraNodata: string;
-    barColorMax: number;
-    barColorMin: number;
+    max: number; // graph color bar limit
+    min: number;
 }
 
 interface ParaProps {
     dataSource: Array<TableObj>;
     expSearchSpace: string;
-    defaultMetric: Array<number> | undefined;
 }
 
 message.config({
@@ -58,16 +57,8 @@ class Para extends React.Component<ParaProps, ParaState> {
             swapAxisArr: [],
             percent: 0,
             paraNodata: '',
-            barColorMax: this.props.defaultMetric !== undefined
-                ?
-                this.props.defaultMetric[1]
-                :
-                1,
-            barColorMin: this.props.defaultMetric !== undefined
-                ?
-                this.props.defaultMetric[0]
-                :
-                1
+            min: 0,
+            max: 1
         };
     }
 
@@ -107,7 +98,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                         parallelAxis.push({
                             dim: i,
                             name: dimName[i],
-                            max: searchKey._value[0],
+                            max: searchKey._value[0] - 1,
                             min: 0
                         });
                         break;
@@ -217,7 +208,11 @@ class Para extends React.Component<ParaProps, ParaState> {
                 eachTrialParams.push(temp.description.parameters);
             }
         });
-        this.getParallelAxis(dimName, searchRange, accPara, eachTrialParams, paraYdata);
+        if (this._isMounted) {
+            this.setState({ max: Math.max(...accPara), min: Math.min(...accPara) }, () => {
+                this.getParallelAxis(dimName, searchRange, accPara, eachTrialParams, paraYdata);
+            });
+        }
     }
 
     // get percent value number
@@ -233,11 +228,11 @@ class Para extends React.Component<ParaProps, ParaState> {
 
     // deal with response data into pic data
     getOption = (dataObj: ParaObj) => {
-        const {barColorMax, barColorMin} = this.state;
+        const { max, min } = this.state;
         let parallelAxis = dataObj.parallelAxis;
         let paralleData = dataObj.data;
         let visualMapObj = {};
-        if (barColorMax === barColorMin) {
+        if (max === min) {
             visualMapObj = {
                 type: 'continuous',
                 precision: 3,
@@ -248,8 +243,8 @@ class Para extends React.Component<ParaProps, ParaState> {
                 bottom: '20px',
                 type: 'continuous',
                 precision: 3,
-                min: barColorMin,
-                max: barColorMax,
+                min: min,
+                max: max,
                 color: ['#CA0000', '#FFC400', '#90EE90']
             };
         }
@@ -379,12 +374,6 @@ class Para extends React.Component<ParaProps, ParaState> {
     componentWillReceiveProps(nextProps: ParaProps) {
         const dataSource = nextProps.dataSource;
         const expSearchSpace = nextProps.expSearchSpace;
-        const metricMax = nextProps.defaultMetric !== undefined
-            ?
-            nextProps.defaultMetric[1]
-            :
-            1;
-        this.setState({ barColorMax: metricMax });
         this.hyperParaPic(dataSource, expSearchSpace);
 
     }
@@ -401,7 +390,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                     <Col span={6} />
                     <Col span={18}>
                         <Row className="meline">
-                            <span>top</span>
+                            <span>Top</span>
                             <Select
                                 style={{ width: '20%', marginRight: 10 }}
                                 placeholder="100%"

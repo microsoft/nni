@@ -392,6 +392,13 @@ machineList:
 
       __image__ set the image to be used in __worker__.
 
+* __localConfig__
+
+  __localConfig__ is applicable only if __trainingServicePlatform__ is set to `local`, otherwise there should not be __localConfig__ section in configuration file.
+  * __gpuIndices__
+  
+    __gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
+
 * __machineList__
 
   __machineList__ should be set if __trainingServicePlatform__ is set to remote, or it should be empty.
@@ -421,6 +428,10 @@ machineList:
   * __passphrase__
 
     __passphrase__ is used to protect ssh key, which could be empty if users don't have passphrase.
+
+  * __gpuIndices__
+  
+    __gpuIndices__ is used to specify designated GPU devices for NNI on this remote machine, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
 
 * __kubeflowConfig__:
 

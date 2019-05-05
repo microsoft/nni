@@ -76,6 +76,12 @@ class MultiPhaseTuner(Recoverable):
         """
         raise NotImplementedError('Tuner: update_search_space not implemented')
 
+    def import_data(self, data):
+        """Import additional data for tuning
+        data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        pass
+
     def load_checkpoint(self):
         """Load the checkpoint of tuner.
         path: checkpoint directory for tuner
@@ -94,4 +100,7 @@ class MultiPhaseTuner(Recoverable):
         pass
 
     def _on_error(self):
+        pass
+
+    def import_data(self, data):
         pass

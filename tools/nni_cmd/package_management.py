@@ -20,17 +20,18 @@
 
 import nni
 import os
+import sys
 from subprocess import call
 from .constants import PACKAGE_REQUIREMENTS
 from .common_utils import print_normal, print_error
+from .command_utils import install_requirements_command
 
 def process_install(package_name):
     if PACKAGE_REQUIREMENTS.get(package_name) is None:
         print_error('{0} is not supported!' % package_name)
     else:
         requirements_path = os.path.join(nni.__path__[0], PACKAGE_REQUIREMENTS[package_name])
-        cmds = 'cd ' + requirements_path + ' && python3 -m pip install --user -r requirements.txt'
-        call(cmds, shell=True)
+        install_requirements_command(requirements_path)
 
 def package_install(args):
     '''install packages'''

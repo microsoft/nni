@@ -60,6 +60,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                             const trialConcurrency = experimentFile.params.trialConcurrency;
                             if (userInputVal !== undefined) {
                                 if (userInputVal === trialConcurrency.toString() || userInputVal === '0') {
+                                    message.destroy();
                                     message.info(
                                         `trialConcurrency's value is ${trialConcurrency}, you did not modify it`, 2);
                                 } else {
@@ -76,6 +77,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                         }
                                     }).then(res => {
                                         if (res.status === 200) {
+                                            message.destroy();
                                             message.success(`Update ${CONTROLTYPE[1].toLocaleLowerCase()} 
                                             successfully`);
                                             // rerender trial profile message
@@ -83,16 +85,16 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                             updateFile();
                                         }
                                     })
-                                    .catch(error => {
-                                        if (error.response.status === 500) {
-                                            if (error.response.data.error) {
-                                                message.error(error.response.data.error);
-                                            } else {
-                                                message.error(
-                                                    `Update ${CONTROLTYPE[1].toLocaleLowerCase()} failed`);
+                                        .catch(error => {
+                                            if (error.response.status === 500) {
+                                                if (error.response.data.error) {
+                                                    message.error(error.response.data.error);
+                                                } else {
+                                                    message.error(
+                                                        `Update ${CONTROLTYPE[1].toLocaleLowerCase()} failed`);
+                                                }
                                             }
-                                        }
-                                    });
+                                        });
                                     // btn -> edit
                                     this.setState(() => ({
                                         btnName: 'Edit',
@@ -159,13 +161,14 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
         const bar2Percent = (bar2 / trialProfile.MaxTrialNum) * 100;
         const percent = (trialProfile.execDuration / trialProfile.maxDuration) * 100;
         const runDuration = convertTime(trialProfile.execDuration);
+        const temp = trialProfile.maxDuration - trialProfile.execDuration;
         let remaining;
-        if (status === 'DONE') {
+        let errorContent;
+        if (temp < 0) {
             remaining = '0';
         } else {
-            remaining = convertTime(trialProfile.maxDuration - trialProfile.execDuration);
+            remaining = convertTime(temp);
         }
-        let errorContent;
         if (errors !== '') {
             errorContent = (
                 <div className="errors">
@@ -200,23 +203,35 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                     percent={percent}
                     description={runDuration}
                     bgclass={status}
-                    maxString={`MaxDuration: ${convertTime(trialProfile.maxDuration)}`}
+                    maxString={`Max duration: ${convertTime(trialProfile.maxDuration)}`}
                 />
                 <ProgressBar
-                    who="TrialNum"
+                    who="Trial numbers"
                     percent={bar2Percent}
                     description={bar2.toString()}
                     bgclass={status}
-                    maxString={`MaxTrialNumber: ${trialProfile.MaxTrialNum}`}
+                    maxString={`Max trial number: ${trialProfile.MaxTrialNum}`}
                 />
                 <Row className="basic colorOfbasic mess">
-                    <Col span={10}>
-                        <p>best metric</p>
-                        <div>{bestAccuracy.toFixed(6)}</div>
+                    <p>Best metric</p>
+                    <div>{bestAccuracy.toFixed(6)}</div>
+                </Row>
+                <Row className="mess">
+                    <Col span={6}>
+                        <Row className="basic colorOfbasic">
+                            <p>Spent</p>
+                            <div>{convertTime(trialProfile.execDuration)}</div>
+                        </Row>
                     </Col>
-                    <Col span={14}>
+                    <Col span={6}>
+                        <Row className="basic colorOfbasic">
+                            <p>Remaining</p>
+                            <div className="time">{remaining}</div>
+                        </Row>
+                    </Col>
+                    <Col span={12}>
                         {/* modify concurrency */}
-                        <p>concurrency</p>
+                        <p>Concurrency</p>
                         <Row className="inputBox">
                             <input
                                 type="number"
@@ -243,44 +258,31 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                     </Col>
                 </Row>
                 <Row className="mess">
-                    <Col span={8}>
+                    <Col span={6}>
                         <Row className="basic colorOfbasic">
-                            <p>spent</p>
-                            <div>{convertTime(trialProfile.execDuration)}</div>
-                        </Row>
-                    </Col>
-                    <Col span={9}>
-                        <Row className="basic colorOfbasic">
-                            <p>remaining</p>
-                            <div>{remaining}</div>
-                        </Row>
-                    </Col>
-                    <Col span={7}>
-                        <Row className="basic colorOfbasic">
-                            <p>running</p>
+                            <p>Running</p>
                             <div>{trialNumber.runTrial}</div>
                         </Row>
                     </Col>
-                </Row>
-                <Row className="mess">
-                    <Col span={8}>
+                    <Col span={6}>
                         <Row className="basic colorOfbasic">
-                            <p>succeed</p>
+                            <p>Succeeded</p>
                             <div>{trialNumber.succTrial}</div>
                         </Row>
                     </Col>
-                    <Col span={9}>
+                    <Col span={6}>
                         <Row className="basic">
-                            <p>stopped</p>
+                            <p>Stopped</p>
                             <div>{trialNumber.stopTrial}</div>
                         </Row>
                     </Col>
-                    <Col span={7}>
+                    <Col span={6}>
                         <Row className="basic">
-                            <p>failed</p>
+                            <p>Failed</p>
                             <div>{trialNumber.failTrial}</div>
                         </Row>
                     </Col>
+
                 </Row>
             </Row>
         );

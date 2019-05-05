@@ -28,17 +28,17 @@ import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { LocalTrainingServiceForGPU } from '../local/localTrainingServiceForGPU';
+import { LocalTrainingService } from '../local/localTrainingService';
 
 // TODO: copy mockedTrail.py to local folder
-const localCodeDir: string = tmp.dirSync().name
+const localCodeDir: string = tmp.dirSync().name.split('\\').join('\\\\');
 const mockedTrialPath: string = './training_service/test/mockedTrial.py'
 fs.copyFileSync(mockedTrialPath, localCodeDir + '/mockedTrial.py')
 
 describe('Unit Test for LocalTrainingService', () => {
     let trialConfig: any = `{"command":"sleep 1h && echo hello","codeDir":"${localCodeDir}","gpuNum":1}`
 
-    let localTrainingService: LocalTrainingServiceForGPU;
+    let localTrainingService: LocalTrainingService;
 
     before(() => {
         chai.should();
@@ -51,7 +51,7 @@ describe('Unit Test for LocalTrainingService', () => {
     });
 
     beforeEach(() => {
-        localTrainingService = component.get(LocalTrainingServiceForGPU);
+        localTrainingService = component.get(LocalTrainingService);
         localTrainingService.run();
     });
 

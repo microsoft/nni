@@ -24,14 +24,17 @@ gridsearch_tuner.py including:
 
 import copy
 import numpy as np
+import logging
 
 import nni
 from nni.tuner import Tuner
+from nni.utils import convert_dict2tuple
 
 TYPE = '_type'
 CHOICE = 'choice'
 VALUE = '_value'
 
+logger = logging.getLogger('grid_search_AutoML')
 
 class GridSearchTuner(Tuner):
     '''
@@ -51,6 +54,7 @@ class GridSearchTuner(Tuner):
     def __init__(self):
         self.count = -1
         self.expanded_search_space = []
+        self.supplement_data = dict()
 
     def json2paramater(self, ss_spec):
         '''
@@ -135,9 +139,36 @@ class GridSearchTuner(Tuner):
 
     def generate_parameters(self, parameter_id):
         self.count += 1
-        if self.count > len(self.expanded_search_space)-1:
-            raise nni.NoMoreTrialError('no more parameters now.')
-        return self.expanded_search_space[self.count]
+        while (self.count <= len(self.expanded_search_space)-1):
+            _params_tuple = convert_dict2tuple(self.expanded_search_space[self.count])
+            if _params_tuple in self.supplement_data:
+                self.count += 1
+            else:
+                return self.expanded_search_space[self.count]
+        raise nni.NoMoreTrialError('no more parameters now.')
 
     def receive_trial_result(self, parameter_id, parameters, value):
         pass
+
+    def import_data(self, data):
+        """Import additional data for tuning
+
+        Parameters
+        ----------
+        data:
+            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        _completed_num = 0
+        for trial_info in data:
+            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
+            _completed_num += 1
+            assert "parameter" in trial_info
+            _params = trial_info["parameter"]
+            assert "value" in trial_info
+            _value = trial_info['value']
+            if not _value:
+                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                continue
+            _params_tuple = convert_dict2tuple(_params)
+            self.supplement_data[_params_tuple] = True
+        logger.info("Successfully import data to grid search tuner.")

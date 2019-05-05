@@ -35,10 +35,10 @@ import {
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
-import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getLogLevel } from '../common/utils';
+import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
     ADD_CUSTOMIZED_TRIAL_JOB, INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
-    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE
+    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, IpcInterface } from './ipcInterface';
 
@@ -97,6 +97,17 @@ class NNIManager implements Manager {
         }
 
         return this.storeExperimentProfile();
+    }
+
+    public importData(data: string): Promise<void> {
+        if (this.dispatcher === undefined) {
+            return Promise.reject(
+                new Error('tuner has not been setup')
+            );
+        }
+        this.dispatcher.sendCommand(IMPORT_DATA, data);
+
+        return this.dataStore.storeTrialJobEvent('IMPORT_DATA', '', data);
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<void> {
@@ -290,12 +301,7 @@ class NNIManager implements Manager {
             NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv
         };
         let newEnv = Object.assign({}, process.env, nniEnv);
-        const tunerProc: ChildProcess = spawn(command, [], {
-            stdio,
-            cwd: newCwd,
-            env: newEnv,
-            shell: true
-        });
+        const tunerProc: ChildProcess = getTunerProc(command,stdio,newCwd,newEnv);
         this.dispatcherPid = tunerProc.pid;
         this.dispatcher = createDispatcherInterface(tunerProc);
 
@@ -341,16 +347,10 @@ class NNIManager implements Manager {
         // gracefully terminate tuner and assessor here, wait at most 30 seconds.
         for (let i: number = 0; i < 30; i++) {
             if (!tunerAlive) { break; }
-            try {
-                await cpp.exec(`kill -0 ${this.dispatcherPid}`);
-            } catch (error) { tunerAlive = false; }
+            tunerAlive = await isAlive(this.dispatcherPid);
             await delay(1000);
         }
-        try {
-            await cpp.exec(`kill ${this.dispatcherPid}`);
-        } catch (error) {
-            // this.tunerPid does not exist, do nothing here
-        }
+        await killPid(this.dispatcherPid);
         const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
         // TO DO: to promise all
         for (const trialJob of trialJobList) {

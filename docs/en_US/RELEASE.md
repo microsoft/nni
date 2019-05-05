@@ -1,5 +1,49 @@
 # ChangeLog
 
+## Release 0.7 - 4/29/2018
+
+### Major Features
+* [Support NNI on Windows](./WindowsLocalMode.md)
+    * NNI running on windows for local mode
+* [New advisor: BOHB](./bohbAdvisor.md)
+    * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
+* [Support import and export experiment data through nnictl](./NNICTLDOC.md#experiment)
+    * Generate analysis results report after the experiment execution
+    * Support import data to tuner and advisor for tuning
+* [Designated gpu devices for NNI trial jobs](./ExperimentConfig.md#localConfig)
+    * Specify GPU devices for NNI trial jobs by gpuIndices configuration, if gpuIndices is set in experiment configuration file, only the specified GPU devices are used for NNI trial jobs.
+* Web Portal enhancement
+    * Decimal format of metrics other than default on the Web UI
+    * Hints in WebUI about Multi-phase
+    * Enable copy/paste for hyperparameters as python dict
+    * Enable early stopped trials data for tuners.
+* NNICTL provide better error message
+    * nnictl provide more meaningful error message for yaml file format error
+
+### Bug fix
+* Unable to kill all python threads after nnictl stop in async dispatcher mode
+* nnictl --version does not work with make dev-instal
+* All trail jobs status stays on 'waiting' for long time on PAI platform
+
+## Release 0.6 - 4/2/2019
+### Major Features
+* [Version checking](https://github.com/Microsoft/nni/blob/master/docs/en_US/PAIMode.md#version-check)
+	* check whether the version is consistent between nniManager and trialKeeper
+* [Report final metrics for early stop job](https://github.com/Microsoft/nni/issues/776)
+	* If includeIntermediateResults is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of includeIntermediateResults is false.
+* [Separate Tuner/Assessor](https://github.com/Microsoft/nni/issues/841)
+	* Adds two pipes to separate message receiving channels for tuner and assessor.
+* Make log collection feature configurable
+* Add intermediate result graph for all trials
+
+### Bug fix
+* [Add shmMB config key for PAI](https://github.com/Microsoft/nni/issues/842)
+* Fix the bug that doesn't show any result if metrics is dict
+* Fix the number calculation issue for float types in hyperband
+* Fix a bug in the search space conversion in SMAC tuner
+* Fix the WebUI issue when parsing experiment.json with illegal format
+* Fix cold start issue in Metis Tuner
+
 ## Release 0.5.2 - 3/4/2019
 ### Improvements
 * Curve fitting assessor performance improvement.

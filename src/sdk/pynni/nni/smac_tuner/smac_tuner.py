@@ -261,3 +261,6 @@ class SMACTuner(Tuner):
                 params.append(self.convert_loguniform_categorical(challenger.get_dictionary()))
                 cnt += 1
         return params
+
+    def import_data(self, data):
+        pass
