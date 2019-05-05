@@ -73,8 +73,13 @@ class GPUScheduler {
 
     public getAvailableGPUIndices(): number[] {
         if (this.gpuSummary !== undefined) {
-            return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => info.activeProcessNum === 0)
-                .map((info: GPUInfo) => info.index);
+            if(process.platform === 'win32') {
+                return this.gpuSummary.gpuInfos.map((info: GPUInfo) => info.index);
+            }
+            else{
+                return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => info.activeProcessNum === 0)
+                    .map((info: GPUInfo) => info.index);
+            }
         }
 
         return [];
