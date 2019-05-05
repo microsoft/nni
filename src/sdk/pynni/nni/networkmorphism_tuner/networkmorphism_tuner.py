@@ -23,9 +23,10 @@ import os
 
 
 from nni.tuner import Tuner
+from nni.utils import OptimizeMode
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
 from nni.networkmorphism_tuner.nn import CnnGenerator, MlpGenerator
-from nni.networkmorphism_tuner.utils import Constant, OptimizeMode
+from nni.networkmorphism_tuner.utils import Constant
 
 from nni.networkmorphism_tuner.graph import graph_to_json, json_to_graph
 

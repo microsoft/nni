@@ -17,38 +17,22 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
+"""
 hyperopt_tuner.py
-'''
+"""
 
 import copy
 import logging
 
-from enum import Enum, unique
+import hyperopt as hp
 import numpy as np
 
-import hyperopt as hp
 from nni.tuner import Tuner
+from nni.utils import NodeType, OptimizeMode, split_index
 
 logger = logging.getLogger('hyperopt_AutoML')
 
-
-@unique
-class OptimizeMode(Enum):
-    """
-    Optimize Mode including Minimize and Maximize
-    """
-    Minimize = 'minimize'
-    Maximize = 'maximize'
-
-
-ROOT = 'root'
-TYPE = '_type'
-VALUE = '_value'
-INDEX = '_index'
-
-
-def json2space(in_x, name=ROOT):
+def json2space(in_x, name=NodeType.Root.Value):
     """
     Change json to search space in hyperopt.
 
@@ -57,14 +41,14 @@ def json2space(in_x, name=ROOT):
     in_x : dict/list/str/int/float
         The part of json.
     name : str
-        name could be ROOT, TYPE, VALUE or INDEX.
+        name could be NodeType.ROOT, NodeType.TYPE, NodeType.VALUE or NodeType.INDEX, NodeType.NAME.
     """
     out_y = copy.deepcopy(in_x)
     if isinstance(in_x, dict):
-        if TYPE in in_x.keys():
-            _type = in_x[TYPE]
+        if NodeType.TYPE in in_x.keys():
+            _type = in_x[NodeType.TYPE]
             name = name + '-' + _type
-            _value = json2space(in_x[VALUE], name=name)
+            _value = json2space(in_x[NodeType.VALUE], name=name)
             if _type == 'choice':
                 out_y = eval('hp.hp.'+_type)(name, _value)
             else:
@@ -83,21 +67,20 @@ def json2space(in_x, name=ROOT):
         logger.info('in_x is not a dict or a list in json2space fuinction %s', str(in_x))
     return out_y
 
-
-def json2parameter(in_x, parameter, name=ROOT):
+def json2parameter(in_x, parameter, name=NodeType.ROOT):
     """
     Change json to parameters.
     """
     out_y = copy.deepcopy(in_x)
     if isinstance(in_x, dict):
-        if TYPE in in_x.keys():
-            _type = in_x[TYPE]
+        if NodeType.TYPE in in_x.keys():
+            _type = in_x[NodeType.TYPE]
             name = name + '-' + _type
             if _type == 'choice':
                 _index = parameter[name]
                 out_y = {
-                    INDEX: _index,
-                    VALUE: json2parameter(in_x[VALUE][_index], parameter, name=name+'[%d]' % _index)
+                    NodeType.INDEX: _index,
+                    NodeType.VALUE: json2parameter(in_x[NodeType.VALUE][_index], parameter, name=name+'[%d]' % _index)
                 }
             else:
                 out_y = parameter[name]
@@ -115,21 +98,21 @@ def json2parameter(in_x, parameter, name=ROOT):
     return out_y
 
 
-def json2vals(in_x, vals, out_y, name=ROOT):
+def json2vals(in_x, vals, out_y, name=NodeType.ROOT):
     if isinstance(in_x, dict):
-        if TYPE in in_x.keys():
-            _type = in_x[TYPE]
+        if NodeType.TYPE in in_x.keys():
+            _type = in_x[NodeType.TYPE]
             name = name + '-' + _type
 
             try:
-                out_y[name] = vals[INDEX]
+                out_y[name] = vals[NodeType.INDEX]
             # TODO - catch exact Exception
             except Exception:
                 out_y[name] = vals
 
             if _type == 'choice':
-                _index = vals[INDEX]
-                json2vals(in_x[VALUE][_index], vals[VALUE],
+                _index = vals[NodeType.INDEX]
+                json2vals(in_x[NodeType.VALUE][_index], vals[NodeType.VALUE],
                           out_y, name=name + '[%d]' % _index)
         else:
             for key in in_x.keys():
@@ -137,21 +120,6 @@ def json2vals(in_x, vals, out_y, name=ROOT):
     elif isinstance(in_x, list):
         for i, temp in enumerate(in_x):
             json2vals(temp, vals[i], out_y, name + '[%d]' % i)
-
-
-def _split_index(params):
-    """
-    Delete index infromation from params
-    """
-    result = {}
-    for key in params:
-        if isinstance(params[key], dict):
-            value = params[key][VALUE]
-        else:
-            value = params[key]
-        result[key] = value
-    return result
-
 
 class HyperoptTuner(Tuner):
     """
@@ -267,7 +235,7 @@ class HyperoptTuner(Tuner):
         json2vals(self.json, vals, out_y)
         vals = out_y
         for key in domain.params:
-            if key in [VALUE, INDEX]:
+            if key in [NodeType.VALUE, NodeType.INDEX]:
                 continue
             if key not in vals or vals[key] is None or vals[key] == []:
                 idxs[key] = vals[key] = []

@@ -142,10 +142,16 @@ def parse_init_json(data):
     params = {}
     for key in data:
         value = data[key]
-        if value == 'Empty':
+        layer_name = value["_name"]
+        if layer_name == 'Empty':
+            # Empty Layer
             params[key] = ['Empty']
+        elif layer_name == 'Conv':
+            # Conv layer
+            params[key] = [layer_name, value['kernel_size'], value['kernel_size']]
         else:
-            params[key] = [value[0], value[1]['_value'], value[1]['_value']]
+            # Pooling Layer
+            params[key] = [layer_name, value['pooling_size'], value['pooling_size']]
     return params
 
 

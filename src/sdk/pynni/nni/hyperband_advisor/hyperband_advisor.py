@@ -32,6 +32,7 @@ import json_tricks
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger
+from nni.utils import NodeType, OptimizeMode
 from .. import parameter_expressions
 
 _logger = logging.getLogger(__name__)
@@ -40,11 +41,6 @@ _next_parameter_id = 0
 _KEY = 'STEPS'
 _epsilon = 1e-6
 
-@unique
-class OptimizeMode(Enum):
-    """Oprimize Mode class"""
-    Minimize = 'minimize'
-    Maximize = 'maximize'
 
 def create_parameter_id():
     """Create an id
@@ -98,12 +94,12 @@ def json2paramater(ss_spec, random_state):
         Parameters in this experiment
     """
     if isinstance(ss_spec, dict):
-        if '_type' in ss_spec.keys():
-            _type = ss_spec['_type']
-            _value = ss_spec['_value']
+        if NodeType.TYPE in ss_spec.keys():
+            _type = ss_spec[NodeType.TYPE]
+            _value = ss_spec[NodeType.VALUE]
             if _type == 'choice':
                 _index = random_state.randint(len(_value))
-                chosen_params = json2paramater(ss_spec['_value'][_index], random_state)
+                chosen_params = json2paramater(ss_spec[NodeType.VALUE][_index], random_state)
             else:
                 chosen_params = eval('parameter_expressions.' + # pylint: disable=eval-used
                                      _type)(*(_value + [random_state]))

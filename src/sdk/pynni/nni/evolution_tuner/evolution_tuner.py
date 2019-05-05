@@ -18,61 +18,33 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-evolution_tuner.py including:
-    class OptimizeMode
-    class Individual
-    class EvolutionTuner
+evolution_tuner.py
 """
 
 import copy
-from enum import Enum, unique
 import random
 
 import numpy as np
-
 from nni.tuner import Tuner
+from nni.utils import NodeType, OptimizeMode, split_index
+
 from .. import parameter_expressions
 
-
-@unique
-class OptimizeMode(Enum):
-    """Optimize Mode class
-
-    if OptimizeMode is 'minimize', it means the tuner need to minimize the reward
-    that received from Trial.
-
-    if OptimizeMode is 'maximize', it means the tuner need to maximize the reward
-    that received from Trial.
-    """
-    Minimize = 'minimize'
-    Maximize = 'maximize'
-
-
-@unique
-class NodeType(Enum):
-    """Node Type class
-    """
-    Root = 'root'
-    Type = '_type'
-    Value = '_value'
-    Index = '_index'
-
-
-def json2space(x, oldy=None, name=NodeType.Root.value):
+def json2space(x, oldy=None, name=NodeType.ROOT):
     """Change search space from json format to hyperopt format
     """
     y = list()
     if isinstance(x, dict):
-        if NodeType.Type.value in x.keys():
-            _type = x[NodeType.Type.value]
+        if NodeType.TYPE in x.keys():
+            _type = x[NodeType.TYPE]
             name = name + '-' + _type
             if _type == 'choice':
                 if oldy != None:
-                    _index = oldy[NodeType.Index.value]
-                    y += json2space(x[NodeType.Value.value][_index],
-                                    oldy[NodeType.Value.value], name=name+'[%d]' % _index)
+                    _index = oldy[NodeType.INDEX]
+                    y += json2space(x[NodeType.VALUE][_index],
+                                    oldy[NodeType.VALUE], name=name+'[%d]' % _index)
                 else:
-                    y += json2space(x[NodeType.Value.value], None, name=name)
+                    y += json2space(x[NodeType.VALUE], None, name=name)
             y.append(name)
         else:
             for key in x.keys():
@@ -86,22 +58,21 @@ def json2space(x, oldy=None, name=NodeType.Root.value):
         pass
     return y
 
-
-def json2paramater(x, is_rand, random_state, oldy=None, Rand=False, name=NodeType.Root.value):
+def json2parameter(x, is_rand, random_state, oldy=None, Rand=False, name=NodeType.ROOT):
     """Json to pramaters.
     """
     if isinstance(x, dict):
-        if NodeType.Type.value in x.keys():
-            _type = x[NodeType.Type.value]
-            _value = x[NodeType.Value.value]
+        if NodeType.TYPE in x.keys():
+            _type = x[NodeType.TYPE]
+            _value = x[NodeType.VALUE]
             name = name + '-' + _type
             Rand |= is_rand[name]
             if Rand is True:
                 if _type == 'choice':
                     _index = random_state.randint(len(_value))
                     y = {
-                        NodeType.Index.value: _index,
-                        NodeType.Value.value: json2paramater(x[NodeType.Value.value][_index],
+                        NodeType.INDEX: _index,
+                        NodeType.VALUE: json2parameter(x[NodeType.VALUE][_index],
                                                              is_rand,
                                                              random_state,
                                                              None,
@@ -116,38 +87,16 @@ def json2paramater(x, is_rand, random_state, oldy=None, Rand=False, name=NodeTyp
         else:
             y = dict()
             for key in x.keys():
-                y[key] = json2paramater(x[key], is_rand, random_state, oldy[key]
+                y[key] = json2parameter(x[key], is_rand, random_state, oldy[key]
                                         if oldy != None else None, Rand, name + "[%s]" % str(key))
     elif isinstance(x, list):
         y = list()
         for i, x_i in enumerate(x):
-            y.append(json2paramater(x_i, is_rand, random_state, oldy[i]
+            y.append(json2parameter(x_i, is_rand, random_state, oldy[i]
                                     if oldy != None else None, Rand, name + "[%d]" % i))
     else:
         y = copy.deepcopy(x)
     return y
-
-
-def _split_index(params):
-    """Delete index information from params
-
-    Parameters
-    ----------
-    params : dict
-
-    Returns
-    -------
-    result : dict
-    """
-    result = {}
-    for key in params:
-        if isinstance(params[key], dict):
-            value = params[key]['_value']
-        else:
-            value = params[key]
-        result[key] = value
-    return result
-
 
 class Individual(object):
     """
