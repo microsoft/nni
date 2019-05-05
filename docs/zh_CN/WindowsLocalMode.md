@@ -37,7 +37,7 @@ When these things are done, run the **config_windows.yml** file from your comman
 
 同样，其它示例的 YAML 配置中也需将 Trial 命令的 `python3` 替换为 `python`。
 
-## **Frequent met errors and answers**
+## **FAQ**
 
 ### 安装 NNI 时出现 simplejson 错误
 
