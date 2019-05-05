@@ -30,7 +30,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
   powershell ./install.ps1
   ```
 
-When these things are done, run the **config_windows.yml** file from your command line to start the experiment.
+When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
 
 ```bash
 nnictl create --config nni/examples/trials/mnist/config_windows.yml

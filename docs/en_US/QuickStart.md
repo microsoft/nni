@@ -143,7 +143,7 @@ When these things are done, **run the config.yml file from your command line to 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
-If you use windows local mode and forget to change the trial command `python3` to `python` in config.yml, **then run the config_windows.yml file from your command line to start the experiment**.
+If you're using windows local mode, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
