@@ -5,12 +5,13 @@ import DefaultMetric from '../public-child/DefaultMetrc';
 import { TableObj } from '../../static/interface';
 import { convertDuration } from '../../static/function';
 import '../../static/style/tableStatus.css';
-import '../../static/style/tableList.scss';
+import '../../static/style/openRow.scss';
 
 interface SuccessTableProps {
     tableSource: Array<TableObj>;
     trainingPlatform: string;
     logCollection: boolean;
+    multiphase: boolean;
 }
 
 class SuccessTable extends React.Component<SuccessTableProps, {}> {
@@ -23,12 +24,13 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
     }
 
     openRow = (record: TableObj) => {
-        const { trainingPlatform, logCollection } = this.props;
+        const { trainingPlatform, logCollection, multiphase } = this.props;
         return (
             <OpenRow
                 trainingPlatform={trainingPlatform}
                 record={record}
                 logCollection={logCollection}
+                multiphase={multiphase}
             />
         );
     }
@@ -52,11 +54,11 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
             width: 140,
             className: 'tableHead'
         }, {
-            title: 'Id',
+            title: 'ID',
             dataIndex: 'id',
             key: 'id',
             width: 60,
-            className: 'tableHead idtitle',
+            className: 'tableHead leftTitle',
             render: (text: string, record: TableObj) => {
                 return (
                     <div>{record.id}</div>
@@ -92,7 +94,7 @@ class SuccessTable extends React.Component<SuccessTableProps, {}> {
                 );
             }
         }, {
-            title: 'Default Metric',
+            title: 'Default metric',
             dataIndex: 'acc',
             key: 'acc',
             sorter: (a: TableObj, b: TableObj) => {

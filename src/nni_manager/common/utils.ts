@@ -411,7 +411,7 @@ async function isAlive(pid:any): Promise<boolean>{
     let alive: boolean = false;
     if(process.platform ==='win32'){
         try {
-            const str = cp.execSync(`powershell.exe Get-Process -Id ${pid}`).toString();
+            const str = cp.execSync(`powershell.exe Get-Process -Id ${pid} -ErrorAction SilentlyContinue`).toString();
             if (str) {
                 alive = true;
             }

@@ -30,13 +30,15 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         const accSource: Array<DetailAccurPoint> = [];
         Object.keys(showSource).map(item => {
             const temp = showSource[item];
-            if (temp.status === 'SUCCEEDED' && temp.acc.default !== undefined) {
-                const searchSpace = temp.description.parameters;
-                accSource.push({
-                    acc: temp.acc.default,
-                    index: temp.sequenceId,
-                    searchSpace: JSON.stringify(searchSpace)
-                });
+            if (temp.status === 'SUCCEEDED' && temp.acc !== undefined) {
+                if (temp.acc.default !== undefined) {
+                    const searchSpace = temp.description.parameters;
+                    accSource.push({
+                        acc: temp.acc.default,
+                        index: temp.sequenceId,
+                        searchSpace: JSON.stringify(searchSpace)
+                    });
+                }
             }
         });
         const resultList: Array<number | string>[] = [];
@@ -63,8 +65,8 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 },
                 formatter: function (data: TooltipForAccuracy) {
                     const result = '<div class="tooldetailAccuracy">' +
-                        '<div>Trial No: ' + data.data[0] + '</div>' +
-                        '<div>Default Metric: ' + data.data[1] + '</div>' +
+                        '<div>Trial No.: ' + data.data[0] + '</div>' +
+                        '<div>Default metric: ' + data.data[1] + '</div>' +
                         '<div>Parameters: ' +
                         '<pre>' + JSON.stringify(data.data[2], null, 4) + '</pre>' +
                         '</div>' +
@@ -77,7 +79,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 type: 'category',
             },
             yAxis: {
-                name: 'Default Metric',
+                name: 'Default metric',
                 type: 'value',
             },
             series: [{

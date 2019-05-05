@@ -40,7 +40,7 @@ def parse_log_path(args, trial_content):
     path_list = []
     host_list = []
     for trial in trial_content:
-        if args.trialid and args.trialid != 'all' and trial.get('id') != args.trialid:
+        if args.trial_id and args.trial_id != 'all' and trial.get('id') != args.trial_id:
             continue
         pattern = r'(?P<head>.+)://(?P<host>.+):(?P<path>.*)'
         match = re.search(pattern,trial['logPath'])
@@ -48,7 +48,7 @@ def parse_log_path(args, trial_content):
             path_list.append(match.group('path'))
             host_list.append(match.group('host'))
     if not path_list:
-        print_error('Trial id %s error!' % args.trialid)
+        print_error('Trial id %s error!' % args.trial_id)
         exit(1)
     return path_list, host_list
 
@@ -154,7 +154,7 @@ def start_tensorboard(args):
     if not trial_content:
         print_error('No trial information!')
         exit(1)
-    if len(trial_content) > 1 and not args.trialid:
+    if len(trial_content) > 1 and not args.trial_id:
         print_error('There are multiple trials, please set trial id!')
         exit(1)
     experiment_id = nni_config.get_config('experimentId')

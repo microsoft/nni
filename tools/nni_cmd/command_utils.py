@@ -1,6 +1,8 @@
 from subprocess import call, check_output
 import sys
 import os
+import signal
+import psutil
 from .common_utils import  print_error, print_normal, print_warning
 
 def check_output_command(file_path, head=None, tail=None):
@@ -27,10 +29,11 @@ def check_output_command(file_path, head=None, tail=None):
 def kill_command(pid):
     '''kill command'''
     if sys.platform == 'win32':
-        cmds = ['powershell.exe', 'kill', str(pid)]
+        process = psutil.Process(pid=pid)
+        process.send_signal(signal.CTRL_BREAK_EVENT)
     else:
         cmds = ['kill', str(pid)]
-    call(cmds)
+        call(cmds)
 
 def install_package_command(package_name):
     '''install python package from pip'''

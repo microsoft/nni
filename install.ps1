@@ -1,8 +1,16 @@
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
 $install_node = $true
 $install_yarn = $true
 
+if([Environment]::Is64BitOperatingSystem){
+    $OS_VERSION = 'win64'
+}
+else{
+    $OS_VERSION = 'win32'
+}
 # nodejs
-$nodeUrl = "https://aka.ms/nni/nodejs-download/win64"
+$nodeUrl = "https://aka.ms/nni/nodejs-download/" + $OS_VERSION
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
 $unzipNodeDir = "node-v*"
 $unzipYarnDir = "yarn-v*"
@@ -25,13 +33,19 @@ $WHICH_PIP = where.exe pip
 if($WHICH_PIP -eq $null){
     throw "Can not find pip"
 }
-if($WHICH_PYTHON[0].Length -eq 1){
-    $NNI_PYTHON3 = $WHICH_PYTHON.SubString(0,$WHICH_PYTHON.Length-11)
+
+$env:PYTHONIOENCODING = "UTF-8"
+if($env:VIRTUAL_ENV){
+    $NNI_PYTHON3 = $env:VIRTUAL_ENV + "\Scripts"
+    $NNI_PKG_FOLDER = $env:VIRTUAL_ENV + "\nni"
+    $NNI_PYTHON_SCRIPTS = $NNI_PYTHON3
 }
 else{
-    $NNI_PYTHON3 = $WHICH_PYTHON[0].SubString(0,$WHICH_PYTHON[0].Length-11)
+    $NNI_PYTHON3 = $(python -c 'import site; from pathlib import Path; print(Path(site.getsitepackages()[0]))')
+    $NNI_PKG_FOLDER = $NNI_PYTHON3 + "\nni"
+    $NNI_PYTHON_SCRIPTS =  $NNI_PYTHON3 + "\Scripts"
 }
-$NNI_PKG_FOLDER = $NNI_PYTHON3 + "\nni"
+
 $PIP_INSTALL = """$NNI_PYTHON3\python"" -m pip install ."
 
 if(!(Test-Path $NNI_DEPENDENCY_FOLDER)){
@@ -66,45 +80,34 @@ $SCRIPT =  "import tarfile",
         "tar.close()"
 [System.IO.File]::WriteAllLines($SCRIPT_PATH, $SCRIPT)
 
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+function Unzip{
+    param([string]$zipfile, [string]$outpath)
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
+}
 if ($install_node) {
     ### nodejs install
     if(!(Test-Path $NNI_NODE_FOLDER)){
-        Expand-Archive $NNI_NODE_ZIP -DestinationPath $NNI_DEPENDENCY_FOLDER
+        Unzip $NNI_NODE_ZIP $NNI_DEPENDENCY_FOLDER
         $unzipNodeDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipNodeDir"
         Rename-Item $unzipNodeDir "nni-node"
     }
-
+    Copy-Item "$NNI_NODE_FOLDER\node.exe" $NNI_PYTHON_SCRIPTS -Recurse -Force
     ### yarn install
     if(!(Test-Path $NNI_YARN_FOLDER)){
-        cmd /C "$NNI_PYTHON3\python" $SCRIPT_PATH
+        cmd /C """$NNI_PYTHON3\python""" $SCRIPT_PATH
         $unzipYarnDir = Get-ChildItem "$NNI_DEPENDENCY_FOLDER\$unzipYarnDir"
         Rename-Item $unzipYarnDir "nni-yarn"
     }
 }
 
-### add to PATH
-function Add2Path {
-    param ($fileName)
-    $PathVariable = [System.Environment]::GetEnvironmentVariable("Path","User")
-    $PathFolders = $PathVariable.Split(";")
-    if(!$PathFolders.Contains($fileName)){
-        if($PathVariable.Trim().EndsWith(";")){
-            $PathVariable = $PathVariable + $fileName
-        }
-        else {
-            $PathVariable = $PathVariable + ";" + $fileName
-        }
-        [System.Environment]::SetEnvironmentVariable("Path",$PathVariable,"User")
-    }
-}
-
-Add2Path -fileName $NNI_NODE_FOLDER
-Add2Path -fileName "$NNI_YARN_FOLDER\bin"
-
-# Refresh Path environment in this session
- $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+## install-python-modules:
+### Installing Python SDK
+(Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
+cmd /c $PIP_INSTALL
 
 # Building NNI Manager
+$env:PATH=$NNI_PYTHON_SCRIPTS+';'+$env:PATH
 cd src\nni_manager
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
@@ -114,27 +117,12 @@ cd ..\webui
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
 
-## install-python-modules:
-### Installing Python SDK
-cd ..\sdk\pynni
-(Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
-cmd /c $PIP_INSTALL
-
-## Installing nnictl
-cd ..\..\..\tools 
-(Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
-cmd /c $PIP_INSTALL 
+cd ..\..
 
 ## install-node-modules
 if(!(Test-Path $NNI_PKG_FOLDER)){
     New-Item $NNI_PKG_FOLDER -ItemType Directory
 }
-cd ..
 Remove-Item $NNI_PKG_FOLDER -Recurse -Force
 Copy-Item "src\nni_manager\dist" $NNI_PKG_FOLDER -Recurse
 Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER
-$PKG_JSON = $NNI_PKG_FOLDER + "\package.json"
-(Get-Content $PKG_JSON).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content $PKG_JSON
-cmd /c $NNI_YARN --prod --cwd $NNI_PKG_FOLDER
-$NNI_PKG_FOLDER_STATIC = $NNI_PKG_FOLDER + "\static"
-Copy-Item "src\webui\build" $NNI_PKG_FOLDER_STATIC -Recurse 

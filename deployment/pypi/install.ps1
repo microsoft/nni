@@ -1,8 +1,17 @@
-param([bool]$version_ts=$false)
+param([int]$version_os, [bool]$version_ts=$false)
+[System.Net.ServicePointManager]::DefaultConnectionLimit = 100
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $CWD = $PWD
 
 $OS_SPEC = "windows"
-$WHEEL_SPEC = "win_amd64"
+if($version_os -eq 64){
+    $OS_VERSION = 'win64'
+    $WHEEL_SPEC = 'win_amd64'
+}
+else{
+    $OS_VERSION = 'win32'
+    $WHEEL_SPEC = 'win32'
+}
 
 $TIME_STAMP = date -u "+%y%m%d%H%M"
 $NNI_VERSION_VALUE = git describe --tags --abbrev=0
@@ -16,11 +25,11 @@ if($version_ts){
 
 $NNI_VERSION_TEMPLATE = "999.0.0-developing"
 
-python -m pip install --user --upgrade setuptools wheel
+python -m pip install --upgrade setuptools wheel
 
-$nodeUrl = "https://aka.ms/nni/nodejs-download/win64"
-$NNI_NODE_ZIP = "$CWD\node-$OS_SPEC-x64.zip"
-$NNI_NODE_FOLDER = "$CWD\node-$OS_SPEC-x64"
+$nodeUrl = "https://aka.ms/nni/nodejs-download/" + $OS_VERSION
+$NNI_NODE_ZIP = "$CWD\node-$OS_SPEC.zip"
+$NNI_NODE_FOLDER = "$CWD\node-$OS_SPEC"
 $unzipNodeDir = "node-v*"
 (New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_ZIP)
 if(Test-Path $NNI_NODE_FOLDER){
@@ -30,6 +39,7 @@ Expand-Archive $NNI_NODE_ZIP -DestinationPath $CWD
 $unzipNodeDir = Get-ChildItem "$CWD\$unzipNodeDir"
 Rename-Item $unzipNodeDir $NNI_NODE_FOLDER
 
+$env:PATH = $NNI_NODE_FOLDER+';'+$env:PATH
 cd $CWD\..\..\src\nni_manager
 yarn
 yarn build

@@ -32,10 +32,11 @@ interface OverviewState {
     accNodata: string;
     trialNumber: TrialNumber;
     isTop10: boolean;
-    titleMaxbgcolor: string;
+    titleMaxbgcolor?: string;
     titleMinbgcolor?: string;
     // trial stdout is content(false) or link(true)
     isLogCollection: boolean;
+    isMultiPhase: boolean;
 }
 
 class Overview extends React.Component<{}, OverviewState> {
@@ -80,8 +81,8 @@ class Overview extends React.Component<{}, OverviewState> {
                 totalCurrentTrial: 0
             },
             isTop10: true,
-            titleMaxbgcolor: '#999',
-            isLogCollection: false
+            isLogCollection: false,
+            isMultiPhase: false
         };
     }
 
@@ -94,39 +95,67 @@ class Overview extends React.Component<{}, OverviewState> {
                 if (res.status === 200) {
                     let sessionData = res.data;
                     let trialPro = [];
-                    const trainingPlatform = sessionData.params.trainingServicePlatform;
+                    const tempara = sessionData.params;
+                    const trainingPlatform = tempara.trainingServicePlatform;
                     // assessor clusterMeteData
-                    const clusterMetaData = sessionData.params.clusterMetaData;
+                    const clusterMetaData = tempara.clusterMetaData;
                     const endTimenum = sessionData.endTime;
-                    const assessor = sessionData.params.assessor;
-                    const advisor = sessionData.params.advisor;
-                     // default logCollection is true
-                    const logCollection = res.data.params.logCollection;
+                    const assessor = tempara.assessor;
+                    const advisor = tempara.advisor;
+                    let optimizeMode = 'other';
+                    if (tempara.tuner !== undefined) {
+                        if (tempara.tuner.classArgs !== undefined) {
+                            if (tempara.tuner.classArgs.optimize_mode !== undefined) {
+                                optimizeMode = tempara.tuner.classArgs.optimize_mode;
+                            }
+                        }
+                    }
+                    // default logCollection is true
+                    const logCollection = tempara.logCollection;
                     let expLogCollection: boolean = false;
+                    const isMultiy: boolean = tempara.multiPhase !== undefined
+                        ? tempara.multiPhase : false;
+                    if (optimizeMode !== undefined) {
+                        if (optimizeMode === 'minimize') {
+                            if (this._isMounted) {
+                                this.setState({
+                                    isTop10: false,
+                                    titleMinbgcolor: '#999'
+                                });
+                            }
+                        } else {
+                            if (this._isMounted) {
+                                this.setState({
+                                    isTop10: true,
+                                    titleMaxbgcolor: '#999'
+                                });
+                            }
+                        }
+                    }
                     if (logCollection !== undefined && logCollection !== 'none') {
                         expLogCollection = true;
                     }
                     trialPro.push({
                         id: sessionData.id,
-                        author: sessionData.params.authorName,
+                        author: tempara.authorName,
                         revision: sessionData.revision,
-                        experName: sessionData.params.experimentName,
-                        runConcurren: sessionData.params.trialConcurrency,
+                        experName: tempara.experimentName,
+                        runConcurren: tempara.trialConcurrency,
                         logDir: sessionData.logDir ? sessionData.logDir : 'undefined',
-                        maxDuration: sessionData.params.maxExecDuration,
+                        maxDuration: tempara.maxExecDuration,
                         execDuration: sessionData.execDuration,
-                        MaxTrialNum: sessionData.params.maxTrialNum,
+                        MaxTrialNum: tempara.maxTrialNum,
                         startTime: sessionData.startTime,
                         endTime: endTimenum ? endTimenum : undefined,
                         trainingServicePlatform: trainingPlatform,
-                        tuner: sessionData.params.tuner,
+                        tuner: tempara.tuner,
                         assessor: assessor ? assessor : undefined,
                         advisor: advisor ? advisor : undefined,
                         clusterMetaData: clusterMetaData ? clusterMetaData : undefined,
                         logCollection: logCollection
                     });
                     // search space format loguniform max and min
-                    const temp = sessionData.params.searchSpace;
+                    const temp = tempara.searchSpace;
                     const searchSpace = temp !== undefined
                         ? JSON.parse(temp) : {};
                     Object.keys(searchSpace).map(item => {
@@ -148,7 +177,8 @@ class Overview extends React.Component<{}, OverviewState> {
                             experimentAPI: res.data,
                             trialProfile: trialPro[0],
                             searchSpace: searchSpace,
-                            isLogCollection: expLogCollection
+                            isLogCollection: expLogCollection,
+                            isMultiPhase: isMultiy
                         });
                     }
                 }
@@ -229,8 +259,10 @@ class Overview extends React.Component<{}, OverviewState> {
                                 const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
                                 const acc = getFinal(tableData[item].finalMetricData);
                                 // if hyperparameters is undefine, show error message, else, show parameters value
-                                if (tableData[item].hyperParameters) {
-                                    const parameters = JSON.parse(tableData[item].hyperParameters[0]).parameters;
+                                const tempara = tableData[item].hyperParameters;
+                                if (tempara !== undefined) {
+                                    const tempLength = tempara.length;
+                                    const parameters = JSON.parse(tempara[tempLength - 1]).parameters;
                                     if (typeof parameters === 'string') {
                                         desJobDetail.parameters = JSON.parse(parameters);
                                     } else {
@@ -315,6 +347,11 @@ class Overview extends React.Component<{}, OverviewState> {
             indexarr.push(items.sequenceId);
         });
         const accOption = {
+            // support max show 0.0000000
+            grid: {
+                left: 67,
+                right: 40
+            },
             tooltip: {
                 trigger: 'item'
             },
@@ -324,7 +361,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 data: indexarr
             },
             yAxis: {
-                name: 'Default Metric',
+                name: 'Default metric',
                 type: 'value',
                 scale: true,
                 data: accarr
@@ -392,7 +429,7 @@ class Overview extends React.Component<{}, OverviewState> {
 
         const {
             trialProfile, searchSpace, tableData, accuracyData,
-            accNodata, status, errorStr, trialNumber, bestAccuracy,
+            accNodata, status, errorStr, trialNumber, bestAccuracy, isMultiPhase,
             titleMaxbgcolor, titleMinbgcolor, isLogCollection, experimentAPI
         } = this.state;
 
@@ -405,7 +442,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 </Row>
                 <Row className="overMessage">
                     {/* status graph */}
-                    <Col span={8} className="prograph overviewBoder">
+                    <Col span={9} className="prograph overviewBoder">
                         <Title1 text="Status" icon="5.png" />
                         <Progressed
                             trialNumber={trialNumber}
@@ -417,8 +454,8 @@ class Overview extends React.Component<{}, OverviewState> {
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}
-                    <Col span={8} className="overviewBoder">
-                        <Title1 text="Search Space" icon="10.png" />
+                    <Col span={7} className="overviewBoder">
+                        <Title1 text="Search space" icon="10.png" />
                         <Row className="experiment">
                             <SearchSpace searchSpace={searchSpace} />
                         </Row>
@@ -428,7 +465,7 @@ class Overview extends React.Component<{}, OverviewState> {
                         <Row className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
                             <div className="experiment searchSpace">
-                            <TrialPro experiment={experimentAPI} />
+                                <TrialPro experiment={experimentAPI} />
                             </div>
                         </Row>
                     </Col>
@@ -436,7 +473,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 <Row className="overGraph">
                     <Row className="top10bg">
                         <Col span={4} className="top10Title">
-                            <Title1 text="Top10  Trials" icon="7.png" />
+                            <Title1 text="Top10  trials" icon="7.png" />
                         </Col>
                         <Col
                             span={2}
@@ -453,22 +490,25 @@ class Overview extends React.Component<{}, OverviewState> {
                             <Title1 text="Minimal" icon="min.png" bgcolor={titleMinbgcolor} />
                         </Col>
                     </Row>
-                    <Col span={8} className="overviewBoder">
-                        <Row className="accuracy">
-                            <Accuracy
-                                accuracyData={accuracyData}
-                                accNodata={accNodata}
-                                height={324}
+                    <Row>
+                        <Col span={8} className="overviewBoder">
+                            <Row className="accuracy">
+                                <Accuracy
+                                    accuracyData={accuracyData}
+                                    accNodata={accNodata}
+                                    height={324}
+                                />
+                            </Row>
+                        </Col>
+                        <Col span={16} id="succeTable">
+                            <SuccessTable
+                                tableSource={tableData}
+                                multiphase={isMultiPhase}
+                                logCollection={isLogCollection}
+                                trainingPlatform={trialProfile.trainingServicePlatform}
                             />
-                        </Row>
-                    </Col>
-                    <Col span={16} id="succeTable">
-                        <SuccessTable
-                            tableSource={tableData}
-                            logCollection={isLogCollection}
-                            trainingPlatform={trialProfile.trainingServicePlatform}
-                        />
-                    </Col>
+                        </Col>
+                    </Row>
                 </Row>
             </div>
         );

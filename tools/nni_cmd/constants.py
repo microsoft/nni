@@ -81,8 +81,28 @@ PACKAGE_REQUIREMENTS = {
     'BOHB': 'bohb_advisor'
 }
 
+TUNERS_SUPPORTING_IMPORT_DATA = {
+    'TPE',
+    'Anneal',
+    'GridSearch',
+    'MetisTuner',
+    'BOHB'
+}
+
+TUNERS_NO_NEED_TO_IMPORT_DATA = {
+    'Random',
+    'Batch_tuner',
+    'Hyperband'
+}
+
 COLOR_RED_FORMAT = Fore.RED + '%s'
 
 COLOR_GREEN_FORMAT = Fore.GREEN + '%s'
 
 COLOR_YELLOW_FORMAT = Fore.YELLOW + '%s'
+
+SCHEMA_TYPE_ERROR = '%s should be %s type!'
+
+SCHEMA_RANGE_ERROR = '%s should be in range of %s!'
+
+SCHEMA_PATH_ERROR = '%s path not exist!'

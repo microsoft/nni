@@ -25,7 +25,7 @@ import os
 import sys
 import subprocess
 import requests
-import yaml
+import ruamel.yaml as yaml
 
 EXPERIMENT_DONE_SIGNAL = '"Experiment done"'
 
@@ -56,7 +56,7 @@ def remove_files(file_list):
 def get_yml_content(file_path):
     '''Load yaml file content'''
     with open(file_path, 'r') as file:
-        return yaml.load(file)
+        return yaml.load(file, Loader=yaml.Loader)
 
 def dump_yml_content(file_path, content):
     '''Dump yaml file content'''

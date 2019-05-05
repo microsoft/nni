@@ -21,7 +21,7 @@
 import os
 import sys
 import json
-import yaml
+import ruamel.yaml as yaml
 import psutil
 import socket
 from pathlib import Path
@@ -31,10 +31,13 @@ def get_yml_content(file_path):
     '''Load yaml file content'''
     try:
         with open(file_path, 'r') as file:
-            return yaml.load(file)
-    except TypeError as err:
-        print('Error: ', err)
-        return None
+            return yaml.load(file, Loader=yaml.Loader)
+    except yaml.scanner.ScannerError as err:
+        print_error('yaml file format error!')
+        exit(1)
+    except Exception as exception:
+        print_error(exception)
+        exit(1)
 
 def get_json_content(file_path):
     '''Load json file content'''
@@ -42,7 +45,7 @@ def get_json_content(file_path):
         with open(file_path, 'r') as file:
             return json.load(file)
     except TypeError as err:
-        print('Error: ', err)
+        print_error('json file format error!')
         return None
 
 def print_error(content):

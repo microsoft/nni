@@ -19,19 +19,19 @@
 
 'use strict';
 
-import { delay } from '../../common/utils';
-import { GPUInfo, GPUSummary } from '../common/gpuData';
-import { getLogger, Logger } from '../../common/log';
-import * as cp from 'child_process';
 import * as cpp from 'child-process-promise';
-import * as path from 'path';
-import * as os from 'os';
+import * as cp from 'child_process';
 import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { String } from 'typescript-string-operations';
 import { execMkdir, getScriptName, getgpuMetricsCollectorScriptContent, execScript, execTail, execRemove, execKill } from '../common/util'
+import { getLogger, Logger } from '../../common/log';
+import { delay } from '../../common/utils';
+import { GPUInfo, GPUSummary } from '../common/gpuData';
 
 /**
- * GPUScheduler
+ * GPUScheduler for local training service
  */
 class GPUScheduler {
 
@@ -67,34 +67,42 @@ class GPUScheduler {
         //generate gpu_metrics_collector script
         let gpuMetricsCollectorScriptPath: string = path.join(this.gpuMetricCollectorScriptFolder, getScriptName('gpu_metrics_collector'));
         const gpuMetricsCollectorScriptContent: string = getgpuMetricsCollectorScriptContent(this.gpuMetricCollectorScriptFolder);
-        console.log(this.gpuMetricCollectorScriptFolder)
-        console.log(gpuMetricsCollectorScriptContent)
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
         execScript(gpuMetricsCollectorScriptPath)
     }
 
     public getAvailableGPUIndices(): number[] {
         if (this.gpuSummary !== undefined) {
-            return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => info.activeProcessNum === 0).map((info: GPUInfo) => info.index);
+            return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => info.activeProcessNum === 0)
+                .map((info: GPUInfo) => info.index);
         }
 
         return [];
     }
 
-    public async stop() {
+    public getSystemGpuCount(): number {
+        if (this.gpuSummary !== undefined) {
+            return this.gpuSummary.gpuCount;
+        }
+
+        return 0;
+    }
+
+    public async stop(): Promise<void> {
         this.stopping = true;
         try {
             const pid: string = await fs.promises.readFile(path.join(this.gpuMetricCollectorScriptFolder, 'pid'), 'utf8');
             await execKill(pid);
             await execRemove(this.gpuMetricCollectorScriptFolder);
-        } catch (error){
+        } catch (error) {
             this.log.error(`GPU scheduler error: ${error}`);
         }
     }
 
-    private async updateGPUSummary() {
-        const cmdresult = await execTail(path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics'));
-        if(cmdresult && cmdresult.stdout) {
+    private async updateGPUSummary(): Promise<void> {
+        const cmdresult: cpp.childProcessPromise.Result =
+            await execTail(path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics'));
+        if (cmdresult && cmdresult.stdout) {
             this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
         } else {
             this.log.error('Could not get gpu metrics information!');
