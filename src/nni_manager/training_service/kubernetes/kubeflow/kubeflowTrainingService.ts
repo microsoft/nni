@@ -280,23 +280,29 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
                 let kubeflowClusterJsonObject = JSON.parse(value);
                 this.kubeflowClusterConfig = KubeflowClusterConfigFactory.generateKubeflowClusterConfig(kubeflowClusterJsonObject);
-                if(this.kubeflowClusterConfig.storageType === 'azureStorage') {
-                    let azureKubeflowClusterConfig = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
-                    this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
-                    this.azureStorageShare = azureKubeflowClusterConfig.azureStorage.azureShare;
-                    await this.createAzureStorage(
-                        azureKubeflowClusterConfig.keyVault.vaultName,
-                        azureKubeflowClusterConfig.keyVault.name,
-                        azureKubeflowClusterConfig.azureStorage.accountName,
-                        azureKubeflowClusterConfig.azureStorage.azureShare
-                    );
-                } else if(this.kubeflowClusterConfig.storageType === 'nfs') {
-                    let nfsKubeflowClusterConfig = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
-                    await this.createNFSStorage(
-                        nfsKubeflowClusterConfig.nfs.server,
-                        nfsKubeflowClusterConfig.nfs.path
-                    );
-                } 
+                try {
+                    if(this.kubeflowClusterConfig.storageType === 'azureStorage') {
+                        let azureKubeflowClusterConfig = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
+                        this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
+                        this.azureStorageShare = azureKubeflowClusterConfig.azureStorage.azureShare;
+                        await this.createAzureStorage(
+                            azureKubeflowClusterConfig.keyVault.vaultName,
+                            azureKubeflowClusterConfig.keyVault.name,
+                            azureKubeflowClusterConfig.azureStorage.accountName,
+                            azureKubeflowClusterConfig.azureStorage.azureShare
+                        );
+                    } else if(this.kubeflowClusterConfig.storageType === 'nfs') {
+                        let nfsKubeflowClusterConfig = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
+                        await this.createNFSStorage(
+                            nfsKubeflowClusterConfig.nfs.server,
+                            nfsKubeflowClusterConfig.nfs.path
+                        );
+                    } 
+                } catch(error) {
+                    this.log.error(error);
+                    return Promise.reject(new Error(error));  
+                }
+         
                 this.kubernetesCRDClient = KubeflowOperatorClient.generateOperatorClient(this.kubeflowClusterConfig.operator,
                                                                                      this.kubeflowClusterConfig.apiVersion);
                 break;
