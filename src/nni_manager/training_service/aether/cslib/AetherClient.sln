@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.421
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AetherClient", "AetherClient.csproj", "{0FEE5F6A-3354-44AF-924C-35D90F5679BF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0FEE5F6A-3354-44AF-924C-35D90F5679BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FEE5F6A-3354-44AF-924C-35D90F5679BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FEE5F6A-3354-44AF-924C-35D90F5679BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FEE5F6A-3354-44AF-924C-35D90F5679BF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {22AC54FE-364A-4E01-885E-73974F0E7A84}
+	EndGlobalSection
+EndGlobal
