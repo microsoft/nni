@@ -178,7 +178,7 @@ class EvolutionTuner(Tuner):
         for item in self.space:
             is_rand[item] = True
         for _ in range(self.population_size):
-            config = json2paramater(
+            config = json2parameter(
                 self.searchspace_json, is_rand, self.random_state)
             self.population.append(Individual(config=config))
 
@@ -216,7 +216,7 @@ class EvolutionTuner(Tuner):
             mutation_pos = space[random.randint(0, len(space)-1)]
             for i in range(len(self.space)):
                 is_rand[self.space[i]] = (self.space[i] == mutation_pos)
-            config = json2paramater(
+            config = json2parameter(
                 self.searchspace_json, is_rand, self.random_state, self.population[0].config)
             self.population.pop(1)
             # remove "_index" from config and save params-id

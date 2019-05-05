@@ -78,7 +78,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
                           increased_id])
     return params_id
 
-def json2paramater(ss_spec, random_state):
+def json2parameter(ss_spec, random_state):
     """Randomly generate values for hyperparameters from hyperparameter space i.e., x.
     
     Parameters
@@ -99,18 +99,18 @@ def json2paramater(ss_spec, random_state):
             _value = ss_spec[NodeType.VALUE]
             if _type == 'choice':
                 _index = random_state.randint(len(_value))
-                chosen_params = json2paramater(ss_spec[NodeType.VALUE][_index], random_state)
+                chosen_params = json2parameter(ss_spec[NodeType.VALUE][_index], random_state)
             else:
                 chosen_params = eval('parameter_expressions.' + # pylint: disable=eval-used
                                      _type)(*(_value + [random_state]))
         else:
             chosen_params = dict()
             for key in ss_spec.keys():
-                chosen_params[key] = json2paramater(ss_spec[key], random_state)
+                chosen_params[key] = json2parameter(ss_spec[key], random_state)
     elif isinstance(ss_spec, list):
         chosen_params = list()
         for _, subspec in enumerate(ss_spec):
-            chosen_params.append(json2paramater(subspec, random_state))
+            chosen_params.append(json2parameter(subspec, random_state))
     else:
         chosen_params = copy.deepcopy(ss_spec)
     return chosen_params
@@ -242,7 +242,7 @@ class Bracket():
         hyperparameter_configs = dict()
         for _ in range(num):
             params_id = create_bracket_parameter_id(self.bracket_id, self.i)
-            params = json2paramater(searchspace_json, random_state)
+            params = json2parameter(searchspace_json, random_state)
             params[_KEY] = r
             hyperparameter_configs[params_id] = params
         self._record_hyper_configs(hyperparameter_configs)

@@ -52,7 +52,7 @@ class GridSearchTuner(Tuner):
         self.count = -1
         self.expanded_search_space = []
 
-    def json2paramater(self, ss_spec):
+    def json2parameter(self, ss_spec):
         '''
         generate all possible configs for hyperparameters from hyperparameter space.
         ss_spec: hyperparameter space
@@ -64,7 +64,7 @@ class GridSearchTuner(Tuner):
                 chosen_params = list()
                 if _type == 'choice':
                     for value in _value:
-                        choice = self.json2paramater(value)
+                        choice = self.json2parameter(value)
                         if isinstance(choice, list):
                             chosen_params.extend(choice)
                         else:
@@ -74,12 +74,12 @@ class GridSearchTuner(Tuner):
             else:
                 chosen_params = dict()
                 for key in ss_spec.keys():
-                    chosen_params[key] = self.json2paramater(ss_spec[key])
+                    chosen_params[key] = self.json2parameter(ss_spec[key])
                 return self.expand_parameters(chosen_params)
         elif isinstance(ss_spec, list):
             chosen_params = list()
             for subspec in ss_spec[1:]:
-                choice = self.json2paramater(subspec)
+                choice = self.json2parameter(subspec)
                 if isinstance(choice, list):
                     chosen_params.extend(choice)
                 else:
@@ -131,7 +131,7 @@ class GridSearchTuner(Tuner):
         '''
         Check if the search space is valid and expand it: only contains 'choice' type or other types beginnning with the letter 'q'
         '''
-        self.expanded_search_space = self.json2paramater(search_space)
+        self.expanded_search_space = self.json2parameter(search_space)
 
     def generate_parameters(self, parameter_id):
         self.count += 1
