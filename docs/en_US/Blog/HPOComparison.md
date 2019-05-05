@@ -320,4 +320,4 @@ Figure:
 
 Figure:
 
-![](../../img/hpo_rocksdb_readrandom.PNG)
+![](../../img/hpo_rocksdb_readrandom.png)
