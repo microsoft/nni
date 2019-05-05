@@ -21,7 +21,11 @@
 utils.py
 """
 
+import os
 from enum import Enum, unique
+
+from .common import init_logger
+from .env_vars import dispatcher_env_vars
 
 @unique
 class OptimizeMode(Enum):
@@ -45,22 +49,56 @@ class NodeType:
     INDEX = '_index'
     NAME = '_name'
 
+
 def split_index(params):
-    """Delete index information from params
-
-    Parameters
-    ----------
-    params : dict
-
-    Returns
-    -------
-    result : dict
     """
-    result = {}
-    for key in params:
-        if isinstance(params[key], dict):
-            value = params[key]['_value']
-        else:
-            value = params[key]
-        result[key] = value
-    return result
+    Delete index infromation from params
+    """
+    if isinstance(params, list):
+        return [params[0], _split_index(params[1])]
+    elif isinstance(params, dict):
+        if INDEX in params.keys():
+            return _split_index(params[VALUE])
+        result = dict()
+        for key in params:
+            result[key] = _split_index(params[key])
+        return result
+    else:
+        return params
+
+
+def extract_scalar_reward(value, scalar_key='default'):
+    """
+    Extract scalar reward from trial result.
+
+    Raises
+    ------
+    RuntimeError
+        Incorrect final result: the final result should be float/int,
+        or a dict which has a key named "default" whose value is float/int.
+    """
+    if isinstance(value, float) or isinstance(value, int):
+        reward = value
+    elif isinstance(value, dict) and scalar_key in value and isinstance(value[scalar_key], (float, int)):
+        reward = value[scalar_key]
+    else:
+        raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.')
+    return reward
+
+def convert_dict2tuple(value):
+    """
+    convert dict type to tuple to solve unhashable problem.
+    """
+    if isinstance(value, dict):
+        for _keys in value:
+            value[_keys] = convert_dict2tuple(value[_keys])
+        return tuple(sorted(value.items()))
+    else:
+        return value
+
+def init_dispatcher_logger():
+    """ Initialize dispatcher logging configuration"""
+    logger_file_path = 'dispatcher.log'
+    if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
+        logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
+    init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)

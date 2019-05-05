@@ -40,7 +40,7 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                                                 href={`${DOWNLOAD_IP}/trial_${id}.log`}
                                                 style={{ marginRight: 10 }}
                                             >
-                                                trial stdout
+                                                Trial stdout
                                             </a>
                                             <a target="_blank" href={logStr.split(',')[1]}>hdfsLog</a>
                                         </Row>
@@ -48,11 +48,11 @@ class PaitrialLog extends React.Component<PaitrialLogProps, {}> {
                                         <Row>
                                             <LogPathChild
                                                 eachLogpath={logStr.split(',')[0]}
-                                                logName="trial stdout:"
+                                                logName="Trial stdout:"
                                             />
                                             <LogPathChild
                                                 eachLogpath={logStr.split(',')[1]}
-                                                logName="hdfsLog:"
+                                                logName="Log on HDFS:"
                                             />
                                         </Row>
                                 }

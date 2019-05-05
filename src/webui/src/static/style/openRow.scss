@@ -1,5 +1,7 @@
-
+/* website theme color */
 $color: #0071bc;
+/* bg light grey */
+$bgColor: #f2f2f2;
 .openRowContent{
     .ant-tabs-vertical.ant-tabs-left .ant-tabs-bar .ant-tabs-tab{
         text-align: left !important;
@@ -12,6 +14,7 @@ $color: #0071bc;
 }
 .openRowContent{
     margin-top: 15px;
+    background-color: $bgColor;
     .card{
         .ant-tabs-vertical .ant-tabs-bar .ant-tabs-tab{
             margin: 0;
@@ -25,7 +28,7 @@ $color: #0071bc;
         }
         .ant-tabs-tabpane{
             background: #f2f2f2;
-            padding: 10px 20px;
+            padding: 12px 12px 12px 0;
         }
     }
 }
@@ -42,5 +45,26 @@ $color: #0071bc;
     }
     .logcontent{
         height: 100%;
+    }
+}
+
+#description{
+    .bgHyper{
+        background-color: #fff;
+        margin-bottom: 12px;
+    }
+    .copy{
+        Button{
+            background-color: #ccc;
+            color: #191919;
+            border: none;
+            outline: none;
+        }
+        Button:hover{
+            background-color: #ccc;
+            color: #191919;
+            border: none;
+            outline: none;
+        }
     }
 }

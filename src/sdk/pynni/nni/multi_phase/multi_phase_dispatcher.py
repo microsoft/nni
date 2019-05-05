@@ -112,6 +112,13 @@ class MultiPhaseMsgDispatcher(MsgDispatcherBase):
         self.tuner.update_search_space(data)
         return True
 
+    def handle_import_data(self, data):
+        """import additional data for tuning
+        data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        self.tuner.import_data(data)
+        return True
+
     def handle_add_customized_trial(self, data):
          # data: parameters
         id_ = _create_parameter_id()
@@ -150,7 +157,12 @@ class MultiPhaseMsgDispatcher(MsgDispatcherBase):
             _trial_history.pop(trial_job_id)
             if self.assessor is not None:
                 self.assessor.trial_end(trial_job_id, data['event'] == 'SUCCEEDED')
+        if self.tuner is not None:
+            self.tuner.trial_end(json_tricks.loads(data['hyper_params'])['parameter_id'], data['event'] == 'SUCCEEDED', trial_job_id)
         return True
+
+    def handle_import_data(self, data):
+        pass
 
     def _handle_intermediate_metric_data(self, data):
         if data['type'] != 'PERIODICAL':

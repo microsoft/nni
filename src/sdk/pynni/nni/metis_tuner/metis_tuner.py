@@ -38,7 +38,7 @@ import nni.metis_tuner.Regression_GP.OutlierDetection as gp_outlier_detection
 import nni.metis_tuner.Regression_GP.Prediction as gp_prediction
 import nni.metis_tuner.Regression_GP.Selection as gp_selection
 from nni.tuner import Tuner
-from nni.utils import OptimizeMode
+from nni.utils import OptimizeMode, extract_scalar_reward
 
 logger = logging.getLogger("Metis_Tuner_AutoML")
 
@@ -58,8 +58,8 @@ class MetisTuner(Tuner):
     https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
     """
 
-    def __init__(self, optimize_mode="maximize", no_resampling=True, no_candidates=True,
-                 selection_num_starting_points=600, cold_start_num=10, exploration_probability=0.1):
+    def __init__(self, optimize_mode="maximize", no_resampling=True, no_candidates=False,
+                 selection_num_starting_points=600, cold_start_num=10, exploration_probability=0.9):
         """
         Parameters
         ----------
@@ -89,7 +89,7 @@ class MetisTuner(Tuner):
         self.samples_x = []
         self.samples_y = []
         self.samples_y_aggregation = []
-        self.history_parameters = []
+        self.total_data = []
         self.space = None
         self.no_resampling = no_resampling
         self.no_candidates = no_candidates
@@ -100,6 +100,7 @@ class MetisTuner(Tuner):
         self.exploration_probability = exploration_probability
         self.minimize_constraints_fun = None
         self.minimize_starting_points = None
+        self.supplement_data_num = 0
 
 
     def update_search_space(self, search_space):
@@ -120,13 +121,7 @@ class MetisTuner(Tuner):
             for key in search_space:
                 key_type = search_space[key]['_type']
                 key_range = search_space[key]['_value']
-                try:
-                    idx = self.key_order.index(key)
-                except Exception as ex:
-                    logger.exception(ex)
-                    raise RuntimeError("The format search space contains \
-                                        some key that didn't define in key_order."                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  )
-
+                idx = self.key_order.index(key)
                 if key_type == 'quniform':
                     if key_range[2] == 1:
                         self.x_bounds[idx] = [key_range[0], key_range[1]]
@@ -220,7 +215,7 @@ class MetisTuner(Tuner):
         value : dict/float
             if value is dict, it should have "default" key.
         """
-        value = self.extract_scalar_reward(value)
+        value = extract_scalar_reward(value)
         if self.optimize_mode == OptimizeMode.Maximize:
             value = -value
 
@@ -265,7 +260,6 @@ class MetisTuner(Tuner):
         samples_size_unique = len(samples_y)
 
         # ===== STEP 1: Compute the current optimum =====
-        #sys.stderr.write("[%s] Predicting the optimal configuration from the current training dataset...\n" % (os.path.basename(__file__)))
         gp_model = gp_create_model.create_model(samples_x, samples_y_aggregation)
         lm_current = gp_selection.selection(
             "lm",
@@ -285,8 +279,6 @@ class MetisTuner(Tuner):
                                'reason': "exploitation_gp"})
 
             # ===== STEP 2: Get recommended configurations for exploration =====
-            #sys.stderr.write("[%s] Getting candidates for exploration...\n"
-            #% \(os.path.basename(__file__)))
             results_exploration = gp_selection.selection(
                 "lc",
                 samples_y_aggregation,
@@ -303,15 +295,11 @@ class MetisTuner(Tuner):
                                        'expected_sigma': results_exploration['expected_sigma'],
                                        'reason': "exploration"})
                     logger.info("DEBUG: 1 exploration candidate selected\n")
-                    #sys.stderr.write("[%s] DEBUG: 1 exploration candidate selected\n" % (os.path.basename(__file__)))
             else:
                 logger.info("DEBUG: No suitable exploration candidates were")
-                # sys.stderr.write("[%s] DEBUG: No suitable exploration candidates were \
-                #                                 found\n" % (os.path.basename(__file__)))
 
             # ===== STEP 3: Get recommended configurations for exploitation =====
             if samples_size_all >= threshold_samplessize_exploitation:
-                #sys.stderr.write("[%s] Getting candidates for exploitation...\n" % (os.path.basename(__file__)))
                 print("Getting candidates for exploitation...\n")
                 try:
                     gmm = gmm_create_model.create_model(samples_x, samples_y_aggregation)
@@ -379,13 +367,6 @@ class MetisTuner(Tuner):
                         temp_improvement = threads_result['expected_lowest_mu'] - lm_current['expected_mu']
 
                         if next_improvement > temp_improvement:
-                            logger.info("DEBUG: \"next_candidate\" changed: \
-                                            lowest mu might reduce from %f (%s) to %f (%s), %s\n"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          %\
-                                            lm_current['expected_mu'], str(lm_current['hyperparameter']),\
-                                            threads_result['expected_lowest_mu'],\
-                                            str(threads_result['candidate']['hyperparameter']),\
-                                            threads_result['candidate']['reason'])
-
                             next_improvement = temp_improvement
                             next_candidate = threads_result['candidate']
             else:
@@ -405,15 +386,38 @@ class MetisTuner(Tuner):
         # ===== STEP 7: If current optimal hyperparameter occurs in the history or exploration probability is less than the threshold, take next config as exploration step  =====
         outputs = self._pack_output(lm_current['hyperparameter'])
         ap = random.uniform(0, 1)
-        if outputs in self.history_parameters or ap<=self.exploration_probability:
+        if outputs in self.total_data or ap<=self.exploration_probability:
             if next_candidate is not None:
                 outputs = self._pack_output(next_candidate['hyperparameter'])
             else:
-                random_parameter = _rand_init(self.x_bounds, self.x_types, 1)[0]
+                random_parameter = _rand_init(x_bounds, x_types, 1)[0]
                 outputs = self._pack_output(random_parameter)
-        self.history_parameters.append(outputs)
+        self.total_data.append(outputs)
         return outputs
 
+    def import_data(self, data):
+        """Import additional data for tuning
+        Parameters
+        ----------
+        data:
+            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        _completed_num = 0
+        for trial_info in data:
+            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
+            _completed_num += 1
+            assert "parameter" in trial_info
+            _params = trial_info["parameter"]
+            assert "value" in trial_info
+            _value = trial_info['value']
+            if not _value:
+                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                continue
+            self.supplement_data_num += 1
+            _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
+            self.total_data.append(_params)
+            self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
+        logger.info("Successfully import data to metis tuner.")
 
 def _rand_with_constraints(x_bounds, x_types):
     outputs = None
@@ -437,8 +441,6 @@ def _rand_with_constraints(x_bounds, x_types):
 def _calculate_lowest_mu_threaded(inputs):
     [candidate, samples_x, samples_y, x_bounds, x_types, minimize_constraints_fun, minimize_starting_points] = inputs
 
-    sys.stderr.write("[%s] Evaluating information gain of %s (%s)...\n" % \
-                        (os.path.basename(__file__), candidate['hyperparameter'], candidate['reason']))
     outputs = {"candidate": candidate, "expected_lowest_mu": None}
 
     for expected_mu in [candidate['expected_mu'] + 1.96 * candidate['expected_sigma'],

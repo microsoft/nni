@@ -22,9 +22,10 @@ import contextlib
 import collections
 import json
 import os
+import sys
 import subprocess
 import requests
-import yaml
+import ruamel.yaml as yaml
 
 EXPERIMENT_DONE_SIGNAL = '"Experiment done"'
 
@@ -55,7 +56,7 @@ def remove_files(file_list):
 def get_yml_content(file_path):
     '''Load yaml file content'''
     with open(file_path, 'r') as file:
-        return yaml.load(file)
+        return yaml.load(file, Loader=yaml.Loader)
 
 def dump_yml_content(file_path, content):
     '''Dump yaml file content'''
@@ -65,7 +66,7 @@ def dump_yml_content(file_path, content):
 def setup_experiment(installed=True):
     '''setup the experiment if nni is not installed'''
     if not installed:
-        os.environ['PATH'] = os.environ['PATH'] + ':' + os.environ['PWD']
+        os.environ['PATH'] = os.environ['PATH'] + ':' + os.getcwd()
         sdk_path = os.path.abspath('../src/sdk/pynni')
         cmd_path = os.path.abspath('../tools')
         pypath = os.environ.get('PYTHONPATH')
@@ -79,7 +80,7 @@ def fetch_nni_log_path(experiment_url):
     '''get nni's log path from nni's experiment url'''
     experiment_profile = requests.get(experiment_url)
     experiment_id = json.loads(experiment_profile.text)['id']
-    experiment_path = os.path.join(os.environ['HOME'], 'nni/experiments', experiment_id)
+    experiment_path = os.path.join(os.path.expanduser('~'), 'nni', 'experiments', experiment_id)
     nnimanager_log_path = os.path.join(experiment_path, 'log', 'nnimanager.log')
 
     return nnimanager_log_path
@@ -87,7 +88,10 @@ def fetch_nni_log_path(experiment_url):
 def is_experiment_done(nnimanager_log_path):
     '''check if the experiment is done successfully'''
     assert os.path.exists(nnimanager_log_path), 'Experiment starts failed'
-    cmds = ['cat', nnimanager_log_path, '|', 'grep', EXPERIMENT_DONE_SIGNAL]
+    if sys.platform == "win32":
+        cmds = ['type', nnimanager_log_path, '|', 'find', EXPERIMENT_DONE_SIGNAL]
+    else:
+        cmds = ['cat', nnimanager_log_path, '|', 'grep', EXPERIMENT_DONE_SIGNAL]
     completed_process = subprocess.run(' '.join(cmds), shell=True)
 
     return completed_process.returncode == 0
@@ -112,7 +116,10 @@ def print_stderr(trial_jobs_url):
     for trial_job in trial_jobs:
         if trial_job['status'] == 'FAILED':
             stderr_path = trial_job['stderrPath'].split(':')[-1]
-            subprocess.run(['cat', stderr_path])
+            if sys.platform == "win32":
+                subprocess.run(['type', stderr_path], shell=True)
+            else:
+                subprocess.run(['cat', stderr_path])
 
 def parse_max_duration_time(max_exec_duration):
     unit = max_exec_duration[-1]

@@ -26,10 +26,9 @@ import logging
 
 import hyperopt as hp
 import numpy as np
-
 from nni.tuner import Tuner
-from nni.utils import NodeType, OptimizeMode, split_index
-
+from nni.utils import (NodeType, OptimizeMode, extract_scalar_reward,
+                       split_index)
 logger = logging.getLogger('hyperopt_AutoML')
 
 def json2space(in_x, name=NodeType.Root.Value):
@@ -121,6 +120,38 @@ def json2vals(in_x, vals, out_y, name=NodeType.ROOT):
         for i, temp in enumerate(in_x):
             json2vals(temp, vals[i], out_y, name + '[%d]' % i)
 
+def _add_index(in_x, parameter):
+    """
+    change parameters in NNI format to parameters in hyperopt format(This function also support nested dict.).
+    For example, receive parameters like:
+        {'dropout_rate': 0.8, 'conv_size': 3, 'hidden_size': 512}
+    Will change to format in hyperopt, like:
+        {'dropout_rate': 0.8, 'conv_size': {'_index': 1, '_value': 3}, 'hidden_size': {'_index': 1, '_value': 512}}
+    """
+    if TYPE not in in_x: # if at the top level
+        out_y = dict()
+        for key, value in parameter.items():
+            out_y[key] = _add_index(in_x[key], value)
+        return out_y
+    elif isinstance(in_x, dict):
+        value_type = in_x[TYPE]
+        value_format = in_x[VALUE]
+        if value_type == "choice":
+            choice_name = parameter[0] if isinstance(parameter, list) else parameter
+            for pos, item in enumerate(value_format): # here value_format is a list
+                if isinstance(item, list): # this format is ["choice_key", format_dict]
+                    choice_key = item[0]
+                    choice_value_format = item[1]
+                    if choice_key == choice_name:
+                        return {INDEX: pos, VALUE: [choice_name, _add_index(choice_value_format, parameter[1])]}
+                elif choice_name == item:
+                    return {INDEX: pos, VALUE: item}
+        else:
+            return parameter
+
+
+
+
 class HyperoptTuner(Tuner):
     """
     HyperoptTuner is a tuner which using hyperopt algorithm.
@@ -139,6 +170,7 @@ class HyperoptTuner(Tuner):
         self.json = None
         self.total_data = {}
         self.rval = None
+        self.supplement_data_num = 0
 
     def _choose_tuner(self, algorithm_name):
         """
@@ -209,7 +241,7 @@ class HyperoptTuner(Tuner):
             if value is dict, it should have "default" key.
             value is final metrics of the trial.
         """
-        reward = self.extract_scalar_reward(value)
+        reward = extract_scalar_reward(value)
         # restore the paramsters contains '_index'
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')
@@ -314,9 +346,36 @@ class HyperoptTuner(Tuner):
         for key in vals:
             try:
                 parameter[key] = vals[key][0].item()
-            except KeyError:
+            except (KeyError, IndexError):
                 parameter[key] = None
 
         # remove '_index' from json2parameter and save params-id
         total_params = json2parameter(self.json, parameter)
         return total_params
+
+    def import_data(self, data):
+        """Import additional data for tuning
+
+        Parameters
+        ----------
+        data:
+            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        _completed_num = 0
+        for trial_info in data:
+            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
+            _completed_num += 1
+            if self.algorithm_name == 'random_search':
+                return
+            assert "parameter" in trial_info
+            _params = trial_info["parameter"]
+            assert "value" in trial_info
+            _value = trial_info['value']
+            if not _value:
+                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                continue
+            self.supplement_data_num += 1
+            _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
+            self.total_data[_parameter_id] = _add_index(in_x=self.json, parameter=_params)
+            self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
+        logger.info("Successfully import data to TPE/Anneal tuner.")

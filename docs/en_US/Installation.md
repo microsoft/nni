@@ -1,8 +1,8 @@
 # Installation of NNI
 
-Currently we only support installation on Linux & Mac.
+Currently we support installation on Linux, Mac and Windows(local mode).
 
-## **Installation**
+## **Installation on Linux & Mac**
 
 * __Install NNI through pip__
 
@@ -13,9 +13,9 @@ Currently we only support installation on Linux & Mac.
 
 * __Install NNI through source code__
 
-  Prerequisite: `python >=3.5, git, wget`
+  Prerequisite: `python >=3.5`, `git`, `wget`
   ```bash
-  git clone -b v0.5.2 https://github.com/Microsoft/nni.git
+  git clone -b v0.7 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
@@ -23,6 +23,29 @@ Currently we only support installation on Linux & Mac.
 * __Install NNI in docker image__
 
   You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
+
+## **Installation on Windows** 
+  When you use powershell to run script for the first time, you need **run powershell as administrator** with this command:
+  ```bash
+  Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+  ```
+  Anaconda is highly recommanded.
+* __Install NNI through pip__
+
+  Prerequisite: `python(64-bit) >= 3.5`
+  ```bash
+  python -m pip install --upgrade nni
+  ```
+
+* __Install NNI through source code__
+
+  Prerequisite: `python >=3.5`, `git`, `powershell`    
+  you can install nni as administrator or current user as follows:
+  ```bash
+  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  cd nni
+  powershell ./install.ps1
+  ```
 
 ## **System requirements**
 
@@ -50,6 +73,18 @@ Below are the minimum system requirements for NNI on macOS. Due to potential pro
 |**Internet**|Boardband internet connection|
 |**Resolution**|1024 x 768 minimum display resolution|
 
+Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is well tested and recommend. Due to potential programming changes, the minimum system requirements for NNI may change over time.
+
+||Minimum Requirements|Recommended Specifications|
+|---|---|---|
+|**Operating System**|Windows 10|Windows 10|
+|**CPU**|Intel® Core™ i3 or AMD Phenom™ X3 8650|Intel® Core™ i5 or AMD Phenom™ II X3 or better|
+|**GPU**|NVIDIA® GeForce® GTX 460|NVIDIA® GeForce® GTX 660 or better|
+|**Memory**|4 GB RAM|6 GB RAM|
+|**Storage**|30 GB available hare drive space|
+|**Internet**|Boardband internet connection|
+|**Resolution**|1024 x 768 minimum display resolution|
+
 ## Further reading
 
 * [Overview](Overview.md)
@@ -57,7 +92,7 @@ Below are the minimum system requirements for NNI on macOS. Due to potential pro
 * [Use NNIBoard](WebUI.md)
 * [Define search space](SearchSpaceSpec.md)
 * [Config an experiment](ExperimentConfig.md)
-* [How to run an experiment on local (with multiple GPUs)?](tutorial_1_CR_exp_local_api.md)
+* [How to run an experiment on local (with multiple GPUs)?](LocalMode.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
 * [How to run an experiment on OpenPAI?](PAIMode.md)
 * [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)
