@@ -20,16 +20,16 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
   python -m pip install --upgrade nni
   ```
 
-* __Install NNI through source code__
+* __通过代码安装 NNI__
 
-  Prerequisite: `python >=3.5`, `git`, `powershell`
+先决条件: `python >=3.5`, `git`, `powershell`
   ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
   cd nni
   powershell ./install.ps1
   ```
 
-When these things are done, run the **config_windows.yml** file from your command line to start the experiment.
+运行完以上脚本后，从命令行使用 **config_windows.yml** 来启动 Experiment。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
