@@ -225,7 +225,7 @@ class EvolutionTuner(Tuner):
 
             total_config = config
         self.total_data[parameter_id] = total_config
-        config = _split_index(total_config)
+        config = split_index(total_config)
         return config
 
     def receive_trial_result(self, parameter_id, parameters, value):

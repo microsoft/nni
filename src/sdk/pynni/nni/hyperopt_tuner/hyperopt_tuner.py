@@ -31,7 +31,7 @@ from nni.utils import (NodeType, OptimizeMode, extract_scalar_reward,
                        split_index)
 logger = logging.getLogger('hyperopt_AutoML')
 
-def json2space(in_x, name=NodeType.Root.Value):
+def json2space(in_x, name=NodeType.ROOT):
     """
     Change json to search space in hyperopt.
 
@@ -49,7 +49,7 @@ def json2space(in_x, name=NodeType.Root.Value):
             name = name + '-' + _type
             _value = json2space(in_x[NodeType.VALUE], name=name)
             if _type == 'choice':
-                out_y = eval('hp.hp.'+_type)(name, _value)
+                out_y = eval('hp.hp.choice')(name, _value)
             else:
                 if _type in ['loguniform', 'qloguniform']:
                     _value[:2] = np.log(_value[:2])
@@ -61,9 +61,16 @@ def json2space(in_x, name=NodeType.Root.Value):
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
-            out_y.append(json2space(x_i, name+'[%d]' % i))
+            # nested json
+            if isinstance(x_i, dict):
+                if NodeType.NAME not in x_i.keys():
+                    raise RuntimeError('\'_name\' key is not found in this nested search space.')
+                else:
+                    out_y.append(json2space(x_i, name+'[%d]' % i))
+            else:
+                out_y.append(json2space(x_i, name+'[%d]' % i))
     else:
-        logger.info('in_x is not a dict or a list in json2space fuinction %s', str(in_x))
+        pass
     return out_y
 
 def json2parameter(in_x, parameter, name=NodeType.ROOT):
@@ -91,9 +98,16 @@ def json2parameter(in_x, parameter, name=NodeType.ROOT):
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
-            out_y.append(json2parameter(x_i, parameter, name + '[%d]' % i))
+            # nested json
+            if isinstance(x_i, dict):
+                if NodeType.NAME not in x_i.keys():
+                    raise RuntimeError('\'_name\' key is not found in this nested search space.')
+                else:
+                    out_y.append(json2parameter(x_i, parameter, name + '[%d]' % i))
+            else:
+                out_y.append(json2parameter(x_i, parameter, name + '[%d]' % i))
     else:
-        logger.info('in_x is not a dict or a list in json2space fuinction %s', str(in_x))
+        pass
     return out_y
 
 
@@ -118,7 +132,14 @@ def json2vals(in_x, vals, out_y, name=NodeType.ROOT):
                 json2vals(in_x[key], vals[key], out_y, name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         for i, temp in enumerate(in_x):
-            json2vals(temp, vals[i], out_y, name + '[%d]' % i)
+            # nested json
+            if isinstance(temp, dict):
+                if NodeType.NAME not in temp.keys():
+                    raise RuntimeError('\'_name\' key is not found in this nested search space.')
+                else:
+                    json2vals(temp, vals[i], out_y, name + '[%d]' % i)
+            else:
+                json2vals(temp, vals[i], out_y, name + '[%d]' % i)
 
 def _add_index(in_x, parameter):
     """
@@ -148,9 +169,6 @@ def _add_index(in_x, parameter):
                     return {INDEX: pos, VALUE: item}
         else:
             return parameter
-
-
-
 
 class HyperoptTuner(Tuner):
     """
@@ -226,7 +244,7 @@ class HyperoptTuner(Tuner):
             # but it can cause deplicate parameter rarely
             total_params = self.get_suggestion(random_search=True)
         self.total_data[parameter_id] = total_params
-        params = _split_index(total_params)
+        params = split_index(total_params)
         return params
 
     def receive_trial_result(self, parameter_id, parameters, value):

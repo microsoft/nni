@@ -1,17 +1,17 @@
 {
     "layer0": {
-        "_name":"Max_pool",
-        "pooling_size": 2
+        "_name": "Avg_pool",
+        "pooling_size": 3
     },
     "layer1": {
-        "_name":"Conv",
+        "_name": "Conv",
         "kernel_size": 2
     },
     "layer2": {
-        "_name":"Empty"
+        "_name": "Empty"
     },
     "layer3": {
-        "_name":"Avg_pool",
-        "pooling_size": 5
+        "_name": "Conv",
+        "kernel_size": 5
     }
 }

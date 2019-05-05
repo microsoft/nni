@@ -54,14 +54,12 @@ def split_index(params):
     """
     Delete index infromation from params
     """
-    if isinstance(params, list):
-        return [params[0], _split_index(params[1])]
-    elif isinstance(params, dict):
-        if INDEX in params.keys():
-            return _split_index(params[VALUE])
-        result = dict()
+    if isinstance(params, dict):
+        if NodeType.INDEX in params.keys():
+            return split_index(params[NodeType.VALUE])
+        result = {}
         for key in params:
-            result[key] = _split_index(params[key])
+            result[key] = split_index(params[key])
         return result
     else:
         return params
