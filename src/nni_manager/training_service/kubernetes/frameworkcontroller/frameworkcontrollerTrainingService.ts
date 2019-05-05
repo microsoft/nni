@@ -237,23 +237,29 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             case TrialConfigMetadataKey.FRAMEWORKCONTROLLER_CLUSTER_CONFIG:
                 let frameworkcontrollerClusterJsonObject = JSON.parse(value);
                 this.fcClusterConfig = FrameworkControllerClusterConfigFactory.generateFrameworkControllerClusterConfig(frameworkcontrollerClusterJsonObject);
-                if(this.fcClusterConfig.storageType === 'azureStorage') {
-                    let azureFrameworkControllerClusterConfig = <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
-                    this.azureStorageAccountName = azureFrameworkControllerClusterConfig.azureStorage.accountName;
-                    this.azureStorageShare = azureFrameworkControllerClusterConfig.azureStorage.azureShare;
-                    await this.createAzureStorage(
-                        azureFrameworkControllerClusterConfig.keyVault.vaultName,
-                        azureFrameworkControllerClusterConfig.keyVault.name,
-                        azureFrameworkControllerClusterConfig.azureStorage.accountName,
-                        azureFrameworkControllerClusterConfig.azureStorage.azureShare
-                    );
-                } else if(this.fcClusterConfig.storageType === 'nfs') {
-                    let nfsFrameworkControllerClusterConfig = <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
-                    await this.createNFSStorage(
-                        nfsFrameworkControllerClusterConfig.nfs.server,
-                        nfsFrameworkControllerClusterConfig.nfs.path
-                    );
-                } 
+                try{
+                    if(this.fcClusterConfig.storageType === 'azureStorage') {
+                        let azureFrameworkControllerClusterConfig = <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
+                        this.azureStorageAccountName = azureFrameworkControllerClusterConfig.azureStorage.accountName;
+                        this.azureStorageShare = azureFrameworkControllerClusterConfig.azureStorage.azureShare;
+                        await this.createAzureStorage(
+                            azureFrameworkControllerClusterConfig.keyVault.vaultName,
+                            azureFrameworkControllerClusterConfig.keyVault.name,
+                            azureFrameworkControllerClusterConfig.azureStorage.accountName,
+                            azureFrameworkControllerClusterConfig.azureStorage.azureShare
+                        );
+                    } else if(this.fcClusterConfig.storageType === 'nfs') {
+                        let nfsFrameworkControllerClusterConfig = <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
+                        await this.createNFSStorage(
+                            nfsFrameworkControllerClusterConfig.nfs.server,
+                            nfsFrameworkControllerClusterConfig.nfs.path
+                        );
+                    } 
+                } catch(error) {
+                    this.log.error(error);
+                    return Promise.reject(new Error(error));
+                }
+                
                 this.kubernetesCRDClient = FrameworkControllerClient.generateFrameworkControllerClient();
                 break;
             case TrialConfigMetadataKey.TRIAL_CONFIG:
