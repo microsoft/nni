@@ -34,7 +34,7 @@ else:
 
 data_files = [('bin', ['node-{}-x64/bin/node'.format(os_type.lower())])]
 if os_type == 'Windows':
-    data_files = [('.\Scripts', ['node-{}-x64/node.exe'.format(os_type.lower())])]
+    data_files = [('.\Scripts', ['node-{}/node.exe'.format(os_type.lower())])]
 
 for (dirpath, dirnames, filenames) in walk('./nni'):
     files = [path.normpath(path.join(dirpath, filename)) for filename in filenames]

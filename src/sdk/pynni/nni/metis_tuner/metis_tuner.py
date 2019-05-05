@@ -65,7 +65,7 @@ class MetisTuner(Tuner):
     https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/
     """
 
-    def __init__(self, optimize_mode="maximize", no_resampling=True, no_candidates=True,
+    def __init__(self, optimize_mode="maximize", no_resampling=True, no_candidates=False,
                  selection_num_starting_points=600, cold_start_num=10, exploration_probability=0.9):
         """
         Parameters
@@ -417,6 +417,9 @@ class MetisTuner(Tuner):
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
+            if not _value:
+                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                continue
             self.supplement_data_num += 1
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
             self.total_data.append(_params)

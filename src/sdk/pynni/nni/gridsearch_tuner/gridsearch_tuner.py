@@ -164,6 +164,11 @@ class GridSearchTuner(Tuner):
             _completed_num += 1
             assert "parameter" in trial_info
             _params = trial_info["parameter"]
+            assert "value" in trial_info
+            _value = trial_info['value']
+            if not _value:
+                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                continue
             _params_tuple = convert_dict2tuple(_params)
             self.supplement_data[_params_tuple] = True
         logger.info("Successfully import data to grid search tuner.")
