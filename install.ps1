@@ -106,8 +106,16 @@ if ($install_node) {
 (Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
 cmd /c $PIP_INSTALL
 
+
+# Building NNI Manager
+$env:PATH=$NNI_PYTHON_SCRIPTS+';'+$env:PATH
+Set-Location src\nni_manager
+cmd /c $NNI_YARN
+cmd /c $NNI_YARN build
+Copy-Item config -Destination .\dist\ -Recurse -Force
+
 # Building Aether Client
-cd src\nni_manager\training_service\aether\cslib
+Set-Location .\training_service\aether\cslib
 if (!(Get-Command nuget | Test-Path)) {
     Write-Host "Please install nuget first"
     exit
@@ -117,20 +125,17 @@ if (!(Get-Command msbuild | Test-Path)) {
     exit
 }
 nuget restore
-msbuild
+msbuild -property:Configuration=Release
+New-Item ..\..\..\dist\aether\bin -ItemType Directory
+Copy-Item .\bin\Release\* ..\..\..\dist\aether\bin\
 
-# Building NNI Manager
-$env:PATH=$NNI_PYTHON_SCRIPTS+';'+$env:PATH
-cd src\nni_manager
-cmd /c $NNI_YARN
-cmd /c $NNI_YARN build
-Copy-Item config -Destination .\dist\ -Recurse -Force
 # Building WebUI
-cd ..\webui
+Set-Location ..\..\..\..\webui
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
 
-cd ..\..
+Set-Location ..\..\
+
 
 ## install-node-modules
 if(!(Test-Path $NNI_PKG_FOLDER)){
@@ -139,7 +144,3 @@ if(!(Test-Path $NNI_PKG_FOLDER)){
 Remove-Item $NNI_PKG_FOLDER -Recurse -Force
 Copy-Item "src\nni_manager\dist" $NNI_PKG_FOLDER -Recurse
 Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER
-
-## install-aether-client
-$NNI_AETHER_FOLDER = "$NNI_PKG_FOLDER\aether\bin"
-Copy-Item ".\src\nni_manager\training_service\aether\cslib\bin\Release\*" $NNI_AETHER_FOLDER -Recurse
