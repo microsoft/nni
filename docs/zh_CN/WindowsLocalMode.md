@@ -18,26 +18,27 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ```bash
   python -m pip install --upgrade nni
-  ```
+```
 
 * __通过代码安装 NNI__
 
-先决条件: `python >=3.5`, `git`, `powershell`
+  先决条件: `python >=3.5`, `git`, `powershell`
+
   ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
   cd nni
   powershell ./install.ps1
   ```
 
-运行完以上脚本后，从命令行使用 **config_windows.yml** 来启动 Experiment。
+运行完以上脚本后，从命令行使用 **config_windows.yml** 来启动 Experiment，完成安装验证。
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config_windows.yml
+nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
 同样，其它示例的 YAML 配置中也需将 Trial 命令的 `python3` 替换为 `python`。
 
-## **FAQ**
+## **常见问答**
 
 ### 安装 NNI 时出现 simplejson 错误
 
@@ -57,7 +58,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
 
-此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 强烈推荐使用 Anaconda python。 如果要使用官方的 Python，确保运行 NNI 前，在 `Visual Studio`，`MATLAB`，`MKL` 和`Intel Distribution for Python` 中至少安装了一个。 如果没有，则需要安装其中之一，或使用 Anaconda Python （64位）。
+此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 强烈推荐使用 Anaconda python。 如果要使用官方的 Python，确保运行 NNI 前，在 `Visual Studio`，`MATLAB`，`MKL` 和`Intel Distribution for Python` 中至少安装了一个。 如果没有，请尝试安装上面的产品之一或 Anaconda Python（64位）。
 
 > ImportError: DLL load failed
 
