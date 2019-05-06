@@ -584,11 +584,11 @@ class NNIManager implements Manager {
             })]);
     }
 
-    private trialJobMetricListener(metric: TrialJobMetric): void {
-        this.onTrialJobMetrics(metric).catch((err: Error) => {
-            this.criticalError(new NNIError('Job metrics error', `Job metrics error: ${err.message}`, err));
-        });
-    }
+    private trialJobMetricListener = (metric: TrialJobMetric) => {
+            this.onTrialJobMetrics(metric).catch((err: Error) => {
+                this.criticalError(new NNIError('Job metrics error', `Job metrics error: ${err.message}`, err));
+            });
+        };
 
     private addEventListeners(): void {
         this.log.info('Add event listeners');
