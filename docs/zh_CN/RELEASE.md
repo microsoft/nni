@@ -19,12 +19,12 @@
   * 可将超参复制为 Python dict 格式
   * 可将提前终止的 Trial 数据传入 Tuner。
 * 为 nnictl 提供更友好的错误消息 
-  * nnictl provide more meaningful error message for YAML file format error
+  * 为 YAML 文件格式错误提供更有意义的错误信息
 
 ### Bug 修复
 
 * 运行 nnictl stop 的异步 Dispatcher 模式时，无法杀掉所有的 Python 线程
-* nnictl --version does not work with make dev-install
+* nnictl --version 不能在 make dev-install 下使用
 * OpenPAI 平台下所有的 Trial 任务状态都是 'WAITING'
 
 ## 发布 0.6 - 4/2/2019
@@ -181,7 +181,7 @@
 
 * 支持同时运行多个 Experiment。
   
-  在 v0.3 以前，NNI 仅支持一次运行一个 Experiment。 After this release, users are able to run multiple experiments simultaneously. 每个 Experiment 都需要一个唯一的端口，第一个 Experiment 会像以前版本一样使用默认端口。 需要为其它 Experiment 指定唯一端口：
+  在 v0.3 以前，NNI 仅支持一次运行一个 Experiment。 此版本开始，用户可以同时运行多个 Experiment。 每个 Experiment 都需要一个唯一的端口，第一个 Experiment 会像以前版本一样使用默认端口。 需要为其它 Experiment 指定唯一端口：
   
   ```bash
   nnictl create --port 8081 --config <config file path>
