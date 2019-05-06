@@ -152,7 +152,7 @@ mkDirP(getLogDir())
     console.error(`Failed to create log dir: ${err.stack}`);
 });
 
-function getStopSignal(): string {
+function getStopSignal(): any {
     if (process.platform === "win32") {
         return 'SIGBREAK';
     }
