@@ -206,11 +206,11 @@ jobs:
       cd deployment\pypi
       if($env:BUILD_TYPE -eq 'prerelease'){
         Write-Host 'uploading prerelease package to testpypi...'
-        python -m twine upload -u $env:TESTPYPI_USER -p $env:TESTPYPI_PWD --repository-url https://test.pypi.org/legacy/ dist/*
+        python -m twine upload -u $(testpypi_user) -p $(testpypi_pwd) --repository-url https://test.pypi.org/legacy/ dist/*
       }
       else{
         Write-Host 'uploading release package to pypi...'
-        python -m twine upload -u $env:PYPI_USER -p $env:PYPI_PWD dist/*
+        python -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
       }
     condition: eq( variables['upload_package'], 'true')
     displayName: 'upload nni package to pypi/testpypi'
@@ -249,11 +249,11 @@ jobs:
       cd deployment\pypi
       if($env:BUILD_TYPE -eq 'prerelease'){
         Write-Host 'uploading prerelease package to testpypi...'
-        python -m twine upload -u $env:TESTPYPI_USER -p $env:TESTPYPI_PWD --repository-url https://test.pypi.org/legacy/ dist/*
+        python -m twine upload -u $(testpypi_user) -p $(testpypi_pwd) --repository-url https://test.pypi.org/legacy/ dist/*
       }
       else{
         Write-Host 'uploading release package to pypi...'
-        python -m twine upload -u $env:PYPI_USER -p $env:PYPI_PWD dist/*
+        python -m twine upload -u $(pypi_user) -p $(pypi_pwd) dist/*
       }
     condition: eq( variables['upload_package'], 'true')
     displayName: 'upload nni package to pypi/testpypi'
