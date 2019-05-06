@@ -441,7 +441,7 @@ nnictl 支持的命令：
     
     也可以用 [nnictl experiment export](#export) 命令导出 Experiment 已经运行过的 Trial 超参和结果。
     
-    当前，以下 Tuner 和 Advisor 支持导入数据：
+    Currently, following tuner and advisor support import data:
     
     ```yml
     内置 Tuner: TPE, Anneal, GridSearch, MetisTuner
