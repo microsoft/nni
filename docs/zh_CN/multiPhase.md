@@ -2,7 +2,7 @@
 
 通常，每个 Trial 任务只需要从 Tuner 获取一个配置（超参等），然后使用这个配置执行并报告结果，然后退出。 但有时，一个 Trial 任务可能需要从 Tuner 请求多次配置。 这是一个非常有用的功能。 例如：
 
-1. 在一些训练平台上，需要数十秒来启动一个任务。 If a configuration takes only around a minute to finish, running only one configuration in a trial job would be very inefficient. 这种情况下，可以在同一个 Trial 任务中，完成一个配置后，再请求并完成另一个配置。 极端情况下，一个 Trial 任务可以运行无数个配置。 如果设置了并发（例如设为 6），那么就会有 6 个**长时间**运行的任务来不断尝试不同的配置。
+1. 在一些训练平台上，需要数十秒来启动一个任务。 如果一个配置只需要一分钟就能完成，那么每个 Trial 任务中只运行一个配置就会非常低效。 这种情况下，可以在同一个 Trial 任务中，完成一个配置后，再请求并完成另一个配置。 极端情况下，一个 Trial 任务可以运行无数个配置。 如果设置了并发（例如设为 6），那么就会有 6 个**长时间**运行的任务来不断尝试不同的配置。
 
 2. 有些类型的模型需要进行多阶段的训练，而下一个阶段的配置依赖于前一个阶段的结果。 例如，为了找到模型最好的量化结果，训练过程通常为：自动量化算法（例如 NNI 中的 TunerJ）选择一个位宽（如 16 位）， Trial 任务获得此配置，并训练数个 epoch，并返回结果（例如精度）。 算法收到结果后，决定是将 16 位改为 8 位，还是 32 位。 此过程会重复多次。
 
@@ -35,12 +35,12 @@ Trial 代码中使用多阶段非常容易，样例如下：
 
 **2. 修改 Experiment 配置**
 
-To enable multi-phase, you should also add `multiPhase: true` in your experiment YAML configure file. 如果不添加此参数，`nni.get_next_parameter()` 会一直返回同样的配置。 For all the built-in tuners/advisors, you can use multi-phase in your trial code without modification of tuner/advisor spec in the YAML configure file.
+要启用多阶段，需要在 Experiment 的 YAML 配置文件中增加 `multiPhase: true`。 如果不添加此参数，`nni.get_next_parameter()` 会一直返回同样的配置。 对于所有内置的 Tuner 和 Advisor，不需要修改任何代码，就直接支持多阶段请求配置。
 
 ### 编写使用多阶段的 Tuner：
 
 强烈建议首先阅读[自定义 Tuner](https://nni.readthedocs.io/en/latest/Customize_Tuner.html)，再开始编写多阶段 Tuner。 与普通 Tuner 不同的是，必须继承于 `MultiPhaseTuner`（在 nni.multi_phase_tuner 中）。 `Tuner` 与 `MultiPhaseTuner` 之间最大的不同是，MultiPhaseTuner 多了一些信息，即 `trial_job_id`。 有了这个信息， Tuner 能够知道哪个 Trial 在请求配置信息， 返回的结果是哪个 Trial 的。 通过此信息，Tuner 能够灵活的为不同的 Trial 及其阶段实现功能。 例如，可在 generate_parameters 方法中使用 trial_job_id 来为特定的 Trial 任务生成超参。
 
-Of course, to use your multi-phase tuner, **you should add `multiPhase: true` in your experiment YAML configure file**.
+当然，要使用自定义的多阶段 Tuner ，也需要**在 Experiment 的 YAML 配置文件中增加`multiPhase: true`**。
 
 [ENAS Tuner](https://github.com/countif/enas_nni/blob/master/nni/examples/tuners/enas/nni_controller_ptb.py) 是多阶段 Tuner 的样例。
