@@ -153,13 +153,13 @@ trial:
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
-**Note**, if you're using windows local mode, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
+**注意**：如果使用了 Windows 本机模式，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
-Note, **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. 查看[这里](NNICTLDOC.md)，了解 `nnictl` 更多用法。
+注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](NNICTLDOC.md)，了解 `nnictl` 更多用法。
 
 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
 
@@ -240,7 +240,7 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 可�
 
 ![](../img/QuickStart6.png)
 
-* Intermediate Result Graph
+* 中间结果图
 
 ![](../img/QuickStart7.png)
 
