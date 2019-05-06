@@ -513,50 +513,29 @@ def hdfs_set(args):
     hdfsConfig.set_config(args.host, args.user_name)
     print_normal('HDFS account update success!')
 
-def hdfs_list(args):
-    hdfsConfig = HDFSConfig()
-    if not hdfsConfig.get_config():
-        print_error('Please use \'nnictl hdfs set\' command to set hdfs account first!')
-        exit(1)
-    host = hdfsConfig.get_config().get('host')
-    user_name = hdfsConfig.get_config().get('user_name')
-    hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)
-    try:
-        print(hdfs_client.listdir(str(args.path)))
-    except HdfsFileNotFoundException as exception:
-        print_error('path {0} not exist!'.format(args.path))
+def get_directory_size(hdfs_client, path):
+    path_list = hdfs_client.listdir(path)
+    total_size = 0
+    for temp_path in path_list:
+        new_path = path + '/' + temp_path
+        if hdfs_client.get_file_status(new_path).type == 'FILE':
+            total_size += hdfs_client.get_file_status(new_path).length
+        else:
+            total_size += get_directory_size(hdfs_client, new_path)
+    return total_size
 
-def hdfs_download(args):
+def hdfs_clean(args):
     hdfsConfig = HDFSConfig()
     if not hdfsConfig.get_config():
         print_error('Please use \'nnictl hdfs set\' command to set hdfs account first!')
         exit(1)
     host = hdfsConfig.get_config().get('host')
-    user_name = hdfsConfig.get_config().get('user_name')
+    user_name = hdfsConfig.get_config().get('userName')
     hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)
-    file_type = hdfs_client.get_file_status(args.hdfs_path).type
-    if(file_type == 'DIRECTORY'):
-        copyHdfsDirectoryToLocal(args.hdfs_path, args.local_path, hdfs_client)
-        print_normal('Download directory success!')
-    else:
-        copyHdfsFileToLocal(args.hdfs_path, args.local_path, hdfs_client)
-        print_normal('Download file success!')
-
-def hdfs_delete(args):
-    hdfsConfig = HDFSConfig()
-    if not hdfsConfig.get_config():
-        print_error('Please use \'nnictl hdfs set\' command to set hdfs account first!')
-        exit(1)
-    host = hdfsConfig.get_config().get('host')
-    user_name = hdfsConfig.get_config().get('user_name')
-    hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)
-    if args.path == '/':
-        print_error('please set the path to be deleted!')
-        exit(1)
-    try:
-        hdfs_client.listdir(args.path)
-        hdfs_client.delete(args.path, recursive=True)
-        print_normal('delete {} successfully!'.format(args.path))
-    except Exception as exception:
-        print_error(exception)
-        exit(1)
+    root_path = os.path.join('/', user_name, 'nni', 'experiments')
+    path_list = hdfs_client.listdir(root_path)
+    for path in path_list:
+        full_path = os.path.join(root_path, path)
+        print_normal('deleting {0}  size {1}'.format(full_path, get_directory_size(full_path)))
+        hdfs_client.delete(full_path, recursive=True)
+    print_normal('DONE')

@@ -674,54 +674,14 @@ Debug mode will disable version check function in Trialkeeper.
   |--host|  True| |The host of hdfs|
   |--user_name|  True| |The userName of hdfs|
 
-* __nnictl hdfs list__
+* __nnictl hdfs clean__
 
   * Description
 
-    List the files and directories.
+    Clean up the files created by nni in hdfs
 
   * Usage
 
     ```bash
-    nnictl hdfs list [OPTIONS]
+    nnictl hdfs clean
     ```
-  * Options
-
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |path|  True| /|the path to be listed|
-
-* __nnictl hdfs download__
-
-  * Description
-
-    Download files and directories form hdfs.
-
-  * Usage
-
-    ```bash
-    nnictl hdfs download [OPTIONS]
-    ```
-  * Options
-
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |--hdfs_path|  True| |the hdfs path to be downloaded|
-  |--local_path|  True| /|the local path to be save files|
-
-* __nnictl hdfs delete__
-
-  * Description
-
-    Delete files and directories in hdfs.
-
-  * Usage
-
-    ```bash
-    nnictl hdfs delete [OPTIONS]
-    ```
-  * Options
-
-  |Name, shorthand|Required|Default|Description|
-  |------|------|------ |------|
-  |path|  True| |the hdfs path to be deleted|
