@@ -218,31 +218,31 @@ You can use these commands to get more information about the experiment
 
 ## **文档**
 
-* [NNI 概述](docs/en_US/Overview.md)
-* [快速入门](docs/en_US/QuickStart.md)
+* [NNI 概述](docs/zh_CN/Overview.md)
+* [快速入门](docs/zh_CN/QuickStart.md)
 
 ## **入门**
 
-* [安装 NNI](docs/en_US/Installation.md)
-* [使用命令行工具 nnictl](docs/en_US/NNICTLDOC.md)
-* [使用 NNIBoard](docs/en_US/WebUI.md)
-* [如何定义搜索空间](docs/en_US/SearchSpaceSpec.md)
-* [如何编写 Trial 代码](docs/en_US/Trials.md)
-* [如何选择 Tuner、搜索算法](docs/en_US/Builtin_Tuner.md)
-* [配置 Experiment](docs/en_US/ExperimentConfig.md)
-* [如何使用 Annotation](docs/en_US/Trials.md#nni-python-annotation)
+* [安装 NNI](docs/zh_CN/Installation.md)
+* [使用命令行工具 nnictl](docs/zh_CN/NNICTLDOC.md)
+* [使用 NNIBoard](docs/zh_CN/WebUI.md)
+* [如何定义搜索空间](docs/zh_CN/SearchSpaceSpec.md)
+* [如何编写 Trial 代码](docs/zh_CN/Trials.md)
+* [如何选择 Tuner、搜索算法](docs/zh_CN/Builtin_Tuner.md)
+* [配置 Experiment](docs/zh_CN/ExperimentConfig.md)
+* [如何使用 Annotation](docs/zh_CN/Trials.md#nni-python-annotation)
 
 ## **教程**
 
-* [在本机运行 Experiment (支持多 GPU 卡)](docs/en_US/LocalMode.md)
-* [在多机上运行 Experiment](docs/en_US/RemoteMachineMode.md)
-* [在 OpenPAI 上运行 Experiment](docs/en_US/PAIMode.md)
-* [在 Kubeflow 上运行 Experiment。](docs/en_US/KubeflowMode.md)
-* [尝试不同的 Tuner](docs/en_US/tuners.rst)
-* [尝试不同的 Assessor](docs/en_US/assessors.rst)
-* [实现自定义 Tuner](docs/en_US/Customize_Tuner.md)
-* [实现自定义 Assessor](docs/en_US/Customize_Assessor.md)
-* [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
+* [在本机运行 Experiment (支持多 GPU 卡)](docs/zh_CN/LocalMode.md)
+* [在多机上运行 Experiment](docs/zh_CN/RemoteMachineMode.md)
+* [在 OpenPAI 上运行 Experiment](docs/zh_CN/PAIMode.md)
+* [在 Kubeflow 上运行 Experiment。](docs/zh_CN/KubeflowMode.md)
+* [尝试不同的 Tuner](docs/zh_CN/tuners.rst)
+* [尝试不同的 Assessor](docs/zh_CN/assessors.rst)
+* [实现自定义 Tuner](docs/zh_CN/Customize_Tuner.md)
+* [实现自定义 Assessor](docs/zh_CN/Customize_Assessor.md)
+* [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README_zh_CN.md)
 
 ## **贡献**
 
