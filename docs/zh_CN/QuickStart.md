@@ -71,7 +71,7 @@ NNI 就是用来帮助调优工作的。它的工作流程如下：
 
 **使用 NNI 时的三个步骤**
 
-**Step 1**: Give a `Search Space` file in JSON, includes the `name` and the `distribution` (discrete valued or continuous valued) of all the hyperparameters you need to search.
+**第一步**：定义 JSON 格式的`搜索空间`文件，包括所有需要搜索的超参的`名称`和`分布`（离散和连续值均可）。
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -135,19 +135,19 @@ trial:
   gpuNum: 0
 ```
 
-Note, **for Windows, you need to change trial command `python3` to `python`**
+注意：**在 Windows 上，需要将 Trial 命令的 `python3` 改为 `python`**
 
 *实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
 上面的代码都已准备好，并保存在 [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)。
 
-If you choose Windows local mode and use PowerShell to run script, you need run below PowerShell command as administrator at first time.
+如果选择 Windows 本机模式并使用 PowerShell 运行脚本，需要首次以管理员身份在 PowerShell 环境中运行以下命令。
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
 
-When these things are done, run below line to start an experiment.
+完成后，运行下列命令来开始 Experiment。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
