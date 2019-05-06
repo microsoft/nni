@@ -98,7 +98,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **安装和验证**
 
-If you choose NNI Windows local mode and you use PowerShell to run script for the first time, you need to **run PowerShell as administrator** with this command first:
+在 Windows 本机模式下，并且是第一次使用 PowerShell 来运行脚本，需要**使用管理员权限**运行一次下列命令：
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
@@ -123,7 +123,7 @@ python -m pip install --upgrade nni
 注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
-* 当前 NNI 在 Windows 上仅支持本机模式。 Anaconda is highly recommended to install NNI on Windows.
+* 当前 NNI 在 Windows 上仅支持本机模式。 强烈推荐使用 Anaconda 在 Windows 上安装 NNI。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/FAQ.md)。
 
 **通过源代码安装**
@@ -142,7 +142,7 @@ Linux 和 MacOS
 
 Windows
 
-* Run the following commands in an environment that has `python >=3.5`, `git` and `PowerShell`
+* 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
 
 ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
@@ -150,11 +150,11 @@ Windows
   powershell ./install.ps1
 ```
 
-For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)
+参考[安装 NNI](docs/zh_CN/Installation.md) 了解系统需求。
 
-For NNI Windows local mode, please refer to [NNI Windows local mode](docs/en_US/WindowsLocalMode.md)
+参考 [NNI Windows 本机模式](docs/zh_CN/WindowsLocalMode.md)，了解更多信息。
 
-**Verify install**
+**验证安装**
 
 The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
 
