@@ -40,9 +40,6 @@ import { PAITrainingService } from './training_service/pai/paiTrainingService';
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
-import { PAITrainingService } from './training_service/pai/paiTrainingService';
-import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
-import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { AetherTrainingService } from './training_service/aether/aetherTrainingService';
 
 function initStartupInfo(
