@@ -536,6 +536,6 @@ def hdfs_clean(args):
     path_list = hdfs_client.listdir(root_path)
     for path in path_list:
         full_path = os.path.join(root_path, path)
-        print_normal('deleting {0}  size {1}'.format(full_path, get_directory_size(full_path)))
+        print_normal('deleting {0}  size {1} bytes'.format(full_path, get_directory_size(hdfs_client, full_path)))
         hdfs_client.delete(full_path, recursive=True)
     print_normal('DONE')
