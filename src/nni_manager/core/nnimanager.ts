@@ -342,11 +342,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
-        this.trainingService.removeTrialJobMetricListener((metric: TrialJobMetric) => {
-            this.onTrialJobMetrics(metric).catch((err: Error) => {
-                this.criticalError(new NNIError('Job metrics error', `Job metrics error: ${err.message}`, err));
-            });
-        });
+        this.trainingService.eventEmitter.removeAllListeners('metric'); 
         this.dispatcher.sendCommand(TERMINATE);
         let tunerAlive: boolean = true;
         // gracefully terminate tuner and assessor here, wait at most 30 seconds.
