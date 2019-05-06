@@ -4,13 +4,17 @@
 
 We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
 #### Linux and MacOS
+
 ```bash
     python3 -m pip install --upgrade nni
 ```
+
 #### Windows
+
 ```bash
     python -m pip install --upgrade nni
 ```
+
 Note:
 
 * For Linux and MacOS `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
@@ -49,7 +53,7 @@ The above code can only try one set of parameters at a time, if we want to tune 
 
 NNI is born for helping user do the tuning jobs, the NNI working process is presented below:
 
-```
+```pseudo
 input: search space, trial code, config file
 output: one optimal hyperparameter configuration
 
@@ -66,7 +70,7 @@ If you want to use NNI to automatically train your model and find the optimal hy
 
 **Three things required to do when using NNI**
 
-**Step 1**: Give a `Search Space` file in json, includes the `name` and the `distribution` (discrete valued or continuous valued) of all the hyperparameters you need to search.
+**Step 1**: Give a `Search Space` file in JSON, includes the `name` and the `distribution` (discrete valued or continuous valued) of all the hyperparameters you need to search.
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -127,33 +131,36 @@ trial:
   codeDir: .
   gpuNum: 0
 ```
-Note:
-* **For Windows, you need to change trial command `python3` to `python`**
+
+Note, **for Windows, you need to change trial command `python3` to `python`**
 
 *Implemented code directory: [config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
 All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
 
-If you choose Windows local mode and use powershell to run script for the first time, you need run powershell as administrator with this command
+If you choose Windows local mode and use PowerShell to run script, you need run below PowerShell command as administrator at first time.
+
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
-When these things are done, **run the config.yml file from your command line to start the experiment**.
+
+When these things are done, run below line to start an experiment.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
-If you're using windows local mode, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
+
+**Note**, if you're using windows local mode, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
-Note: **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](NNICTLDOC.md) for more usage of `nnictl`
+Note, **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](NNICTLDOC.md) for more usage of `nnictl`
 
 Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
 
-```
+```text
 INFO: Starting restful server...
 INFO: Successfully started Restful server!
 INFO: Setting local config...
@@ -185,7 +192,7 @@ If you prepare `trial`, `search space` and `config` according to the above steps
 
 After you start your experiment in NNI successfully, you can find a message in the command-line interface to tell you `Web UI url` like this:
 
-```
+```text
 The Web UI urls are: [Your IP]:8080
 ```
 
@@ -229,7 +236,7 @@ Below is the status of the all trials. Specifically:
 
 ![](../img/QuickStart6.png)
 
-* Intermediate Result Grap
+* Intermediate Result Graph
 
 ![](../img/QuickStart7.png)
 
