@@ -33,7 +33,6 @@ from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMEN
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process
 from .command_utils import check_output_command, kill_command
-from .hdfs_utils import copyHdfsDirectoryToLocal, copyHdfsFileToLocal
 
 def get_experiment_time(port):
     '''get the startTime and endTime of an experiment'''
@@ -513,17 +512,6 @@ def hdfs_set(args):
     hdfsConfig.set_config(args.host, args.user_name)
     print_normal('HDFS account update success!')
 
-def get_directory_size(hdfs_client, path):
-    path_list = hdfs_client.listdir(path)
-    total_size = 0
-    for temp_path in path_list:
-        new_path = path + '/' + temp_path
-        if hdfs_client.get_file_status(new_path).type == 'FILE':
-            total_size += hdfs_client.get_file_status(new_path).length
-        else:
-            total_size += get_directory_size(hdfs_client, new_path)
-    return total_size
-
 def hdfs_clean(args):
     hdfsConfig = HDFSConfig()
     if not hdfsConfig.get_config():
@@ -533,9 +521,20 @@ def hdfs_clean(args):
     user_name = hdfsConfig.get_config().get('userName')
     hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)
     root_path = os.path.join('/', user_name, 'nni', 'experiments')
+    while True:
+        inputs = input('INFO: clean up all files in {0}, do you want to continue?[Y/N]:'.format(root_path))
+        if inputs.lower() not in ['y', 'n', 'yes', 'no']:
+            print_warning('please input Y or N!')
+        elif inputs.lower() in ['n', 'no']:
+            exit(0)
+        else:
+            break
     path_list = hdfs_client.listdir(root_path)
     for path in path_list:
         full_path = os.path.join(root_path, path)
-        print_normal('deleting {0}  size {1} bytes'.format(full_path, get_directory_size(hdfs_client, full_path)))
-        hdfs_client.delete(full_path, recursive=True)
+        print_normal('deleting {0}'.format(full_path))
+        if hdfs_client.delete(full_path, recursive=True):
+            print_normal('delete success!')
+        else:
+            print_normal('delete failed!')
     print_normal('DONE')
