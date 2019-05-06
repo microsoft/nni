@@ -156,17 +156,17 @@ Windows
 
 **验证安装**
 
-The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
+以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow**。
 
-* Download the examples via clone the source code.
+* 通过克隆源代码下载示例。
 
 ```bash
     git clone -b v0.7 https://github.com/Microsoft/nni.git
 ```
 
-Linux and MacOS
+Linux 和 macOS
 
-* Run the MNIST example.
+* 运行 MNIST 示例。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
@@ -174,13 +174,13 @@ Linux and MacOS
 
 Windows
 
-* Run the MNIST example.
+* 运行 MNIST 示例。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
-* Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
+* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
 ```text
 INFO: Starting restful server...
@@ -209,7 +209,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](docs/en_US/WebUI.md) are more Web UI pages.
+* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](docs/zh_CN/WebUI.md)的更多页面。
 
 <table style="border: none">
     <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
@@ -218,44 +218,44 @@ You can use these commands to get more information about the experiment
 
 ## **文档**
 
-* [NNI overview](docs/en_US/Overview.md)
-* [Quick start](docs/en_US/QuickStart.md)
+* [NNI 概述](docs/en_US/Overview.md)
+* [快速入门](docs/en_US/QuickStart.md)
 
 ## **入门**
 
-* [Install NNI](docs/en_US/Installation.md)
-* [Use command line tool nnictl](docs/en_US/NNICTLDOC.md)
-* [Use NNIBoard](docs/en_US/WebUI.md)
-* [How to define search space](docs/en_US/SearchSpaceSpec.md)
-* [How to define a trial](docs/en_US/Trials.md)
-* [How to choose tuner/search-algorithm](docs/en_US/Builtin_Tuner.md)
-* [Config an experiment](docs/en_US/ExperimentConfig.md)
-* [How to use annotation](docs/en_US/Trials.md#nni-python-annotation)
+* [安装 NNI](docs/en_US/Installation.md)
+* [使用命令行工具 nnictl](docs/en_US/NNICTLDOC.md)
+* [使用 NNIBoard](docs/en_US/WebUI.md)
+* [如何定义搜索空间](docs/en_US/SearchSpaceSpec.md)
+* [如何编写 Trial 代码](docs/en_US/Trials.md)
+* [如何选择 Tuner、搜索算法](docs/en_US/Builtin_Tuner.md)
+* [配置 Experiment](docs/en_US/ExperimentConfig.md)
+* [如何使用 Annotation](docs/en_US/Trials.md#nni-python-annotation)
 
 ## **教程**
 
-* [Run an experiment on local (with multiple GPUs)?](docs/en_US/LocalMode.md)
-* [Run an experiment on multiple machines?](docs/en_US/RemoteMachineMode.md)
-* [Run an experiment on OpenPAI?](docs/en_US/PAIMode.md)
-* [Run an experiment on Kubeflow?](docs/en_US/KubeflowMode.md)
-* [Try different tuners](docs/en_US/tuners.rst)
-* [Try different assessors](docs/en_US/assessors.rst)
-* [Implement a customized tuner](docs/en_US/Customize_Tuner.md)
-* [Implement a customized assessor](docs/en_US/Customize_Assessor.md)
-* [Use Genetic Algorithm to find good model architectures for Reading Comprehension task](examples/trials/ga_squad/README.md)
+* [在本机运行 Experiment (支持多 GPU 卡)](docs/en_US/LocalMode.md)
+* [在多机上运行 Experiment](docs/en_US/RemoteMachineMode.md)
+* [在 OpenPAI 上运行 Experiment](docs/en_US/PAIMode.md)
+* [在 Kubeflow 上运行 Experiment。](docs/en_US/KubeflowMode.md)
+* [尝试不同的 Tuner](docs/en_US/tuners.rst)
+* [尝试不同的 Assessor](docs/en_US/assessors.rst)
+* [实现自定义 Tuner](docs/en_US/Customize_Tuner.md)
+* [实现自定义 Assessor](docs/en_US/Customize_Assessor.md)
+* [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README.md)
 
 ## **贡献**
 
-This project welcomes contributions and suggestions, we use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
+欢迎贡献代码或提交建议，可在 [GitHub issues](https://github.com/Microsoft/nni/issues) 跟踪需求和 Bug。
 
-Issues with the **good first issue** label are simple and easy-to-start ones that we recommend new contributors to start with.
+推荐新贡献者从标有 **good first issue** 的简单需求开始。
 
-To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/en_US/SetupNNIDeveloperEnvironment.md)
+如要安装 NNI 开发环境，参考： [配置 NNI 开发环境](docs/zh_CN/SetupNNIDeveloperEnvironment.md)。
 
-Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/en_US/CONTRIBUTING.md)
+在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/zh_CN/CONTRIBUTING.md)。
 
-We are in construction of the instruction for [How to Debug](docs/en_US/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
+我们正在编写[如何调试](docs/zh_CN/HowToDebug.md) 的页面，欢迎提交建议和问题。
 
 ## **许可协议**
 
-The entire codebase is under [MIT license](LICENSE)
+代码库遵循 [MIT 许可协议](LICENSE)
