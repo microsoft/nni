@@ -6,7 +6,7 @@
 
 **强烈推荐使用 Anaconda python(64 位)。**
 
-When you use PowerShell to run script for the first time, you need **run PowerShell as administrator** with this command:
+在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
 
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
@@ -18,11 +18,11 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ```bash
   python -m pip install --upgrade nni
-  ```
+```
 
-* __Install NNI through source code__
+* __通过代码安装 NNI__
 
-  Prerequisite: `python >=3.5`, `git`, `powershell`
+  先决条件: `python >=3.5`, `git`, `powershell`
 
   ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
@@ -30,25 +30,25 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
   powershell ./install.ps1
   ```
 
-When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
+运行完以上脚本后，从命令行使用 **config_windows.yml** 来启动 Experiment，完成安装验证。
 
 ```bash
 nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
-For other examples you need to change trial command `python3` into `python` in each example YAML.
+同样，其它示例的 YAML 配置中也需将 Trial 命令的 `python3` 替换为 `python`。
 
-## **FAQ**
+## **常见问答**
 
-### simplejson failed when installing NNI
+### 安装 NNI 时出现 simplejson 错误
 
 确保安装了 C++ 14.0 编译器。
 
 > building 'simplejson._speedups' extension error: [WinError 3] The system cannot find the path specified
 
-### Fail to run PowerShell when install NNI from source
+### 从源代码安装 NNI 时，遇到 PowerShell 错误
 
-If you run PowerShell script for the first time and did not set the execution policies for executing the script, you will meet this error below. Try to run PowerShell as administrator with this command first:
+如果第一次运行 PowerShell 脚本，且没有设置过执行脚本的策略，会遇到下列错误。 需要以管理员身份运行此命令：
 
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
@@ -56,15 +56,15 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 > ...cannot be loaded because running scripts is disabled on this system.
 
-### Trial failed with missing DLL in cmd or PowerShell
+### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
 
-This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. 强烈推荐使用 Anaconda python。 If you use official python, make sure you have one of `Visual Studio`, `MATLAB`, `MKL` and `Intel Distribution for Python` installed on Windows before running NNI. If not, try to install one of products above or Anaconda python(64-bit).
+此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 强烈推荐使用 Anaconda python。 如果要使用官方的 Python，确保运行 NNI 前，在 `Visual Studio`，`MATLAB`，`MKL` 和`Intel Distribution for Python` 中至少安装了一个。 如果没有，请尝试安装上面的产品之一或 Anaconda Python（64位）。
 
 > ImportError: DLL load failed
 
 ### Web 界面上的 Trial 错误
 
-检查 Trial 日志文件来了解详情。 If there is no such file and NNI is installed through pip, then you need to run PowerShell as administrator with this command first:
+检查 Trial 日志文件来了解详情。 如果没有日志文件，且 NNI 是通过 pip 安装的，则需要在管理员权限下先运行以下命令：
 
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
@@ -72,8 +72,8 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 如果存在 stderr 文件，也需要查看其内容。 可能的错误情况包括：
 
-* forget to change the trial command `python3` into `python` in each experiment YAML.
-* forget to install experiment dependencies such as TensorFlow, Keras and so on.
+* 忘记将 Experiment 配置的 Trial 命令中的 `python3` 改为 `python`。
+* 忘记安装 Experiment 的依赖，如 TensorFlow，Keras 等。
 
 ### Windows 上支持的 Tuner
 
