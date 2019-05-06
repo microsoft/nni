@@ -54,23 +54,24 @@ if __name__ == '__main__':
 
 NNI 就是用来帮助调优工作的。它的工作流程如下：
 
-    输入: 搜索空间, Trial 代码, 配置文件
-    输出: 一组最佳的超参配置
-    
-    1: For t = 0, 1, 2, ..., maxTrialNum,
-    2:      hyperparameter = 从搜索空间选择一组参数
-    3:      final result = run_trial_and_evaluate(hyperparameter)
-    4:      返回最终结果给 NNI
-    5:      If 时间达到上限,
-    6:          停止实验
-    7: return 最好的实验结果
-    
+```pseudo
+输入: 搜索空间, Trial 代码, 配置文件
+输出: 一组最佳的超参配置
+
+1: For t = 0, 1, 2, ..., maxTrialNum,
+2:      hyperparameter = 从搜索空间选择一组参数
+3:      final result = run_trial_and_evaluate(hyperparameter)
+4:      返回最终结果给 NNI
+5:      If 时间达到上限,
+6:          停止实验
+7: return 最好的实验结果
+```
 
 如果需要使用 NNI 来自动训练模型，找到最佳超参，需要如下三步：
 
 **使用 NNI 时的三个步骤**
 
-**第一步**：定义 JSON 格式的`搜索空间`文件，包括所有需要搜索的超参的`名称`和`分布`（离散和连续值均可）。
+**Step 1**: Give a `Search Space` file in JSON, includes the `name` and the `distribution` (discrete valued or continuous valued) of all the hyperparameters you need to search.
 
 ```diff
 -   params = {'data_dir': '/tmp/tensorflow/mnist/input_data', 'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
@@ -134,59 +135,60 @@ trial:
   gpuNum: 0
 ```
 
-注意： * **在 Windows 上，需要将 Trial 命令的 `python3` 改为 `python`**
+Note, **for Windows, you need to change trial command `python3` to `python`**
 
 *实现代码：[config.yml](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist/config.yml)*
 
 上面的代码都已准备好，并保存在 [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)。
 
-使用 Windows 本机模式，并且是第一次使用 PowerShell 来运行脚本，需要使用管理员权限运行下列命令
+If you choose Windows local mode and use PowerShell to run script, you need run below PowerShell command as administrator at first time.
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
 
-上述步骤完成后，**从命令行运行 config.yml 文件来开始 Experiment**。
+When these things are done, run below line to start an experiment.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
-在 Windows 的本机模式下，可**使用 config_windows.yml 来启动 Experiment**。此配置文件仅将 `python3` 改为了 `python`，以适应 Windows 中不同的的可执行文件名。
+**Note**, if you're using windows local mode, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
-注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](NNICTLDOC.md)，了解 `nnictl` 更多用法。
+Note, **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. 查看[这里](NNICTLDOC.md)，了解 `nnictl` 更多用法。
 
 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
 
-    INFO: Starting restful server...
-    INFO: Successfully started Restful server!
-    INFO: Setting local config...
-    INFO: Successfully set local config!
-    INFO: Starting experiment...
-    INFO: Successfully started experiment!
-    -----------------------------------------------------------------------
-    The experiment id is egchD4qy
-    The Web UI urls are: [Your IP]:8080
-    -----------------------------------------------------------------------
-    
-    You can use these commands to get more information about the experiment
-    -----------------------------------------------------------------------
-             commands                       description
-    
-    1. nnictl experiment show        show the information of experiments
-    2. nnictl trial ls               list all of trial jobs
-    3. nnictl top                    monitor the status of running experiments
-    4. nnictl log stderr             show stderr log content
-    5. nnictl log stdout             show stdout log content
-    6. nnictl stop                   stop an experiment
-    7. nnictl trial kill             kill a trial job by id
-    8. nnictl --help                 get help information about nnictl
-    -----------------------------------------------------------------------
-    
+```text
+INFO: Starting restful server...
+INFO: Successfully started Restful server!
+INFO: Setting local config...
+INFO: Successfully set local config!
+INFO: Starting experiment...
+INFO: Successfully started experiment!
+-----------------------------------------------------------------------
+The experiment id is egchD4qy
+The Web UI urls are: [Your IP]:8080
+-----------------------------------------------------------------------
+
+You can use these commands to get more information about the experiment
+-----------------------------------------------------------------------
+         commands                       description
+
+1. nnictl experiment show        show the information of experiments
+2. nnictl trial ls               list all of trial jobs
+3. nnictl top                    monitor the status of running experiments
+4. nnictl log stderr             show stderr log content
+5. nnictl log stdout             show stdout log content
+6. nnictl stop                   stop an experiment
+7. nnictl trial kill             kill a trial job by id
+8. nnictl --help                 get help information about nnictl
+-----------------------------------------------------------------------
+```
 
 如果根据上述步骤准备好了相应 `Trial`, `搜索空间` 和 `配置`，并成功创建的 NNI 任务。NNI 会自动开始通过配置的搜索空间来运行不同的超参集合，搜索最好的超参。 通过 Web 界面可看到 NNI 的进度。
 
@@ -194,8 +196,9 @@ trial:
 
 启动 Experiment 后，可以在命令行界面找到如下的 `Web 界面地址`：
 
-    The Web UI urls are: [IP 地址]:8080
-    
+```text
+The Web UI urls are: [IP 地址]:8080
+```
 
 在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。
 
@@ -237,7 +240,7 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 可�
 
 ![](../img/QuickStart6.png)
 
-* 中间结果图
+* Intermediate Result Graph
 
 ![](../img/QuickStart7.png)
 
