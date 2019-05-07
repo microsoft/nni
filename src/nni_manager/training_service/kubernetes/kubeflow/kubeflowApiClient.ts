@@ -34,12 +34,16 @@ abstract class KubeflowOperatorClient extends KubernetesCRDClient{
                 return new TFOperatorClientV1Alpha2();
             } else if(operatorApiVersion == 'v1beta1') {
                 return new TFOperatorClientV1Beta1();
+            } else if(operatorApiVersion == 'v1beta2') {
+                return new TFOperatorClientV1Beta2();
             }
         } else if(kubeflowOperator === 'pytorch-operator') {
             if(operatorApiVersion == 'v1alpha2') {
                 return new PytorchOperatorClientV1Alpha2();
             } else if(operatorApiVersion == 'v1beta1') {
                 return new PytorchOperatorClientV1Beta1();
+            } else if(operatorApiVersion == 'v1beta2') {
+                return new PytorchOperatorClientV1Beta2();
             }
         }
 
@@ -85,6 +89,25 @@ class TFOperatorClientV1Beta1 extends KubernetesCRDClient {
     }    
 }
 
+class TFOperatorClientV1Beta2 extends KubernetesCRDClient {
+    /**
+     * constructor, to initialize tfjob CRD definition
+     */
+    public constructor() {
+        super();
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/kubeflow/tfjob-crd-v1beta2.json', 'utf8'));
+        this.client.addCustomResourceDefinition(this.crdSchema);
+    }
+
+    protected get operator(): any {
+        return this.client.apis["kubeflow.org"].v1beta2.namespaces('default').tfjobs;
+    }
+
+    public get containerName(): string {
+        return 'tensorflow';
+    }    
+}
+
 class PytorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     /**
      * constructor, to initialize tfjob CRD definition
@@ -116,6 +139,25 @@ class PytorchOperatorClientV1Beta1 extends KubernetesCRDClient {
 
     protected get operator(): any {
         return this.client.apis["kubeflow.org"].v1beta1.namespaces('default').pytorchjobs;
+    }
+
+    public get containerName(): string {
+        return 'pytorch';
+    }
+}
+
+class PytorchOperatorClientV1Beta2 extends KubernetesCRDClient {
+    /**
+     * constructor, to initialize tfjob CRD definition
+     */
+    public constructor() {
+        super();
+        this.crdSchema = JSON.parse(fs.readFileSync('./config/kubeflow/pytorchjob-crd-v1beta2.json', 'utf8'));
+        this.client.addCustomResourceDefinition(this.crdSchema);
+    }
+
+    protected get operator(): any {
+        return this.client.apis["kubeflow.org"].v1beta2.namespaces('default').pytorchjobs;
     }
 
     public get containerName(): string {
