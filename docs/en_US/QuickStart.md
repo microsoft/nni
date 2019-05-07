@@ -143,15 +143,16 @@ Note, **for Windows, you need to change trial command `python3` to `python`**
 All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
 
 #### Linux and MacOS   
-Run the **config.yml** file from your command line to start mnist experiment.
+Run the **config.yml** file from your command line to start MNIST experiment.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 #### Windows   
-Run the **config_windows.yml** file from your command line to start mnist experiment.
+Run the **config_windows.yml** file from your command line to start MNIST experiment.
 
 **Note**, if you're using windows local mode, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
+
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```

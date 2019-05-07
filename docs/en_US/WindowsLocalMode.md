@@ -55,9 +55,9 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 >...cannot be loaded because running scripts is disabled on this system.
 
-### Trial failed with missing DLL in cmd or Powershell
+### Trial failed with missing DLL in cmd or PowerShell
 
-This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install scipy. Using anaconda python(64-bit) can solve it.
+This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Using anaconda python(64-bit) can solve it.
 >ImportError: DLL load failed
 
 ### Trial failed on webUI
