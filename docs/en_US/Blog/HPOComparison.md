@@ -5,19 +5,32 @@ Comparison of Hyperparameter Optimization algorithms on several problems.
 
 Hyperparameter Optimization algorithms are list below:
 
-- Random Search
-- Grid Search
-- Evolution
-- Anneal
-- Metis
-- TPE
-- SMAC
-- HyperBand
-- BOHB
+- [Random Search](../Builtin_Tuner.md#Random)
+- [Grid Search](../Builtin_Tuner.md#Random)
+- [Evolution](../Builtin_Tuner.md#Evolution)
+- [Anneal](../Builtin_Tuner.md#Anneal)
+- [Metis](../Builtin_Tuner.md#MetisTuner)
+- [TPE](../Builtin_Tuner.md#TPE)
+- [SMAC](../Builtin_Tuner.md#SMAC)
+- [HyperBand](../Builtin_Tuner.md#Hyperband)
+- [BOHB](../Builtin_Tuner.md#BOHB)
 
-All algorithms run in NNI local environment.
+All algorithms run in NNI local environment。
 
-## First Fake Function
+Machine Environment：
+
+```
+OS: Linux Ubuntu 16.04 LTS
+CPU: Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz 2600 MHz
+Memory: 112 GB
+NNI Version: v0.7
+NNI Mode(local|pai|remote): local
+Python version: 3.6
+Is conda or virtualenv used?: Conda
+is running in docker?: no
+```
+
+## Convex Function Optimization With Hyperparameters Non-independent
 
 ### Problem Description
 
@@ -76,7 +89,7 @@ We repeat these algorithms (Random Search, Grid Search, Evolution, Anneal, Metis
 
 For Metis, there are about 300 trials because it runs slowly due to its high time complexity O(n^3) in Gaussian Process.
 
-## Second Fake Function
+## Convex Function Optimization With Hyperparameters Independent
 
 ### Problem Description
 
@@ -139,7 +152,7 @@ For Metis, there are about 300 trials because it runs slowly due to its high tim
 
 ### Problem Description
 
-Nonconvex problem on the hyper-parameter search of AutoGBDT example.
+Nonconvex problem on the hyper-parameter search of [AutoGBDT](../gbdt_example.md) example.
 
 ### Search Space
 
@@ -210,7 +223,7 @@ For Metis, there are about 300 trials because it runs slowly due to its high tim
 
 ### Problem Description
 
-`DB_Bench` is the main tool that is used to benchmark RocksDB's performance. It has so many hapermeter to tune.
+[DB_Bench](<https://github.com/facebook/rocksdb/wiki/Benchmarking-tools>) is the main tool that is used to benchmark [RocksDB](https://rocksdb.org/)'s performance. It has so many hapermeter to tune.
 
 The performance of `DB_Bench` is associated with the machine configuration and installation method. We run the `DB_Bench`in the Linux machine and install the Rock in shared library.
 
@@ -305,7 +318,7 @@ The search space is enormous (about 10^40) and we set the maximum number of tria
 
 Figure:
 
-![](../../img/hpo_rocksdb_fillrandom.PNG)
+![](../../img/hpo_rocksdb_fillrandom.png)
 
 #### 'readrandom' Benchmark
 
