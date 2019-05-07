@@ -21,7 +21,6 @@
 hyperband_advisor.py
 """
 
-from enum import Enum, unique
 import sys
 import math
 import copy

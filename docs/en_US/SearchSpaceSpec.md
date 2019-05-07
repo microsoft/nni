@@ -6,7 +6,7 @@ In NNI, tuner will sample parameters/architecture according to the search space,
 
 To define a search space, users should define the name of variable, the type of sampling strategy and its parameters.
 
-* A example of search space definition as follow:
+* An example of search space definition as follow:
 
 ```yaml
 {
@@ -26,9 +26,19 @@ Take the first line as an example. `dropout_rate` is defined as a variable whose
 All types of sampling strategies and their parameter are listed here:
 
 * {"_type":"choice","_value":options}
-  * Which means the variable value is one of the options, which should be a list. The elements of options can themselves be [nested] stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
+
+  * Which means the variable value is one of the options, which should be a list. The elements of options can themselves be **nested** stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
+
+  * An simple [example](../../examples/trials/mnist-cascading-search-space/search_space.json) of [nested] search space definition. The elements of options in the list must be dictionary with one key `_name` and its value pair. Here is a [sample]((../../examples/trials/mnist-cascading-search-space/sample.json) ) which users can get from nni with **nested** search space definition. Tuners which support this feature is as follows:
+
+    - Random Search 
+    - TPE
+
+    - Anneal
+    - Evolution
 
 * {"_type":"randint","_value":[upper]}
+
   * Which means the variable value is a random integer in the range [0, upper). The semantics of this distribution is that there is no more correlation in the loss function between nearby integer values, as compared with more distant integer values. This is an appropriate distribution for describing random seeds for example. If the loss function is probably more correlated for nearby integer values, then you should probably use one of the "quantized" continuous distributions, such as either quniform, qloguniform, qnormal or qlognormal. Note that if you want to change lower bound, you can use `quniform` for now.
 
 * {"_type":"uniform","_value":[low, high]}
@@ -48,6 +58,7 @@ All types of sampling strategies and their parameter are listed here:
   * Suitable for a discrete variable with respect to which the objective is "smooth" and gets smoother with the size of the value, but which should be bounded both above and below.
 
 * {"_type":"normal","_value":[mu, sigma]}
+
   * Which means the variable value is a real value that's normally-distributed with mean mu and standard deviation sigma. When optimizing, this is an unconstrained variable.
 
 * {"_type":"qnormal","_value":[mu, sigma, q]}
@@ -55,6 +66,7 @@ All types of sampling strategies and their parameter are listed here:
   * Suitable for a discrete variable that probably takes a value around mu, but is fundamentally unbounded.
 
 * {"_type":"lognormal","_value":[mu, sigma]}
+
   * Which means the variable value is a value drawn according to exp(normal(mu, sigma)) so that the logarithm of the return value is normally distributed. When optimizing, this variable is constrained to be positive.
 
 * {"_type":"qlognormal","_value":[mu, sigma, q]}

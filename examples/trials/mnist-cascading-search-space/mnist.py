@@ -131,12 +131,14 @@ def main(params):
 
         nni.report_final_result(test_acc)
 
-def generate_defualt_params():
-    params = {'data_dir': '/tmp/tensorflow/mnist/input_data',
-              'batch_num': 1000,
-              'batch_size': 200}
-    return params
-
+def get_params():
+    ''' Get parameters from command line '''
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_dir", type=str, default='/tmp/tensorflow/mnist/input_data', help="data directory")
+    parser.add_argument("--batch_num", type=int, default=1000)
+    parser.add_argument("--batch_size", type=int, default=200)
+    args, _ = parser.parse_known_args()
+    return args
 
 def parse_init_json(data):
     params = {}
@@ -163,7 +165,7 @@ if __name__ == '__main__':
 
         RCV_PARAMS = parse_init_json(data)
         logger.debug(RCV_PARAMS)
-        params = generate_defualt_params()
+        params = vars(get_params())
         params.update(RCV_PARAMS)
         print(RCV_PARAMS)
 
