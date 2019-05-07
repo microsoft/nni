@@ -139,19 +139,50 @@ def json2vals(in_x, vals, out_y, name=ROOT):
         for i, temp in enumerate(in_x):
             json2vals(temp, vals[i], out_y, name + '[%d]' % i)
 
+def _add_index(in_x, parameter):
+    """
+    change parameters in NNI format to parameters in hyperopt format(This function also support nested dict.).
+    For example, receive parameters like:
+        {'dropout_rate': 0.8, 'conv_size': 3, 'hidden_size': 512}
+    Will change to format in hyperopt, like:
+        {'dropout_rate': 0.8, 'conv_size': {'_index': 1, '_value': 3}, 'hidden_size': {'_index': 1, '_value': 512}}
+    """
+    if TYPE not in in_x: # if at the top level
+        out_y = dict()
+        for key, value in parameter.items():
+            out_y[key] = _add_index(in_x[key], value)
+        return out_y
+    elif isinstance(in_x, dict):
+        value_type = in_x[TYPE]
+        value_format = in_x[VALUE]
+        if value_type == "choice":
+            choice_name = parameter[0] if isinstance(parameter, list) else parameter
+            for pos, item in enumerate(value_format): # here value_format is a list
+                if isinstance(item, list): # this format is ["choice_key", format_dict]
+                    choice_key = item[0]
+                    choice_value_format = item[1]
+                    if choice_key == choice_name:
+                        return {INDEX: pos, VALUE: [choice_name, _add_index(choice_value_format, parameter[1])]}
+                elif choice_name == item:
+                    return {INDEX: pos, VALUE: item}
+        else:
+            return parameter
 
 def _split_index(params):
     """
     Delete index infromation from params
     """
-    result = {}
-    for key in params:
-        if isinstance(params[key], dict):
-            value = params[key][VALUE]
-        else:
-            value = params[key]
-        result[key] = value
-    return result
+    if isinstance(params, list):
+        return [params[0], _split_index(params[1])]
+    elif isinstance(params, dict):
+        if INDEX in params.keys():
+            return _split_index(params[VALUE])
+        result = dict()
+        for key in params:
+            result[key] = _split_index(params[key])
+        return result
+    else:
+        return params
 
 
 class HyperoptTuner(Tuner):
@@ -365,7 +396,7 @@ class HyperoptTuner(Tuner):
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s" %(_completed_num), len(data))
+            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
             _completed_num += 1
             if self.algorithm_name == 'random_search':
                 return
@@ -373,8 +404,11 @@ class HyperoptTuner(Tuner):
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
+            if not _value:
+                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                continue
             self.supplement_data_num += 1
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
-            self.total_data[_parameter_id] = _params
+            self.total_data[_parameter_id] = _add_index(in_x=self.json, parameter=_params)
             self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
         logger.info("Successfully import data to TPE/Anneal tuner.")

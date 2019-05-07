@@ -136,7 +136,7 @@ def import_data(args):
     args.port = get_experiment_port(args)
     if args.port is not None:
         if import_data_to_restful_server(args, content):
-            print_normal('Import data success!')
+            pass
         else:
             print_error('Import data failed!')
 

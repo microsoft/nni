@@ -113,8 +113,11 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
 
     entry_dir = get_nni_installation_path()
     entry_file = os.path.join(entry_dir, 'main.js')
-
-    cmds = ['node', entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
+    
+    node_command = 'node'
+    if sys.platform == 'win32':
+        node_command = os.path.join(entry_dir[:-3], 'Scripts', 'node.exe')
+    cmds = [node_command, entry_file, '--port', str(port), '--mode', platform, '--start_mode', mode]
     if log_dir is not None:
         cmds += ['--log_dir', log_dir]
     if log_level is not None:

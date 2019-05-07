@@ -68,7 +68,7 @@ function mkDirP(dirPath: string): Promise<void> {
         } else {
             const parent: string = path.dirname(dirPath);
             mkDirP(parent).then(() => {
-                fs.mkdir(dirPath, (err: Error | null) => {
+                fs.mkdir(dirPath, (err: Error) => {
                     if (err) {
                         deferred.reject(err);
                     } else {

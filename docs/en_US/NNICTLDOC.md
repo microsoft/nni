@@ -167,7 +167,7 @@ Debug mode will disable version check function in Trialkeeper.
     `update experiment's new search space with file dir 'examples/trials/mnist/search_space.json'`
 
     ```bash
-    nnictl update searchspace [experiment_id] --file examples/trials/mnist/search_space.json
+    nnictl update searchspace [experiment_id] --filename examples/trials/mnist/search_space.json
     ```
 
 * __nnictl update concurrency__
@@ -388,7 +388,7 @@ Debug mode will disable version check function in Trialkeeper.
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
   |id|  False| |ID of the experiment    |
-  |--file|  True| |File path of the output file     |
+  |--filename, -f|  True| |File path of the output file     |
   |--type|  True| |Type of output file, only support "csv" and "json"|
 
   * Examples
@@ -396,7 +396,7 @@ Debug mode will disable version check function in Trialkeeper.
   > export all trial data in an experiment as json format
 
   ```bash
-  nnictl experiment export [experiment_id] --file [file_path] --type json
+  nnictl experiment export [experiment_id] --filename [file_path] --type json
   ```
 
 * __nnictl experiment import__
@@ -415,7 +415,7 @@ Debug mode will disable version check function in Trialkeeper.
   |Name, shorthand|Required|Default|Description|
   |------|------|------|------|
   |id|  False| |The id of the experiment you want to import data into|
-  |--file, -f|  True| |a file with data you want to import in json format|
+  |--filename, -f|  True| |a file with data you want to import in json format|
 
   * Details
 
@@ -433,7 +433,7 @@ Debug mode will disable version check function in Trialkeeper.
 
     You also can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
 
-    Currenctly, following tuner and advisor support import data:
+    Currently, following tuner and advisor support import data:
 
     ```yml
     builtinTunerName: TPE, Anneal, GridSearch, MetisTuner

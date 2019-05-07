@@ -145,7 +145,7 @@ def parse_init_json(data):
         if value == 'Empty':
             params[key] = ['Empty']
         else:
-            params[key] = [value[0], value[1]['_value'], value[1]['_value']]
+            params[key] = [value[0], value[1], value[1]]
     return params
 
 
