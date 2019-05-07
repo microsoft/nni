@@ -19,13 +19,25 @@
 
 `use strict`;
 
+import * as path from 'path';
+import * as chai from 'chai';
+import * as fs from 'fs';
+import * as tmp from 'tmp';
 import * as chaiAsPromised from 'chai-as-promised';
-import { prepareUnitTest, cleanupUnitTest } from 'common/utils';
+import { prepareUnitTest, cleanupUnitTest, delay } from '../../common/utils';
 import * as component from '../../common/component';
-import { AetherTrainingService } from 'training_service/aether/aetherTrainingService';
+import { AetherTrainingService } from '../../training_service/aether/aetherTrainingService';
+import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
+import { fstat } from 'fs';
+import { TrialJobApplicationForm, TrialJobDetail } from '../../common/trainingService';
+
+const aetherCodeDir: string = tmp.dirSync().name.split('\\').join('\\\\');
+const aetherGraphPath: string = './training_service/test/graph.json';
+const aetherGraphTmpPath: string = path.win32.join(aetherCodeDir, 'graph.json').split('\\').join('\\\\'); 
+fs.copyFileSync(aetherGraphPath, aetherGraphTmpPath);
 
 describe(`Unit Test for Aether Training Service`, () => {
-
+    let trial_config = `{"command": "", "codeDir": "${aetherCodeDir}", "gpuNum": 0, "baseGraph": "${aetherGraphTmpPath}", "outputNodeAlias": "184eb95a", "outputName": "OutputFile"}`;
     let aetherTrainingService: AetherTrainingService;    
     before(() => {
         chai.should();
@@ -37,8 +49,9 @@ describe(`Unit Test for Aether Training Service`, () => {
         cleanupUnitTest();
     })
 
-    beforeEach(() => {
+    beforeEach(async () => {
         aetherTrainingService = component.get(AetherTrainingService);
+        await aetherTrainingService.setClusterMetadata(TrialConfigMetadataKey.NNI_MANAGER_IP, `{"nniManagerIp": "127.0.0.1"}`); 
         aetherTrainingService.run();
     })
 
@@ -46,7 +59,30 @@ describe(`Unit Test for Aether Training Service`, () => {
         aetherTrainingService.cleanUp();
     })
 
-    it('Submit job and collect reward', () => {}).timeout(20000);
+    it('Submit job and collect metric', async () => {
+        await aetherTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trial_config);
+        const form: TrialJobApplicationForm = {
+            jobType: 'TRIAL',
+            hyperParameters: {
+                   value: '',
+                   index: 0,
+            }
+        };
+        const jobDetail: TrialJobDetail = await aetherTrainingService.submitTrialJob(form);
+        chai.expect(jobDetail.status).to.be.oneOf(['WAITING', 'RUNNING']);
+        aetherTrainingService.listTrialJobs().then((jobList) => {
+            chai.expect(jobList).to.be.lengthOf(1);
+        })
+        const listener = function f1(metric: any) {
+            chai.expect(metric.id).to.be.equals(jobDetail.id);
+            // TODO: assert metric number
+            console.log(metric.data);
+        };
+        aetherTrainingService.addTrialJobMetricListener(listener);
+        
+        await delay(60000);
+        aetherTrainingService.removeTrialJobMetricListener(listener);
+    }).timeout(200000);
 
     it('Submit job and cancel', () => {}).timeout(20000);
 })

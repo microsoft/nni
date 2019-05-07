@@ -39,6 +39,7 @@ import { delay, getExperimentRootDir, uniqueString, mkDirP } from '../../common/
 import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
 import { AetherConfig, AetherTrialJobDetail } from './aetherData';
 import { AetherJobRestServer } from './aetherJobRestServer';
+import { AssertionError } from 'assert';
 
 // tslint:disable-next-line:completed-docs
 @component.Singleton
@@ -52,8 +53,20 @@ class AetherTrainingService implements TrainingService {
         return this.metricsEmitter;
     }
 
+    private resolveAetherClient(): string {
+        if (path.extname(__filename) == '.ts') {
+            // testing mode
+            return path.resolve(__dirname, '../../dist/aether/bin/AetherClient.exe');
+        } else if (path.extname(__filename) == '.js') {
+            // production mode
+            return path.resolve(__dirname, '../../aether/bin/AetherClient.exe');
+        } else {
+            throw new Error(`${__filename} wrong file extension!`);
+        }
+    }
+
     public  readonly trialJobsMap: Map<string, AetherTrialJobDetail>;
-    private aetherClientExePath: string = 'C:\\Users\\yann\\Desktop\\NNIAetherClient\\bin\\Debug\\AetherClient.exe';
+    private aetherClientExePath: string;
     private readonly metricsEmitter: EventEmitter;
     private nextTrialSequenceId: number;
     private readonly log!: Logger;
@@ -68,6 +81,7 @@ class AetherTrainingService implements TrainingService {
         this.trialJobsMap = new Map<string, AetherTrialJobDetail>();
         this.nextTrialSequenceId = -1;
         this.runDeferred = new Deferred<void>();
+        this.aetherClientExePath = this.resolveAetherClient();
         this.log.info('Aether Training Service Constructed.');
     }
 
