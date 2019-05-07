@@ -37,9 +37,9 @@ jobs:
     inputs:
       secureFile: remote_ci_private_key
   - powershell: |
-      Copy-Item $(Agent.TempDirectory)/remote_ci_private_key test/id_rsa
-      scp -i test/id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test/port
-      more test/port
+      Copy-Item $(Agent.TempDirectory)\remote_ci_private_key test\id_rsa
+      scp -i test\id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
+      more test\port
     displayName: 'Get docker port'
   - script: |
       cd test
