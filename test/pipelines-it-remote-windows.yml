@@ -1,0 +1,56 @@
+jobs:
+- job: 'integration_test_remote_windows'
+
+  steps:
+  - script: python -m pip install --upgrade pip setuptools
+    displayName: 'Install python tools'
+  - powershell: |
+      cd deployment/pypi
+      Write-Host 'building prerelease package...'
+      .\install.ps1 -version_os 64
+      ls $(Build.SourcesDirectory)\deployment\pypi\dist\
+    displayName: 'build nni bdsit_wheel'
+  - powershell: |
+      .\install.ps1
+    displayName: 'Install nni toolkit via source code'
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: remote_nni-ci-gpu-01
+      sourceFolder: deployment\pypi\dist\
+      targetFolder: /tmp/nnitest/$(Build.BuildId)/dist
+      overwrite: true
+    displayName: 'Copy dist files to remote machine'
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: remote_nni-ci-gpu-01
+      sourceFolder: test
+      targetFolder: /tmp/nnitest/$(Build.BuildId)/test
+      overwrite: true
+    displayName: 'Copy test files to remote machine'
+  - task: SSH@0
+    inputs:
+      sshEndpoint: remote_nni-ci-gpu-01
+      runOptions: commands
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni
+    displayName: 'Start docker'
+  - task: DownloadSecureFile@1
+    inputs:
+      secureFile: remote_ci_private_key
+  - powershell: |
+      Copy-Item $(Agent.TempDirectory)/remote_ci_private_key test/id_rsa
+      scp -i test/id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test/port
+      more test/port
+    displayName: 'Get docker port'
+  - script: |
+      cd test
+      python generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) \
+      --remote_port $(cat port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
+      more training_service.yml
+      python config_test.py --ts remote --exclude cifar10,smac,bohb
+    displayName: 'integration test'
+  - task: SSH@0
+    inputs:
+      sshEndpoint: remote_nni-ci-gpu-01
+      runOptions: commands
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/remote_docker.py --mode stop --name $(Build.BuildId)
+    displayName: 'Stop docker'
