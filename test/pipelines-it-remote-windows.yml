@@ -7,11 +7,11 @@ jobs:
   - powershell: |
       cd deployment/pypi
       Write-Host 'building prerelease package...'
-      .\install.ps1 -version_os 64
-      ls $(Build.SourcesDirectory)\deployment\pypi\dist\
+      powershell.exe -file install.ps1 -version_os 64
+      dir $(Build.SourcesDirectory)\deployment\pypi\dist\
     displayName: 'build nni bdsit_wheel'
   - powershell: |
-      .\install.ps1
+      powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - task: CopyFilesOverSSH@0
     inputs:
