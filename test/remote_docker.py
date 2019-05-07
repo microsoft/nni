@@ -72,7 +72,7 @@ if __name__ == '__main__':
     parser.add_argument('--image', dest='image', help='the image to be used')
     parser.add_argument('--os', dest='os', default='Linux', choices=['Linux', 'MacOS', 'Windows'], help='nniManager os version')
     args = parser.parse_args()
-    if args.os == Windows:
+    if args.os == 'Windows':
         if args.mode == 'start':
             start_container_windows(args.image, args.name)
         else:
