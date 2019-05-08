@@ -83,6 +83,6 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 当前不支持 SMAC，原因可参考[此问题](https://github.com/automl/SMAC3/issues/483)。
 
-Note:
+注意：
 
-* If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
+* 如果遇到 `Segmentation fault` 这样的错误，参考[常见问答](FAQ.md)。
