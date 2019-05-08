@@ -59,6 +59,7 @@ def start_container_windows(image, name):
     check_call(sdk_cmds)
     with open(source_dir + '/port', 'w') as file:
         file.write(str(port))
+    print('----------line 62----------')
 
 def stop_container(name):
     '''Stop docker container''' 
@@ -77,6 +78,7 @@ if __name__ == '__main__':
     if args.os == 'Windows':
         if args.mode == 'start':
             start_container_windows(args.image, args.name)
+            print('----------line 81----------')
         else:
             stop_container(args.name)
     else:
