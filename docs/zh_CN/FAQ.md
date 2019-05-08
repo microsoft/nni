@@ -37,10 +37,10 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 将虚拟机的网络配置为桥接模式来让虚拟机能被网络访问，并确保虚拟机的防火墙没有禁止相关端口。
 
-### Windows local mode problems
+### Windows 本机模式
 
-Please refer to [NNI Windows local mode](WindowsLocalMode.md)
+参考 [NNI Windows 本机模式](WindowsLocalMode.md)
 
-### Help us improve
+### 帮助改进
 
-Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.
+在创建新问题前，请在 https://github.com/Microsoft/nni/issues 查看是否有人已经报告了相似的问题。
