@@ -17,7 +17,7 @@ jobs:
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
       runOptions: commands
-      commands: cd /tmp/nnitest/$(Build.BuildId)/nni-remote/deployment/pypi && export PATH=/usr/bin/yarn:$PATH && export PATH=/home/nni/.local/bin/node:$PATH && make build
+      commands: cd /tmp/nnitest/$(Build.BuildId)/nni-remote/deployment/pypi && make build
     displayName: 'build nni bdsit_wheel'
   - task: SSH@0
     inputs:
