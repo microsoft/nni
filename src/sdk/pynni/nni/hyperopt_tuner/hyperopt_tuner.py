@@ -61,14 +61,10 @@ def json2space(in_x, name=NodeType.ROOT):
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
-            # nested json
             if isinstance(x_i, dict):
                 if NodeType.NAME not in x_i.keys():
                     raise RuntimeError('\'_name\' key is not found in this nested search space.')
-                else:
-                    out_y.append(json2space(x_i, name+'[%d]' % i))
-            else:
-                out_y.append(json2space(x_i, name+'[%d]' % i))
+            out_y.append(json2space(x_i, name+'[%d]' % i))
     else:
         pass
     return out_y
@@ -98,14 +94,10 @@ def json2parameter(in_x, parameter, name=NodeType.ROOT):
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
-            # nested json
             if isinstance(x_i, dict):
                 if NodeType.NAME not in x_i.keys():
                     raise RuntimeError('\'_name\' key is not found in this nested search space.')
-                else:
-                    out_y.append(json2parameter(x_i, parameter, name + '[%d]' % i))
-            else:
-                out_y.append(json2parameter(x_i, parameter, name + '[%d]' % i))
+            out_y.append(json2parameter(x_i, parameter, name + '[%d]' % i))
     else:
         pass
     return out_y
