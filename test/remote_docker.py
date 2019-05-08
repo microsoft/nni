@@ -57,9 +57,9 @@ def start_container_windows(image, name):
     check_call(pip_cmds)
     sdk_cmds = ['docker', 'exec', name, 'bash', '-c', 'cd /tmp/nni/nni-remote/ && yes | source install.sh']
     check_call(sdk_cmds)
+    print('----------line 60----------')
     with open(source_dir + '/port', 'w') as file:
         file.write(str(port))
-    print('----------line 62----------')
 
 def stop_container(name):
     '''Stop docker container''' 
