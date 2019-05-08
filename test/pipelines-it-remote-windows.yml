@@ -17,6 +17,12 @@ jobs:
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
       runOptions: commands
+      commands: cd /tmp/nnitest/$(Build.BuildId)/nni-remote/deployment/pypi && export PATH=/usr/bin/yarn:$PATH && export PATH=/home/nni/.local/bin/node:$PATH && make build
+    displayName: 'build nni bdsit_wheel'
+  - task: SSH@0
+    inputs:
+      sshEndpoint: remote_nni-ci-gpu-01
+      runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/nni-remote/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni --os Windows
     displayName: 'Start docker'
   - task: DownloadSecureFile@1
