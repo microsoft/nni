@@ -12,19 +12,19 @@
 
 #### Windows
 
-If you choose Windows local mode and use PowerShell to run script, you need run below PowerShell command as administrator at first time.
+如果选择 Windows 本机模式并使用 PowerShell 运行脚本，需要首次以管理员身份在 PowerShell 环境中运行以下命令。
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
 
-Then install nni through pip:
+然后通过 pip 安装 NNI：
 
 ```bash
     python -m pip install --upgrade nni
 ```
 
-Note:
+注意：
 
 * 在 Linux 和 MacOS 上，如果要将 NNI 安装到当前用户的 home 目录中，可使用 `--user`，则不需要特殊权限。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](FAQ.md)。
@@ -32,7 +32,7 @@ Note:
 
 ## MNIST 上的 "Hello World"
 
-NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, tuning hyperparameters. Now, we show how to use NNI to help you find the optimal hyperparameters.
+NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 下面会展示如何使用 NNI 来找到最佳超参组合。
 
 Here is an example script to train a CNN on MNIST dataset **without NNI**:
 
