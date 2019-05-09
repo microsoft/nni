@@ -30,10 +30,10 @@ jobs:
     inputs:
       secureFile: remote_ci_private_key
   - powershell: |
-      Copy-Item $(Agent.TempDirectory)\remote_ci_private_key test\id_rsa
-      icacls.exe test\id_rsa /reset
-      icacls.exe test\id_rsa /grant "$((Get-Acl -Path .\test\id_rsa).Owner):(R,W)"
-      icacls.exe test\id_rsa /inheritance:r
+      Copy-Item $(Agent.TempDirectory)\remote_ci_private_key test\id_rsa -Force
+      cmd /c icacls test\id_rsa /c /t /inheritance:d
+      icacls.exe test\id_rsa /grant "$((Get-Acl -Path .\test\id_rsa).Owner):(F)"
+      cmd /c icacls test\id_rsa /c /t /remove Administrator BUILTIN\Administrators BUILTIN Everyone System Users
       Write-Host "start scp"
       scp -v -i test\id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
       more test\port
