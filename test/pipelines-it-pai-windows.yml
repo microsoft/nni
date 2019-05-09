@@ -8,8 +8,9 @@ jobs:
     vmImage: 'Ubuntu 16.04'
   steps:
   - script:
+      ARTIFACT_BUILD_NUMBER=test
+      echo "##vso[task.setvariable variable=docker_image]$ARTIFACT_BUILD_NUMBER"
       echo "TEST_IMG:$(docker_image)"
-      echo '##vso[task.setvariable variable=docker_image]test'
     displayName: tsetVariable
 
   # - script: python3 -m pip install --upgrade pip setuptools --user
