@@ -30,14 +30,14 @@ def find_wheel_package(dir):
             return file_name
     return None
 
-def start_container(image, name, os):
+def start_container(image, name, nnimanager_os):
     '''Start docker container, generate a port in /tmp/nnitest/{name}/port file'''
     port = find_port()
     source_dir = '/tmp/nnitest/' + name
     run_cmds = ['docker', 'run', '-d', '-p', str(port) + ':22', '--name', name, '--mount', 'type=bind,source=' + source_dir + ',target=/tmp/nni', image]
     output = check_output(run_cmds)
     commit_id = output.decode('utf-8')
-    if os == 'Windows':
+    if nnimanager_os == 'Windows':
         wheel_name = find_wheel_package(os.path.join(source_dir, 'nni-remote/deployment/pypi/dist'))
     else:
         wheel_name = find_wheel_package(os.path.join(source_dir, 'dist'))
@@ -46,7 +46,7 @@ def start_container(image, name, os):
         print('Error: could not find wheel package in {0}'.format(source_dir))
         exit(1)
     def get_dist(wheel_name):
-        if os == 'Windows':
+        if nnimanager_os == 'Windows':
             return '/tmp/nni/nni-remote/deployment/pypi/dist/{0}'.format(wheel_name)
         else:
             return '/tmp/nni/dist/{0}'.format(wheel_name)
