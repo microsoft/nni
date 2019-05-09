@@ -44,6 +44,7 @@ jobs:
 
 - job: 'integration_test_pai'
   timeoutInMinutes: 0
+  dependsOn: build_docker_image
 
   steps:
   - powershell: |
