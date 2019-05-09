@@ -1,6 +1,3 @@
-variables:
-  docker_image: msranni/nni:latest
-
 jobs:
 - job: 'build_docker_image'
   timeoutInMinutes: 0
@@ -8,9 +5,8 @@ jobs:
     vmImage: 'Ubuntu 16.04'
   steps:
   - script:
-      ARTIFACT_BUILD_NUMBER=test
-      echo "##vso[task.setvariable variable=docker_image]$ARTIFACT_BUILD_NUMBER"
-      echo "TEST_IMG:$(docker_image)"
+      echo "##vso[task.setvariable variable=docker_image;isOutput=true]test variable"
+    name: setvariableStep
     displayName: tsetVariable
 
   # - script: python3 -m pip install --upgrade pip setuptools --user
@@ -54,10 +50,11 @@ jobs:
   pool:
     vmImage: 'Ubuntu 16.04'
 
+variables:
+  docker_image: $[ dependencies.build_docker_image.outputs['setvariableStep.docker_image'] ]
   steps:
-  - script:
-      echo "TEST_IMG:$(docker_image)"
-    displayName: 'test variable'
+  - script: "echo $(docker_image)"
+    displayName: tsetVariable
   # - powershell: |
   #     python -m pip install --upgrade pip setuptools
   #     python -m pip install twine
