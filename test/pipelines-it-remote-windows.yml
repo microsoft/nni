@@ -33,12 +33,12 @@ jobs:
       Write-Host "Downloading Putty..."
       (New-Object Net.WebClient).DownloadFile("https://the.earth.li/~sgtatham/putty/latest/w64/pscp.exe", "$(Agent.TempDirectory)\pscp.exe")
       $(Agent.TempDirectory)\pscp.exe -hostkey $(hostkey) -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
-      more test\port
+      Get-Content test\port
     displayName: 'Get docker port'
   - script: |
       cd test
-      python generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) --remote_port $(more port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
-      more training_service.yml
+      python generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) --remote_port $(Get-Content port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
+      Get-Content training_service.yml
       python config_test.py --ts remote --exclude cifar10,smac,bohb
     displayName: 'integration test'
   - task: SSH@0
