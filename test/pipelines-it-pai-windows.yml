@@ -22,7 +22,7 @@ jobs:
 - job: 'build docker image'
   timeoutInMinutes: 0
   pool:
-    vmImage: 'NNI CI PAI CLI'
+    vmImage: 'Ubuntu 16.04'
   steps:
   - script: python3 -m pip install --upgrade pip setuptools --user
     displayName: 'Install python tools'
@@ -82,17 +82,3 @@ jobs:
       python -m pip install torchvision --user
       python -m pip install tensorflow-gpu==1.11.0 --user
     displayName: 'Install dependencies for integration tests'
-  - powershell: |
-      cd deployment\pypi
-      if($env:BUILD_TYPE -eq 'prerelease'){
-        # NNI build scripts (powershell) uses branch tag as package version number
-        git tag $env:BUILD_VERSION
-        Write-Host 'building prerelease package...'
-        .\install.ps1 -version_os 64 -version_ts $True
-      }
-      else{
-        Write-Host 'building release package...'
-        .\install.ps1 -version_os 64 -version_ts $False
-      }
-    condition: eq( variables['upload_package'], 'true')
-    displayName: 'build nni bdsit_wheel'
