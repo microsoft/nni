@@ -14,6 +14,8 @@ jobs:
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - task: SSH@0
+    condition: continueOnError
+    continueOnError: true
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
       runOptions: inline
