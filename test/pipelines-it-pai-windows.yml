@@ -4,48 +4,44 @@ jobs:
   pool:
     vmImage: 'Ubuntu 16.04'
   steps:
-  - script:
-      echo '##vso[task.setvariable variable=TEST_IMG]abc123'
-    displayName: setVariable
+  - script: python3 -m pip install --upgrade pip setuptools --user
+    displayName: 'Install python tools'
+
+  - script: |
+      cd deployment/pypi
+      echo 'building prerelease package...'
+      make build
+      ls $(Build.SourcesDirectory)/deployment/pypi/dist/
+    condition: eq( variables['build_docker_img'], 'true' )
+    displayName: 'build nni bdsit_wheel'
+
+  - script: |
+      if [ $(build_docker_img) = 'true' ]
+      then
+        cd deployment/pypi
+        docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
+        echo 'updating docker file for installing nni from local...'
+        # update Dockerfile to install NNI in docker image from whl file built in last step
+        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
+        cat ../docker/Dockerfile
+        export IMG_TAG=`date -u +%y%m%d%H%M`
+
+        echo 'build and upload docker image'
+        docker build -f ../docker/Dockerfile -t $(test_docker_img_name):$IMG_TAG .
+        docker push $(test_docker_img_name):$IMG_TAG
+
+        export TEST_IMG=$(test_docker_img_name):$IMG_TAG
+        cd ../../
+      else
+        export TEST_IMG=$(existing_docker_img)
+      fi
+      echo "TEST_IMG:$TEST_IMG"
+      echo '##vso[task.setvariable variable=TEST_IMG]$TEST_IMG'
+    displayName: 'build docker image'
   - script:
       echo "##vso[task.setvariable variable=docker_image;isOutput=true]$TEST_IMG"
     name: setvariableStep
     displayName: tsetVariable
-
-  # - script: python3 -m pip install --upgrade pip setuptools --user
-  #   displayName: 'Install python tools'
-
-  # - script: |
-  #     cd deployment/pypi
-  #     echo 'building prerelease package...'
-  #     make build
-  #     ls $(Build.SourcesDirectory)/deployment/pypi/dist/
-  #   condition: eq( variables['build_docker_img'], 'true' )
-  #   displayName: 'build nni bdsit_wheel'
-
-  # - script: |
-  #     if [ $(build_docker_img) = 'true' ]
-  #     then
-  #       cd deployment/pypi
-  #       docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
-  #       echo 'updating docker file for installing nni from local...'
-  #       # update Dockerfile to install NNI in docker image from whl file built in last step
-  #       sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
-  #       cat ../docker/Dockerfile
-  #       export IMG_TAG=`date -u +%y%m%d%H%M`
-
-  #       echo 'build and upload docker image'
-  #       docker build -f ../docker/Dockerfile -t $(test_docker_img_name):$IMG_TAG .
-  #       docker push $(test_docker_img_name):$IMG_TAG
-
-  #       export TEST_IMG=$(test_docker_img_name):$IMG_TAG
-  #       cd ../../
-  #     else
-  #       export TEST_IMG=$(existing_docker_img)
-  #     fi
-  #     docker_image=$TEST_IMG
-  #     echo "TEST_IMG:$(docker_image)"
-  #   displayName: 'build docker image'
 
 - job: 'integration_test_pai'
   timeoutInMinutes: 0
@@ -53,26 +49,24 @@ jobs:
   pool:
     vmImage: 'Ubuntu 16.04'
   variables:
-    docker_image: $[ dependencies.build_docker_image.outputs['setvariableStep.docker_image'] ]
+    TEST_IMG: $[ dependencies.build_docker_image.outputs['setvariableStep.docker_image'] ]
 
   steps:
-  - script:
-      echo $(docker_image)
-    displayName: tsetVariable
-  # - powershell: |
-  #     python -m pip install --upgrade pip setuptools
-  #     python -m pip install twine
-  #   displayName: 'Install twine'
-  # - script: |
-  #     powershell.exe -file install.ps1
-  #   displayName: 'Install nni toolkit via source code'
-  # - script: |
-  #     python -m pip install scikit-learn==0.20.0 --user
-  #     python -m pip install keras==2.1.6 --user
-  #     python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
-  #     python -m pip install torchvision --user
-  #     python -m pip install tensorflow-gpu==1.11.0 --user
-  #   displayName: 'Install dependencies for integration tests'
-  # - script: |
-  #     echo "TEST_IMG:$(docker_image)"
-  #   displayName: 'debug image'
+  - script: |
+      powershell.exe -file install.ps1
+    displayName: 'Install nni toolkit via source code'
+  - script: |
+      python -m pip install scikit-learn==0.20.0 --user
+      python -m pip install keras==2.1.6 --user
+      python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
+      python -m pip install torchvision --user
+      python -m pip install tensorflow-gpu==1.11.0 --user
+    displayName: 'Install dependencies for integration tests'
+  - script: |
+      cd test
+      echo $(TEST_IMG)
+      python generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) --vc $(pai_virtual_cluster) \
+      --nni_docker_image $TEST_IMG --data_dir $(data_dir) --output_dir $(output_dir) --nni_manager_ip $(nni_manager_ip)
+
+      python config_test.py --ts pai --exclude multi_phase,smac,bohb
+    displayName: 'Examples and advanced features tests on local machine'
