@@ -31,7 +31,7 @@ jobs:
       secureFile: remote_ci_private_key
   - powershell: |
       Write-Host "Downloading Putty..."
-      (New-Object Net.WebClient).DownloadFile("https://the.earth.li/~sgtatham/putty/latest/w64/pscp.exe", $(Agent.TempDirectory)\pscp.exe)
+      (New-Object Net.WebClient).DownloadFile("https://the.earth.li/~sgtatham/putty/latest/w64/pscp.exe", "$(Agent.TempDirectory)\pscp.exe")
       $(Agent.TempDirectory)\pscp.exe -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
       more test\port
     displayName: 'Get docker port'
