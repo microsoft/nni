@@ -152,7 +152,7 @@ mkDirP(getLogDir())
     console.error(`Failed to create log dir: ${err.stack}`);
 });
 
-process.on('SIGTERM', async () => {
+async function cleanUp() {
     const log: Logger = getLogger();
     let hasError: boolean = false;
     try {
@@ -169,4 +169,12 @@ process.on('SIGTERM', async () => {
         await log.close();
         process.exit(hasError ? 1 : 0);
     }
+}
+
+process.on('SIGBREAK', async () => {
+    await cleanUp();
+})
+
+process.on('SIGTERM', async () => {
+    await cleanUp();
 });

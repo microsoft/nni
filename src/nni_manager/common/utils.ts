@@ -357,12 +357,22 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     });
 
     let fileCount: number = -1;
-    cpp.exec(`find ${directory} -type f | wc -l`).then((result) => {
-        if(result.stdout && parseInt(result.stdout)) {
-            fileCount = parseInt(result.stdout);            
-        }
-        deferred.resolve(fileCount);
-    });
+    if(process.platform === "win32") {
+        cpp.exec(`dir/s/b/a-d ${directory} | find /v /c "::"`).then((result) => {
+            if(result.stdout && parseInt(result.stdout)) {
+                fileCount = parseInt(result.stdout);            
+            }
+            deferred.resolve(fileCount);
+        });
+    }else {
+        cpp.exec(`find ${directory} -type f | wc -l`).then((result) => {
+            if(result.stdout && parseInt(result.stdout)) {
+                fileCount = parseInt(result.stdout);            
+            }
+            deferred.resolve(fileCount);
+        });
+    }
+
 
     return Promise.race([deferred.promise, delayTimeout]).finally(() => {
         clearTimeout(timeoutId);
@@ -459,6 +469,26 @@ function getNewLine(): string{
     }
 }
 
+/**
+ * Use '/' to join path instead of '\' for all kinds of platform
+ * @param path 
+ */
+function pathJoin(...paths: any[]): string{
+    let dir:string = '';
+    for(let path of paths){
+        if(dir === ''){
+            dir = path;
+        }else{
+            if(dir === '/'){
+                dir = dir + path;
+            }else{
+                dir = dir + '/' + path;
+            }
+        }
+    }
+    return dir;
+}
+
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, pathJoin,
     mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine };
