@@ -30,7 +30,7 @@ jobs:
     inputs:
       secureFile: remote_ci_private_key
   - powershell: |
-      pscp -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
+      "C:\Program Files\PuTTY\pscp.exe" -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
       more test\port
     displayName: 'Get docker port'
   - script: |
