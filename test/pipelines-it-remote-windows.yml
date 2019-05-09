@@ -18,7 +18,7 @@ jobs:
       sshEndpoint: remote_nni-ci-gpu-01
       runOptions: inline
       inline: cd /tmp/nnitest/$(Build.BuildId)/nni-remote/deployment/pypi;make build
-      continueOnError: true
+    continueOnError: true
     displayName: 'build nni bdsit_wheel'
   - task: SSH@0
     inputs:
