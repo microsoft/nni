@@ -32,7 +32,7 @@ jobs:
   - powershell: |
       Write-Host "Downloading Putty..."
       (New-Object Net.WebClient).DownloadFile("https://the.earth.li/~sgtatham/putty/latest/w64/pscp.exe", "$(Agent.TempDirectory)\pscp.exe")
-      Write-Host y | $(Agent.TempDirectory)\pscp.exe -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
+      cmd /c echo y | $(Agent.TempDirectory)\pscp.exe -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
       more test\port
     continueOnError: true
     displayName: 'Get docker port'
