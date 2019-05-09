@@ -19,7 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 jobs:
-- job: 'build-docker-image'
+- job: 'build_docker_image'
   timeoutInMinutes: 0
   pool:
     vmImage: 'Ubuntu 16.04'
