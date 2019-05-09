@@ -2,7 +2,7 @@
 
 NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tuner 的简单介绍：
 
-注意：点击 **Tuner 的名称**可跳转到算法的详细描述，点击**用法**可看到 Tuner 的安装要求、建议场景和使用样例等等。
+Note: Click the **Tuner's name** to get a detailed description of the algorithm, click the corresponding **Usage** to get the Tuner's installation requirements, suggested scenario and using example. Here is an [article](./Blog/HPOComparison.md) about the comparison of different Tuners on several problems.
 
 当前支持的 Tuner：
 
