@@ -50,6 +50,8 @@ def start_container(image, name, nnimanager_os):
             return '/tmp/nni/nni-remote/deployment/pypi/dist/{0}'.format(wheel_name)
         else:
             return '/tmp/nni/dist/{0}'.format(wheel_name)
+    pip_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '--upgrade', 'pip']
+    check_call(pip_cmds)
     sdk_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', get_dist(wheel_name)]
     check_call(sdk_cmds)
     with open(source_dir + '/port', 'w') as file:
