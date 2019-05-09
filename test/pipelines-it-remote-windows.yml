@@ -34,7 +34,8 @@ jobs:
       icacls.exe test\id_rsa /reset
       icacls.exe test\id_rsa /grant "$((Get-Acl -Path .\test\id_rsa).Owner):(R,W)"
       icacls.exe test\id_rsa /inheritance:r
-      scp -i test\id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
+      Write-Host "start scp"
+      scp -v -i test\id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
       more test\port
     displayName: 'Get docker port'
   - script: |
