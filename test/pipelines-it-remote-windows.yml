@@ -35,7 +35,7 @@ jobs:
       $(Agent.TempDirectory)\pscp.exe -hostkey $(hostkey) -pw $(pscp_pwd) $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
       Get-Content test\port
     displayName: 'Get docker port'
-  - script: |
+  - powershell: |
       cd test
       python generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) --remote_port $(Get-Content port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
       Get-Content training_service.yml
