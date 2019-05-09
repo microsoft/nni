@@ -8,8 +8,8 @@ jobs:
     vmImage: 'Ubuntu 16.04'
   steps:
   - script:
-      docker_image=test
       echo "TEST_IMG:$(docker_image)"
+      echo '##vso[task.setvariable variable=docker_image]test'
     displayName: tsetVariable
 
   # - script: python3 -m pip install --upgrade pip setuptools --user
@@ -57,20 +57,20 @@ jobs:
   - script:
       echo "TEST_IMG:$(docker_image)"
     displayName: 'test variable'
-  - powershell: |
-      python -m pip install --upgrade pip setuptools
-      python -m pip install twine
-    displayName: 'Install twine'
-  - script: |
-      powershell.exe -file install.ps1
-    displayName: 'Install nni toolkit via source code'
-  - script: |
-      python -m pip install scikit-learn==0.20.0 --user
-      python -m pip install keras==2.1.6 --user
-      python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
-      python -m pip install torchvision --user
-      python -m pip install tensorflow-gpu==1.11.0 --user
-    displayName: 'Install dependencies for integration tests'
-  - script: |
-      echo "TEST_IMG:$(docker_image)"
-    displayName: 'debug image'
+  # - powershell: |
+  #     python -m pip install --upgrade pip setuptools
+  #     python -m pip install twine
+  #   displayName: 'Install twine'
+  # - script: |
+  #     powershell.exe -file install.ps1
+  #   displayName: 'Install nni toolkit via source code'
+  # - script: |
+  #     python -m pip install scikit-learn==0.20.0 --user
+  #     python -m pip install keras==2.1.6 --user
+  #     python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
+  #     python -m pip install torchvision --user
+  #     python -m pip install tensorflow-gpu==1.11.0 --user
+  #   displayName: 'Install dependencies for integration tests'
+  # - script: |
+  #     echo "TEST_IMG:$(docker_image)"
+  #   displayName: 'debug image'
