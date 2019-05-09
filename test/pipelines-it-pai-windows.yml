@@ -7,46 +7,56 @@ jobs:
   pool:
     vmImage: 'Ubuntu 16.04'
   steps:
-  - script: python3 -m pip install --upgrade pip setuptools --user
-    displayName: 'Install python tools'
-
-  - script: |
-      cd deployment/pypi
-      echo 'building prerelease package...'
-      make build
-      ls $(Build.SourcesDirectory)/deployment/pypi/dist/
-    condition: eq( variables['build_docker_img'], 'true' )
-    displayName: 'build nni bdsit_wheel'
-
-  - script: |
-      if [ $(build_docker_img) = 'true' ]
-      then
-        cd deployment/pypi
-        docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
-        echo 'updating docker file for installing nni from local...'
-        # update Dockerfile to install NNI in docker image from whl file built in last step
-        sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
-        cat ../docker/Dockerfile
-        export IMG_TAG=`date -u +%y%m%d%H%M`
-
-        echo 'build and upload docker image'
-        docker build -f ../docker/Dockerfile -t $(test_docker_img_name):$IMG_TAG .
-        docker push $(test_docker_img_name):$IMG_TAG
-
-        export TEST_IMG=$(test_docker_img_name):$IMG_TAG
-        cd ../../
-      else
-        export TEST_IMG=$(existing_docker_img)
-      fi
-      $(docker_image)=$TEST_IMG
+  - script:
+      docker_image=test
       echo "TEST_IMG:$(docker_image)"
-    displayName: 'build docker image'
+    displayName: tsetVariable
+
+  # - script: python3 -m pip install --upgrade pip setuptools --user
+  #   displayName: 'Install python tools'
+
+  # - script: |
+  #     cd deployment/pypi
+  #     echo 'building prerelease package...'
+  #     make build
+  #     ls $(Build.SourcesDirectory)/deployment/pypi/dist/
+  #   condition: eq( variables['build_docker_img'], 'true' )
+  #   displayName: 'build nni bdsit_wheel'
+
+  # - script: |
+  #     if [ $(build_docker_img) = 'true' ]
+  #     then
+  #       cd deployment/pypi
+  #       docker login -u $(docker_hub_user) -p $(docker_hub_pwd)
+  #       echo 'updating docker file for installing nni from local...'
+  #       # update Dockerfile to install NNI in docker image from whl file built in last step
+  #       sed -ie 's/RUN python3 -m pip --no-cache-dir install nni/COPY .\/dist\/* .\nRUN python3 -m pip install nni-*.whl/' ../docker/Dockerfile
+  #       cat ../docker/Dockerfile
+  #       export IMG_TAG=`date -u +%y%m%d%H%M`
+
+  #       echo 'build and upload docker image'
+  #       docker build -f ../docker/Dockerfile -t $(test_docker_img_name):$IMG_TAG .
+  #       docker push $(test_docker_img_name):$IMG_TAG
+
+  #       export TEST_IMG=$(test_docker_img_name):$IMG_TAG
+  #       cd ../../
+  #     else
+  #       export TEST_IMG=$(existing_docker_img)
+  #     fi
+  #     docker_image=$TEST_IMG
+  #     echo "TEST_IMG:$(docker_image)"
+  #   displayName: 'build docker image'
 
 - job: 'integration_test_pai'
   timeoutInMinutes: 0
   dependsOn: build_docker_image
+  pool:
+    vmImage: 'Ubuntu 16.04'
 
   steps:
+  - script:
+      echo "TEST_IMG:$(docker_image)"
+    displayName: 'test variable'
   - powershell: |
       python -m pip install --upgrade pip setuptools
       python -m pip install twine
