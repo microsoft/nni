@@ -1,8 +1,8 @@
-# NAS 算法对比
+# Neural Architecture Search Comparison
 
 *匿名作者*
 
-训练并对比 Autokeras, DARTS, ENAS 和 NAO 这些算法的效果。
+Train and Compare NAS (Neural Architecture Search) models including Autokeras, DARTS, ENAS and NAO.
 
 源码链接如下：
 
