@@ -49,11 +49,12 @@ jobs:
   dependsOn: build_docker_image
   pool:
     vmImage: 'Ubuntu 16.04'
+  variables:
+    docker_image: $[ dependencies.build_docker_image.outputs['setvariableStep.docker_image'] ]
 
-variables:
-  docker_image: $[ dependencies.build_docker_image.outputs['setvariableStep.docker_image'] ]
   steps:
-  - script: "echo $(docker_image)"
+  - script:
+      echo $(docker_image)
     displayName: tsetVariable
   # - powershell: |
   #     python -m pip install --upgrade pip setuptools
