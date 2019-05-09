@@ -41,13 +41,11 @@ jobs:
   - script:
       echo "##vso[task.setvariable variable=docker_image;isOutput=true]$TEST_IMG"
     name: setvariableStep
-    displayName: tsetVariable
+    displayName: 'set image variable'
 
 - job: 'integration_test_pai'
   timeoutInMinutes: 0
   dependsOn: build_docker_image
-  pool:
-    vmImage: 'Ubuntu 16.04'
   variables:
     TEST_IMG: $[ dependencies.build_docker_image.outputs['setvariableStep.docker_image'] ]
 
