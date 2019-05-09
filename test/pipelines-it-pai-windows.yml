@@ -5,7 +5,7 @@ jobs:
     vmImage: 'Ubuntu 16.04'
   steps:
   - script:
-      TEST_IMG=abc123
+      echo '##vso[task.setvariable variable=TEST_IMG]abc123'
     displayName: setVariable
   - script:
       echo "##vso[task.setvariable variable=docker_image;isOutput=true]$TEST_IMG"
