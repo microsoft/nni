@@ -32,7 +32,7 @@ jobs:
   - powershell: |
       Copy-Item $(Agent.TempDirectory)\remote_ci_private_key test\id_rsa
       icacls.exe test\id_rsa /reset
-      icacls.exe test\id_rsa /grant "$($env:USERNAME):(R,W)"
+      icacls.exe test\id_rsa /grant "$((Get-Acl -Path .\test\id_rsa).Owner):(R,W)"
       icacls.exe test\id_rsa /inheritance:r
       scp -i test\id_rsa $(remote_user)@$(remote_host):/tmp/nnitest/$(Build.BuildId)/port test\port
       more test\port
