@@ -37,7 +37,7 @@ def start_container(image, name, nnimanager_os):
     run_cmds = ['docker', 'run', '-d', '-p', str(port) + ':22', '--name', name, '--mount', 'type=bind,source=' + source_dir + ',target=/tmp/nni', image]
     output = check_output(run_cmds)
     commit_id = output.decode('utf-8')
-    if nnimanager_os == 'Windows':
+    if nnimanager_os == 'windows':
         wheel_name = find_wheel_package(os.path.join(source_dir, 'nni-remote/deployment/pypi/dist'))
     else:
         wheel_name = find_wheel_package(os.path.join(source_dir, 'dist'))
@@ -46,7 +46,7 @@ def start_container(image, name, nnimanager_os):
         print('Error: could not find wheel package in {0}'.format(source_dir))
         exit(1)
     def get_dist(wheel_name):
-        if nnimanager_os == 'Windows':
+        if nnimanager_os == 'windows':
             return '/tmp/nni/nni-remote/deployment/pypi/dist/{0}'.format(wheel_name)
         else:
             return '/tmp/nni/dist/{0}'.format(wheel_name)
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     parser.add_argument('--mode', required=True, choices=['start', 'stop'], dest='mode', help='start or stop a container')
     parser.add_argument('--name', required=True, dest='name', help='the name of container to be used')
     parser.add_argument('--image', dest='image', help='the image to be used')
-    parser.add_argument('--os', dest='os', default='Linux', choices=['Linux', 'MacOS', 'Windows'], help='nniManager os version')
+    parser.add_argument('--os', dest='os', default='unix', choices=['unix', 'windows'], help='nniManager os version')
     args = parser.parse_args()
     if args.mode == 'start':
         start_container(args.image, args.name, args.os)

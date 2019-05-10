@@ -176,13 +176,13 @@ export async function tarAdd(tar_path: string, source_path: string): Promise<voi
         source_path = source_path.split('\\').join('\\\\');
         let script: string[] = [];
         script.push(
-        `import os`,
-        `import tarfile`,
-        String.Format(`tar = tarfile.open("{0}","w:gz")\r\nfor root,dir,files in os.walk("{1}"):`, tar_path, source_path),
-        `    for file in files:`,
-        `        fullpath = os.path.join(root,file)`,
-        `        tar.add(fullpath, arcname=file)`,
-        `tar.close()`);
+            `import os`,
+            `import tarfile`,
+            String.Format(`tar = tarfile.open("{0}","w:gz")\r\nfor root,dir,files in os.walk("{1}"):`, tar_path, source_path),
+            `    for file in files:`,
+            `        fullpath = os.path.join(root,file)`,
+            `        tar.add(fullpath, arcname=file)`,
+            `tar.close()`);
         await fs.promises.writeFile(path.join(os.tmpdir(), 'tar.py'), script.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
         const tarScript: string = path.join(os.tmpdir(), 'tar.py');
         await cpp.exec(`python ${tarScript}`);

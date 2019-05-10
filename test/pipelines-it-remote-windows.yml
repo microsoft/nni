@@ -24,7 +24,7 @@ jobs:
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
       runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/nni-remote/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni --os Windows
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/nni-remote/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni --os windows
     displayName: 'Start docker'
   - task: DownloadSecureFile@1
     inputs:
@@ -45,5 +45,5 @@ jobs:
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
       runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/nni-remote/test/remote_docker.py --mode stop --name $(Build.BuildId) --os Windows
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/nni-remote/test/remote_docker.py --mode stop --name $(Build.BuildId) --os windows
     displayName: 'Stop docker'
