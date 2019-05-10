@@ -1,8 +1,8 @@
-# Neural Architecture Search Comparison
+# 神经网络结构搜索的对比
 
 *匿名作者*
 
-Train and Compare NAS (Neural Architecture Search) models including Autokeras, DARTS, ENAS and NAO.
+训练和比较 NAS（神经网络架构搜索）的模型，包括 Autokeras，DARTS，ENAS 和 NAO。
 
 源码链接如下：
 
