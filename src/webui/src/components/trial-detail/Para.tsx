@@ -182,7 +182,8 @@ class Para extends React.Component<ParaProps, ParaState> {
             // need to cut down the data
             if (percent !== 0) {
                 const linesNum = paraData.data.length;
-                const len = Math.floor(linesNum * percent);
+                // Math.ceil rather than Math.floor to avoid lost lines
+                const len = Math.ceil(linesNum * percent);
                 paraData.data.length = len;
             }
             // need to swap the yAxis
@@ -236,6 +237,8 @@ class Para extends React.Component<ParaProps, ParaState> {
             visualMapObj = {
                 type: 'continuous',
                 precision: 3,
+                min: 0,
+                max: max,
                 color: ['#CA0000', '#FFC400', '#90EE90']
             };
         } else {

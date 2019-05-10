@@ -10,7 +10,11 @@ We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or
 ```
 
 #### Windows
-
+If you choose Windows local mode and use PowerShell to run script, you need run below PowerShell command as administrator at first time.
+```bash
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
+Then install nni through pip:
 ```bash
     python -m pip install --upgrade nni
 ```
@@ -138,17 +142,14 @@ Note, **for Windows, you need to change trial command `python3` to `python`**
 
 All the codes above are already prepared and stored in [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist).
 
-If you choose Windows local mode and use PowerShell to run script, you need run below PowerShell command as administrator at first time.
-
-```bash
-    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
-When these things are done, run below line to start an experiment.
+#### Linux and MacOS   
+Run the **config.yml** file from your command line to start MNIST experiment.
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
+#### Windows   
+Run the **config_windows.yml** file from your command line to start MNIST experiment.
 
 **Note**, if you're using windows local mode, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
 

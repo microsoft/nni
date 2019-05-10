@@ -1,8 +1,9 @@
 ######################
-Blog
+Research Blog
 ######################
 
 ..  toctree::
     :maxdepth: 2
 
-    NAS Comparison<NASComparison>
+    Hyperparameter Optimization Comparison<HPOComparison>
+    Neural Architecture Search Comparison<NASComparison>
