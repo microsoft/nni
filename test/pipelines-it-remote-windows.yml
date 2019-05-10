@@ -39,7 +39,7 @@ jobs:
       cd test
       python generate_ts_config.py --ts remote --remote_user $(docker_user) --remote_host $(remote_host) --remote_port $(Get-Content port) --remote_pwd $(docker_pwd) --nni_manager_ip $(nni_manager_ip)
       Get-Content training_service.yml
-      python config_test.py --ts remote --exclude cifar10,smac,bohb
+      python config_test.py --ts remote --exclude cifar10,smac,bohb,annotation,keras,sklearn,multi_phase,thread
     displayName: 'integration test'
   - task: SSH@0
     inputs:
