@@ -196,7 +196,7 @@ After you start your experiment in NNI successfully, you can find a message in t
 The Web UI urls are: [Your IP]:8080
 ```
 
-Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
+Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. If you can not open the WebUI link in your terminal, you can refer to [FAQ](FAQ.md).
 
 #### View summary page
 
