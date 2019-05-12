@@ -92,7 +92,7 @@ def get_max_values(config_file):
 def run(args):
     '''test all configuration files'''
     if args.config is None:
-        config_files = glob.glob('./config_test/**/*.test.yml')
+        config_files = glob.glob('./config_test/**/mnist-metis.test.yml')
     else:
         config_files = args.config.split(',')
 
