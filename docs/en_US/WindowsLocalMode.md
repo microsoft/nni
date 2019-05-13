@@ -16,19 +16,19 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
   Prerequisite: `python(64-bit) >= 3.5`
 
-```bash
-python -m pip install --upgrade nni
-```
+  ```bash
+  python -m pip install --upgrade nni
+  ```
 
 * __Install NNI through source code__
 
-  Prerequisite: `python >=3.5`, `git`, `powershell`
+  Prerequisite: `python >=3.5`, `git`, `PowerShell`
 
-```bash
-git clone -b v0.7 https://github.com/Microsoft/nni.git
-cd nni
-powershell ./install.ps1
-```
+  ```bash
+  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  cd nni
+  powershell ./install.ps1
+  ```
 
 When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
 
@@ -77,8 +77,7 @@ If there is a stderr file, please check out. Two possible cases are as follows:
 Make sure C++ 14.0 compiler installed then try to run `nnictl package install --name=BOHB` to install the dependencies.
 
 ### Not supported tuner on Windows
-SMAC is not supported currently, the specific reason can be referred to this [github issue](https://github.com/automl/SMAC3/issues/483).
-
+SMAC is not supported currently, the specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
 
 Note:
 
