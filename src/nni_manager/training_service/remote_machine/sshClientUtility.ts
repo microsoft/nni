@@ -28,7 +28,7 @@ import * as stream from 'stream';
 import { Deferred } from 'ts-deferred';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
-import { uniqueString, getRemoteTmpDir, pathJoin } from '../../common/utils';
+import { uniqueString, getRemoteTmpDir, unixPathJoin } from '../../common/utils';
 import { RemoteCommandResult } from './remoteMachineData';
 import { execRemove, tarAdd } from '../common/util';
 
@@ -48,7 +48,7 @@ export namespace SSHClientUtility {
         const deferred: Deferred<void> = new Deferred<void>();
         const tmpTarName: string = `${uniqueString(10)}.tar.gz`;
         const localTarPath: string = path.join(os.tmpdir(), tmpTarName);
-        const remoteTarPath: string = pathJoin(getRemoteTmpDir(remoteOS), tmpTarName);
+        const remoteTarPath: string = unixPathJoin(getRemoteTmpDir(remoteOS), tmpTarName);
 
         // Compress files in local directory to experiment root directory
         await tarAdd(localTarPath, localDirectory);

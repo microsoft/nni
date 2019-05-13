@@ -58,7 +58,7 @@ class NNIManager implements Manager {
     private status: NNIManagerStatus;
     private waitingTrials: string[];
     private trialJobs: Map<string, TrialJobDetail>;
-
+    private trialJobMetricListener: (metric: TrialJobMetric) => void;
     constructor() {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
@@ -75,6 +75,11 @@ class NNIManager implements Manager {
         this.status = {
             status: 'INITIALIZED',
             errors: []
+        };
+        this.trialJobMetricListener = (metric: TrialJobMetric) => {
+            this.onTrialJobMetrics(metric).catch((err: Error) => {
+                this.criticalError(new NNIError('Job metrics error', `Job metrics error: ${err.message}`, err));
+            });
         };
     }
 
@@ -583,12 +588,6 @@ class NNIManager implements Manager {
                 throw new NNIError('Job management error', `Job management error: ${err.message}`, err);
             })]);
     }
-
-    private trialJobMetricListener = (metric: TrialJobMetric) => {
-            this.onTrialJobMetrics(metric).catch((err: Error) => {
-                this.criticalError(new NNIError('Job metrics error', `Job metrics error: ${err.message}`, err));
-            });
-        };
 
     private addEventListeners(): void {
         this.log.info('Add event listeners');

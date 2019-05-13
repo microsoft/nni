@@ -473,22 +473,12 @@ function getNewLine(): string{
  * Use '/' to join path instead of '\' for all kinds of platform
  * @param path 
  */
-function pathJoin(...paths: any[]): string{
-    let dir:string = '';
-    for(let path of paths){
-        if(dir === ''){
-            dir = path;
-        }else{
-            if(dir === '/'){
-                dir = dir + path;
-            }else{
-                dir = dir + '/' + path;
-            }
-        }
-    }
+function unixPathJoin(...paths: any[]): string{
+    let dir:string = paths.filter((path: any) => path !== '').join('/');
+    if (dir === '') return '.';
     return dir;
 }
 
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, pathJoin,
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin,
     mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine };
