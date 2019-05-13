@@ -4,7 +4,7 @@ Currently we only support local mode on Windows. Windows 10.1809 is well tested 
 
 ## **Installation on Windows**
 
-  **Anaconda python(64-bit) is highly recommended.**  
+  **Anaconda or Miniconda python(64-bit) is highly recommended.**  
 
 When you use PowerShell to run script for the first time, you need **run PowerShell as administrator** with this command:
 
@@ -55,9 +55,9 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 >...cannot be loaded because running scripts is disabled on this system.
 
-### Trial failed with missing DLL in cmd or PowerShell
+### Trial failed with missing DLL in command line or PowerShell
 
-This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Using anaconda python(64-bit) can solve it.
+This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Using Anaconda or Miniconda with Python(64-bit) can solve it.
 >ImportError: DLL load failed
 
 ### Trial failed on webUI

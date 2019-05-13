@@ -129,7 +129,7 @@ python -m pip install --upgrade nni
 Note:
 
 * `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
-* Currently NNI on Windows only support local mode. Anaconda is highly recommended to install NNI on Windows.
+* Currently NNI on Windows only support local mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
 * If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/FAQ.md)
 
 **Install through source code**
