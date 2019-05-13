@@ -36,7 +36,7 @@ jobs:
       #   export TEST_IMG=$(existing_docker_img)
       # fi
       export IMAGE=abcd
-      echo '##vso[task.setvariable variable=TEST_IMG]$IMAGE'
+      echo "##vso[task.setvariable variable=TEST_IMG]$IMAGE"
     displayName: 'build docker image'
   - script:
       echo $TEST_IMG
