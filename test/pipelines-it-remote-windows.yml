@@ -12,8 +12,10 @@ jobs:
     displayName: 'Copy all files to remote machine'
   - script: |
       powershell.exe -file install.ps1
-      python -m pip install -U scikit-learn==0.20.1
     displayName: 'Install nni toolkit via source code'
+  - script: |
+      python -m pip install scikit-learn==0.20.1 --user
+    displayName: 'Install dependencies for integration tests'
   - task: SSH@0
     inputs:
       sshEndpoint: remote_nni-ci-gpu-01
