@@ -5,4 +5,5 @@
 ..  toctree::
     :maxdepth: 2
 
-    NAS 算法比较<NASComparison>
+    超参优化的对比<HPOComparison>
+    神经网络结构搜索（NAS）的对比<NASComparison>
