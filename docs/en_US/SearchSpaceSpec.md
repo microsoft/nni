@@ -29,7 +29,7 @@ All types of sampling strategies and their parameter are listed here:
 
   * Which means the variable value is one of the options, which should be a list. The elements of options can themselves be **nested** stochastic expressions. In this case, the stochastic choices that only appear in some of the options become conditional parameters.
 
-  * An simple [example](../../examples/trials/mnist-cascading-search-space/search_space.json) of [nested] search space definition. The elements of options in the list must be dictionary with one key `_name` and its value pair. Here is a [sample]((../../examples/trials/mnist-cascading-search-space/sample.json) ) which users can get from nni with **nested** search space definition. Tuners which support this feature is as follows:
+  * An simple [example](../../examples/trials/mnist-cascading-search-space/search_space.json) of [nested] search space definition. The elements of options in the list must be dictionary with one key `_name` and its value pair. Here is a [sample]((../../examples/trials/mnist-cascading-search-space/sample.json) ) which users can get from nni with **nested** search space definition. Tuners which support nested search space is as follows:
 
     - Random Search 
     - TPE

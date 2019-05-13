@@ -32,7 +32,7 @@ from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger
 from nni.utils import NodeType, OptimizeMode, extract_scalar_reward
-from .. import parameter_expressions
+import nni.parameter_expressions as parameter_expressions
 
 _logger = logging.getLogger(__name__)
 

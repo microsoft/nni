@@ -27,9 +27,10 @@ import logging
 import hyperopt as hp
 import numpy as np
 from nni.tuner import Tuner
-from nni.utils import (NodeType, OptimizeMode, extract_scalar_reward,
-                       split_index)
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
+
 logger = logging.getLogger('hyperopt_AutoML')
+
 
 def json2space(in_x, name=NodeType.ROOT):
     """
@@ -57,17 +58,18 @@ def json2space(in_x, name=NodeType.ROOT):
         else:
             out_y = dict()
             for key in in_x.keys():
-                out_y[key] = json2space(in_x[key], name+'[%s]' % str(key))
+                out_y[key] = json2space(in_x[key], name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
             if isinstance(x_i, dict):
                 if NodeType.NAME not in x_i.keys():
-                    raise RuntimeError('\'_name\' key is not found in this nested search space.')
-            out_y.append(json2space(x_i, name+'[%d]' % i))
-    else:
-        pass
+                    raise RuntimeError(
+                        '\'_name\' key is not found in this nested search space.'
+                    )
+            out_y.append(json2space(x_i, name + '[%d]' % i))
     return out_y
+
 
 def json2parameter(in_x, parameter, name=NodeType.ROOT):
     """
@@ -81,25 +83,29 @@ def json2parameter(in_x, parameter, name=NodeType.ROOT):
             if _type == 'choice':
                 _index = parameter[name]
                 out_y = {
-                    NodeType.INDEX: _index,
-                    NodeType.VALUE: json2parameter(in_x[NodeType.VALUE][_index], parameter, name=name+'[%d]' % _index)
+                    NodeType.INDEX:
+                    _index,
+                    NodeType.VALUE:
+                    json2parameter(in_x[NodeType.VALUE][_index],
+                                   parameter,
+                                   name=name + '[%d]' % _index)
                 }
             else:
                 out_y = parameter[name]
         else:
             out_y = dict()
             for key in in_x.keys():
-                out_y[key] = json2parameter(
-                    in_x[key], parameter, name + '[%s]' % str(key))
+                out_y[key] = json2parameter(in_x[key], parameter,
+                                            name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
             if isinstance(x_i, dict):
                 if NodeType.NAME not in x_i.keys():
-                    raise RuntimeError('\'_name\' key is not found in this nested search space.')
+                    raise RuntimeError(
+                        '\'_name\' key is not found in this nested search space.'
+                    )
             out_y.append(json2parameter(x_i, parameter, name + '[%d]' % i))
-    else:
-        pass
     return out_y
 
 
@@ -117,21 +123,27 @@ def json2vals(in_x, vals, out_y, name=NodeType.ROOT):
 
             if _type == 'choice':
                 _index = vals[NodeType.INDEX]
-                json2vals(in_x[NodeType.VALUE][_index], vals[NodeType.VALUE],
-                          out_y, name=name + '[%d]' % _index)
+                json2vals(in_x[NodeType.VALUE][_index],
+                          vals[NodeType.VALUE],
+                          out_y,
+                          name=name + '[%d]' % _index)
         else:
             for key in in_x.keys():
-                json2vals(in_x[key], vals[key], out_y, name + '[%s]' % str(key))
+                json2vals(in_x[key], vals[key], out_y,
+                          name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         for i, temp in enumerate(in_x):
             # nested json
             if isinstance(temp, dict):
                 if NodeType.NAME not in temp.keys():
-                    raise RuntimeError('\'_name\' key is not found in this nested search space.')
+                    raise RuntimeError(
+                        '\'_name\' key is not found in this nested search space.'
+                    )
                 else:
                     json2vals(temp, vals[i], out_y, name + '[%d]' % i)
             else:
                 json2vals(temp, vals[i], out_y, name + '[%d]' % i)
+
 
 def _add_index(in_x, parameter):
     """
@@ -141,7 +153,7 @@ def _add_index(in_x, parameter):
     Will change to format in hyperopt, like:
         {'dropout_rate': 0.8, 'conv_size': {'_index': 1, '_value': 3}, 'hidden_size': {'_index': 1, '_value': 512}}
     """
-    if TYPE not in in_x: # if at the top level
+    if TYPE not in in_x:  # if at the top level
         out_y = dict()
         for key, value in parameter.items():
             out_y[key] = _add_index(in_x[key], value)
@@ -150,24 +162,36 @@ def _add_index(in_x, parameter):
         value_type = in_x[TYPE]
         value_format = in_x[VALUE]
         if value_type == "choice":
-            choice_name = parameter[0] if isinstance(parameter, list) else parameter
-            for pos, item in enumerate(value_format): # here value_format is a list
-                if isinstance(item, list): # this format is ["choice_key", format_dict]
+            choice_name = parameter[0] if isinstance(parameter,
+                                                     list) else parameter
+            for pos, item in enumerate(
+                    value_format):  # here value_format is a list
+                if isinstance(
+                        item,
+                        list):  # this format is ["choice_key", format_dict]
                     choice_key = item[0]
                     choice_value_format = item[1]
                     if choice_key == choice_name:
-                        return {INDEX: pos, VALUE: [choice_name, _add_index(choice_value_format, parameter[1])]}
+                        return {
+                            INDEX:
+                            pos,
+                            VALUE: [
+                                choice_name,
+                                _add_index(choice_value_format, parameter[1])
+                            ]
+                        }
                 elif choice_name == item:
                     return {INDEX: pos, VALUE: item}
         else:
             return parameter
+
 
 class HyperoptTuner(Tuner):
     """
     HyperoptTuner is a tuner which using hyperopt algorithm.
     """
 
-    def __init__(self, algorithm_name, optimize_mode = 'minimize'):
+    def __init__(self, algorithm_name, optimize_mode='minimize'):
         """
         Parameters
         ----------
@@ -211,11 +235,16 @@ class HyperoptTuner(Tuner):
         search_space_instance = json2space(self.json)
         rstate = np.random.RandomState()
         trials = hp.Trials()
-        domain = hp.Domain(None, search_space_instance,
+        domain = hp.Domain(None,
+                           search_space_instance,
                            pass_expr_memo_ctrl=None)
         algorithm = self._choose_tuner(self.algorithm_name)
-        self.rval = hp.FMinIter(algorithm, domain, trials,
-                                max_evals=-1, rstate=rstate, verbose=0)
+        self.rval = hp.FMinIter(algorithm,
+                                domain,
+                                trials,
+                                max_evals=-1,
+                                rstate=rstate,
+                                verbose=0)
         self.rval.catch_eval_exceptions = False
 
     def generate_parameters(self, parameter_id):
@@ -285,17 +314,23 @@ class HyperoptTuner(Tuner):
                 idxs[key] = [new_id]
                 vals[key] = [vals[key]]
 
-        self.miscs_update_idxs_vals(rval_miscs, idxs, vals,
+        self.miscs_update_idxs_vals(rval_miscs,
+                                    idxs,
+                                    vals,
                                     idxs_map={new_id: new_id},
                                     assert_all_vals_used=False)
 
-        trial = trials.new_trial_docs([new_id], rval_specs, rval_results, rval_miscs)[0]
+        trial = trials.new_trial_docs([new_id], rval_specs, rval_results,
+                                      rval_miscs)[0]
         trial['result'] = {'loss': reward, 'status': 'ok'}
         trial['state'] = hp.JOB_STATE_DONE
         trials.insert_trial_docs([trial])
         trials.refresh()
 
-    def miscs_update_idxs_vals(self, miscs, idxs, vals,
+    def miscs_update_idxs_vals(self,
+                               miscs,
+                               idxs,
+                               vals,
                                assert_all_vals_used=True,
                                idxs_map=None):
         """
@@ -345,9 +380,10 @@ class HyperoptTuner(Tuner):
         algorithm = rval.algo
         new_ids = rval.trials.new_trial_ids(1)
         rval.trials.refresh()
-        random_state = rval.rstate.randint(2**31-1)
+        random_state = rval.rstate.randint(2**31 - 1)
         if random_search:
-            new_trials = hp.rand.suggest(new_ids, rval.domain, trials, random_state)
+            new_trials = hp.rand.suggest(new_ids, rval.domain, trials,
+                                         random_state)
         else:
             new_trials = algorithm(new_ids, rval.domain, trials, random_state)
         rval.trials.refresh()
@@ -373,7 +409,8 @@ class HyperoptTuner(Tuner):
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
+            logger.info("Importing data, current processing progress %s / %s" %
+                        (_completed_num, len(data)))
             _completed_num += 1
             if self.algorithm_name == 'random_search':
                 return
@@ -382,10 +419,16 @@ class HyperoptTuner(Tuner):
             assert "value" in trial_info
             _value = trial_info['value']
             if not _value:
-                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                logger.info(
+                    "Useless trial data, value is %s, skip this trial data." %
+                    _value)
                 continue
             self.supplement_data_num += 1
-            _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
-            self.total_data[_parameter_id] = _add_index(in_x=self.json, parameter=_params)
-            self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
+            _parameter_id = '_'.join(
+                ["ImportData", str(self.supplement_data_num)])
+            self.total_data[_parameter_id] = _add_index(in_x=self.json,
+                                                        parameter=_params)
+            self.receive_trial_result(parameter_id=_parameter_id,
+                                      parameters=_params,
+                                      value=_value)
         logger.info("Successfully import data to TPE/Anneal tuner.")

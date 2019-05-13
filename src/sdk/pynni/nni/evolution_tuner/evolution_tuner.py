@@ -26,10 +26,9 @@ import random
 
 import numpy as np
 from nni.tuner import Tuner
-from nni.utils import (NodeType, OptimizeMode, extract_scalar_reward,
-                       split_index)
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
-from .. import parameter_expressions
+import nni.parameter_expressions as parameter_expressions
 
 
 def json2space(x, oldy=None, name=NodeType.ROOT):
@@ -59,8 +58,6 @@ def json2space(x, oldy=None, name=NodeType.ROOT):
                     raise RuntimeError('\'_name\' key is not found in this nested search space.')
             y += json2space(x_i, (oldy[i] if oldy !=
                                   None else None), name+"[%d]" % i)
-    else:
-        pass
     return y
 
 def json2parameter(x, is_rand, random_state, oldy=None, Rand=False, name=NodeType.ROOT):
