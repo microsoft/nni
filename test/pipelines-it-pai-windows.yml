@@ -51,19 +51,15 @@ jobs:
 
   steps:
   - script: |
-      echo $(docker_image)
-    displayName: testVariable
-  - script: |
       set PATH=$(ENV_PATH)
       python --version
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - script: |
       cd test
-      echo $(TEST_IMG)
       set PATH=$(ENV_PATH)
       python --version
-      python generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) --vc $(pai_virtual_cluster) --nni_docker_image $(TEST_IMG) --data_dir $(data_dir) --output_dir $(output_dir) --nni_manager_ip $(nni_manager_ip)
+      python generate_ts_config.py --ts pai --pai_host $(pai_host) --pai_user $(pai_user) --pai_pwd $(pai_pwd) --vc $(pai_virtual_cluster) --nni_docker_image $(docker_image) --data_dir $(data_dir) --output_dir $(output_dir) --nni_manager_ip $(nni_manager_ip)
 
       python config_test.py --ts pai --exclude multi_phase,smac,bohb
     displayName: 'Examples and advanced features tests on pai'
