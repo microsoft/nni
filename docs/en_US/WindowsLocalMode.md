@@ -57,7 +57,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ### Trial failed with missing DLL in cmd or PowerShell
 
-This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Anaconda python is highly recommended. If you use official python, make sure you have one of `Visual Studio`, `MATLAB`, `MKL` and `Intel Distribution for Python` installed on Windows before running NNI. If not, try to install one of products above or Anaconda python(64-bit).
+This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Using anaconda python(64-bit) can solve it.
 >ImportError: DLL load failed
 
 ### Trial failed on webUI
@@ -73,10 +73,12 @@ If there is a stderr file, please check out. Two possible cases are as follows:
 * forget to change the trial command `python3` into `python` in each experiment YAML.
 * forget to install experiment dependencies such as TensorFlow, Keras and so on.
 
-### Support tuner on Windows
+### Fail to use BOHB on Windows
+Make sure C++ 14.0 compiler installed then try to run `nnictl package install --name=BOHB` to install the dependencies.
 
-* SMAC is not supported
-* BOHB is supported, make sure C++ 14.0 compiler and dependencies installed successfully.
+### Not supported tuner on Windows
+SMAC is not supported currently, the specific reason can be referred to this [github issue](https://github.com/automl/SMAC3/issues/483).
+
 
 Note:
 
