@@ -1,15 +1,15 @@
-# Hyperparameter Optimization Comparison
+# 超参数优化的对比
 
-*Posted by Anonymous Author*
+*匿名作者*
 
-Comparison of Hyperparameter Optimization algorithms on several problems.
+超参优化算法在几个问题上的对比。
 
-Hyperparameter Optimization algorithms are list below:
+超参数优化算法如下：
 
-- [Random Search](../Builtin_Tuner.md#Random)
-- [Grid Search](../Builtin_Tuner.md#Random)
+- [Random Search（随机搜索）](../Builtin_Tuner.md#Random)
+- [Grid Search（遍历搜索）](../Builtin_Tuner.md#Random)
 - [Evolution](../Builtin_Tuner.md#Evolution)
-- [Anneal](../Builtin_Tuner.md#Anneal)
+- [Anneal（退火算法）](../Builtin_Tuner.md#Anneal)
 - [Metis](../Builtin_Tuner.md#MetisTuner)
 - [TPE](../Builtin_Tuner.md#TPE)
 - [SMAC](../Builtin_Tuner.md#SMAC)
