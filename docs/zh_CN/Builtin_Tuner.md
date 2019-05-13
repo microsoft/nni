@@ -2,7 +2,7 @@
 
 NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Tuner 的简单介绍：
 
-注意：点击 **Tuner 的名称**可跳转到算法的详细描述，点击**用法**可看到 Tuner 的安装要求、建议场景和使用样例等等。
+注意：点击 **Tuner 的名称**可跳转到算法的详细描述，点击**用法**可看到 Tuner 的安装要求、建议场景和使用样例等等。 [此文章](./Blog/HPOComparison.md)对比了不同 Tuner 在几个问题下的不同效果。
 
 当前支持的 Tuner：
 
@@ -131,6 +131,8 @@ tuner:
 ![](https://placehold.it/15/1589F0/000000?text=+) `SMAC`
 
 > 名称：**SMAC**
+
+**当前 SMAC 不支持在 WIndows 下运行。 原因参考：[github issue](https://github.com/automl/SMAC3/issues/483).**
 
 **安装**
 

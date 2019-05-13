@@ -10,7 +10,7 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
-### **NNI [v0.6](https://github.com/Microsoft/nni/releases) 已发布！**
+### **NNI [v0.7](https://github.com/Microsoft/nni/releases) 已发布！**
 
 <p align="center">
   <a href="#nni-v05-has-been-released"><img src="docs/img/overview.svg" /></a>
@@ -98,78 +98,118 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **安装和验证**
 
-**通过 pip 命令安装**
-
-* 当前支持 Linux 和 MacOS。测试并支持的版本包括：Ubuntu 16.04 及更高版本，MacOS 10.14.1。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。 
+在 Windows 本机模式下，并且是第一次使用 PowerShell 来运行脚本，需要**使用管理员权限**运行一次下列命令：
 
 ```bash
-    python3 -m pip install --upgrade nni
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
+
+**通过 pip 命令安装**
+
+* 当前支持 Linux，MacOS 和 Windows（本机模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+
+Linux 和 MacOS
+
+```bash
+python3 -m pip install --upgrade nni
+```
+
+Windows
+
+```bash
+python -m pip install --upgrade nni
 ```
 
 注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
+* 当前 NNI 在 Windows 上仅支持本机模式。 强烈推荐使用 Anaconda 在 Windows 上安装 NNI。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/FAQ.md)。
 
 **通过源代码安装**
 
-* 当前支持 Linux（Ubuntu 16.04 及更高版本） 和 MacOS（10.14.1）。 
+* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）下的本机模式。 
+
+Linux 和 MacOS
+
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
-    git clone -b v0.6 https://github.com/Microsoft/nni.git
-    cd nni  
-    source install.sh   
+    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    cd nni
+    source install.sh
+```
+
+Windows
+
+* 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
+
+```bash
+  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  cd nni
+  powershell ./install.ps1
 ```
 
 参考[安装 NNI](docs/zh_CN/Installation.md) 了解系统需求。
+
+参考 [NNI Windows 本机模式](docs/zh_CN/WindowsLocalMode.md)，了解更多信息。
 
 **验证安装**
 
 以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow**。
 
-* 通过克隆源代码下载示例。 
+* 通过克隆源代码下载示例。
 
 ```bash
-    git clone -b v0.6 https://github.com/Microsoft/nni.git
+    git clone -b v0.7 https://github.com/Microsoft/nni.git
 ```
 
-* 运行 mnist 示例。
+Linux 和 macOS
+
+* 运行 MNIST 示例。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
 
+Windows
+
+* 运行 MNIST 示例。
+
+```bash
+    nnictl create --config nni/examples/trials/mnist/config_windows.yml
+```
+
 * 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
-    ```
-    INFO: Starting restful server...
-    INFO: Successfully started Restful server!
-    INFO: Setting local config...
-    INFO: Successfully set local config!
-    INFO: Starting experiment...
-    INFO: Successfully started experiment!
-    -----------------------------------------------------------------------
-    The experiment id is egchD4qy
-    The Web UI urls are: http://223.255.255.1:8080   http://127.0.0.1:8080
-    -----------------------------------------------------------------------
-    
-    You can use these commands to get more information about the experiment
-    -----------------------------------------------------------------------
-             commands                       description
-    
-    1. nnictl experiment show        show the information of experiments
-    2. nnictl trial ls               list all of trial jobs
-    3. nnictl top                    monitor the status of running experiments
-    4. nnictl log stderr             show stderr log content
-    5. nnictl log stdout             show stdout log content
-    6. nnictl stop                   stop an experiment
-    7. nnictl trial kill             kill a trial job by id
-    8. nnictl --help                 get help information about nnictl
-    -----------------------------------------------------------------------
-    
+```text
+INFO: Starting restful server...
+INFO: Successfully started Restful server!
+INFO: Setting local config...
+INFO: Successfully set local config!
+INFO: Starting experiment...
+INFO: Successfully started experiment!
+-----------------------------------------------------------------------
+The experiment id is egchD4qy
+The Web UI urls are: http://223.255.255.1:8080   http://127.0.0.1:8080
+-----------------------------------------------------------------------
 
-* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里的](docs/zh_CN/WebUI.md)更多页面示例。
+You can use these commands to get more information about the experiment
+-----------------------------------------------------------------------
+         commands                       description
+
+1. nnictl experiment show        show the information of experiments
+2. nnictl trial ls               list all of trial jobs
+3. nnictl top                    monitor the status of running experiments
+4. nnictl log stderr             show stderr log content
+5. nnictl log stdout             show stdout log content
+6. nnictl stop                   stop an experiment
+7. nnictl trial kill             kill a trial job by id
+8. nnictl --help                 get help information about nnictl
+-----------------------------------------------------------------------
+```
+
+* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](docs/zh_CN/WebUI.md)的更多页面。
 
 <table style="border: none">
     <th><img src="./docs/img/webui_overview_page.png" alt="drawing" width="395"/></th>
