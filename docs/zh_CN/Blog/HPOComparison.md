@@ -16,27 +16,27 @@
 - [HyperBand](../Builtin_Tuner.md#Hyperband)
 - [BOHB](../Builtin_Tuner.md#BOHB)
 
-All algorithms run in NNI local environment。
+所有算法都在 NNI 本机环境下运行。
 
-Machine Environment：
+环境：
 
     OS: Linux Ubuntu 16.04 LTS
     CPU: Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz 2600 MHz
     Memory: 112 GB
     NNI Version: v0.7
-    NNI Mode(local|pai|remote): local
-    Python version: 3.6
-    Is conda or virtualenv used?: Conda
-    is running in docker?: no
+    NNI 模式(local|pai|remote): local
+    Python 版本: 3.6
+    使用的虚拟环境: Conda
+    是否在 Docker 中运行: no
     
 
-## AutoGBDT Example
+## AutoGBDT 示例
 
-### Problem Description
+### 问题描述
 
-Nonconvex problem on the hyper-parameter search of [AutoGBDT](../gbdt_example.md) example.
+超参搜索上的非凸问题 [AutoGBDT](../gbdt_example.md)。
 
-### Search Space
+### 搜索空间
 
 ```json
 {
@@ -67,49 +67,49 @@ Nonconvex problem on the hyper-parameter search of [AutoGBDT](../gbdt_example.md
 }
 ```
 
-The total search space is 1,204,224, we set the number of maximum trial to 1000. The time limitation is 48 hours.
+总搜索空间为 1, 204, 224 次，将最大 Trial 次数设置为1000。 时间限制为 48 小时。
 
-### Results
+### 结果
 
-| Algorithm     | Best loss    | Average of Best 5 Losses | Average of Best 10 Losses |
-| ------------- | ------------ | ------------------------ | ------------------------- |
-| Random Search | 0.418854     | 0.420352                 | 0.421553                  |
-| Random Search | 0.417364     | 0.420024                 | 0.420997                  |
-| Random Search | 0.417861     | 0.419744                 | 0.420642                  |
-| Grid Search   | 0.498166     | 0.498166                 | 0.498166                  |
-| Evolution     | 0.409887     | 0.409887                 | 0.409887                  |
-| Evolution     | 0.413620     | 0.413875                 | 0.414067                  |
-| Evolution     | 0.409887     | 0.409887                 | 0.409887                  |
-| Anneal        | 0.414877     | 0.417289                 | 0.418281                  |
-| Anneal        | 0.409887     | 0.409887                 | 0.410118                  |
-| Anneal        | 0.413683     | 0.416949                 | 0.417537                  |
-| Metis         | 0.416273     | 0.420411                 | 0.422380                  |
-| Metis         | 0.420262     | 0.423175                 | 0.424816                  |
-| Metis         | 0.421027     | 0.424172                 | 0.425714                  |
-| TPE           | 0.414478     | 0.414478                 | 0.414478                  |
-| TPE           | 0.415077     | 0.417986                 | 0.418797                  |
-| TPE           | 0.415077     | 0.417009                 | 0.418053                  |
-| SMAC          | **0.408386** | **0.408386**             | **0.408386**              |
-| SMAC          | 0.414012     | 0.414012                 | 0.414012                  |
-| SMAC          | **0.408386** | **0.408386**             | **0.408386**              |
-| BOHB          | 0.410464     | 0.415319                 | 0.417755                  |
-| BOHB          | 0.418995     | 0.420268                 | 0.422604                  |
-| BOHB          | 0.415149     | 0.418072                 | 0.418932                  |
-| HyperBand     | 0.414065     | 0.415222                 | 0.417628                  |
-| HyperBand     | 0.416807     | 0.417549                 | 0.418828                  |
-| HyperBand     | 0.415550     | 0.415977                 | 0.417186                  |
+| 算法            | 最好的损失值       | 最好的 5 次损失的平均值 | 最好的 10 次损失的平均 |
+| ------------- | ------------ | ------------- | ------------- |
+| Random Search | 0.418854     | 0.420352      | 0.421553      |
+| Random Search | 0.417364     | 0.420024      | 0.420997      |
+| Random Search | 0.417861     | 0.419744      | 0.420642      |
+| Grid Search   | 0.498166     | 0.498166      | 0.498166      |
+| Evolution     | 0.409887     | 0.409887      | 0.409887      |
+| Evolution     | 0.413620     | 0.413875      | 0.414067      |
+| Evolution     | 0.409887     | 0.409887      | 0.409887      |
+| Anneal        | 0.414877     | 0.417289      | 0.418281      |
+| Anneal        | 0.409887     | 0.409887      | 0.410118      |
+| Anneal        | 0.413683     | 0.416949      | 0.417537      |
+| Metis         | 0.416273     | 0.420411      | 0.422380      |
+| Metis         | 0.420262     | 0.423175      | 0.424816      |
+| Metis         | 0.421027     | 0.424172      | 0.425714      |
+| TPE           | 0.414478     | 0.414478      | 0.414478      |
+| TPE           | 0.415077     | 0.417986      | 0.418797      |
+| TPE           | 0.415077     | 0.417009      | 0.418053      |
+| SMAC          | **0.408386** | **0.408386**  | **0.408386**  |
+| SMAC          | 0.414012     | 0.414012      | 0.414012      |
+| SMAC          | **0.408386** | **0.408386**  | **0.408386**  |
+| BOHB          | 0.410464     | 0.415319      | 0.417755      |
+| BOHB          | 0.418995     | 0.420268      | 0.422604      |
+| BOHB          | 0.415149     | 0.418072      | 0.418932      |
+| HyperBand     | 0.414065     | 0.415222      | 0.417628      |
+| HyperBand     | 0.416807     | 0.417549      | 0.418828      |
+| HyperBand     | 0.415550     | 0.415977      | 0.417186      |
 
-For Metis, there are about 300 trials because it runs slowly due to its high time complexity O(n^3) in Gaussian Process.
+Metis 算法因为其高斯计算过程的复杂度为 O(n^3) 而运行非常慢，因此仅执行了 300 次 Trial。
 
-## RocksDB Benchmark 'fillrandom' and 'readrandom'
+## RocksDB 的 'fillrandom' 和 'readrandom' 基准测试
 
-### Problem Description
+### 问题描述
 
-[DB_Bench](https://github.com/facebook/rocksdb/wiki/Benchmarking-tools) is the main tool that is used to benchmark [RocksDB](https://rocksdb.org/)'s performance. It has so many hapermeter to tune.
+[DB_Bench](https://github.com/facebook/rocksdb/wiki/Benchmarking-tools) 是用来做 [RocksDB](https://rocksdb.org/) 性能基准测试的工具。 有多个参数需要调优。
 
-The performance of `DB_Bench` is associated with the machine configuration and installation method. We run the `DB_Bench`in the Linux machine and install the Rock in shared library.
+`DB_Bench` 的性能与计算机配置和安装方法有关。 在 `DB_Bench` Linux 系统上运行，并将 Rock 作为共享库安装。
 
-#### Machine configuration
+#### 计算机配置
 
     RocksDB:    version 6.1
     CPU:        6 * Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz
@@ -119,19 +119,19 @@ The performance of `DB_Bench` is associated with the machine configuration and i
     Entries:    1000000
     
 
-#### Storage performance
+#### 存储性能
 
-**Latency**: each IO request will take some time to complete, this is called the average latency. There are several factors that would affect this time including network connection quality and hard disk IO performance.
+**延迟**：每个 IO 请求都需要一些时间才能完成，这称为平均延迟。 有几个因素会影响此时间，包括网络连接质量和硬盘IO性能。
 
-**IOPS**: **IO operations per second**, which means the amount of *read or write operations* that could be done in one seconds time.
+**IOPS**： **每秒的 IO 操作数量**，这意味着可以在一秒钟内完成的*读取或写入操作次数*。
 
-**IO size**: **the size of each IO request**. Depending on the operating system and the application/service that needs disk access it will issue a request to read or write a certain amount of data at the same time.
+**IO 大小**： **每个 IO 请求的大小**。 根据操作系统和需要磁盘访问的应用程序、服务，它将同时发出读取或写入一定数量数据的请求。
 
-**Throughput (in MB/s) = Average IO size x IOPS **
+**吞吐量（以 MB/s 为单位）= 平均 IO 大小 x IOPS **
 
-IOPS is related to online processing ability and we use the IOPS as the metric in my experiment.
+IOPS 与在线处理能力有关，我们在实验中使用 IOPS 作为指标。
 
-### Search Space
+### 搜索空间
 
 ```json
 {
@@ -182,11 +182,11 @@ IOPS is related to online processing ability and we use the IOPS as the metric i
 }
 ```
 
-The search space is enormous (about 10^40) and we set the maximum number of trial to 100 to limit the computation resource.
+搜索空间非常大（约10 的 40 次方），将最大 Trial 次数设置为 100 以限制资源。
 
-### Results
+### 结果
 
-#### fillrandom' Benchmark
+#### fillrandom 基准
 
 | Model     | Best IOPS (Repeat 1) | Best IOPS (Repeat 2) | Best IOPS (Repeat 3) |
 | --------- | -------------------- | -------------------- | -------------------- |
@@ -201,7 +201,7 @@ Figure:
 
 ![](../../img/hpo_rocksdb_fillrandom.png)
 
-#### 'readrandom' Benchmark
+#### readrandom 基准
 
 | Model     | Best IOPS (Repeat 1) | Best IOPS (Repeat 2) | Best IOPS (Repeat 3) |
 | --------- | -------------------- | -------------------- | -------------------- |
