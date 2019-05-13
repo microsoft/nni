@@ -58,7 +58,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
 
-此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 强烈推荐使用 Anaconda python。 如果要使用官方的 Python，确保运行 NNI 前，在 `Visual Studio`，`MATLAB`，`MKL` 和`Intel Distribution for Python` 中至少安装了一个。 如果没有，请尝试安装上面的产品之一或 Anaconda Python（64位）。
+此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 使用 Anaconda Python(64-bit) 可解决此问题。
 
 > ImportError: DLL load failed
 
@@ -75,10 +75,13 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 * 忘记将 Experiment 配置的 Trial 命令中的 `python3` 改为 `python`。
 * 忘记安装 Experiment 的依赖，如 TensorFlow，Keras 等。
 
-### Windows 上支持的 Tuner
+### 无法在 Windows 上使用 BOHB
 
-* 不支持 SMAC
-* 支持 BOHB，但需要确保安装了 C++ 14.0 编译器。
+确保安装了 C ++ 14.0 编译器然后尝试运行 `nnictl package install --name=BOHB` 来安装依赖项。
+
+### Windows 上不支持的 Tuner
+
+当前不支持 SMAC，原因可参考[此问题](https://github.com/automl/SMAC3/issues/483)。
 
 注意：
 

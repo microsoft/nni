@@ -12,6 +12,14 @@
 
 #### Windows
 
+如果选择 Windows 本机模式并使用 PowerShell 运行脚本，需要首次以管理员身份在 PowerShell 环境中运行以下命令。
+
+```bash
+    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
+
+然后通过 pip 安装 NNI：
+
 ```bash
     python -m pip install --upgrade nni
 ```
@@ -26,7 +34,7 @@
 
 NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 下面会展示如何使用 NNI 来找到最佳超参组合。
 
-这是还**没有 NNI** 的样例代码，用 CNN 在 MNIST 数据集上训练：
+这是**没有 NNI** 的样例代码，用 CNN 在 MNIST 数据集上训练：
 
 ```python
 def run_trial(params):
@@ -52,11 +60,11 @@ if __name__ == '__main__':
 
 上面的代码一次只能尝试一组参数，如果想要调优学习率，需要手工改动超参，并一次次尝试。
 
-NNI 就是用来帮助调优工作的。它的工作流程如下：
+NNI 用来帮助超参调优。它的流程如下：
 
 ```pseudo
 输入: 搜索空间, Trial 代码, 配置文件
-输出: 一组最佳的超参配置
+输出: 一组最优的参数配置
 
 1: For t = 0, 1, 2, ..., maxTrialNum,
 2:      hyperparameter = 从搜索空间选择一组参数
@@ -64,7 +72,7 @@ NNI 就是用来帮助调优工作的。它的工作流程如下：
 4:      返回最终结果给 NNI
 5:      If 时间达到上限,
 6:          停止实验
-7: return 最好的实验结果
+7: 返回最好的实验结果
 ```
 
 如果需要使用 NNI 来自动训练模型，找到最佳超参，需要如下三步：
@@ -141,17 +149,17 @@ trial:
 
 上面的代码都已准备好，并保存在 [examples/trials/mnist/](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist)。
 
-如果选择 Windows 本机模式并使用 PowerShell 运行脚本，需要首次以管理员身份在 PowerShell 环境中运行以下命令。
+#### Linux 和 macOS
 
-```bash
-    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
-完成后，运行下列命令来开始 Experiment。
+从命令行使用 **config.yml** 文件启动 MNIST Experiment 。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config.yml
 ```
+
+#### Windows
+
+从命令行使用 **config_windows.yml** 文件启动 MNIST Experiment 。
 
 **注意**：如果使用了 Windows 本机模式，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
 
