@@ -49,12 +49,12 @@ jobs:
   timeoutInMinutes: 0
   dependsOn: build_docker_image
   variables:
-    TEST_IMG: $[ dependencies.build_docker_image.outputs['setvariableStep.docker_image'] ]
+    docker_image: $[ dependencies.build_docker_image.outputs['setvariableStep.docker_image'] ]
 
   steps:
-    - script: |
-        echo $(TEST_IMG)
-        echo $TEST_IMG
+  - script: |
+      echo $(docker_image)
+    displayName: testVariable
   # - script: |
   #     set PATH=$(ENV_PATH)
   #     python --version
