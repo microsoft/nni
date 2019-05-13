@@ -153,7 +153,7 @@ def _add_index(in_x, parameter):
     Will change to format in hyperopt, like:
         {'dropout_rate': 0.8, 'conv_size': {'_index': 1, '_value': 3}, 'hidden_size': {'_index': 1, '_value': 512}}
     """
-    if TYPE not in in_x:  # if at the top level
+    if TYPE not in in_x: # if at the top level
         out_y = dict()
         for key, value in parameter.items():
             out_y[key] = _add_index(in_x[key], value)
