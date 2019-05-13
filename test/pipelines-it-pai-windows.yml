@@ -52,6 +52,8 @@ jobs:
 
   steps:
   - script: |
+      echo $(ENV_PATH)
+      set PATH=$(ENV_PATH)
       python --version
     displayName: 'test python'
   # - script: |
