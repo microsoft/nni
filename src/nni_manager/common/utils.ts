@@ -474,7 +474,7 @@ function getNewLine(): string{
  * @param path 
  */
 function unixPathJoin(...paths: any[]): string{
-    let dir:string = paths.filter((path: any) => path !== '').join('/');
+    const dir: string = paths.filter((path: any) => path !== '').join('/');
     if (dir === '') return '.';
     return dir;
 }
