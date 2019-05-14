@@ -357,23 +357,18 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     });
 
     let fileCount: number = -1;
+    let cmd: string;
     if(process.platform === "win32") {
-        cpp.exec(`powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`).then((result) => {
-            if(result.stdout && parseInt(result.stdout)) {
-                fileCount = parseInt(result.stdout);            
-            }
-            deferred.resolve(fileCount);
-        });
-    }else {
-        cpp.exec(`find ${directory} -type f | wc -l`).then((result) => {
-            if(result.stdout && parseInt(result.stdout)) {
-                fileCount = parseInt(result.stdout);            
-            }
-            deferred.resolve(fileCount);
-        });
+        cmd = `powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`
+    } else {
+        cmd = `find ${directory} -type f | wc -l`;   
     }
-
-
+    cpp.exec(cmd).then((result) => {
+        if(result.stdout && parseInt(result.stdout)) {
+            fileCount = parseInt(result.stdout);            
+        }
+        deferred.resolve(fileCount);
+    });
     return Promise.race([deferred.promise, delayTimeout]).finally(() => {
         clearTimeout(timeoutId);
     });
