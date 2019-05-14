@@ -358,7 +358,7 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
 
     let fileCount: number = -1;
     if(process.platform === "win32") {
-        cpp.exec(`dir/s/b/a-d ${directory} | find /v /c "::"`).then((result) => {
+        cpp.exec(`powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`).then((result) => {
             if(result.stdout && parseInt(result.stdout)) {
                 fileCount = parseInt(result.stdout);            
             }
