@@ -73,7 +73,7 @@ def update_training_service_config(args):
 
 def convert_command():
     '''convert command by platform'''
-    if sys.platform != 'win32':
+    if sys.platform != 'win32' or args.ts:
         return None
     config_files = glob.glob('./**/*.yml') + glob.glob('./**/**/*.yml')
     for config_file in config_files:
