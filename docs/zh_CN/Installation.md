@@ -33,7 +33,7 @@
     bash
       Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
-Anaconda or Miniconda is highly recommended.
+推荐使用 Anaconda 或 Miniconda。
 
 * **通过 pip 命令安装 NNI**
     
