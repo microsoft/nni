@@ -59,6 +59,7 @@ class NNIManager implements Manager {
     private waitingTrials: string[];
     private trialJobs: Map<string, TrialJobDetail>;
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
+    
     constructor() {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;

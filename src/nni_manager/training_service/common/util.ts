@@ -108,8 +108,6 @@ export function execScript(filePath: string): cp.ChildProcess {
     }
 }
 
-
-
 /**
  * output the last line of a file
  * @param filePath 
@@ -128,7 +126,7 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
  * delete a directory
  * @param directory 
  */
-export async function execRemove(directory: string): Promise<void>{
+export async function execRemove(directory: string): Promise<void> {
     if (process.platform === 'win32') {
         await cpp.exec(`powershell.exe Remove-Item ${directory} -Recurse -Force`);
     } else {
@@ -141,7 +139,7 @@ export async function execRemove(directory: string): Promise<void>{
  * kill a process
  * @param directory 
  */
-export async function execKill(pid: string): Promise<void>{
+export async function execKill(pid: string): Promise<void> {
     if (process.platform === 'win32') {
         await cpp.exec(`cmd /c taskkill /PID ${pid} /T /F`);
     } else {
@@ -155,7 +153,7 @@ export async function execKill(pid: string): Promise<void>{
  * @param  variable
  * @returns command string  
  */
-export function setEnvironmentVariable(variable: { key: string; value: string }): string{
+export function setEnvironmentVariable(variable: { key: string; value: string }): string {
     if (process.platform === 'win32') {
         return `$env:${variable.key}="${variable.value}"`;
     }
@@ -164,13 +162,12 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
     }
 }
 
-
 /**
  * Compress files in directory to tar file
  * @param  source_path
  * @param  tar_path
  */
-export async function tarAdd(tar_path: string, source_path: string): Promise<void>{
+export async function tarAdd(tar_path: string, source_path: string): Promise<void> {
     if (process.platform === 'win32') {
         tar_path = tar_path.split('\\').join('\\\\');
         source_path = source_path.split('\\').join('\\\\');
