@@ -123,7 +123,7 @@ python -m pip install --upgrade nni
 注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
-* 当前 NNI 在 Windows 上仅支持本机模式。 强烈推荐使用 Anaconda 在 Windows 上安装 NNI。
+* 当前 NNI 在 Windows 上仅支持本机模式。 Anaconda or Miniconda is highly recommended to install NNI on Windows.
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/FAQ.md)。
 
 **通过源代码安装**
