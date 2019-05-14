@@ -4,7 +4,7 @@ Currently we only support local mode on Windows. Windows 10.1809 is well tested 
 
 ## **Installation on Windows**
 
-  **Anaconda python(64-bit) is highly recommended.**  
+  **Anaconda or Miniconda python(64-bit) is highly recommended.**  
 
 When you use PowerShell to run script for the first time, you need **run PowerShell as administrator** with this command:
 
@@ -22,7 +22,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 * __Install NNI through source code__
 
-  Prerequisite: `python >=3.5`, `git`, `powershell`
+  Prerequisite: `python >=3.5`, `git`, `PowerShell`
 
   ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
@@ -55,9 +55,9 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 >...cannot be loaded because running scripts is disabled on this system.
 
-### Trial failed with missing DLL in cmd or PowerShell
+### Trial failed with missing DLL in command line or PowerShell
 
-This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Anaconda python is highly recommended. If you use official python, make sure you have one of `Visual Studio`, `MATLAB`, `MKL` and `Intel Distribution for Python` installed on Windows before running NNI. If not, try to install one of products above or Anaconda python(64-bit).
+This error caused by missing LIBIFCOREMD.DLL and LIBMMD.DLL and fail to install SciPy. Using Anaconda or Miniconda with Python(64-bit) can solve it.
 >ImportError: DLL load failed
 
 ### Trial failed on webUI
@@ -73,10 +73,11 @@ If there is a stderr file, please check out. Two possible cases are as follows:
 * forget to change the trial command `python3` into `python` in each experiment YAML.
 * forget to install experiment dependencies such as TensorFlow, Keras and so on.
 
-### Support tuner on Windows
+### Fail to use BOHB on Windows
+Make sure C++ 14.0 compiler installed then try to run `nnictl package install --name=BOHB` to install the dependencies.
 
-* SMAC is not supported
-* BOHB is supported, make sure C++ 14.0 compiler and dependencies installed successfully.
+### Not supported tuner on Windows
+SMAC is not supported currently, the specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
 
 Note:
 

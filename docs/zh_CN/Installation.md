@@ -1,6 +1,6 @@
 # 安装 NNI
 
-当前支持在 Linux，Mac 和 Windows 下安装。
+当前支持在 Linux，Mac 和 Windows（本机模式）下安装。
 
 ## **在 Linux 和 Mac 下安装**
 
@@ -17,7 +17,7 @@
     先决条件：`python >=3.5`, `git`, `wget`
     
     ```bash
-    git clone -b v0.6 https://github.com/Microsoft/nni.git
+    git clone -b v0.7 https://github.com/Microsoft/nni.git
     cd nni
     ./install.sh
     ```
@@ -28,9 +28,14 @@
 
 ## **在 Windows 上安装**
 
+在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令： 
+
+    bash
+      Set-ExecutionPolicy -ExecutionPolicy Unrestricted 强烈推荐使用 Anaconda。
+
 * **通过 pip 命令安装 NNI**
     
-    先决条件：`python >= 3.5`
+    先决条件：`python(64-bit) >= 3.5`
     
     ```bash
     python -m pip install --upgrade nni
@@ -39,16 +44,10 @@
 * **通过源代码安装 NNI**
     
     先决条件：`python >=3.5`, `git`, `powershell`  
-    在第一次使用 PowerShell 时，需要作为管理员运行此命令：
+    可使用管理员或当前用户权限运行下列命令：
     
     ```bash
-    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-    ```
-    
-    然后可以使用管理员或当前用户安装 NNI：
-    
-    ```bash
-    git clone https://github.com/Microsoft/nni.git
+    git clone -b v0.7 https://github.com/Microsoft/nni.git
     cd nni
     powershell ./install.ps1
     ```
@@ -79,7 +78,7 @@
 | **网络**   | 宽带连接                                               |                          |
 | **分辨率**  | 1024 x 768 以上                                      |                          |
 
-以下是 NNI 在 Windows 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
+以下是 NNI 在 Windows 上的最低配置，推荐使用 Windows 10 1809 版。 由于程序变更，NNI 的最低配置会有所更改。
 
 |          | 最低配置                                  | 推荐配置                                      |
 | -------- | ------------------------------------- | ----------------------------------------- |
