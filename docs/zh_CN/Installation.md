@@ -28,7 +28,7 @@
 
 ## **在 Windows 上安装**
 
-When you use PowerShell to run script for the first time, you need **run PowerShell as administrator** with this command:
+在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
 
     bash
       Set-ExecutionPolicy -ExecutionPolicy Unrestricted
