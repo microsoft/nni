@@ -272,7 +272,7 @@ class PAITrainingService implements TrainingService {
 
                 // Validate to make sure codeDir doesn't have too many files
                 try {
-                    // await validateCodeDir(this.paiTrialConfig.codeDir);
+                    await validateCodeDir(this.paiTrialConfig.codeDir);
                 } catch(error) {
                     this.log.error(error);
                     deferred.reject(new Error(error));
