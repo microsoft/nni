@@ -30,6 +30,7 @@ import { AetherTrainingService } from '../../training_service/aether/aetherTrain
 import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
 import { fstat } from 'fs';
 import { TrialJobApplicationForm, TrialJobDetail } from '../../common/trainingService';
+import { Deferred } from 'ts-deferred';
 
 const aetherCodeDir: string = tmp.dirSync().name.split('\\').join('\\\\');
 const aetherGraphPath: string = './training_service/test/graph.json';
@@ -39,6 +40,14 @@ fs.copyFileSync(aetherGraphPath, aetherGraphTmpPath);
 describe(`Unit Test for Aether Training Service`, () => {
     let trial_config = `{"command": "", "codeDir": "${aetherCodeDir}", "gpuNum": 0, "baseGraph": "${aetherGraphTmpPath}", "outputNodeAlias": "184eb95a", "outputName": "OutputFile"}`;
     let aetherTrainingService: AetherTrainingService;    
+    const hparam = {
+        'parameter_id': 0,
+        'parameter_source': 'fake',
+        'parameters': {
+            'param': 'hello',
+        }
+    }
+
     before(() => {
         chai.should();
         chai.use(chaiAsPromised);
@@ -64,7 +73,7 @@ describe(`Unit Test for Aether Training Service`, () => {
         const form: TrialJobApplicationForm = {
             jobType: 'TRIAL',
             hyperParameters: {
-                   value: '',
+                   value: JSON.stringify(hparam),
                    index: 0,
             }
         };
@@ -72,17 +81,35 @@ describe(`Unit Test for Aether Training Service`, () => {
         chai.expect(jobDetail.status).to.be.oneOf(['WAITING', 'RUNNING']);
         aetherTrainingService.listTrialJobs().then((jobList) => {
             chai.expect(jobList).to.be.lengthOf(1);
-        })
+        });
+
+        const metric_deferred = new Deferred<string>();
         const listener = function f1(metric: any) {
             chai.expect(metric.id).to.be.equals(jobDetail.id);
-            // TODO: assert metric number
-            console.log(metric.data);
+            metric_deferred.resolve(metric.data);
         };
         aetherTrainingService.addTrialJobMetricListener(listener);
         
-        await delay(60000);
+        const metric_data: string = await metric_deferred.promise;
+        chai.expect(metric_data).to.be.equals(0.618);
         aetherTrainingService.removeTrialJobMetricListener(listener);
-    }).timeout(200000);
+        return Promise.resolve();
+    }).timeout(100000);
 
-    it('Submit job and cancel', () => {}).timeout(20000);
+    it('Submit job and cancel', async () => {
+        await aetherTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trial_config);
+        const form: TrialJobApplicationForm = {
+            jobType: 'TRIAL',
+            hyperParameters: {
+                   value: JSON.stringify(hparam),
+                   index: 0,
+            }
+        };
+        const jobDetail: TrialJobDetail = await aetherTrainingService.submitTrialJob(form);
+        chai.expect(jobDetail.status).to.be.oneOf(['WAITING', 'RUNNING']);
+
+        await aetherTrainingService.cancelTrialJob(jobDetail.id);
+        chai.expect(jobDetail.status).to.be.oneOf(['USER_CANCELED', 'SYS_CANCELED']);
+        return Promise.resolve();
+    }).timeout(100000);
 })

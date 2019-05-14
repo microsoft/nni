@@ -56,10 +56,10 @@ class AetherTrainingService implements TrainingService {
     private resolveAetherClient(): string {
         if (path.extname(__filename) == '.ts') {
             // testing mode
-            return path.resolve(__dirname, '../../dist/aether/bin/AetherClient.exe');
+            return path.resolve(__dirname, '../../dist/aether/AetherClient.exe');
         } else if (path.extname(__filename) == '.js') {
             // production mode
-            return path.resolve(__dirname, '../../aether/bin/AetherClient.exe');
+            return path.resolve(__dirname, '../../aether/AetherClient.exe');
         } else {
             throw new Error(`${__filename} wrong file extension!`);
         }
@@ -148,6 +148,14 @@ class AetherTrainingService implements TrainingService {
             stdout.on('open', () => {stdout_open.resolve();});
             await Promise.all([stderr_open.promise, stdout_open.promise]);
             const clientProc: ChildProcess = spawn(this.aetherClientExePath, clientCmdArgs, {stdio: ['pipe', stdout, stderr]});
+            clientProc.on('exit', (code) => {
+                if (code == 1) {
+                    return Promise.reject( new Error(`Aether Client process for trial ${trialJobId} exited with error, please check ${path.join(trialWorkingDirectory, 'stderr')} to see details`));
+                }
+            });
+            clientProc.on('error', (err) => {
+                this.log.error(`Failed to start subprocess: ${err}`);
+            });
 
             const trialDetail: AetherTrialJobDetail = new AetherTrialJobDetail(
                 trialJobId,
@@ -189,9 +197,11 @@ class AetherTrainingService implements TrainingService {
         if (!trial.clientProc.killed) {
             trial.isEarlyStopped = isEarlyStopped;
             const deferred_exit = new Deferred<void>();
-            trial.clientProc.on('exit', () => {
-                trial.status = 'USER_CANCELED';  //USER or SYS CANCELLED?
-                deferred_exit.resolve();
+            trial.clientProc.on('exit', (code) => {
+                if (code == 0) {
+                    trial.status = 'USER_CANCELED';  //USER or SYS CANCELLED?
+                    deferred_exit.resolve();
+                }
             })
             trial.clientProc.stdin.write('0');
             return deferred_exit.promise;

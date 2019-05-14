@@ -9,10 +9,10 @@
           "DefaultDataRetentionHint": null,
           "ModuleParameters": [
             {
-              "ValueType": 0,
+              "ValueType": 1,
               "AssignmentsToConcatenate": null,
               "Name": "Parameter1",
-              "Value": "hello"
+              "Value": "param"
             },
             {
               "ValueType": 0,
@@ -153,13 +153,23 @@
       "WorkspaceId": null,
       "Etag": null,
       "Tags": null,
-      "CreatedDate": "2019-05-06T15:27:24.2659391+08:00",
-      "LastModifiedDate": "2019-05-06T15:27:24.2659391+08:00",
+      "CreatedDate": "2019-05-14T14:23:08.7609109+08:00",
+      "LastModifiedDate": "2019-05-14T14:23:08.7609109+08:00",
       "EntityStatus": 0
     }
   },
   "Interface": {
-    "Parameters": [],
+    "Parameters": [
+      {
+        "Name": "param",
+        "Documentation": null,
+        "DefaultValue": "hello",
+        "IsOptional": true,
+        "MinMaxRules": [],
+        "EnumRules": [],
+        "Type": 4
+      }
+    ],
     "Ports": {
       "Inputs": [],
       "Outputs": []

@@ -125,9 +125,7 @@ if (!(Get-Command msbuild | Test-Path)) {
     exit
 }
 nuget restore
-msbuild -property:Configuration=Release
-New-Item ..\..\..\dist\aether\bin -ItemType Directory
-Copy-Item .\bin\Release\* ..\..\..\dist\aether\bin\
+cmd /c 'msbuild -Property:Configure=Release;OutputPath=..\..\..\dist\aether'
 
 # Building WebUI
 Set-Location ..\..\..\..\webui

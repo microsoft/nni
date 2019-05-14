@@ -28,6 +28,3 @@ Remove-Item "src/webui/build" -Recurse -Force
 Remove-Item "src/webui/node_modules" -Recurse -Force
 Remove-Item $NNI_YARN_FOLDER -Recurse -Force
 Remove-Item $NNI_NODE_FOLDER -Recurse -Force
-cd src\nni_manager\training_service\aether\cslib\ 
-msbuild -t:Clean -property:Configuration=Release
-cd ..\..\..\..\..\
