@@ -4,7 +4,7 @@
 
 ## **在 Windows 上安装**
 
-**强烈推荐使用 Anaconda python(64 位)。**
+**Anaconda or Miniconda python(64-bit) is highly recommended.**
 
 在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
 
@@ -18,11 +18,11 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ```bash
   python -m pip install --upgrade nni
-```
+  ```
 
-* __通过代码安装 NNI__
+* __Install NNI through source code__
 
-  先决条件: `python >=3.5`, `git`, `powershell`
+  Prerequisite: `python >=3.5`, `git`, `PowerShell`
 
   ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
@@ -30,7 +30,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
   powershell ./install.ps1
   ```
 
-运行完以上脚本后，从命令行使用 **config_windows.yml** 来启动 Experiment，完成安装验证。
+When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
 
 ```bash
 nnictl create --config nni/examples/trials/mnist/config_windows.yml
@@ -56,9 +56,9 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 > ...cannot be loaded because running scripts is disabled on this system.
 
-### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
+### Trial failed with missing DLL in command line or PowerShell
 
-此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 使用 Anaconda Python(64-bit) 可解决此问题。
+此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 Using Anaconda or Miniconda with Python(64-bit) can solve it.
 
 > ImportError: DLL load failed
 
@@ -81,7 +81,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ### Windows 上不支持的 Tuner
 
-当前不支持 SMAC，原因可参考[此问题](https://github.com/automl/SMAC3/issues/483)。
+SMAC is not supported currently, the specific reason can be referred to this [GitHub issue](https://github.com/automl/SMAC3/issues/483).
 
 注意：
 
