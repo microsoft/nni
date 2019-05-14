@@ -348,9 +348,9 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         tuner_name = experiment_config['tuner']['builtinTunerName']
         module_name = ModuleName[tuner_name]
         try:
-            check_call([sys.executable, '-c', 'import %s'%(module_name)])
-        except ModuleNotFoundError as e:
-            print_error('The tuner %s should be installed through nnictl'%(tuner_name))
+            exec('import %s' % module_name)
+        except ImportError:
+            print_error('The tuner %s should be installed through \'nnictl install --name %s\''%(tuner_name, tuner_name))
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
