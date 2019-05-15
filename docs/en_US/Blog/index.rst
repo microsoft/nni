@@ -7,3 +7,4 @@ Research Blog
 
     Hyperparameter Optimization Comparison<HPOComparison>
     Neural Architecture Search Comparison<NASComparison>
+    Parallelizing Sequential Search<ParallelizingSequentialSearch>

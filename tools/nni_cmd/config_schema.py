@@ -67,8 +67,8 @@ common_schema = {
     }
 }
 tuner_schema_dict = {
-    ('TPE', 'Anneal', 'SMAC', 'Evolution'): {
-        'builtinTunerName': setChoice('builtinTunerName', 'TPE', 'Anneal', 'SMAC', 'Evolution'),
+    ('Anneal', 'SMAC', 'Evolution'): {
+        'builtinTunerName': setChoice('builtinTunerName', 'Anneal', 'SMAC', 'Evolution'),
         Optional('classArgs'): {
             'optimize_mode': setChoice('optimize_mode', 'maximize', 'minimize'),
         },
@@ -77,6 +77,16 @@ tuner_schema_dict = {
     },
     ('BatchTuner', 'GridSearch', 'Random'): {
         'builtinTunerName': setChoice('builtinTunerName', 'BatchTuner', 'GridSearch', 'Random'),
+        Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
+    },
+    'TPE': {
+        'builtinTunerName': 'TPE',
+        'classArgs': {
+            Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
+            Optional('parallel_optimize'): setType('parallel_optimize', bool),
+            Optional('constant_liar'): setChoice('min', 'max', 'mean')
+        },
+        Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
     },
     'NetworkMorphism': {

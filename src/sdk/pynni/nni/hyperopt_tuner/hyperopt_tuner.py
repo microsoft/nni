@@ -190,7 +190,7 @@ class HyperoptTuner(Tuner):
     HyperoptTuner is a tuner which using hyperopt algorithm.
     """
 
-    def __init__(self, algorithm_name, optimize_mode = 'minimize'):
+    def __init__(self, algorithm_name, optimize_mode='minimize', parallel_optimize=True, constant_liar='min'):
         """
         Parameters
         ----------
@@ -203,7 +203,12 @@ class HyperoptTuner(Tuner):
         self.json = None
         self.total_data = {}
         self.rval = None
+        self.CL_rval = None
         self.supplement_data_num = 0
+        self.parallel = parallel_optimize
+        self.constant_liar_type = constant_liar
+        self.running_data = []
+        self.optimal_y = 0
 
     def _choose_tuner(self, algorithm_name):
         """
@@ -259,10 +264,11 @@ class HyperoptTuner(Tuner):
             # but it can cause deplicate parameter rarely
             total_params = self.get_suggestion(random_search=True)
         self.total_data[parameter_id] = total_params
+        self.running_data.append(parameter_id)
         params = _split_index(total_params)
         return params
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, fake=False):
         """
         Record an observation of the objective function
 
@@ -274,16 +280,41 @@ class HyperoptTuner(Tuner):
             if value is dict, it should have "default" key.
             value is final metrics of the trial.
         """
+        logger.info("value = %s" %value)
         reward = extract_scalar_reward(value)
         # restore the paramsters contains '_index'
         if parameter_id not in self.total_data:
             raise RuntimeError('Received parameter_id not in total_data.')
         params = self.total_data[parameter_id]
 
-        if self.optimize_mode is OptimizeMode.Maximize:
-            reward = -reward
+        if fake:
+            rval = self.CL_rval
+            logger.info("Update CL_rval with fack point")
+        else:
+            
+            
+            rval = self.rval
+            self.running_data.remove(parameter_id)
+            if self.parallel:
+                # update the reward of optimal_y
+                if not self.optimal_y:
+                    if self.constant_liar_type == 'mean':
+                        self.optimal_y = [reward, 1]
+                    else:
+                        self.optimal_y = reward
+                else:
+                    if self.constant_liar_type == 'mean':
+                        _sum = self.optimal_y[0] + reward
+                        _number = self.optimal_y[1] + 1
+                        self.optimal_y = [_sum, _number]
+                    elif self.constant_liar_type == 'min':
+                        self.optimal_y = min(self.optimal_y, reward)
+                    elif self.constant_liar_type == 'max':
+                        self.optimal_y = max(self.optimal_y, reward)
+                logger.info("Update optimal_y with reward, optimal_y = %s", self.optimal_y)
 
-        rval = self.rval
+        if self.optimize_mode is OptimizeMode.Maximize:
+                reward = -reward
         domain = rval.domain
         trials = rval.trials
 
@@ -362,8 +393,21 @@ class HyperoptTuner(Tuner):
         total_params : dict
             parameter suggestion
         """
-
-        rval = self.rval
+        if self.parallel == True and len(self.running_data):
+            self.CL_rval = copy.deepcopy(self.rval)
+            fake_y = 0
+            if self.constant_liar_type == 'mean' and self.optimal_y[1]:
+                    fake_y = self.optimal_y[0] / self.optimal_y[1]
+            else:
+                fake_y = self.optimal_y
+            for _parameter_id in self.running_data:
+                self.receive_trial_result(parameter_id=_parameter_id, parameters=None, value=fake_y, fake=True)
+                logger.info("update parameter with fake value %s" %fake_y)
+            rval = self.CL_rval
+        else:
+            rval = self.rval
+        logger.info("get_suggestions, CL_rval is %s" %self.CL_rval)
+        logger.info("get_suggestions, rval is %s" %self.rval)
         trials = rval.trials
         algorithm = rval.algo
         new_ids = rval.trials.new_trial_ids(1)
@@ -410,5 +454,5 @@ class HyperoptTuner(Tuner):
             self.supplement_data_num += 1
             _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
             self.total_data[_parameter_id] = _add_index(in_x=self.json, parameter=_params)
-            self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
+            self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value, fake=False)
         logger.info("Successfully import data to TPE/Anneal tuner.")
