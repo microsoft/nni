@@ -167,7 +167,7 @@ trial:
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
-注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](NNICTLDOC.md)，了解 `nnictl` 更多用法。
+注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 Click [here](Nnictl.md) for more usage of `nnictl`
 
 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
 
@@ -208,7 +208,7 @@ You can use these commands to get more information about the experiment
 The Web UI urls are: [IP 地址]:8080
 ```
 
-在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。
+Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. If you can not open the WebUI link in your terminal, you can refer to [FAQ](FAQ.md).
 
 #### 查看概要页面
 
@@ -254,12 +254,12 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 可�
 
 ## 相关主题
 
-* [尝试不同的 Tuner](Builtin_Tuner.md)
-* [尝试不同的 Assessor](Builtin_Assessors.md)
-* [使用命令行工具 nnictl](NNICTLDOC.md)
+* [尝试不同的 Tuner](BuiltinTuner.md)
+* [尝试不同的 Assessor](BuiltinAssessors.md)
+* [使用命令行工具 nnictl](Nnictl.md)
 * [如何编写 Trial 代码](Trials.md)
 * [如何在本机运行 Experiment (支持多 GPU 卡)？](LocalMode.md)
 * [如何在多机上运行 Experiment？](RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](PaiMode.md)
 * [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](KubeflowMode.md)
 * [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](FrameworkControllerMode.md)
