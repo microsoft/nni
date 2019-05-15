@@ -6,7 +6,7 @@ jobs:
     displayName: 'Install python tools'
   - task: CopyFilesOverSSH@0
     inputs:
-      sshEndpoint: remote_nni-ci-gpu-01
+      sshEndpoint: $(end_point)
       targetFolder: /tmp/nnitest/$(Build.BuildId)/nni-remote
       overwrite: true
     displayName: 'Copy all files to remote machine'
@@ -18,20 +18,17 @@ jobs:
     displayName: 'Install dependencies for integration tests'
   - task: SSH@0
     inputs:
-      sshEndpoint: remote_nni-ci-gpu-01
+      sshEndpoint: $(end_point)
       runOptions: inline
       inline: cd /tmp/nnitest/$(Build.BuildId)/nni-remote/deployment/pypi;make build
     continueOnError: true
     displayName: 'build nni bdsit_wheel'
   - task: SSH@0
     inputs:
-      sshEndpoint: remote_nni-ci-gpu-01
+      sshEndpoint: $(end_point)
       runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/nni-remote/test/remote_docker.py --mode start --name $(Build.BuildId) --image nni/nni --os windows
     displayName: 'Start docker'
-  - task: DownloadSecureFile@1
-    inputs:
-      secureFile: remote_ci_private_key
   - powershell: |
       Write-Host "Downloading Putty..."
       (New-Object Net.WebClient).DownloadFile("https://the.earth.li/~sgtatham/putty/latest/w64/pscp.exe", "$(Agent.TempDirectory)\pscp.exe")
@@ -46,7 +43,7 @@ jobs:
     displayName: 'integration test'
   - task: SSH@0
     inputs:
-      sshEndpoint: remote_nni-ci-gpu-01
+      sshEndpoint: $(end_point)
       runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/nni-remote/test/remote_docker.py --mode stop --name $(Build.BuildId) --os windows
     displayName: 'Stop docker'
