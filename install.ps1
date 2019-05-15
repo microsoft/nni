@@ -142,3 +142,8 @@ if(!(Test-Path $NNI_PKG_FOLDER)){
 Remove-Item $NNI_PKG_FOLDER -Recurse -Force
 Copy-Item "src\nni_manager\dist" $NNI_PKG_FOLDER -Recurse
 Copy-Item "src\nni_manager\package.json" $NNI_PKG_FOLDER
+$PKG_JSON = $NNI_PKG_FOLDER + "\package.json"
+(Get-Content $PKG_JSON).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content $PKG_JSON
+cmd /c $NNI_YARN --prod --cwd $NNI_PKG_FOLDER
+$NNI_PKG_FOLDER_STATIC = $NNI_PKG_FOLDER + "\static"
+Copy-Item "src\webui\build" $NNI_PKG_FOLDER_STATIC -Recurse
