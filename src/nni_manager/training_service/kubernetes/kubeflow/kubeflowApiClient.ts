@@ -29,24 +29,35 @@ abstract class KubeflowOperatorClient extends KubernetesCRDClient{
      */
     public static generateOperatorClient(kubeflowOperator: KubeflowOperator, 
                                     operatorApiVersion: string): KubernetesCRDClient {
-        if(kubeflowOperator === 'tf-operator') {
-            if(operatorApiVersion == 'v1alpha2') {
-                return new TFOperatorClientV1Alpha2();
-            } else if(operatorApiVersion == 'v1beta1') {
-                return new TFOperatorClientV1Beta1();
-            } else if(operatorApiVersion == 'v1beta2') {
-                return new TFOperatorClientV1Beta2();
+        switch(kubeflowOperator) {
+            case 'tf-operator': {
+                switch(operatorApiVersion) {
+                    case 'v1alpha2': {
+                        return new TFOperatorClientV1Alpha2();
+                    }
+                    case 'v1beta1': {
+                        return new TFOperatorClientV1Beta1();
+                    }
+                    case 'v1beta2': {
+                        return new TFOperatorClientV1Beta2();
+                    }
+                }
+                break;
             }
-        } else if(kubeflowOperator === 'pytorch-operator') {
-            if(operatorApiVersion == 'v1alpha2') {
-                return new PytorchOperatorClientV1Alpha2();
-            } else if(operatorApiVersion == 'v1beta1') {
-                return new PytorchOperatorClientV1Beta1();
-            } else if(operatorApiVersion == 'v1beta2') {
-                return new PytorchOperatorClientV1Beta2();
-            }
+            case 'pytorch-operator': {
+                switch(operatorApiVersion) {
+                    case 'v1alpha2': {
+                        return new PyTorchOperatorClientV1Alpha2();
+                    }
+                    case 'v1beta1': {
+                        return new PyTorchOperatorClientV1Beta1();
+                    }
+                    case 'v1beta2': {
+                        return new PyTorchOperatorClientV1Beta2();
+                    }
+                }
+            } 
         }
-
         throw new Error(`Invalid operator ${kubeflowOperator} or apiVersion ${operatorApiVersion}`);
     }
 }
@@ -108,7 +119,7 @@ class TFOperatorClientV1Beta2 extends KubernetesCRDClient {
     }    
 }
 
-class PytorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {
+class PyTorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     /**
      * constructor, to initialize tfjob CRD definition
      */
@@ -127,7 +138,7 @@ class PytorchOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     }
 }
 
-class PytorchOperatorClientV1Beta1 extends KubernetesCRDClient {
+class PyTorchOperatorClientV1Beta1 extends KubernetesCRDClient {
     /**
      * constructor, to initialize tfjob CRD definition
      */
@@ -146,7 +157,7 @@ class PytorchOperatorClientV1Beta1 extends KubernetesCRDClient {
     }
 }
 
-class PytorchOperatorClientV1Beta2 extends KubernetesCRDClient {
+class PyTorchOperatorClientV1Beta2 extends KubernetesCRDClient {
     /**
      * constructor, to initialize tfjob CRD definition
      */
