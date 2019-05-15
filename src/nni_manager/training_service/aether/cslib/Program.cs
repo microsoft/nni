@@ -62,10 +62,19 @@ namespace AetherClient
         }
     }
 
+    class Metrics 
+    {
+        public int parameter_id { get; set; }
+        public string trial_job_id { get; set; }
+        public string type { get; set; }
+        public int sequence { get; set; }
+        public float value  { get; set; }
+    }
+
     class RewardBody
     {
         public string jobId {get; set;}
-        public float[] metrics { get; set; }
+        public string[] metrics { get; set; }
     }
 
     class ClientRunner
@@ -77,6 +86,8 @@ namespace AetherClient
         private ExperimentStatusCode status;
         private string experimentId = null; // Aether experiment ID
         private NNITrialInfo info = null;
+
+        private NNIHparam hparams = null;
         private readonly Dictionary<ExperimentStatusCode, StatusBody> statusMap = new Dictionary<ExperimentStatusCode, StatusBody>
         {
             { ExperimentStatusCode.NotStarted, new StatusBody("WAITING") },
@@ -105,7 +116,7 @@ namespace AetherClient
                 info = serializer.Deserialize<NNITrialInfo>(response);
 
                 IVisualGraph graph = environment.DeserializeGraph(File.ReadAllText(info.aetherConfig.baseGraph));
-                NNIHparam hparams = JsonConvert.DeserializeObject<NNIHparam>(info.form.hyperParameters.value);
+                hparams = JsonConvert.DeserializeObject<NNIHparam>(info.form.hyperParameters.value);
                 foreach (var item in hparams.parameters)
                 {
                     try {
@@ -179,9 +190,18 @@ namespace AetherClient
                     using (StreamReader reader = new StreamReader(outputfile))
                     {
                         string line = reader.ReadToEnd();
+                        Metrics metrics = new Metrics {
+                            parameter_id = hparams.parameter_id,
+                            trial_job_id = this.trialId,
+                            type = "FINAL",
+                            sequence = 0,
+                            value = float.Parse(line, CultureInfo.InvariantCulture)
+                        };
                         RewardBody rewardBody = new RewardBody { 
                             jobId = this.trialId, 
-                            metrics = new float[1] { float.Parse(line, CultureInfo.InvariantCulture)}
+                            metrics = new string[1]{
+                                JsonConvert.SerializeObject(metrics),
+                            }
                         };
                         var reqReward = new RestRequest(String.Format("/api/v1/nni-aether/update-metrics/{0}/{1}", this.expId, this.trialId), Method.POST, DataFormat.Json);
                         reqReward.AddJsonBody(rewardBody);
