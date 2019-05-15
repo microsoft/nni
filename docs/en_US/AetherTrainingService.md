@@ -2,6 +2,7 @@
 
 ## Dependencies
 * [.NET Framework v4.6.2](https://dotnet.microsoft.com/download/dotnet-framework/net462)
+    * with [Developer Pack](https://www.microsoft.com/en-us/download/details.aspx?id=53321)
 * [NuGet](https://www.nuget.org/)
 * [Visual Studio 2017/2019](https://visualstudio.microsoft.com/) with `.NET Desktop Development` support.
 
