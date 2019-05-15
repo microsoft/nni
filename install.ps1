@@ -128,10 +128,6 @@ Copy-Item config -Destination .\dist\ -Recurse -Force
 
 # Building Aether Client
 Set-Location .\training_service\aether\cslib
-if (!(Get-Command nuget | Test-Path)) {
-    Write-Host "Please install nuget first"
-    exit
-}
 if (!(Get-Command msbuild | Test-Path)) {
     Write-Host "Please install msbuild first"
     exit
