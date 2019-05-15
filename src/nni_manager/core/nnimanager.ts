@@ -573,13 +573,13 @@ class NNIManager implements Manager {
         await Promise.all([
             this.periodicallyUpdateExecDuration(),
             this.pingDispatcher().catch((err: Error) => {
-                throw new NNIError('Dispatcher error', `Dispatcher error: ${err.message}`, err);
+                throw NNIError.FromError(err, 'Dispatcher error: ');
             }),
             this.trainingService.run().catch((err: Error) => {
-                throw new NNIError('Training service error', `Training service error: ${err.message}`, err);
+                throw NNIError.FromError(err, 'Training service error: ');
             }),
             this.manageTrials().catch((err: Error) => {
-                throw new NNIError('Job management error', `Job management error: ${err.message}`, err);
+                throw NNIError.FromError(err, 'Job management error: ');
             })]);
     }
 
@@ -591,13 +591,13 @@ class NNIManager implements Manager {
         }
         this.trainingService.addTrialJobMetricListener((metric: TrialJobMetric) => {
             this.onTrialJobMetrics(metric).catch((err: Error) => {
-                this.criticalError(new NNIError('Job metrics error', `Job metrics error: ${err.message}`, err));
+                this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
             });
         });
 
         this.dispatcher.onCommand((commandType: string, content: string) => {
             this.onTunerCommand(commandType, content).catch((err: Error) => {
-                this.criticalError(new NNIError('Tuner command event error', `Tuner command event error: ${err.message}`, err));
+                this.criticalError(NNIError.FromError(err, 'Tuner command event error: '));
             });
         });
     }
