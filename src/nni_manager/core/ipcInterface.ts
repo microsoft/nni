@@ -106,7 +106,7 @@ class IpcInterface {
                 this.logger.warning('Commands jammed in buffer!');
             }
         } catch (err) {
-            throw new NNIError('Dispatcher Error', `Dispatcher Error: ${err.message}`, err);
+            throw NNIError.FromError(err, 'Dispatcher Error: ');
         }
     }
 
