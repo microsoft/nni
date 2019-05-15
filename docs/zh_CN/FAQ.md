@@ -37,10 +37,18 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 将虚拟机的网络配置为桥接模式来让虚拟机能被网络访问，并确保虚拟机的防火墙没有禁止相关端口。
 
-### Windows 本机模式
+### Could not open webUI link
 
-参考 [NNI Windows 本机模式](WindowsLocalMode.md)
+Unable to open the WebUI may have the following reasons:
 
-### 帮助改进
+* http://127.0.0.1, http://172.17.0.1 and http://10.0.0.15 are referred to localhost, if you start your experiment on the server or remote machine. You can replace the IP to your server IP to view the WebUI, like http://[your_server_ip]:8080
+* If you still can't see the WebUI after you use the server IP, you can check the proxy and the firewall of your machine. Or use the browser on the machine where you start your NNI experiment.
+* Another reason may be your experiment is failed and NNI may fail to get the experiment infomation. You can check the log of NNImanager in the following directory: ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
 
-在创建新问题前，请在 https://github.com/Microsoft/nni/issues 查看是否有人已经报告了相似的问题。
+### Windows local mode problems
+
+Please refer to [NNI Windows local mode](WindowsLocalMode.md)
+
+### Help us improve
+
+Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.
