@@ -33,7 +33,7 @@ export namespace HDFSClientUtility {
      * @param hdfsUserName HDFS user name
      */
     function hdfsExpRootDir(hdfsUserName: string): string {
-        return unixPathJoin('/', hdfsUserName, 'nni', 'experiments', getExperimentId());
+        return '/' + unixPathJoin(hdfsUserName, 'nni', 'experiments', getExperimentId());
     }
 
     /**
