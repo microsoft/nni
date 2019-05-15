@@ -47,32 +47,32 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
         </ul>
       </td>
       <td>
-        <a href="docs/zh_CN/Builtin_Tuner.md">Tuner（调参器）</a>
+        <a href="docs/en_US/BuiltinTuner.md">Tuner（调参器）</a>
         <ul>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#TPE">TPE</a></li>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#Random">Random Search（随机搜索）</a></li>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#Anneal">Anneal（退火算法）</a></li>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#Evolution">Naive Evolution（进化算法）</a></li>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#SMAC">SMAC</a></li>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#Batch">Batch（批处理）</a></li>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#Grid">Grid Search（遍历搜索）</a></li>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#Hyperband">Hyperband</a></li>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#NetworkMorphism">Network Morphism</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#TPE">TPE</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#Random">Random Search（随机搜索）</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#Anneal">Anneal（退火算法）</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#Evolution">Naive Evolution（进化算法）</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#SMAC">SMAC</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#Batch">Batch（批处理）</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#Grid">Grid Search（遍历搜索）</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#Hyperband">Hyperband</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a></li>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
-          <li><a href="docs/zh_CN/Builtin_Tuner.md#BOHB">BOHB</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#NetworkMorphism#MetisTuner">Metis Tuner</a></li>
+          <li><a href="docs/en_US/BuiltinTuner.md#BOHB">BOHB</a></li>
         </ul>
-          <a href="docs/zh_CN/Builtin_Assessors.md#assessor">Assessor（评估器）</a> 
+          <a href="docs/en_US/BuiltinAssessors.md#assessor">Assessor（评估器）</a> 
         <ul>
-          <li><a href="docs/zh_CN/Builtin_Assessors.md#Medianstop">Median Stop</a></li>
-          <li><a href="docs/zh_CN/Builtin_Assessors.md#Curvefitting">Curve Fitting</a></li>
+          <li><a href="docs/en_US/BuiltinAssessors.md#Medianstop">Median Stop</a></li>
+          <li><a href="docs/en_US/BuiltinAssessors.md#Curvefitting">Curve Fitting</a></li>
         </ul>
       </td>
       <td>
       <ul>
         <li><a href="docs/zh_CN/LocalMode.md">本地计算机</a></li>
         <li><a href="docs/zh_CN/RemoteMachineMode.md">远程计算机</a></li>
-        <li><a href="docs/zh_CN/PAIMode.md">OpenPAI</a></li>
+        <li><a href="docs/en_US/PaiMode.md">OpenPAI</a></li>
         <li><a href="docs/zh_CN/KubeflowMode.md">Kubeflow</a></li>
         <li><a href="docs/zh_CN/FrameworkControllerMode.md">基于 Kubernetes（AKS 等等）的 FrameworkController</a></li>
       </ul>
@@ -224,11 +224,11 @@ You can use these commands to get more information about the experiment
 ## **入门**
 
 * [安装 NNI](docs/zh_CN/Installation.md)
-* [使用命令行工具 nnictl](docs/zh_CN/NNICTLDOC.md)
+* [使用命令行工具 nnictl](docs/en_US/Nnictl.md)
 * [使用 NNIBoard](docs/zh_CN/WebUI.md)
 * [如何定义搜索空间](docs/zh_CN/SearchSpaceSpec.md)
 * [如何编写 Trial 代码](docs/zh_CN/Trials.md)
-* [如何选择 Tuner、搜索算法](docs/zh_CN/Builtin_Tuner.md)
+* [如何选择 Tuner、搜索算法](docs/en_US/BuiltinTuner.md)
 * [配置 Experiment](docs/zh_CN/ExperimentConfig.md)
 * [如何使用 Annotation](docs/zh_CN/Trials.md#nni-python-annotation)
 
@@ -236,12 +236,12 @@ You can use these commands to get more information about the experiment
 
 * [在本机运行 Experiment (支持多 GPU 卡)](docs/zh_CN/LocalMode.md)
 * [在多机上运行 Experiment](docs/zh_CN/RemoteMachineMode.md)
-* [在 OpenPAI 上运行 Experiment](docs/zh_CN/PAIMode.md)
+* [在 OpenPAI 上运行 Experiment](docs/en_US/PaiMode.md)
 * [在 Kubeflow 上运行 Experiment。](docs/zh_CN/KubeflowMode.md)
 * [尝试不同的 Tuner](docs/zh_CN/tuners.rst)
 * [尝试不同的 Assessor](docs/zh_CN/assessors.rst)
-* [实现自定义 Tuner](docs/zh_CN/Customize_Tuner.md)
-* [实现自定义 Assessor](docs/zh_CN/Customize_Assessor.md)
+* [实现自定义 Tuner](docs/en_US/CustomizeTuner.md)
+* [实现自定义 Assessor](docs/en_US/CustomizeAssessor.md)
 * [使用进化算法为阅读理解任务找到好模型](examples/trials/ga_squad/README_zh_CN.md)
 
 ## **贡献**
@@ -250,9 +250,9 @@ You can use these commands to get more information about the experiment
 
 推荐新贡献者从标有 **good first issue** 的简单需求开始。
 
-如要安装 NNI 开发环境，参考： [配置 NNI 开发环境](docs/zh_CN/SetupNNIDeveloperEnvironment.md)。
+To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/en_US/SetupNniDeveloperEnvironment.md)
 
-在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/zh_CN/CONTRIBUTING.md)。
+Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/en_US/Contributing.md)
 
 我们正在编写[如何调试](docs/zh_CN/HowToDebug.md) 的页面，欢迎提交建议和问题。
 
