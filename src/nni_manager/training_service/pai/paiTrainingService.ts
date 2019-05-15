@@ -41,7 +41,7 @@ import { delay, generateParamFileName,
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir, execMkdir } from '../common/util';
-import { pathJoin } from '../../common/utils'
+import { unixPathJoin } from '../../common/utils'
 import { HDFSClientUtility } from './hdfsClientUtility';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
 import { PAI_LOG_PATH_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_TRIAL_COMMAND_FORMAT, PAITrialJobDetail } from './paiData';
@@ -407,7 +407,7 @@ class PAITrainingService implements TrainingService {
         }
 
         // Step 1. Prepare PAI job configuration
-        const hdfsOutputDir : string = pathJoin(this.hdfsBaseDir, this.experimentId, trialJobId);
+        const hdfsOutputDir : string = unixPathJoin(this.hdfsBaseDir, this.experimentId, trialJobId);
         const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
 
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
