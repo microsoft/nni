@@ -6,9 +6,9 @@
 
 * [Support NNI on Windows](./WindowsLocalMode.md)
   * NNI running on windows for local mode
-* [New advisor: BOHB](./bohbAdvisor.md)
+* [New advisor: BOHB](./BohbAdvisor.md)
   * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
-* [Support import and export experiment data through nnictl](./NNICTLDOC.md#experiment)
+* [Support import and export experiment data through nnictl](./Nnictl.md#experiment)
   * Generate analysis results report after the experiment execution
   * Support import data to tuner and advisor for tuning
 * [Designated gpu devices for NNI trial jobs](./ExperimentConfig.md#localConfig)
@@ -31,7 +31,7 @@
 
 ### Major Features
 
-* [Version checking](https://github.com/Microsoft/nni/blob/master/docs/en_US/PAIMode.md#version-check)
+* [Version checking](https://github.com/Microsoft/nni/blob/master/docs/en_US/PaiMode.md#version-check)
   * check whether the version is consistent between nniManager and trialKeeper
 * [Report final metrics for early stop job](https://github.com/Microsoft/nni/issues/776)
   * If includeIntermediateResults is true, the last intermediate result of the trial that is early stopped by assessor is sent to tuner as final result. The default value of includeIntermediateResults is false.
@@ -87,10 +87,10 @@
 
 #### New tuner and assessor supports
 
-* Support [Metis tuner](metisTuner.md) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
+* Support [Metis tuner](MetisTuner.md) as a new NNI tuner. Metis algorithm has been proofed to be well performed for **online** hyper-parameter tuning.
 * Support [ENAS customized tuner](https://github.com/countif/enas_nni), a tuner contributed by github community user, is an algorithm for neural network search, it could learn neural network architecture via reinforcement learning and serve a better performance than NAS.
-* Support [Curve fitting assessor](curvefittingAssessor.md) for early stop policy using learning curve extrapolation.
-* Advanced Support of [Weight Sharing](./AdvancedNAS.md): Enable weight sharing for NAS tuners, currently through NFS.
+* Support [Curve fitting assessor](CurvefittingAssessor.md) for early stop policy using learning curve extrapolation.
+* Advanced Support of [Weight Sharing](./AdvancedNas.md): Enable weight sharing for NAS tuners, currently through NFS.
 
 #### Training Service Enhancement
 
@@ -112,7 +112,7 @@
 
 #### New tuner supports
 
-* Support [network morphism](networkmorphismTuner.md) as a new tuner
+* Support [network morphism](NetworkmorphismTuner.md) as a new tuner
 
 #### Training Service improvements
 
@@ -146,8 +146,8 @@
 * [Kubeflow Training service](./KubeflowMode.md)
   * Support tf-operator
   * [Distributed trial example](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py) on Kubeflow
-* [Grid search tuner](gridsearchTuner.md) 
-* [Hyperband tuner](hyperbandAdvisor.md)
+* [Grid search tuner](GridsearchTuner.md) 
+* [Hyperband tuner](HyperbandAdvisor.md)
 * Support launch NNI experiment on MAC
 * WebUI
   * UI support for hyperband tuner
@@ -182,7 +182,7 @@
   ```
 
 * Support updating max trial number.
-  use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](NNICTLDOC.md) for the fully usage of NNICTL.
+  use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](Nnictl.md) for the fully usage of NNICTL.
 
 ### API new features and updates
 
@@ -227,10 +227,10 @@
 
 ### Major Features
 
-* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](./PAIMode.md) for instructions about how to submit NNI job in pai mode)
+* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](./PaiMode.md) for instructions about how to submit NNI job in pai mode)
   * Support training services on pai mode. NNI trials will be scheduled to run on OpenPAI cluster
   * NNI trial's output (including logs and model file) will be copied to OpenPAI HDFS for further debugging and checking
-* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](smacTuner.md) for instructions about how to use SMAC tuner)
+* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](SmacTuner.md) for instructions about how to use SMAC tuner)
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO to handle categorical parameters. The SMAC supported by NNI is a wrapper on [SMAC3](https://github.com/automl/SMAC3)
 * Support NNI installation on [conda](https://conda.io/docs/index.html) and python virtual environment
 * Others
