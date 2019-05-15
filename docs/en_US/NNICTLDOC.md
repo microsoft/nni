@@ -678,7 +678,7 @@ Debug mode will disable version check function in Trialkeeper.
 
   * Description
 
-    Clean up the files created by nni in hdfs
+    Clean up all files created by nni in hdfs
 
   * Usage
 
