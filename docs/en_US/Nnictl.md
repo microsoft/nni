@@ -453,7 +453,7 @@ Debug mode will disable version check function in Trialkeeper.
     > import data to a running experiment
 
     ```bash
-    nnictl experiment [experiment_id] -f experiment_data.json
+    nnictl experiment import [experiment_id] -f experiment_data.json
     ```
 
 <a name="config"></a>
