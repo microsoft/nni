@@ -286,7 +286,7 @@ class GeneralChild(Model):
       """@nni.mutable_layers(
       {
         layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
-        fixed_inputs:[],
+        fixed_inputs:[x],
         optional_inputs: [],
         optional_input_size: 1,
         layer_output: layer_0_out
