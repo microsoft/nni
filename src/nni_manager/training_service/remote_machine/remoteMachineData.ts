@@ -39,9 +39,10 @@ export class RemoteMachineMeta {
     // GPU Reservation info, the key is GPU index, the value is the job id which reserves this GPU
     public gpuReservation : Map<number, string>;
     public readonly gpuIndices?: string;
+    public readonly maxTrialNumOnEachGPU?: number;
 
     constructor(ip : string, port : number, username : string, passwd : string,
-                sshKeyPath: string, passphrase : string, gpuIndices?: string) {
+                sshKeyPath: string, passphrase : string, gpuIndices?: string, maxTrialNumOnEachGPU?: number) {
         this.ip = ip;
         this.port = port;
         this.username = username;
@@ -50,6 +51,7 @@ export class RemoteMachineMeta {
         this.passphrase = passphrase;
         this.gpuReservation = new Map<number, string>();
         this.gpuIndices = gpuIndices;
+        this.maxTrialNumOnEachGPU = maxTrialNumOnEachGPU;
     }
 }
 

@@ -31,10 +31,12 @@ export namespace ValidationSchemas {
                 passwd: joi.string(),
                 sshKeyPath: joi.string(),
                 passphrase: joi.string(),
-                gpuIndices: joi.string()
+                gpuIndices: joi.string(),
+                maxTrialNumOnEachGPU: joi.number()
             })),
             local_config: joi.object({
-                gpuIndices: joi.string()
+                gpuIndices: joi.string(),
+                maxTrialNumOnEachGPU: joi.number()
             }),
             trial_config: joi.object({
                 image: joi.string().min(1),

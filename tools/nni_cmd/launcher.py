@@ -160,9 +160,11 @@ def set_local_config(experiment_config, port, config_file_name):
     request_data = dict()
     if experiment_config.get('localConfig'):
         request_data['local_config'] = experiment_config['localConfig']
-        if request_data['local_config'] and request_data['local_config'].get('gpuIndices') \
-            and isinstance(request_data['local_config'].get('gpuIndices'), int):
-            request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
+        if request_data['local_config']:
+            if request_data['local_config'].get('gpuIndices') and isinstance(request_data['local_config'].get('gpuIndices'), int):
+                request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
+            if request_data['local_config'].get('maxTrialNumOnEachGPU'):
+                request_data['local_config']['maxTrialNumOnEachGPU'] = request_data['local_config'].get('maxTrialNumOnEachGPU')
         response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
         err_message = ''
         if not response or not check_response(response):
