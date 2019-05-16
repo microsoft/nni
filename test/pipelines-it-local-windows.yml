@@ -3,7 +3,6 @@ jobs:
 
   steps:
   - script: |
-      set PATH = %PATH%;C:\agent-private\_work\_tool\Bin
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - script: |
