@@ -74,8 +74,8 @@ def parse_annotation_mutable_layers(code, lineno):
             elif k.id == 'optional_inputs':
                 assert not fields['optional_inputs'], 'Duplicated field: optional_inputs'
                 assert type(value) is ast.List, 'Value of optional_inputs should be a list'
-                var_names = [astor.to_source(var).strip() for var in value.elts]
-                optional_inputs = ast.Dict(keys=var_names, values=value)
+                var_names = [ast.Str(s=astor.to_source(var).strip()) for var in value.elts]
+                optional_inputs = ast.Dict(keys=var_names, values=value.elts)
                 fields['optional_inputs'] = True
             elif k.id == 'optional_input_size':
                 assert not fields['optional_input_size'], 'Duplicated field: optional_input_size'
