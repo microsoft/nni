@@ -2,8 +2,8 @@ jobs:
 - job: 'Test'
 
   steps:
-    powershell: Write-Host $env:UserName
-  - script: |
+  - powershell: |
+      Write-Host $env:UserName
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - script: |
