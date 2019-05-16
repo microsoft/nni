@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 export PYTHONPATH="$(pwd)"
 
 python3 src/cifar10/nni_child_cifar10.py \
@@ -15,7 +15,7 @@ python3 src/cifar10/nni_child_cifar10.py \
   --eval_every_epochs=1 \
   --child_use_aux_heads \
   --child_num_layers=8 \
-  --child_out_filters=96 \
+  --child_out_filters=36 \
   --child_l2_reg=0.0002 \
   --child_num_branches=6 \
   --child_num_cell_layers=5 \
@@ -30,6 +30,6 @@ python3 src/cifar10/nni_child_cifar10.py \
   --controller_train_every=1 \
   --controller_num_aggregate=20 \
   --controller_train_steps=50 \
-  --child_mode="subgraph"
+  --child_mode="subgraph" \
   "$@"
 

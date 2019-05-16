@@ -1,8 +1,8 @@
 authorName: Unknown
 experimentName: enas_macro
-trialConcurrency: 4
+trialConcurrency: 1
 maxExecDuration: 24h
-maxTrialNum: 8
+maxTrialNum: 2
 #choice: local, remote
 trainingServicePlatform: local
 #choice: true, false
@@ -13,7 +13,7 @@ tuner:
   classFileName: nni_controller_cifar10.py
   className: ENASTuner
   classArgs:
-    batch_size: 3
+    batch_size: 1
 
 trial:
   command: sh ./macro_cifar10_final.sh
