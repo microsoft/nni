@@ -106,7 +106,7 @@ We believe weight sharing (transferring) plays a key role on speeding up NAS, wh
 
 ### Support of One-Shot NAS
 
-One-Shot NAS is a popular approach to find good neural architecture within a limited time and resource budget. Basically, it build a full graph based on the search space, and uses gradient descent to at last find the best subgraph. There are different training approaches, such as [training subgraphs (per mini-batch)][1], [training full graph through dropout][6], [training with architecture weights (regularization)][3]. Here we focus on the first approach, i.e., training subgraphs (ENAS).
+One-Shot NAS is a popular approach to find good neural architecture within a limited time and resource budget. Basically, it builds a full graph based on the search space, and uses gradient descent to at last find the best subgraph. There are different training approaches, such as [training subgraphs (per mini-batch)][1], [training full graph through dropout][6], [training with architecture weights (regularization)][3]. Here we focus on the first approach, i.e., training subgraphs (ENAS).
 
 With the same annotated trial code, users could choose One-Shot NAS as execution mode on NNI. Specifically, the compiled trial code builds the full graph (rather than subgraph demonstrated above), it receives a chosen architecture and training this architecture on the full graph for a mini-batch, then request another chosen architecture. It is supported by [NNI multi-phase](./multiPhase.md). We support this training approach because training a subgraph is very fast, building the graph every time training a subgraph induces too much overhead.
 
@@ -138,5 +138,5 @@ There are many interesting research topics in this area, both system and machine
 [2]: https://arxiv.org/abs/1707.07012
 [3]: https://arxiv.org/abs/1806.09055
 [4]: https://arxiv.org/abs/1806.10282
-[5]: https://arxiv.org/abs/1703.01041 
+[5]: https://arxiv.org/abs/1703.01041
 [6]: http://proceedings.mlr.press/v80/bender18a/bender18a.pdf
