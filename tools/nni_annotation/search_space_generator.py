@@ -57,7 +57,7 @@ class SearchSpaceGenerator(ast.NodeTransformer):
             self.search_space[mutable_block] = dict()
         self.search_space[mutable_block][mutable_layer] = {
             'layer_choice': [key.s for key in args[2].keys],
-            'optional_inputs': [var.id for var in args[5].elts],
+            'optional_inputs': [key.s for key in args[5].keys],
             'optional_input_size': args[6].n
         }
 
