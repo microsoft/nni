@@ -2,8 +2,8 @@ jobs:
 - job: 'Test'
 
   steps:
-  - powershell: |
-      $env:PATH = 'C:\agent-private\_work\_tool\Bin'+';'+$env:PATH
+  - script: |
+      set PATH = %PATH%;C:\agent-private\_work\_tool\Bin
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - script: |
