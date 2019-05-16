@@ -249,9 +249,9 @@ class ENASTuner(Tuner):
             data.pop(choice_key[0])
         # Sort layers and generate search space
         self.search_space = []
-        data = OrderedDict(sorted(data.items(), key=lambda tp:int(tp[0].split('_')[1])))
+        data = OrderedDict(sorted(data.items(), key=lambda tp:int(tp[0].split('_')[-1])))
         for block_id, layers in data.items():
-            data[block_id] = OrderedDict(sorted(layers.items(), key=lambda tp:int(tp[0].split('_')[1])))
+            data[block_id] = OrderedDict(sorted(layers.items(), key=lambda tp:int(tp[0].split('_')[-1])))
             for layer_id, info in data[block_id].items():
                 info['mutable_block'] = block_id
                 self.search_space.append((layer_id, info))
