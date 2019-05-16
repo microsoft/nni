@@ -251,36 +251,37 @@ class GeneralChild(Model):
         with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_0'):
             out = self._conv_branch(inputs[0][0], 3, is_training, out_filters, out_filters, start_idx=None)
-          post_process_out(out, inputs[1])
+          out = post_process_out(out, inputs[1])
         return out
       def conv3_sep(inputs):
         with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_1'):
             out = self._conv_branch(inputs[0][0], 3, is_training, out_filters, out_filters, start_idx=None, separable=True)
-          post_process_out(out, inputs[1])
+          out = post_process_out(out, inputs[1])
         return out
       def conv5(inputs):
         with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_2'):
             out = self._conv_branch(inputs[0][0], 5, is_training, out_filters, out_filters, start_idx=None)
-          post_process_out(out, inputs[1])
+          out = post_process_out(out, inputs[1])
         return out
       def conv5_sep(inputs):
         with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_3'):
             out = self._conv_branch(inputs[0][0], 5, is_training, out_filters, out_filters, start_idx=None, separable=True)
-          post_process_out(out, inputs[1])
+          out = post_process_out(out, inputs[1])
         return out
       def avg_pool(inputs):
         with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_4'):
             out = self._pool_branch(inputs[0][0], is_training, out_filters, out_filters, "avg", start_idx=None)
+          out = post_process_out(out, inputs[1])
         return out
       def max_pool(inputs):
         with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_5'):
             out = self._pool_branch(inputs[0][0], is_training, out_filters, out_filters, "max", start_idx=None)
-          post_process_out(out, inputs[1])
+          out = post_process_out(out, inputs[1])
         return out
 
       """@nni.mutable_layers(
