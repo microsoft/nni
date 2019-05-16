@@ -22,7 +22,7 @@ smac_tuner.py
 """
 
 from nni.tuner import Tuner
-from nni.utils import extract_scalar_reward
+from nni.utils import OptimizeMode, extract_scalar_reward
 
 import sys
 import logging
@@ -37,11 +37,6 @@ from smac.facade.smac_facade import SMAC
 from smac.facade.roar_facade import ROAR
 from smac.facade.epils_facade import EPILS
 
-@unique
-class OptimizeMode(Enum):
-    """Oprimize Mode class"""
-    Minimize = 'minimize'
-    Maximize = 'maximize'
 
 class SMACTuner(Tuner):
     """
