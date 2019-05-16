@@ -167,7 +167,10 @@ class ENASTuner(Tuner):
         start_idx = 0
         current_config = dict()
         onehot2list = lambda l: [idx for idx, val in enumerate(l) if val==1]
-        for layer_id, (layer_name, info) in enumerate(self.search_space.items()):
+        for layer_id, (layer_name, info) in enumerate(self.search_space):
+            mutable_block = info['mutable_block']
+            if mutable_block not in current_config:
+                current_config[mutable_block] = dict()
             layer_choice_idx = current_arc_code[start_idx]
             if layer_id != 0:
                 input_start = start_idx + 1
@@ -175,9 +178,9 @@ class ENASTuner(Tuner):
                 input_start = start_idx
             inputs_idxs = current_arc_code[input_start: input_start + layer_id]
             inputs_idxs = onehot2list(inputs_idxs)
-            current_config[layer_name] = dict()
-            current_config[layer_name]['layer_choice'] = info['layer_choice'][layer_choice_idx]
-            current_config[layer_name]['input_candidates'] = [info['input_candidates'][ipi] for ipi in inputs_idxs]
+            current_config[mutable_block][layer_name] = dict()
+            current_config[mutable_block][layer_name]['layer_choice'] = info['layer_choice'][layer_choice_idx]
+            current_config[mutable_block][layer_name]['optional_inputs'] = [info['optional_inputs'][ipi] for ipi in inputs_idxs]
             start_idx += 1 + layer_id
 
         return current_config 
@@ -241,10 +244,17 @@ class ENASTuner(Tuner):
 
     def update_search_space(self, data):
         # Extract choice
-        self.key = list(filter(lambda k: k.strip().endswith('choice'), list(data)))[0]
-        data.pop(self.key)
-        # Sort layers
-        self.search_space = OrderedDict(sorted(data.items(), key=lambda tp:int(tp[0].split('_')[1])))
+        choice_key = list(filter(lambda k: k.strip().endswith('choice'), list(data)))
+        if len(choice_key) > 0:
+            data.pop(choice_key[0])
+        # Sort layers and generate search space
+        self.search_space = []
+        data = OrderedDict(sorted(data.items(), key=lambda tp:int(tp[0].split('_')[1])))
+        for block_id, layers in data.items():
+            data[block_id] = OrderedDict(sorted(layers.items(), key=lambda tp:int(tp[0].split('_')[1])))
+            for layer_id, info in data[block_id].items():
+                info['mutable_block'] = block_id
+                self.search_space.append((layer_id, info))
         logger.debug(self.search_space)
 
 if __name__ == "__main__":

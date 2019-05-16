@@ -220,181 +220,163 @@ class GeneralChild(Model):
           return pooled_layers, out_filters
 
 
-      def post_process_out(layer_id, out, input_candidates):
-        with tf.variable_scope(layer_id):
-          with tf.variable_scope("skip"):
-            inputs = layers[-1]
-            if self.data_format == "NHWC":
-              inp_h = inputs.get_shape()[1].value
-              inp_w = inputs.get_shape()[2].value
-              inp_c = inputs.get_shape()[3].value
-              out.set_shape([None, inp_h, inp_w, out_filters])
-            elif self.data_format == "NCHW":
-              inp_c = inputs.get_shape()[1].value
-              inp_h = inputs.get_shape()[2].value
-              inp_w = inputs.get_shape()[3].value
-              out.set_shape([None, out_filters, inp_h, inp_w])
-            if self.mode == 'subgraph':
-              input_candidates.append(out)
-              pout = tf.add_n(input_candidates)
-            else:
-              try:
-                pout = tf.add_n([out, tf.reduce_sum(input_candidates, axis=0)])
-              except Exception as e:
-                print(e)
-                pout = out
-            out = batch_norm(pout, is_training, data_format=self.data_format)
-
+      def post_process_out(out, optional_inputs):
+        with tf.variable_scope("skip"):
+          inputs = layers[-1]
+          if self.data_format == "NHWC":
+            inp_h = inputs.get_shape()[1].value
+            inp_w = inputs.get_shape()[2].value
+            inp_c = inputs.get_shape()[3].value
+            out.set_shape([None, inp_h, inp_w, out_filters])
+          elif self.data_format == "NCHW":
+            inp_c = inputs.get_shape()[1].value
+            inp_h = inputs.get_shape()[2].value
+            inp_w = inputs.get_shape()[3].value
+            out.set_shape([None, out_filters, inp_h, inp_w])
+          optional_inputs.append(out)
+          pout = tf.add_n(optional_inputs)
+          out = batch_norm(pout, is_training, data_format=self.data_format)
         layers.append(out)
-
         return out
 
-      def conv3(layer_id, res_layers):
+      global layer_id
+      layer_id = -1
+      def get_layer_id():
+        global layer_id
+        layer_id += 1
+        return 'layer_' + str(layer_id)
+      def conv3(inputs):
         # res_layers is pre_layers that are chosen to form skip connection
         # layers[-1] is always the latest input
-        with tf.variable_scope(layer_id):
+        with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_0'):
-            out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=None)
+            out = self._conv_branch(inputs[0][0], 3, is_training, out_filters, out_filters, start_idx=None)
+          post_process_out(out, inputs[1])
         return out
-      def conv3_sep(layer_id, res_layers):
-        with tf.variable_scope(layer_id):
+      def conv3_sep(inputs):
+        with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_1'):
-            out = self._conv_branch(layers[-1], 3, is_training, out_filters, out_filters, start_idx=None, separable=True)
+            out = self._conv_branch(inputs[0][0], 3, is_training, out_filters, out_filters, start_idx=None, separable=True)
+          post_process_out(out, inputs[1])
         return out
-      def conv5(layer_id, res_layers):
-        with tf.variable_scope(layer_id):
+      def conv5(inputs):
+        with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_2'):
-            out = self._conv_branch(layers[-1], 5, is_training, out_filters, out_filters, start_idx=None)
+            out = self._conv_branch(inputs[0][0], 5, is_training, out_filters, out_filters, start_idx=None)
+          post_process_out(out, inputs[1])
         return out
-      def conv5_sep(layer_id, res_layers):
-        with tf.variable_scope(layer_id):
+      def conv5_sep(inputs):
+        with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_3'):
-            out = self._conv_branch(layers[-1], 5, is_training, out_filters, out_filters, start_idx=None, separable=True)
+            out = self._conv_branch(inputs[0][0], 5, is_training, out_filters, out_filters, start_idx=None, separable=True)
+          post_process_out(out, inputs[1])
         return out
-      def avg_pool(layer_id, res_layers):
-        with tf.variable_scope(layer_id):
+      def avg_pool(inputs):
+        with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_4'):
-            out = self._pool_branch(layers[-1], is_training, out_filters, out_filters, "avg", start_idx=None)
+            out = self._pool_branch(inputs[0][0], is_training, out_filters, out_filters, "avg", start_idx=None)
         return out
-      def max_pool(layer_id, res_layers):
-        with tf.variable_scope(layer_id):
+      def max_pool(inputs):
+        with tf.variable_scope(get_layer_id()):
           with tf.variable_scope('branch_5'):
-            out = self._pool_branch(layers[-1], is_training, out_filters, out_filters, "max", start_idx=None)
+            out = self._pool_branch(inputs[0][0], is_training, out_filters, out_filters, "max", start_idx=None)
+          post_process_out(out, inputs[1])
         return out
 
-      """@nni.architecture
+      """@nni.mutable_layers(
       {
-        platform: others,
-        layer_0: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_0_out,
-          post_process_outputs: post_process_out
-        },
-        layer_1: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_1_out,
-          post_process_outputs: post_process_out
-        },
-        layer_2: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_2_out,
-          post_process_outputs: post_process_out
-        },
-        layer_3: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_3_out,
-          post_process_outputs: post_process_out
-        }
-      }"""
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs:[],
+        optional_inputs: [],
+        optional_input_size: 1,
+        layer_output: layer_0_out
+      },
+      {
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs:[layer_0_out],
+        optional_inputs: [layer_0_out],
+        optional_input_size: 1,
+        layer_output: layer_1_out
+      },
+      {
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs:[layer_1_out],
+        optional_inputs: [layer_0_out, layer_1_out],
+        optional_input_size: 1,
+        layer_output: layer_2_out
+      },
+      {
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs:[layer_2_out],
+        optional_inputs: [layer_0_out, layer_1_out, layer_2_out],
+        optional_input_size: 1,
+        layer_output: layer_3_out
+      }
+      )"""
       layers, out_filters = add_fixed_pooling_layer(3, layers, out_filters, is_training)
       layer_0_out, layer_1_out, layer_2_out, layer_3_out = layers[-4:]
-      """@nni.architecture
+      """@nni.mutable_layers(
       {
-        platform: others,
-        layer_4: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_4_out,
-          post_process_outputs: post_process_out
-        },
-        layer_5: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_5_out,
-          post_process_outputs: post_process_out
-        },
-        layer_6: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_6_out,
-          post_process_outputs: post_process_out
-        },
-        layer_7: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_7_out,
-          post_process_outputs: post_process_out
-        }
-      }"""
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs: [layer_3_out],
+        optional_inputs: [layer_0_out, layer_1_out, layer_2_out, layer_3_out],
+        optional_input_size: 1,
+        layer_output: layer_4_out
+      },
+      {
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs: [layer_4_out],
+        optional_inputs: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out],
+        optional_input_size: 1,
+        layer_output: layer_5_out
+      },
+      {
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs: [layer_5_out],
+        optional_inputs: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out],
+        optional_input_size: 1,
+        layer_output: layer_6_out
+      },
+      {
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs: [layer_6_out],
+        optional_inputs: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out],
+        optional_input_size: 1,
+        layer_output: layer_7_out
+      }
+      )"""
       layers, out_filters = add_fixed_pooling_layer(7, layers, out_filters, is_training)
       layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out = layers[-8:]
-      """@nni.architecture
+      """@nni.mutable_layers(
       {
-        platform: others,
-        layer_8: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_8_out,
-          post_process_outputs: post_process_out
-        },
-        layer_9: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out, layer_8_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_9_out,
-          post_process_outputs: post_process_out
-        },
-        layer_10: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out, layer_8_out, layer_9_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_10_out,
-          post_process_outputs: post_process_out
-        },
-        layer_11: {
-          layer_choice: [conv3, conv3_sep, conv5, conv5_sep, avg_pool, max_pool],
-          input_candidates: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out, layer_8_out, layer_9_out, layer_10_out],
-          input_num: 1,
-          input_aggregate: None,
-          outputs: layer_11_out,
-          post_process_outputs: post_process_out
-        }
-      }"""
-      ############################# New added code ending
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs: [layer_7_out],
+        optional_inputs: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out, layer_8_out, layer_9_out, layer_10_out],
+        optional_input_size: 1,
+        layer_output: layer_8_out
+      },
+      {
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs: [layer_8_out],
+        optional_inputs: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out, layer_8_out, layer_9_out, layer_10_out],
+        optional_input_size: 1,
+        layer_output: layer_9_out
+      },
+      {
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs: [layer_9_out],
+        optional_inputs: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out, layer_8_out, layer_9_out, layer_10_out],
+        optional_input_size: 1,
+        layer_output: layer_10_out
+      },
+      {
+        layer_choice: [conv3(), conv3_sep(), conv5(), conv5_sep(), avg_pool(), max_pool()],
+        fixed_inputs:[layer_10_out],
+        optional_inputs: [layer_0_out, layer_1_out, layer_2_out, layer_3_out, layer_4_out, layer_5_out, layer_6_out, layer_7_out, layer_8_out, layer_9_out, layer_10_out],
+        optional_input_size: 1,
+        layer_output: layer_11_out
+      }
+      )"""
 
       x = global_avg_pool(layer_11_out, data_format=self.data_format)
       if is_training:
