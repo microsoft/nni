@@ -413,8 +413,6 @@ class LocalTrainingService implements TrainingService {
 
         let selectedGPUIndices: number[] = [];
         let availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.occupiedGpuIndexNumMap);
-        console.log('-------------416-----------')
-        console.log(availableGpuIndices)
         for(let index of availableGpuIndices) {
             let num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
             if(num === undefined || num < this.maxTrialNumOnEachGPU) {
