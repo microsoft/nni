@@ -7,5 +7,5 @@ In addtion to the official tutorilas and examples, we encourage community contri
 ..  toctree::
     :maxdepth: 2
 
-    NNI Practice Sharing<>
-    AutoML Practice Sharing<>
+    NNI Practice Sharing<nni_practice_sharing>
+    AutoML Practice Sharing<automl_practice_sharing>
