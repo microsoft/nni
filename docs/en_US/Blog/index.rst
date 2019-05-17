@@ -5,5 +5,5 @@ Research Blog
 ..  toctree::
     :maxdepth: 2
 
-    Hyperparameter Optimization Comparison<HPOComparison>
-    Neural Architecture Search Comparison<NASComparison>
+    Hyperparameter Optimization Comparison<HpoComparison>
+    Neural Architecture Search Comparison<NasComparison>
