@@ -135,6 +135,8 @@ if (!(Get-Command msbuild | Test-Path)) {
 }
 
 cmd /c $NNI_NUGET sources remove -Name "nuget.org"
+cmd /c $NNI_NUGET sources remove -Name "Bing"
+cmd /c $NNI_NUGET sources remove -Name "DstsManagement"
 cmd /c $NNI_NUGET sources add -Name "nuget.org" -Source https://api.nuget.org/v3/index.json -username "t-jianz@microsoft.com" -password $pwd
 cmd /c $NNI_NUGET sources add -Name "Bing" -Source "https://msasg.pkgs.visualstudio.com/DefaultCollection/_packaging/Bing/nuget/v3/index.json" -username "t-jianz@microsoft.com" -password $pwd
 cmd /c $NNI_NUGET sources add -Name "DstsManagement" -Source "https://msazure.pkgs.visualstudio.com/DefaultCollection/_apis/packaging/Official/nuget/index.json" -username "t-jianz@microsoft.com" -password $pwd
