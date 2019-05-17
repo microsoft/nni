@@ -3,7 +3,7 @@ jobs:
 
   steps:
   - script: |
-      powershell.exe -file install.ps1
+      powershell.exe -file install.ps1 -pwd $(vs_pwd)
     displayName: 'Install nni toolkit via source code'
   - script: |
       python -m pip install scikit-learn==0.20.0 --user
