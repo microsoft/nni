@@ -98,6 +98,12 @@ class Tuner(Recoverable):
         checkpoin_path = self.get_checkpoint_path()
         _logger.info('Save checkpoint ignored by tuner, checkpoint path: %s' % checkpoin_path)
 
+    def import_data(self, data):
+        """Import additional data for tuning
+        data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        pass
+
     def _on_exit(self):
         pass
 

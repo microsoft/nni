@@ -2,7 +2,7 @@
 
 NNI provides state-of-the-art tuning algorithm as our builtin-tuners and makes them easy to use. Below is the brief summary of NNI currently built-in Tuners:
 
-Note: Click the **Tuner's name** to get a detailed description of the algorithm, click the corresponding **Usage** to get the Tuner's installation requirements, suggested scenario and using example.
+Note: Click the **Tuner's name** to get a detailed description of the algorithm, click the corresponding **Usage** to get the Tuner's installation requirements, suggested scenario and using example. Here is an [article](./Blog/HPOComparison.md) about the comparison of different Tuners on several problems.
 
 Currently we support the following algorithms:
 
@@ -131,6 +131,8 @@ tuner:
 ![](https://placehold.it/15/1589F0/000000?text=+) `SMAC`
 
 > Builtin Tuner Name: **SMAC**
+
+**Please note that SMAC doesn't support running on windows currently. The specific reason can be referred to this [github issue](https://github.com/automl/SMAC3/issues/483).**
 
 **Installation**
 

@@ -24,7 +24,6 @@ import psutil
 import json
 import datetime
 import time
-
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .config_utils import Config, Experiments
@@ -32,6 +31,7 @@ from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process
+from .command_utils import check_output_command, kill_command
 
 def get_experiment_time(port):
     '''get the startTime and endTime of an experiment'''
@@ -103,14 +103,11 @@ def check_experiment_id(args):
             return None
         else:
             return running_experiment_list[0]
-    if hasattr(args, "experiment"):
-        if experiment_dict.get(args.experiment):
-            return args.experiment
-    elif hasattr(args, "id"):
-        if experiment_dict.get(args.id):
-            return args.id
-    print_error('Id not correct!')
-    return None
+    if experiment_dict.get(args.id):
+        return args.id
+    else:
+        print_error('Id not correct!')
+        return None
 
 def parse_ids(args):
     '''Parse the arguments for nnictl stop
@@ -222,14 +219,12 @@ def stop_experiment(args):
             rest_port = nni_config.get_config('restServerPort')
             rest_pid = nni_config.get_config('restServerPid')
             if rest_pid:
-                stop_rest_cmds = ['kill', str(rest_pid)]
-                call(stop_rest_cmds)
+                kill_command(rest_pid)
                 tensorboard_pid_list = nni_config.get_config('tensorboardPidList')
                 if tensorboard_pid_list:
                     for tensorboard_pid in tensorboard_pid_list:
                         try:
-                            cmds = ['kill', '-9', str(tensorboard_pid)]
-                            call(cmds)
+                            kill_command(tensorboard_pid)
                         except Exception as exception:
                             print_error(exception)
                     nni_config.set_config('tensorboardPidList', [])
@@ -306,14 +301,6 @@ def experiment_status(args):
     else:
         print(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
 
-def get_log_content(file_name, cmds):
-    '''use cmds to read config content'''
-    if os.path.exists(file_name):
-        rest = check_output(cmds)
-        print(rest.decode('utf-8'))
-    else:
-        print_normal('NULL!')
-
 def log_internal(args, filetype):
     '''internal function to call get_log_content'''
     file_name = get_config_filename(args)
@@ -321,15 +308,8 @@ def log_internal(args, filetype):
         file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'stdout')
     else:
         file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'stderr')
-    if args.head:
-        get_log_content(file_full_path, ['head', '-' + str(args.head), file_full_path])
-    elif args.tail:
-        get_log_content(file_full_path, ['tail', '-' + str(args.tail), file_full_path])
-    elif args.path:
-        print_normal('The path of stdout file is: ' + file_full_path)
-    else:
-        get_log_content(file_full_path, ['cat', file_full_path])
-
+    print(check_output_command(file_full_path, head=args.head, tail=args.tail))
+    
 def log_stdout(args):
     '''get stdout log'''
     log_internal(args, 'stdout')
@@ -357,16 +337,15 @@ def log_trial(args):
     else:
         print_error('Restful server is not running...')
         exit(1)
-    if args.experiment:
-        if args.id:
-            if trial_id_path_dict.get(args.id):
-                print('id:' + args.id + ' path:' + trial_id_path_dict[args.id])
+    if args.id:
+        if args.trial_id:
+            if trial_id_path_dict.get(args.trial_id):
+                print_normal('id:' + args.trial_id + ' path:' + trial_id_path_dict[args.trial_id])
             else:
                 print_error('trial id is not valid!')
                 exit(1)
         else:
             print_error('please specific the trial id!')
-            print_error("trial id list in this experiment: " + str(list(trial_id_path_dict.keys())))
             exit(1)
     else:
         for key in trial_id_path_dict:
@@ -509,10 +488,19 @@ def export_trials_data(args):
             # dframe = pd.DataFrame.from_records([parse_trial_data(t_data) for t_data in content])
             # dframe.to_csv(args.csv_path, sep='\t')
             records = parse_trial_data(content)
-            with open(args.csv_path, 'w') as f_csv:
-                writer = csv.DictWriter(f_csv, set.union(*[set(r.keys()) for r in records]))
-                writer.writeheader()
-                writer.writerows(records)
+            if args.type == 'json':
+                json_records = []
+                for trial in records:
+                    value = trial.pop('reward', None)
+                    trial_id =  trial.pop('id', None)
+                    json_records.append({'parameter': trial, 'value': value, 'id': trial_id})
+            with open(args.path, 'w') as file:
+                if args.type == 'csv':
+                    writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in records]))
+                    writer.writeheader()
+                    writer.writerows(records)
+                else:
+                    json.dump(json_records, file)
         else:
             print_error('Export failed...')
     else:

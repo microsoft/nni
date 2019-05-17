@@ -21,7 +21,6 @@
 hyperband_advisor.py
 """
 
-from enum import Enum, unique
 import sys
 import math
 import copy
@@ -32,8 +31,8 @@ import json_tricks
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger
-from nni.utils import extract_scalar_reward
-from .. import parameter_expressions
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward
+import nni.parameter_expressions as parameter_expressions
 
 _logger = logging.getLogger(__name__)
 
@@ -41,11 +40,6 @@ _next_parameter_id = 0
 _KEY = 'TRIAL_BUDGET'
 _epsilon = 1e-6
 
-@unique
-class OptimizeMode(Enum):
-    """Oprimize Mode class"""
-    Minimize = 'minimize'
-    Maximize = 'maximize'
 
 def create_parameter_id():
     """Create an id
@@ -83,7 +77,7 @@ def create_bracket_parameter_id(brackets_id, brackets_curr_decay, increased_id=-
                           increased_id])
     return params_id
 
-def json2paramater(ss_spec, random_state):
+def json2parameter(ss_spec, random_state):
     """Randomly generate values for hyperparameters from hyperparameter space i.e., x.
     
     Parameters
@@ -99,23 +93,23 @@ def json2paramater(ss_spec, random_state):
         Parameters in this experiment
     """
     if isinstance(ss_spec, dict):
-        if '_type' in ss_spec.keys():
-            _type = ss_spec['_type']
-            _value = ss_spec['_value']
+        if NodeType.TYPE in ss_spec.keys():
+            _type = ss_spec[NodeType.TYPE]
+            _value = ss_spec[NodeType.VALUE]
             if _type == 'choice':
                 _index = random_state.randint(len(_value))
-                chosen_params = json2paramater(ss_spec['_value'][_index], random_state)
+                chosen_params = json2parameter(ss_spec[NodeType.VALUE][_index], random_state)
             else:
                 chosen_params = eval('parameter_expressions.' + # pylint: disable=eval-used
                                      _type)(*(_value + [random_state]))
         else:
             chosen_params = dict()
             for key in ss_spec.keys():
-                chosen_params[key] = json2paramater(ss_spec[key], random_state)
+                chosen_params[key] = json2parameter(ss_spec[key], random_state)
     elif isinstance(ss_spec, list):
         chosen_params = list()
         for _, subspec in enumerate(ss_spec):
-            chosen_params.append(json2paramater(subspec, random_state))
+            chosen_params.append(json2parameter(subspec, random_state))
     else:
         chosen_params = copy.deepcopy(ss_spec)
     return chosen_params
@@ -247,7 +241,7 @@ class Bracket():
         hyperparameter_configs = dict()
         for _ in range(num):
             params_id = create_bracket_parameter_id(self.bracket_id, self.i)
-            params = json2paramater(searchspace_json, random_state)
+            params = json2parameter(searchspace_json, random_state)
             params[_KEY] = r
             hyperparameter_configs[params_id] = params
         self._record_hyper_configs(hyperparameter_configs)
@@ -419,4 +413,7 @@ class Hyperband(MsgDispatcherBase):
             raise ValueError('Data type not supported: {}'.format(data['type']))
 
     def handle_add_customized_trial(self, data):
+        pass
+
+    def handle_import_data(self, data):
         pass

@@ -3,7 +3,6 @@
   "version": "999.0.0-developing",
   "main": "index.js",
   "scripts": {
-    "postbuild": "cp -rf config ./dist/",
     "build": "tsc",
     "test": "nyc mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
     "start": "node dist/main.js",
@@ -35,7 +34,7 @@
     "@types/express": "^4.16.0",
     "@types/glob": "^7.1.1",
     "@types/mocha": "^5.2.5",
-    "@types/node": "^10.12.18",
+    "@types/node": "10.12.18",
     "@types/request": "^2.47.1",
     "@types/rx": "^4.1.1",
     "@types/sqlite3": "^3.1.3",

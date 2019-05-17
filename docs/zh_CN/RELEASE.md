@@ -1,5 +1,54 @@
 # 更改日志
 
+## 发布 0.7 - 4/29/2018
+
+### 主要功能
+
+* [支持在 Windows 上使用 NNI](./WindowsLocalMode.md) 
+  * NNI 可在 Windows 上使用本机模式
+* [支持新的 Advisor: BOHB](./bohbAdvisor.md) 
+  * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
+* [支持通过 nnictl 来导入导出 Experiment 数据](./NNICTLDOC.md#experiment) 
+  * 在 Experiment 执行完后，可生成分析结果报告
+  * 支持将先前的调优数据导入到 Tuner 和 Advisor 中
+* [可为 NNI Trial 任务指定 GPU](./ExperimentConfig.md#localConfig) 
+  * 通过 gpuIndices 配置来为 Trial 任务指定GPU。如果 Experiment 配置文件中有 gpuIndices，则只有指定的 GPU 会被用于 NNI 的 Trial 任务。
+* 改进 Web 界面 
+  * 在 Web 界面上使用十进制格式的指标
+  * 添加多阶段训练相关的提示
+  * 可将超参复制为 Python dict 格式
+  * 可将提前终止的 Trial 数据传入 Tuner。
+* 为 nnictl 提供更友好的错误消息 
+  * 为 YAML 文件格式错误提供更有意义的错误信息
+
+### Bug 修复
+
+* 运行 nnictl stop 的异步 Dispatcher 模式时，无法杀掉所有的 Python 线程
+* nnictl --version 不能在 make dev-install 下使用
+* OpenPAI 平台下所有的 Trial 任务状态都是 'WAITING'
+
+## 发布 0.6 - 4/2/2019
+
+### 主要功能
+
+* [版本检查](https://github.com/Microsoft/nni/blob/master/docs/en_US/PAIMode.md#version-check) 
+  * 检查 nniManager 和 trialKeeper 的版本是否一致
+* [提前终止的任务也可返回最终指标](https://github.com/Microsoft/nni/issues/776) 
+  * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
+* [分离 Tuner/Assessor](https://github.com/Microsoft/nni/issues/841) 
+  * 增加两个管道来分离 Tuner 和 Assessor 的消息
+* 使日志集合功能可配置
+* 为所有 Trial 增加中间结果的视图
+
+### Bug 修复
+
+* [为 OpenPAI 增加 shmMB 配置](https://github.com/Microsoft/nni/issues/842)
+* 修复在指标为 dict 时，无法显示任何结果的 Bug。
+* 修复 hyperband 中浮点类型的计算问题
+* 修复 SMAC Tuner 中搜索空间转换的错误
+* 修复 Web 界面中解析 Experiment 的错误格式
+* 修复 Metis Tuner 冷启动时的错误
+
 ## 发布 0.5.2 - 3/4/2019
 
 ### 改进
@@ -25,12 +74,12 @@
 
 ### 改进
 
-* [日志目录](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md)可配置。
-* 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/en_US/ExperimentConfig.md)，使其更易于调试。 
+* [日志目录](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)可配置。
+* 支持[不同级别的日志](https://github.com/Microsoft/nni/blob/v0.5.1/docs/zh_CN/ExperimentConfig.md)，使其更易于调试。 
 
 ### 文档
 
-* 重新组织文档，新的主页位置：https://nni.readthedocs.io/en/latest/
+* 重新组织文档，新的主页位置：https://nni.readthedocs.io/zh/latest/
 
 ### Bug 修复和其它更新
 
@@ -44,7 +93,7 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持新的 [Metis Tuner](metisTuner.md)。 对于**在线**超参调优的场景，Metis 算法已经被证明非常有效。
+* 支持新的 [Metis Tuner](metisTuner.md)。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
 * 支持 [Curve fitting （曲线拟合）Assessor](curvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
 * 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
@@ -164,7 +213,7 @@
 
 ### 新样例
 
-* 公共的 NNI Docker 映像：
+* 公开的 NNI Docker 映像：
   
   ```bash
   docker pull msranni/nni:latest

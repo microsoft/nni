@@ -33,6 +33,7 @@ import { NNIManager } from '../nnimanager';
 import { SqlDB } from '../sqlDatabase';
 import { MockedTrainingService } from './mockedTrainingService';
 import { MockedDataStore } from './mockedDatastore';
+import * as path from 'path';
 
 async function initContainer(): Promise<void> {
     prepareUnitTest();
@@ -183,7 +184,7 @@ describe('Unit test for nnimanager', function () {
     it('test getExperimentProfile', () => {
         return nniManager.getExperimentProfile().then((experimentProfile) => {
             expect(experimentProfile.id).to.be.equal('unittest');
-            expect(experimentProfile.logDir).to.be.equal(os.homedir()+'/nni/experiments/unittest');
+            expect(experimentProfile.logDir).to.be.equal(path.join(os.homedir(),'nni','experiments','unittest'));
 
         }).catch((error) => {
             assert.fail(error);
