@@ -20,4 +20,4 @@ Contents
     Contribution<contribution>
     Changelog<Release>
     Blog<Blog/index>
-    AutoML Practice<automl_practice>
+    Community Sharings<community_sharings>

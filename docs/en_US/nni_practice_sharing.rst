@@ -7,4 +7,4 @@ We share the practice of leveraging NNI to tune models.
 ..  toctree::
     :maxdepth: 2
 
-    Auto tuning SVD<../../examples/tutorials/RecommendersSVD>
+    Tuning SVD of Recommenders on NNI<CommunitySharings/RecommendersSVD>
