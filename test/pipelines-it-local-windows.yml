@@ -4,7 +4,7 @@ jobs:
   steps:
   - powershell: |
       (New-Object Net.WebClient).DownloadFile("https://dist.nuget.org/win-x86-commandline/latest/nuget.exe", "C:\tmp\$env:USERNAME\nni-nuget\nuget.exe")
-      "C:\tmp\$env:USERNAME\nni-nuget\nuget.exe" sources update -Name "nuget.org" -UserName $(vs_username) -Password $(vs_pwd)
+      "C:\tmp\nni-ci-windows$\nni-nuget\nuget.exe" sources update -Name "nuget.org" -UserName $(vs_username) -Password $(vs_pwd)
   - script: |
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
