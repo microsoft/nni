@@ -145,9 +145,9 @@ class ENASTuner(Tuner):
                 else:
                     res = self.generate_parameters(parameter_id)
                     if self.credit > 0:
-                        self.credit -= 1              
+                        self.credit -= 1
             except nni.NoMoreTrialError:
-                self.credit += len(parameter_id_list) - idx
+                self.credit += len(parameter_id_list) - idx - 1
                 return result
             result.append(res)
         return result
@@ -230,6 +230,8 @@ class ENASTuner(Tuner):
         self.num_completed_jobs += 1
         self.controller_one_step(self.epoch, reward, self.parameter_id2pos[parameter_id])
         if self.num_completed_jobs == self.total_steps:
+            logger.debug('EPOCH DONE!')
+            self.generate_one_epoch_parameters()
             self.new_trial_jobs(self.credit)
 
     def trial_end(self, parameter_id, success):

@@ -9,14 +9,14 @@ trainingServicePlatform: local
 useAnnotation: true
 multiPhase: false
 tuner:
-  codeDir: ../tuner
+  codeDir: ../../tuners/general_controller
   classFileName: nni_controller_cifar10.py
   className: ENASTuner
   classArgs:
     batch_size: 1
 
 trial:
-  command: sh ./macro_cifar10_final.sh
+  command: sh ./macro_cifar10.sh
   codeDir: ./
   gpuNum: 1
 
