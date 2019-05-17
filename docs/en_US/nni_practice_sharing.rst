@@ -2,9 +2,10 @@
 Tutorials
 #################
 
-We share the practice of leveraging NNI to tune models.
+Sharing the practice of leveraging NNI to tune models and systems.
 
 ..  toctree::
     :maxdepth: 2
 
-    Tuning SVD of Recommenders on NNI<CommunitySharings/RecommendersSVD>
+    Tuning SVD of Recommenders on NNI<CommunitySharings/NniPracticeSharing/RecommendersSVD>
+    Auto-tuning AutoGBDT and RocksDB on NNI<CommunitySharings/NniPracticeSharing/HpoComparison>

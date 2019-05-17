@@ -2,4 +2,7 @@
 AutoML Practice Sharing
 #################
 
-[TBD]
+..  toctree::
+    :maxdepth: 2
+
+    Neural Architecture Search Comparison<CommunitySharings/AutomlPracticeSharing>

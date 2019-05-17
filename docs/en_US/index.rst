@@ -19,5 +19,4 @@ Contents
     FAQ
     Contribution<contribution>
     Changelog<Release>
-    Blog<Blog/index>
     Community Sharings<community_sharings>
