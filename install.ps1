@@ -133,7 +133,7 @@ if (!(Get-Command msbuild | Test-Path)) {
     exit
 }
 
-cmd /c $NNI_NUGET sources Add -Name "nuget.org" -UserName jgzhang1994@163.com -Password zhang123456
+cmd /c $NNI_NUGET sources Add -Name "nuget.org" -source https://api.nuget.org/v3/index.json -UserName jgzhang1994@163.com -Password zhang123456
 cmd /c $NNI_NUGET restore
 cmd /c 'msbuild -Property:Configure=Release;OutputPath=..\..\..\dist\aether'
 
