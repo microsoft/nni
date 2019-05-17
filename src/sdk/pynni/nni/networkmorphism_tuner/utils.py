@@ -18,16 +18,6 @@
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
 
-from enum import Enum, unique
-
-@unique
-class OptimizeMode(Enum):
-    """
-    Oprimize Mode class
-    """
-
-    Minimize = "minimize"
-    Maximize = "maximize"
 
 class Constant:
     '''Constant for the Tuner.

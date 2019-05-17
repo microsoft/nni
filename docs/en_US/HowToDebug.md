@@ -21,7 +21,7 @@ There are three kinds of log in NNI. When creating a new experiment, you can spe
 
 All possible errors that happen when launching an NNI experiment can be found here.
 
-You can use `nnictl log stderr` to find error information. For more options please refer to [NNICTL](NNICTLDOC.md)
+You can use `nnictl log stderr` to find error information. For more options please refer to [NNICTL](Nnictl.md)
 
 
 ### Experiment Root Directory

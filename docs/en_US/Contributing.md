@@ -28,7 +28,7 @@ When raising issues, please specify the following:
 
 Provide PRs with appropriate tags for bug fixes or enhancements to the source code. Do follow the correct naming conventions and code styles when you work on and do try to implement all code reviews along the way.
 
-If you are looking for How to develop and debug the NNI source code, you can refer to [How to set up NNI developer environment doc](./SetupNNIDeveloperEnvironment.md) file in the `docs` folder.
+If you are looking for How to develop and debug the NNI source code, you can refer to [How to set up NNI developer environment doc](./SetupNniDeveloperEnvironment.md) file in the `docs` folder.
 
 Similarly for [Quick Start](QuickStart.md). For everything else, refer to [NNI Home page](http://nni.readthedocs.io).
 
@@ -39,7 +39,7 @@ A person looking to contribute can take up an issue by claiming it as a comment/
 
 ## Code Styles & Naming Conventions  
 * We follow [PEP8](https://www.python.org/dev/peps/pep-0008/) for Python code and naming conventions, do try to adhere to the same when making a pull request or making a change. One can also take the help of linters such as `flake8` or `pylint`
-* We also follow [NumPy Docstring Style](https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy) for Python Docstring Conventions. During the [documentation building](CONTRIBUTING.md#documentation), we use [sphinx.ext.napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) to generate Python API documentation from Docstring.
+* We also follow [NumPy Docstring Style](https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy) for Python Docstring Conventions. During the [documentation building](Contributing.md#documentation), we use [sphinx.ext.napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) to generate Python API documentation from Docstring.
 
 ## Documentation 
 Our documentation is built with [sphinx](http://sphinx-doc.org/), supporting [Markdown](https://guides.github.com/features/mastering-markdown/) and [reStructuredText](http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html) format. All our documentations are placed under [docs/en_US](https://github.com/Microsoft/nni/tree/master/docs).
