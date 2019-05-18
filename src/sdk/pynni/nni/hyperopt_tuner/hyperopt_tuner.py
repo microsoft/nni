@@ -191,7 +191,7 @@ class HyperoptTuner(Tuner):
     HyperoptTuner is a tuner which using hyperopt algorithm.
     """
 
-    def __init__(self, algorithm_name, optimize_mode='minimize', parallel_optimize=True, constant_liar='min'):
+    def __init__(self, algorithm_name, optimize_mode='minimize', parallel_optimize=True, constant_liar_type='min'):
         """
         Parameters
         ----------
@@ -207,7 +207,7 @@ class HyperoptTuner(Tuner):
         self.CL_rval = None
         self.supplement_data_num = 0
         self.parallel = parallel_optimize
-        self.constant_liar_type = constant_liar
+        self.constant_liar_type = constant_liar_type
         self.running_data = []
         self.optimal_y = 0
 
@@ -274,7 +274,7 @@ class HyperoptTuner(Tuner):
         params = split_index(total_params)
         return params
 
-    def receive_trial_result(self, parameter_id, parameters, value, fake=False):
+    def receive_trial_result(self, parameter_id, parameters, value, constant_liar=False):
         """
         Record an observation of the objective function
 
@@ -293,17 +293,15 @@ class HyperoptTuner(Tuner):
             raise RuntimeError('Received parameter_id not in total_data.')
         params = self.total_data[parameter_id]
 
-        if fake:
+        if constant_liar:
             rval = self.CL_rval
             logger.info("Update CL_rval with fack point")
         else:
-            
-            
             rval = self.rval
             self.running_data.remove(parameter_id)
             if self.parallel:
                 # update the reward of optimal_y
-                if not self.optimal_y:
+                if self.optimal_y == 0:
                     if self.constant_liar_type == 'mean':
                         self.optimal_y = [reward, 1]
                     else:
@@ -407,14 +405,13 @@ class HyperoptTuner(Tuner):
         """
         if self.parallel == True and len(self.running_data):
             self.CL_rval = copy.deepcopy(self.rval)
-            fake_y = 0
+            _constant_liar_y = 0
             if self.constant_liar_type == 'mean' and self.optimal_y[1]:
-                    fake_y = self.optimal_y[0] / self.optimal_y[1]
+                    _constant_liar_y = self.optimal_y[0] / self.optimal_y[1]
             else:
-                fake_y = self.optimal_y
+                _constant_liar_y = self.optimal_y
             for _parameter_id in self.running_data:
-                self.receive_trial_result(parameter_id=_parameter_id, parameters=None, value=fake_y, fake=True)
-                logger.info("update parameter with fake value %s" %fake_y)
+                self.receive_trial_result(parameter_id=_parameter_id, parameters=None, value=_constant_liar_y, constant_liar=True)
             rval = self.CL_rval
         else:
             rval = self.rval

@@ -84,7 +84,7 @@ tuner_schema_dict = {
         'classArgs': {
             Optional('optimize_mode'): setChoice('optimize_mode', 'maximize', 'minimize'),
             Optional('parallel_optimize'): setType('parallel_optimize', bool),
-            Optional('constant_liar'): setChoice('min', 'max', 'mean')
+            Optional('constant_liar_type'): setChoice('min', 'max', 'mean')
         },
         Optional('includeIntermediateResults'): setType('includeIntermediateResults', bool),
         Optional('gpuNum'): setNumberRange('gpuNum', int, 0, 99999),
