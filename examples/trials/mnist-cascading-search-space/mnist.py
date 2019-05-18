@@ -7,6 +7,7 @@ import logging
 import math
 import tempfile
 import time
+import argparse
 
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
@@ -20,7 +21,7 @@ class MnistNetwork(object):
     def __init__(self, params, feature_size = 784):
         config = []
 
-        for i in range(10):
+        for i in range(4):
             config.append(params['layer'+str(i)])
         self.config = config
         self.feature_size = feature_size
