@@ -23,7 +23,7 @@ f(x(i)) was less than y∗ and g(x) is the density formed by using the remaining
 
 Here is a simulation of the TPE algorithm in a two-dimensional search space. The difference of background color represents different values. It can be seen that TPE combines exploration and exploitation very well. (Black indicates the points of this round samples, and yellow indicates the points has been taken in the history.)
 
-![](../../img/parallel_tpe_search1.PNG)
+![](../../img/parallel_tpe_search1.gif)
 
 **Since EI is a continuous function, the highest x of EI is determined at a certain status.** As shown in the figure below, the blue triangle is the point that is most likely to be sampled in this state.
 
@@ -33,7 +33,7 @@ TPE perfors well when we use it in sequential, but if we provide a larger concur
 
 Here is the simulation figure when we set `concurrency=60`, It can be seen that this phenomenon is obvious.
 
-![](../../img/parallel_tpe_search2.PNG)
+![](../../img/parallel_tpe_search2.gif)
 
 ## Research solution
 
@@ -63,7 +63,7 @@ L should logically be determined on the basis of the values taken by y at X. Thr
 
 We have simulated the method above. The following figure shows the result of using mean value liars to maximize q-EI. We find that the points we have taken have begun to be scattered.
 
-![](../../img/parallel_tpe_search3.PNG)
+![](../../img/parallel_tpe_search3.gif)
 
 ## Experiment
 
@@ -95,5 +95,7 @@ Note: The total number of samples per test is 240 (ensure that the budget is equ
 ## References
 
 [1] James Bergstra, Remi Bardenet, Yoshua Bengio, Balazs Kegl. "Algorithms for Hyper-Parameter Optimization". [Link](https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf)
+
 [2] Meng-Hiot Lim, Yew-Soon Ong. "Computational Intelligence in Expensive Optimization Problems". [Link](https://link.springer.com/content/pdf/10.1007%2F978-3-642-10701-6.pdf)
+
 [3] M. Jordan, J. Kleinberg, B. Scho¨lkopf. "Pattern Recognition and Machine Learning". [Link](http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf)
