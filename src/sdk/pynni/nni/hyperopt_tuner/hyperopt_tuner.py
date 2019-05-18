@@ -286,7 +286,6 @@ class HyperoptTuner(Tuner):
             if value is dict, it should have "default" key.
             value is final metrics of the trial.
         """
-        logger.info("value = %s" %value)
         reward = extract_scalar_reward(value)
         # restore the paramsters contains '_index'
         if parameter_id not in self.total_data:
@@ -295,7 +294,6 @@ class HyperoptTuner(Tuner):
 
         if constant_liar:
             rval = self.CL_rval
-            logger.info("Update CL_rval with fack point")
         else:
             rval = self.rval
             self.running_data.remove(parameter_id)
@@ -315,7 +313,7 @@ class HyperoptTuner(Tuner):
                         self.optimal_y = min(self.optimal_y, reward)
                     elif self.constant_liar_type == 'max':
                         self.optimal_y = max(self.optimal_y, reward)
-                logger.info("Update optimal_y with reward, optimal_y = %s", self.optimal_y)
+                logger.debug("Update optimal_y with reward, optimal_y = %s", self.optimal_y)
 
         if self.optimize_mode is OptimizeMode.Maximize:
                 reward = -reward
@@ -415,8 +413,6 @@ class HyperoptTuner(Tuner):
             rval = self.CL_rval
         else:
             rval = self.rval
-        logger.info("get_suggestions, CL_rval is %s" %self.CL_rval)
-        logger.info("get_suggestions, rval is %s" %self.rval)
         trials = rval.trials
         algorithm = rval.algo
         new_ids = rval.trials.new_trial_ids(1)
