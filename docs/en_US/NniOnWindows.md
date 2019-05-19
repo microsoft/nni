@@ -1,6 +1,6 @@
 # Windows Local Mode (experimental feature)
 
-Currently we only support local mode on Windows. Windows 10.1809 is well tested and recommended.
+Currently we support local, remote and pai mode on Windows. Windows 10.1809 is well tested and recommended.
 
 ## **Installation on Windows**
 

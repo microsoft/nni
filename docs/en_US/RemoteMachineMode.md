@@ -55,11 +55,21 @@ machineList:
     username: bob
     passwd: bob123
 ```
-
+You can use different systems to run experiments on the remote machine.
+#### Linux and MacOS
 Simply filling the `machineList` section and then run:
 
 ```bash
 nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
+```
+
+to start the experiment.
+
+#### Windows
+Simply filling the `machineList` section and then run:
+
+```bash
+nnictl create --config %userprofile%\nni\examples\trials\mnist-annotation\config_remote.yml
 ```
 
 to start the experiment.
