@@ -172,8 +172,8 @@ class RLTuner(Tuner):
             inputs_idxs = current_arc_code[input_start: input_start + layer_id]
             inputs_idxs = onehot2list(inputs_idxs)
             current_config[mutable_block][layer_name] = dict()
-            current_config[mutable_block][layer_name]['layer_choice'] = info['layer_choice'][layer_choice_idx]
-            current_config[mutable_block][layer_name]['optional_inputs'] = [
+            current_config[mutable_block][layer_name]['chosen_layer'] = info['layer_choice'][layer_choice_idx]
+            current_config[mutable_block][layer_name]['chosen_inputs'] = [
                 info['optional_inputs'][ipi] for ipi in inputs_idxs]
             start_idx += 1 + layer_id
 
