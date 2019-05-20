@@ -81,10 +81,7 @@ def get_child_ops(child_model):
 class ENASTrial():
 
     def __init__(self):
-        if FLAGS.child_mode == 'subgraph':
-            images, labels = read_data(FLAGS.data_path, num_valids=0)
-        else:
-            images, labels = read_data(FLAGS.data_path)
+        images, labels = read_data(FLAGS.data_path, num_valids=0)
 
         self.output_dir = os.path.join(os.getenv('NNI_OUTPUT_DIR'), '../..')
         self.file_path = os.path.join(
