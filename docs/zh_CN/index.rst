@@ -19,4 +19,4 @@ Neural Network Intelligence（NNI）文档
     常见问答<FAQ>
     Contribution<contribution>
     Changelog<Release>
-    博客<Blog/index>
+    Community Sharings<community_sharings>
