@@ -2,36 +2,29 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
-import shutil
-import sys
-import time
 import logging
 import tensorflow as tf
-import fcntl
-import src.utils
-import json_tricks
-from nni.protocol import CommandType, send
 import nni
 from nni.tuner import Tuner
 from src.utils import Logger
-from src.cifar10.general_controller import GeneralController
+from src.general_controller import GeneralController
 from src.cifar10_flags import *
 from collections import OrderedDict
+
 
 def build_logger(log_name):
     logger = logging.getLogger(log_name)
     logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(log_name+'.log')
-    fh.setLevel(logging.DEBUG)
-    logger.addHandler(fh)
+    file_handler = logging.FileHandler(log_name+'.log')
+    file_handler.setLevel(logging.DEBUG)
+    logger.addHandler(file_handler)
     return logger
 
 
 logger = build_logger("nni_controller_cifar10")
 
 
-def BuildController(ControllerClass, batch_size):
+def build_controller(ControllerClass, batch_size):
     controller_model = ControllerClass(
         search_for=FLAGS.search_for,
         search_whole_channels=FLAGS.controller_search_whole_channels,
@@ -87,31 +80,34 @@ def get_controller_ops(controller_model):
     return controller_ops
 
 
-class ENASTuner(Tuner):
+class RLTuner(Tuner):
 
     def __init__(self, batch_size):
         # branches defaults to 6, need to be modified according to ss
         macro_init()
 
         # self.child_totalsteps = (FLAGS.train_data_size + FLAGS.batch_size - 1) // FLAGS.batch_size
-        #self.controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
+        # self.controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
         self.total_steps = batch_size
         logger.debug("batch_size:\t"+str(batch_size))
 
         ControllerClass = GeneralController
-        self.controller_model = BuildController(ControllerClass, self.total_steps)
+        self.controller_model = build_controller(
+            ControllerClass, self.total_steps)
 
         self.graph = tf.Graph()
 
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.1)
-        config = tf.ConfigProto(allow_soft_placement=True, gpu_options=gpu_options)
+        config = tf.ConfigProto(
+            allow_soft_placement=True, gpu_options=gpu_options)
 
         self.controller_model.build_trainer()
         self.controller_ops = get_controller_ops(self.controller_model)
 
         hooks = []
         if FLAGS.controller_training and FLAGS.controller_sync_replicas:
-            sync_replicas_hook = self.controller_ops["optimizer"].make_session_run_hook(True)
+            sync_replicas_hook = self.controller_ops["optimizer"].make_session_run_hook(
+                True)
             hooks.append(sync_replicas_hook)
 
         self.sess = tf.train.SingularMonitoredSession(
@@ -125,7 +121,7 @@ class ENASTuner(Tuner):
         self.generate_one_epoch_parameters()
 
     def generate_one_epoch_parameters(self):
-        # Generate architectures in one epoch and 
+        # Generate architectures in one epoch and
         # store them to self.child_arc
         self.bucket = [i for i in range(self.total_steps)]
         self.num_completed_jobs = 0
@@ -138,7 +134,7 @@ class ENASTuner(Tuner):
         result = []
         for idx, parameter_id in enumerate(parameter_id_list):
             try:
-                logger.debug("generating param for {}".format(parameter_id))
+                logger.debug("generating param for %s", parameter_id)
                 if self.failed_trial_pos:
                     pos = self.failed_trial_pos.pop()
                     res = self.generate_parameters(parameter_id, pos=pos)
@@ -160,13 +156,15 @@ class ENASTuner(Tuner):
                 else:
                     self.generate_one_epoch_parameters()
             pos = self.bucket.pop()
-        logger.info('current bucket: ' + str(self.bucket))
-        logger.info('current pos: ' + str(pos))
+        logger.info('current bucket: %s', self.bucket)
+        logger.info('current pos: %s', pos)
         self.parameter_id2pos[parameter_id] = pos
         current_arc_code = self.child_arc[pos]
         start_idx = 0
         current_config = dict()
-        onehot2list = lambda l: [idx for idx, val in enumerate(l) if val==1]
+
+        def onehot2list(l): return [idx for idx,
+                                    val in enumerate(l) if val == 1]
         for layer_id, (layer_name, info) in enumerate(self.search_space):
             mutable_block = info['mutable_block']
             if mutable_block not in current_config:
@@ -180,16 +178,16 @@ class ENASTuner(Tuner):
             inputs_idxs = onehot2list(inputs_idxs)
             current_config[mutable_block][layer_name] = dict()
             current_config[mutable_block][layer_name]['layer_choice'] = info['layer_choice'][layer_choice_idx]
-            current_config[mutable_block][layer_name]['optional_inputs'] = [info['optional_inputs'][ipi] for ipi in inputs_idxs]
+            current_config[mutable_block][layer_name]['optional_inputs'] = [
+                info['optional_inputs'][ipi] for ipi in inputs_idxs]
             start_idx += 1 + layer_id
 
-        return current_config 
-
+        return current_config
 
     def controller_one_step(self, epoch, valid_acc_arr, cur_pos):
-        logger.debug("Epoch {}: Training controller".format(epoch))
-        logger.debug("cur_pos {}: Training controller".format(cur_pos))
-        mask = [1 if i==cur_pos else 0 for i in range(self.total_steps)]
+        logger.debug("Epoch %s: Training controller", epoch)
+        logger.debug("cur_pos %s: Training controller", cur_pos)
+        mask = [1 if i == cur_pos else 0 for i in range(self.total_steps)]
         print(self.parameter_id2pos)
         print(mask)
         run_ops = [
@@ -221,14 +219,14 @@ class ENASTuner(Tuner):
         logger.debug(log_string)
         return
 
-
     def receive_trial_result(self, parameter_id, parameters, reward):
         logger.debug("epoch:\t"+str(self.epoch))
         logger.debug(parameter_id)
         logger.debug(self.child_arc[self.parameter_id2pos[parameter_id]])
         logger.debug(reward)
         self.num_completed_jobs += 1
-        self.controller_one_step(self.epoch, reward, self.parameter_id2pos[parameter_id])
+        self.controller_one_step(
+            self.epoch, reward, self.parameter_id2pos[parameter_id])
         if self.num_completed_jobs == self.total_steps:
             logger.debug('EPOCH DONE!')
             self.generate_one_epoch_parameters()
@@ -246,18 +244,22 @@ class ENASTuner(Tuner):
 
     def update_search_space(self, data):
         # Extract choice
-        choice_key = list(filter(lambda k: k.strip().endswith('choice'), list(data)))
+        choice_key = list(
+            filter(lambda k: k.strip().endswith('choice'), list(data)))
         if len(choice_key) > 0:
             data.pop(choice_key[0])
         # Sort layers and generate search space
         self.search_space = []
-        data = OrderedDict(sorted(data.items(), key=lambda tp:int(tp[0].split('_')[-1])))
+        data = OrderedDict(
+            sorted(data.items(), key=lambda tp: int(tp[0].split('_')[-1])))
         for block_id, layers in data.items():
-            data[block_id] = OrderedDict(sorted(layers.items(), key=lambda tp:int(tp[0].split('_')[-1])))
+            data[block_id] = OrderedDict(
+                sorted(layers.items(), key=lambda tp: int(tp[0].split('_')[-1])))
             for layer_id, info in data[block_id].items():
                 info['mutable_block'] = block_id
                 self.search_space.append((layer_id, info))
         logger.debug(self.search_space)
+
 
 if __name__ == "__main__":
     tf.app.run()

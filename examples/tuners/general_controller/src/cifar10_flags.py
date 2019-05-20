@@ -6,6 +6,7 @@ from src.utils import DEFINE_string
 flags = tf.app.flags
 FLAGS = flags.FLAGS
 
+
 def macro_init():
     DEFINE_boolean("reset_output_dir", False, "Delete output_dir if exists.")
     DEFINE_string("output_dir", "", "")
@@ -38,7 +39,8 @@ def macro_init():
     DEFINE_integer("controller_train_every", 1,
                    "train the controller after this number of epochs")
     DEFINE_boolean("controller_search_whole_channels", True, "")
-    DEFINE_boolean("controller_sync_replicas", False, "To sync or not to sync.")
+    DEFINE_boolean("controller_sync_replicas",
+                   False, "To sync or not to sync.")
     DEFINE_boolean("controller_training", True, "")
     DEFINE_boolean("controller_use_critic", False, "")
 

@@ -1,23 +1,14 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
 import os
 import shutil
-import sys
-import time
-import fcntl
-import numpy as np
-np.random.seed(996)
-import tensorflow as tf
-tf.set_random_seed(996)
 import logging
-import pickle
-from src.utils import Logger
+import tensorflow as tf
 from src.cifar10.data_utils import read_data
 from src.cifar10.general_child import GeneralChild
-from src.cifar10_flags import *
-child_init()
+import src.cifar10_flags
+from src.cifar10_flags import FLAGS
 
 
 def build_logger(log_name):
@@ -32,7 +23,7 @@ def build_logger(log_name):
 logger = build_logger("nni_child_cifar10")
 
 
-def BuildChild(images, labels, ChildClass):
+def build_trial(images, labels, ChildClass):
     child_model = ChildClass(
         images,
         labels,
@@ -96,20 +87,21 @@ class ENASTrial():
             images, labels = read_data(FLAGS.data_path)
 
         self.output_dir = os.path.join(os.getenv('NNI_OUTPUT_DIR'), '../..')
-        self.file_path = os.path.join(self.output_dir, 'trainable_variable.txt')
+        self.file_path = os.path.join(
+            self.output_dir, 'trainable_variable.txt')
 
-        self.g = tf.Graph()
-        with self.g.as_default():
-            self.child_model = BuildChild(images, labels, GeneralChild)
+        self.graph = tf.Graph()
+        with self.graph.as_default():
+            self.child_model = build_trial(images, labels, GeneralChild)
 
             self.total_data = {}
 
-            self.child_model.connect_controller()
+            self.child_model.build_model()
             if FLAGS.child_mode != 'subgraph':
                 self.child_model.build_valid_rl()
             self.child_ops = get_child_ops(self.child_model)
             config = tf.ConfigProto(
-                device_count={"CPU":8},
+                device_count={"CPU": 8},
                 intra_op_parallelism_threads=0,
                 inter_op_parallelism_threads=0,
                 allow_soft_placement=True)
@@ -118,7 +110,7 @@ class ENASTrial():
 
         logger.debug('initlize ENASTrial done.')
 
-    def run_child_one_macro(self):
+    def run_one_step(self):
         run_ops = [
             self.child_ops["loss"],
             self.child_ops["lr"],
@@ -126,7 +118,6 @@ class ENASTrial():
             self.child_ops["train_acc"],
             self.child_ops["train_op"],
         ]
-        actual_step = None
         loss, lr, gn, tr_acc, _ = self.sess.run(run_ops)
         global_step = self.sess.run(self.child_ops["global_step"])
         log_string = ""
@@ -139,48 +130,37 @@ class ENASTrial():
             logger.debug(log_string)
         return loss, global_step
 
-    def get_csvaa(self):
-        cur_valid_acc = self.sess.run(self.child_model.cur_valid_acc)
-        return cur_valid_acc
-
-    def start_eval_macro(self):
-        self.child_ops["eval_func"]\
-            (self.sess, "valid", self.child_model)
-        
-
-    def train_on_this(self):
+    def run(self):
         max_acc = 0
         while True:
-            loss, global_step = self.run_child_one_macro()
+            _, global_step = self.run_one_step()
             if global_step % self.child_ops['num_train_batches'] == 0:
-                acc = self.child_ops["eval_func"](self.sess, "test", self.child_model)
+                acc = self.child_ops["eval_func"](
+                    self.sess, "test", self.child_model)
                 max_acc = max(max_acc, acc)
                 '''@nni.report_intermediate_result(acc)'''
             if global_step / self.child_ops['num_train_batches'] >= FLAGS.num_epochs:
                 '''@nni.report_final_result(max_acc)'''
                 break
 
+
 def main(_):
     logger.debug("-" * 80)
 
     if not os.path.isdir(FLAGS.output_dir):
-        logger.debug("Path {} does not exist. Creating.".format(FLAGS.output_dir))
+        logger.debug(
+            "Path {} does not exist. Creating.".format(FLAGS.output_dir))
         os.makedirs(FLAGS.output_dir)
     elif FLAGS.reset_output_dir:
-        logger.debug("Path {} exists. Remove and remake.".format(FLAGS.output_dir))
+        logger.debug(
+            "Path {} exists. Remove and remake.".format(FLAGS.output_dir))
         shutil.rmtree(FLAGS.output_dir)
         os.makedirs(FLAGS.output_dir)
     logger.debug("-" * 80)
     trial = ENASTrial()
-    controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
-    logger.debug("here is the num train batches")
 
-    logger.debug(trial.child_model.num_train_batches)
-    child_totalsteps = (FLAGS.train_data_size + FLAGS.batch_size - 1) // FLAGS.batch_size
-    logger.debug("child total \t"+str(child_totalsteps))
-    epoch = 0
+    trial.run()
 
-    trial.train_on_this()
 
 if __name__ == "__main__":
     tf.app.run()
