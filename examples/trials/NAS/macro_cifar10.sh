@@ -14,7 +14,7 @@ python3 src/cifar10/nni_child_cifar10.py \
   --log_every=50 \
   --eval_every_epochs=1 \
   --child_use_aux_heads \
-  --child_num_layers=8 \
+  --child_num_layers=12 \
   --child_out_filters=36 \
   --child_l2_reg=0.0002 \
   --child_num_branches=6 \
