@@ -11,7 +11,7 @@ multiPhase: false
 tuner:
   codeDir: ../../tuners/general_controller
   classFileName: nni_controller_cifar10.py
-  className: ENASTuner
+  className: RLTuner
   classArgs:
     batch_size: 1
 
