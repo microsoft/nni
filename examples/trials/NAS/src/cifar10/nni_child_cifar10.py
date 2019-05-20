@@ -55,8 +55,7 @@ def build_trial(images, labels, ChildClass):
         optim_algo="momentum",
         sync_replicas=FLAGS.child_sync_replicas,
         num_aggregate=FLAGS.child_num_aggregate,
-        num_replicas=FLAGS.child_num_replicas,
-        mode=FLAGS.child_mode
+        num_replicas=FLAGS.child_num_replicas
     )
 
     return child_model
@@ -78,7 +77,7 @@ def get_child_ops(child_model):
     return child_ops
 
 
-class ENASTrial():
+class NASTrial():
 
     def __init__(self):
         images, labels = read_data(FLAGS.data_path, num_valids=0)
@@ -105,7 +104,7 @@ class ENASTrial():
 
             self.sess = tf.train.SingularMonitoredSession(config=config)
 
-        logger.debug('initlize ENASTrial done.')
+        logger.debug('initlize NASTrial done.')
 
     def run_one_step(self):
         run_ops = [
@@ -154,7 +153,7 @@ def main(_):
         shutil.rmtree(FLAGS.output_dir)
         os.makedirs(FLAGS.output_dir)
     logger.debug("-" * 80)
-    trial = ENASTrial()
+    trial = NASTrial()
 
     trial.run()
 
