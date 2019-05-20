@@ -31,7 +31,7 @@ import { parseGpuIndices, RemoteMachineMeta, RemoteMachineScheduleResult, Schedu
 export class GPUScheduler {
 
     private readonly machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>;
-    private log: Logger = getLogger();
+    private readonly log: Logger = getLogger();
 
     /**
      * Constructor
@@ -182,7 +182,11 @@ export class GPUScheduler {
             resultType: ScheduleResultType.SUCCEED,
             scheduleInfo: {
                 rmMeta: rmMeta,
-                cuda_visible_device: allocatedGPUs.map((gpuInfo: GPUInfo) => { return gpuInfo.index; }).join(',')
+                cuda_visible_device: allocatedGPUs
+                                        .map((gpuInfo: GPUInfo) => {
+                                            return gpuInfo.index;
+                                        })
+                                        .join(',')
             }
         };
     }

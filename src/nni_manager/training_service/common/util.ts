@@ -1,5 +1,3 @@
-import { getLogger } from "common/log";
-
 /**
  * Copyright (c) Microsoft Corporation
  * All rights reserved.
@@ -21,17 +19,17 @@ import { getLogger } from "common/log";
 
 'use strict';
 
-import { countFilesRecursively } from '../../common/utils'
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
-import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData'
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
-import { file } from "../../node_modules/@types/tmp";
+import { countFilesRecursively } from '../../common/utils';
+import { file } from '../../node_modules/@types/tmp';
+import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
 /**
  * Validate codeDir, calculate file count recursively under codeDir, and throw error if any rule is broken
- * 
+ *
  * @param codeDir codeDir in nni config file
  * @returns file number under codeDir
  */
@@ -40,14 +38,14 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
 
     try {
         fileCount = await countFilesRecursively(codeDir);
-    } catch(error) {
+    } catch (error) {
         throw new Error(`Call count file error: ${error}`);
     }
 
-    if(fileCount && fileCount > 1000) {
-        const errMessage: string = `Too many files(${fileCount} found}) in ${codeDir},` 
+    if (fileCount != null && fileCount > 1000) {
+        const errMessage: string = `Too many files(${fileCount} found}) in ${codeDir},`
                                     + ` please check if it's a valid code dir`;
-        throw new Error(errMessage);        
+        throw new Error(errMessage);
     }
 
     return fileCount;
@@ -55,7 +53,7 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
 
 /**
  * crete a new directory
- * @param directory 
+ * @param directory
  */
 export async function execMkdir(directory: string): Promise<void> {
     if (process.platform === 'win32') {
@@ -63,12 +61,13 @@ export async function execMkdir(directory: string): Promise<void> {
     } else {
         await cpp.exec(`mkdir -p ${directory}`);
     }
+
     return Promise.resolve();
 }
 
 /**
  * crete a new file
- * @param filename 
+ * @param filename
  */
 export async function execNewFile(filename: string): Promise<void> {
     if (process.platform === 'win32') {
@@ -76,6 +75,7 @@ export async function execNewFile(filename: string): Promise<void> {
     } else {
         await cpp.exec(`touch ${filename}`);
     }
+
     return Promise.resolve();
 }
 
@@ -91,11 +91,9 @@ export function execScript(filePath: string): cp.ChildProcess {
     }
 }
 
-
-
 /**
  * output the last line of a file
- * @param filePath 
+ * @param filePath
  */
 export async function execTail(filePath: string): Promise<cpp.childProcessPromise.Result> {
     let cmdresult: cpp.childProcessPromise.Result;
@@ -104,78 +102,74 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
     } else {
         cmdresult = await cpp.exec(`tail -n 1 ${filePath}`);
     }
+
     return Promise.resolve(cmdresult);
 }
 
 /**
  * delete a directory
- * @param directory 
+ * @param directory
  */
-export async function execRemove(directory: string): Promise<void>{
+export async function execRemove(directory: string): Promise<void> {
     if (process.platform === 'win32') {
         await cpp.exec(`powershell.exe Remove-Item ${directory}`);
     } else {
         await cpp.exec(`rm -rf ${directory}`);
     }
+
     return Promise.resolve();
 }
 
 /**
  * kill a process
- * @param directory 
+ * @param directory
  */
-export async function execKill(pid: string): Promise<void>{
+export async function execKill(pid: string): Promise<void> {
     if (process.platform === 'win32') {
         await cpp.exec(`cmd /c taskkill /PID ${pid} /T /F`);
     } else {
         await cpp.exec(`pkill -P ${pid}`);
     }
+
     return Promise.resolve();
 }
 
-/**
- * set environment variable
- * @param  variable
- * @returns command string  
- */
-export function setEnvironmentVariable(variable: { key: string; value: string }): string{
+export function setEnvironmentVariable(variable: { key: string; value: string }): string {
     if (process.platform === 'win32') {
         return `$env:${variable.key}="${variable.value}"`;
-    }
-    else{
+    } else {
         return `export ${variable.key}=${variable.value}`;
     }
 }
 
-
 /**
  * generate script file name
- * @param fileNamePrefix 
+ * @param fileNamePrefix
  */
 export function getScriptName(fileNamePrefix: string): string {
     if (process.platform === 'win32') {
-        return fileNamePrefix + '.ps1';
+        return String.Format('{0}.ps1', fileNamePrefix);
     } else {
-        return fileNamePrefix + '.sh';
+        return String.Format('{0}.sh', fileNamePrefix);
     }
 }
 
 /**
  * generate script file
- * @param gpuMetricCollectorScriptFolder 
+ * @param gpuMetricCollectorScriptFolder
  */
 export function getgpuMetricsCollectorScriptContent(gpuMetricCollectorScriptFolder: string): string {
-    if(process.platform === 'win32') {
+    if (process.platform === 'win32') {
         return String.Format(
             GPU_INFO_COLLECTOR_FORMAT_WINDOWS,
             gpuMetricCollectorScriptFolder,
-            path.join(gpuMetricCollectorScriptFolder, 'pid'),
+            path.join(gpuMetricCollectorScriptFolder, 'pid')
         );
     } else {
         return String.Format(
             GPU_INFO_COLLECTOR_FORMAT_LINUX,
             gpuMetricCollectorScriptFolder,
-            path.join(gpuMetricCollectorScriptFolder, 'pid'),
+            path.join(gpuMetricCollectorScriptFolder, 'pid')
         );
     }
 }
