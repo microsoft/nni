@@ -83,11 +83,6 @@ def get_controller_ops(controller_model):
 class RLTuner(Tuner):
 
     def __init__(self, batch_size):
-        # branches defaults to 6, need to be modified according to ss
-        macro_init()
-
-        # self.child_totalsteps = (FLAGS.train_data_size + FLAGS.batch_size - 1) // FLAGS.batch_size
-        # self.controller_total_steps = FLAGS.controller_train_steps * FLAGS.controller_num_aggregate
         self.total_steps = batch_size
         logger.debug("batch_size:\t"+str(batch_size))
 
