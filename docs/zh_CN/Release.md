@@ -93,10 +93,10 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* Support [Metis tuner](MetisTuner.md) as a new NNI tuner. **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* 支持新的 [Metis Tuner](MetisTuner.md)。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
-* Support [Curve fitting assessor](CurvefittingAssessor.md) for early stop policy using learning curve extrapolation.
-* Advanced Support of [Weight Sharing](./AdvancedNas.md): Enable weight sharing for NAS tuners, currently through NFS.
+* 支持 [Curve fitting （曲线拟合）Assessor](CurvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
+* 进一步支持 [Weight Sharing（权重共享）](./AdvancedNas.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
 
 #### 改进训练平台
 
@@ -118,7 +118,7 @@
 
 #### 支持新的 Tuner
 
-* Support [network morphism](NetworkmorphismTuner.md) as a new tuner
+* 支持新的 [network morphism](NetworkmorphismTuner.md) Tuner。
 
 #### 改进训练平台
 
@@ -187,7 +187,7 @@
   nnictl create --port 8081 --config <config file path>
   ```
 
-* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 Or refer to [NNICTL Spec](Nnictl.md) for the fully usage of NNICTL.
+* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL](Nnictl.md) 查看完整帮助。
 
 ### API 的新功能和更新
 
@@ -233,10 +233,10 @@
 
 ### 主要功能
 
-* Support [OpenPAI](https://github.com/Microsoft/pai) Training Platform (See [here](./PaiMode.md) for instructions about how to submit NNI job in pai mode) 
+* 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练服务 (参考[这里](./PaiMode.md)来了解如何在 pai 模式下提交 NNI 任务) 
   * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
   * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
-* Support [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) tuner (See [here](SmacTuner.md) for instructions about how to use SMAC tuner) 
+* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](SmacTuner.md)，了解如何使用 SMAC Tuner) 
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
 * 支持将 NNI 安装在 [conda](https://conda.io/docs/index.html) 和 Python 虚拟环境中。
 * 其它 
