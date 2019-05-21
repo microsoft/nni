@@ -1,11 +1,11 @@
 #################
-Tutorials
+教程
 #################
 
-Sharing the practice of leveraging NNI to tune models and systems.
+分享使用 NNI 来调优模型和系统的经验
 
 ..  toctree::
     :maxdepth: 2
 
-    Tuning SVD of Recommenders on NNI<CommunitySharings/NniPracticeSharing/RecommendersSvd>
-    Auto-tuning AutoGBDT and RocksDB on NNI<CommunitySharings/NniPracticeSharing/HpoComparison>
+    在 NNI 上调优 Recommenders 的 SVD<CommunitySharings/NniPracticeSharing/RecommendersSvd>
+    在 NNI 上自动调优 AutoGBDT 和 RocksDB<CommunitySharings/NniPracticeSharing/HpoComparison>
