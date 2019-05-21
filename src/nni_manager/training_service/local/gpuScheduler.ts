@@ -73,8 +73,13 @@ class GPUScheduler {
 
     public getAvailableGPUIndices(): number[] {
         if (this.gpuSummary !== undefined) {
-            return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => info.activeProcessNum === 0)
-                .map((info: GPUInfo) => info.index);
+            if(process.platform === 'win32') {
+                return this.gpuSummary.gpuInfos.map((info: GPUInfo) => info.index);
+            }
+            else{
+                return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => info.activeProcessNum === 0)
+                    .map((info: GPUInfo) => info.index);
+            }
         }
 
         return [];
@@ -100,12 +105,16 @@ class GPUScheduler {
     }
 
     private async updateGPUSummary(): Promise<void> {
-        const cmdresult: cpp.childProcessPromise.Result =
-            await execTail(path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics'));
-        if (cmdresult && cmdresult.stdout) {
-            this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
-        } else {
-            this.log.error('Could not get gpu metrics information!');
+        let gpuMetricPath = path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics');
+        if (fs.existsSync(gpuMetricPath)) {
+            const cmdresult: cpp.childProcessPromise.Result = await execTail(gpuMetricPath);
+            if (cmdresult && cmdresult.stdout) {
+                this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
+            } else {
+                this.log.error('Could not get gpu metrics information!');
+            }
+        } else{
+            this.log.warning('gpu_metrics file does not exist!')
         }
     }
 }

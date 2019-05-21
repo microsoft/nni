@@ -97,12 +97,12 @@ Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is
 ## Further reading
 
 * [Overview](Overview.md)
-* [Use command line tool nnictl](NNICTLDOC.md)
+* [Use command line tool nnictl](Nnictl.md)
 * [Use NNIBoard](WebUI.md)
 * [Define search space](SearchSpaceSpec.md)
 * [Config an experiment](ExperimentConfig.md)
 * [How to run an experiment on local (with multiple GPUs)?](LocalMode.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PAIMode.md)
+* [How to run an experiment on OpenPAI?](PaiMode.md)
 * [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)
 * [How to run an experiment on Kubernetes through FrameworkController?](FrameworkControllerMode.md)

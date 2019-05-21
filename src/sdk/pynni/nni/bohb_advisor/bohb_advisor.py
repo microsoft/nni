@@ -21,7 +21,6 @@
 bohb_advisor.py
 '''
 
-from enum import Enum, unique
 import sys
 import math
 import logging
@@ -32,7 +31,7 @@ import ConfigSpace.hyperparameters as CSH
 
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.utils import extract_scalar_reward
+from nni.utils import OptimizeMode, extract_scalar_reward
 
 from .config_generator import CG_BOHB
 
@@ -41,12 +40,6 @@ logger = logging.getLogger('BOHB_Advisor')
 _next_parameter_id = 0
 _KEY = 'TRIAL_BUDGET'
 _epsilon = 1e-6
-
-@unique
-class OptimizeMode(Enum):
-    """Optimize Mode class"""
-    Minimize = 'minimize'
-    Maximize = 'maximize'
 
 
 def create_parameter_id():

@@ -12,7 +12,7 @@ With the NFS setup (see below), trial code can share model weight through loadin
 ```yaml
 tuner:
   codeDir: path/to/customer_tuner
-  classFileName: customer_tuner.py 
+  classFileName: customer_tuner.py
   className: CustomerTuner
   classArgs:
     ...
