@@ -175,7 +175,7 @@ machineList:
     
     - **remote** 将任务提交到远程的 Ubuntu 上，必须用 **machineList** 来指定远程的 SSH 连接信息。
     
-    - **pai** 提交任务到微软开源的 [OpenPAI](https://github.com/Microsoft/pai) 上。 For more details of pai configuration, please reference [PAIMOdeDoc](./PaiMode.md)
+    - **pai** 提交任务到微软开源的 [OpenPAI](https://github.com/Microsoft/pai) 上。 更多 OpenPAI 配置，参考 [pai 模式](./PaiMode.md)。
     
     - **kubeflow** 提交任务至 [Kubeflow](https://www.kubeflow.org/docs/about/kubeflow/)。 NNI 支持基于 Kubeflow 的 Kubenetes，以及[Azure Kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/)。
 
