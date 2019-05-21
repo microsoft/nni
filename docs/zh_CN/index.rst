@@ -13,10 +13,10 @@ Neural Network Intelligence（NNI）文档
 
     概述<Overview>
     入门<QuickStart>
-    Tutorials<tutorials>
-    Examples<examples>
-    Reference<reference>
+    教程<tutorials>
+    示例<examples>
+    参考<reference>
     常见问答<FAQ>
-    Contribution<contribution>
-    Changelog<Release>
-    Community Sharings<community_sharings>
+    贡献<contribution>
+    更改日志<Release>
+    社区经验分享<community_sharings>
