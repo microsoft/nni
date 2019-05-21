@@ -8,8 +8,8 @@ TrainingService 是与平台管理、任务调度相关的模块。 TrainingServ
 
 ![](../img/NNIDesign.jpg)
 
-NNI 的架构如图所示。 NNIManager 是系统的核心管理模块，负责调用 TrainingService 来管理 Trial，并负责不同模块之间的通信。 Dispatcher 是消息处理中心。 TrainingService 是管理任务的模块，它和 NNIManager 通信，并且根据平台的特点有不同的实现。 For the time being, NNI supports local platfrom, [remote platfrom](RemoteMachineMode.md), [PAI platfrom](PaiMode.md), [kubeflow platform](KubeflowMode.md) and [FrameworkController platfrom](FrameworkController.md).  
-In this document, we introduce the brief design of TrainingService. 如果要添加新的 TrainingService，只需要继承 TrainingServcie 类并实现相应的方法，不需要理解NNIManager、Dispatcher 等其它模块的细节。
+NNI 的架构如图所示。 NNIManager 是系统的核心管理模块，负责调用 TrainingService 来管理 Trial，并负责不同模块之间的通信。 Dispatcher 是消息处理中心。 TrainingService 是管理任务的模块，它和 NNIManager 通信，并且根据平台的特点有不同的实现。 当前，NNI 支持本地平台、[远程平台](RemoteMachineMode.md)、[OpenPAI 平台](PaiMode.md)、[Kubeflow 平台](KubeflowMode.md)和[FrameworkController 平台](FrameworkController.md)。  
+在这个文档中，会简要介绍 TrainingService 的设计。 如果要添加新的 TrainingService，只需要继承 TrainingServcie 类并实现相应的方法，不需要理解NNIManager、Dispatcher 等其它模块的细节。
 
 ## 代码文件夹结构
 
@@ -150,5 +150,5 @@ NNI 提供了 TrialKeeper 工具，用来帮助维护 Trial 任务。 可以在 
 
 ## 参考
 
-For more information about how to debug, please [refer](HowToDebug.md).  
-The guide line of how to contribute, please [refer](Contributing.md).
+更多关于如何调试的信息，请[参考这里](HowToDebug.md)。  
+关于如何贡献代码，请[参考这里](Contributing.md)。
