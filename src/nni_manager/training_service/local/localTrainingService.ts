@@ -97,14 +97,14 @@ class LocalTrialJobDetail implements TrialJobDetail {
  * Local training service config
  */
 class LocalConfig {
-    public maxTrialNumOnEachGPU?: number;
+    public maxTrialNumPerGPU?: number;
     public gpuIndices?: string;
-    constructor(gpuIndices?: string, maxTrialNumOnEachGPU?: number) {
+    constructor(gpuIndices?: string, maxTrialNumPerGPU?: number) {
         if (gpuIndices !== undefined) {
             this.gpuIndices = gpuIndices;
         }
-        if (maxTrialNumOnEachGPU !== undefined) {
-            this.maxTrialNumOnEachGPU = maxTrialNumOnEachGPU;
+        if (maxTrialNumPerGPU !== undefined) {
+            this.maxTrialNumPerGPU = maxTrialNumPerGPU;
         }
     }
 }
@@ -128,7 +128,7 @@ class LocalTrainingService implements TrainingService {
     private localConfig?: LocalConfig;
     private isMultiPhase: boolean = false;
     private jobStreamMap: Map<string, ts.Stream>;
-    private maxTrialNumOnEachGPU: number = 1;
+    private maxTrialNumPerGPU: number = 1;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -309,8 +309,8 @@ class LocalTrainingService implements TrainingService {
                         throw new Error('gpuIndices can not be empty if specified.');
                     }
                 }
-                if (this.localConfig.maxTrialNumOnEachGPU !== undefined) {
-                    this.maxTrialNumOnEachGPU = this.localConfig.maxTrialNumOnEachGPU;
+                if (this.localConfig.maxTrialNumPerGPU !== undefined) {
+                    this.maxTrialNumPerGPU = this.localConfig.maxTrialNumPerGPU;
                 }
                 break;
             case TrialConfigMetadataKey.MULTI_PHASE:
@@ -415,7 +415,7 @@ class LocalTrainingService implements TrainingService {
         let availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.occupiedGpuIndexNumMap);
         for(let index of availableGpuIndices) {
             let num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
-            if(num === undefined || num < this.maxTrialNumOnEachGPU) {
+            if(num === undefined || num < this.maxTrialNumPerGPU) {
                 selectedGPUIndices.push(index);
             }
         }

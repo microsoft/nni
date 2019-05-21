@@ -64,7 +64,7 @@ common_schema = {
     Optional('assessor'): dict,
     Optional('localConfig'): {
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-        Optional('maxTrialNumOnEachGPU'): setType('maxTrialNumOnEachGPU', int)
+        Optional('maxTrialNumPerGPU'): setType('maxTrialNumPerGPU', int)
     }
 }
 tuner_schema_dict = {
@@ -326,7 +326,7 @@ Optional('machineList'):[Or({
     'sshKeyPath': setPathCheck('sshKeyPath'),
     Optional('passphrase'): setType('passphrase', str),
     Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    Optional('maxTrialNumOnEachGPU'): setType('maxTrialNumOnEachGPU', int)
+    Optional('maxTrialNumPerGPU'): setType('maxTrialNumPerGPU', int)
 })]
 }
 

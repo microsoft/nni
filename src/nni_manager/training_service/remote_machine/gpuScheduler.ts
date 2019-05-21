@@ -32,7 +32,7 @@ export class GPUScheduler {
 
     private readonly machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>;
     private log: Logger = getLogger();
-    private machineMaxTrialNumOnEachGPUMap: Map<RemoteMachineMeta, Map<number, number>>;
+    private machineOccupiedTrialNumPerGPUMap: Map<RemoteMachineMeta, Map<number, number>>;
 
     /**
      * Constructor
@@ -40,7 +40,7 @@ export class GPUScheduler {
      */
     constructor(machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>) {
         this.machineSSHClientMap = machineSSHClientMap;
-        this.machineMaxTrialNumOnEachGPUMap = new Map<RemoteMachineMeta, Map<number, number>>();
+        this.machineOccupiedTrialNumPerGPUMap = new Map<RemoteMachineMeta, Map<number, number>>();
     }
 
     /**
@@ -95,16 +95,16 @@ export class GPUScheduler {
             rmMeta.gpuReservation.forEach((reserveTrialJobId : string, gpuIndex : number) => {
                 if (reserveTrialJobId === trialJobId) {
                     rmMeta.gpuReservation.delete(gpuIndex);
-                    let maxTrialNumOnEachGPU = this.machineMaxTrialNumOnEachGPUMap.get(rmMeta);
-                    if(maxTrialNumOnEachGPU === undefined) {
+                    let occupiedTrialNumPerGPU = this.machineOccupiedTrialNumPerGPUMap.get(rmMeta);
+                    if(occupiedTrialNumPerGPU === undefined) {
                         throw new Error(`gpu scheduler error!`);
                     }
-                    let num = maxTrialNumOnEachGPU.get(gpuIndex);
+                    let num = occupiedTrialNumPerGPU.get(gpuIndex);
                     if(num === undefined) {
                         throw new Error(`gpu scheduler error!`);
                     }
-                    maxTrialNumOnEachGPU.set(gpuIndex, num - 1)
-                    this.machineMaxTrialNumOnEachGPUMap.set(rmMeta, maxTrialNumOnEachGPU);
+                    occupiedTrialNumPerGPU.set(gpuIndex, num - 1)
+                    this.machineOccupiedTrialNumPerGPUMap.set(rmMeta, occupiedTrialNumPerGPU);
                 }
             });
         }
@@ -161,14 +161,14 @@ export class GPUScheduler {
                     // or trial number on a GPU reach max number,
                     // We should NOT allocate this GPU
                     if (designatedGpuIndices === undefined || designatedGpuIndices.has(gpuInfo.index)) {
-                        let maxTrialNumOnEachGpuMap = this.machineMaxTrialNumOnEachGPUMap.get(rmMeta);
-                        if(maxTrialNumOnEachGpuMap !== undefined) {
-                            let num = maxTrialNumOnEachGpuMap.get(gpuInfo.index);
-                            let maxTrialNumOnEachGPU: number = rmMeta.maxTrialNumOnEachGPU? rmMeta.maxTrialNumOnEachGPU: 1;
-                            if(num === undefined || num !== undefined && num < maxTrialNumOnEachGPU) {
+                        let occupiedTrialNumPerGpuMap = this.machineOccupiedTrialNumPerGPUMap.get(rmMeta);
+                        if(occupiedTrialNumPerGpuMap !== undefined) {
+                            let num = occupiedTrialNumPerGpuMap.get(gpuInfo.index);
+                            let maxTrialNumPerGPU: number = rmMeta.maxTrialNumPerGPU? rmMeta.maxTrialNumPerGPU: 1;
+                            if((num === undefined && gpuInfo.activeProcessNum === 0) || (num !== undefined && num < maxTrialNumPerGPU)) {
                                 availableGPUs.push(gpuInfo);
                             }
-                        } else {
+                        } else if(gpuInfo.activeProcessNum === 0){
                             availableGPUs.push(gpuInfo);
                         }
                     }
@@ -195,19 +195,19 @@ export class GPUScheduler {
                          gpuInfos: GPUInfo[], trialJobId: string): RemoteMachineScheduleResult {
         assert(gpuInfos.length >= requiredGPUNum);
         const allocatedGPUs: GPUInfo[] = this.selectGPUsForTrial(gpuInfos, requiredGPUNum);
-        let maxTrialNumOnEachGPU = this.machineMaxTrialNumOnEachGPUMap.get(rmMeta)
+        let occupiedTrialNumPerGPU = this.machineOccupiedTrialNumPerGPUMap.get(rmMeta)
         allocatedGPUs.forEach((gpuInfo: GPUInfo) => {
             let tempMap: Map<number, number> = new Map<number, number>();
-            if(maxTrialNumOnEachGPU !== undefined) {
-                let num = maxTrialNumOnEachGPU.get(gpuInfo.index);
+            if(occupiedTrialNumPerGPU !== undefined) {
+                let num = occupiedTrialNumPerGPU.get(gpuInfo.index);
                 if(num === undefined) {
                     num = 0;
                 }
                 tempMap.set(gpuInfo.index, num + 1);
-                this.machineMaxTrialNumOnEachGPUMap.set(rmMeta, tempMap);
+                this.machineOccupiedTrialNumPerGPUMap.set(rmMeta, tempMap);
             }else {
                 tempMap.set(gpuInfo.index, 1);
-                this.machineMaxTrialNumOnEachGPUMap.set(rmMeta, tempMap);
+                this.machineOccupiedTrialNumPerGPUMap.set(rmMeta, tempMap);
             }
             rmMeta.gpuReservation.set(gpuInfo.index, trialJobId);
         });
