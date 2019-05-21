@@ -17,10 +17,53 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
+"""
+utils.py
+"""
 
 import os
+from enum import Enum, unique
+
 from .common import init_logger
 from .env_vars import dispatcher_env_vars
+
+@unique
+class OptimizeMode(Enum):
+    """Optimize Mode class
+
+    if OptimizeMode is 'minimize', it means the tuner need to minimize the reward
+    that received from Trial.
+
+    if OptimizeMode is 'maximize', it means the tuner need to maximize the reward
+    that received from Trial.
+    """
+    Minimize = 'minimize'
+    Maximize = 'maximize'
+
+class NodeType:
+    """Node Type class
+    """
+    ROOT = 'root'
+    TYPE = '_type'
+    VALUE = '_value'
+    INDEX = '_index'
+    NAME = '_name'
+
+
+def split_index(params):
+    """
+    Delete index infromation from params
+    """
+    if isinstance(params, dict):
+        if NodeType.INDEX in params.keys():
+            return split_index(params[NodeType.VALUE])
+        result = {}
+        for key in params:
+            result[key] = split_index(params[key])
+        return result
+    else:
+        return params
+
 
 def extract_scalar_reward(value, scalar_key='default'):
     """

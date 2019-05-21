@@ -35,6 +35,23 @@ export class NNIError extends Error {
         }
         this.cause = err;
     }
+
+    public static FromError(err: NNIError | Error | string, messagePrefix?: string): NNIError {
+        const msgPrefix: string = messagePrefix === undefined ? '' : messagePrefix;
+        if (err instanceof NNIError) {
+            if (err.message !== undefined) {
+                err.message = msgPrefix + err.message;
+            }
+
+            return err;
+        } else if (typeof(err) === 'string') {
+            return new NNIError('', msgPrefix + err);
+        } else if (err instanceof Error) {
+            return new NNIError('', msgPrefix + err.message, err);
+        } else {
+            throw new Error(`Wrong instance type: ${typeof(err)}`);
+        }
+    }
 }
 
 export class MethodNotImplementedError extends Error {

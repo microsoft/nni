@@ -21,6 +21,7 @@
 
 import ast
 import astor
+import numbers
 
 # pylint: disable=unidiomatic-typecheck
 
@@ -87,8 +88,9 @@ class SearchSpaceGenerator(ast.NodeTransformer):
             args = [key.n if type(key) is ast.Num else key.s for key in node.args[0].keys]
         else:
             # arguments of other functions must be literal number
-            assert all(type(arg) is ast.Num for arg in node.args), 'Smart parameter\'s arguments must be number literals'
-            args = [arg.n for arg in node.args]
+            assert all(isinstance(ast.literal_eval(astor.to_source(arg)), numbers.Real) for arg in node.args), \
+            'Smart parameter\'s arguments must be number literals'
+            args = [ast.literal_eval(astor.to_source(arg)) for arg in node.args]
 
         key = self.module_name + '/' + name + '/' + func
         # store key in ast.Call
