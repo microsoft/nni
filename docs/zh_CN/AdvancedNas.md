@@ -15,7 +15,7 @@
 ```yaml
 tuner:
   codeDir: path/to/customer_tuner
-  classFileName: customer_tuner.py
+  classFileName: customer_tuner.py 
   className: CustomerTuner
   classArgs:
     ...
