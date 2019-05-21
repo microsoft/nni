@@ -46,23 +46,23 @@ NAO 需要太多的计算资源，因此只使用提供 Pipeline 脚本的 NAO-W
 | ImageNet-10-1   |     61.80     |      77.07       |      79.80       | **80.48** |   77.20    |
 | ImageNet-10-2   |     37.20     |      58.13       |      56.47       |   60.53   | **61.20**  |
 
-Unfortunately, we cannot reproduce all the results in the paper.
+很遗憾，我们无法复现论文中所有的结果。
 
-The best or average results reported in the paper:
+论文中提供的最佳或平均结果：
 
 | NAS       | AutoKeras(%) | ENAS (macro) (%) | ENAS (micro) (%) |   DARTS (%)    | NAO-WS (%)  |
 | --------- | ------------ |:----------------:|:----------------:|:--------------:|:-----------:|
 | CIFAR- 10 | 88.56(best)  |   96.13(best)    |   97.11(best)    | 97.17(average) | 96.47(best) |
 
-For AutoKeras, it has relatively worse performance across all datasets due to its random factor on network morphism.
+AutoKeras，由于其算法中的随机因素，它在所有数据集中的表现相对较差。
 
-For ENAS, ENAS (macro) shows good results in OUI-Adience-Age and ENAS (micro) shows good results in CIFAR-10.
+ENAS，ENAS（macro）在 OUI-Adience-Age 数据集中表现较好，并且 ENAS（micro）在 CIFAR-10 数据集中表现较好。
 
-For DARTS, it has a good performance on some datasets but we found its high variance in other datasets. The difference among three runs of benchmarks can be up to 5.37% in OUI-Adience-Age and 4.36% in ImageNet-10-1.
+对于DARTS，在某些数据集上具有良好的结果，但在某些数据集中具有比较大的方差。 DARTS 三次实验中的差异在 OUI-Audience-Age 数据集上可达 5.37％（绝对值），在 ImageNet-10-1 数据集上可达4.36％（绝对值）。
 
-For NAO-WS, it shows good results in ImageNet-10-2 but it can perform very poorly in OUI-Adience-Age.
+NAO-WS 在 ImageNet-10-2 中表现良好，但在 OUI-Adience-Age 中表现非常差。
 
-## Reference
+## 参考文献
 
 1. Jin, Haifeng, Qingquan Song, and Xia Hu. "Efficient neural architecture search with network morphism." *arXiv preprint arXiv:1806.10282* (2018).
 
