@@ -318,7 +318,7 @@ Optional('machineList'):[Or({
     'username': setType('username', str),
     'passwd': setType('passwd', str),
     Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    Optional('maxTrialNumOnEachGPU'): setType('maxTrialNumOnEachGPU', int)
+    Optional('maxTrialNumPerGPU'): setType('maxTrialNumPerGPU', int)
     },{
     'ip': setType('ip', str),
     Optional('port'): setNumberRange('port', int, 1, 65535),
