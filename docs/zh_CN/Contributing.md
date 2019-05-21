@@ -29,7 +29,7 @@
 
 拉取请求需要选好正确的标签，表明是 Bug 修复还是功能改进。 所有代码都需要遵循正确的命名约定和代码风格。
 
-If you are looking for How to develop and debug the NNI source code, you can refer to [How to set up NNI developer environment doc](./SetupNniDeveloperEnvironment.md) file in the `docs` folder.
+参考[如何配置 NNI 的开发环境](./SetupNniDeveloperEnvironment.md)，来安装开发环境。
 
 与[快速入门](QuickStart.md)类似。 其它内容，参考[NNI 文档](http://nni.readthedocs.io)。
 
@@ -42,7 +42,7 @@ If you are looking for How to develop and debug the NNI source code, you can ref
 ## 代码风格和命名约定
 
 * NNI 遵循 [PEP8](https://www.python.org/dev/peps/pep-0008/) 的 Python 代码命名约定。在提交拉取请求时，请尽量遵循此规范。 可通过`flake8`或`pylint`的提示工具来帮助遵循规范。
-* NNI 还遵循 [NumPy Docstring 风格](https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy) 的 Python Docstring 命名方案。 During the [documentation building](Contributing.md#documentation), we use [sphinx.ext.napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) to generate Python API documentation from Docstring.
+* NNI 还遵循 [NumPy Docstring 风格](https://www.sphinx-doc.org/en/master/usage/extensions/example_numpy.html#example-numpy) 的 Python Docstring 命名方案。 Python API 使用了[sphinx.ext.napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) 来[生成文档](Contributing.md#documentation)。
 
 ## 文档
 
