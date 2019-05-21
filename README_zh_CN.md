@@ -123,7 +123,7 @@ python -m pip install --upgrade nni
 注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
-* 当前 NNI 在 Windows 上仅支持本机模式。 Anaconda or Miniconda is highly recommended to install NNI on Windows.
+* 当前 NNI 在 Windows 上仅支持本机模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/FAQ.md)。
 
 **通过源代码安装**
@@ -250,9 +250,9 @@ You can use these commands to get more information about the experiment
 
 推荐新贡献者从标有 **good first issue** 的简单需求开始。
 
-To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/en_US/SetupNniDeveloperEnvironment.md)
+如要安装 NNI 开发环境，参考：[配置 NNI 开发环境](docs/zh_CN/SetupNniDeveloperEnvironment.md)。
 
-Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/en_US/Contributing.md)
+在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/zh_CN/Contributing.md)。
 
 我们正在编写[如何调试](docs/zh_CN/HowToDebug.md) 的页面，欢迎提交建议和问题。
 
