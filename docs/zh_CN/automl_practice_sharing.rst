@@ -1,8 +1,8 @@
 #################
-AutoML Practice Sharing
+自动机器学习的经验分享
 #################
 
 ..  toctree::
     :maxdepth: 2
 
-    Neural Architecture Search Comparison<CommunitySharings/AutomlPracticeSharing/NasComparison>
+    神经网络架构搜索的对比<CommunitySharings/AutomlPracticeSharing/NasComparison>
