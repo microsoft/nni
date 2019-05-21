@@ -1,4 +1,4 @@
-param([int]$version_os, [bool]$version_ts=$false)
+param([int]$version_os=64, [bool]$version_ts=$false)
 [System.Net.ServicePointManager]::DefaultConnectionLimit = 100
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $CWD = $PWD
@@ -30,31 +30,68 @@ python -m pip install --upgrade setuptools wheel
 $nodeUrl = "https://aka.ms/nni/nodejs-download/" + $OS_VERSION
 $NNI_NODE_ZIP = "$CWD\node-$OS_SPEC.zip"
 $NNI_NODE_FOLDER = "$CWD\node-$OS_SPEC"
-$unzipNodeDir = "node-v*"
+$yarnUrl = "https://yarnpkg.com/latest.tar.gz"
+$NNI_YARN_TARBALL = "$CWD\nni-yarn.tar.gz"
+$NNI_YARN_FOLDER = "$CWD\nni-yarn"
+$NNI_YARN = $NNI_YARN_FOLDER +"\bin\yarn"
+$unzipYarnDir = "yarn-v*"
+$nugetUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+$NNI_NUGET_FOLDER = "$CWD\nni-nuget"
+$NNI_NUGET = $NNI_NUGET_FOLDER + "\nuget.exe"
+
 (New-Object Net.WebClient).DownloadFile($nodeUrl, $NNI_NODE_ZIP)
-if(Test-Path $NNI_NODE_FOLDER){
-    Remove-Item $NNI_NODE_FOLDER -Recurse -Force
+(New-Object Net.WebClient).DownloadFile($yarnUrl, $NNI_YARN_TARBALL)
+if (!(Test-Path $NNI_NUGET_FOLDER)) {
+    New-Item $NNI_NUGET_FOLDER -ItemType Directory
 }
-Expand-Archive $NNI_NODE_ZIP -DestinationPath $CWD
-$unzipNodeDir = Get-ChildItem "$CWD\$unzipNodeDir"
-Rename-Item $unzipNodeDir $NNI_NODE_FOLDER
+(New-Object Net.WebClient).DownloadFile($nugetUrl, $NNI_NUGET)
+
+$NNI_YARN_TARBALL = $NNI_YARN_TARBALL -split '\\' -join '\\'
+$CWD = $CWD -split '\\' -join '\\'
+$SCRIPT_PATH = $CWD + '\extract.py'
+$SCRIPT =  "import tarfile",
+       ("tar = tarfile.open(""{0}"")" -f $NNI_YARN_TARBALL),
+       ("tar.extractall(""{0}"")" -f $CWD),
+        "tar.close()"
+[System.IO.File]::WriteAllLines($SCRIPT_PATH, $SCRIPT)
+
+if(!(Test-Path $NNI_NODE_FOLDER)){
+    New-Item $NNI_NODE_FOLDER -ItemType Directory
+    cmd /c tar -xf $NNI_NODE_ZIP -C $NNI_NODE_FOLDER --strip-components 1
+}
+
+if(!(Test-Path $NNI_YARN_FOLDER)){
+    cmd /c python $SCRIPT_PATH
+    $unzipYarnDir = Get-ChildItem "$CWD\$unzipYarnDir"
+    Rename-Item $unzipYarnDir "nni-yarn"
+}
 
 $env:PATH = $NNI_NODE_FOLDER+';'+$env:PATH
 cd $CWD\..\..\src\nni_manager
-yarn
-yarn build
+cmd /c $NNI_YARN
+cmd /c $NNI_YARN build
 cd $CWD\..\..\src\webui 
-yarn
-yarn build
+cmd /c $NNI_YARN
+cmd /c $NNI_YARN build
+
+# Building Aether Client
+cd $CWD\..\..\src\nni_manager\training_service\aether\cslib
+if (!(Get-Command msbuild | Test-Path)) {
+    Write-Host "Please install msbuild first"
+    exit
+}
+cmd /c $NNI_NUGET restore
+cmd /c 'msbuild -Property:Configure=Release;OutputPath=..\..\..\dist\aether'
+
 if(Test-Path $CWD\nni){
-    Remove-Item $CWD\nni -r -fo
+    Remove-Item $CWD\nni -Recurse -Force
 }
 Copy-Item $CWD\..\..\src\nni_manager\dist $CWD\nni -Recurse
 Copy-Item $CWD\..\..\src\webui\build $CWD\nni\static -Recurse
 Copy-Item $CWD\..\..\src\nni_manager\package.json $CWD\nni
 (Get-Content $CWD\nni\package.json).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content $CWD\nni\package.json
 cd $CWD\nni
-yarn --prod
+cmd /c $NNI_YARN --prod
 cd $CWD
 (Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
 python setup.py bdist_wheel -p $WHEEL_SPEC

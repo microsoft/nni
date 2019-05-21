@@ -132,6 +132,7 @@ if (!(Get-Command msbuild | Test-Path)) {
     Write-Host "Please install msbuild first"
     exit
 }
+
 cmd /c $NNI_NUGET restore
 cmd /c 'msbuild -Property:Configure=Release;OutputPath=..\..\..\dist\aether'
 
