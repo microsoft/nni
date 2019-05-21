@@ -4,7 +4,7 @@
 
 ## **在 Windows 上安装**
 
-**Anaconda or Miniconda python(64-bit) is highly recommended.**
+**强烈推荐使用 Anaconda 或 Miniconda Python（64位）。**
 
 在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
 
