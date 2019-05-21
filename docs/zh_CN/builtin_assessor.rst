@@ -1,9 +1,9 @@
-Builtin-Assessors
+内置 Assessor
 =================
 
 ..  toctree::
     :maxdepth: 1
 
-    Overview<BuiltinAssessors>
+    介绍<BuiltinAssessors>
     Medianstop<MedianstopAssessor>
     Curvefitting<CurvefittingAssessor>
