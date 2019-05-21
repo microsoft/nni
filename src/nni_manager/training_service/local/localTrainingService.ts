@@ -179,7 +179,7 @@ class LocalTrainingService implements TrainingService {
                     const state: string = await fs.promises.readFile(path.join(trialJob.workingDirectory, '.nni', 'state'), 'utf8');
                     const match: RegExpMatchArray | null = state.trim()
                         .match(/^(\d+)\s+(\d+)/);
-                    if (match !== null) {
+                    if (match !== undefined && match !== null) {
                         const { 1: code, 2: timestamp } = match;
                         if (parseInt(code, 10) === 0) {
                             this.setTrialJobStatus(trialJob, 'SUCCEEDED');
@@ -289,7 +289,7 @@ class LocalTrainingService implements TrainingService {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 this.localTrailConfig = <TrialConfig>JSON.parse(value);
                 // Parse trial config failed, throw Error
-                if (this.localTrailConfig === undefined || this.localTrailConfig === null) {
+                if (this.localTrailConfig === undefined) {
                     throw new Error('trial config parsed failed');
                 }
                 this.log.info(`required GPU number is ${this.localTrailConfig.gpuNum}`);
@@ -319,7 +319,7 @@ class LocalTrainingService implements TrainingService {
         switch (key) {
             case TrialConfigMetadataKey.TRIAL_CONFIG:
                 let getResult: Promise<string>;
-                if (this.localTrailConfig === undefined || this.localTrailConfig === null) {
+                if (this.localTrailConfig === undefined) {
                     getResult = Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, `${key} is never set yet`));
                 } else {
                     getResult = Promise.resolve(JSON.stringify(this.localTrailConfig));
@@ -349,7 +349,7 @@ class LocalTrainingService implements TrainingService {
         if (['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'].includes(trialJob.status)) {
             if (this.jobStreamMap.has(trialJob.id)) {
                 const stream: ts.Stream | undefined = this.jobStreamMap.get(trialJob.id);
-                if (stream === undefined || stream === null) {
+                if (stream === undefined) {
                     throw new Error(`Could not find stream in trial ${trialJob.id}`);
                 }
                 stream.destroy();
@@ -484,7 +484,7 @@ class LocalTrainingService implements TrainingService {
         const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
         const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource);
 
-        if (this.localTrailConfig === undefined || this.localTrailConfig === null) {
+        if (this.localTrailConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
         const runScriptLines: string[] = [];

@@ -105,12 +105,12 @@ class GPUScheduler {
         execScript(gpuMetricsCollectorScriptPath);
     }
 
-    /* tslint:disable:non-literal-fs-path no-null-keyword */
+    // tslint:disable:non-literal-fs-path
     private async updateGPUSummary(): Promise<void> {
         const gpuMetricPath: string = path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics');
         if (fs.existsSync(gpuMetricPath)) {
             const cmdresult: cpp.childProcessPromise.Result = await execTail(gpuMetricPath);
-            if (cmdresult != null && cmdresult.stdout != null) {
+            if (cmdresult !== undefined && cmdresult.stdout !== undefined) {
                 this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
             } else {
                 this.log.error('Could not get gpu metrics information!');

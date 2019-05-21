@@ -33,6 +33,7 @@ import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } fr
  * @param codeDir codeDir in nni config file
  * @returns file number under codeDir
  */
+// tslint:disable: no-redundant-jsdoc
 export async function validateCodeDir(codeDir: string) : Promise<number> {
     let fileCount: number | undefined;
 
@@ -42,7 +43,7 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
         throw new Error(`Call count file error: ${error}`);
     }
 
-    if (fileCount != null && fileCount > 1000) {
+    if (fileCount !== undefined && fileCount !== null && fileCount > 1000) {
         const errMessage: string = `Too many files(${fileCount} found}) in ${codeDir},`
                                     + ` please check if it's a valid code dir`;
         throw new Error(errMessage);
@@ -134,6 +135,11 @@ export async function execKill(pid: string): Promise<void> {
     return Promise.resolve();
 }
 
+/**
+ * get command of setting environment variable
+ * @param  variable
+ * @returns command string
+ */
 export function setEnvironmentVariable(variable: { key: string; value: string }): string {
     if (process.platform === 'win32') {
         return `$env:${variable.key}="${variable.value}"`;

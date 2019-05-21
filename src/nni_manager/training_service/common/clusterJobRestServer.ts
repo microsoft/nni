@@ -20,22 +20,24 @@
 'use strict';
 
 import * as assert from 'assert';
-import { Request, Response, Router } from 'express';
+// tslint:disable-next-line:no-implicit-dependencies
 import * as bodyParser from 'body-parser';
-import * as component from '../../common/component';
-import * as fs from 'fs'
-import * as path from 'path'
-import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
-import { RestServer } from '../../common/restServer'
-import { getLogDir } from '../../common/utils';
+import { Request, Response, Router } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Writable } from 'stream';
+import { String } from 'typescript-string-operations';
+import * as component from '../../common/component';
+import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
+import { RestServer } from '../../common/restServer';
+import { getLogDir } from '../../common/utils';
 
 /**
  * Cluster Job Training service Rest server, provides rest API to support Cluster job metrics update
- * 
+ *
  */
 @component.Singleton
-export abstract class ClusterJobRestServer extends RestServer{
+export abstract class ClusterJobRestServer extends RestServer {
     private readonly API_ROOT_URL: string = '/api/v1/nni-pai';
     private readonly NNI_METRICS_PATTERN: string = `NNISDK_MEb'(?<metrics>.*?)'`;
 
@@ -51,22 +53,23 @@ export abstract class ClusterJobRestServer extends RestServer{
     constructor() {
         super();
         const basePort: number = getBasePort();
-        assert(basePort && basePort > 1024);
-        
-        this.port = basePort + 1;         
+        assert(basePort !== undefined && basePort > 1024);
+
+        this.port = basePort + 1;
     }
 
     public get clusterRestServerPort(): number {
-        if(!this.port) {
+        if (this.port === undefined || this.port === null) {
             throw new Error('PAI Rest server port is undefined');
         }
+
         return this.port;
     }
-    
-    public get getErrorMessage(): string | undefined{
+
+    public get getErrorMessage(): string | undefined {
         return this.errorMessage;
     }
-    
+
     public set setEnableVersionCheck(versionCheck: boolean) {
         this.enableVersionCheck = versionCheck;
     }
@@ -79,10 +82,13 @@ export abstract class ClusterJobRestServer extends RestServer{
         this.app.use(this.API_ROOT_URL, this.createRestHandler());
     }
 
+    // Abstract method to handle trial metrics data
+    protected abstract handleTrialMetrics(jobId : string, trialMetrics : any[]) : void;
+
+    // tslint:disable: no-unsafe-any typedef
     private createRestHandler() : Router {
         const router: Router = Router();
 
-        // tslint:disable-next-line:typedef
         router.use((req: Request, res: Response, next) => {
             this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
             res.setHeader('Content-Type', 'application/json');
@@ -92,7 +98,7 @@ export abstract class ClusterJobRestServer extends RestServer{
         router.post(`/version/${this.expId}/:trialId`, (req: Request, res: Response) => {
             if (this.enableVersionCheck) {
                 try {
-                    const checkResultSuccess: boolean = req.body.tag === 'VCSuccess'? true: false;
+                    const checkResultSuccess: boolean = req.body.tag === 'VCSuccess' ? true : false;
                     if (this.versionCheckSuccess !== undefined && this.versionCheckSuccess !== checkResultSuccess) {
                         this.errorMessage = 'Version check error, version check result is inconsistent!';
                         this.log.error(this.errorMessage);
@@ -103,7 +109,7 @@ export abstract class ClusterJobRestServer extends RestServer{
                         this.versionCheckSuccess = false;
                         this.errorMessage = req.body.msg;
                     }
-                } catch(err) {
+                } catch (err) {
                     this.log.error(`json parse metrics error: ${err}`);
                     res.status(500);
                     res.send(err.message);
@@ -122,8 +128,7 @@ export abstract class ClusterJobRestServer extends RestServer{
                 this.handleTrialMetrics(req.body.jobId, req.body.metrics);
 
                 res.send();
-            }
-            catch(err) {
+            } catch (err) {
                 this.log.error(`json parse metrics error: ${err}`);
                 res.status(500);
                 res.send(err.message);
@@ -131,35 +136,36 @@ export abstract class ClusterJobRestServer extends RestServer{
         });
 
         router.post(`/stdout/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            if(this.enableVersionCheck && !this.versionCheckSuccess && !this.errorMessage) {
-                this.errorMessage = `Version check failed, didn't get version check response from trialKeeper, please check your NNI version in `
-                 + `NNIManager and TrialKeeper!`
+            if (this.enableVersionCheck && this.versionCheckSuccess !== undefined && !this.versionCheckSuccess
+                && this.errorMessage !== undefined) {
+                this.errorMessage = `Version check failed, didn't get version check response from trialKeeper,`
+                 + ` please check your NNI version in NNIManager and TrialKeeper!`;
             }
             const trialLogPath: string = path.join(getLogDir(), `trial_${req.params.trialId}.log`);
             try {
                 let skipLogging: boolean = false;
-                if(req.body.tag === 'trial' && req.body.msg !== undefined) {
+                if (req.body.tag === 'trial' && req.body.msg !== undefined) {
                     const metricsContent = req.body.msg.match(this.NNI_METRICS_PATTERN);
-                    if(metricsContent && metricsContent.groups) {
+                    if (metricsContent && metricsContent.groups) {
                         this.handleTrialMetrics(req.params.trialId, [metricsContent.groups['metrics']]);
                         skipLogging = true;
                     }
                 }
 
-                if(!skipLogging){
+                if (!skipLogging) {
                     // Construct write stream to write remote trial's log into local file
+                    // tslint:disable-next-line:non-literal-fs-path
                     const writeStream: Writable = fs.createWriteStream(trialLogPath, {
                         flags: 'a+',
                         encoding: 'utf8',
                         autoClose: true
                     });
 
-                    writeStream.write(req.body.msg + '\n');
+                    writeStream.write(String.Format('{0}\n', req.body.msg));
                     writeStream.end();
                 }
                 res.send();
-            }
-            catch(err) {
+            } catch (err) {
                 this.log.error(`json parse stdout data error: ${err}`);
                 res.status(500);
                 res.send(err.message);
@@ -168,7 +174,4 @@ export abstract class ClusterJobRestServer extends RestServer{
 
         return router;
     }
-
-    /** Abstract method to handle trial metrics data */
-    protected abstract handleTrialMetrics(jobId : string, trialMetrics : any[]) : void;
 }

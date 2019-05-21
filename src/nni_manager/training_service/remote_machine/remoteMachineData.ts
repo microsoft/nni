@@ -112,7 +112,7 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
 /**
  * The remote machine ssh client used for trial and gpu detector
  */
-// tslint:disable: max-classes-per-file
+// tslint:disable: max-classes-per-file completed-docs
 export class SSHClient {
     private readonly sshClient: Client;
     private usedConnectionNumber: number; //count the connection number of every client
@@ -138,7 +138,6 @@ export class SSHClient {
     }
 }
 
-// tslint:disable-next-line:completed-docs
 export class SSHClientManager {
     private readonly sshClientArray: SSHClient[];
     private readonly maxTrialNumberPerConnection: number;
@@ -154,7 +153,7 @@ export class SSHClientManager {
      */
     public async getAvailableSSHClient(): Promise<Client> {
         const deferred: Deferred<Client> = new Deferred<Client>();
-        for (const index in this.sshClientArray) {
+        for (const index of this.sshClientArray.keys()) {
             const connectionNumber: number = this.sshClientArray[index].getUsedConnectionNumber;
             if (connectionNumber < this.maxTrialNumberPerConnection) {
                 this.sshClientArray[index].addUsedConnectionNumber();
@@ -170,7 +169,7 @@ export class SSHClientManager {
 
     /**
      * add a new ssh client to sshClientArray
-     * @param sshClient
+     * @param sshClient SSH Client
      */
     public addNewSSHClient(client: Client): void {
         this.sshClientArray.push(new SSHClient(client, 1));
@@ -179,7 +178,7 @@ export class SSHClientManager {
     /**
      * first ssh clilent instance is used for gpu collector and host job
      */
-    public getFirstSSHClient() {
+    public getFirstSSHClient(): Client {
         return this.sshClientArray[0].getSSHClientInstance;
     }
 
@@ -194,13 +193,13 @@ export class SSHClientManager {
 
     /**
      * retrieve resource, minus a number for given ssh client
-     * @param client
+     * @param client SSH Client
      */
     public releaseConnection(client: Client | undefined): void {
-        if (client === undefined || client === null) {
+        if (client === undefined) {
             throw new Error(`could not release a undefined ssh client`);
         }
-        for (const index in this.sshClientArray) {
+        for (const index of this.sshClientArray.keys()) {
             if (this.sshClientArray[index].getSSHClientInstance === client) {
                 this.sshClientArray[index].minusUsedConnectionNumber();
                 break;
@@ -211,7 +210,7 @@ export class SSHClientManager {
     /**
      * Create a new ssh connection client and initialize it
      */
-    // tslint:disable:non-literal-fs-path no-null-keyword
+    // tslint:disable:non-literal-fs-path
     private initNewSSHClient(): Promise<Client> {
         const deferred: Deferred<Client> = new Deferred<Client>();
         const conn: Client = new Client();
@@ -219,9 +218,9 @@ export class SSHClientManager {
             host: this.rmMeta.ip,
             port: this.rmMeta.port,
             username: this.rmMeta.username };
-        if (this.rmMeta.passwd != null) {
+        if (this.rmMeta.passwd !== undefined) {
             connectConfig.password = this.rmMeta.passwd;
-        } else if (this.rmMeta.sshKeyPath != null) {
+        } else if (this.rmMeta.sshKeyPath !== undefined) {
             if (!fs.existsSync(this.rmMeta.sshKeyPath)) {
                 //SSh key path is not a valid file, reject
                 deferred.reject(new Error(`${this.rmMeta.sshKeyPath} does not exist.`));

@@ -101,7 +101,7 @@ export namespace SSHClientUtility {
      * @param command the command to execute remotely
      * @param client SSH Client
      */
-    // tslint:disable:no-unsafe-any no-any
+    // tslint:disable:no-unsafe-any no-any prefer-type-cast
     export function remoteExeCommand(command : string, client : Client): Promise<RemoteCommandResult> {
         const log: Logger = getLogger();
         log.debug(`remoteExeCommand: command: [${command}]`);
@@ -119,7 +119,7 @@ export namespace SSHClientUtility {
             }
 
             channel.on('data', (data : any, dataStderr : any) => {
-                if (dataStderr) {
+                if (dataStderr != null) {
                     stderr += data.toString();
                 } else {
                     stdout += data.toString();
