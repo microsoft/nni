@@ -40,6 +40,7 @@ class OptimizeMode(Enum):
     Minimize = 'minimize'
     Maximize = 'maximize'
 
+
 class NodeType:
     """Node Type class
     """
@@ -83,6 +84,7 @@ def extract_scalar_reward(value, scalar_key='default'):
         raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.')
     return reward
 
+
 def convert_dict2tuple(value):
     """
     convert dict type to tuple to solve unhashable problem.
@@ -94,9 +96,32 @@ def convert_dict2tuple(value):
     else:
         return value
 
+
 def init_dispatcher_logger():
     """ Initialize dispatcher logging configuration"""
     logger_file_path = 'dispatcher.log'
     if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
         logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
     init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)
+
+
+def randint_to_quniform(in_x):
+    if isinstance(in_x, dict):
+        if NodeType.TYPE in in_x.keys():
+            if in_x[NodeType.TYPE] == 'randint':
+                value = in_x[NodeType.VALUE]
+                value.append(1)
+
+                in_x[NodeType.TYPE] = 'quniform'
+                in_x[NodeType.VALUE] = value
+ 
+            elif in_x[NodeType.TYPE] == 'choice':
+                randint_to_quniform(in_x[NodeType.VALUE])
+            else:
+                pass
+        else:
+            for key in in_x.keys():
+                randint_to_quniform(in_x[key])
+    elif isinstance(in_x, list):
+        for _, temp in enumerate(in_x):
+            randint_to_quniform(temp)
