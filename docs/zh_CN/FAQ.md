@@ -43,7 +43,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 * http://127.0.0.1，http://172.17.0.1 以及 http://10.0.0.15 都是 localhost。如果在服务器或远程计算机上启动 Experiment， 可将此 IP 替换为所连接的 IP 来查看 Web 界面，如 http://[远程连接的地址]:8080
 * 如果使用服务器 IP 后还是无法看到 Web 界面，可检查此服务器上是否有防火墙或需要代理。 或使用此运行 NNI Experiment 的服务器上的浏览器来查看 Web 界面。
-* Another reason may be your experiment is failed and NNI may fail to get the experiment infomation. You can check the log of NNImanager in the following directory: ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
+* 另一个可能的原因是 Experiment 启动失败了，NNI 无法读取 Experiment 的信息。 可在如下目录中查看 NNIManager 的日志： ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
 
 ### Windows 本机模式
 
