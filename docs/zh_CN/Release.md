@@ -31,7 +31,7 @@
 
 ### 主要功能
 
-* [版本检查](https://github.com/Microsoft/nni/blob/master/docs/en_US/PaiMode.md#version-check) 
+* [版本检查](https://github.com/Microsoft/nni/blob/master/docs/zh_CN/PaiMode.md#version-check) 
   * 检查 nniManager 和 trialKeeper 的版本是否一致
 * [提前终止的任务也可返回最终指标](https://github.com/Microsoft/nni/issues/776) 
   * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
