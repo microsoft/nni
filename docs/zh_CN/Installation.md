@@ -45,9 +45,9 @@
 
 * **通过源代码安装 NNI**
     
-    Prerequisite: `python >=3.5`, `git`, `PowerShell`.
+    先决条件：`python >=3.5`, `git`, `PowerShell`
     
-    you can install NNI as administrator or current user as follows:
+    然后可以使用管理员或当前用户安装 NNI：
     
     ```bash
     git clone -b v0.7 https://github.com/Microsoft/nni.git
@@ -57,7 +57,7 @@
 
 ## **系统需求**
 
-Below are the minimum system requirements for NNI on Linux. 由于程序变更，NNI 的最低配置会有所更改。
+以下是 NNI 在 Linux 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
 
 |          | 最低配置                                  | 推荐配置                                      |
 | -------- | ------------------------------------- | ----------------------------------------- |
@@ -69,7 +69,7 @@ Below are the minimum system requirements for NNI on Linux. 由于程序变更�
 | **网络**   | 宽带连接                                  |                                           |
 | **分辨率**  | 1024 x 768 以上                         |                                           |
 
-Below are the minimum system requirements for NNI on macOS. Due to potential programming changes, the minimum system requirements for NNI may change over time.
+以下是 NNI 在 MacOS 下的最低配置。 由于程序变更，NNI 的最低配置会有所更改。
 
 |          | 最低配置                                               | 推荐配置                     |
 | -------- | -------------------------------------------------- | ------------------------ |
@@ -81,7 +81,7 @@ Below are the minimum system requirements for NNI on macOS. Due to potential pro
 | **网络**   | 宽带连接                                               |                          |
 | **分辨率**  | 1024 x 768 以上                                      |                          |
 
-Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is well tested and recommend. Due to potential programming changes, the minimum system requirements for NNI may change over time.
+以下是 NNI 在 Windows 上的最低配置，推荐使用 Windows 10 1809 版。 由于程序变更，NNI 的最低配置会有所更改。
 
 |          | 最低配置                                  | 推荐配置                                      |
 | -------- | ------------------------------------- | ----------------------------------------- |
