@@ -37,6 +37,8 @@ from smac.facade.smac_facade import SMAC
 from smac.facade.roar_facade import ROAR
 from smac.facade.epils_facade import EPILS
 
+from ConfigSpaceNNI import Configuration
+
 
 class SMACTuner(Tuner):
     """
@@ -57,6 +59,7 @@ class SMACTuner(Tuner):
         self.update_ss_done = False
         self.loguniform_key = set()
         self.categorical_dict = {}
+        self.cs = None
 
     def _main_cli(self):
         """Main function of SMAC for CLI interface
@@ -95,6 +98,7 @@ class SMACTuner(Tuner):
 
         # Create scenario-object
         scen = Scenario(args.scenario_file, [])
+        self.cs = scen.cs
 
         if args.mode == "SMAC":
             optimizer = SMAC(
@@ -258,4 +262,44 @@ class SMACTuner(Tuner):
         return params
 
     def import_data(self, data):
-        pass
+        """Import additional data for tuning
+        Parameters
+        ----------
+        data:
+            a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        _completed_num = 0
+        for trial_info in data:
+            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
+            # simply validate data format
+            assert "parameter" in trial_info
+            _params = trial_info["parameter"]
+            assert "value" in trial_info
+            _value = trial_info['value']
+            if not _value:
+                logger.info("Useless trial data, value is %s, skip this trial data." %_value)
+                continue
+            # convert the keys in loguniform and categorical types
+            found_idx = -2
+            for key, value in _params:
+                if key in self.loguniform_key:
+                    _params[key] = np.log(value)
+                elif key in self.categorical_dict:
+                    found_idx = -1
+                    for idx, real_v in self.categorical_dict[key]:
+                        if value == real_v:
+                            found_idx = idx
+                            _params[key] = found_idx
+                            break
+                    if found_idx == -1:
+                        logger.info("The value %s of key %s is not in search space." % (str(value), key))
+                        break
+            if found_idx == -1:
+                continue
+            # start import this data entry
+            _completed_num += 1
+            config = Configuration(self.cs, values=_params)
+            if self.optimize_mode is OptimizeMode.Maximize:
+                _value = -_value
+            self.smbo_solver.nni_smac_receive_runs(config, _value)
+        logger.info("Successfully import data to grid search tuner, total data: %d, imported data: %d." % (len(data), _completed_num))
