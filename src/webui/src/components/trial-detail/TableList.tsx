@@ -1,16 +1,13 @@
 import * as React from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
-import {
-    Row, Table, Button, Popconfirm, Modal, Checkbox
-} from 'antd';
+import { Row, Table, Button, Popconfirm, Modal, Checkbox } from 'antd';
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
 import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
-// import DefaultMetric from '../public-child/DefaultMetrc';
-import IntermediateVal from '../public-child/IntermediateVal';
+import IntermediateVal from '../public-child/IntermediateVal'; // table default metric column
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
@@ -33,6 +30,7 @@ interface TableListProps {
     platform: string;
     logCollection: boolean;
     isMultiPhase: boolean;
+    isTableLoading: boolean;
 }
 
 interface TableListState {
@@ -197,7 +195,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     render() {
 
-        const { entries, tableSource, updateList } = this.props;
+        const { entries, tableSource, updateList, isTableLoading } = this.props;
         const { intermediateOption, modalVisible, isShowColumn, columnSelected } = this.state;
         let showTitle = COLUMN;
         let bgColor = '';
@@ -420,6 +418,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         dataSource={tableSource}
                         className="commonTableStyle"
                         pagination={{ pageSize: entries }}
+                        loading={isTableLoading}
                     />
                     {/* Intermediate Result Modal */}
                     <Modal
