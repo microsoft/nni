@@ -152,7 +152,16 @@ mkDirP(getLogDir())
     console.error(`Failed to create log dir: ${err.stack}`);
 });
 
-async function cleanUp() {
+function getStopSignal(): any {
+    if (process.platform === "win32") {
+        return 'SIGBREAK';
+    }
+    else{
+        return 'SIGTERM';
+    }
+}
+
+process.on(getStopSignal(), async () => {
     const log: Logger = getLogger();
     let hasError: boolean = false;
     try {
@@ -169,12 +178,4 @@ async function cleanUp() {
         await log.close();
         process.exit(hasError ? 1 : 0);
     }
-}
-
-process.on('SIGBREAK', async () => {
-    await cleanUp();
-})
-
-process.on('SIGTERM', async () => {
-    await cleanUp();
 });
