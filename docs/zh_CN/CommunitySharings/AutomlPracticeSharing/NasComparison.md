@@ -1,10 +1,10 @@
-# Neural Architecture Search Comparison
+# 神经网络结构搜索的对比
 
-*Posted by Anonymous Author*
+*匿名作者*
 
-Train and Compare NAS (Neural Architecture Search) models including Autokeras, DARTS, ENAS and NAO.
+训练和比较 NAS（神经网络架构搜索）的模型，包括 Autokeras，DARTS，ENAS 和 NAO。
 
-Their source code link is as below:
+源码链接如下：
 
 - Autokeras: <https://github.com/jhfjhfj1/autokeras>
 
@@ -14,28 +14,28 @@ Their source code link is as below:
 
 - NAO: <https://github.com/renqianluo/NAO>
 
-## Experiment Description
+## 实验说明
 
-To avoid over-fitting in **CIFAR-10**, we also compare the models in the other five datasets including Fashion-MNIST, CIFAR-100, OUI-Adience-Age, ImageNet-10-1 (subset of ImageNet), ImageNet-10-2 (another subset of ImageNet). We just sample a subset with 10 different labels from ImageNet to make ImageNet-10-1 or ImageNet-10-2.
+为了避免算法仅仅在 **CIFAR-10** 数据集上过拟合，还对比了包括 Fashion-MNIST, CIFAR-100, OUI-Adience-Age, ImageNet-10-1 (ImageNet的子集) 和 ImageNet-10-2 (ImageNet 的另一个子集) 在内的其它 5 个数据集。 分别从 ImageNet 中抽取 10 种不同类别标签的子集，组成 ImageNet10-1 和 ImageNet10-2 数据集 。
 
-| Dataset                                                                                 | Training Size | Numer of Classes | Descriptions                                                                                                                 |
-|:--------------------------------------------------------------------------------------- | ------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| [Fashion-MNIST](https://github.com/zalandoresearch/fashion-mnist)                       | 60,000        | 10               | T-shirt/top, trouser, pullover, dress, coat, sandal, shirt, sneaker, bag and ankle boot.                                     |
-| [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html)                                 | 50,000        | 10               | Airplanes, cars, birds, cats, deer, dogs, frogs, horses, ships and trucks.                                                   |
-| [CIFAR-100](https://www.cs.toronto.edu/~kriz/cifar.html)                                | 50,000        | 100              | Similar to CIFAR-10 but with 100 classes and 600 images each.                                                                |
-| [OUI-Adience-Age](https://talhassner.github.io/home/projects/Adience/Adience-data.html) | 26,580        | 8                | 8 age groups/labels (0-2, 4-6, 8-13, 15-20, 25-32, 38-43, 48-53, 60-).                                                       |
-| [ImageNet-10-1](http://www.image-net.org/)                                              | 9,750         | 10               | Coffee mug, computer keyboard, dining table, wardrobe, lawn mower, microphone, swing, sewing machine, odometer and gas pump. |
-| [ImageNet-10-2](http://www.image-net.org/)                                              | 9,750         | 10               | Drum, banj, whistle, grand piano, violin, organ, acoustic guitar, trombone, flute and sax.                                   |
+| 数据集                                                                                     | 训练数据集大小 | 类别标签数 | 数据集说明                                                       |
+|:--------------------------------------------------------------------------------------- | ------- | ----- | ----------------------------------------------------------- |
+| [Fashion-MNIST](https://github.com/zalandoresearch/fashion-mnist)                       | 60,000  | 10    | T恤上衣，裤子，套头衫，连衣裙，外套，凉鞋，衬衫，运动鞋，包和踝靴。                          |
+| [CIFAR-10](https://www.cs.toronto.edu/~kriz/cifar.html)                                 | 50,000  | 10    | 飞机，汽车，鸟类，猫，鹿，狗，青蛙，马，船和卡车。                                   |
+| [CIFAR-100](https://www.cs.toronto.edu/~kriz/cifar.html)                                | 50,000  | 100   | 和 CIFAR-10 类似，但总共有 100 个类，每个类有 600 张图。                      |
+| [OUI-Adience-Age](https://talhassner.github.io/home/projects/Adience/Adience-data.html) | 26,580  | 8     | 8 个年龄组类别 (0-2, 4-6, 8-13, 15-20, 25-32, 38-43, 48-53, 60-)。 |
+| [ImageNet-10-1](http://www.image-net.org/)                                              | 9,750   | 10    | 咖啡杯、电脑键盘、餐桌、衣柜、割草机、麦克风、秋千、缝纫机、里程表和燃气泵。                      |
+| [ImageNet-10-2](http://www.image-net.org/)                                              | 9,750   | 10    | 鼓，班吉，口哨，三角钢琴，小提琴，管风琴，原声吉他，长号，长笛和萨克斯。                        |
 
-We do not change the default fine-tuning technique in their source code. In order to match each task, the codes of input image shape and output numbers are changed.
+没有改变源码中的 Fine-tuning 方法。 为了匹配每个任务，改变了源码中模型的输入图片大小和输出类别数目的部分。
 
-Search phase time for all NAS methods is **two days** as well as the retrain time. Average results are reported based on **three repeat times**. Our evaluation machines have one Nvidia Tesla P100 GPU, 112GB of RAM and one 2.60GHz CPU (Intel E5-2690).
+所有 NAS 方法模型搜索时间和重训练时间都是**两天**。 所有结果都是基于**三次重复实验**。 评估计算机有一块 Nvidia Tesla P100 GPU、112GB 内存和 2.60GHz CPU (Intel E5-2690)。
 
-For NAO, it requires too much computing resources, so we only use NAO-WS which provides the pipeline script.
+NAO 需要太多的计算资源，因此只使用提供 Pipeline 脚本的 NAO-WS。
 
-For AutoKeras, we used 0.2.18 version because it was the latest version when we started the experiment.
+对于 AutoKeras，使用了 0.2.18 版本的代码, 因为这是开始实验时的最新版本。
 
-## NAS Performance
+## NAS 结果对比
 
 | NAS             | AutoKeras (%) | ENAS (macro) (%) | ENAS (micro) (%) | DARTS (%) | NAO-WS (%) |
 | --------------- |:-------------:|:----------------:|:----------------:|:---------:|:----------:|
