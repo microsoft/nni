@@ -86,7 +86,8 @@ TUNERS_SUPPORTING_IMPORT_DATA = {
     'Anneal',
     'GridSearch',
     'MetisTuner',
-    'BOHB'
+    'BOHB',
+    'SMAC'
 }
 
 TUNERS_NO_NEED_TO_IMPORT_DATA = {
