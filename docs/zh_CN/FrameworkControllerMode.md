@@ -106,4 +106,4 @@ frameworkcontroller 模式中的 Trial 配置使用以下主键：
 
 ## 版本校验
 
-NNI support version check feature in since version 0.6, [refer](PaiMode.md)
+从 0.6 开始，NNI 支持版本校验，详情参考[这里](PaiMode.md)。
