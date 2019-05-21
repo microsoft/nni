@@ -6,9 +6,9 @@
 
 * [支持在 Windows 上使用 NNI](./WindowsLocalMode.md) 
   * NNI 可在 Windows 上使用本机模式
-* [支持新的 Advisor: BOHB](./bohbAdvisor.md) 
+* [支持新的 Advisor: BOHB](./BohbAdvisor.md) 
   * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
-* [支持通过 nnictl 来导入导出 Experiment 数据](./NNICTLDOC.md#experiment) 
+* [支持通过 nnictl 来导入导出 Experiment 数据](./Nnictl.md#experiment) 
   * 在 Experiment 执行完后，可生成分析结果报告
   * 支持将先前的调优数据导入到 Tuner 和 Advisor 中
 * [可为 NNI Trial 任务指定 GPU](./ExperimentConfig.md#localConfig) 
@@ -31,7 +31,7 @@
 
 ### 主要功能
 
-* [版本检查](https://github.com/Microsoft/nni/blob/master/docs/en_US/PAIMode.md#version-check) 
+* [版本检查](https://github.com/Microsoft/nni/blob/master/docs/zh_CN/PaiMode.md#version-check) 
   * 检查 nniManager 和 trialKeeper 的版本是否一致
 * [提前终止的任务也可返回最终指标](https://github.com/Microsoft/nni/issues/776) 
   * 如果 includeIntermediateResults 为 true，最后一个 Assessor 的中间结果会被发送给 Tuner 作为最终结果。 includeIntermediateResults 的默认值为 false。
@@ -93,10 +93,10 @@
 
 #### 支持新的 Tuner 和 Assessor
 
-* 支持新的 [Metis Tuner](metisTuner.md)。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
+* 支持新的 [Metis Tuner](MetisTuner.md)。 **在线**超参调优的场景下，Metis 算法已经被证明非常有效。
 * 支持 [ENAS customized tuner](https://github.com/countif/enas_nni)。由 GitHub 社区用户所贡献。它是神经网络的搜索算法，能够通过强化学习来学习神经网络架构，比 NAS 的性能更好。
-* 支持 [Curve fitting （曲线拟合）Assessor](curvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
-* 进一步支持 [Weight Sharing（权重共享）](./AdvancedNAS.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
+* 支持 [Curve fitting （曲线拟合）Assessor](CurvefittingAssessor.md)，通过曲线拟合的策略来实现提前终止 Trial。
+* 进一步支持 [Weight Sharing（权重共享）](./AdvancedNas.md)：为 NAS Tuner 通过 NFS 来提供权重共享。
 
 #### 改进训练平台
 
@@ -118,7 +118,7 @@
 
 #### 支持新的 Tuner
 
-* 支持新的 [network morphism](networkmorphismTuner.md) Tuner。
+* 支持新的 [network morphism](NetworkmorphismTuner.md) Tuner。
 
 #### 改进训练平台
 
@@ -152,8 +152,8 @@
 * [Kubeflow 训练服务](./KubeflowMode.md) 
   * 支持 tf-operator
   * 使用 Kubeflow 的[分布式 Trial 样例](https://github.com/Microsoft/nni/tree/master/examples/trials/mnist-distributed/dist_mnist.py)
-* [网格搜索 Tuner](gridsearchTuner.md) 
-* [Hyperband Tuner](hyperbandAdvisor.md)
+* [网格搜索 Tuner](GridsearchTuner.md) 
+* [Hyperband Tuner](HyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
 * Web 界面 
   * 支持 hyperband Tuner
@@ -187,7 +187,7 @@
   nnictl create --port 8081 --config <config file path>
   ```
 
-* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL](NNICTLDOC.md) 查看完整帮助。
+* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL](Nnictl.md) 查看完整帮助。
 
 ### API 的新功能和更新
 
@@ -233,10 +233,10 @@
 
 ### 主要功能
 
-* 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练服务 (参考[这里](./PAIMode.md)来了解如何在 OpenPAI 下提交 NNI 任务) 
+* 支持 [OpenPAI](https://github.com/Microsoft/pai) (又称 pai) 训练服务 (参考[这里](./PaiMode.md)来了解如何在 pai 模式下提交 NNI 任务) 
   * 支持 pai 模式的训练服务。 NNI Trial 可发送至 OpenPAI 集群上运行
   * NNI Trial 输出 (包括日志和模型文件) 会被复制到 OpenPAI 的 HDFS 中。
-* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](smacTuner.md)，了解如何使用 SMAC Tuner) 
+* 支持 [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) Tuner (参考[这里](SmacTuner.md)，了解如何使用 SMAC Tuner) 
   * [SMAC](https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf) 基于 Sequential Model-Based Optimization (SMBO). 它会利用使用过的结果好的模型（高斯随机过程模型），并将随机森林引入到 SMBO 中，来处理分类参数。 NNI 的 SMAC 通过包装 [SMAC3](https://github.com/automl/SMAC3) 来支持。
 * 支持将 NNI 安装在 [conda](https://conda.io/docs/index.html) 和 Python 虚拟环境中。
 * 其它 
