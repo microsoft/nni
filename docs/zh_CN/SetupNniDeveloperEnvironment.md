@@ -57,4 +57,4 @@ Trial 启动 Experiment 来检查环境。 例如，运行命令
 
 * * *
 
-最后，希望一切顺利。 For more contribution guidelines on making PR's or issues to NNI source code, you can refer to our [Contributing](./Contributing.md) document.
+最后，希望一切顺利。 参考[贡献](./Contributing.md)文档，来了解更多创建拉取请求或问题的指南。
