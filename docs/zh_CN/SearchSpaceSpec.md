@@ -27,9 +27,9 @@
 
 * {"_type":"choice","_value":options}
   
-  * 表示变量的值是选项之一。 这里的 'options' 是一个数组。 选项的每个元素都是字符串。 It could also be a nested sub-search-space, this sub-search-space takes effect only when the corresponding element is chosen. The variables in this sub-search-space could be seen as conditional variables.
+  * 表示变量的值是选项之一。 这里的 'options' 是一个数组。 选项的每个元素都是字符串。 也可以是嵌套的子搜索空间。此子搜索空间仅在相应的元素选中后才起作用。 该子搜索空间中的变量可看作是条件变量。
   
-  * An simple [example](../../examples/trials/mnist-cascading-search-space/search_space.json) of [nested] search space definition. If an element in the options list is a dict, it is a sub-search-space, and for our built-in tuners you have to add a key '_name' in this dict, which helps you to identify which element is chosen. Accordingly, here is a [sample](../../examples/trials/mnist-cascading-search-space/sample.json) which users can get from nni with nested search space definition. Tuners which support nested search space is as follows:
+  * 这是个简单的 [nested] 搜索空间定义的[示例](../../examples/trials/mnist-cascading-search-space/search_space.json)。 如果选项列表中的元素是 dict，则它是一个子搜索空间，对于内置的 Tuner，必须在此 dict 中添加键 “_name”，这有助于标识选中的元素。 相应的，这是从 NNI 中获得的嵌套搜索空间定义的[示例](../../examples/trials/mnist-cascading-search-space/sample.json)。 以下 Tuner 支持嵌套搜索空间：
     
     * Random Search（随机搜索） 
     * TPE
