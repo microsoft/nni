@@ -67,7 +67,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             paraNodata: '',
             min: 0,
             max: 1,
-            sutrialCount: 10000000, // 假设无限大, 方便第一次打开页面时可以引起SCU update
+            sutrialCount: 10000000,
             clickCounts: 1,
             isLoadConfirm: false
         };
@@ -134,7 +134,6 @@ class Para extends React.Component<ParaProps, ParaState> {
         // specific value array
         const eachTrialParams: Array<string> = [];
         // experiment interface search space obj
-        // *** test case： 没有search space的experiment
         const searchRange = searchSpace !== undefined ? JSON.parse(searchSpace) : '';
         const dimName = Object.keys(searchRange);
         if (this._isMounted === true) {
@@ -290,7 +289,6 @@ class Para extends React.Component<ParaProps, ParaState> {
         const parallelAxis = dataObj.parallelAxis;
         const paralleData = dataObj.data;
         let visualMapObj = {};
-        // 只有一条succeed trial
         if (max === min) {
             visualMapObj = {
                 type: 'continuous',
