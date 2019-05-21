@@ -54,4 +54,4 @@ NNI CTL 模块用来控制 Neural Network Intelligence，包括开始新 Experim
 
 ## 开始使用 NNI CTL
 
-please reference to the [NNI CTL document](../docs/en_US/Nnictl.md).
+参考 [NNI CTL 文档](../docs/zh_CN/Nnictl.md)。
