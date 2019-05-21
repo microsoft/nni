@@ -6,7 +6,7 @@
 
 要定义搜索空间，需要定义变量名称、采样策略的类型及其参数。
 
-* An example of search space definition as follow:
+* 搜索空间样例如下：
 
 ```yaml
 {
@@ -31,9 +31,9 @@
   
   * An simple [example](../../examples/trials/mnist-cascading-search-space/search_space.json) of [nested] search space definition. If an element in the options list is a dict, it is a sub-search-space, and for our built-in tuners you have to add a key '_name' in this dict, which helps you to identify which element is chosen. Accordingly, here is a [sample](../../examples/trials/mnist-cascading-search-space/sample.json) which users can get from nni with nested search space definition. Tuners which support nested search space is as follows:
     
-    * Random Search 
+    * Random Search（随机搜索） 
     * TPE
-    * Anneal
+    * Anneal（退火算法）
     * Evolution
 
 * {"_type":"randint","_value":[upper]}
