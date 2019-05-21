@@ -1,4 +1,11 @@
 jobs:
+- task: NuGetCommand@2
+  inputs:
+    command: 'restore'
+    restoreSolution: 'src/nni_manager/training_service/aether/cslib/AetherClient.sln'
+    feedsToUse: 'config'
+    nugetConfigPath: 'src/nni_manager/training_service/aether/cslib/NuGet.Config'
+    versioningScheme: 'off'
 - job: 'Test'
 
   steps:
