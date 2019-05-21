@@ -109,4 +109,4 @@ tuner:
 
 ### 实现更高级的自动机器学习算法
 
-上述内容足够写出通用的 Tuner。 但有时可能需要更多的信息，例如，中间结果， Trial 的状态等等，从而能够实现更强大的自动机器学习算法。 因此，有另一个 `Advisor` 类，直接继承于 `MsgDispatcherBase`，它在 [`src/sdk/pynni/nni/msg_dispatcher_base.py`](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/msg_dispatcher_base.py)。 Please refer to [here](CustomizeAdvisor.md) for how to write a customized advisor.
+上述内容足够写出通用的 Tuner。 但有时可能需要更多的信息，例如，中间结果， Trial 的状态等等，从而能够实现更强大的自动机器学习算法。 因此，有另一个 `Advisor` 类，直接继承于 `MsgDispatcherBase`，它在 [`src/sdk/pynni/nni/msg_dispatcher_base.py`](https://github.com/Microsoft/nni/tree/master/src/sdk/pynni/nni/msg_dispatcher_base.py)。 参考[这里](CustomizeAdvisor.md)来了解如何实现自定义的 Advisor。
