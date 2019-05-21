@@ -1,10 +1,10 @@
-Builtin-Tuners
+内置 Tuner
 ==================
 
 ..  toctree::
     :maxdepth: 1
     
-    Overview<BuiltinTuner>
+    介绍<BuiltinTuner>
     TPE<HyperoptTuner>
     Random Search<HyperoptTuner>
     Anneal<HyperoptTuner>
