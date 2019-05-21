@@ -17,39 +17,22 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-'''
+"""
 hyperopt_tuner.py
-'''
+"""
 
 import copy
 import logging
 
-from enum import Enum, unique
-import numpy as np
-
 import hyperopt as hp
+import numpy as np
 from nni.tuner import Tuner
-from nni.utils import extract_scalar_reward
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
 logger = logging.getLogger('hyperopt_AutoML')
 
 
-@unique
-class OptimizeMode(Enum):
-    """
-    Optimize Mode including Minimize and Maximize
-    """
-    Minimize = 'minimize'
-    Maximize = 'maximize'
-
-
-ROOT = 'root'
-TYPE = '_type'
-VALUE = '_value'
-INDEX = '_index'
-
-
-def json2space(in_x, name=ROOT):
+def json2space(in_x, name=NodeType.ROOT):
     """
     Change json to search space in hyperopt.
 
@@ -58,16 +41,16 @@ def json2space(in_x, name=ROOT):
     in_x : dict/list/str/int/float
         The part of json.
     name : str
-        name could be ROOT, TYPE, VALUE or INDEX.
+        name could be NodeType.ROOT, NodeType.TYPE, NodeType.VALUE or NodeType.INDEX, NodeType.NAME.
     """
     out_y = copy.deepcopy(in_x)
     if isinstance(in_x, dict):
-        if TYPE in in_x.keys():
-            _type = in_x[TYPE]
+        if NodeType.TYPE in in_x.keys():
+            _type = in_x[NodeType.TYPE]
             name = name + '-' + _type
-            _value = json2space(in_x[VALUE], name=name)
+            _value = json2space(in_x[NodeType.VALUE], name=name)
             if _type == 'choice':
-                out_y = eval('hp.hp.'+_type)(name, _value)
+                out_y = eval('hp.hp.choice')(name, _value)
             else:
                 if _type in ['loguniform', 'qloguniform']:
                     _value[:2] = np.log(_value[:2])
@@ -75,83 +58,132 @@ def json2space(in_x, name=ROOT):
         else:
             out_y = dict()
             for key in in_x.keys():
-                out_y[key] = json2space(in_x[key], name+'[%s]' % str(key))
+                out_y[key] = json2space(in_x[key], name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
-            out_y.append(json2space(x_i, name+'[%d]' % i))
-    else:
-        logger.info('in_x is not a dict or a list in json2space fuinction %s', str(in_x))
+            if isinstance(x_i, dict):
+                if NodeType.NAME not in x_i.keys():
+                    raise RuntimeError(
+                        '\'_name\' key is not found in this nested search space.'
+                    )
+            out_y.append(json2space(x_i, name + '[%d]' % i))
     return out_y
 
 
-def json2parameter(in_x, parameter, name=ROOT):
+def json2parameter(in_x, parameter, name=NodeType.ROOT):
     """
     Change json to parameters.
     """
     out_y = copy.deepcopy(in_x)
     if isinstance(in_x, dict):
-        if TYPE in in_x.keys():
-            _type = in_x[TYPE]
+        if NodeType.TYPE in in_x.keys():
+            _type = in_x[NodeType.TYPE]
             name = name + '-' + _type
             if _type == 'choice':
                 _index = parameter[name]
                 out_y = {
-                    INDEX: _index,
-                    VALUE: json2parameter(in_x[VALUE][_index], parameter, name=name+'[%d]' % _index)
+                    NodeType.INDEX:
+                    _index,
+                    NodeType.VALUE:
+                    json2parameter(in_x[NodeType.VALUE][_index],
+                                   parameter,
+                                   name=name + '[%d]' % _index)
                 }
             else:
                 out_y = parameter[name]
         else:
             out_y = dict()
             for key in in_x.keys():
-                out_y[key] = json2parameter(
-                    in_x[key], parameter, name + '[%s]' % str(key))
+                out_y[key] = json2parameter(in_x[key], parameter,
+                                            name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         out_y = list()
         for i, x_i in enumerate(in_x):
+            if isinstance(x_i, dict):
+                if NodeType.NAME not in x_i.keys():
+                    raise RuntimeError(
+                        '\'_name\' key is not found in this nested search space.'
+                    )
             out_y.append(json2parameter(x_i, parameter, name + '[%d]' % i))
-    else:
-        logger.info('in_x is not a dict or a list in json2space fuinction %s', str(in_x))
     return out_y
 
 
-def json2vals(in_x, vals, out_y, name=ROOT):
+def json2vals(in_x, vals, out_y, name=NodeType.ROOT):
     if isinstance(in_x, dict):
-        if TYPE in in_x.keys():
-            _type = in_x[TYPE]
+        if NodeType.TYPE in in_x.keys():
+            _type = in_x[NodeType.TYPE]
             name = name + '-' + _type
 
             try:
-                out_y[name] = vals[INDEX]
+                out_y[name] = vals[NodeType.INDEX]
             # TODO - catch exact Exception
             except Exception:
                 out_y[name] = vals
 
             if _type == 'choice':
-                _index = vals[INDEX]
-                json2vals(in_x[VALUE][_index], vals[VALUE],
-                          out_y, name=name + '[%d]' % _index)
+                _index = vals[NodeType.INDEX]
+                json2vals(in_x[NodeType.VALUE][_index],
+                          vals[NodeType.VALUE],
+                          out_y,
+                          name=name + '[%d]' % _index)
         else:
             for key in in_x.keys():
-                json2vals(in_x[key], vals[key], out_y, name + '[%s]' % str(key))
+                json2vals(in_x[key], vals[key], out_y,
+                          name + '[%s]' % str(key))
     elif isinstance(in_x, list):
         for i, temp in enumerate(in_x):
-            json2vals(temp, vals[i], out_y, name + '[%d]' % i)
+            # nested json
+            if isinstance(temp, dict):
+                if NodeType.NAME not in temp.keys():
+                    raise RuntimeError(
+                        '\'_name\' key is not found in this nested search space.'
+                    )
+                else:
+                    json2vals(temp, vals[i], out_y, name + '[%d]' % i)
+            else:
+                json2vals(temp, vals[i], out_y, name + '[%d]' % i)
 
 
-def _split_index(params):
+def _add_index(in_x, parameter):
     """
-    Delete index infromation from params
+    change parameters in NNI format to parameters in hyperopt format(This function also support nested dict.).
+    For example, receive parameters like:
+        {'dropout_rate': 0.8, 'conv_size': 3, 'hidden_size': 512}
+    Will change to format in hyperopt, like:
+        {'dropout_rate': 0.8, 'conv_size': {'_index': 1, '_value': 3}, 'hidden_size': {'_index': 1, '_value': 512}}
     """
-    result = {}
-    for key in params:
-        if isinstance(params[key], dict):
-            value = params[key][VALUE]
+    if TYPE not in in_x: # if at the top level
+        out_y = dict()
+        for key, value in parameter.items():
+            out_y[key] = _add_index(in_x[key], value)
+        return out_y
+    elif isinstance(in_x, dict):
+        value_type = in_x[TYPE]
+        value_format = in_x[VALUE]
+        if value_type == "choice":
+            choice_name = parameter[0] if isinstance(parameter,
+                                                     list) else parameter
+            for pos, item in enumerate(
+                    value_format):  # here value_format is a list
+                if isinstance(
+                        item,
+                        list):  # this format is ["choice_key", format_dict]
+                    choice_key = item[0]
+                    choice_value_format = item[1]
+                    if choice_key == choice_name:
+                        return {
+                            INDEX:
+                            pos,
+                            VALUE: [
+                                choice_name,
+                                _add_index(choice_value_format, parameter[1])
+                            ]
+                        }
+                elif choice_name == item:
+                    return {INDEX: pos, VALUE: item}
         else:
-            value = params[key]
-        result[key] = value
-    return result
+            return parameter
 
 
 class HyperoptTuner(Tuner):
@@ -159,7 +191,7 @@ class HyperoptTuner(Tuner):
     HyperoptTuner is a tuner which using hyperopt algorithm.
     """
 
-    def __init__(self, algorithm_name, optimize_mode = 'minimize'):
+    def __init__(self, algorithm_name, optimize_mode='minimize'):
         """
         Parameters
         ----------
@@ -203,11 +235,16 @@ class HyperoptTuner(Tuner):
         search_space_instance = json2space(self.json)
         rstate = np.random.RandomState()
         trials = hp.Trials()
-        domain = hp.Domain(None, search_space_instance,
+        domain = hp.Domain(None,
+                           search_space_instance,
                            pass_expr_memo_ctrl=None)
         algorithm = self._choose_tuner(self.algorithm_name)
-        self.rval = hp.FMinIter(algorithm, domain, trials,
-                                max_evals=-1, rstate=rstate, verbose=0)
+        self.rval = hp.FMinIter(algorithm,
+                                domain,
+                                trials,
+                                max_evals=-1,
+                                rstate=rstate,
+                                verbose=0)
         self.rval.catch_eval_exceptions = False
 
     def generate_parameters(self, parameter_id):
@@ -228,7 +265,7 @@ class HyperoptTuner(Tuner):
             # but it can cause deplicate parameter rarely
             total_params = self.get_suggestion(random_search=True)
         self.total_data[parameter_id] = total_params
-        params = _split_index(total_params)
+        params = split_index(total_params)
         return params
 
     def receive_trial_result(self, parameter_id, parameters, value):
@@ -269,7 +306,7 @@ class HyperoptTuner(Tuner):
         json2vals(self.json, vals, out_y)
         vals = out_y
         for key in domain.params:
-            if key in [VALUE, INDEX]:
+            if key in [NodeType.VALUE, NodeType.INDEX]:
                 continue
             if key not in vals or vals[key] is None or vals[key] == []:
                 idxs[key] = vals[key] = []
@@ -277,17 +314,23 @@ class HyperoptTuner(Tuner):
                 idxs[key] = [new_id]
                 vals[key] = [vals[key]]
 
-        self.miscs_update_idxs_vals(rval_miscs, idxs, vals,
+        self.miscs_update_idxs_vals(rval_miscs,
+                                    idxs,
+                                    vals,
                                     idxs_map={new_id: new_id},
                                     assert_all_vals_used=False)
 
-        trial = trials.new_trial_docs([new_id], rval_specs, rval_results, rval_miscs)[0]
+        trial = trials.new_trial_docs([new_id], rval_specs, rval_results,
+                                      rval_miscs)[0]
         trial['result'] = {'loss': reward, 'status': 'ok'}
         trial['state'] = hp.JOB_STATE_DONE
         trials.insert_trial_docs([trial])
         trials.refresh()
 
-    def miscs_update_idxs_vals(self, miscs, idxs, vals,
+    def miscs_update_idxs_vals(self,
+                               miscs,
+                               idxs,
+                               vals,
                                assert_all_vals_used=True,
                                idxs_map=None):
         """
@@ -337,9 +380,10 @@ class HyperoptTuner(Tuner):
         algorithm = rval.algo
         new_ids = rval.trials.new_trial_ids(1)
         rval.trials.refresh()
-        random_state = rval.rstate.randint(2**31-1)
+        random_state = rval.rstate.randint(2**31 - 1)
         if random_search:
-            new_trials = hp.rand.suggest(new_ids, rval.domain, trials, random_state)
+            new_trials = hp.rand.suggest(new_ids, rval.domain, trials,
+                                         random_state)
         else:
             new_trials = algorithm(new_ids, rval.domain, trials, random_state)
         rval.trials.refresh()
@@ -365,7 +409,8 @@ class HyperoptTuner(Tuner):
         """
         _completed_num = 0
         for trial_info in data:
-            logger.info("Importing data, current processing progress %s / %s" %(_completed_num, len(data)))
+            logger.info("Importing data, current processing progress %s / %s" %
+                        (_completed_num, len(data)))
             _completed_num += 1
             if self.algorithm_name == 'random_search':
                 return
@@ -373,8 +418,17 @@ class HyperoptTuner(Tuner):
             _params = trial_info["parameter"]
             assert "value" in trial_info
             _value = trial_info['value']
+            if not _value:
+                logger.info(
+                    "Useless trial data, value is %s, skip this trial data." %
+                    _value)
+                continue
             self.supplement_data_num += 1
-            _parameter_id = '_'.join(["ImportData", str(self.supplement_data_num)])
-            self.total_data[_parameter_id] = _params
-            self.receive_trial_result(parameter_id=_parameter_id, parameters=_params, value=_value)
+            _parameter_id = '_'.join(
+                ["ImportData", str(self.supplement_data_num)])
+            self.total_data[_parameter_id] = _add_index(in_x=self.json,
+                                                        parameter=_params)
+            self.receive_trial_result(parameter_id=_parameter_id,
+                                      parameters=_params,
+                                      value=_value)
         logger.info("Successfully import data to TPE/Anneal tuner.")

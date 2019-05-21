@@ -77,7 +77,7 @@ class NNIDataStore implements DataStore {
         try {
             await this.db.storeExperimentProfile(experimentProfile);
         } catch (err) {
-            throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
+            throw NNIError.FromError(err, 'Datastore error: ');
         }
     }
 
@@ -105,7 +105,7 @@ class NNIDataStore implements DataStore {
 
         return this.db.storeTrialJobEvent(event, trialJobId, timestamp, hyperParameter, jobDetail).catch(
                 (err: Error) => {
-                    throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
+                    throw NNIError.FromError(err, 'Datastore error: ');
                 }
             );
     }
@@ -163,7 +163,7 @@ class NNIDataStore implements DataStore {
                 timestamp: Date.now()
             }));
         } catch (err) {
-            throw new NNIError('Datastore error', `Datastore error: ${err.message}`, err);
+            throw NNIError.FromError(err, 'Datastore error');
         }
     }
 

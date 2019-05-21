@@ -1,14 +1,15 @@
-# NNI Annotation 
+# NNI Annotation
 
 ## Overview
 
-To improve user experience and reduce user effort, we design an annotation grammar. Using NNI annotation, users can adapt their code to NNI just by adding some standalone annotating strings, which does not affect the execution of the original code. 
+To improve user experience and reduce user effort, we design an annotation grammar. Using NNI annotation, users can adapt their code to NNI just by adding some standalone annotating strings, which does not affect the execution of the original code.
 
 Below is an example:
 
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
 learning_rate = 0.1
+
 ```
 The meaning of this example is that NNI will choose one of several values (0.1, 0.01, 0.001) to assign to the learning_rate variable. Specifically, this first line is an NNI annotation, which is a single string. Following is an assignment statement. What nni does here is to replace the right value of this assignment statement according to the information provided by the annotation line.
 
