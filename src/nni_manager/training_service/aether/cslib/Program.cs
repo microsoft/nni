@@ -112,10 +112,12 @@ namespace AetherClient
                 var response = this.client.Get(request);
 
                 var serializer = new RestSharp.Serialization.Json.JsonSerializer();
-
                 info = serializer.Deserialize<NNITrialInfo>(response);
 
+                Console.WriteLine(String.Format("Loading graph from file: {0}", info.aetherConfig.baseGraph));
                 IVisualGraph graph = environment.DeserializeGraph(File.ReadAllText(info.aetherConfig.baseGraph));
+
+                Console.WriteLine(String.Format("Setting hyper-parameters: {0}", info.form.hyperParameters.value));
                 hparams = JsonConvert.DeserializeObject<NNIHparam>(info.form.hyperParameters.value);
                 foreach (var item in hparams.parameters)
                 {
@@ -127,6 +129,7 @@ namespace AetherClient
                 }
 
                 this.experimentId = environment.SubmitExperiment(new ExperimentCreationInfo { Description = String.Format("NNI Experiment {0}/{1}", this.expId, this.trialId) }, graph);
+                Console.WriteLine(String.Format("Experiment Submitted: {0}", this.experimentId));
 
                 GuidBody body = new GuidBody { guid = this.experimentId };
 
@@ -149,6 +152,7 @@ namespace AetherClient
                 try
                 {
                     ExperimentStatusCode statusTmp = environment.GetExperiment(this.experimentId).GetStatus();
+                    Console.WriteLine(String.Format("Experiment {0} status updated: {1}", this.experimentId, statusTmp));
                     if (this.status == statusTmp)
                     {
                         continue;
