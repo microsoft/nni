@@ -148,11 +148,11 @@ class AetherTrainingService implements TrainingService {
         const clientProc: ChildProcess = spawn(this.aetherClientExePath, clientCmdArgs, {stdio: ['pipe', stdout, stderr]});
         clientProc.on('exit', (code) => {
             if (code == 1) {
-                return Promise.reject( new Error(`Aether Client process for trial ${trialJobId} exited with error, please check ${path.join(trialWorkingDirectory, 'stderr')} to see details`));
+                throw new Error(`Aether Client process for trial ${trialJobId} exited with error, please check ${path.join(trialWorkingDirectory, 'stderr')} to see details`);
             }
         });
         clientProc.on('error', (err) => {
-                return Promise.reject(new Error(`Failed to start subprocess: ${err}`));
+                throw new Error(`Failed to start subprocess: ${err}`);
         });
 
         const trialDetail: AetherTrialJobDetail = new AetherTrialJobDetail(
