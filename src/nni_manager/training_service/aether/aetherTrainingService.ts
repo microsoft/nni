@@ -45,14 +45,6 @@ import { AssertionError } from 'assert';
 @component.Singleton
 class AetherTrainingService implements TrainingService {
 
-    public get isMultiPhaseJobSupported(): boolean {
-        return false;
-    }
-
-    public get MetricsEmitter(): EventEmitter {
-        return this.metricsEmitter;
-    }
-
     private resolveAetherClient(): string {
         if (path.extname(__filename) == '.ts') {
             // testing mode
@@ -99,7 +91,7 @@ class AetherTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    public async listTrialJobs(): Promise<AetherTrialJobDetail[]> {
+    public listTrialJobs(): Promise<AetherTrialJobDetail[]> {
         const jobs: AetherTrialJobDetail[] = [];
         for (const [key, value] of this.trialJobsMap) {
             if (value.form.jobType === 'TRIAL') {
@@ -110,75 +102,13 @@ class AetherTrainingService implements TrainingService {
         return Promise.resolve(jobs);
     }
 
-    public async getTrialJob(trialJobId: string): Promise<AetherTrialJobDetail> {
+    public getTrialJob(trialJobId: string): Promise<AetherTrialJobDetail> {
         const trial: AetherTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (!trial) {
             return Promise.reject(new Error(`Trial job ${trialJobId} not found`));
         }
 
         return Promise.resolve(trial);
-    }
-
-    public async submitTrialJob(form: JobApplicationForm): Promise<AetherTrialJobDetail> {
-        const deferred: Deferred<AetherTrialJobDetail> = new Deferred<AetherTrialJobDetail>();
-        if (!this.nniManagerIpConfig) {
-            return Promise.reject(new Error('nnimanager ip not initialized'));
-        }
-        if (!this.aetherJobConfig) {
-            return Promise.reject(new Error('Aether job config not initialized'));
-        }
-        if (!this.restServerAddress) {
-            return Promise.reject(new Error('Training Service Restful server for Aether Client not initialized'));
-        }
-
-        try {
-            const trialJobId: string = uniqueString(5);
-            const trialSequencdId: number = this.generateSequenceId();
-            const trialWorkingDirectory: string = path.join(getExperimentRootDir(), 'trials', trialJobId);
-            await mkDirP(trialWorkingDirectory);
-
-            // prepare daemon process, redirect stdout & stderr
-            const clientCmdArgs: string[] = [this.restServerAddress, getExperimentId(), trialJobId];
-            this.log.info(`execute command: ${this.aetherClientExePath} ${clientCmdArgs.join(' ')}`);
-            const stderr = fs.createWriteStream(path.join(trialWorkingDirectory, 'stderr'), );
-            const stderr_open: Deferred<void> = new Deferred<void>();
-            stderr.on('open', () => {stderr_open.resolve();});
-            const stdout = fs.createWriteStream(path.join(trialWorkingDirectory, 'stdout'));
-            const stdout_open: Deferred<void> = new Deferred<void>();
-            stdout.on('open', () => {stdout_open.resolve();});
-            await Promise.all([stderr_open.promise, stdout_open.promise]);
-            const clientProc: ChildProcess = spawn(this.aetherClientExePath, clientCmdArgs, {stdio: ['pipe', stdout, stderr]});
-            clientProc.on('exit', (code) => {
-                if (code == 1) {
-                    return Promise.reject( new Error(`Aether Client process for trial ${trialJobId} exited with error, please check ${path.join(trialWorkingDirectory, 'stderr')} to see details`));
-                }
-            });
-            clientProc.on('error', (err) => {
-                this.log.error(`Failed to start subprocess: ${err}`);
-            });
-
-            const trialDetail: AetherTrialJobDetail = new AetherTrialJobDetail(
-                trialJobId,
-                'WAITING',
-                Date.now(),
-                trialWorkingDirectory,
-                form,
-                trialSequencdId,
-                clientProc,
-                this.aetherJobConfig
-            );
-            this.trialJobsMap.set(trialJobId, trialDetail);
-            const guid: string = await trialDetail.guid.promise;
-            trialDetail.url = `aether:\\experiment\\${guid}`;
-            deferred.resolve(trialDetail);
-        } catch (err) {
-            return Promise.reject(err);
-        }
-        return deferred.promise;
-    }
-
-    public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<AetherTrialJobDetail> {
-        throw new MethodNotImplementedError();
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
@@ -188,6 +118,67 @@ class AetherTrainingService implements TrainingService {
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.off('metric', listener);
     }
+
+    public async submitTrialJob(form: JobApplicationForm): Promise<AetherTrialJobDetail> {
+        if (!this.nniManagerIpConfig) {
+            throw new Error('nnimanager ip not initialized');
+        }
+        if (!this.aetherJobConfig) {
+            throw new Error('Aether job config not initialized');
+        }
+        if (!this.restServerAddress) {
+            throw new Error('Training Service Restful server for Aether Client not initialized');
+        }
+
+        const trialJobId: string = uniqueString(5);
+        const trialSequencdId: number = this.generateSequenceId();
+        const trialWorkingDirectory: string = path.join(getExperimentRootDir(), 'trials', trialJobId);
+        await mkDirP(trialWorkingDirectory);
+
+        // prepare daemon process, redirect stdout & stderr
+        const clientCmdArgs: string[] = [this.restServerAddress, getExperimentId(), trialJobId];
+        this.log.info(`execute command: ${this.aetherClientExePath} ${clientCmdArgs.join(' ')}`);
+        const stderr = fs.createWriteStream(path.join(trialWorkingDirectory, 'stderr'), );
+        const stderr_open: Deferred<void> = new Deferred<void>();
+        stderr.on('open', () => {stderr_open.resolve();});
+        const stdout = fs.createWriteStream(path.join(trialWorkingDirectory, 'stdout'));
+        const stdout_open: Deferred<void> = new Deferred<void>();
+        stdout.on('open', () => {stdout_open.resolve();});
+        await Promise.all([stderr_open.promise, stdout_open.promise]);
+        const clientProc: ChildProcess = spawn(this.aetherClientExePath, clientCmdArgs, {stdio: ['pipe', stdout, stderr]});
+        clientProc.on('exit', (code) => {
+            if (code == 1) {
+                return Promise.reject( new Error(`Aether Client process for trial ${trialJobId} exited with error, please check ${path.join(trialWorkingDirectory, 'stderr')} to see details`));
+            }
+        });
+        clientProc.on('error', (err) => {
+                return Promise.reject(new Error(`Failed to start subprocess: ${err}`));
+        });
+
+        const trialDetail: AetherTrialJobDetail = new AetherTrialJobDetail(
+            trialJobId,
+            'WAITING',
+            Date.now(),
+            trialWorkingDirectory,
+            form,
+            trialSequencdId,
+            clientProc,
+            this.aetherJobConfig
+        );
+        this.trialJobsMap.set(trialJobId, trialDetail);
+        const guid: string = await trialDetail.guid.promise;
+        trialDetail.url = `aether:\\experiment\\${guid}`;
+        return trialDetail;
+    }
+
+    public async updateTrialJob(trialJobId: string, form: JobApplicationForm): Promise<AetherTrialJobDetail> {
+        throw new MethodNotImplementedError();
+    }
+
+    public get isMultiPhaseJobSupported(): boolean {
+        return false;
+    }
+
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trial: AetherTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (!trial) {
@@ -212,7 +203,7 @@ class AetherTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
+    public setClusterMetadata(key: string, value: string): Promise<void> {
 
         switch (key) {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
@@ -229,9 +220,7 @@ class AetherTrainingService implements TrainingService {
     }
 
     public async getClusterMetadata(key: string): Promise<string> {
-        const deferred: Deferred<string> = new Deferred<string>();
-
-        return deferred.promise;
+        throw new MethodNotImplementedError();
     }
 
     public async cleanUp(): Promise<void> {
@@ -240,6 +229,10 @@ class AetherTrainingService implements TrainingService {
 
         // cancel running jobs?
         return Promise.resolve();
+    }
+
+    public get MetricsEmitter(): EventEmitter {
+        return this.metricsEmitter;
     }
 
     private generateSequenceId(): number {

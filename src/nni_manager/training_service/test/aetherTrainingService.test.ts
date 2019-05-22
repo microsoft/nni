@@ -91,7 +91,7 @@ describe(`Unit Test for Aether Training Service`, () => {
         aetherTrainingService.addTrialJobMetricListener(listener);
         
         const metric_data: string = await metric_deferred.promise;
-        chai.expect(metric_data).to.be.equals(0.618);
+        chai.expect(metric_data).to.have.property('value');
         aetherTrainingService.removeTrialJobMetricListener(listener);
         return Promise.resolve();
     }).timeout(100000);

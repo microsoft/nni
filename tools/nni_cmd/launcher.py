@@ -481,8 +481,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             if err_msg:
                 print_error('Failed! Error is: {}'.format(err_msg))
             try:
-                cmds = ['pkill', str(rest_process.pid)]
-                call(cmds)
+                kill_command(rest_process.pid)
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)

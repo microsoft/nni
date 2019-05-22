@@ -28,10 +28,6 @@ jobs:
     displayName: 'generate config files'
   - script: |
       cd test
-      python config_test.py --ts local --local_gpu --exclude smac,bohb
-    displayName: 'Examples and advanced features tests on local machine'
-  - script: |
-      cd test
       powershell.exe -file unittest.ps1
     displayName: 'unit test'
   - script: |
@@ -46,3 +42,7 @@ jobs:
       cd test
       python metrics_test.py
     displayName: 'Trial job metrics test'
+  - script: |
+      cd test
+      python config_test.py --ts local --local_gpu --exclude smac,bohb
+    displayName: 'Examples and advanced features tests on local machine'

@@ -106,9 +106,13 @@ export class AetherJobRestServer extends RestServer {
                 }
                 trial.status = req.body.status;
                 if (req.body.status === 'RUNNING') {
-                    trial.startTime = Date.now();
+                    if (trial.startTime == undefined) {
+                        trial.startTime = Date.now();
+                    }
                 } else if (req.body.status === 'SUCCEEDED' || req.body.status === 'FAILED' || req.body.status === 'USER_CANCELED') {
-                    trial.endTime = Date.now();
+                    if (trial.endTime == undefined) {
+                        trial.endTime = Date.now();
+                    }
                 }
             } catch (err) {
                 this.log.error(err.message);
