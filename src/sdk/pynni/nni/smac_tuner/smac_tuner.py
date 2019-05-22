@@ -21,23 +21,21 @@
 smac_tuner.py
 """
 
-from nni.tuner import Tuner
-from nni.utils import OptimizeMode, extract_scalar_reward
-
 import sys
 import logging
 import numpy as np
-import json_tricks
-from enum import Enum, unique
-from .convert_ss_to_scenario import generate_scenario
+
+from nni.tuner import Tuner
+from nni.utils import OptimizeMode, extract_scalar_reward
 
 from smac.utils.io.cmd_reader import CMDReader
 from smac.scenario.scenario import Scenario
 from smac.facade.smac_facade import SMAC
 from smac.facade.roar_facade import ROAR
 from smac.facade.epils_facade import EPILS
-
 from ConfigSpaceNNI import Configuration
+
+from .convert_ss_to_scenario import generate_scenario
 
 
 class SMACTuner(Tuner):
@@ -303,4 +301,4 @@ class SMACTuner(Tuner):
                 self.first_one = False
             else:
                 self.smbo_solver.nni_smac_receive_runs(config, _value)
-        self.logger.info("Successfully import data to grid search tuner, total data: %d, imported data: %d.", len(data), _completed_num)
+        self.logger.info("Successfully import data to smac tuner, total data: %d, imported data: %d.", len(data), _completed_num)
