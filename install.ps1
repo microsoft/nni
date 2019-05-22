@@ -133,7 +133,6 @@ if (!(Get-Command msbuild | Test-Path)) {
     exit
 }
 
-cmd /c $NNI_NUGET restore
 cmd /c 'msbuild -Property:Configure=Release;OutputPath=..\..\..\dist\aether'
 
 # Building WebUI
