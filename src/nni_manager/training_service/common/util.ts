@@ -43,7 +43,7 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
         throw new Error(`Call count file error: ${error}`);
     }
 
-    if (fileCount !== undefined && fileCount !== null && fileCount > 1000) {
+    if (fileCount !== undefined && fileCount > 1000) {
         const errMessage: string = `Too many files(${fileCount} found}) in ${codeDir},`
                                     + ` please check if it's a valid code dir`;
         throw new Error(errMessage);

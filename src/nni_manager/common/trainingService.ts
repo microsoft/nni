@@ -91,6 +91,7 @@ interface TrialJobMetric {
  * define TrainingServiceError
  */
 class TrainingServiceError extends Error {
+    // tslint:disable-next-line: prefer-readonly
     private errCode: number;
 
     constructor(errorCode: number, errorMessage: string) {
@@ -126,7 +127,7 @@ abstract class TrainingService {
  */
 class NNIManagerIpConfig {
     public readonly nniManagerIp: string;
-    constructor(nniManagerIp: string){
+    constructor(nniManagerIp: string) {
         this.nniManagerIp = nniManagerIp;
     }
 }
@@ -136,5 +137,3 @@ export {
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
     HostJobApplicationForm, JobApplicationForm, JobType, NNIManagerIpConfig
 };
-
-

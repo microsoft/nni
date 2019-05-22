@@ -59,7 +59,7 @@ export abstract class ClusterJobRestServer extends RestServer {
     }
 
     public get clusterRestServerPort(): number {
-        if (this.port === undefined || this.port === null) {
+        if (this.port === undefined) {
             throw new Error('PAI Rest server port is undefined');
         }
 
@@ -83,6 +83,7 @@ export abstract class ClusterJobRestServer extends RestServer {
     }
 
     // Abstract method to handle trial metrics data
+    // tslint:disable-next-line:no-any
     protected abstract handleTrialMetrics(jobId : string, trialMetrics : any[]) : void;
 
     // tslint:disable: no-unsafe-any typedef
@@ -147,7 +148,8 @@ export abstract class ClusterJobRestServer extends RestServer {
                 if (req.body.tag === 'trial' && req.body.msg !== undefined) {
                     const metricsContent = req.body.msg.match(this.NNI_METRICS_PATTERN);
                     if (metricsContent && metricsContent.groups) {
-                        this.handleTrialMetrics(req.params.trialId, [metricsContent.groups['metrics']]);
+                        const key: string = 'metrics';
+                        this.handleTrialMetrics(req.params.trialId, [metricsContent.groups[key]]);
                         skipLogging = true;
                     }
                 }
@@ -175,3 +177,4 @@ export abstract class ClusterJobRestServer extends RestServer {
         return router;
     }
 }
+// tslint:enable: no-unsafe-any typedef

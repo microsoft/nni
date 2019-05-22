@@ -179,7 +179,7 @@ class LocalTrainingService implements TrainingService {
                     const state: string = await fs.promises.readFile(path.join(trialJob.workingDirectory, '.nni', 'state'), 'utf8');
                     const match: RegExpMatchArray | null = state.trim()
                         .match(/^(\d+)\s+(\d+)/);
-                    if (match !== undefined && match !== null) {
+                    if (match !== null) {
                         const { 1: code, 2: timestamp } = match;
                         if (parseInt(code, 10) === 0) {
                             this.setTrialJobStatus(trialJob, 'SUCCEEDED');
