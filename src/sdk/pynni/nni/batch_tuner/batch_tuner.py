@@ -100,6 +100,13 @@ class BatchTuner(Tuner):
         data:
             a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
         """
+        if len(self.values) == 0:
+            logger.info("Search space has not been initialized, skip this data import")
+            return
+
+        self.values = self.values[(self.count+1):]
+        self.count = -1
+
         _completed_num = 0
         for trial_info in data:
             logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))
@@ -111,5 +118,7 @@ class BatchTuner(Tuner):
             if not _value:
                 logger.info("Useless trial data, value is %s, skip this trial data.", _value)
                 continue
-
+            _completed_num += 1
+            if _params in self.values:
+                self.values.remove(_params)
         logger.info("Successfully import data to batch tuner, total data: %d, imported data: %d.", len(data), _completed_num)
