@@ -97,11 +97,11 @@ export class GPUScheduler {
                     rmMeta.gpuReservation.delete(gpuIndex);
                     let occupiedTrialNumPerGPU = this.machineOccupiedTrialNumPerGPUMap.get(rmMeta);
                     if(occupiedTrialNumPerGPU === undefined) {
-                        throw new Error(`gpu scheduler error!`);
+                        throw new Error(`gpu scheduler error, occupiedTrialNumPerGPU is empty!`);
                     }
                     let num = occupiedTrialNumPerGPU.get(gpuIndex);
                     if(num === undefined) {
-                        throw new Error(`gpu scheduler error!`);
+                        throw new Error(`gpu scheduler error, occupiedTrialNumPerGPU in ${gpuIndex} is empty!`);
                     }
                     occupiedTrialNumPerGPU.set(gpuIndex, num - 1)
                     this.machineOccupiedTrialNumPerGPUMap.set(rmMeta, occupiedTrialNumPerGPU);
