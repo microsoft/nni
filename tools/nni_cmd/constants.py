@@ -87,12 +87,12 @@ TUNERS_SUPPORTING_IMPORT_DATA = {
     'GridSearch',
     'MetisTuner',
     'BOHB',
-    'SMAC'
+    'SMAC',
+    'BatchTuner'
 }
 
 TUNERS_NO_NEED_TO_IMPORT_DATA = {
     'Random',
-    'Batch_tuner',
     'Hyperband'
 }
 
