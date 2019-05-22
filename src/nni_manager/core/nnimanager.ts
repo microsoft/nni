@@ -58,6 +58,7 @@ class NNIManager implements Manager {
     private status: NNIManagerStatus;
     private waitingTrials: string[];
     private trialJobs: Map<string, TrialJobDetail>;
+    private trialDataForTuner: string;
 
     constructor() {
         this.currSubmittedTrialNum = 0;
@@ -68,6 +69,7 @@ class NNIManager implements Manager {
         this.dispatcherPid = 0;
         this.waitingTrials = [];
         this.trialJobs = new Map<string, TrialJobDetail>();
+        this.trialDataForTuner = '';
 
         this.log = getLogger();
         this.dataStore = component.get(DataStore);
@@ -205,6 +207,13 @@ class NNIManager implements Manager {
         await Promise.all(allTrialJobs
             .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
             .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
+
+        // Collect generated trials and imported trials
+        let trialDataForTuner = [];
+        for (const trialJob of allTrialJobs) {
+            trialDataForTuner.push({'parameter': trialJob.hyperParameters[0], 'value': , 'id': });
+        }
+        await this.dataStore.XXX
 
         if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
             this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
@@ -644,6 +653,12 @@ class NNIManager implements Manager {
         switch (commandType) {
             case INITIALIZED:
                 // Tuner is intialized, search space is set, request tuner to generate hyper parameters
+                if (this.trialDataForTuner.length > 0) {
+                    if (this.dispatcher === undefined) {
+                        throw new Error('Dispatcher error: tuner has not been setup');
+                    }
+                    this.dispatcher.sendCommand(IMPORT_DATA, data);
+                }
                 this.requestTrialJobs(this.experimentProfile.params.trialConcurrency);
                 break;
             case NEW_TRIAL_JOB:
