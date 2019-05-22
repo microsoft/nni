@@ -69,14 +69,13 @@ export namespace SSHClientUtility {
      * @param remoteFilePath the target path in remote machine
      * @param sshClient SSH Client
      */
-    /* tslint:disable:no-null-keyword */
     export function copyFileToRemote(localFilePath : string, remoteFilePath : string, sshClient : Client) : Promise<boolean> {
         const log: Logger = getLogger();
         log.debug(`copyFileToRemote: localFilePath: ${localFilePath}, remoteFilePath: ${remoteFilePath}`);
         assert(sshClient !== undefined);
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         sshClient.sftp((err : Error, sftp : SFTPWrapper) => {
-            if (err != null) {
+            if (err !== undefined && err !== null) {
                 log.error(`copyFileToRemote: ${err.message}, ${localFilePath}, ${remoteFilePath}`);
                 deferred.reject(err);
 
@@ -85,7 +84,7 @@ export namespace SSHClientUtility {
             assert(sftp !== undefined);
             sftp.fastPut(localFilePath, remoteFilePath, (fastPutErr : Error) => {
                 sftp.end();
-                if (fastPutErr != null) {
+                if (fastPutErr !== undefined && fastPutErr !== null) {
                     deferred.reject(fastPutErr);
                 } else {
                     deferred.resolve(true);
@@ -111,7 +110,7 @@ export namespace SSHClientUtility {
         let exitCode : number;
 
         client.exec(command, (err : Error, channel : ClientChannel) => {
-            if (err != null) {
+            if (err !== undefined && err !== null) {
                 log.error(`remoteExeCommand: ${err.message}`);
                 deferred.reject(err);
 
@@ -119,7 +118,7 @@ export namespace SSHClientUtility {
             }
 
             channel.on('data', (data : any, dataStderr : any) => {
-                if (dataStderr != null) {
+                if (dataStderr !== undefined && dataStderr !== null) {
                     stderr += data.toString();
                 } else {
                     stdout += data.toString();
@@ -141,7 +140,7 @@ export namespace SSHClientUtility {
     export function getRemoteFileContent(filePath: string, sshClient: Client): Promise<string> {
         const deferred: Deferred<string> = new Deferred<string>();
         sshClient.sftp((err: Error, sftp : SFTPWrapper) => {
-            if (err != null) {
+            if (err !== undefined && err !== null) {
                 getLogger()
                   .error(`getRemoteFileContent: ${err.message}`);
                 deferred.reject(new Error(`SFTP error: ${err.message}`));
@@ -174,4 +173,5 @@ export namespace SSHClientUtility {
 
         return deferred.promise;
     }
+    // tslint:enable:no-unsafe-any no-any prefer-type-cast
 }
