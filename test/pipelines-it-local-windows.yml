@@ -1,6 +1,4 @@
 jobs:
-
-
 - job: 'Test'
   steps:
   - task: NuGetToolInstaller@1
