@@ -24,7 +24,7 @@ import os
 import sys
 import shutil
 import string
-from subprocess import Popen, PIPE, call, check_output, check_call
+from subprocess import Popen, PIPE, call, check_output, check_call, CalledProcessError
 import tempfile
 from nni.constants import ModuleName, AdvisorModuleName
 from nni_annotation import *
@@ -353,9 +353,9 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
         module_name = AdvisorModuleName.get(package_name)
     if package_name and module_name:
         try:
-            exec('import %s' % module_name)
-        except ImportError:
-            print_error('%s should be installed through \'nnictl install --name %s\''%(package_name, package_name))
+            check_call([sys.executable, '-c', 'import %s'%(module_name)], stdout=PIPE, stderr=PIPE)
+        except CalledProcessError as e:
+            print_error('%s should be installed through \'nnictl package install --name %s\''%(package_name, package_name))
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
