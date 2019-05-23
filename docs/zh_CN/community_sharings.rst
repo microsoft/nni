@@ -8,4 +8,5 @@
     :maxdepth: 2
 
     NNI 经验分享<nni_practice_sharing>
-    自动机器学习经验分享<automl_practice_sharing>
+    Neural Architecture Search Comparison<CommunitySharings/NasComparison>
+    Hyper-parameter Tuning Algorithm Comparsion<CommunitySharings/HpoComparison>
