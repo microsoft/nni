@@ -12,11 +12,6 @@ jobs:
       nugetConfigPath: 'src/nni_manager/training_service/aether/cslib/NuGet.Config'
       externalFeedCredentials: 'AzureDstsManagement'
       versioningScheme: 'off'
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.x'
-      addToPath: true
-      architecture: 'x64'
   - script: |
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
