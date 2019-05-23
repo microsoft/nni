@@ -357,13 +357,18 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     });
 
     let fileCount: number = -1;
-    cpp.exec(`find ${directory} -type f | wc -l`).then((result) => {
+    let cmd: string;
+    if(process.platform === "win32") {
+        cmd = `powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`
+    } else {
+        cmd = `find ${directory} -type f | wc -l`;   
+    }
+    cpp.exec(cmd).then((result) => {
         if(result.stdout && parseInt(result.stdout)) {
             fileCount = parseInt(result.stdout);            
         }
         deferred.resolve(fileCount);
     });
-
     return Promise.race([deferred.promise, delayTimeout]).finally(() => {
         clearTimeout(timeoutId);
     });
@@ -459,6 +464,16 @@ function getNewLine(): string{
     }
 }
 
+/**
+ * Use '/' to join path instead of '\' for all kinds of platform
+ * @param path 
+ */
+function unixPathJoin(...paths: any[]): string {
+    const dir: string = paths.filter((path: any) => path !== '').join('/');
+    if (dir === '') return '.';
+    return dir;
+}
+
 export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, 
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin,
     mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine };
