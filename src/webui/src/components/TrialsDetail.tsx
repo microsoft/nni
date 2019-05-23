@@ -253,32 +253,19 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     }
 
     handleEntriesSelect = (value: string) => {
-        switch (value) {
-            case '20':
-                if (this._isMounted) {
-                    this.setState(() => ({ entriesTable: 20 }));
-                }
-                break;
-            case '50':
-                if (this._isMounted) {
-                    this.setState(() => ({ entriesTable: 50 }));
-                }
-                break;
-            case '100':
-                if (this._isMounted) {
-                    this.setState(() => ({ entriesTable: 100 }));
-                }
-                break;
-            case 'all':
-                const { tableListSource } = this.state;
-                if (this._isMounted) {
-                    this.setState(() => ({
-                        entriesInSelect: 'all',
-                        entriesTable: tableListSource.length
-                    }));
-                }
-                break;
-            default:
+        // user select isn't 'all'
+        if (value !== 'all') {
+            if (this._isMounted) {
+                this.setState(() => ({ entriesTable: parseInt(value) }));
+            }
+        } else {
+            const { tableListSource } = this.state;
+            if (this._isMounted) {
+                this.setState(() => ({
+                    entriesInSelect: 'all',
+                    entriesTable: tableListSource.length
+                }));
+            }
         }
     }
 
@@ -370,7 +357,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             </Row>
                         </TabPane>
                         <TabPane tab={this.titleOfDuration} key="3">
-                            <Duration source={source} whichGraph={whichGraph}/>
+                            <Duration source={source} whichGraph={whichGraph} />
                             {/* <Duration source={source} whichGraph={whichGraph} clickCounts={durationCounts} /> */}
                         </TabPane>
                         <TabPane tab={this.titleOfIntermediate} key="4">
