@@ -108,8 +108,11 @@ namespace AetherClient
             #region submitTrialJob
             try
             {
-                var request = new RestRequest(String.Format("/api/v1/nni-aether/trial-meta/{0}/{1}", this.expId, this.trialId), DataFormat.Json);
+                string requestUri = String.Format("/api/v1/nni-aether/trial-meta/{0}/{1}", this.expId, this.trialId);
+                var request = new RestRequest(requestUri, DataFormat.Json);
+                Console.WriteLine(String.Format("Sending request: {0}", requestUri));
                 var response = this.client.Get(request);
+                Console.WriteLine(String.Format("Response is: {0}", response.Content));
 
                 var serializer = new RestSharp.Serialization.Json.JsonSerializer();
                 info = serializer.Deserialize<NNITrialInfo>(response);
@@ -133,10 +136,12 @@ namespace AetherClient
 
                 GuidBody body = new GuidBody { guid = this.experimentId };
 
-                var reqGuid = new RestRequest(String.Format("/api/v1/nni-aether/update-guid/{0}/{1}", this.expId, this.trialId), Method.POST, DataFormat.Json);
+                string requestUri_guid = String.Format("/api/v1/nni-aether/update-guid/{0}/{1}", this.expId, this.trialId);
+                var reqGuid = new RestRequest(requestUri_guid, Method.POST, DataFormat.Json);
                 reqGuid.AddJsonBody(body);
+                Console.WriteLine(String.Format("Sending request: {0}", requestUri_guid));
                 var resGuid = this.client.Execute(reqGuid);
-                Console.WriteLine(resGuid.Content);
+                Console.WriteLine(String.Format("Receive: {0}", resGuid.Content));
             }
             catch (Exception e) {
                 Console.Error.WriteLine(String.Format("Exception while submitting trial job: {0}", e));

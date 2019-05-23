@@ -48,24 +48,26 @@ describe(`Unit Test for Aether Training Service`, () => {
         }
     }
 
-    before(() => {
+    before(async () => {
         chai.should();
         chai.use(chaiAsPromised);
         prepareUnitTest();
-    })
 
-    after(() => {
-        cleanupUnitTest();
-    })
-
-    beforeEach(async () => {
         aetherTrainingService = component.get(AetherTrainingService);
         await aetherTrainingService.setClusterMetadata(TrialConfigMetadataKey.NNI_MANAGER_IP, `{"nniManagerIp": "127.0.0.1"}`); 
         aetherTrainingService.run();
     })
 
-    afterEach(() => {
+    after(() => {
+        console.info("calling cleanup");
         aetherTrainingService.cleanUp();
+        cleanupUnitTest();
+    })
+
+    beforeEach(() => {
+    })
+
+    afterEach(() => {
     })
 
     it('Submit job and collect metric', async () => {
@@ -83,14 +85,12 @@ describe(`Unit Test for Aether Training Service`, () => {
             chai.expect(jobList).to.be.lengthOf(1);
         });
 
-        const metric_deferred = new Deferred<string>();
         const listener = function f1(metric: any) {
-            chai.expect(metric.id).to.be.equals(jobDetail.id);
-            metric_deferred.resolve(metric.data);
+            chai.expect(Promise.resolve(metric.id)).to.eventually.be.equals(jobDetail.id);
+            chai.expect(Promise.resolve(metric.data)).to.eventually.be.not.empty;
         };
         aetherTrainingService.addTrialJobMetricListener(listener);
         
-        const metric_data: string = await metric_deferred.promise;
         aetherTrainingService.removeTrialJobMetricListener(listener);
     }).timeout(100000);
 
@@ -104,9 +104,9 @@ describe(`Unit Test for Aether Training Service`, () => {
             }
         };
         const jobDetail: TrialJobDetail = await aetherTrainingService.submitTrialJob(form);
-        chai.expect(jobDetail.status).to.be.oneOf(['WAITING', 'RUNNING']);
+        chai.expect(Promise.resolve(jobDetail.status)).to.eventually.be.oneOf(['WAITING', 'RUNNING']);
 
         await aetherTrainingService.cancelTrialJob(jobDetail.id);
-        chai.expect(jobDetail.status).to.be.oneOf(['USER_CANCELED', 'SYS_CANCELED']);
+        chai.expect(Promise.resolve(jobDetail.status)).to.eventually.be.oneOf(['USER_CANCELED', 'SYS_CANCELED']);
     }).timeout(100000);
 })

@@ -64,7 +64,7 @@ class AetherTrainingService implements TrainingService {
     private readonly log!: Logger;
     private nniManagerIpConfig!: NNIManagerIpConfig;
     private aetherJobConfig!: AetherConfig;
-    private readonly runDeferred: Deferred<void>;
+    private runDeferred?: Deferred<void>;
     private restServerAddress!: string;
 
     constructor() {
@@ -72,13 +72,13 @@ class AetherTrainingService implements TrainingService {
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, AetherTrialJobDetail>();
         this.nextTrialSequenceId = -1;
-        this.runDeferred = new Deferred<void>();
         this.aetherClientExePath = this.resolveAetherClient();
         this.log.info('Aether Training Service Constructed.');
     }
 
     public async run(): Promise<void> {
         this.log.info('Run Aether training service.');
+        this.runDeferred = new Deferred<void>();
         const restServer: AetherJobRestServer = component.get(AetherJobRestServer);
         this.restServerAddress = `http://${this.nniManagerIpConfig.nniManagerIp}:${restServer.clusterRestServerPort}`;
         await restServer.start();
@@ -149,6 +149,8 @@ class AetherTrainingService implements TrainingService {
         clientProc.on('exit', (code) => {
             if (code == 1) {
                 throw new Error(`Aether Client process for trial ${trialJobId} exited with error, please check ${path.join(trialWorkingDirectory, 'stderr')} to see details`);
+            } else {
+                this.log.info(`Aether Client process for trial ${trialJobId} exited normally.`);
             }
         });
         clientProc.on('error', (err) => {
@@ -225,8 +227,18 @@ class AetherTrainingService implements TrainingService {
 
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping Aether Training Service...');
+        if (this.runDeferred == undefined) {
+            throw new Error("AetherTrainingService.cleanUp() called before run()");
+        }
         this.runDeferred.resolve();
 
+        const restServer: AetherJobRestServer = component.get(AetherJobRestServer);
+        try {
+            await restServer.stop();
+            this.log.info(`Aether Training Service Rest Server stop succeeded`);
+        } catch (error) {
+            this.log.error(`Aether Training Service Rest Server stop failed, error: ${error.message}`);
+        }
         // cancel running jobs?
         return Promise.resolve();
     }
