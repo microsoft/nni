@@ -379,7 +379,7 @@ class NNIManager implements Manager {
 
     private async periodicallyUpdateExecDuration(): Promise<void> {
         let count: number = 1;
-        while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
+        while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             await delay(1000 * 1); // 1 seconds
             if (this.status.status === 'RUNNING') {
                 this.experimentProfile.execDuration += 1;
@@ -468,7 +468,7 @@ class NNIManager implements Manager {
         }
         let allFinishedTrialJobNum: number = this.currSubmittedTrialNum;
         let waitSubmittedToFinish: number;
-        while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
+        while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
             allFinishedTrialJobNum += finishedTrialJobNum;
 
@@ -674,7 +674,9 @@ class NNIManager implements Manager {
                     'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
                 break;
             case NO_MORE_TRIAL_JOBS:
-                this.setStatus('TUNER_NO_MORE_TRIAL');
+                if (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
+                    this.setStatus('TUNER_NO_MORE_TRIAL');
+                }
                 break;
             case KILL_TRIAL_JOB:
                 this.log.info(`cancelTrialJob: ${JSON.parse(content)}`);

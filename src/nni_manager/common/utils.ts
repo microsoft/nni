@@ -337,15 +337,6 @@ function getJobCancelStatus(isEarlyStopped: boolean): TrialJobStatus {
     return isEarlyStopped ? 'EARLY_STOPPED' : 'USER_CANCELED';
 }
 
-function getCountFilesCommand(directory: string): string {
-    if(process.platform === "win32"){
-        return `powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`;
-    }
-    else{
-        return `find ${directory} -type f | wc -l`;
-    }
-}
-
 /**
  * Utility method to calculate file numbers under a directory, recursively
  * @param directory directory name
@@ -366,13 +357,18 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     });
 
     let fileCount: number = -1;
-    cpp.exec(getCountFilesCommand(directory)).then((result) => {
+    let cmd: string;
+    if(process.platform === "win32") {
+        cmd = `powershell "Get-ChildItem -Path ${directory} -Recurse -File | Measure-Object | %{$_.Count}"`
+    } else {
+        cmd = `find ${directory} -type f | wc -l`;   
+    }
+    cpp.exec(cmd).then((result) => {
         if(result.stdout && parseInt(result.stdout)) {
             fileCount = parseInt(result.stdout);            
         }
         deferred.resolve(fileCount);
     });
-
     return Promise.race([deferred.promise, delayTimeout]).finally(() => {
         clearTimeout(timeoutId);
     });

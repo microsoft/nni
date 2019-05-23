@@ -15,5 +15,5 @@ Like Tuners, users can either use built-in Assessors, or customize an Assessor o
 ..  toctree::
     :maxdepth: 2
 
-    Builtin Assessors<builtinAssessor>
-    Customized Assessors<Customize_Assessor>
+    Builtin Assessors<BuiltinAssessor>
+    Customized Assessors<CustomizeAssessor>

@@ -157,7 +157,7 @@ Run the **config_windows.yml** file from your command line to start MNIST experi
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
-Note, **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](NNICTLDOC.md) for more usage of `nnictl`
+Note, **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](Nnictl.md) for more usage of `nnictl`
 
 Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. And this is what we expected to get:
 
@@ -197,7 +197,7 @@ After you start your experiment in NNI successfully, you can find a message in t
 The Web UI urls are: [Your IP]:8080
 ```
 
-Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below.
+Open the `Web UI url`(In this information is: `[Your IP]:8080`) in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. If you can not open the WebUI link in your terminal, you can refer to [FAQ](FAQ.md).
 
 #### View summary page
 
@@ -243,12 +243,12 @@ Below is the status of the all trials. Specifically:
 
 ## Related Topic
 
-* [Try different Tuners](Builtin_Tuner.md)
-* [Try different Assessors](Builtin_Assessors.md)
-* [How to use command line tool nnictl](NNICTLDOC.md)
+* [Try different Tuners](BuiltinTuner.md)
+* [Try different Assessors](BuiltinAssessors.md)
+* [How to use command line tool nnictl](Nnictl.md)
 * [How to write a trial](Trials.md)
 * [How to run an experiment on local (with multiple GPUs)?](LocalMode.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PAIMode.md)
+* [How to run an experiment on OpenPAI?](PaiMode.md)
 * [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)
 * [How to run an experiment on Kubernetes through FrameworkController?](FrameworkControllerMode.md)
