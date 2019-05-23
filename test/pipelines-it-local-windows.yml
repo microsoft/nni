@@ -12,6 +12,12 @@ jobs:
       nugetConfigPath: 'src/nni_manager/training_service/aether/cslib/NuGet.Config'
       externalFeedCredentials: 'AzureDstsManagement'
       versioningScheme: 'off'
+  - task: MSBuild@1
+    inputs:
+      solution: 'src/nni_manager/training_service/aether/cslib/AetherClient.sln'
+      msbuildArchitecture: 'x64'
+      configuration: 'Release'
+      msbuildArguments: 'OutputPath=src/nni_manager/dist/aether'
   - script: |
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
