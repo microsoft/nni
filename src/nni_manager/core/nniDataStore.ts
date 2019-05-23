@@ -171,6 +171,11 @@ class NNIDataStore implements DataStore {
         return this.db.queryMetricData(trialJobId, metricType);
     }
 
+    public async exportTrialHpConfigs(): Promise<string> {
+        const jobs: TrialJobInfo[] = await this.listTrialJobs();
+        return ;
+    }
+
     private async queryTrialJobs(status?: TrialJobStatus, trialJobId?: string): Promise<TrialJobInfo[]> {
         const result: TrialJobInfo[] = [];
         const trialJobEvents: TrialJobEventRecord[] = await this.db.queryTrialJobEvent(trialJobId);

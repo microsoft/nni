@@ -112,6 +112,10 @@ class NNIManager implements Manager {
         return this.dataStore.storeTrialJobEvent('IMPORT_DATA', '', data);
     }
 
+    public async exportData(): Promise<string> {
+        return this.dataStore.exportTrialHpConfigs();
+    }
+
     public addCustomizedTrialJob(hyperParams: string): Promise<void> {
         if (this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
             return Promise.reject(
