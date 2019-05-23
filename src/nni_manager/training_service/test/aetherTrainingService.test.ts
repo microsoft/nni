@@ -91,9 +91,7 @@ describe(`Unit Test for Aether Training Service`, () => {
         aetherTrainingService.addTrialJobMetricListener(listener);
         
         const metric_data: string = await metric_deferred.promise;
-        chai.expect(metric_data).to.have.property('value');
         aetherTrainingService.removeTrialJobMetricListener(listener);
-        return Promise.resolve();
     }).timeout(100000);
 
     it('Submit job and cancel', async () => {
@@ -110,6 +108,5 @@ describe(`Unit Test for Aether Training Service`, () => {
 
         await aetherTrainingService.cancelTrialJob(jobDetail.id);
         chai.expect(jobDetail.status).to.be.oneOf(['USER_CANCELED', 'SYS_CANCELED']);
-        return Promise.resolve();
     }).timeout(100000);
 })

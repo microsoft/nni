@@ -34,6 +34,5 @@ export enum TrialConfigMetadataKey {
     NNI_MANAGER_IP = 'nni_manager_ip',
     FRAMEWORKCONTROLLER_CLUSTER_CONFIG = 'frameworkcontroller_config',
     VERSION_CHECK = 'version_check',
-    LOG_COLLECTION = 'log_collection',
-    AETHER_CONFIG = 'aether_config'
+    LOG_COLLECTION = 'log_collection'
 }
