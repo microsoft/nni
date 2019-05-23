@@ -1,0 +1,22 @@
+authorName: Unknown
+experimentName: enas_macro
+trialConcurrency: 1
+maxExecDuration: 24h
+maxTrialNum: 2
+#choice: local, remote
+trainingServicePlatform: local
+#choice: true, false
+useAnnotation: true
+multiPhase: false
+tuner:
+  codeDir: ../../tuners/general_controller
+  classFileName: nni_controller_cifar10.py
+  className: RLTuner
+  classArgs:
+    batch_size: 1
+
+trial:
+  command: sh ./macro_cifar10.sh
+  codeDir: ./
+  gpuNum: 1
+

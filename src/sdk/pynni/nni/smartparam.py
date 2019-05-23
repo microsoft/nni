@@ -128,7 +128,6 @@ else:
             name=None,
             key=None):
         '''execute the chosen function and inputs.
-
         Below is an example of chosen function and inputs:
         {
             "mutable_id": {
@@ -138,7 +137,6 @@ else:
                 }
             }
         }
-
         Parameters:
         ---------------
         mutable_id: the name of this mutable_layer block (which could have multiple mutable layers)
