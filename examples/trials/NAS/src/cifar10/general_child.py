@@ -4,7 +4,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 from src.common_ops import create_weight, batch_norm, batch_norm_with_mask, global_avg_pool, conv_op, pool_op
-from src.utils import count_model_params, get_train_ops
+from src.utils import count_model_params, get_train_ops, get_C, get_strides
 from src.cifar10.models import Model
 
 
@@ -81,38 +81,7 @@ class GeneralChild(Model):
         pool_distance = self.num_layers // 3
         self.pool_layers = [pool_distance - 1, 2 * pool_distance - 1]
 
-    def _get_C(self, x):
-        """
-        Args:
-            x: tensor of shape [N, H, W, C] or [N, C, H, W]
-        """
-        if self.data_format == "NHWC":
-            return x.get_shape()[3].value
-        elif self.data_format == "NCHW":
-            return x.get_shape()[1].value
-        else:
-            raise ValueError(
-                "Unknown data_format '{0}'".format(self.data_format))
 
-    def _get_HW(self, x):
-        """
-        Args:
-            x: tensor of shape [N, H, W, C] or [N, C, H, W]
-        """
-        return x.get_shape()[2].value
-
-    def _get_strides(self, stride):
-        """
-        Args:
-            x: tensor of shape [N, H, W, C] or [N, C, H, W]
-        """
-        if self.data_format == "NHWC":
-            return [1, stride, stride, 1]
-        elif self.data_format == "NCHW":
-            return [1, 1, stride, stride]
-        else:
-            raise ValueError(
-                "Unknown data_format '{0}'".format(self.data_format))
 
     def _factorized_reduction(self, x, out_filters, stride, is_training):
         """Reduces the shape of x without information loss due to striding."""
@@ -120,19 +89,19 @@ class GeneralChild(Model):
             "Need even number of filters when using this factorized reduction.")
         if stride == 1:
             with tf.variable_scope("path_conv"):
-                inp_c = self._get_C(x)
+                inp_c = get_C(x, self.data_format)
                 w = create_weight("w", [1, 1, inp_c, out_filters])
                 x = tf.nn.conv2d(x, w, [1, 1, 1, 1], "SAME",
                                  data_format=self.data_format)
                 x = batch_norm(x, is_training, data_format=self.data_format)
                 return x
 
-        stride_spec = self._get_strides(stride)
+        stride_spec = get_strides(stride, self.data_format)
         # Skip path 1
         path1 = tf.nn.avg_pool(
             x, [1, 1, 1, 1], stride_spec, "VALID", data_format=self.data_format)
         with tf.variable_scope("path1_conv"):
-            inp_c = self._get_C(path1)
+            inp_c = get_C(path1, self.data_format)
             w = create_weight("w", [1, 1, inp_c, out_filters // 2])
             path1 = tf.nn.conv2d(path1, w, [1, 1, 1, 1], "SAME",
                                  data_format=self.data_format)
@@ -152,7 +121,7 @@ class GeneralChild(Model):
         path2 = tf.nn.avg_pool(
             path2, [1, 1, 1, 1], stride_spec, "VALID", data_format=self.data_format)
         with tf.variable_scope("path2_conv"):
-            inp_c = self._get_C(path2)
+            inp_c = get_C(path2, self.data_format)
             w = create_weight("w", [1, 1, inp_c, out_filters // 2])
             path2 = tf.nn.conv2d(path2, w, [1, 1, 1, 1], "SAME",
                                  data_format=self.data_format)

@@ -48,6 +48,40 @@ def print_user_flags(line_limit=80):
         print(log_string)
 
 
+def get_C(x, data_format):
+    """
+    Args:
+        x: tensor of shape [N, H, W, C] or [N, C, H, W]
+    """
+    if data_format == "NHWC":
+        return x.get_shape()[3].value
+    elif data_format == "NCHW":
+        return x.get_shape()[1].value
+    else:
+        raise ValueError(
+            "Unknown data_format '{0}'".format(data_format))
+
+def get_HW(x, data_format):
+    """
+    Args:
+        x: tensor of shape [N, H, W, C] or [N, C, H, W]
+    """
+    return x.get_shape()[2].value
+
+def get_strides(stride, data_format):
+    """
+    Args:
+        x: tensor of shape [N, H, W, C] or [N, C, H, W]
+    """
+    if data_format == "NHWC":
+        return [1, stride, stride, 1]
+    elif data_format == "NCHW":
+        return [1, 1, stride, stride]
+    else:
+        raise ValueError(
+            "Unknown data_format '{0}'".format(data_format))
+
+
 class TextColors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
