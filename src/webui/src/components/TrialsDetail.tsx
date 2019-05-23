@@ -256,7 +256,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         // user select isn't 'all'
         if (value !== 'all') {
             if (this._isMounted) {
-                this.setState(() => ({ entriesTable: parseInt(value) }));
+                this.setState(() => ({ entriesTable: parseInt(value, 10) }));
             }
         } else {
             const { tableListSource } = this.state;
