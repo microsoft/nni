@@ -40,7 +40,7 @@ export class KubernetesTrialJobDetail implements TrialJobDetail {
     public queryJobFailedCount: number;
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
-                workingDirectory: string, form: JobApplicationForm, 
+                workingDirectory: string, form: JobApplicationForm,
                 kubernetesJobName: string, sequenceId: number, url: string) {
         this.id = id;
         this.status = status;
@@ -55,7 +55,8 @@ export class KubernetesTrialJobDetail implements TrialJobDetail {
     }
 }
 
-export const KubernetesScriptFormat =
+// tslint:disable-next-line:variable-name
+export const KubernetesScriptFormat: string =
 `#!/bin/bash
 export NNI_PLATFORM={0}
 export NNI_SYS_DIR=$PWD/nni/{1}
@@ -71,5 +72,5 @@ mkdir -p $NNI_OUTPUT_DIR
 cp -rT $NNI_CODE_DIR $NNI_SYS_DIR
 cd $NNI_SYS_DIR
 sh install_nni.sh
-python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' --nnimanager_ip {9} --nnimanager_port {10} --nni_manager_version '{11}' --log_collection '{12}'`
-+ `1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`
+python3 -m nni_trial_tool.trial_keeper --trial_command '{8}' --nnimanager_ip {9} --nnimanager_port {10} \
+--nni_manager_version '{11}' --log_collection '{12}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr`;
