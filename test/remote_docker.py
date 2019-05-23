@@ -48,6 +48,7 @@ def start_container(image, name, nnimanager_os):
         exit(1)
         
     def get_dist(wheel_name):
+        '''get the wheel package path'''
         if nnimanager_os == 'windows':
             return '/tmp/nni/nni-remote/deployment/pypi/dist/{0}'.format(wheel_name)
         else:
