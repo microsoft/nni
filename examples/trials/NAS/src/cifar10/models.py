@@ -194,6 +194,3 @@ class Model(object):
 
     def _build_test(self):
         raise NotImplementedError("Abstract method")
-
-    def build_valid_rl(self):
-        raise NotImplementedError("Abstract method")

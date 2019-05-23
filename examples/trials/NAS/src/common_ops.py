@@ -37,6 +37,124 @@ def create_bias(name, shape, initializer=None):
     return tf.get_variable(name, shape, initializer=initializer)
 
 
+def conv_op(self, inputs, filter_size, is_training, count, out_filters,
+                     data_format, ch_mul=1, start_idx=None, separable=False):
+    """
+    Args:
+        start_idx: where to start taking the output channels. if None, assuming
+            fixed_arc mode
+        count: how many output_channels to take.
+    """
+
+    if data_format == "NHWC":
+        inp_c = inputs.get_shape()[3].value
+    elif data_format == "NCHW":
+        inp_c = inputs.get_shape()[1].value
+
+    with tf.variable_scope("inp_conv_1"):
+        w = create_weight("w", [1, 1, inp_c, out_filters])
+        x = tf.nn.conv2d(inputs, w, [1, 1, 1, 1],
+                            "SAME", data_format=data_format)
+        x = batch_norm(x, is_training, data_format=data_format)
+        x = tf.nn.relu(x)
+
+    with tf.variable_scope("out_conv_{}".format(filter_size)):
+        if start_idx is None:
+            if separable:
+                w_depth = create_weight(
+                    "w_depth", [filter_size, filter_size, out_filters, ch_mul])
+                w_point = create_weight(
+                    "w_point", [1, 1, out_filters * ch_mul, count])
+                x = tf.nn.separable_conv2d(x, w_depth, w_point, strides=[1, 1, 1, 1],
+                                            padding="SAME", data_format=data_format)
+                x = batch_norm(
+                    x, is_training, data_format=data_format)
+            else:
+                w = create_weight(
+                    "w", [filter_size, filter_size, inp_c, count])
+                x = tf.nn.conv2d(
+                    x, w, [1, 1, 1, 1], "SAME", data_format=data_format)
+                x = batch_norm(
+                    x, is_training, data_format=data_format)
+        else:
+            if separable:
+                w_depth = create_weight(
+                    "w_depth", [filter_size, filter_size, out_filters, ch_mul])
+                #test_depth = w_depth
+                w_point = create_weight(
+                    "w_point", [out_filters, out_filters * ch_mul])
+                w_point = w_point[start_idx:start_idx+count, :]
+                w_point = tf.transpose(w_point, [1, 0])
+                w_point = tf.reshape(
+                    w_point, [1, 1, out_filters * ch_mul, count])
+
+                x = tf.nn.separable_conv2d(x, w_depth, w_point, strides=[1, 1, 1, 1],
+                                            padding="SAME", data_format=data_format)
+                mask = tf.range(0, out_filters, dtype=tf.int32)
+                mask = tf.logical_and(
+                    start_idx <= mask, mask < start_idx + count)
+                x = batch_norm_with_mask(
+                    x, is_training, mask, out_filters, data_format=data_format)
+            else:
+                w = create_weight(
+                    "w", [filter_size, filter_size, out_filters, out_filters])
+                w = tf.transpose(w, [3, 0, 1, 2])
+                w = w[start_idx:start_idx+count, :, :, :]
+                w = tf.transpose(w, [1, 2, 3, 0])
+                x = tf.nn.conv2d(
+                    x, w, [1, 1, 1, 1], "SAME", data_format=data_format)
+                mask = tf.range(0, out_filters, dtype=tf.int32)
+                mask = tf.logical_and(
+                    start_idx <= mask, mask < start_idx + count)
+                x = batch_norm_with_mask(
+                    x, is_training, mask, out_filters, data_format=data_format)
+        x = tf.nn.relu(x)
+    return x
+
+def pool_op(self, inputs, is_training, count, out_filters, avg_or_max, data_format, start_idx=None):
+    """
+    Args:
+        start_idx: where to start taking the output channels. if None, assuming
+            fixed_arc mode
+        count: how many output_channels to take.
+    """
+
+    if data_format == "NHWC":
+        inp_c = inputs.get_shape()[3].value
+    elif data_format == "NCHW":
+        inp_c = inputs.get_shape()[1].value
+
+    with tf.variable_scope("conv_1"):
+        w = create_weight("w", [1, 1, inp_c, out_filters])
+        x = tf.nn.conv2d(inputs, w, [1, 1, 1, 1],
+                            "SAME", data_format=data_format)
+        x = batch_norm(x, is_training, data_format=data_format)
+        x = tf.nn.relu(x)
+
+    with tf.variable_scope("pool"):
+        if data_format == "NHWC":
+            actual_data_format = "channels_last"
+        elif data_format == "NCHW":
+            actual_data_format = "channels_first"
+
+        if avg_or_max == "avg":
+            x = tf.layers.average_pooling2d(
+                x, [3, 3], [1, 1], "SAME", data_format=actual_data_format)
+        elif avg_or_max == "max":
+            x = tf.layers.max_pooling2d(
+                x, [3, 3], [1, 1], "SAME", data_format=actual_data_format)
+        else:
+            raise ValueError("Unknown pool {}".format(avg_or_max))
+
+        if start_idx is not None:
+            if data_format == "NHWC":
+                x = x[:, :, :, start_idx: start_idx+count]
+            elif data_format == "NCHW":
+                x = x[:, start_idx: start_idx+count, :, :]
+
+    return x
+
+
 def global_avg_pool(x, data_format="NHWC"):
     if data_format == "NHWC":
         x = tf.reduce_mean(x, [1, 2])

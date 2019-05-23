@@ -42,7 +42,7 @@ class GeneralController():
                  **kwargs):
 
         print("-" * 80)
-        print("Building ConvController")
+        print("Building Controller")
 
         self.search_for = search_for
         self.search_whole_channels = search_whole_channels

@@ -24,6 +24,7 @@ logger = build_logger("nni_child_cifar10")
 
 
 def build_trial(images, labels, ChildClass):
+    '''Build child class'''
     child_model = ChildClass(
         images,
         labels,
@@ -62,6 +63,7 @@ def build_trial(images, labels, ChildClass):
 
 
 def get_child_ops(child_model):
+    '''Assemble child op to a dict'''
     child_ops = {
         "global_step": child_model.global_step,
         "loss": child_model.loss,
@@ -95,7 +97,6 @@ class NASTrial():
             self.child_model.build_model()
             self.child_ops = get_child_ops(self.child_model)
             config = tf.ConfigProto(
-                device_count={"CPU": 8},
                 intra_op_parallelism_threads=0,
                 inter_op_parallelism_threads=0,
                 allow_soft_placement=True)
@@ -105,6 +106,7 @@ class NASTrial():
         logger.debug('initlize NASTrial done.')
 
     def run_one_step(self):
+        '''Run this model on a batch of data'''
         run_ops = [
             self.child_ops["loss"],
             self.child_ops["lr"],
@@ -125,6 +127,7 @@ class NASTrial():
         return loss, global_step
 
     def run(self):
+        '''Run this model according to the `epoch` set in FALGS'''
         max_acc = 0
         while True:
             _, global_step = self.run_one_step()

@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 import numpy as np
 import tensorflow as tf
-from src.common_ops import create_weight, batch_norm, batch_norm_with_mask, global_avg_pool
+from src.common_ops import create_weight, batch_norm, batch_norm_with_mask, global_avg_pool, conv_op, pool_op
 from src.utils import count_model_params, get_train_ops
 from src.cifar10.models import Model
 
@@ -165,6 +165,7 @@ class GeneralChild(Model):
         return final_path
 
     def _model(self, images, is_training, reuse=False):
+        '''Build model'''
         with tf.variable_scope(self.name, reuse=reuse):
             layers = []
 
@@ -177,6 +178,7 @@ class GeneralChild(Model):
                 layers.append(x)
 
             def add_fixed_pooling_layer(layer_id, layers, out_filters, is_training):
+                '''Add a fixed pooling layer every four layers'''
                 out_filters *= 2
                 with tf.variable_scope("pool_at_{0}".format(layer_id)):
                     pooled_layers = []
@@ -188,6 +190,7 @@ class GeneralChild(Model):
                     return pooled_layers, out_filters
 
             def post_process_out(out, optional_inputs):
+                '''Form skip connection and perform batch norm'''
                 with tf.variable_scope("skip"):
                     inputs = layers[-1]
                     if self.data_format == "NHWC":
@@ -220,48 +223,48 @@ class GeneralChild(Model):
                 # layers[-1] is always the latest input
                 with tf.variable_scope(get_layer_id()):
                     with tf.variable_scope('branch_0'):
-                        out = self._conv_branch(
-                            inputs[0][0], 3, is_training, out_filters, out_filters, start_idx=None)
+                        out = conv_op(
+                            inputs[0][0], 3, is_training, out_filters, out_filters, self.data_format, start_idx=None)
                     out = post_process_out(out, inputs[1])
                 return out
 
             def conv3_sep(inputs):
                 with tf.variable_scope(get_layer_id()):
                     with tf.variable_scope('branch_1'):
-                        out = self._conv_branch(
-                            inputs[0][0], 3, is_training, out_filters, out_filters, start_idx=None, separable=True)
+                        out = conv_op(
+                            inputs[0][0], 3, is_training, out_filters, out_filters, self.data_format, start_idx=None, separable=True)
                     out = post_process_out(out, inputs[1])
                 return out
 
             def conv5(inputs):
                 with tf.variable_scope(get_layer_id()):
                     with tf.variable_scope('branch_2'):
-                        out = self._conv_branch(
-                            inputs[0][0], 5, is_training, out_filters, out_filters, start_idx=None)
+                        out = conv_op(
+                            inputs[0][0], 5, is_training, out_filters, out_filters, self.data_format, start_idx=None)
                     out = post_process_out(out, inputs[1])
                 return out
 
             def conv5_sep(inputs):
                 with tf.variable_scope(get_layer_id()):
                     with tf.variable_scope('branch_3'):
-                        out = self._conv_branch(
-                            inputs[0][0], 5, is_training, out_filters, out_filters, start_idx=None, separable=True)
+                        out = conv_op(
+                            inputs[0][0], 5, is_training, out_filters, out_filters, self.data_format, start_idx=None, separable=True)
                     out = post_process_out(out, inputs[1])
                 return out
 
             def avg_pool(inputs):
                 with tf.variable_scope(get_layer_id()):
                     with tf.variable_scope('branch_4'):
-                        out = self._pool_branch(
-                            inputs[0][0], is_training, out_filters, out_filters, "avg", start_idx=None)
+                        out = pool_op(
+                            inputs[0][0], is_training, out_filters, out_filters, "avg", self.data_format, start_idx=None)
                     out = post_process_out(out, inputs[1])
                 return out
 
             def max_pool(inputs):
                 with tf.variable_scope(get_layer_id()):
                     with tf.variable_scope('branch_5'):
-                        out = self._pool_branch(
-                            inputs[0][0], is_training, out_filters, out_filters, "max", start_idx=None)
+                        out = pool_op(
+                            inputs[0][0], is_training, out_filters, out_filters, "max", self.data_format, start_idx=None)
                     out = post_process_out(out, inputs[1])
                 return out
 
@@ -378,122 +381,6 @@ class GeneralChild(Model):
                 x = tf.matmul(x, w)
         return x
 
-    def _conv_branch(self, inputs, filter_size, is_training, count, out_filters,
-                     ch_mul=1, start_idx=None, separable=False):
-        """
-        Args:
-            start_idx: where to start taking the output channels. if None, assuming
-                fixed_arc mode
-            count: how many output_channels to take.
-        """
-
-        if self.data_format == "NHWC":
-            inp_c = inputs.get_shape()[3].value
-        elif self.data_format == "NCHW":
-            inp_c = inputs.get_shape()[1].value
-
-        with tf.variable_scope("inp_conv_1"):
-            w = create_weight("w", [1, 1, inp_c, out_filters])
-            x = tf.nn.conv2d(inputs, w, [1, 1, 1, 1],
-                             "SAME", data_format=self.data_format)
-            x = batch_norm(x, is_training, data_format=self.data_format)
-            x = tf.nn.relu(x)
-
-        with tf.variable_scope("out_conv_{}".format(filter_size)):
-            if start_idx is None:
-                if separable:
-                    w_depth = create_weight(
-                        "w_depth", [filter_size, filter_size, out_filters, ch_mul])
-                    w_point = create_weight(
-                        "w_point", [1, 1, out_filters * ch_mul, count])
-                    x = tf.nn.separable_conv2d(x, w_depth, w_point, strides=[1, 1, 1, 1],
-                                               padding="SAME", data_format=self.data_format)
-                    x = batch_norm(
-                        x, is_training, data_format=self.data_format)
-                else:
-                    w = create_weight(
-                        "w", [filter_size, filter_size, inp_c, count])
-                    x = tf.nn.conv2d(
-                        x, w, [1, 1, 1, 1], "SAME", data_format=self.data_format)
-                    x = batch_norm(
-                        x, is_training, data_format=self.data_format)
-            else:
-                if separable:
-                    w_depth = create_weight(
-                        "w_depth", [filter_size, filter_size, out_filters, ch_mul])
-                    #self.test_depth = w_depth
-                    w_point = create_weight(
-                        "w_point", [out_filters, out_filters * ch_mul])
-                    w_point = w_point[start_idx:start_idx+count, :]
-                    w_point = tf.transpose(w_point, [1, 0])
-                    w_point = tf.reshape(
-                        w_point, [1, 1, out_filters * ch_mul, count])
-
-                    x = tf.nn.separable_conv2d(x, w_depth, w_point, strides=[1, 1, 1, 1],
-                                               padding="SAME", data_format=self.data_format)
-                    mask = tf.range(0, out_filters, dtype=tf.int32)
-                    mask = tf.logical_and(
-                        start_idx <= mask, mask < start_idx + count)
-                    x = batch_norm_with_mask(
-                        x, is_training, mask, out_filters, data_format=self.data_format)
-                else:
-                    w = create_weight(
-                        "w", [filter_size, filter_size, out_filters, out_filters])
-                    w = tf.transpose(w, [3, 0, 1, 2])
-                    w = w[start_idx:start_idx+count, :, :, :]
-                    w = tf.transpose(w, [1, 2, 3, 0])
-                    x = tf.nn.conv2d(
-                        x, w, [1, 1, 1, 1], "SAME", data_format=self.data_format)
-                    mask = tf.range(0, out_filters, dtype=tf.int32)
-                    mask = tf.logical_and(
-                        start_idx <= mask, mask < start_idx + count)
-                    x = batch_norm_with_mask(
-                        x, is_training, mask, out_filters, data_format=self.data_format)
-            x = tf.nn.relu(x)
-        return x
-
-    def _pool_branch(self, inputs, is_training, count, out_filters, avg_or_max, start_idx=None):
-        """
-        Args:
-            start_idx: where to start taking the output channels. if None, assuming
-                fixed_arc mode
-            count: how many output_channels to take.
-        """
-
-        if self.data_format == "NHWC":
-            inp_c = inputs.get_shape()[3].value
-        elif self.data_format == "NCHW":
-            inp_c = inputs.get_shape()[1].value
-
-        with tf.variable_scope("conv_1"):
-            w = create_weight("w", [1, 1, inp_c, out_filters])
-            x = tf.nn.conv2d(inputs, w, [1, 1, 1, 1],
-                             "SAME", data_format=self.data_format)
-            x = batch_norm(x, is_training, data_format=self.data_format)
-            x = tf.nn.relu(x)
-
-        with tf.variable_scope("pool"):
-            if self.data_format == "NHWC":
-                actual_data_format = "channels_last"
-            elif self.data_format == "NCHW":
-                actual_data_format = "channels_first"
-
-            if avg_or_max == "avg":
-                x = tf.layers.average_pooling2d(
-                    x, [3, 3], [1, 1], "SAME", data_format=actual_data_format)
-            elif avg_or_max == "max":
-                x = tf.layers.max_pooling2d(
-                    x, [3, 3], [1, 1], "SAME", data_format=actual_data_format)
-            else:
-                raise ValueError("Unknown pool {}".format(avg_or_max))
-
-            if start_idx is not None:
-                if self.data_format == "NHWC":
-                    x = x[:, :, :, start_idx: start_idx+count]
-                elif self.data_format == "NCHW":
-                    x = x[:, start_idx: start_idx+count, :, :]
-
-        return x
 
     # override
     def _build_train(self):
@@ -563,47 +450,6 @@ class GeneralChild(Model):
         self.test_acc = tf.to_int32(self.test_acc)
         self.test_acc = tf.reduce_sum(self.test_acc)
 
-    # override
-    def build_valid_rl(self, shuffle=False):
-        print("-" * 80)
-        print("Build valid graph on shuffled data")
-        with tf.device("/cpu:0"):
-            # shuffled valid data: for choosing validation model
-            if not shuffle and self.data_format == "NCHW":
-                self.images["valid_original"] = np.transpose(
-                    self.images["valid_original"], [0, 3, 1, 2])
-            x_valid_shuffle, y_valid_shuffle = tf.train.shuffle_batch(
-                [self.images["valid_original"], self.labels["valid_original"]],
-                batch_size=self.batch_size,
-                capacity=25000,
-                enqueue_many=True,
-                min_after_dequeue=0,
-                num_threads=16,
-                seed=self.seed,
-                allow_smaller_final_batch=True,
-            )
-
-            def _pre_process(x):
-                x = tf.pad(x, [[4, 4], [4, 4], [0, 0]])
-                x = tf.random_crop(x, [32, 32, 3], seed=self.seed)
-                x = tf.image.random_flip_left_right(x, seed=self.seed)
-                if self.data_format == "NCHW":
-                    x = tf.transpose(x, [2, 0, 1])
-
-                return x
-
-            if shuffle:
-                x_valid_shuffle = tf.map_fn(
-                    _pre_process, x_valid_shuffle, back_prop=False)
-
-        logits = self._model(x_valid_shuffle, False, reuse=True)
-        valid_shuffle_preds = tf.argmax(logits, axis=1)
-        valid_shuffle_preds = tf.to_int32(valid_shuffle_preds)
-        self.valid_shuffle_acc = tf.equal(valid_shuffle_preds, y_valid_shuffle)
-        self.valid_shuffle_acc = tf.to_int32(self.valid_shuffle_acc)
-        self.valid_shuffle_acc = tf.reduce_sum(self.valid_shuffle_acc)
-        self.cur_valid_acc = tf.to_float(
-            self.valid_shuffle_acc) / tf.to_float(self.batch_size)
 
     def build_model(self):
 

@@ -8,7 +8,7 @@ import nni
 from nni.tuner import Tuner
 from src.utils import Logger
 from src.general_controller import GeneralController
-from src.cifar10_flags import *
+from src.tf_flags import *
 from collections import OrderedDict
 
 
@@ -21,7 +21,7 @@ def build_logger(log_name):
     return logger
 
 
-logger = build_logger("nni_controller_cifar10")
+logger = build_logger("RL_controller")
 
 
 def build_controller(ControllerClass, batch_size):
@@ -232,7 +232,6 @@ class RLTuner(Tuner):
         parameter_id: int
         success: True if the trial successfully completed; False if failed or terminated.
         """
-        print("I'm now in tuner's trial_end")
         if not success:
             self.failed_trial_pos.append(self.parameter_id2pos[parameter_id])
             self.new_trial_jobs(1)
