@@ -24,7 +24,7 @@ import { Deferred } from 'ts-deferred';
 
 import * as component from '../common/component';
 import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
-    TrialJobEvent, TrialJobEventRecord, TrialJobInfo } from '../common/datastore';
+    TrialJobEvent, TrialJobEventRecord, TrialJobInfo, HyperParameterFormat } from '../common/datastore';
 import { NNIError } from '../common/errors';
 import { getExperimentId, isNewExperiment } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
@@ -173,6 +173,10 @@ class NNIDataStore implements DataStore {
 
     public async exportTrialHpConfigs(): Promise<string> {
         const jobs: TrialJobInfo[] = await this.listTrialJobs();
+        let exportedData: HyperParameterFormat[] = [];
+        for (const job of jobs) {
+            ;
+        }
         return ;
     }
 

@@ -70,6 +70,12 @@ interface TrialJobInfo {
     stderrPath?: string;
 }
 
+interface HyperParameterFormat {
+    parameter_source: string;
+    parameters: any;
+    parameter_id: number;
+}
+
 abstract class DataStore {
     public abstract init(): Promise<void>;
     public abstract close(): Promise<void>;
