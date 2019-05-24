@@ -8,4 +8,5 @@
     :maxdepth: 2
 
     NNI 经验分享<nni_practice_sharing>
-    自动机器学习经验分享<automl_practice_sharing>
+    神经网络结构搜索的对比<CommunitySharings/NasComparison>
+    超参调优算法的对比<CommunitySharings/HpoComparison>
