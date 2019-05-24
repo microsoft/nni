@@ -211,7 +211,8 @@ class NNIDataStore implements DataStore {
                 }
             }
         }
-        return Promise.resolve(JSON.stringify(exportedData));
+
+        return JSON.stringify(exportedData);
     }
 
     public async getImportedData(): Promise<string[]> {
@@ -222,7 +223,8 @@ class NNIDataStore implements DataStore {
                 importedData.push(event.data);
             }
         }
-        return Promise.resolve(importedData);
+
+        return importedData;
     }
 
     private async queryTrialJobs(status?: TrialJobStatus, trialJobId?: string): Promise<TrialJobInfo[]> {

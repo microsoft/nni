@@ -218,7 +218,7 @@ class NNIManager implements Manager {
         let trialData: Object[] = JSON.parse(finishedTrialData);
         for (const oneImportedData of importedData) {
             // do not deduplicate
-            trialData.concat(<Object[]>JSON.parse(oneImportedData));
+            trialData = trialData.concat(<Object[]>JSON.parse(oneImportedData));
         }
         this.trialDataForTuner = JSON.stringify(trialData);
 
