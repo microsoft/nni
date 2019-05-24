@@ -49,5 +49,5 @@ jobs:
     displayName: 'Trial job metrics test'
   - script: |
       cd test
-      python config_test.py --ts local --local_gpu --exclude smac,bohb
+      python config_test.py --ts local --local_gpu --exclude cifar10,smac,bohb
     displayName: 'Examples and advanced features tests on local machine'
