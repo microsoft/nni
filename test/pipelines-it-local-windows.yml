@@ -58,5 +58,6 @@ jobs:
     displayName: 'Build bdsit_wheel'
   - script:  |
       powershell.exe rm $(Agent.ToolsDirectory)\nni -Recurse -Force
+      powershell.exe New-Item $(Agent.ToolsDirectory)\nni -itemtype directory
       powershell.exe cp $(Build.SourcesDirectory)\deployment\pypi\dist\* $(Agent.ToolsDirectory)\nni
-    displayName: 'host bdsit_wheel'
+    displayName: 'Host bdsit_wheel'
