@@ -20,7 +20,7 @@ jobs:
   - script: |
       cd deployment\pypi
       powershell.exe -file install.ps1
-      ls $(Build.SourcesDirectory)\deployment\pypi\dist\
+      dir $(Build.SourcesDirectory)\deployment\pypi\dist\
     displayName: 'Build bdsit_wheel'
   - script:  |
       powershell.exe cp $(Build.SourcesDirectory)\deployment\pypi\dist\* $(Agent.ToolsDirectory)\nni
