@@ -1,4 +1,4 @@
-# Windows Local Mode (experimental feature)
+# NNI on Windows (experimental feature)
 
 Currently we support local, remote and pai mode on Windows. Windows 10.1809 is well tested and recommended.
 
@@ -25,15 +25,15 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
   Prerequisite: `python >=3.5`, `git`, `PowerShell`
 
   ```bash
-  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
-  powershell ./install.ps1
+  powershell -file install.ps1
   ```
 
 When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
 
 ```bash
-nnictl create --config nni/examples/trials/mnist/config_windows.yml
+nnictl create --config nni\examples\trials\mnist\config_windows.yml
 ```
 
 For other examples you need to change trial command `python3` into `python` in each example YAML.
