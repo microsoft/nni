@@ -72,8 +72,14 @@ interface TrialJobInfo {
 
 interface HyperParameterFormat {
     parameter_source: string;
-    parameters: any;
+    parameters: Object;
     parameter_id: number;
+}
+
+interface ExportedDataFormat {
+    parameter: Object;
+    value: Object;
+    id: string;
 }
 
 abstract class DataStore {
@@ -106,5 +112,5 @@ abstract class Database {
 
 export {
     DataStore, Database, TrialJobEvent, MetricType, MetricData, TrialJobInfo,
-    ExperimentProfileRecord, TrialJobEventRecord, MetricDataRecord
+    ExperimentProfileRecord, TrialJobEventRecord, MetricDataRecord, HyperParameterFormat, ExportedDataFormat
 };
