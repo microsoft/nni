@@ -217,6 +217,7 @@ class NNIManager implements Manager {
         const importedData: string[] = await this.dataStore.getImportedData();
         let trialData: Object[] = JSON.parse(finishedTrialData);
         for (const oneImportedData of importedData) {
+            // do not deduplicate
             trialData.concat(<Object[]>JSON.parse(oneImportedData));
         }
         this.trialDataForTuner = JSON.stringify(trialData);
@@ -663,7 +664,7 @@ class NNIManager implements Manager {
                     if (this.dispatcher === undefined) {
                         throw new Error('Dispatcher error: tuner has not been setup');
                     }
-                    this.dispatcher.sendCommand(IMPORT_DATA, data);
+                    this.dispatcher.sendCommand(IMPORT_DATA, this.trialDataForTuner);
                 }
                 this.requestTrialJobs(this.experimentProfile.params.trialConcurrency);
                 break;
