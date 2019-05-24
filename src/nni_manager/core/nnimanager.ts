@@ -213,11 +213,13 @@ class NNIManager implements Manager {
             .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
 
         // Collect generated trials and imported trials
-        let trialDataForTuner = [];
-        for (const trialJob of allTrialJobs) {
-            trialDataForTuner.push({'parameter': trialJob.hyperParameters[0], 'value': , 'id': });
+        const finishedTrialData: string = await this.exportData();
+        const importedData: string[] = await this.dataStore.getImportedData();
+        let trialData: Object[] = JSON.parse(finishedTrialData);
+        for (const oneImportedData of importedData) {
+            trialData.concat(<Object[]>JSON.parse(oneImportedData));
         }
-        await this.dataStore.XXX
+        this.trialDataForTuner = JSON.stringify(trialData);
 
         if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
             this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&

@@ -214,6 +214,17 @@ class NNIDataStore implements DataStore {
         return Promise.resolve(JSON.stringify(exportedData));
     }
 
+    public async getImportedData(): Promise<string[]> {
+        let importedData: string[] = [];
+        const importDataEvents: TrialJobEventRecord[] = await this.db.queryTrialJobEvent(undefined, 'IMPORT_DATA');
+        for (const event of importDataEvents) {
+            if (event.data) {
+                importedData.push(event.data);
+            }
+        }
+        return Promise.resolve(importedData);
+    }
+
     private async queryTrialJobs(status?: TrialJobStatus, trialJobId?: string): Promise<TrialJobInfo[]> {
         const result: TrialJobInfo[] = [];
         const trialJobEvents: TrialJobEventRecord[] = await this.db.queryTrialJobEvent(trialJobId);

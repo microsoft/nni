@@ -95,6 +95,7 @@ abstract class DataStore {
     public abstract storeMetricData(trialJobId: string, data: string): Promise<void>;
     public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
     public abstract exportTrialHpConfigs(): Promise<string>;
+    public abstract getImportedData(): Promise<string[]>;
 }
 
 abstract class Database {
