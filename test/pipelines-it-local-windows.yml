@@ -18,7 +18,14 @@ jobs:
       addToPath: true
       architecture: 'x64'
   - script: |
-      powershell.exe Write-Host $(Agent.ToolsDirectory)/nni
+      cd deployment\pypi
+      powershell.exe -file install.ps1
+      ls $(Build.SourcesDirectory)\deployment\pypi\dist\
+    displayName: 'Build bdsit_wheel'
+  - script:  |
+      powershell.exe cp $(Build.SourcesDirectory)\deployment\pypi\dist\* $(Agent.ToolsDirectory)\nni
+    displayName: 'host bdsit_wheel'
+  - script: |
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
   - script: |
@@ -52,11 +59,3 @@ jobs:
       cd test
       python metrics_test.py
     displayName: 'Trial job metrics test'
-  - script: |
-      cd deployment\pypi
-      powershell.exe -file install.ps1
-      ls $(Build.SourcesDirectory)/deployment/pypi/dist/
-    displayName: 'Build bdsit_wheel'
-  - script:  |
-      powershell.exe cp $(Build.SourcesDirectory)/deployment/pypi/dist/* $(Agent.ToolsDirectory)/nni
-    displayName: 'host bdsit_wheel'
