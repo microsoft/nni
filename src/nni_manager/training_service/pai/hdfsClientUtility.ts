@@ -22,6 +22,7 @@ import * as fs from 'fs';
 import { Deferred } from 'ts-deferred';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger } from '../../common/log';
+import { unixPathJoin } from '../../common/utils'
 
 /**
  * HDFS client utility, including copy file/directory
@@ -32,7 +33,7 @@ export namespace HDFSClientUtility {
      * @param hdfsUserName HDFS user name
      */
     function hdfsExpRootDir(hdfsUserName: string): string {
-        return path.join('/', hdfsUserName, 'nni', 'experiments', getExperimentId());
+        return '/' + unixPathJoin(hdfsUserName, 'nni', 'experiments', getExperimentId());
     }
 
     /**
@@ -40,7 +41,7 @@ export namespace HDFSClientUtility {
      * @param hdfsUserName HDFS user name
      */
     export function getHdfsExpCodeDir(hdfsUserName: string): string {
-        return path.join(hdfsExpRootDir(hdfsUserName), 'codeDir');
+        return unixPathJoin(hdfsExpRootDir(hdfsUserName), 'codeDir');
     }
 
     /**
@@ -49,7 +50,9 @@ export namespace HDFSClientUtility {
      * @param trialId NNI trial ID
      */
     export function getHdfsTrialWorkDir(hdfsUserName: string, trialId: string): string {
-        return path.join(hdfsExpRootDir(hdfsUserName), 'trials', trialId);
+        let root = hdfsExpRootDir(hdfsUserName)
+        console.log(root)
+        return unixPathJoin(root, 'trials', trialId);
     }
 
     /**
