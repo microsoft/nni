@@ -434,7 +434,7 @@ Debug mode will disable version check function in Trialkeeper.
 
     You also can use [nnictl experiment export](#export) to export a valid json file including previous experiment trial hyperparameters and results.
 
-    Currenctly, following tuner and advisor support import data:
+    Currently, following tuner and advisor support import data:
 
     ```yml
     builtinTunerName: TPE, Anneal, GridSearch, MetisTuner
@@ -454,7 +454,7 @@ Debug mode will disable version check function in Trialkeeper.
     > import data to a running experiment
 
     ```bash
-    nnictl experiment [experiment_id] -f experiment_data.json
+    nnictl experiment import [experiment_id] -f experiment_data.json
     ```
 
 <a name="config"></a>

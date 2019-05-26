@@ -1,8 +1,8 @@
-# NAS 算法对比
+# 神经网络结构搜索的对比
 
 *匿名作者*
 
-训练并对比 Autokeras, DARTS, ENAS 和 NAO 这些算法的效果。
+训练和比较 NAS（神经网络架构搜索）的模型，包括 Autokeras，DARTS，ENAS 和 NAO。
 
 源码链接如下：
 
