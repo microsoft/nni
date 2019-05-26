@@ -71,9 +71,9 @@ class GPUScheduler {
         execScript(gpuMetricsCollectorScriptPath)
     }
 
-    public getAvailableGPUIndices(occupiedGpuIndexNumMap: Map<number, number>): number[] {
+    public getAvailableGPUIndices(useActiveGPU: boolean, occupiedGpuIndexNumMap: Map<number, number>): number[] {
         if (this.gpuSummary !== undefined) {
-            if(process.platform === 'win32') {
+            if(process.platform === 'win32' || useActiveGPU) {
                 return this.gpuSummary.gpuInfos.map((info: GPUInfo) => info.index);
             }
             else{

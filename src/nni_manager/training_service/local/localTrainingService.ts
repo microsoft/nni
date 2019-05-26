@@ -99,12 +99,16 @@ class LocalTrialJobDetail implements TrialJobDetail {
 class LocalConfig {
     public maxTrialNumPerGPU?: number;
     public gpuIndices?: string;
-    constructor(gpuIndices?: string, maxTrialNumPerGPU?: number) {
+    public useActiveGPU?: boolean;
+    constructor(gpuIndices?: string, maxTrialNumPerGPU?: number, useActiveGPU?: boolean) {
         if (gpuIndices !== undefined) {
             this.gpuIndices = gpuIndices;
         }
         if (maxTrialNumPerGPU !== undefined) {
             this.maxTrialNumPerGPU = maxTrialNumPerGPU;
+        }
+        if (useActiveGPU !== undefined) {
+            this.useActiveGPU = useActiveGPU;
         }
     }
 }
@@ -129,6 +133,7 @@ class LocalTrainingService implements TrainingService {
     private isMultiPhase: boolean = false;
     private jobStreamMap: Map<string, ts.Stream>;
     private maxTrialNumPerGPU: number = 1;
+    private useActiveGPU: boolean = false;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -312,6 +317,10 @@ class LocalTrainingService implements TrainingService {
                 if (this.localConfig.maxTrialNumPerGPU !== undefined) {
                     this.maxTrialNumPerGPU = this.localConfig.maxTrialNumPerGPU;
                 }
+
+                if (this.localConfig.useActiveGPU !== undefined) {
+                    this.useActiveGPU = this.localConfig.useActiveGPU;
+                }
                 break;
             case TrialConfigMetadataKey.MULTI_PHASE:
                 this.isMultiPhase = (value === 'true' || value === 'True');
@@ -412,7 +421,7 @@ class LocalTrainingService implements TrainingService {
         }
 
         let selectedGPUIndices: number[] = [];
-        let availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.occupiedGpuIndexNumMap);
+        let availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.useActiveGPU, this.occupiedGpuIndexNumMap);
         for(let index of availableGpuIndices) {
             let num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
             if(num === undefined || num < this.maxTrialNumPerGPU) {

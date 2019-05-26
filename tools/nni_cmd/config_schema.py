@@ -64,7 +64,8 @@ common_schema = {
     Optional('assessor'): dict,
     Optional('localConfig'): {
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-        Optional('maxTrialNumPerGPU'): setType('maxTrialNumPerGPU', int)
+        Optional('maxTrialNumPerGPU'): setType('maxTrialNumPerGPU', int),
+        Optional('useActiveGPU'): setType('useActiveGPU', bool)
     }
 }
 tuner_schema_dict = {
@@ -318,7 +319,8 @@ Optional('machineList'):[Or({
     'username': setType('username', str),
     'passwd': setType('passwd', str),
     Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    Optional('maxTrialNumPerGPU'): setType('maxTrialNumPerGPU', int)
+    Optional('maxTrialNumPerGPU'): setType('maxTrialNumPerGPU', int),
+    Optional('useActiveGPU'): setType('useActiveGPU', bool)
     },{
     'ip': setType('ip', str),
     Optional('port'): setNumberRange('port', int, 1, 65535),
@@ -326,7 +328,8 @@ Optional('machineList'):[Or({
     'sshKeyPath': setPathCheck('sshKeyPath'),
     Optional('passphrase'): setType('passphrase', str),
     Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
-    Optional('maxTrialNumPerGPU'): setType('maxTrialNumPerGPU', int)
+    Optional('maxTrialNumPerGPU'): setType('maxTrialNumPerGPU', int),
+    Optional('useActiveGPU'): setType('useActiveGPU', bool)
 })]
 }
 
