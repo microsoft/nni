@@ -62,7 +62,7 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
     }
 
     public static getInstance(jsonObject: object): KubernetesClusterConfigNFS {
-        let kubernetesClusterConfigObjectNFS = <KubernetesClusterConfigNFS>jsonObject;
+        const kubernetesClusterConfigObjectNFS: KubernetesClusterConfigNFS = <KubernetesClusterConfigNFS>jsonObject;
 
         return new KubernetesClusterConfigNFS(
             kubernetesClusterConfigObjectNFS.apiVersion,
@@ -74,12 +74,12 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
 
 // tslint:disable:max-classes-per-file
 export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
-    public readonly keyVault: keyVaultConfig;
+    public readonly keyVault: KeyVaultConfig;
     public readonly azureStorage: AzureStorage;
 
     constructor(
             apiVersion: string,
-            keyVault: keyVaultConfig,
+            keyVault: KeyVaultConfig,
             azureStorage: AzureStorage,
             storage?: KubernetesStorageKind
         ) {
@@ -138,7 +138,7 @@ export class NFSConfig {
  * KeyVault configuration to store the key of Azure Storage Service
  * Refer https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
  */
-export class keyVaultConfig {
+export class KeyVaultConfig {
     // The vault-name to specify vault
     public readonly vaultName : string;
     // The name to specify private key

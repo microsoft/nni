@@ -20,7 +20,7 @@
 'use strict';
 
 import * as assert from 'assert';
-import { KubernetesClusterConfigAzure, KubernetesClusterConfigNFS, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig,
+import { KubernetesClusterConfigAzure, KubernetesClusterConfigNFS, KubernetesStorageKind, NFSConfig, AzureStorage, KeyVaultConfig,
         KubernetesTrialConfig, KubernetesTrialConfigTemplate, StorageConfig, KubernetesClusterConfig } from '../kubernetesConfig'
 import { MethodNotImplementedError } from '../../../common/errors';
 
@@ -72,7 +72,7 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure{
     constructor(
             operator: KubeflowOperator, 
             apiVersion: string, 
-            keyVault: keyVaultConfig, 
+            keyVault: KeyVaultConfig, 
             azureStorage: AzureStorage, 
             storage?: KubernetesStorageKind
         ) {

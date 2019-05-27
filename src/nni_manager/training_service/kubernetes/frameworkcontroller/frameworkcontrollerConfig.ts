@@ -21,7 +21,7 @@
 import * as assert from 'assert';
 
 import { KubernetesTrialConfig, KubernetesTrialConfigTemplate, KubernetesClusterConfigAzure,
-     KubernetesClusterConfigNFS, NFSConfig, KubernetesStorageKind, keyVaultConfig, AzureStorage, KubernetesClusterConfig,
+     KubernetesClusterConfigNFS, NFSConfig, KubernetesStorageKind, KeyVaultConfig, AzureStorage, KubernetesClusterConfig,
     StorageConfig } from '../kubernetesConfig'
 
 export class FrameworkAttemptCompletionPolicy {
@@ -98,7 +98,7 @@ export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConf
     constructor(
             serviceAccountName: string, 
             apiVersion: string, 
-            keyVault: keyVaultConfig, 
+            keyVault: KeyVaultConfig, 
             azureStorage: AzureStorage, 
             storage?: KubernetesStorageKind
         ) {
