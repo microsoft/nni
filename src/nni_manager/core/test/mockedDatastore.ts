@@ -210,6 +210,16 @@ class MockedDataStore implements DataStore {
         return result;
     }
 
+    async exportTrialHpConfigs(): Promise<string> {
+        const ret: string = '';
+        return Promise.resolve(ret);
+    }
+
+    async getImportedData(): Promise<string[]> {
+        const ret: string[] = [];
+        return Promise.resolve(ret);
+    }
+
     public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
         throw new Error("Method not implemented.");
     }
