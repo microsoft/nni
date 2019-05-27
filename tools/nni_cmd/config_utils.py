@@ -23,7 +23,7 @@ import os
 import json
 import shutil
 from .constants import NNICTL_HOME_DIR
-from common_utils import print_error
+from .common_utils import print_error
 
 class Config:
     '''a util class to load and save config'''
