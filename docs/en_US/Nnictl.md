@@ -671,15 +671,15 @@ Debug mode will disable version check function in Trialkeeper.
 
   |Name, shorthand|Required|Default|Description|
   |------|------|------ |------|
-  |--host|  True| |The host of hdfs|
+  |--host|  True| |The host ip of hdfs, the format is xx.xx.xx.xx, for example, 10.10.10.10|
   |--user_name|  True| |The userName of hdfs|
 
 * __nnictl hdfs clean__
 
   * Description
 
-    Clean up all files created by nni in hdfs
-
+    Clean up the code files that nni automatically copied to hdfs. This command deletes all such files under the user_name.
+    
   * Usage
 
     ```bash
