@@ -36,8 +36,8 @@ Unable to open the WebUI may have the following reasons:
 * If you still can't see the WebUI after you use the server IP, you can check the proxy and the firewall of your machine. Or use the browser on the machine where you start your NNI experiment.
 * Another reason may be your experiment is failed and NNI may fail to get the experiment infomation. You can check the log of NNImanager in the following directory: ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
 
-### Windows local mode problems
-Please refer to [NNI Windows local mode](WindowsLocalMode.md) 
+### NNI on Windows problems
+Please refer to [NNI on Windows](NniOnWindows.md) 
 
 ### Help us improve
 Please inquiry the problem in https://github.com/Microsoft/nni/issues to see whether there are other people already reported the problem, create a new one if there are no existing issues been created.
