@@ -38,7 +38,7 @@ All types of sampling strategies and their parameter are listed here:
 
 * {"_type":"randint","_value":[lower, upper]}
 
-  * For now, we implment the "randint" distribution with "quniform", which means the variable value is a value like round(uniform(lower, upper)).
+  * For now, we implment the "randint" distribution with "quniform", which means the variable value is a value like round(uniform(lower, upper)). The type of chosen value is float. If you want to use integer value, please convert it explicitly.
 
 * {"_type":"uniform","_value":[low, high]}
   * Which means the variable value is a value uniformly between low and high.
