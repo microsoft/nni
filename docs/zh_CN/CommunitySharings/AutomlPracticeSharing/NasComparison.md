@@ -14,7 +14,7 @@
 
 - NAO: <https://github.com/renqianluo/NAO>
 
-## 实验描述
+## 实验说明
 
 为了避免算法仅仅在 **CIFAR-10** 数据集上过拟合，还对比了包括 Fashion-MNIST, CIFAR-100, OUI-Adience-Age, ImageNet-10-1 (ImageNet的子集) 和 ImageNet-10-2 (ImageNet 的另一个子集) 在内的其它 5 个数据集。 分别从 ImageNet 中抽取 10 种不同类别标签的子集，组成 ImageNet10-1 和 ImageNet10-2 数据集 。
 
@@ -33,7 +33,7 @@
 
 NAO 需要太多的计算资源，因此只使用提供 Pipeline 脚本的 NAO-WS。
 
-对于 Autkeras，使用了 0.2.18 版本的代码, 因为这是开始实验时的最新版本。
+对于 AutoKeras，使用了 0.2.18 版本的代码, 因为这是开始实验时的最新版本。
 
 ## NAS 结果对比
 
@@ -54,13 +54,13 @@ NAO 需要太多的计算资源，因此只使用提供 Pipeline 脚本的 NAO-W
 | --------- | ------------ |:----------------:|:----------------:|:--------------:|:-----------:|
 | CIFAR- 10 | 88.56(best)  |   96.13(best)    |   97.11(best)    | 97.17(average) | 96.47(best) |
 
-对于 AutoKeras，由于其算法中的随机因素，它在所有数据集中的表现相对较差。
+AutoKeras，由于其算法中的随机因素，它在所有数据集中的表现相对较差。
 
-对于ENAS，ENAS（macro）在 OUI-Adience-Age 数据集中表现较好，并且 ENAS（micro）在 CIFAR-10 数据集中表现较好。
+ENAS，ENAS（macro）在 OUI-Adience-Age 数据集中表现较好，并且 ENAS（micro）在 CIFAR-10 数据集中表现较好。
 
 对于DARTS，在某些数据集上具有良好的结果，但在某些数据集中具有比较大的方差。 DARTS 三次实验中的差异在 OUI-Audience-Age 数据集上可达 5.37％（绝对值），在 ImageNet-10-1 数据集上可达4.36％（绝对值）。
 
-对于 NAO-WS，它在 ImageNet-10-2 中显示良好，但在 OUI-Adience-Age 中表现非常差。
+NAO-WS 在 ImageNet-10-2 中表现良好，但在 OUI-Adience-Age 中表现非常差。
 
 ## 参考文献
 

@@ -9,6 +9,7 @@
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
 learning_rate = 0.1
+
 ```
 
 此样例中，NNI 会从 (0.1, 0.01, 0.001) 中选择一个值赋给 learning_rate 变量。 第一行就是 NNI 的 Annotation，是 Python 中的一个字符串。 接下来的一行需要是赋值语句。 NNI 会根据 Annotation 行的信息，来给这一行的变量赋上相应的值。
