@@ -2,7 +2,7 @@
 
 ## 安装
 
-We support Linux MacOS and Windows in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 and Windows 10.1809 are tested and supported. 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+当前支持 Linux，MacOS 和 Windows，在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
 #### Linux 和 MacOS
 
@@ -12,7 +12,7 @@ We support Linux MacOS and Windows in current stage, Ubuntu 16.04 or higher, Mac
 
 #### Windows
 
-If you are using NNI on Windows, you need run below PowerShell command as administrator at first time.
+如果在 Windows 上使用 NNI，首次使用 PowerShell 时，需要以管理员身份运行下列命令。
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
