@@ -156,15 +156,17 @@ export class GPUScheduler {
                     // or index not in gpuIndices configuration in machineList,
                     // or trial number on a GPU reach max number,
                     // We should NOT allocate this GPU
+                    // if users set useActiveGpu, use the gpu whether there is another activeProcess
                     if (designatedGpuIndices === undefined || designatedGpuIndices.has(gpuInfo.index)) {
                         if(rmMeta.occupiedGpuIndexMap !== undefined) {
                             let num = rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
-                            let maxTrialNumPerGPU: number = rmMeta.maxTrialNumPerGPU? rmMeta.maxTrialNumPerGPU: 1;
-                            if((num === undefined && (!rmMeta.useActiveGPU && gpuInfo.activeProcessNum === 0 || !rmMeta.useActiveGPU)) || (num !== undefined && num < maxTrialNumPerGPU)) {
+                            let maxTrialNumPerGpu: number = rmMeta.maxTrialNumPerGpu? rmMeta.maxTrialNumPerGpu: 1;
+                            if((num === undefined && (!rmMeta.useActiveGpu && gpuInfo.activeProcessNum === 0 || rmMeta.useActiveGpu))
+                            || (num !== undefined && num < maxTrialNumPerGpu)) {
                                 availableGPUs.push(gpuInfo);
                             }
-                        } else if(!rmMeta.useActiveGPU && gpuInfo.activeProcessNum === 0 || rmMeta.useActiveGPU){
-                            availableGPUs.push(gpuInfo);
+                        } else {
+                            throw new Error(`occupiedGpuIndexMap initialize error!`);
                         }
                     }
                 });

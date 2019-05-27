@@ -37,12 +37,12 @@ export class RemoteMachineMeta {
     public readonly passphrase?: string;
     public gpuSummary : GPUSummary | undefined;
     public readonly gpuIndices?: string;
-    public readonly maxTrialNumPerGPU?: number;
+    public readonly maxTrialNumPerGpu?: number;
     public occupiedGpuIndexMap?: Map<number, number>;
-    public readonly useActiveGPU?: boolean = false;
+    public readonly useActiveGpu?: boolean = false;
 
     constructor(ip : string, port : number, username : string, passwd : string,
-                sshKeyPath: string, passphrase : string, gpuIndices?: string, maxTrialNumPerGPU?: number, useActiveGPU?: boolean) {
+                sshKeyPath: string, passphrase : string, gpuIndices?: string, maxTrialNumPerGpu?: number, useActiveGpu?: boolean) {
         this.ip = ip;
         this.port = port;
         this.username = username;
@@ -50,9 +50,9 @@ export class RemoteMachineMeta {
         this.sshKeyPath = sshKeyPath;
         this.passphrase = passphrase;
         this.gpuIndices = gpuIndices;
-        this.maxTrialNumPerGPU = maxTrialNumPerGPU;
+        this.maxTrialNumPerGpu = maxTrialNumPerGpu;
         this.occupiedGpuIndexMap = new Map<number, number>();
-        this.useActiveGPU = useActiveGPU;
+        this.useActiveGpu = useActiveGpu;
     }
 }
 

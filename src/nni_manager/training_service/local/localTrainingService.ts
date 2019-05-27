@@ -97,18 +97,18 @@ class LocalTrialJobDetail implements TrialJobDetail {
  * Local training service config
  */
 class LocalConfig {
-    public maxTrialNumPerGPU?: number;
+    public maxTrialNumPerGpu?: number;
     public gpuIndices?: string;
-    public useActiveGPU?: boolean;
-    constructor(gpuIndices?: string, maxTrialNumPerGPU?: number, useActiveGPU?: boolean) {
+    public useActiveGpu?: boolean;
+    constructor(gpuIndices?: string, maxTrialNumPerGpu?: number, useActiveGpu?: boolean) {
         if (gpuIndices !== undefined) {
             this.gpuIndices = gpuIndices;
         }
-        if (maxTrialNumPerGPU !== undefined) {
-            this.maxTrialNumPerGPU = maxTrialNumPerGPU;
+        if (maxTrialNumPerGpu !== undefined) {
+            this.maxTrialNumPerGpu = maxTrialNumPerGpu;
         }
-        if (useActiveGPU !== undefined) {
-            this.useActiveGPU = useActiveGPU;
+        if (useActiveGpu !== undefined) {
+            this.useActiveGpu = useActiveGpu;
         }
     }
 }
@@ -132,8 +132,8 @@ class LocalTrainingService implements TrainingService {
     private localConfig?: LocalConfig;
     private isMultiPhase: boolean = false;
     private jobStreamMap: Map<string, ts.Stream>;
-    private maxTrialNumPerGPU: number = 1;
-    private useActiveGPU: boolean = false;
+    private maxTrialNumPerGpu: number = 1;
+    private useActiveGpu: boolean = false;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -314,12 +314,12 @@ class LocalTrainingService implements TrainingService {
                         throw new Error('gpuIndices can not be empty if specified.');
                     }
                 }
-                if (this.localConfig.maxTrialNumPerGPU !== undefined) {
-                    this.maxTrialNumPerGPU = this.localConfig.maxTrialNumPerGPU;
+                if (this.localConfig.maxTrialNumPerGpu !== undefined) {
+                    this.maxTrialNumPerGpu = this.localConfig.maxTrialNumPerGpu;
                 }
 
-                if (this.localConfig.useActiveGPU !== undefined) {
-                    this.useActiveGPU = this.localConfig.useActiveGPU;
+                if (this.localConfig.useActiveGpu !== undefined) {
+                    this.useActiveGpu = this.localConfig.useActiveGpu;
                 }
                 break;
             case TrialConfigMetadataKey.MULTI_PHASE:
@@ -421,10 +421,10 @@ class LocalTrainingService implements TrainingService {
         }
 
         let selectedGPUIndices: number[] = [];
-        let availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.useActiveGPU, this.occupiedGpuIndexNumMap);
+        let availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.useActiveGpu, this.occupiedGpuIndexNumMap);
         for(let index of availableGpuIndices) {
             let num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
-            if(num === undefined || num < this.maxTrialNumPerGPU) {
+            if(num === undefined || num < this.maxTrialNumPerGpu) {
                 selectedGPUIndices.push(index);
             }
         }

@@ -32,13 +32,13 @@ export namespace ValidationSchemas {
                 sshKeyPath: joi.string(),
                 passphrase: joi.string(),
                 gpuIndices: joi.string(),
-                maxTrialNumPerGPU: joi.number(),
-                useActiveGPU: joi.boolean()
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean()
             })),
             local_config: joi.object({
                 gpuIndices: joi.string(),
-                maxTrialNumPerGPU: joi.number(),
-                useActiveGPU: joi.boolean()
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean()
             }),
             trial_config: joi.object({
                 image: joi.string().min(1),
