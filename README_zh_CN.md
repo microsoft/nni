@@ -155,7 +155,7 @@ Windows
 
 参考[安装 NNI](docs/zh_CN/Installation.md) 了解系统需求。
 
-For NNI on Windows, please refer to [NNI on Windows](docs/en_US/NniOnWindows.md)
+Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/NniOnWindows.md)。
 
 **验证安装**
 
