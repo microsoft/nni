@@ -20,10 +20,6 @@
 """
 smac_tuner.py
 """
-
-from nni.tuner import Tuner
-from nni.utils import OptimizeMode, extract_scalar_reward
-
 import sys
 import logging
 import numpy as np
@@ -37,6 +33,8 @@ from smac.facade.smac_facade import SMAC
 from smac.facade.roar_facade import ROAR
 from smac.facade.epils_facade import EPILS
 
+from nni.tuner import Tuner
+from nni.utils import OptimizeMode, extract_scalar_reward, randint_to_quniform
 
 class SMACTuner(Tuner):
     """
@@ -134,6 +132,7 @@ class SMACTuner(Tuner):
         search_space:
             search space
         """
+        randint_to_quniform(search_space)
         if not self.update_ss_done:
             self.categorical_dict = generate_scenario(search_space)
             if self.categorical_dict is None:
