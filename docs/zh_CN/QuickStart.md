@@ -161,7 +161,7 @@ trial:
 
 从命令行使用 **config_windows.yml** 文件启动 MNIST Experiment 。
 
-**Note**, if you're using NNI on Windows, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
+**注意**：如果使用 Windows，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
