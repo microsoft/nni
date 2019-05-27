@@ -451,8 +451,8 @@ def monitor_experiment(args):
             exit(1)
 
 def export_trials_data(args):
-    """export experiment metadata to csv
-    """
+    '''export experiment metadata to csv
+    '''
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
@@ -464,10 +464,9 @@ def export_trials_data(args):
         response = rest_get(export_data_url(rest_port), 20)
         if response is not None and check_response(response):
             if args.type == 'json':
-                f_obj = open(args.path, 'w')
-                f_obj.write(response.text)
-                f_obj.close()
-            else:
+                with open(args.path, 'w') as file:
+                    file.write(response.text)
+            elif args.type == 'csv':
                 content = json.loads(response.text)
                 trial_records = []
                 for record in content:
@@ -480,6 +479,9 @@ def export_trials_data(args):
                     writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in trial_records]))
                     writer.writeheader()
                     writer.writerows(trial_records)
+            else:
+                print_error('Unknown type: %s' % args.type)
+                exit(1)
         else:
             print_error('Export failed...')
     else:
