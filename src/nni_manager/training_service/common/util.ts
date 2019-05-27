@@ -24,7 +24,10 @@ import { getLogger } from "common/log";
 import { countFilesRecursively } from '../../common/utils'
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
-import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData'
+import * as os from 'os';
+import * as fs from 'fs';
+import { getNewLine } from '../../common/utils';
+import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
 import { file } from "../../node_modules/@types/tmp";
@@ -67,6 +70,20 @@ export async function execMkdir(directory: string): Promise<void> {
 }
 
 /**
+ * copy files to the directory
+ * @param source
+ * @param destination
+ */
+export async function execCopydir(source: string, destination: string): Promise<void> {
+    if (process.platform === 'win32') {
+        await cpp.exec(`powershell.exe Copy-Item ${source} -Destination ${destination} -Recurse`);
+    } else {
+        await cpp.exec(`cp -r ${source} ${destination}`);
+    }
+    return Promise.resolve();
+}
+
+/**
  * crete a new file
  * @param filename 
  */
@@ -91,8 +108,6 @@ export function execScript(filePath: string): cp.ChildProcess {
     }
 }
 
-
-
 /**
  * output the last line of a file
  * @param filePath 
@@ -111,9 +126,9 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
  * delete a directory
  * @param directory 
  */
-export async function execRemove(directory: string): Promise<void>{
+export async function execRemove(directory: string): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe Remove-Item ${directory}`);
+        await cpp.exec(`powershell.exe Remove-Item ${directory} -Recurse -Force`);
     } else {
         await cpp.exec(`rm -rf ${directory}`);
     }
@@ -124,7 +139,7 @@ export async function execRemove(directory: string): Promise<void>{
  * kill a process
  * @param directory 
  */
-export async function execKill(pid: string): Promise<void>{
+export async function execKill(pid: string): Promise<void> {
     if (process.platform === 'win32') {
         await cpp.exec(`cmd /c taskkill /PID ${pid} /T /F`);
     } else {
@@ -138,7 +153,7 @@ export async function execKill(pid: string): Promise<void>{
  * @param  variable
  * @returns command string  
  */
-export function setEnvironmentVariable(variable: { key: string; value: string }): string{
+export function setEnvironmentVariable(variable: { key: string; value: string }): string {
     if (process.platform === 'win32') {
         return `$env:${variable.key}="${variable.value}"`;
     }
@@ -147,6 +162,32 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
     }
 }
 
+/**
+ * Compress files in directory to tar file
+ * @param  source_path
+ * @param  tar_path
+ */
+export async function tarAdd(tar_path: string, source_path: string): Promise<void> {
+    if (process.platform === 'win32') {
+        tar_path = tar_path.split('\\').join('\\\\');
+        source_path = source_path.split('\\').join('\\\\');
+        let script: string[] = [];
+        script.push(
+            `import os`,
+            `import tarfile`,
+            String.Format(`tar = tarfile.open("{0}","w:gz")\r\nfor root,dir,files in os.walk("{1}"):`, tar_path, source_path),
+            `    for file in files:`,
+            `        fullpath = os.path.join(root,file)`,
+            `        tar.add(fullpath, arcname=file)`,
+            `tar.close()`);
+        await fs.promises.writeFile(path.join(os.tmpdir(), 'tar.py'), script.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
+        const tarScript: string = path.join(os.tmpdir(), 'tar.py');
+        await cpp.exec(`python ${tarScript}`);
+    } else {
+        await cpp.exec(`tar -czf ${tar_path} -C ${source_path} .`);
+    }
+    return Promise.resolve();
+}
 
 /**
  * generate script file name
