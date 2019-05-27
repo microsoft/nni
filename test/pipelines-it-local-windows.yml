@@ -25,12 +25,16 @@ jobs:
       python -m pip install keras==2.1.6 --user
       python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
       python -m pip install torchvision --user
-      python -m pip install tensorflow-gpu==1.11.0 --user
+      python -m pip install tensorflow==1.11.0 --user
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
       python generate_ts_config.py
     displayName: 'generate config files'
+  - script: |
+      cd test
+      python config_test.py --ts local --local_gpu --exclude cifar10,smac,bohb
+    displayName: 'Examples and advanced features tests on local machine'
   - script: |
       cd test
       powershell.exe -file unittest.ps1
@@ -48,6 +52,12 @@ jobs:
       python metrics_test.py
     displayName: 'Trial job metrics test'
   - script: |
-      cd test
-      python config_test.py --ts local --local_gpu --exclude smac,bohb
-    displayName: 'Examples and advanced features tests on local machine'
+      cd deployment\pypi
+      powershell.exe -file install.ps1
+      dir $(Build.SourcesDirectory)\deployment\pypi\dist\
+    displayName: 'Build bdsit_wheel'
+  - script:  |
+      powershell.exe rm $(Agent.ToolsDirectory)\nni -Recurse -Force
+      powershell.exe New-Item $(Agent.ToolsDirectory)\nni -itemtype directory
+      powershell.exe cp $(Build.SourcesDirectory)\deployment\pypi\dist\* $(Agent.ToolsDirectory)\nni
+    displayName: 'Host bdsit_wheel'
