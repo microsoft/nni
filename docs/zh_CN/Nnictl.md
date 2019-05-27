@@ -461,7 +461,7 @@ nnictl 支持的命令：
     > 将数据导入运行中的 Experiment
     
     ```bash
-    nnictl experiment [experiment_id] -f experiment_data.json
+    nnictl experiment import [experiment_id] -f experiment_data.json
     ```
 
 <a name="config"></a>

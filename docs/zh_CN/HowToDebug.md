@@ -19,7 +19,7 @@ NNI 中有三种日志。 在创建 Experiment 时，可增加命令行参数 `-
 
 在启动 NNI Experiment 时发生的错误，都可以在这里找到。
 
-通过 `nnictl log stderr` 命令来查看错误信息。 参考 [NNICTL](NNICTLDOC.md) 了解更多命令选项。
+通过 `nnictl log stderr` 命令来查看错误信息。 参考 [NNICTL](Nnictl.md) 了解更多命令选项。
 
 ### Experiment 根目录
 

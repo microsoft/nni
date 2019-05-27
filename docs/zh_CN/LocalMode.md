@@ -87,7 +87,7 @@
 
 上面的命令会写在 YAML 文件中。 参考[这里](Trials.md)来写出自己的 Experiment 代码。
 
-**准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的 Tuner（参考[这里](Customize_Tuner.md)）。下面使用了 NNI 内置的 Tuner：
+**准备 Tuner**: NNI 支持多种流行的自动机器学习算法，包括：Random Search（随机搜索），Tree of Parzen Estimators (TPE)，Evolution（进化算法）等等。 也可以实现自己的 Tuner（参考[这里](CustomizeTuner.md)）。下面使用了 NNI 内置的 Tuner：
 
       tuner:
         builtinTunerName: TPE
@@ -95,7 +95,7 @@
           optimize_mode: maximize
     
 
-*builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner的参数（内置 Tuner 在[这里](Builtin_Tuner.md)），*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
+*builtinTunerName* 用来指定 NNI 中的 Tuner，*classArgs* 是传入到 Tuner的参数（内置 Tuner 在[这里](BuiltinTuner.md)），*optimization_mode* 表明需要最大化还是最小化 Trial 的结果。
 
 **准备配置文件**：实现 Trial 的代码，并选择或实现自定义的 Tuner 后，就要准备 YAML 配置文件了。 NNI 为每个 Trial 样例都提供了演示的配置文件，用命令`cat ~/nni/examples/trials/mnist-annotation/config.yml` 来查看其内容。 大致内容如下：
 
@@ -133,7 +133,7 @@
       nnictl create --config ~/nni/examples/trials/mnist-annotation/config.yml
     
 
-参考[这里](NNICTLDOC.md)来了解 *nnictl* 命令行工具的更多用法。
+参考[这里](Nnictl.md)来了解 *nnictl* 命令行工具的更多用法。
 
 ## 查看 Experiment 结果
 
