@@ -60,6 +60,8 @@ class NNIManager implements Manager {
     private trialJobs: Map<string, TrialJobDetail>;
     private trialDataForTuner: string;
 
+    private trialJobMetricListener: (metric: TrialJobMetric) => void;
+    
     constructor() {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
@@ -77,6 +79,11 @@ class NNIManager implements Manager {
         this.status = {
             status: 'INITIALIZED',
             errors: []
+        };
+        this.trialJobMetricListener = (metric: TrialJobMetric) => {
+            this.onTrialJobMetrics(metric).catch((err: Error) => {
+                this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
+            });
         };
     }
 
@@ -358,6 +365,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
+        this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener); 
         this.dispatcher.sendCommand(TERMINATE);
         let tunerAlive: boolean = true;
         // gracefully terminate tuner and assessor here, wait at most 30 seconds.
@@ -605,11 +613,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner or job maintainer have not been setup');
         }
-        this.trainingService.addTrialJobMetricListener((metric: TrialJobMetric) => {
-            this.onTrialJobMetrics(metric).catch((err: Error) => {
-                this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
-            });
-        });
+        this.trainingService.addTrialJobMetricListener(this.trialJobMetricListener);
 
         this.dispatcher.onCommand((commandType: string, content: string) => {
             this.onTunerCommand(commandType, content).catch((err: Error) => {

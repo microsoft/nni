@@ -4,7 +4,7 @@
 
 ## **在 Windows 上安装**
 
-**强烈推荐使用 Anaconda python(64 位)。**
+**强烈推荐使用 Anaconda 或 Miniconda Python（64位）。**
 
 在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
 
@@ -22,7 +22,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 * __通过代码安装 NNI__
 
-  先决条件: `python >=3.5`, `git`, `powershell`
+  先决条件: `python >=3.5`, `git`, `PowerShell`
 
   ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
@@ -58,7 +58,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ### 在命令行或 PowerShell 中，Trial 因为缺少 DLL 而失败
 
-此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 使用 Anaconda Python(64-bit) 可解决此问题。
+此错误因为缺少 LIBIFCOREMD.DLL 和 LIBMMD.DLL 文件，且 SciPy 安装失败。 使用 Anaconda 或 Miniconda 和 Python（64位）可解决。
 
 > ImportError: DLL load failed
 

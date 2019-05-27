@@ -86,7 +86,7 @@ def convert_command():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote'], default='pai')
+    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local'], default='pai')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
     # args for PAI
@@ -111,4 +111,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     update_training_service_config(args)
-    convert_command()
+    if args.ts == 'local':
+        convert_command()
