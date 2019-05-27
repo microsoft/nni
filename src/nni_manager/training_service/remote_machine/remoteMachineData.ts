@@ -38,7 +38,7 @@ export class RemoteMachineMeta {
     public gpuSummary : GPUSummary | undefined;
     public readonly gpuIndices?: string;
     public readonly maxTrialNumPerGpu?: number;
-    public occupiedGpuIndexMap?: Map<number, number> | undefined;
+    public occupiedGpuIndexMap: Map<number, number>;
     public readonly useActiveGpu?: boolean = false;
 
     constructor(ip : string, port : number, username : string, passwd : string,
