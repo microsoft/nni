@@ -121,5 +121,5 @@ def randint_to_quniform(in_x):
             for key in in_x.keys():
                 randint_to_quniform(in_x[key])
     elif isinstance(in_x, list):
-        for _, temp in enumerate(in_x):
+        for temp in in_x:
             randint_to_quniform(temp)
