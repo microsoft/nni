@@ -9,17 +9,9 @@ FLAGS = flags.FLAGS
 
 DEFINE_boolean("reset_output_dir", False, "Delete output_dir if exists.")
 DEFINE_string("output_dir", "", "")
-DEFINE_string("search_for", "macro", "Must be [macro|micro]")
-
 DEFINE_integer("batch_size", 128, "")
-DEFINE_integer("num_epochs", 310, "")
-DEFINE_integer("train_data_size", 45000, "")
-
 DEFINE_integer("child_num_layers", 12, "")
 DEFINE_integer("child_num_branches", 6, "")
-DEFINE_integer("child_out_filters", 36, "")
-DEFINE_integer("child_num_cells", 5, "")
-
 DEFINE_float("controller_lr", 0.001, "")
 DEFINE_float("controller_lr_dec_rate", 1.0, "")
 DEFINE_float("controller_keep_prob", 0.5, "")
