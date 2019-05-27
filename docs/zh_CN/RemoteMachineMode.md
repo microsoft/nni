@@ -56,14 +56,28 @@ machineList:
     passwd: bob123
 ```
 
-填好 `machineList` 部分，然后运行：
+You can use different systems to run experiments on the remote machine.
+
+#### Linux and MacOS
+
+Simply filling the `machineList` section and then run:
 
 ```bash
 nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
 ```
 
-来启动 Experiment。
+to start the experiment.
+
+#### Windows
+
+Simply filling the `machineList` section and then run:
+
+```bash
+nnictl create --config %userprofile%\nni\examples\trials\mnist-annotation\config_remote.yml
+```
+
+to start the experiment.
 
 ## 版本校验
 
-从 0.6 开始，NNI 支持版本校验，详情参考[这里](PaiMode.md)。
+NNI support version check feature in since version 0.6, [refer](PaiMode.md)

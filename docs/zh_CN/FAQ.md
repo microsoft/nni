@@ -47,7 +47,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 ### Windows 本机模式
 
-参考 [NNI Windows 本机模式](WindowsLocalMode.md)
+Please refer to [NNI on Windows](NniOnWindows.md)
 
 ### 帮助改进
 
