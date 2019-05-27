@@ -23,6 +23,7 @@ import os
 import json
 import shutil
 from .constants import NNICTL_HOME_DIR
+from common_utils import print_error
 
 class Config:
     '''a util class to load and save config'''
@@ -132,7 +133,8 @@ class HDFSConfig:
             try:
                 with open(self.hdfs_config_file, 'r') as file:
                     return json.load(file)
-            except Exception:
+            except Exception as exception:
+                print_error(exception)
                 return None
         else:
             return None
