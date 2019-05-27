@@ -26,8 +26,9 @@ import datetime
 import time
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
-from .config_utils import Config, Experiments
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
+from pyhdfs import HdfsClient, HdfsFileNotFoundException
+from .config_utils import Config, Experiments, HDFSConfig
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process
@@ -486,3 +487,35 @@ def export_trials_data(args):
             print_error('Export failed...')
     else:
         print_error('Restful server is not Running')
+
+def hdfs_set(args):
+    hdfsConfig = HDFSConfig()
+    hdfsConfig.set_config(args.host, args.user_name)
+    print_normal('HDFS account update success!')
+
+def hdfs_clean(args):
+    hdfsConfig = HDFSConfig()
+    if not hdfsConfig.get_config():
+        print_error('Please use \'nnictl hdfs set\' command to set hdfs account first!')
+        exit(1)
+    host = hdfsConfig.get_config().get('host')
+    user_name = hdfsConfig.get_config().get('userName')
+    hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)
+    root_path = os.path.join('/', user_name, 'nni', 'experiments')
+    while True:
+        inputs = input('INFO: clean up all files in {0}, do you want to continue?[Y/N]:'.format(root_path))
+        if inputs.lower() not in ['y', 'n', 'yes', 'no']:
+            print_warning('please input Y or N!')
+        elif inputs.lower() in ['n', 'no']:
+            exit(0)
+        else:
+            break
+    path_list = hdfs_client.listdir(root_path)
+    for path in path_list:
+        full_path = os.path.join(root_path, path)
+        print_normal('deleting {0}'.format(full_path))
+        if hdfs_client.delete(full_path, recursive=True):
+            print_normal('delete success!')
+        else:
+            print_normal('delete failed!')
+    print_normal('DONE')
