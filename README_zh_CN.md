@@ -101,7 +101,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **安装和验证**
 
-If you are using NNI on Windows and use PowerShell to run script for the first time, you need to **run PowerShell as administrator** with this command first:
+在 Windows 本机模式下，并且是第一次使用 PowerShell 来运行脚本，需要**使用管理员权限**运行一次下列命令：
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
@@ -109,7 +109,7 @@ If you are using NNI on Windows and use PowerShell to run script for the first t
 
 **通过 pip 命令安装**
 
-* We support Linux, MacOS and Windows(local, remote and pai mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+* 当前支持 Linux，MacOS 和 Windows（本机，远程，OpenPAI 模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
 Linux 和 macOS
 
@@ -126,12 +126,12 @@ python -m pip install --upgrade nni
 注意：
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
-* Currently NNI on Windows support local, remote and pai mode. 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
+* 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/FAQ.md)。
 
 **通过源代码安装**
 
-* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) and Windows (10.1809) in our current stage. 
+* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。 
 
 Linux 和 macOS
 
