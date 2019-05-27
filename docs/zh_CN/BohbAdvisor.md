@@ -10,7 +10,7 @@ BOHB 依赖 HB（Hyperband）来决定每次跑多少组参数和每组参数分
 
 ### HB（Hyperband）
 
-按照 Hyperband 的方式来选择每次跑的参数个数与分配多少资源（budget），并继续使用“连续减半（SuccessiveHalving）”策略，更多有关Hyperband算法的细节，请参考[NNI 中的 Hyperband](hyperbandAdvisor.md) 和 [Hyperband 的参考论文](https://arxiv.org/abs/1603.06560)。 下面的伪代码描述了这个过程。
+按照 Hyperband 的方式来选择每次跑的参数个数与分配多少资源（budget），并继续使用“连续减半（SuccessiveHalving）”策略，更多有关Hyperband算法的细节，请参考[NNI 中的 Hyperband](HyperbandAdvisor.md) 和 [Hyperband 的参考论文](https://arxiv.org/abs/1603.06560)。 下面的伪代码描述了这个过程。
 
 ![](../img/bohb_1.png)
 
