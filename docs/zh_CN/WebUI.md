@@ -6,8 +6,8 @@
 
 * 查看 Experiment 的配置和搜索空间内容。
 * 支持下载 Experiment 结果。
-* Support to export nni-manager and dispatcher log file.
-* If you have any question, you can click "Feedback" to report it.
+* 支持导出 nni-manager 和 dispatcher 的日志文件。
+* 如果有任何问题，可以点击 “Feedback” 告诉我们。
 
 ![](../img/webui-img/over1.png)
 
@@ -54,20 +54,20 @@
 
 ![](../img/webui-img/detail-local.png)
 
-* The button named "Add column" can select which column to show in the table. If you run an experiment that final result is dict, you can see other keys in the table.
+* "Add column" 按钮可选择在表格中显示的列。 如果 Experiment 的最终结果是 dict，则可以在表格中查看其它键。
 
 ![](../img/webui-img/addColumn.png)
 
-* You can use the button named "Copy as python" to copy trial's parameters.
+* 可使用 "Copy as python" 按钮来拷贝 Trial 的参数。
 
 ![](../img/webui-img/copyParameter.png)
 
-* If you run on OpenPAI or Kubeflow platform, you can also see the hdfsLog.
+* 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
 
 ![](../img/webui-img/detail-pai.png)
 
-* Kill: you can kill a job that status is running.
-* Support to search for a specific trial.
-* Intermediate Result Graph.
+* Kill: 可终止正在运行的任务。
+* 支持搜索某个特定的 Trial。
+* 中间结果图。
 
 ![](../img/intermediate.png)
