@@ -130,10 +130,10 @@ class LocalTrainingService implements TrainingService {
     private log: Logger;
     private localTrailConfig?: TrialConfig;
     private localConfig?: LocalConfig;
-    private isMultiPhase: boolean = false;
+    private isMultiPhase: boolean;
     private jobStreamMap: Map<string, ts.Stream>;
-    private maxTrialNumPerGpu: number = 1;
-    private useActiveGpu: boolean = false;
+    private maxTrialNumPerGpu: number;
+    private useActiveGpu: boolean;
 
     constructor() {
         this.eventEmitter = new EventEmitter();
@@ -146,6 +146,9 @@ class LocalTrainingService implements TrainingService {
         this.jobStreamMap = new Map<string, ts.Stream>();
         this.log.info('Construct local machine training service.');
         this.occupiedGpuIndexNumMap = new Map<number, number>();
+        this.maxTrialNumPerGpu = 1;
+        this.useActiveGpu = false;
+        this.isMultiPhase = false;
     }
 
     public async run(): Promise<void> {

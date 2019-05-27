@@ -93,7 +93,10 @@ export class GPUScheduler {
         if(trialJobDetail === undefined) {
             throw new Error(`could not get trialJobDetail by id ${trialJobId}`);
         } 
-        if (trialJobDetail.rmMeta !== undefined && trialJobDetail.rmMeta.occupiedGpuIndexMap !== undefined && trialJobDetail.gpuIndices !== undefined && trialJobDetail.gpuIndices.length > 0) {
+        if (trialJobDetail.rmMeta !== undefined && 
+            trialJobDetail.rmMeta.occupiedGpuIndexMap !== undefined && 
+            trialJobDetail.gpuIndices !== undefined && 
+            trialJobDetail.gpuIndices.length > 0) {
             for (const gpuInfo of trialJobDetail.gpuIndices) {
                 let num: number | undefined = trialJobDetail.rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
                 if(num !== undefined) {
@@ -161,8 +164,8 @@ export class GPUScheduler {
                         if(rmMeta.occupiedGpuIndexMap !== undefined) {
                             let num = rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
                             let maxTrialNumPerGpu: number = rmMeta.maxTrialNumPerGpu? rmMeta.maxTrialNumPerGpu: 1;
-                            if((num === undefined && (!rmMeta.useActiveGpu && gpuInfo.activeProcessNum === 0 || rmMeta.useActiveGpu))
-                            || (num !== undefined && num < maxTrialNumPerGpu)) {
+                            if((num === undefined && (!rmMeta.useActiveGpu && gpuInfo.activeProcessNum === 0 || rmMeta.useActiveGpu)) ||
+                               (num !== undefined && num < maxTrialNumPerGpu)) {
                                 availableGPUs.push(gpuInfo);
                             }
                         } else {
@@ -200,8 +203,7 @@ export class GPUScheduler {
                 }
                 rmMeta.occupiedGpuIndexMap.set(gpuInfo.index, num + 1);
             }else {
-                rmMeta.occupiedGpuIndexMap = new Map<number, number>();
-                rmMeta.occupiedGpuIndexMap.set(gpuInfo.index, 1);
+                throw new Error(`Machine ${rmMeta.ip} occupiedGpuIndexMap initialize error!`);
             }
         });
         trialJobDetail.gpuIndices = allocatedGPUs;
