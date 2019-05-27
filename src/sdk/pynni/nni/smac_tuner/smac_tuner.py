@@ -20,6 +20,7 @@
 """
 smac_tuner.py
 """
+
 import sys
 import logging
 import numpy as np
@@ -35,6 +36,7 @@ from smac.facade.epils_facade import EPILS
 
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward, randint_to_quniform
+
 
 class SMACTuner(Tuner):
     """
