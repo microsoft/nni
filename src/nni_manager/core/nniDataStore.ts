@@ -24,7 +24,8 @@ import { Deferred } from 'ts-deferred';
 
 import * as component from '../common/component';
 import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
-    TrialJobEvent, TrialJobEventRecord, TrialJobInfo } from '../common/datastore';
+    TrialJobEvent, TrialJobEventRecord, TrialJobInfo, HyperParameterFormat,
+    ExportedDataFormat } from '../common/datastore';
 import { NNIError } from '../common/errors';
 import { getExperimentId, isNewExperiment } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
@@ -169,6 +170,61 @@ class NNIDataStore implements DataStore {
 
     public getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
         return this.db.queryMetricData(trialJobId, metricType);
+    }
+
+    public async exportTrialHpConfigs(): Promise<string> {
+        const jobs: TrialJobInfo[] = await this.listTrialJobs();
+        let exportedData: ExportedDataFormat[] = [];
+        for (const job of jobs) {
+            if (job.hyperParameters && job.finalMetricData) {
+                if (job.hyperParameters.length === 1 && job.finalMetricData.length === 1) {
+                    // optimization for non-multi-phase case
+                    const parameters: HyperParameterFormat = <HyperParameterFormat>JSON.parse(job.hyperParameters[0]);
+                    const oneEntry: ExportedDataFormat = {
+                        parameter: parameters.parameters,
+                        value: JSON.parse(job.finalMetricData[0].data),
+                        id: job.id
+                    };
+                    exportedData.push(oneEntry);
+                } else {
+                    let paraMap: Map<number, Object> = new Map();
+                    let metricMap: Map<number, Object> = new Map();
+                    for (const eachPara of job.hyperParameters) {
+                        const parameters: HyperParameterFormat = <HyperParameterFormat>JSON.parse(eachPara);
+                        paraMap.set(parameters.parameter_id, parameters.parameters);
+                    }
+                    for (const eachMetric of job.finalMetricData) {
+                        const value: Object = JSON.parse(eachMetric.data);
+                        metricMap.set(Number(eachMetric.parameterId), value);
+                    }
+                    paraMap.forEach((value: Object, key: number) => {
+                        const metricValue: Object | undefined = metricMap.get(key);
+                        if (metricValue) {
+                            const oneEntry: ExportedDataFormat = {
+                                parameter: value,
+                                value: metricValue,
+                                id: job.id
+                            };
+                            exportedData.push(oneEntry);
+                        }
+                    });
+                }
+            }
+        }
+
+        return JSON.stringify(exportedData);
+    }
+
+    public async getImportedData(): Promise<string[]> {
+        let importedData: string[] = [];
+        const importDataEvents: TrialJobEventRecord[] = await this.db.queryTrialJobEvent(undefined, 'IMPORT_DATA');
+        for (const event of importDataEvents) {
+            if (event.data) {
+                importedData.push(event.data);
+            }
+        }
+
+        return importedData;
     }
 
     private async queryTrialJobs(status?: TrialJobStatus, trialJobId?: string): Promise<TrialJobInfo[]> {

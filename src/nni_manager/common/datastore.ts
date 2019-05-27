@@ -70,6 +70,18 @@ interface TrialJobInfo {
     stderrPath?: string;
 }
 
+interface HyperParameterFormat {
+    parameter_source: string;
+    parameters: Object;
+    parameter_id: number;
+}
+
+interface ExportedDataFormat {
+    parameter: Object;
+    value: Object;
+    id: string;
+}
+
 abstract class DataStore {
     public abstract init(): Promise<void>;
     public abstract close(): Promise<void>;
@@ -82,6 +94,8 @@ abstract class DataStore {
     public abstract getTrialJob(trialJobId: string): Promise<TrialJobInfo>;
     public abstract storeMetricData(trialJobId: string, data: string): Promise<void>;
     public abstract getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]>;
+    public abstract exportTrialHpConfigs(): Promise<string>;
+    public abstract getImportedData(): Promise<string[]>;
 }
 
 abstract class Database {
@@ -99,5 +113,5 @@ abstract class Database {
 
 export {
     DataStore, Database, TrialJobEvent, MetricType, MetricData, TrialJobInfo,
-    ExperimentProfileRecord, TrialJobEventRecord, MetricDataRecord
+    ExperimentProfileRecord, TrialJobEventRecord, MetricDataRecord, HyperParameterFormat, ExportedDataFormat
 };
