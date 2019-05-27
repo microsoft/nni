@@ -5,7 +5,7 @@
 - [MNIST 中使用 NNI API](#mnist)
 - [MNIST 中使用 NNI 标记（annotation）](#mnist-annotation)
 - [在 Keras 中使用 MNIST](#mnist-keras)
-- [MNIST -- 用批处理调参器来调优](#mnist-batch)
+- [MNIST -- 用批处理 Tuner 来调优](#mnist-batch)
 - [MNIST -- 用 hyperband 调优](#mnist-hyperband)
 - [MNIST -- 用嵌套搜索空间调优](#mnist-nested)
 - [用 Kubeflow 运行分布式的 MNIST (tensorflow)](#mnist-kubeflow-tf)
@@ -14,7 +14,7 @@
 <a name="mnist"></a>
 **MNIST 中使用 NNI API**
 
-这是个简单的卷积网络，有两个卷积层，两个池化层和一个全连接层。 调优的超参包括 dropout 比率，卷积层大小，隐藏层（全连接层）大小等等。 它能用 NNI 中大部分内置的调参器来调优，如 TPE，SMAC，Random。 样例的 YAML 文件也启用了评估器来提前终止一些中间结果不好的尝试。
+这是个简单的卷积网络，有两个卷积层，两个池化层和一个全连接层。 调优的超参包括 dropout 比率，卷积层大小，隐藏层（全连接层）大小等等。 它能用 NNI 中大部分内置的 Tuner 来调优，如 TPE，SMAC，Random。 样例的 YAML 文件也启用了评估器来提前终止一些中间结果不好的尝试。
 
 `代码目录: examples/trials/mnist/`
 
@@ -33,9 +33,9 @@
 `代码目录: examples/trials/mnist-keras/`
 
 <a name="mnist-batch"></a>
-**MNIST -- 用批处理调参器来调优**
+**MNIST -- 用批处理 Tuner 来调优**
 
-此样例演示了如何使用批处理调参器。 只需要在搜索空间文件中列出所有要尝试的配置， NNI 会逐个尝试。
+此样例演示了如何使用批处理 Tuner。 只需要在搜索空间文件中列出所有要尝试的配置， NNI 会逐个尝试。
 
 `代码目录: examples/trials/mnist-batch-tune-keras/`
 

@@ -3,4 +3,4 @@
 
 ..  toctree::
     多阶段<MultiPhase>
-    AdvancedNas<AdvancedNas>
+    高级网络架构搜索<AdvancedNas>

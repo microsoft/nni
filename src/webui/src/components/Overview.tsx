@@ -192,17 +192,21 @@ class Overview extends React.Component<{}, OverviewState> {
             method: 'GET'
         })
             .then(res => {
-                if (res.status === 200 && this._isMounted) {
+                if (res.status === 200) {
                     const errors = res.data.errors;
                     if (errors.length !== 0) {
-                        this.setState({
-                            status: res.data.status,
-                            errorStr: res.data.errors[0]
-                        });
+                        if (this._isMounted) {
+                            this.setState({
+                                status: res.data.status,
+                                errorStr: res.data.errors[0]
+                            });
+                        }
                     } else {
-                        this.setState({
-                            status: res.data.status,
-                        });
+                        if (this._isMounted) {
+                            this.setState({
+                                status: res.data.status,
+                            });
+                        }
                     }
                 }
             });
@@ -254,7 +258,8 @@ class Overview extends React.Component<{}, OverviewState> {
                             case 'SUCCEEDED':
                                 profile.succTrial += 1;
                                 const desJobDetail: Parameters = {
-                                    parameters: {}
+                                    parameters: {},
+                                    intermediate: []
                                 };
                                 const duration = (tableData[item].endTime - tableData[item].startTime) / 1000;
                                 const acc = getFinal(tableData[item].finalMetricData);

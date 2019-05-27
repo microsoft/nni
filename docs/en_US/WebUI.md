@@ -6,6 +6,8 @@ Click the tab "Overview".
 
 * See the experiment trial profile and search space message.
 * Support to download the experiment result.
+* Support to export nni-manager and dispatcher log file.
+* If you have any question, you can click "Feedback" to report it.
 
 ![](../img/webui-img/over1.png)
 * See good performance trials.
@@ -51,6 +53,14 @@ Click the tab "Trials Detail" to see the status of the all trials. Specifically:
 * Trial detail: trial's id, trial's duration, start time, end time, status, accuracy and search space file.
 
 ![](../img/webui-img/detail-local.png)
+
+* The button named "Add column" can select which column to show in the table. If you run an experiment that final result is dict, you can see other keys in the table.
+
+![](../img/webui-img/addColumn.png)
+
+* You can use the button named "Copy as python" to copy trial's parameters.
+
+![](../img/webui-img/copyParameter.png)
 
 * If you run on OpenPAI or Kubeflow platform, you can also see the hdfsLog.
 
