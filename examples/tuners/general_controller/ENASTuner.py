@@ -80,7 +80,7 @@ def get_controller_ops(controller_model):
     return controller_ops
 
 
-class RLTuner(Tuner):
+class ENASTuner(Tuner):
 
     def __init__(self, batch_size):
         self.total_steps = batch_size

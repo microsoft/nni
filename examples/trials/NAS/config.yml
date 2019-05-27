@@ -10,8 +10,8 @@ useAnnotation: true
 multiPhase: false
 tuner:
   codeDir: ../../tuners/general_controller
-  classFileName: nni_controller_cifar10.py
-  className: RLTuner
+  classFileName: ENASTuner.py
+  className: ENASTuner
   classArgs:
     batch_size: 1
 
