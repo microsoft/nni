@@ -21,6 +21,9 @@
 
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
+import * as os from 'os';
+import * as fs from 'fs';
+import { getNewLine } from '../../common/utils';
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
 import { countFilesRecursively } from '../../common/utils';
@@ -61,6 +64,21 @@ export async function execMkdir(directory: string): Promise<void> {
         await cpp.exec(`powershell.exe New-Item -Path ${directory} -ItemType "directory" -Force`);
     } else {
         await cpp.exec(`mkdir -p ${directory}`);
+    }
+
+    return Promise.resolve();
+}
+
+/**
+ * copy files to the directory
+ * @param source
+ * @param destination
+ */
+export async function execCopydir(source: string, destination: string): Promise<void> {
+    if (process.platform === 'win32') {
+        await cpp.exec(`powershell.exe Copy-Item ${source} -Destination ${destination} -Recurse`);
+    } else {
+        await cpp.exec(`cp -r ${source} ${destination}`);
     }
 
     return Promise.resolve();
@@ -113,7 +131,7 @@ export async function execTail(filePath: string): Promise<cpp.childProcessPromis
  */
 export async function execRemove(directory: string): Promise<void> {
     if (process.platform === 'win32') {
-        await cpp.exec(`powershell.exe Remove-Item ${directory}`);
+        await cpp.exec(`powershell.exe Remove-Item ${directory} -Recurse -Force`);
     } else {
         await cpp.exec(`rm -rf ${directory}`);
     }
@@ -146,6 +164,36 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
     } else {
         return `export ${variable.key}=${variable.value}`;
     }
+}
+
+/**
+ * Compress files in directory to tar file
+ * @param  sourcePath
+ * @param  tarPath
+ */
+export async function tarAdd(tarPath: string, sourcePath: string): Promise<void> {
+    if (process.platform === 'win32') {
+        tarPath = tarPath.split('\\')
+                         .join('\\\\');
+        sourcePath = sourcePath.split('\\')
+                               .join('\\\\');
+        let script: string[] = [];
+        script.push(
+            `import os`,
+            `import tarfile`,
+            String.Format(`tar = tarfile.open("{0}","w:gz")\r\nfor root,dir,files in os.walk("{1}"):`, tarPath, sourcePath),
+            `    for file in files:`,
+            `        fullpath = os.path.join(root,file)`,
+            `        tar.add(fullpath, arcname=file)`,
+            `tar.close()`);
+        await fs.promises.writeFile(path.join(os.tmpdir(), 'tar.py'), script.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
+        const tarScript: string = path.join(os.tmpdir(), 'tar.py');
+        await cpp.exec(`python ${tarScript}`);
+    } else {
+        await cpp.exec(`tar -czf ${tarPath} -C ${sourcePath} .`);
+    }
+
+    return Promise.resolve();
 }
 
 /**

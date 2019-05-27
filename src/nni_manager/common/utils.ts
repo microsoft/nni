@@ -43,11 +43,11 @@ function getExperimentRootDir(): string {
             .getLogDir();
 }
 
-function getLogDir(): string{
+function getLogDir(): string {
     return path.join(getExperimentRootDir(), 'log');
 }
 
-function getLogLevel(): string{
+function getLogLevel(): string {
     return getExperimentStartupInfo()
     .getLogLevel();
 }
@@ -149,7 +149,7 @@ function parseArg(names: string[]): string {
     return '';
 }
 
-function encodeCmdLineArgs(args:any):any{
+function encodeCmdLineArgs(args: any): any {
     if(process.platform === 'win32'){
         return JSON.stringify(args);
     }
@@ -158,7 +158,7 @@ function encodeCmdLineArgs(args:any):any{
     }
 }
 
-function getCmdPy():string{
+function getCmdPy(): string {
     let cmd = 'python3';
     if(process.platform === 'win32'){
         cmd = 'python';
@@ -390,7 +390,7 @@ async function getVersion(): Promise<string> {
 /**
  * run command as ChildProcess
  */
-function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any): ChildProcess{
+function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any): ChildProcess {
     let cmd: string = command;
     let arg: string[] = [];
     let newShell: boolean = true;
@@ -411,7 +411,7 @@ function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newE
 /**
  * judge whether the process is alive
  */
-async function isAlive(pid:any): Promise<boolean>{
+async function isAlive(pid:any): Promise<boolean> {
     let deferred : Deferred<boolean> = new Deferred<boolean>();
     let alive: boolean = false;
     if(process.platform ==='win32'){
@@ -439,7 +439,7 @@ async function isAlive(pid:any): Promise<boolean>{
 /**
  * kill process 
  */
-async function killPid(pid:any): Promise<void>{
+async function killPid(pid:any): Promise<void> {
     let deferred : Deferred<void> = new Deferred<void>();
     try {
         if (process.platform === "win32") {
@@ -455,7 +455,7 @@ async function killPid(pid:any): Promise<void>{
     return deferred.promise;
 }
 
-function getNewLine(): string{
+function getNewLine(): string {
     if (process.platform === "win32") {
         return "\r\n";
     }
