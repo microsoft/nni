@@ -133,9 +133,9 @@ class HDFSConfig:
                 with open(self.hdfs_config_file, 'r') as file:
                     return json.load(file)
             except Exception:
-                return {}
+                return None
         else:
-            return {}
+            return None
 
     def set_config(self, host, user_name):
         with open(self.hdfs_config_file, 'w') as file:
