@@ -1,6 +1,6 @@
-# NNI on Windows (experimental feature)
+# Windows 上的 NNI（实验阶段的功能）
 
-Currently we support local, remote and pai mode on Windows. 推荐 Windows 10 的 1809 版，其经过了测试。
+当前 Windows 上支持本机、远程和 OpenPAI 模式。 推荐 Windows 10 的 1809 版，其经过了测试。
 
 ## **在 Windows 上安装**
 
@@ -18,11 +18,11 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 ```bash
   python -m pip install --upgrade nni
-  ```
+```
 
-* __Install NNI through source code__
+* __通过代码安装 NNI__
 
-  Prerequisite: `python >=3.5`, `git`, `PowerShell`
+  先决条件: `python >=3.5`, `git`, `PowerShell`
 
   ```bash
   git clone -b v0.8 https://github.com/Microsoft/nni.git
@@ -30,7 +30,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
   powershell -file install.ps1
   ```
 
-When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
+运行完以上脚本后，从命令行使用 **config_windows.yml** 来启动 Experiment，完成安装验证。
 
 ```bash
 nnictl create --config nni\examples\trials\mnist\config_windows.yml
