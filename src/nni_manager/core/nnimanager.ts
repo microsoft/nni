@@ -58,6 +58,8 @@ class NNIManager implements Manager {
     private status: NNIManagerStatus;
     private waitingTrials: string[];
     private trialJobs: Map<string, TrialJobDetail>;
+    private trialDataForTuner: string;
+
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
     
     constructor() {
@@ -69,6 +71,7 @@ class NNIManager implements Manager {
         this.dispatcherPid = 0;
         this.waitingTrials = [];
         this.trialJobs = new Map<string, TrialJobDetail>();
+        this.trialDataForTuner = '';
 
         this.log = getLogger();
         this.dataStore = component.get(DataStore);
@@ -114,6 +117,10 @@ class NNIManager implements Manager {
         this.dispatcher.sendCommand(IMPORT_DATA, data);
 
         return this.dataStore.storeTrialJobEvent('IMPORT_DATA', '', data);
+    }
+
+    public async exportData(): Promise<string> {
+        return this.dataStore.exportTrialHpConfigs();
     }
 
     public addCustomizedTrialJob(hyperParams: string): Promise<void> {
@@ -211,6 +218,16 @@ class NNIManager implements Manager {
         await Promise.all(allTrialJobs
             .filter((job: TrialJobInfo) => job.status === 'WAITING' || job.status === 'RUNNING')
             .map((job: TrialJobInfo) => this.dataStore.storeTrialJobEvent('FAILED', job.id)));
+
+        // Collect generated trials and imported trials
+        const finishedTrialData: string = await this.exportData();
+        const importedData: string[] = await this.dataStore.getImportedData();
+        let trialData: Object[] = JSON.parse(finishedTrialData);
+        for (const oneImportedData of importedData) {
+            // do not deduplicate
+            trialData = trialData.concat(<Object[]>JSON.parse(oneImportedData));
+        }
+        this.trialDataForTuner = JSON.stringify(trialData);
 
         if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
             this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
@@ -647,6 +664,12 @@ class NNIManager implements Manager {
         switch (commandType) {
             case INITIALIZED:
                 // Tuner is intialized, search space is set, request tuner to generate hyper parameters
+                if (this.trialDataForTuner.length > 0) {
+                    if (this.dispatcher === undefined) {
+                        throw new Error('Dispatcher error: tuner has not been setup');
+                    }
+                    this.dispatcher.sendCommand(IMPORT_DATA, this.trialDataForTuner);
+                }
                 this.requestTrialJobs(this.experimentProfile.params.trialConcurrency);
                 break;
             case NEW_TRIAL_JOB:
