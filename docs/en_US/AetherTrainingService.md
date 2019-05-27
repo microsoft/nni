@@ -53,9 +53,10 @@ Besides as introduced in [QuickStart](https://nni.readthedocs.io/en/latest/Quick
 
 * Last, fill `config.yml` with the above information:
     ```yaml
+    trainingServicePlatform: aether     # submit job to AEther
     trial:
         codeDir: .
-        baseGraph: hello.json   # Aether Graph File
+        baseGraph: hello.json   # AEther Graph File
         outputNodeAlias: 184eb95a 
         outputName: OutputFile
     ```
