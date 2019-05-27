@@ -7,6 +7,7 @@ import logging
 import math
 import tempfile
 import time
+import argparse
 
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
@@ -20,7 +21,7 @@ class MnistNetwork(object):
     def __init__(self, params, feature_size = 784):
         config = []
 
-        for i in range(10):
+        for i in range(4):
             config.append(params['layer'+str(i)])
         self.config = config
         self.feature_size = feature_size
@@ -131,21 +132,29 @@ def main(params):
 
         nni.report_final_result(test_acc)
 
-def generate_defualt_params():
-    params = {'data_dir': '/tmp/tensorflow/mnist/input_data',
-              'batch_num': 1000,
-              'batch_size': 200}
-    return params
-
+def get_params():
+    ''' Get parameters from command line '''
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--data_dir", type=str, default='/tmp/tensorflow/mnist/input_data', help="data directory")
+    parser.add_argument("--batch_num", type=int, default=1000)
+    parser.add_argument("--batch_size", type=int, default=200)
+    args, _ = parser.parse_known_args()
+    return args
 
 def parse_init_json(data):
     params = {}
     for key in data:
         value = data[key]
-        if value == 'Empty':
+        layer_name = value["_name"]
+        if layer_name == 'Empty':
+            # Empty Layer
             params[key] = ['Empty']
+        elif layer_name == 'Conv':
+            # Conv layer
+            params[key] = [layer_name, value['kernel_size'], value['kernel_size']]
         else:
-            params[key] = [value[0], value[1], value[1]]
+            # Pooling Layer
+            params[key] = [layer_name, value['pooling_size'], value['pooling_size']]
     return params
 
 
@@ -157,7 +166,7 @@ if __name__ == '__main__':
 
         RCV_PARAMS = parse_init_json(data)
         logger.debug(RCV_PARAMS)
-        params = generate_defualt_params()
+        params = vars(get_params())
         params.update(RCV_PARAMS)
         print(RCV_PARAMS)
 

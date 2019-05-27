@@ -58,7 +58,8 @@ class NNIManager implements Manager {
     private status: NNIManagerStatus;
     private waitingTrials: string[];
     private trialJobs: Map<string, TrialJobDetail>;
-
+    private trialJobMetricListener: (metric: TrialJobMetric) => void;
+    
     constructor() {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
@@ -75,6 +76,11 @@ class NNIManager implements Manager {
         this.status = {
             status: 'INITIALIZED',
             errors: []
+        };
+        this.trialJobMetricListener = (metric: TrialJobMetric) => {
+            this.onTrialJobMetrics(metric).catch((err: Error) => {
+                this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
+            });
         };
     }
 
@@ -342,6 +348,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
+        this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener); 
         this.dispatcher.sendCommand(TERMINATE);
         let tunerAlive: boolean = true;
         // gracefully terminate tuner and assessor here, wait at most 30 seconds.
@@ -372,7 +379,7 @@ class NNIManager implements Manager {
 
     private async periodicallyUpdateExecDuration(): Promise<void> {
         let count: number = 1;
-        while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
+        while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             await delay(1000 * 1); // 1 seconds
             if (this.status.status === 'RUNNING') {
                 this.experimentProfile.execDuration += 1;
@@ -461,7 +468,7 @@ class NNIManager implements Manager {
         }
         let allFinishedTrialJobNum: number = this.currSubmittedTrialNum;
         let waitSubmittedToFinish: number;
-        while (this.status.status !== 'STOPPING' && this.status.status !== 'STOPPED') {
+        while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
             allFinishedTrialJobNum += finishedTrialJobNum;
 
@@ -589,11 +596,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner or job maintainer have not been setup');
         }
-        this.trainingService.addTrialJobMetricListener((metric: TrialJobMetric) => {
-            this.onTrialJobMetrics(metric).catch((err: Error) => {
-                this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
-            });
-        });
+        this.trainingService.addTrialJobMetricListener(this.trialJobMetricListener);
 
         this.dispatcher.onCommand((commandType: string, content: string) => {
             this.onTunerCommand(commandType, content).catch((err: Error) => {
@@ -671,7 +674,9 @@ class NNIManager implements Manager {
                     'ADD_HYPERPARAMETER', tunerCommand.trial_job_id, content, undefined);
                 break;
             case NO_MORE_TRIAL_JOBS:
-                this.setStatus('TUNER_NO_MORE_TRIAL');
+                if (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
+                    this.setStatus('TUNER_NO_MORE_TRIAL');
+                }
                 break;
             case KILL_TRIAL_JOB:
                 this.log.info(`cancelTrialJob: ${JSON.parse(content)}`);

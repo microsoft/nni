@@ -27,6 +27,11 @@ interface TrialDetailState {
     entriesInSelect: string;
     searchSpace: string;
     isMultiPhase: boolean;
+    isTableLoading: boolean;
+    whichGraph: string;
+    hyperCounts: number; // user click the hyper-parameter counts
+    durationCounts: number;
+    intermediateCounts: number;
 }
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
@@ -70,9 +75,14 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             experimentLogCollection: false,
             entriesTable: 20,
             entriesInSelect: '20',
-            isHasSearch: false,
             searchSpace: '',
-            isMultiPhase: false
+            whichGraph: '1',
+            isHasSearch: false,
+            isMultiPhase: false,
+            isTableLoading: false,
+            hyperCounts: 0,
+            durationCounts: 0,
+            intermediateCounts: 0
         };
     }
 
@@ -85,6 +95,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             ])
             .then(axios.spread((res, res1) => {
                 if (res.status === 200 && res1.status === 200) {
+                    if (this._isMounted === true) {
+                        this.setState(() => ({ isTableLoading: true }));
+                    }
                     const trialJobs = res.data;
                     const metricSource = res1.data;
                     const trialTable: Array<TableObj> = [];
@@ -175,6 +188,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     }
                     if (this._isMounted) {
                         this.setState(() => ({
+                            isTableLoading: false,
                             tableListSource: trialTable
                         }));
                     }
@@ -239,26 +253,26 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     }
 
     handleEntriesSelect = (value: string) => {
-        switch (value) {
-            case '20':
-                this.setState(() => ({ entriesTable: 20 }));
-                break;
-            case '50':
-                this.setState(() => ({ entriesTable: 50 }));
-                break;
-            case '100':
-                this.setState(() => ({ entriesTable: 100 }));
-                break;
-            case 'all':
-                const { tableListSource } = this.state;
-                if (this._isMounted) {
-                    this.setState(() => ({
-                        entriesInSelect: 'all',
-                        entriesTable: tableListSource.length
-                    }));
-                }
-                break;
-            default:
+        // user select isn't 'all'
+        if (value !== 'all') {
+            if (this._isMounted) {
+                this.setState(() => ({ entriesTable: parseInt(value, 10) }));
+            }
+        } else {
+            const { tableListSource } = this.state;
+            if (this._isMounted) {
+                this.setState(() => ({
+                    entriesInSelect: 'all',
+                    entriesTable: tableListSource.length
+                }));
+            }
+        }
+    }
+
+    handleWhichTabs = (activeKey: string) => {
+        // const which = JSON.parse(activeKey);
+        if (this._isMounted) {
+            this.setState(() => ({ whichGraph: activeKey }));
         }
     }
 
@@ -315,18 +329,21 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
 
         const {
             tableListSource, searchResultSource, isHasSearch, isMultiPhase,
-            entriesTable, experimentPlatform, searchSpace, experimentLogCollection
+            entriesTable, experimentPlatform, searchSpace, experimentLogCollection,
+            whichGraph, isTableLoading
         } = this.state;
         const source = isHasSearch ? searchResultSource : tableListSource;
         return (
             <div>
                 <div className="trial" id="tabsty">
-                    <Tabs type="card">
+                    <Tabs type="card" onChange={this.handleWhichTabs}>
+                        {/* <TabPane tab={this.titleOfacc} key="1" destroyInactiveTabPane={true}> */}
                         <TabPane tab={this.titleOfacc} key="1">
                             <Row className="graph">
                                 <DefaultPoint
                                     height={432}
                                     showSource={source}
+                                    whichGraph={whichGraph}
                                 />
                             </Row>
                         </TabPane>
@@ -335,14 +352,16 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 <Para
                                     dataSource={source}
                                     expSearchSpace={searchSpace}
+                                    whichGraph={whichGraph}
                                 />
                             </Row>
                         </TabPane>
                         <TabPane tab={this.titleOfDuration} key="3">
-                            <Duration source={source} />
+                            <Duration source={source} whichGraph={whichGraph} />
+                            {/* <Duration source={source} whichGraph={whichGraph} clickCounts={durationCounts} /> */}
                         </TabPane>
                         <TabPane tab={this.titleOfIntermediate} key="4">
-                            <Intermediate source={source} />
+                            <Intermediate source={source} whichGraph={whichGraph} />
                         </TabPane>
                     </Tabs>
                 </div>
@@ -388,6 +407,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 <TableList
                     entries={entriesTable}
                     tableSource={source}
+                    isTableLoading={isTableLoading}
                     isMultiPhase={isMultiPhase}
                     platform={experimentPlatform}
                     updateList={this.getDetailSource}
