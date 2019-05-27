@@ -28,12 +28,11 @@ class IntermediateVal extends React.Component<IntermediateValProps, {}> {
                 if (wei > 6) {
                     result = `${lastVal.toFixed(6)}`;
                 }
-                if (status === 'SUCCEEDED') {
-                    result = `${lastVal.toFixed(6)} (FINAL)`;
-                } else {
-                    result = `${lastVal.toFixed(6)} (LATEST)`;
-                }
-
+            }
+            if (status === 'SUCCEEDED') {
+                result = `${result} (FINAL)`;
+            } else {
+                result = `${result} (LATEST)`;
             }
         } else {
             result = '--';
