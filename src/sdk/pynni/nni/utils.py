@@ -117,8 +117,6 @@ def randint_to_quniform(in_x):
  
             elif in_x[NodeType.TYPE] == 'choice':
                 randint_to_quniform(in_x[NodeType.VALUE])
-            else:
-                pass
         else:
             for key in in_x.keys():
                 randint_to_quniform(in_x[key])
