@@ -9,7 +9,9 @@
         "no-increment-decrement": false,
         "promise-function-async": false,
         "no-console": [true, "log"],
-        "no-multiline-string": false
+        "no-multiline-string": false,
+        "no-suspicious-comment": false,
+        "no-http-string": false
     },
     "rulesDirectory": [],
     "linterOptions": {

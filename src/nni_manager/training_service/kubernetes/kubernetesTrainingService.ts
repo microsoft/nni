@@ -80,14 +80,14 @@ abstract class KubernetesTrainingService {
         this.logCollection = 'none';
     }
 
-    // tslint:disable:no-any object-literal-key-quotes
+    // tslint:disable:no-any
     public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
         return {
-            'memory': `${memory}Mi`,
-            'cpu': `${cpuNum}`,
+            memory: `${memory}Mi`,
+            cpu: `${cpuNum}`,
             'nvidia.com/gpu': `${gpuNum}`
         };
-    } // tslint:enable:no-any object-literal-key-quotes
+    } // tslint:enable:no-any
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
         const jobs: TrialJobDetail[] = [];
@@ -248,7 +248,7 @@ abstract class KubernetesTrainingService {
             await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
             //create sotrage secret
             this.azureStorageSecretName = String.Format('nni-secret-{0}', uniqueString(8)
-                                                                                        .toLowerCase());
+                                                                            .toLowerCase());
             await this.genericK8sClient.createSecret(
                 {
                     apiVersion: 'v1',

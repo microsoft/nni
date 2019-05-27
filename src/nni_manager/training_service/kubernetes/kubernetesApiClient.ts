@@ -120,11 +120,11 @@ abstract class KubernetesCRDClient {
         let result: Promise<boolean>;
         // construct match query from labels for deleting tfjob
         const matchQuery: string = Array.from(labels.keys())
-                                                        .map((labelKey: string) => `${labelKey}=${labels.get(labelKey)}`)
-                                                        .join(',');
+                                     .map((labelKey: string) => `${labelKey}=${labels.get(labelKey)}`)
+                                     .join(',');
         try {
             const deleteResult : any = await this.operator()
-            .delete({
+              .delete({
                  qs: {
                       labelSelector: matchQuery,
                       propagationPolicy: 'Background'

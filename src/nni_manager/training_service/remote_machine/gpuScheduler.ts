@@ -183,10 +183,10 @@ export class GPUScheduler {
             scheduleInfo: {
                 rmMeta: rmMeta,
                 cuda_visible_device: allocatedGPUs
-                                        .map((gpuInfo: GPUInfo) => {
+                                       .map((gpuInfo: GPUInfo) => {
                                             return gpuInfo.index;
                                         })
-                                        .join(',')
+                                       .join(',')
             }
         };
     }

@@ -21,6 +21,7 @@
 
 import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 
+// tslint:disable-next-line:completed-docs
 export class PAITrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;

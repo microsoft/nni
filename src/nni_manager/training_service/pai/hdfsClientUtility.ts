@@ -22,7 +22,7 @@ import * as path from 'path';
 import { Deferred } from 'ts-deferred';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger } from '../../common/log';
-import { unixPathJoin } from '../../common/utils'
+import { unixPathJoin } from '../../common/utils';
 
 /**
  * HDFS client utility, including copy file/directory
@@ -33,7 +33,7 @@ export namespace HDFSClientUtility {
      * @param hdfsUserName HDFS user name
      */
     function hdfsExpRootDir(hdfsUserName: string): string {
-        return '/' + unixPathJoin(hdfsUserName, 'nni', 'experiments', getExperimentId());
+        return unixPathJoin('/', hdfsUserName, 'nni', 'experiments', getExperimentId());
     }
 
     /**
@@ -50,8 +50,8 @@ export namespace HDFSClientUtility {
      * @param trialId NNI trial ID
      */
     export function getHdfsTrialWorkDir(hdfsUserName: string, trialId: string): string {
-        let root = hdfsExpRootDir(hdfsUserName)
-        console.log(root)
+        const root: string = hdfsExpRootDir(hdfsUserName);
+
         return unixPathJoin(root, 'trials', trialId);
     }
 
@@ -97,7 +97,6 @@ export namespace HDFSClientUtility {
      */
     export async function copyDirectoryToHdfs(localDirectory : string, hdfsDirectory : string, hdfsClient : any) : Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
-        // tslint:disable-next-line:no-suspicious-comment
         // TODO: fs.readdirSync doesn't support ~($HOME)
         const fileNameArray: string[] = fs.readdirSync(localDirectory);
 

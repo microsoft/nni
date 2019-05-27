@@ -103,7 +103,7 @@ export namespace AzureStorageClientUtility {
                                                        (error: any, result: any, response: any) => {
             if (error) {
                 getLogger()
-                        .error(`Upload file failed:, ${error}`);
+                  .error(`Upload file failed:, ${error}`);
                 deferred.reject(error);
             } else {
                 deferred.resolve();
@@ -156,7 +156,7 @@ export namespace AzureStorageClientUtility {
             const fullFilePath: string = path.join(localDirectory, fileName);
             try {
                 if (fs.lstatSync(fullFilePath)
-                  .isFile()) {
+                      .isFile()) {
                     await uploadFileToAzure(fileServerClient, azureDirectory, fileName, azureShare, fullFilePath);
                 } else {
                     // If filePath is a directory, recuisively copy it to azure

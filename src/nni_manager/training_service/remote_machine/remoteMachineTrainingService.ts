@@ -130,7 +130,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
     /**
      * give trial a ssh connection
-     * @param trial RemoteMachineTrialJobDetail
+     * @param trial remote machine trial job detail
      */
     public async allocateSSHClientForTrial(trial: RemoteMachineTrialJobDetail): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
@@ -150,7 +150,7 @@ class RemoteMachineTrainingService implements TrainingService {
 
     /**
      * If a trial is finished, release the connection resource
-     * @param trial RemoteMachineTrialJobDetail
+     * @param trial remote machine trial job detail
      */
     public releaseTrialSSHClient(trial: RemoteMachineTrialJobDetail): void {
         if (trial.rmMeta === undefined) {
@@ -489,8 +489,8 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta, conn: Client): Promise<void> {
-        /* Create root working directory after ssh connection is ready,
-           generate gpu script in local machine first, will copy to remote machine later */
+        // Create root working directory after ssh connection is ready,
+        // generate gpu script in local machine first, will copy to remote machine later
         await this.generateGpuMetricsCollectorScript(rmMeta.username);
         const nniRootDir: string = `${os.tmpdir()}/nni`;
         await SSHClientUtility.remoteExeCommand(`mkdir -p ${this.remoteExpRootDir}`, conn);
@@ -542,7 +542,8 @@ class RemoteMachineTrainingService implements TrainingService {
             this.log.error(errorMessage);
             deferred.reject();
             throw new NNIError(NNIErrorNames.RESOURCE_NOT_AVAILABLE, errorMessage);
-        } else if (rmScheduleResult.resultType === ScheduleResultType.SUCCEED && rmScheduleResult.scheduleInfo !== undefined) {
+        } else if (rmScheduleResult.resultType === ScheduleResultType.SUCCEED
+            && rmScheduleResult.scheduleInfo !== undefined) {
             const rmScheduleInfo : RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
             const trialWorkingFolder: string = path.join(this.remoteExpRootDir, 'trials', trialJobId);
 
@@ -694,7 +695,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 const trailReturnCode: string = await SSHClientUtility.getRemoteFileContent(trialReturnCodeFilePath, sshClient);
                 this.log.debug(`trailjob ${trialJob.id} return code: ${trailReturnCode}`);
                 const match: RegExpMatchArray | null = trailReturnCode.trim()
-                    .match(/^(\d+)\s+(\d+)$/);
+                  .match(/^(\d+)\s+(\d+)$/);
                 if (match !== null) {
                     const { 1: code, 2: timestamp } = match;
                     // Update trial job's status based on result code

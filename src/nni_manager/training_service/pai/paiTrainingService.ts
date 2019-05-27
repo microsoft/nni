@@ -38,11 +38,10 @@ import {
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import { delay, generateParamFileName,
-    getExperimentRootDir, getIPV4Address, getVersion, uniqueString } from '../../common/utils';
+    getExperimentRootDir, getIPV4Address, getVersion, uniqueString, unixPathJoin } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { validateCodeDir, execMkdir } from '../common/util';
-import { unixPathJoin } from '../../common/utils'
+import { execMkdir, validateCodeDir } from '../common/util';
 import { HDFSClientUtility } from './hdfsClientUtility';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
 import { PAI_LOG_PATH_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_TRIAL_COMMAND_FORMAT, PAITrialJobDetail } from './paiData';
@@ -155,7 +154,6 @@ class PAITrainingService implements TrainingService {
 
         const trialJobId: string = uniqueString(5);
         const trialSequenceId: number = this.generateSequenceId();
-        // tslint:disable-next-line:no-suspicious-comment
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
@@ -208,7 +206,7 @@ class PAITrainingService implements TrainingService {
         }
 
         const stopJobRequest: request.Options = {
-            // tslint:disable-next-line:max-line-length no-http-string
+            // tslint:disable-next-line:max-line-length
             uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs/${trialJobDetail.paiJobName}/executionType`,
             method: 'PUT',
             json: true,
@@ -270,7 +268,7 @@ class PAITrainingService implements TrainingService {
                 }
                 this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
                 //paiTrialConfig.outputDir could be null if it is not set in nnictl
-                if (this.paiTrialConfig.outputDir === undefined) {
+                if (this.paiTrialConfig.outputDir === undefined || this.paiTrialConfig.outputDir === null) {
                     this.paiTrialConfig.outputDir = String.Format(
                         PAI_OUTPUT_DIR_FORMAT,
                         this.paiClusterConfig.host
@@ -296,11 +294,9 @@ class PAITrainingService implements TrainingService {
                 if (groups === undefined) {
                     throw new Error('Trial outputDir format Error');
                 }
-                let hdfsKey: string = 'host';
-                this.hdfsOutputHost = groups[hdfsKey];
+                this.hdfsOutputHost = groups.host;
                 //TODO: choose to use /${username} as baseDir
-                hdfsKey = 'baseDir';
-                this.hdfsBaseDir = groups[hdfsKey];
+                this.hdfsBaseDir = groups.baseDir;
                 if (this.hdfsBaseDir === undefined) {
                     this.hdfsBaseDir = '/';
                 }
@@ -461,6 +457,7 @@ class PAITrainingService implements TrainingService {
         )
         .replace(/\r\n|\n|\r/gm, '');
 
+        // tslint:disable-next-line:no-console
         console.log(`nniPAItrial command is ${nniPaiTrialCommand.trim()}`);
         const paiTaskRoles : PAITaskRole[] = [
             new PAITaskRole(

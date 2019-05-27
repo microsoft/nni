@@ -76,8 +76,8 @@ export class PAIJobInfoCollector {
             json: true,
             headers: {
                 'Content-Type': 'application/json',
-                // tslint:disable-next-line:object-literal-key-quotes prefer-template
-                'Authorization': 'Bearer ' + paiToken
+                // tslint:disable-next-line:prefer-template
+                Authorization: 'Bearer ' + paiToken
             }
         };
 
