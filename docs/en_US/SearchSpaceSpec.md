@@ -82,7 +82,7 @@ All types of sampling strategies and their parameter are listed here:
 | Evolution Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | SMAC Tuner        | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    |      |  |  |    |     |
 | Batch Tuner       | &#10003; |  |  |   |     |      |  |  |    |     |
-| Grid Search Tuner | &#10003; |  |  | &#10003;  |     | &#10003;     |  |  |    |     |
+| Grid Search Tuner  | &#10003; |  |  | &#10003;  |     | &#10003;     |  |  |    |     |
 | Hyperband Advisor | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | Metis Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  |     |      |  |  |    |     |
 
@@ -92,3 +92,5 @@ Note that In Grid Search Tuner, for users' convenience, the definition of `qunif
 * Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
 
 Note that Metis Tuner only support numerical `choice` now
+
+Note the Only Random Search/TPE/Anneal/Evolution tuner support nested search sapce. Fow now, we don't support showing nested search space in WebUI.
