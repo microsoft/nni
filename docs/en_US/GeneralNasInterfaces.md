@@ -119,13 +119,13 @@ The design of One-Shot NAS on NNI is shown in the above figure. One-Shot NAS usu
 
 ## General tuning algorithms for NAS
 
-We have generalized the RL controller of ENAS. It could deal with almost all the search space expressed through our defined programming interface. Of course, it is hard to make it perform good on every search space, we expect efforts from community to design and implement better NAS algorithms.
+Like hyperparameter tuning, a relatively general algorithms for NAS is required. The general programming interface makes this task easier to some extent. We have a RL-based tuner algorithm for NAS from our contributors. We expect efforts from community to design and implement better NAS algorithms.
 
-[__TODO__] Detail of this RL controller.
+[__TODO__] More tuning algorithms for NAS.
 
 ## Export best neural architecture and code
 
-After the NNI experiment is done, users could run `nnictl experiment export --code` to export the trial code with the best neural architecture.
+[__TODO__] After the NNI experiment is done, users could run `nnictl experiment export --code` to export the trial code with the best neural architecture.
 
 ## Conclusion and Future work
 
