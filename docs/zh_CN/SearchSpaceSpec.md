@@ -36,9 +36,9 @@
     * Anneal（退火算法）
     * Evolution
 
-* {"_type":"randint","_value":[upper]}
+* {"_type":"randint","_value":[lower, upper]}
   
-  * 此变量为范围 [0, upper) 之间的随机整数。 这种分布的语义，在较远整数与附近整数之间的损失函数无太大关系， 这是用来描述随机种子的较好分布。 如果损失函数与较近的整数更相关，则应该使用某个"quantized"的连续分布，如quniform, qloguniform, qnormal 或 qlognormal。 注意，如果需要改动数字下限，可以使用 `quniform`。
+  * For now, we implment the "randint" distribution with "quniform", which means the variable value is a value like round(uniform(lower, upper)). The type of chosen value is float. If you want to use integer value, please convert it explicitly.
 
 * {"_type":"uniform","_value":[low, high]}
   
