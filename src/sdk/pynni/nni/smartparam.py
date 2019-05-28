@@ -147,10 +147,6 @@ else:
         optional_inputs: dict of optional inputs
         optional_input_size: number of candidate inputs to be chosen
         '''
-        if debug_mode:
-            # TODO:
-            return
-        
         mutable_block = _get_param(mutable_id)
         chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
         chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
