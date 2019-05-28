@@ -13,6 +13,6 @@ For details, please refer to the following tutorials:
 ..  toctree::
     :maxdepth: 2
 
-    builtin_tuner
+    Builtin Tuners <BuiltinTuner>
     Customized Tuners<CustomizeTuner>
     Customized Advisor<CustomizeAdvisor>
