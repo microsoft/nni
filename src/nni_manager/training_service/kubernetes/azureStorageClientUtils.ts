@@ -182,7 +182,6 @@ export namespace AzureStorageClientUtility {
      * @param azureShare
      * @param localDirectory
      */
-     // tslint:disable:no-string-literal
     export async function downloadDirectory(fileServerClient: any, azureDirectory: string, azureShare: any, localDirectory: string):
      Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
@@ -195,24 +194,24 @@ export namespace AzureStorageClientUtility {
                 throw new Error(`list files failed, can't get entries in result`);
             }
 
-            if (('files' in result['entries']) === false) {
+            if (('files' in result.entries) === false) {
                 getLogger()
                   .error(`list files failed, can't get files in result['entries']`);
                 throw new Error(`list files failed, can't get files in result['entries']`);
             }
 
-            if (('directories' in result['directories']) === false) {
+            if (('directories' in result.directories) === false) {
                 getLogger()
                   .error(`list files failed, can't get directories in result['entries']`);
                 throw new Error(`list files failed, can't get directories in result['entries']`);
             }
 
-            for (const fileName of result['entries']['files']) {
+            for (const fileName of result.entries.files) {
                 const fullFilePath: string = path.join(localDirectory, fileName.name);
                 await downloadFile(fileServerClient, azureDirectory, fileName.name, azureShare, fullFilePath);
             }
 
-            for (const directoryName of result['entries']['directories']) {
+            for (const directoryName of result.entries.directories) {
                 const fullDirectoryPath: string = path.join(localDirectory, directoryName.name);
                 const fullAzureDirectory: string = path.join(azureDirectory, directoryName.name);
                 await downloadDirectory(fileServerClient, fullAzureDirectory, azureShare, fullDirectoryPath);
@@ -221,6 +220,6 @@ export namespace AzureStorageClientUtility {
         });
 
         return deferred.promise;
-    } // tslint:enable:no-string-literal
+    }
 }
 // tslint:enable: no-redundant-jsdoc no-any no-unsafe-any

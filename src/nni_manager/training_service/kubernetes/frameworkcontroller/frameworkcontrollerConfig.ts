@@ -20,10 +20,11 @@
 'use strict';
 import * as assert from 'assert';
 
-import { KubernetesTrialConfig, KubernetesTrialConfigTemplate, KubernetesClusterConfigAzure,
-     KubernetesClusterConfigNFS, NFSConfig, KubernetesStorageKind, KeyVaultConfig, AzureStorage, KubernetesClusterConfig,
-    StorageConfig } from '../kubernetesConfig'
+import { AzureStorage, KeyVaultConfig, KubernetesClusterConfig, KubernetesClusterConfigAzure, KubernetesClusterConfigNFS,
+    KubernetesStorageKind, KubernetesTrialConfig, KubernetesTrialConfigTemplate, NFSConfig, StorageConfig
+} from '../kubernetesConfig';
 
+// tslint:disable:completed-docs
 export class FrameworkAttemptCompletionPolicy {
     public readonly minFailedTaskCount: number;
     public readonly minSucceededTaskCount: number;
@@ -36,13 +37,13 @@ export class FrameworkAttemptCompletionPolicy {
 /**
  * Trial job configuration for FrameworkController
  */
-export class FrameworkControllerTrialConfigTemplate extends KubernetesTrialConfigTemplate{
+export class FrameworkControllerTrialConfigTemplate extends KubernetesTrialConfigTemplate {
     public readonly frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy;
     public readonly name: string;
     public readonly taskNum: number;
-    constructor(taskNum: number, command : string, gpuNum : number, 
-        cpuNum: number, memoryMB: number, image: string, 
-        frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy) {
+    constructor(taskNum: number, command : string, gpuNum : number,
+                cpuNum: number, memoryMB: number, image: string,
+                frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy) {
         super(command, gpuNum, cpuNum, memoryMB, image);
         this.frameworkAttemptCompletionPolicy = frameworkAttemptCompletionPolicy;
         this.name = name;
@@ -50,7 +51,7 @@ export class FrameworkControllerTrialConfigTemplate extends KubernetesTrialConfi
     }
 }
 
-export class FrameworkControllerTrialConfig extends KubernetesTrialConfig{
+export class FrameworkControllerTrialConfig extends KubernetesTrialConfig {
     public readonly taskRoles: FrameworkControllerTrialConfigTemplate[];
     public readonly codeDir: string;
     constructor(codeDir: string, taskRoles: FrameworkControllerTrialConfigTemplate[]) {
@@ -60,6 +61,7 @@ export class FrameworkControllerTrialConfig extends KubernetesTrialConfig{
     }
 }
 
+// tslint:disable:max-classes-per-file
 export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
     public readonly serviceAccountName: string;
     constructor(apiVersion: string, serviceAccountName: string) {
@@ -68,11 +70,12 @@ export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
     }
 }
 
+// tslint:disable:function-name
 export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly serviceAccountName: string;
     constructor(
-            serviceAccountName: string, 
-            apiVersion: string, 
+            serviceAccountName: string,
+            apiVersion: string,
             nfs: NFSConfig,
             storage?: KubernetesStorageKind
         ) {
@@ -81,8 +84,9 @@ export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfig
     }
 
     public static getInstance(jsonObject: object): FrameworkControllerClusterConfigNFS {
-        let kubeflowClusterConfigObjectNFS = <FrameworkControllerClusterConfigNFS>jsonObject;
-        assert (kubeflowClusterConfigObjectNFS !== undefined)
+        const kubeflowClusterConfigObjectNFS: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS>jsonObject;
+        assert (kubeflowClusterConfigObjectNFS !== undefined);
+
         return new FrameworkControllerClusterConfigNFS(
             kubeflowClusterConfigObjectNFS.serviceAccountName,
             kubeflowClusterConfigObjectNFS.apiVersion,
@@ -94,20 +98,21 @@ export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfig
 
 export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConfigAzure {
     public readonly serviceAccountName: string;
-    
+
     constructor(
-            serviceAccountName: string, 
-            apiVersion: string, 
-            keyVault: KeyVaultConfig, 
-            azureStorage: AzureStorage, 
+            serviceAccountName: string,
+            apiVersion: string,
+            keyVault: KeyVaultConfig,
+            azureStorage: AzureStorage,
             storage?: KubernetesStorageKind
         ) {
-        super(apiVersion, keyVault, azureStorage,storage);
+        super(apiVersion, keyVault, azureStorage, storage);
         this.serviceAccountName = serviceAccountName;
     }
 
     public static getInstance(jsonObject: object): FrameworkControllerClusterConfigAzure {
-        let kubeflowClusterConfigObjectAzure = <FrameworkControllerClusterConfigAzure>jsonObject;
+        const kubeflowClusterConfigObjectAzure: FrameworkControllerClusterConfigAzure = <FrameworkControllerClusterConfigAzure>jsonObject;
+
         return new FrameworkControllerClusterConfigAzure(
             kubeflowClusterConfigObjectAzure.serviceAccountName,
             kubeflowClusterConfigObjectAzure.apiVersion,
@@ -118,14 +123,15 @@ export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConf
     }
 }
 
+// tslint:disable-next-line:no-unnecessary-class
 export class FrameworkControllerClusterConfigFactory {
 
     public static generateFrameworkControllerClusterConfig(jsonObject: object): FrameworkControllerClusterConfig {
-         let storageConfig = <StorageConfig>jsonObject;
-         if(!storageConfig) {
-            throw new Error("Invalid json object as a StorageConfig instance");
+         const storageConfig: StorageConfig = <StorageConfig>jsonObject;
+         if (storageConfig === undefined) {
+            throw new Error('Invalid json object as a StorageConfig instance');
         }
-         if(storageConfig.storage && storageConfig.storage === 'azureStorage') {
+         if (storageConfig.storage !== undefined && storageConfig.storage === 'azureStorage') {
             return FrameworkControllerClusterConfigAzure.getInstance(jsonObject);
          } else if (storageConfig.storage === undefined || storageConfig.storage === 'nfs') {
             return FrameworkControllerClusterConfigNFS.getInstance(jsonObject);
@@ -133,7 +139,9 @@ export class FrameworkControllerClusterConfigFactory {
          throw new Error(`Invalid json object ${jsonObject}`);
     }
 }
+// tslint:enable:function-name
 
-export type FrameworkControllerJobStatus = 'AttemptRunning' | 'Completed' | 'AttemptCreationPending' | 'AttemptCreationRequested' | 'AttemptPreparing' | 'AttemptCompleted';
+export type FrameworkControllerJobStatus =
+  'AttemptRunning' | 'Completed' | 'AttemptCreationPending' | 'AttemptCreationRequested' | 'AttemptPreparing' | 'AttemptCompleted';
 
 export type FrameworkControllerJobCompleteStatus = 'Succeeded' | 'Failed';

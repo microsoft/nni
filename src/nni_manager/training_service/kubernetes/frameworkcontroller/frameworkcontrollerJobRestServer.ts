@@ -20,16 +20,15 @@
 'use strict';
 
 import * as component from '../../../common/component';
+import { KubernetesJobRestServer } from '../kubernetesJobRestServer';
 import { FrameworkControllerTrainingService } from './frameworkcontrollerTrainingService';
-import { KubernetesJobRestServer } from '../kubernetesJobRestServer'
 
 /**
  * frameworkcontroller Training service Rest server, provides rest API to support frameworkcontroller job metrics update
- * 
  */
 @component.Singleton
-export class FrameworkControllerJobRestServer extends KubernetesJobRestServer{
+export class FrameworkControllerJobRestServer extends KubernetesJobRestServer {
     constructor() {
         super(component.get(FrameworkControllerTrainingService));
-    }  
+    }
 }

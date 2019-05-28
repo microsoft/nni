@@ -20,12 +20,14 @@
 'use strict';
 
 import * as fs from 'fs';
-import { KubernetesCRDClient, GeneralK8sClient } from '../kubernetesApiClient';
+import { GeneralK8sClient, KubernetesCRDClient } from '../kubernetesApiClient';
 
-abstract class FrameworkControllerClient extends KubernetesCRDClient{
+// tslint:disable:completed-docs
+abstract class FrameworkControllerClient extends KubernetesCRDClient {
     /**
-     * Factory method to generate operator cliet
+     * Factory method to generate operator client
      */
+    // tslint:disable-next-line:function-name
     public static generateFrameworkControllerClient(): KubernetesCRDClient {
         return new FrameworkControllerClientV1();
     }
@@ -42,13 +44,12 @@ class FrameworkControllerClientV1 extends FrameworkControllerClient {
     }
 
     protected get operator(): any {
-        return this.client.apis["frameworkcontroller.microsoft.com"].v1.namespaces('default').frameworks;
+        return this.client.apis['frameworkcontroller.microsoft.com'].v1.namespaces('default').frameworks;
     }
 
     public get containerName(): string {
         return 'framework';
-    }    
+    }
 }
 
 export { FrameworkControllerClient, GeneralK8sClient };
-
