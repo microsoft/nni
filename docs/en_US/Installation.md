@@ -13,11 +13,9 @@ Currently we support installation on Linux, Mac and Windows(local, remote and pa
 
 * __Install NNI through source code__
 
-  Prerequisite: `python >=3.5`, `git`, `wget`  
-  Note: **[Release]** should be replaced with latest version, such as **v0.8**.
-
+  Prerequisite: `python >=3.5`, `git`, `wget`
   ```bash
-  git clone -b [Release] https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
@@ -45,11 +43,12 @@ Currently we support installation on Linux, Mac and Windows(local, remote and pa
 
 * __Install NNI through source code__
 
-  Prerequisite: `python >=3.5`, `git`, `PowerShell`.  
-  Note: **[Release]** should be replaced with latest version, such as **v0.8**.
+  Prerequisite: `python >=3.5`, `git`, `PowerShell`.
+  
+  you can install NNI as administrator or current user as follows:
 
   ```bash
-  git clone -b [Release] https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
   powershell .\install.ps1
   ```
