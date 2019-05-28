@@ -21,7 +21,6 @@ nnictl 支持的命令：
 * [nnictl tensorboard](#tensorboard)
 * [nnictl package](#package)
 * [nnictl --version](#version)
-* [nnictl hdfs](#hdfs)
 
 ### 管理 Experiment
 
@@ -661,39 +660,4 @@ nnictl 支持的命令：
     
     ```bash
     nnictl --version
-    ```
-
-<a name="hdfs"></a>
-
-![](https://placehold.it/15/1589F0/000000?text=+) `管理 HDFS`
-
-* **nnictl hdfs set**
-  
-  * 说明
-    
-    设置 HDFS 的地址和用户名
-  
-  * 用法
-    
-    ```bash
-    nnictl hdfs set [OPTIONS]
-    ```
-  
-  * 选项
-  
-  | 参数及缩写       | 是否必需 | 默认值 | 说明                                  |
-  | ----------- | ---- | --- | ----------------------------------- |
-  | --host      | True |     | HDFS 的地址，格式为 x.x.x.x，例如：10.10.10.10 |
-  | --user_name | True |     | HDFS 的用户名                           |
-
-* **nnictl hdfs clean**
-  
-  * 说明
-    
-    清理 NNI 自动拷贝到 HDFS 的代码文件。 此命令会删除 user_name 下的所有文件。
-  
-  * 用法
-    
-    ```bash
-    nnictl hdfs clean
     ```
