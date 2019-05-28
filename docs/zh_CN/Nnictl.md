@@ -665,13 +665,13 @@ nnictl 支持的命令：
 
 <a name="hdfs"></a>
 
-![](https://placehold.it/15/1589F0/000000?text=+) `Manage hdfs`
+![](https://placehold.it/15/1589F0/000000?text=+) `管理 HDFS`
 
 * **nnictl hdfs set**
   
-  * Description
+  * 说明
     
-    set the host and userName of hdfs
+    设置 HDFS 的地址和用户名
   
   * Usage
     
