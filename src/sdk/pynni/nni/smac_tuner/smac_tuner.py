@@ -37,6 +37,9 @@ from ConfigSpaceNNI import Configuration
 
 from .convert_ss_to_scenario import generate_scenario
 
+from nni.tuner import Tuner
+from nni.utils import OptimizeMode, extract_scalar_reward, randint_to_quniform
+
 
 class SMACTuner(Tuner):
     """
@@ -136,6 +139,7 @@ class SMACTuner(Tuner):
         search_space:
             search space
         """
+        randint_to_quniform(search_space)
         if not self.update_ss_done:
             self.categorical_dict = generate_scenario(search_space)
             if self.categorical_dict is None:

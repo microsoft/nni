@@ -36,8 +36,8 @@ There are 10 types to express your search space as follows:
 
 * `@nni.variable(nni.choice(option1,option2,...,optionN),name=variable)`
   Which means the variable value is one of the options, which should be a list The elements of options can themselves be stochastic expressions
-* `@nni.variable(nni.randint(upper),name=variable)`
-  Which means the variable value is a random integer in the range [0, upper).
+* `@nni.variable(nni.randint(lower, upper),name=variable)`
+  Which means the variable value is a value like round(uniform(low, high)). For now, the type of chosen value is float. If you want to use integer value, please convert it explicitly.
 * `@nni.variable(nni.uniform(low, high),name=variable)`
   Which means the variable value is a value uniformly between low and high.
 * `@nni.variable(nni.quniform(low, high, q),name=variable)`
