@@ -45,9 +45,9 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 * 如果使用服务器 IP 后还是无法看到 Web 界面，可检查此服务器上是否有防火墙或需要代理。 或使用此运行 NNI Experiment 的服务器上的浏览器来查看 Web 界面。
 * 另一个可能的原因是 Experiment 启动失败了，NNI 无法读取 Experiment 的信息。 可在如下目录中查看 NNIManager 的日志： ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
 
-### Windows 本机模式
+### NNI 在 Windows 上的问题
 
-参考 [NNI Windows 本机模式](WindowsLocalMode.md)
+参考 [Windows 上使用 NNI](NniOnWindows.md)。
 
 ### 帮助改进
 
