@@ -26,8 +26,9 @@ import datetime
 import time
 from subprocess import call, check_output
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
-from .config_utils import Config, Experiments
-from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url
+from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
+from pyhdfs import HdfsClient, HdfsFileNotFoundException
+from .config_utils import Config, Experiments, HDFSConfig
 from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMENT_DETAIL_FORMAT, \
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process
@@ -450,30 +451,9 @@ def monitor_experiment(args):
             print_error(exception)
             exit(1)
 
-
-def parse_trial_data(content):
-    """output: List[Dict]"""
-    trial_records = []
-    for trial_data in content:
-        for phase_i in range(len(trial_data['hyperParameters'])):
-            hparam = json.loads(trial_data['hyperParameters'][phase_i])['parameters']
-            hparam['id'] = trial_data['id']
-            if 'finalMetricData' in trial_data.keys() and phase_i < len(trial_data['finalMetricData']):
-                reward = json.loads(trial_data['finalMetricData'][phase_i]['data'])
-                if isinstance(reward, (float, int)):
-                    dict_tmp = {**hparam, **{'reward': reward}}
-                elif isinstance(reward, dict):
-                    dict_tmp = {**hparam, **reward}
-                else:
-                    raise ValueError("Invalid finalMetricsData format: {}/{}".format(type(reward), reward))
-            else:
-                dict_tmp = hparam
-            trial_records.append(dict_tmp)
-    return trial_records
-
 def export_trials_data(args):
-    """export experiment metadata to csv
-    """
+    '''export experiment metadata to csv
+    '''
     nni_config = Config(get_config_filename(args))
     rest_port = nni_config.get_config('restServerPort')
     rest_pid = nni_config.get_config('restServerPid')
@@ -482,26 +462,60 @@ def export_trials_data(args):
         return
     running, response = check_rest_server_quick(rest_port)
     if running:
-        response = rest_get(trial_jobs_url(rest_port), 20)
+        response = rest_get(export_data_url(rest_port), 20)
         if response is not None and check_response(response):
-            content = json.loads(response.text)
-            # dframe = pd.DataFrame.from_records([parse_trial_data(t_data) for t_data in content])
-            # dframe.to_csv(args.csv_path, sep='\t')
-            records = parse_trial_data(content)
             if args.type == 'json':
-                json_records = []
-                for trial in records:
-                    value = trial.pop('reward', None)
-                    trial_id =  trial.pop('id', None)
-                    json_records.append({'parameter': trial, 'value': value, 'id': trial_id})
-            with open(args.path, 'w') as file:
-                if args.type == 'csv':
-                    writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in records]))
+                with open(args.path, 'w') as file:
+                    file.write(response.text)
+            elif args.type == 'csv':
+                content = json.loads(response.text)
+                trial_records = []
+                for record in content:
+                    if not isinstance(record['value'], (float, int)):
+                        formated_record = {**record['parameter'], **record['value'], **{'id': record['id']}}
+                    else:
+                        formated_record = {**record['parameter'], **{'reward': record['value'], 'id': record['id']}}
+                    trial_records.append(formated_record)
+                with open(args.path, 'w') as file:
+                    writer = csv.DictWriter(file, set.union(*[set(r.keys()) for r in trial_records]))
                     writer.writeheader()
-                    writer.writerows(records)
-                else:
-                    json.dump(json_records, file)
+                    writer.writerows(trial_records)
+            else:
+                print_error('Unknown type: %s' % args.type)
+                exit(1)
         else:
             print_error('Export failed...')
     else:
         print_error('Restful server is not Running')
+
+def hdfs_set(args):
+    hdfsConfig = HDFSConfig()
+    hdfsConfig.set_config(args.host, args.user_name)
+    print_normal('HDFS account update success!')
+
+def hdfs_clean(args):
+    hdfsConfig = HDFSConfig()
+    if not hdfsConfig.get_config():
+        print_error('Please use \'nnictl hdfs set\' command to set hdfs account first!')
+        exit(1)
+    host = hdfsConfig.get_config().get('host')
+    user_name = hdfsConfig.get_config().get('userName')
+    hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)
+    root_path = os.path.join('/', user_name, 'nni', 'experiments')
+    while True:
+        inputs = input('INFO: clean up all files in {0}, do you want to continue?[Y/N]:'.format(root_path))
+        if inputs.lower() not in ['y', 'n', 'yes', 'no']:
+            print_warning('please input Y or N!')
+        elif inputs.lower() in ['n', 'no']:
+            exit(0)
+        else:
+            break
+    path_list = hdfs_client.listdir(root_path)
+    for path in path_list:
+        full_path = os.path.join(root_path, path)
+        print_normal('deleting {0}'.format(full_path))
+        if hdfs_client.delete(full_path, recursive=True):
+            print_normal('delete success!')
+        else:
+            print_normal('delete failed!')
+    print_normal('DONE')

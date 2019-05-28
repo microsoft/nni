@@ -8,4 +8,5 @@ In addtion to the official tutorilas and examples, we encourage community contri
     :maxdepth: 2
 
     NNI Practice Sharing<nni_practice_sharing>
-    AutoML Practice Sharing<automl_practice_sharing>
+    Neural Architecture Search Comparison<CommunitySharings/NasComparison>
+    Hyper-parameter Tuning Algorithm Comparsion<CommunitySharings/HpoComparison>
