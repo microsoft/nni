@@ -23,7 +23,7 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 * __Install NNI through source code__
 
   Prerequisite: `python >=3.5`, `git`, `PowerShell`  
-  Note: [Release] should be replaced with latest version, such as `v0.8`. Local, remote and pai mode on Windows are supported from v0.8. Please refer to [Releases](https://github.com/Microsoft/nni/releases) for more details.
+  Note: **[Release]** should be replaced with latest version, such as **v0.8**. Local, remote and pai mode on Windows are supported from v0.8. Please refer to [Releases](https://github.com/Microsoft/nni/releases) for more details.
   ```bash
   git clone -b [Release] https://github.com/Microsoft/nni.git
   cd nni
