@@ -154,7 +154,7 @@ Run the **config_windows.yml** file from your command line to start MNIST experi
 **Note**, if you're using NNI on Windows, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config_windows.yml
+    nnictl create --config nni\examples\trials\mnist\config_windows.yml
 ```
 
 Note, **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](Nnictl.md) for more usage of `nnictl`
