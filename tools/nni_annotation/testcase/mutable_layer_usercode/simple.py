@@ -50,8 +50,4 @@ def main():
     """@nni.report_final_result(layer_3_out)"""
 
 if __name__ == '__main__':
-    try:
-        main()
-    except Exception as exception:
-        print(exception)
-        raise
+    main()
