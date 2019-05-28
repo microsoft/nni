@@ -681,18 +681,18 @@ nnictl 支持的命令：
   
   * 选项
   
-  | 参数及缩写       | 是否必需 | 默认值 | 说明                                          |
-  | ----------- | ---- | --- | ------------------------------------------- |
-  | --host      | True |     | HDFS 的地址，格式为 xxx.xxx.xxx.xxx，例如：10.10.10.10 |
-  | --user_name | True |     | The userName of hdfs                        |
+  | 参数及缩写       | 是否必需 | 默认值 | 说明                                  |
+  | ----------- | ---- | --- | ----------------------------------- |
+  | --host      | True |     | HDFS 的地址，格式为 x.x.x.x，例如：10.10.10.10 |
+  | --user_name | True |     | HDFS 的用户名                           |
 
 * **nnictl hdfs clean**
   
-  * Description
+  * 说明
     
-    Clean up the code files that nni automatically copied to hdfs. This command deletes all such files under the user_name.
+    清理 NNI 自动拷贝到 HDFS 的代码文件。 此命令会删除 user_name 下的所有文件。
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl hdfs clean
