@@ -50,7 +50,7 @@ Currently we support installation on Linux, Mac and Windows(local, remote and pa
   ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
   cd nni
-  powershell ./install.ps1
+  powershell .\install.ps1
   ```
 
 ## **System requirements**
