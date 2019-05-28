@@ -56,10 +56,24 @@ machineList:
     passwd: bob123
 ```
 
+可以使用不同系统来在远程计算机上运行 Experiment。
+
+#### Linux 和 macOS
+
 填好 `machineList` 部分，然后运行：
 
 ```bash
 nnictl create --config ~/nni/examples/trials/mnist-annotation/config_remote.yml
+```
+
+来启动 Experiment。
+
+#### Windows
+
+填好 `machineList` 部分，然后运行：
+
+```bash
+nnictl create --config %userprofile%\nni\examples\trials\mnist-annotation\config_remote.yml
 ```
 
 来启动 Experiment。

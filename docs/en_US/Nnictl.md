@@ -21,6 +21,7 @@ nnictl support commands:
 * [nnictl tensorboard](#tensorboard)
 * [nnictl package](#package)
 * [nnictl --version](#version)
+* [nnictl hdfs](#hdfs)
 
 ### Manage an experiment
 
@@ -649,4 +650,38 @@ Debug mode will disable version check function in Trialkeeper.
 
     ```bash
     nnictl --version
+    ```
+
+<a name="hdfs"></a>
+
+![](https://placehold.it/15/1589F0/000000?text=+) `Manage hdfs`
+
+* __nnictl hdfs set__
+  * Description
+
+    set the host and userName of hdfs
+
+  * Usage
+
+    ```bash
+    nnictl hdfs set [OPTIONS]
+    ```
+
+  * Options
+
+  |Name, shorthand|Required|Default|Description|
+  |------|------|------ |------|
+  |--host|  True| |The host ip of hdfs, the format is xx.xx.xx.xx, for example, 10.10.10.10|
+  |--user_name|  True| |The userName of hdfs|
+
+* __nnictl hdfs clean__
+
+  * Description
+
+    Clean up the code files that nni automatically copied to hdfs. This command deletes all such files under the user_name.
+    
+  * Usage
+
+    ```bash
+    nnictl hdfs clean
     ```
