@@ -1,5 +1,5 @@
 authorName: default
-experimentName: mnist-cascading-search-space
+experimentName: mnist-nested-search-space
 trialConcurrency: 2
 maxExecDuration: 1h
 maxTrialNum: 100

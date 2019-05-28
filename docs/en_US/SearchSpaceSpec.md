@@ -29,7 +29,7 @@ All types of sampling strategies and their parameter are listed here:
 
   * Which means the variable's value is one of the options. Here 'options' should be a list. Each element of options is a number of string. It could also be a nested sub-search-space, this sub-search-space takes effect only when the corresponding element is chosen. The variables in this sub-search-space could be seen as conditional variables.
 
-  * An simple [example](../../examples/trials/mnist-cascading-search-space/search_space.json) of [nested] search space definition. If an element in the options list is a dict, it is a sub-search-space, and for our built-in tuners you have to add a key '_name' in this dict, which helps you to identify which element is chosen. Accordingly, here is a [sample](../../examples/trials/mnist-cascading-search-space/sample.json) which users can get from nni with nested search space definition. Tuners which support nested search space is as follows:
+  * An simple [example](../../examples/trials/mnist-nested-search-space/search_space.json) of [nested] search space definition. If an element in the options list is a dict, it is a sub-search-space, and for our built-in tuners you have to add a key '_name' in this dict, which helps you to identify which element is chosen. Accordingly, here is a [sample](../../examples/trials/mnist-nested-search-space/sample.json) which users can get from nni with nested search space definition. Tuners which support nested search space is as follows:
 
     - Random Search 
     - TPE

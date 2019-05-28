@@ -51,7 +51,7 @@ This example is to show how to use hyperband to tune the model. There is one mor
 
 This example is to show that NNI also support nested search space. The search space file is an example of how to define nested search space.
 
-`code directory: examples/trials/mnist-cascading-search-space/`
+`code directory: examples/trials/mnist-nested-search-space/`
 
 <a name="mnist-kubeflow-tf"></a>
 **distributed MNIST (tensorflow) using kubeflow**
