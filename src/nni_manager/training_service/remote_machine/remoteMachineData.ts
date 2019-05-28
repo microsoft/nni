@@ -23,7 +23,7 @@ import * as fs from 'fs';
 import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
 import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
-import { GPUSummary } from '../common/gpuData';
+import { GPUSummary, GPUInfo } from '../common/gpuData';
 
 /**
  * Metadata of remote machine for configuration and statuc query
@@ -36,20 +36,23 @@ export class RemoteMachineMeta {
     public readonly sshKeyPath?: string;
     public readonly passphrase?: string;
     public gpuSummary : GPUSummary | undefined;
-    // GPU Reservation info, the key is GPU index, the value is the job id which reserves this GPU
-    public gpuReservation : Map<number, string>;
     public readonly gpuIndices?: string;
+    public readonly maxTrialNumPerGpu?: number;
+    public occupiedGpuIndexMap: Map<number, number>;
+    public readonly useActiveGpu?: boolean = false;
 
     constructor(ip : string, port : number, username : string, passwd : string,
-                sshKeyPath: string, passphrase : string, gpuIndices?: string) {
+                sshKeyPath: string, passphrase : string, gpuIndices?: string, maxTrialNumPerGpu?: number, useActiveGpu?: boolean) {
         this.ip = ip;
         this.port = port;
         this.username = username;
         this.passwd = passwd;
         this.sshKeyPath = sshKeyPath;
         this.passphrase = passphrase;
-        this.gpuReservation = new Map<number, string>();
         this.gpuIndices = gpuIndices;
+        this.maxTrialNumPerGpu = maxTrialNumPerGpu;
+        this.occupiedGpuIndexMap = new Map<number, number>();
+        this.useActiveGpu = useActiveGpu;
     }
 }
 
@@ -97,6 +100,7 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
     public sequenceId: number;
     public rmMeta?: RemoteMachineMeta;
     public isEarlyStopped?: boolean;
+    public gpuIndices: GPUInfo[];
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
                 workingDirectory: string, form: JobApplicationForm, sequenceId: number) {
@@ -107,6 +111,7 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
         this.form = form;
         this.sequenceId = sequenceId;
         this.tags = [];
+        this.gpuIndices = []
     }
 }
 
