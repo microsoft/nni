@@ -81,6 +81,9 @@ if env_args.platform is None:
     def function_choice(*funcs, name=None):
         return random.choice(funcs)()
 
+    def mutable_layer():
+        raise RuntimeError('Cannot call nni.mutable_layer in this mode')
+
 else:
 
     def choice(options, name=None, key=None):
