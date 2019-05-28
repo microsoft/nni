@@ -119,7 +119,7 @@ The design of One-Shot NAS on NNI is shown in the above figure. One-Shot NAS usu
 
 ## General tuning algorithms for NAS
 
-Like hyperparameter tuning, a relatively general algorithms for NAS is required. The general programming interface makes this task easier to some extent. We have a RL-based tuner algorithm for NAS from our contributors. We expect efforts from community to design and implement better NAS algorithms.
+Like hyperparameter tuning, a relatively general algorithm for NAS is required. The general programming interface makes this task easier to some extent. We have a RL-based tuner algorithm for NAS from our contributors. We expect efforts from community to design and implement better NAS algorithms.
 
 [__TODO__] More tuning algorithms for NAS.
 
