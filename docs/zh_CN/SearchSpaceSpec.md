@@ -29,7 +29,7 @@
   
   * 表示变量的值是选项之一。 这里的 'options' 是一个数组。 选项的每个元素都是字符串。 也可以是嵌套的子搜索空间。此子搜索空间仅在相应的元素选中后才起作用。 该子搜索空间中的变量可看作是条件变量。
   
-  * 这是个简单的 [nested] 搜索空间定义的[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/search_space.json)。 如果选项列表中的元素是 dict，则它是一个子搜索空间，对于内置的 Tuner，必须在此 dict 中添加键 “_name”，这有助于标识选中的元素。 相应的，这是从 NNI 中获得的嵌套搜索空间定义的[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/sample.json)。 以下 Tuner 支持嵌套搜索空间：
+  * An simple [example](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/search_space.json) of [nested] search space definition. 如果选项列表中的元素是 dict，则它是一个子搜索空间，对于内置的 Tuner，必须在此 dict 中添加键 “_name”，这有助于标识选中的元素。 Accordingly, here is a [sample](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/sample.json) which users can get from nni with nested search space definition. 以下 Tuner 支持嵌套搜索空间：
     
     * Random Search（随机搜索） 
     * TPE
@@ -92,9 +92,19 @@
 |  Hyperband Advisor  | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
 |     Metis Tuner     | &#10003; | &#10003; | &#10003; | &#10003; |            |             |          |          |           |            |
 
-注意，在 Grid Search Tuner 中，为了使用方便 `quniform` 和 `qloguniform` 的定义也有所改变，其中的 q 表示采样值的数量。 详情如下：
+Known Limitations:
 
-* 类型 'quniform' 接收三个值 [low, high, q]， 其中 [low, high] 指定了范围，而 'q' 指定了会被均匀采样的值的数量。 注意 q 至少为 2。 它的第一个采样值为 'low'，每个采样值都会比前一个大 (high-low)/q 。
-* 类型 'qloguniform' 的行为与 'quniform' 类似，不同处在于首先将范围改为 [log(low), log(high)] 采样后，再将数值还原。
+* Note that In Grid Search Tuner, for users' convenience, the definition of `quniform` and `qloguniform` change, where q here specifies the number of values that will be sampled. Details about them are listed as follows
+  
+      * Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
+      
+      * Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
+      
 
-注意 Metis Tuner 当前仅支持在 `choice` 中使用数值。
+* Note that Metis Tuner only supports numerical `choice` now
+
+* Note that for nested search space:
+  
+      * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
+      
+      * We do not support nested search space "Hyper Parameter" parallel graph now, the enhancement is being considered in #1110(https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
