@@ -13,7 +13,7 @@ Here is an experimental result of MNIST after using 'Curvefitting' Assessor in '
 Like Tuners, users can either use built-in Assessors, or customize an Assessor on their own. Please refer to the following tutorials for detail:
 
 ..  toctree::
-    :maxdepth:2
+    :maxdepth: 2
 
     builtin_assessor
     Customized Assessors<CustomizeAssessor>
