@@ -19,6 +19,7 @@ Note: Please follow the format when you write your `config.yml` file.
 
 <a name="MedianStop"></a>
 
+
 ![](https://placehold.it/15/1589F0/000000?text=+) `Median Stop Assessor`
 
 > Builtin Assessor Name: **Medianstop**
