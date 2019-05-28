@@ -4,33 +4,9 @@
 
 ## **在 Windows 上安装**
 
-**强烈推荐使用 Anaconda 或 Miniconda Python（64位）。**
+please refer to [Installation](Installation.md#installation-on-windows) for more details.
 
-在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
-
-```bash
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
-* **通过 pip 命令安装 NNI**
-    
-    先决条件：`python(64-bit) >= 3.5`
-
-```bash
-  python -m pip install --upgrade nni
-```
-
-* __通过代码安装 NNI__
-
-  先决条件: `python >=3.5`, `git`, `PowerShell`
-
-  ```bash
-  git clone -b v0.8 https://github.com/Microsoft/nni.git
-  cd nni
-  powershell -file install.ps1
-  ```
-
-运行完以上脚本后，从命令行使用 **config_windows.yml** 来启动 Experiment，完成安装验证。
+When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
 
 ```bash
 nnictl create --config nni\examples\trials\mnist\config_windows.yml
@@ -72,8 +48,8 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 如果存在 stderr 文件，也需要查看其内容。 可能的错误情况包括：
 
-* 忘记将 Experiment 配置的 Trial 命令中的 `python3` 改为 `python`。
-* 忘记安装 Experiment 的依赖，如 TensorFlow，Keras 等。
+* forget to change the trial command `python3` into `python` in each experiment YAML.
+* forget to install experiment dependencies such as TensorFlow, Keras and so on.
 
 ### 无法在 Windows 上使用 BOHB
 
@@ -85,4 +61,4 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 注意：
 
-* 如果遇到 `Segmentation fault` 这样的错误，参考[常见问答](FAQ.md)。
+* If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
