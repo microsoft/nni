@@ -86,11 +86,19 @@ All types of sampling strategies and their parameter are listed here:
 | Hyperband Advisor | &#10003; | &#10003; | &#10003; | &#10003;  | &#10003;    | &#10003;     | &#10003; | &#10003; | &#10003;   | &#10003;    |
 | Metis Tuner   | &#10003; | &#10003; | &#10003; | &#10003;  |     |      |  |  |    |     |
 
-Note that In Grid Search Tuner, for users' convenience, the definition of `quniform` and `qloguniform` change, where q here specifies the number of values that will be sampled. Details about them are listed as follows
 
-* Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
-* Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
+Known Limitations:
 
-Note that Metis Tuner only support numerical `choice` now
+* Note that In Grid Search Tuner, for users' convenience, the definition of `quniform` and `qloguniform` change, where q here specifies the number of values that will be sampled. Details about them are listed as follows
 
-Note the Only Random Search/TPE/Anneal/Evolution tuner support nested search sapce. Fow now, we don't support showing nested search space in WebUI.
+    * Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
+    
+    * Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
+
+* Note that Metis Tuner only support numerical `choice` now
+
+* Note that for nested search space:
+
+    * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
+
+    * We do not support nested search space "Hyper Parameter" parallel graph now, the enhancement is being considered in #1110(https://github.com/microsoft/nni/pull/1115), any suggestions or discussions or contributions are warmly welcomed
