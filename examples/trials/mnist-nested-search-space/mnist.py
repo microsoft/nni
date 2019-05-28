@@ -14,7 +14,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 import nni
 
-logger = logging.getLogger('mnist_cascading_search_space')
+logger = logging.getLogger('mnist_nested_search_space')
 FLAGS = None
 
 class MnistNetwork(object):
