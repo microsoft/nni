@@ -673,18 +673,18 @@ nnictl 支持的命令：
     
     设置 HDFS 的地址和用户名
   
-  * Usage
+  * 用法
     
     ```bash
     nnictl hdfs set [OPTIONS]
     ```
   
-  * Options
+  * 选项
   
-  | Name, shorthand | Required | Default | Description                                                              |
-  | --------------- | -------- | ------- | ------------------------------------------------------------------------ |
-  | --host          | True     |         | The host ip of hdfs, the format is xx.xx.xx.xx, for example, 10.10.10.10 |
-  | --user_name     | True     |         | The userName of hdfs                                                     |
+  | 参数及缩写       | 是否必需 | 默认值 | 说明                                          |
+  | ----------- | ---- | --- | ------------------------------------------- |
+  | --host      | True |     | HDFS 的地址，格式为 xxx.xxx.xxx.xxx，例如：10.10.10.10 |
+  | --user_name | True |     | The userName of hdfs                        |
 
 * **nnictl hdfs clean**
   
