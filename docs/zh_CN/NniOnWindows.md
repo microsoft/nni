@@ -1,6 +1,6 @@
-# Windows 本地模式（测试中）
+# Windows 上的 NNI（实验阶段的功能）
 
-当前 Windows 下仅支持本机模式。 推荐 Windows 10 的 1809 版，其经过了测试。
+当前 Windows 上支持本机、远程和 OpenPAI 模式。 推荐 Windows 10 的 1809 版，其经过了测试。
 
 ## **在 Windows 上安装**
 
@@ -25,15 +25,15 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
   先决条件: `python >=3.5`, `git`, `PowerShell`
 
   ```bash
-  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
-  powershell ./install.ps1
+  powershell -file install.ps1
   ```
 
 运行完以上脚本后，从命令行使用 **config_windows.yml** 来启动 Experiment，完成安装验证。
 
 ```bash
-nnictl create --config nni/examples/trials/mnist/config_windows.yml
+nnictl create --config nni\examples\trials\mnist\config_windows.yml
 ```
 
 同样，其它示例的 YAML 配置中也需将 Trial 命令的 `python3` 替换为 `python`。

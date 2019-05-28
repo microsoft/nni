@@ -3,7 +3,7 @@ experimentName: default_test
 maxExecDuration: 5m
 maxTrialNum: 4
 trialConcurrency: 2
-searchSpacePath: ../../../examples/trials/mnist-cascading-search-space/search_space.json
+searchSpacePath: ../../../examples/trials/mnist-nested-search-space/search_space.json
 
 tuner:
   #choice: TPE, Random, Anneal, Evolution
@@ -13,7 +13,7 @@ assessor:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-cascading-search-space
+  codeDir: ../../../examples/trials/mnist-nested-search-space
   command: python3 mnist.py --batch_num 100
   gpuNum: 0
 

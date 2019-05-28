@@ -2,7 +2,7 @@
 
 ## 安装
 
-当前支持 Linux，MacOS 和 Windows（本机模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+当前支持 Linux，MacOS 和 Windows，在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
 #### Linux 和 MacOS
 
@@ -12,7 +12,7 @@
 
 #### Windows
 
-如果选择 Windows 本机模式并使用 PowerShell 运行脚本，需要首次以管理员身份在 PowerShell 环境中运行以下命令。
+如果在 Windows 上使用 NNI，首次使用 PowerShell 时，需要以管理员身份运行下列命令。
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
@@ -161,7 +161,7 @@ trial:
 
 从命令行使用 **config_windows.yml** 文件启动 MNIST Experiment 。
 
-**注意**：如果使用了 Windows 本机模式，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
+**注意**：如果使用 Windows，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
