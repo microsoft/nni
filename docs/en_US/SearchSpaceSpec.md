@@ -95,7 +95,7 @@ Known Limitations:
     
     * Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
 
-* Note that Metis Tuner only support numerical `choice` now
+* Note that Metis Tuner only supports numerical `choice` now
 
 * Note that for nested search space:
 
