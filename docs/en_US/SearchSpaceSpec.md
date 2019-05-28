@@ -101,4 +101,4 @@ Known Limitations:
 
     * Only Random Search/TPE/Anneal/Evolution tuner supports nested search space
 
-    * We do not support nested search space "Hyper Parameter" parallel graph now, the enhancement is being considered in #1110(https://github.com/microsoft/nni/pull/1115), any suggestions or discussions or contributions are warmly welcomed
+    * We do not support nested search space "Hyper Parameter" parallel graph now, the enhancement is being considered in #1110(https://github.com/microsoft/nni/issues/1110), any suggestions or discussions or contributions are warmly welcomed
