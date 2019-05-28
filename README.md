@@ -155,7 +155,7 @@ Windows
 ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
   cd nni
-  powershell ./install.ps1
+  powershell .\install.ps1
 ```
 
 For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)
@@ -185,7 +185,7 @@ Windows
 * Run the MNIST example.
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config_windows.yml
+    nnictl create --config nni\examples\trials\mnist\config_windows.yml
 ```
 
 * Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
