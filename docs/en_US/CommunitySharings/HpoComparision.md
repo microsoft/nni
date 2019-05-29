@@ -5,15 +5,15 @@ Comparison of Hyperparameter Optimization algorithms on several problems.
 
 Hyperparameter Optimization algorithms are list below:
 
-- [Random Search](../BuiltinTuner.md)
-- [Grid Search](../BuiltinTuner.md)
-- [Evolution](../BuiltinTuner.md)
-- [Anneal](../BuiltinTuner.md)
-- [Metis](../BuiltinTuner.md)
-- [TPE](../BuiltinTuner.md)
-- [SMAC](../BuiltinTuner.md)
-- [HyperBand](../BuiltinTuner.md)
-- [BOHB](../BuiltinTuner.md)
+- [Random Search](../BuiltinTuner.html#Random)
+- [Grid Search](../BuiltinTuner.html#GridSearch)
+- [Evolution](../BuiltinTuner.html#Evolution)
+- [Anneal](../BuiltinTuner.html#Anneal)
+- [Metis](../BuiltinTuner.html#MetisTuner)
+- [TPE](../BuiltinTuner.html#TPE)
+- [SMAC](../BuiltinTuner.html#SMAC)
+- [HyperBand](../BuiltinTuner.html#Hyperband)
+- [BOHB](../BuiltinTuner.html#BOHB)
 
 All algorithms run in NNI local environment.
 
