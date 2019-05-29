@@ -12,7 +12,7 @@
               "ValueType": 1,
               "AssignmentsToConcatenate": null,
               "Name": "Parameter1",
-              "Value": "param"
+              "Value": "float_param"
             },
             {
               "ValueType": 0,
@@ -153,17 +153,26 @@
       "WorkspaceId": null,
       "Etag": null,
       "Tags": null,
-      "CreatedDate": "2019-05-14T14:23:08.7609109+08:00",
-      "LastModifiedDate": "2019-05-14T14:23:08.7609109+08:00",
+      "CreatedDate": "2019-05-29T15:31:42.8982675+08:00",
+      "LastModifiedDate": "2019-05-29T15:31:42.8982675+08:00",
       "EntityStatus": 0
     }
   },
   "Interface": {
     "Parameters": [
       {
-        "Name": "param",
+        "Name": "float_param",
         "Documentation": null,
         "DefaultValue": "hello",
+        "IsOptional": true,
+        "MinMaxRules": [],
+        "EnumRules": [],
+        "Type": 4
+      },
+      {
+        "Name": "int_param",
+        "Documentation": null,
+        "DefaultValue": null,
         "IsOptional": true,
         "MinMaxRules": [],
         "EnumRules": [],

@@ -44,7 +44,8 @@ describe(`Unit Test for Aether Training Service`, () => {
         'parameter_id': 0,
         'parameter_source': 'fake',
         'parameters': {
-            'param': 'hello',
+            'float_param': '0.618',
+            'int_param': '1.0',
         }
     }
 

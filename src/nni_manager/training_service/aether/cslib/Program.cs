@@ -124,8 +124,16 @@ namespace AetherClient
                 hparams = JsonConvert.DeserializeObject<NNIHparam>(info.form.hyperParameters.value);
                 foreach (var item in hparams.parameters)
                 {
+                    string value;
+                    try
+                    {
+                        value = String.Format("{0}", Convert.ToInt64(item.Value));
+                    } catch (FormatException)
+                    {
+                        value = item.Value;
+                    }
                     try {
-                        graph.Parameters.First(e => e.Name == item.Key).Value = item.Value;
+                        graph.Parameters.First(e => e.Name == item.Key).Value = value;
                     } catch (NullReferenceException e) {
                         Console.WriteLine(String.Format("WARNING: hyper-parameter {0} found in Current Aether Experiment", item.Key));
                     }
