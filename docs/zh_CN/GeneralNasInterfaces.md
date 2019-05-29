@@ -1,6 +1,6 @@
 # 神经网络架构搜索的通用编程接口
 
-自动神经架构搜索在寻找更好的模型方面发挥着越来越重要的作用。 最近的研究工作证明了自动NAS的可行性，并且还发现了一些可以击败手动设计和调整模型的模型。 一些代表作品是[ NASNet ](https://arxiv.org/abs/1707.07012) ，[ ENAS ](https://arxiv.org/abs/1802.03268) ，[ DARTS ](https://arxiv.org/abs/1806.09055) ，[Network Morphism](https://arxiv.org/abs/1806.10282) ，和[Evolution](https://arxiv.org/abs/1703.01041)等 。 新的创新不断涌现。 然而，实现这些算法需要付出很大的努力，并且很难重用一种算法的代码库来实现另一种算法。
+自动神经架构搜索在寻找更好的模型方面发挥着越来越重要的作用。 最近的研究工作证明了自动NAS的可行性，并且还发现了一些可以击败手动设计和调整模型的模型。 一些代表作品是[NASNet](https://arxiv.org/abs/1707.07012)，[ENAS](https://arxiv.org/abs/1802.03268)，[DARTS](https://arxiv.org/abs/1806.09055)，[Network Morphism](https://arxiv.org/abs/1806.10282)，和[Evolution](https://arxiv.org/abs/1703.01041) 等。 新的创新不断涌现。 然而，实现这些算法需要付出很大的努力，并且很难重用一种算法的代码库来实现另一种算法。
 
 为了促进NAS创新（例如，设计/实施新的NAS模型，并排比较不同的NAS模型），易于使用且灵活的编程接口至关重要。
 
@@ -91,7 +91,7 @@ NNI的注释编译器将带注释的试验代码转换为可以接收架构选�
 
 上图显示了试验代码如何在NNI上运行。 ` nnictl `处理用户试用代码以生成搜索空间文件和编译的试用代码。 前者用于tuner，后者用于运行trials。
 
-[** TODO **] NNI上NAS的简单示例。
+[**TODO**] NNI上NAS的简单示例。
 
 ### 权重共享
 
@@ -119,7 +119,7 @@ NNI上One-Shot NAS的设计如上图所示。 One-Shot NAS通常只有一个带�
 
 与超参数调整一样, NAS 也需要相对通用的算法。 通用编程接口使这项任务在某种程度上更容易。 我们的贡献者为NAS提供了基于RL的调参算法。 我们期待社区努力设计和实施更好的 NAS 调优算法。
 
-[**TODO**] More tuning algorithms for NAS.
+[**TODO**] 更多 NAS 的调优算法。
 
 ## 导出最好的神经架构和代码
 
