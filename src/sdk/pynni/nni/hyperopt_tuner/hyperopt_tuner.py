@@ -27,7 +27,7 @@ import logging
 import hyperopt as hp
 import numpy as np
 from nni.tuner import Tuner
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index, randint_to_quniform
 
 logger = logging.getLogger('hyperopt_AutoML')
 
@@ -153,14 +153,14 @@ def _add_index(in_x, parameter):
     Will change to format in hyperopt, like:
         {'dropout_rate': 0.8, 'conv_size': {'_index': 1, '_value': 3}, 'hidden_size': {'_index': 1, '_value': 512}}
     """
-    if TYPE not in in_x: # if at the top level
+    if NodeType.TYPE not in in_x: # if at the top level
         out_y = dict()
         for key, value in parameter.items():
             out_y[key] = _add_index(in_x[key], value)
         return out_y
     elif isinstance(in_x, dict):
-        value_type = in_x[TYPE]
-        value_format = in_x[VALUE]
+        value_type = in_x[NodeType.TYPE]
+        value_format = in_x[NodeType.VALUE]
         if value_type == "choice":
             choice_name = parameter[0] if isinstance(parameter,
                                                      list) else parameter
@@ -173,15 +173,14 @@ def _add_index(in_x, parameter):
                     choice_value_format = item[1]
                     if choice_key == choice_name:
                         return {
-                            INDEX:
-                            pos,
-                            VALUE: [
+                            NodeType.INDEX: pos,
+                            NodeType.VALUE: [
                                 choice_name,
                                 _add_index(choice_value_format, parameter[1])
                             ]
                         }
                 elif choice_name == item:
-                    return {INDEX: pos, VALUE: item}
+                    return {NodeType.INDEX: pos, NodeType.VALUE: item}
         else:
             return parameter
 
@@ -232,6 +231,8 @@ class HyperoptTuner(Tuner):
         search_space : dict
         """
         self.json = search_space
+        randint_to_quniform(self.json)
+
         search_space_instance = json2space(self.json)
         rstate = np.random.RandomState()
         trials = hp.Trials()
