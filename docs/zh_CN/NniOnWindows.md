@@ -4,9 +4,9 @@
 
 ## **在 Windows 上安装**
 
-please refer to [Installation](Installation.md#installation-on-windows) for more details.
+详细信息参考[安装](Installation.md#installation-on-windows)。
 
-When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
+完成操作后，使用 **config_windows.yml** 配置来开始 Experiment 进行验证。
 
 ```bash
 nnictl create --config nni\examples\trials\mnist\config_windows.yml
@@ -48,8 +48,8 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 如果存在 stderr 文件，也需要查看其内容。 可能的错误情况包括：
 
-* forget to change the trial command `python3` into `python` in each experiment YAML.
-* forget to install experiment dependencies such as TensorFlow, Keras and so on.
+* 忘记将 Experiment 配置的 Trial 命令中的 `python3` 改为 `python`。
+* 忘记安装 Experiment 的依赖，如 TensorFlow，Keras 等。
 
 ### 无法在 Windows 上使用 BOHB
 
@@ -61,4 +61,4 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
 注意：
 
-* If there is any error like `Segmentation fault`, please refer to [FAQ](FAQ.md)
+* 如果遇到如 `Segmentation fault` 这样的任何错误，参考[常见问题](FAQ.md)。
