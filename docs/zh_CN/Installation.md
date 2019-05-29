@@ -17,7 +17,7 @@
     先决条件：`python >=3.5`, `git`, `wget`
     
     ```bash
-    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    git clone -b v0.8 https://github.com/Microsoft/nni.git
     cd nni
     ./install.sh
     ```
@@ -50,9 +50,9 @@
     然后可以使用管理员或当前用户安装 NNI：
     
     ```bash
-    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    git clone -b v0.8 https://github.com/Microsoft/nni.git
     cd nni
-    powershell ./install.ps1
+    powershell .\install.ps1
     ```
 
 ## **系统需求**

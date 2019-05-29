@@ -150,7 +150,7 @@ Windows
 ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
   cd nni
-  powershell ./install.ps1
+  powershell .\install.ps1
 ```
 
 参考[安装 NNI](docs/zh_CN/Installation.md) 了解系统需求。
@@ -180,7 +180,7 @@ Windows
 * 运行 MNIST 示例。
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config_windows.yml
+    nnictl create --config nni\examples\trials\mnist\config_windows.yml
 ```
 
 * 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。

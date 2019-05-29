@@ -29,16 +29,16 @@
   
   * 表示变量的值是选项之一。 这里的 'options' 是一个数组。 选项的每个元素都是字符串。 也可以是嵌套的子搜索空间。此子搜索空间仅在相应的元素选中后才起作用。 该子搜索空间中的变量可看作是条件变量。
   
-  * 这是个简单的 [nested] 搜索空间定义的[示例](../../examples/trials/mnist-cascading-search-space/search_space.json)。 如果选项列表中的元素是 dict，则它是一个子搜索空间，对于内置的 Tuner，必须在此 dict 中添加键 “_name”，这有助于标识选中的元素。 相应的，这是从 NNI 中获得的嵌套搜索空间定义的[示例](../../examples/trials/mnist-cascading-search-space/sample.json)。 以下 Tuner 支持嵌套搜索空间：
+  * [nested] 搜索空间定义的简单[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/search_space.json)。 如果选项列表中的元素是 dict，则它是一个子搜索空间，对于内置的 Tuner，必须在此 dict 中添加键 “_name”，这有助于标识选中的元素。 相应的，这是使用从 NNI 获得的嵌套搜索空间的[示例](https://github.com/microsoft/nni/tree/master/examples/trials/mnist-nested-search-space/sample.json)。 以下 Tuner 支持嵌套搜索空间：
     
     * Random Search（随机搜索） 
     * TPE
     * Anneal（退火算法）
     * Evolution
 
-* {"_type":"randint","_value":[upper]}
+* {"_type":"randint","_value":[lower, upper]}
   
-  * 此变量为范围 [0, upper) 之间的随机整数。 这种分布的语义，在较远整数与附近整数之间的损失函数无太大关系， 这是用来描述随机种子的较好分布。 如果损失函数与较近的整数更相关，则应该使用某个"quantized"的连续分布，如quniform, qloguniform, qnormal 或 qlognormal。 注意，如果需要改动数字下限，可以使用 `quniform`。
+  * 当前有使用 "quniform" 的 "randint" 分布，随机变量的分布函数是 round(uniform(lower, upper))。 所选择值的类型是 float。 如果要使用整数，需要显式转换。
 
 * {"_type":"uniform","_value":[low, high]}
   
@@ -92,9 +92,19 @@
 |  Hyperband Advisor  | &#10003; | &#10003; | &#10003; | &#10003; |  &#10003;  |  &#10003;   | &#10003; | &#10003; | &#10003;  |  &#10003;  |
 |     Metis Tuner     | &#10003; | &#10003; | &#10003; | &#10003; |            |             |          |          |           |            |
 
-注意，在 Grid Search Tuner 中，为了使用方便 `quniform` 和 `qloguniform` 的定义也有所改变，其中的 q 表示采样值的数量。 详情如下：
+已知的局限：
 
-* 类型 'quniform' 接收三个值 [low, high, q]， 其中 [low, high] 指定了范围，而 'q' 指定了会被均匀采样的值的数量。 注意 q 至少为 2。 它的第一个采样值为 'low'，每个采样值都会比前一个大 (high-low)/q 。
-* 类型 'qloguniform' 的行为与 'quniform' 类似，不同处在于首先将范围改为 [log(low), log(high)] 采样后，再将数值还原。
+* 注意，在 Grid Search Tuner 中，为了使用方便 `quniform` 和 `qloguniform` 的定义也有所改变，其中的 q 表示采样值的数量。 详情如下：
+  
+      * 类型 'quniform' 接收三个值 [low, high, q]， 其中 [low, high] 指定了范围，而 'q' 指定了会被均匀采样的值的数量。 注意 q 至少为 2。 它的第一个采样值为 'low'，每个采样值都会比前一个大 (high-low)/q 。
+      
+      * 类型 'qloguniform' 的行为与 'quniform' 类似，不同处在于首先将范围改为 [log(low), log(high)] 采样后，再将数值还原。
+      
 
-注意 Metis Tuner 当前仅支持在 `choice` 中使用数值。
+* 注意 Metis Tuner 当前仅支持在 `choice` 中使用数值。
+
+* 请注意，对于嵌套搜索空间：
+  
+      * 只有 随机搜索/TPE/Anneal/Evolution Tuner 支持嵌套搜索空间
+      
+      * 不支持嵌套搜索空间 "超参" 并行图，对其的改进通过 #1110(https://github.com/microsoft/nni/issues/1110) 来跟踪 。欢迎任何建议和贡献。

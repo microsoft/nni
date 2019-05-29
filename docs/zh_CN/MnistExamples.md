@@ -51,7 +51,7 @@
 
 此样例演示了 NNI 如何支持嵌套的搜索空间。 搜索空间文件示了如何定义嵌套的搜索空间。
 
-`代码目录: examples/trials/mnist-cascading-search-space/`
+`代码目录: examples/trials/mnist-nested-search-space/`
 
 <a name="mnist-kubeflow-tf"></a>
 **用 Kubeflow 运行分布式的 MNIST (tensorflow)**

@@ -36,7 +36,8 @@ __all__ = [
     'qnormal',
     'lognormal',
     'qlognormal',
-    'function_choice'
+    'function_choice',
+    'mutable_layer'
 ]
 
 
@@ -78,6 +79,9 @@ if trial_env_vars.NNI_PLATFORM is None:
     def function_choice(*funcs, name=None):
         return random.choice(funcs)()
 
+    def mutable_layer():
+        raise RuntimeError('Cannot call nni.mutable_layer in this mode')
+
 else:
 
     def choice(options, name=None, key=None):
@@ -112,6 +116,42 @@ else:
 
     def function_choice(funcs, name=None, key=None):
         return funcs[_get_param(key)]()
+
+    def mutable_layer(
+            mutable_id,
+            mutable_layer_id,
+            funcs,
+            funcs_args,
+            fixed_inputs,
+            optional_inputs,
+            optional_input_size=0):
+        '''execute the chosen function and inputs.
+        Below is an example of chosen function and inputs:
+        {
+            "mutable_id": {
+                "mutable_layer_id": {
+                    "chosen_layer": "pool",
+                    "chosen_inputs": ["out1", "out3"]
+                }
+            }
+        }
+        Parameters:
+        ---------------
+        mutable_id: the name of this mutable_layer block (which could have multiple mutable layers)
+        mutable_layer_id: the name of a mutable layer in this block
+        funcs: dict of function calls
+        funcs_args:
+        fixed_inputs:
+        optional_inputs: dict of optional inputs
+        optional_input_size: number of candidate inputs to be chosen
+        '''
+        mutable_block = _get_param(mutable_id)
+        chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
+        chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
+        real_chosen_inputs = [optional_inputs[input_name] for input_name in chosen_inputs]
+        layer_out = funcs[chosen_layer]([fixed_inputs, real_chosen_inputs], *funcs_args[chosen_layer])
+        
+        return layer_out
 
     def _get_param(key):
         if trial._params is None:
