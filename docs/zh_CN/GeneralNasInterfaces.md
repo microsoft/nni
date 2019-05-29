@@ -89,25 +89,25 @@ NNI 的 Annotation 编译器会将 Trial 代码转换为可以接收架构选择
 
 ![](../img/nas_on_nni.png)
 
-上图显示了试验代码如何在NNI上运行。 `nnictl` 处理用户试用代码以生成搜索空间文件和编译的试用代码。 前者用于 Tuner，后者用于运行 Trial。
+上图显示了 Trial 代码如何在 NNI 上运行。 `nnictl` 处理 Trial 代码，并生成搜索空间文件和编译后的 Trial 代码。 前者会输入 Tuner，后者会在 Trial 代码运行时使用。
 
-[**TODO**] NNI 上 NAS 的简单示例。
+[**待实现**] NNI 上 NAS 的简单示例。
 
 ### 权重共享
 
-在所选择的架构（即试验）之间共享权重可以加速模型搜索。 例如，适当地继承已完成试验的权重可以加速新试验的收敛。 One-shot NAS（例如，ENAS，Darts）更具侵略性，不同架构（即子图）的训练在完整图中共享相同的权重副本。
+在所选择的架构（即 Trial）之间共享权重可以加速模型搜索。 例如，适当地继承已完成 Trial 的权重可加速新 Trial 的收敛。 One-shot NAS（例如，ENAS，Darts）更为激进，不同架构（即子图）的训练会在完整图中共享相同的权重。
 
 ![](../img/nas_weight_share.png)
 
-我们认为权重分配（转移）在加速 NAS 方面起着关键作用，而找到有效的权重共享方式仍然是一个热门的研究课题。 我们为用户提供了一个键值存储, 用于存储和加载权重。 Tuner 和 Trial 使用提供的 KV 客户端库来访问存储。
+权重分配（转移）在加速 NAS 中有关键作用，而找到有效的权重共享方式仍是热门的研究课题。 NNI 提供了一个键值存储，用于存储和加载权重。 Tuner 和 Trial 使用 KV 客户端库来访问存储。
 
-[**TODO**] NNI上的权重分享示例。
+[**待实现**] NNI 上的权重共享示例。
 
-### 支持One-Shot NAS
+### 支持 One-Shot NAS
 
-One-Shot NAS是一种在有限的时间和资源预算内找到良好的神经结构的流行方法。 基本上，它基于搜索空间构建完整的图形，并使用梯度下降最终找到最佳子图。 有不同的训练方法，例如：[training subgraphs (per mini-batch)](https://arxiv.org/abs/1802.03268) ，[training full graph through dropout](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)，以及 [training with architecture weights (regularization)](https://arxiv.org/abs/1806.09055) 。 在这里，我们关注第一种方法，即训练子图（ENAS）。
+One-Shot NAS 是流行的，能在有限的时间和资源预算内找到较好的神经网络结构的方法。 本质上，它会基于搜索空间来构建完整的图，并使用梯度下降最终找到最佳子图。 它有不同的训练方法，如：[training subgraphs (per mini-batch)](https://arxiv.org/abs/1802.03268) ，[training full graph through dropout](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)，以及 [training with architecture weights (regularization)](https://arxiv.org/abs/1806.09055) 。 这里会关注第一种方法，即训练子图（ENAS）。
 
-使用相同的带注释的试验代码，用户可以选择 One-Shot NAS 作为 NNI 上的执行模式。 具体来说, 编译后的试用代码构建完整的图形 (而不是上面演示的子图), 它接收所选择的架构, 并在完整的图形上对此体系结构进行小型批处理的训练, 然后请求另一个选定的架构。 由 [NNI 多阶段](./multiPhase.md) 支持。 因为训练子图非常快，而每次训练子图时都会产生过多的开销，所以支持这种训练方法。
+使用相同 Annotation Trial 代码，可选择 One-Shot NAS 作为执行模式。 具体来说，编译后的 Trial 代码会构建完整的图形（而不是上面演示的子图），会接收所选择的架构，并在完整的图形上对此体系结构进行小型的批处理训练，然后再请求另一个架构。 它通过 [NNI 多阶段 Experiment](./multiPhase.md) 来支持。 因为子图训练非常快，而每次启动子图训练时都会产生开销，所以采用此方法。
 
 ![](../img/one-shot_training.png)
 
