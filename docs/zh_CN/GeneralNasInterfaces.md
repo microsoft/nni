@@ -85,21 +85,21 @@
 
 ### 实验执行的基本流程
 
-NNI的注释编译器将带注释的试验代码转换为可以接收架构选择并构建相应模型（即图形）的代码。 The NAS search space can be seen as a full graph (here, full graph means enabling all the provided operators and connections to build a graph), the architecture chosen by the tuning algorithm is a subgraph in it. By default, the compiled trial code only builds and executes the subgraph.
+NNI的注释编译器将带注释的试验代码转换为可以接收架构选择并构建相应模型（即图）的代码。 NAS搜索空间可以看作是一个完整的图形（这里，完整的图形意味着允许所有提供的操作符和连接来构建图形），调整算法选择的体系结构是其中的子图形。 默认情况下，编译的试验代码仅构建并执行子图。
 
 ![](../img/nas_on_nni.png)
 
-The above figure shows how the trial code runs on NNI. `nnictl` processes user trial code to generate a search space file and compiled trial code. The former is fed to tuner, and the latter is used to run trilas.
+上图显示了试验代码如何在NNI上运行。 ` nnictl `处理用户试用代码以生成搜索空间文件和编译的试用代码。 前者用于tuner，后者用于运行trials。
 
-[**TODO**] Simple example of NAS on NNI.
+[** TODO **] NNI上NAS的简单示例。
 
-### Weight sharing
+### 权重共享
 
-Sharing weights among chosen architectures (i.e., trials) could speedup model search. For example, properly inheriting weights of completed trials could speedup the converge of new trials. One-Shot NAS (e.g., ENAS, Darts) is more aggressive, the training of different architectures (i.e., subgraphs) shares the same copy of the weights in full graph.
+在所选择的架构（即试验）之间共享权重可以加速模型搜索。 例如，适当地继承已完成试验的权重可以加速新试验的收敛。 One-shot NAS（例如，ENAS，Darts）更具侵略性，不同架构（即子图）的训练在完整图中共享相同的权重副本。
 
 ![](../img/nas_weight_share.png)
 
-We believe weight sharing (transferring) plays a key role on speeding up NAS, while finding efficient ways of sharing weights is still a hot research topic. We provide a key-value store for users to store and load weights. Tuners and Trials use a provided KV client lib to access the storage.
+我们认为权重分配（转移）在加速NAS方面起着关键作用，而找到有效的权重共享方式仍然是一个热门的研究课题。 我们为用户提供了一个键值存储, 用于存储和加载权重。 Tuner和Trial使用提供的KV客户端lib来访问存储。
 
 [**TODO**] Example of weight sharing on NNI.
 
