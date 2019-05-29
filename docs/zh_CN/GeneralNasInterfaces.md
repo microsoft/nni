@@ -89,9 +89,9 @@ NNI 的注释编译器将带注释的试验代码转换为可以接收架构选�
 
 ![](../img/nas_on_nni.png)
 
-上图显示了试验代码如何在NNI上运行。 `nnictl` 处理用户试用代码以生成搜索空间文件和编译的试用代码。 前者用于 tuner，后者用于运行 trials。
+上图显示了试验代码如何在NNI上运行。 `nnictl` 处理用户试用代码以生成搜索空间文件和编译的试用代码。 前者用于 Tuner，后者用于运行 Trial。
 
-[**TODO**] NNI上NAS的简单示例。
+[**TODO**] NNI 上 NAS 的简单示例。
 
 ### 权重共享
 
@@ -105,7 +105,7 @@ NNI 的注释编译器将带注释的试验代码转换为可以接收架构选�
 
 ### 支持One-Shot NAS
 
-One-Shot NAS是一种在有限的时间和资源预算内找到良好的神经结构的流行方法。 基本上，它基于搜索空间构建完整的图形，并使用梯度下降最终找到最佳子图。 有不同的培训方法，例如[训练子图（每个小批量） ](https://arxiv.org/abs/1802.03268) ，[使用 dropout 训练完整的图](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf) ，[和架构权重一起训练（正则化） ](https://arxiv.org/abs/1806.09055) 。 在这里，我们关注第一种方法，即训练子图（ENAS）。
+One-Shot NAS是一种在有限的时间和资源预算内找到良好的神经结构的流行方法。 基本上，它基于搜索空间构建完整的图形，并使用梯度下降最终找到最佳子图。 有不同的训练方法，例如：[training subgraphs (per mini-batch)](https://arxiv.org/abs/1802.03268) ，[training full graph through dropout](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)，以及 [training with architecture weights (regularization)](https://arxiv.org/abs/1806.09055) 。 在这里，我们关注第一种方法，即训练子图（ENAS）。
 
 使用相同的带注释的试验代码，用户可以选择 One-Shot NAS 作为 NNI 上的执行模式。 具体来说, 编译后的试用代码构建完整的图形 (而不是上面演示的子图), 它接收所选择的架构, 并在完整的图形上对此体系结构进行小型批处理的训练, 然后请求另一个选定的架构。 它由 [NNI 多阶段实验](./multiPhase.md) 。 我们支持这种训练方法，因为训练子图非常快，每次训练子图时都会产生过多的开销。
 
