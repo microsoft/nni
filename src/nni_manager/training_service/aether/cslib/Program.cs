@@ -127,7 +127,16 @@ namespace AetherClient
                     string value;
                     try
                     {
-                        value = String.Format("{0}", Convert.ToInt64(item.Value));
+                        double d_value = Convert.ToDouble(item.Value);
+                        if (Math.Ceiling(d_value) == d_value)
+                        {
+                            value = Convert.ToString(Convert.ToInt64(d_value));
+                            Console.WriteLine(String.Format("Convert Param {0} to int", item.Key));
+                        } else
+                        {
+                            value = item.Value;
+                        }
+                       
                     } catch (FormatException)
                     {
                         value = item.Value;
