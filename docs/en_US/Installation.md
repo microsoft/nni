@@ -1,6 +1,6 @@
 # Installation of NNI
 
-Currently we support installation on Linux, Mac and Windows(local mode).
+Currently we support installation on Linux, Mac and Windows(local, remote and pai mode).
 
 ## **Installation on Linux & Mac**
 
@@ -17,7 +17,7 @@ Currently we support installation on Linux, Mac and Windows(local mode).
   Prerequisite: `python >=3.5`, `git`, `wget`
 
   ```bash
-  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
@@ -51,9 +51,9 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
   you can install NNI as administrator or current user as follows:
 
   ```bash
-  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
-  powershell ./install.ps1
+  powershell .\install.ps1
   ```
 
 ## **System requirements**

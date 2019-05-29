@@ -26,7 +26,7 @@ interface ErrorParameter {
 interface Parameters {
     parameters: ErrorParameter;
     logPath?: string;
-    intermediate?: Array<number>;
+    intermediate: Array<number>;
 }
 
 interface Experiment {

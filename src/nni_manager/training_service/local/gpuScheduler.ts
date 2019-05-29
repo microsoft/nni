@@ -71,14 +71,15 @@ class GPUScheduler {
         execScript(gpuMetricsCollectorScriptPath)
     }
 
-    public getAvailableGPUIndices(): number[] {
+    public getAvailableGPUIndices(useActiveGpu: boolean, occupiedGpuIndexNumMap: Map<number, number>): number[] {
         if (this.gpuSummary !== undefined) {
-            if(process.platform === 'win32') {
+            if(process.platform === 'win32' || useActiveGpu) {
                 return this.gpuSummary.gpuInfos.map((info: GPUInfo) => info.index);
             }
             else{
-                return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => info.activeProcessNum === 0)
-                    .map((info: GPUInfo) => info.index);
+                return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => 
+                occupiedGpuIndexNumMap.get(info.index) === undefined && info.activeProcessNum === 0 ||
+                occupiedGpuIndexNumMap.get(info.index) !== undefined).map((info: GPUInfo) => info.index);
             }
         }
 

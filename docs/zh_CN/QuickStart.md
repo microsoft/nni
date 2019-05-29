@@ -2,7 +2,7 @@
 
 ## 安装
 
-当前支持 Linux，MacOS 和 Windows（本机模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
+当前支持 Linux，MacOS 和 Windows，在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
 #### Linux 和 MacOS
 
@@ -12,7 +12,7 @@
 
 #### Windows
 
-如果选择 Windows 本机模式并使用 PowerShell 运行脚本，需要首次以管理员身份在 PowerShell 环境中运行以下命令。
+如果在 Windows 上使用 NNI，首次使用 PowerShell 时，需要以管理员身份运行下列命令。
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
@@ -161,13 +161,13 @@ trial:
 
 从命令行使用 **config_windows.yml** 文件启动 MNIST Experiment 。
 
-**注意**：如果使用了 Windows 本机模式，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
+**注意**：如果使用 Windows，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
 
 ```bash
     nnictl create --config nni/examples/trials/mnist/config_windows.yml
 ```
 
-注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](NNICTLDOC.md)，了解 `nnictl` 更多用法。
+注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](Nnictl.md)，了解 `nnictl` 更多用法。
 
 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 期望的输出如下：
 
@@ -208,7 +208,7 @@ You can use these commands to get more information about the experiment
 The Web UI urls are: [IP 地址]:8080
 ```
 
-在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。
+在浏览器中打开 `Web 界面地址`(即：`[IP 地址]:8080`)，就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。 如果无法打开终端中的 Web 界面链接，可以参考 [FAQ](FAQ.md)。
 
 #### 查看概要页面
 
@@ -254,12 +254,12 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 可�
 
 ## 相关主题
 
-* [尝试不同的 Tuner](Builtin_Tuner.md)
-* [尝试不同的 Assessor](Builtin_Assessors.md)
-* [使用命令行工具 nnictl](NNICTLDOC.md)
+* [尝试不同的 Tuner](BuiltinTuner.md)
+* [尝试不同的 Assessor](BuiltinAssessors.md)
+* [使用命令行工具 nnictl](Nnictl.md)
 * [如何编写 Trial 代码](Trials.md)
 * [如何在本机运行 Experiment (支持多 GPU 卡)？](LocalMode.md)
 * [如何在多机上运行 Experiment？](RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](PaiMode.md)
 * [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](KubeflowMode.md)
 * [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](FrameworkControllerMode.md)

@@ -1,6 +1,6 @@
 # 安装 NNI
 
-当前支持在 Linux，Mac 和 Windows（本机模式）下安装。
+当前支持在 Linux，Mac 和 Windows（本机，远程和 OpenPAI 模式）下安装。
 
 ## **在 Linux 和 Mac 下安装**
 
@@ -28,10 +28,12 @@
 
 ## **在 Windows 上安装**
 
-在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令： 
+在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
 
     bash
-      Set-ExecutionPolicy -ExecutionPolicy Unrestricted 强烈推荐使用 Anaconda。
+      Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+
+推荐使用 Anaconda 或 Miniconda。
 
 * **通过 pip 命令安装 NNI**
     
@@ -43,8 +45,9 @@
 
 * **通过源代码安装 NNI**
     
-    先决条件：`python >=3.5`, `git`, `powershell`  
-    可使用管理员或当前用户权限运行下列命令：
+    先决条件：`python >=3.5`, `git`, `PowerShell`
+    
+    然后可以使用管理员或当前用户安装 NNI：
     
     ```bash
     git clone -b v0.7 https://github.com/Microsoft/nni.git
@@ -93,12 +96,12 @@
 ## 更多
 
 * [概述](Overview.md)
-* [使用命令行工具 nnictl](NNICTLDOC.md)
+* [使用命令行工具 nnictl](Nnictl.md)
 * [使用 NNIBoard](WebUI.md)
 * [定制搜索空间](SearchSpaceSpec.md)
 * [配置 Experiment](ExperimentConfig.md)
 * [如何在本机运行 Experiment (支持多 GPU 卡)？](LocalMode.md)
 * [如何在多机上运行 Experiment？](RemoteMachineMode.md)
-* [如何在 OpenPAI 上运行 Experiment？](PAIMode.md)
+* [如何在 OpenPAI 上运行 Experiment？](PaiMode.md)
 * [如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？](KubeflowMode.md)
 * [如何通过 FrameworkController 在 Kubernetes 上运行 Experiment？](FrameworkControllerMode.md)

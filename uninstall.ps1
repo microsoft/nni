@@ -1,5 +1,4 @@
-
-$NNI_DEPENDENCY_FOLDER = "C:\tmp\$env:USERNAME"
+$NNI_DEPENDENCY_FOLDER = [System.IO.Path]::GetTempPath()+$env:USERNAME
 
 $env:PYTHONIOENCODING = "UTF-8"
 if($env:VIRTUAL_ENV){

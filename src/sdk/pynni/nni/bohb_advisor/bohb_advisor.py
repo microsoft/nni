@@ -31,7 +31,7 @@ import ConfigSpace.hyperparameters as CSH
 
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
-from nni.utils import OptimizeMode, extract_scalar_reward
+from nni.utils import OptimizeMode, extract_scalar_reward, randint_to_quniform
 
 from .config_generator import CG_BOHB
 
@@ -443,6 +443,7 @@ class BOHB(MsgDispatcherBase):
             search space of this experiment
         """
         search_space = data
+        randint_to_quniform(search_space)
         cs = CS.ConfigurationSpace()
         for var in search_space:
             _type = str(search_space[var]["_type"])

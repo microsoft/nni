@@ -24,9 +24,9 @@ import os
 import sys
 import shutil
 import string
-from subprocess import Popen, PIPE, call, check_output, check_call
+from subprocess import Popen, PIPE, call, check_output, check_call, CalledProcessError
 import tempfile
-from nni.constants import ModuleName
+from nni.constants import ModuleName, AdvisorModuleName
 from nni_annotation import *
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_rest_server_quick, check_response
@@ -160,9 +160,13 @@ def set_local_config(experiment_config, port, config_file_name):
     request_data = dict()
     if experiment_config.get('localConfig'):
         request_data['local_config'] = experiment_config['localConfig']
-        if request_data['local_config'] and request_data['local_config'].get('gpuIndices') \
-            and isinstance(request_data['local_config'].get('gpuIndices'), int):
-            request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
+        if request_data['local_config']:
+            if request_data['local_config'].get('gpuIndices') and isinstance(request_data['local_config'].get('gpuIndices'), int):
+                request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
+            if request_data['local_config'].get('maxTrialNumOnEachGpu'):
+                request_data['local_config']['maxTrialNumOnEachGpu'] = request_data['local_config'].get('maxTrialNumOnEachGpu')
+            if request_data['local_config'].get('useActiveGpu'):
+                request_data['local_config']['useActiveGpu'] = request_data['local_config'].get('useActiveGpu')
         response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
         err_message = ''
         if not response or not check_response(response):
@@ -343,14 +347,26 @@ def set_experiment(experiment_config, mode, port, config_file_name):
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(config_file_name)
+    # check execution policy in powershell
+    if sys.platform == 'win32':
+        execution_policy = check_output(['powershell.exe','Get-ExecutionPolicy']).decode('ascii').strip()
+        if execution_policy == 'Restricted':
+            print_error('PowerShell execution policy error, please run PowerShell as administrator with this command first:\r\n'\
+                + '\'Set-ExecutionPolicy -ExecutionPolicy Unrestricted\'')
+            exit(1)
     # check packages for tuner
+    package_name, module_name = None, None
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
-        tuner_name = experiment_config['tuner']['builtinTunerName']
-        module_name = ModuleName[tuner_name]
+        package_name = experiment_config['tuner']['builtinTunerName']
+        module_name = ModuleName.get(package_name)
+    elif experiment_config.get('advisor') and experiment_config['advisor'].get('builtinAdvisorName'):
+        package_name = experiment_config['advisor']['builtinAdvisorName']
+        module_name = AdvisorModuleName.get(package_name)
+    if package_name and module_name:
         try:
-            check_call([sys.executable, '-c', 'import %s'%(module_name)])
-        except ModuleNotFoundError as e:
-            print_error('The tuner %s should be installed through nnictl'%(tuner_name))
+            check_call([sys.executable, '-c', 'import %s'%(module_name)], stdout=PIPE, stderr=PIPE)
+        except CalledProcessError as e:
+            print_error('%s should be installed through \'nnictl package install --name %s\''%(package_name, package_name))
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None

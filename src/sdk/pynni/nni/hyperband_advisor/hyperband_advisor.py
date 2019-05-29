@@ -31,7 +31,7 @@ import json_tricks
 from nni.protocol import CommandType, send
 from nni.msg_dispatcher_base import MsgDispatcherBase
 from nni.common import init_logger
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, randint_to_quniform
 import nni.parameter_expressions as parameter_expressions
 
 _logger = logging.getLogger(__name__)
@@ -357,6 +357,7 @@ class Hyperband(MsgDispatcherBase):
             number of trial jobs
         """
         self.searchspace_json = data
+        randint_to_quniform(self.searchspace_json)
         self.random_state = np.random.RandomState()
 
     def handle_trial_end(self, data):
