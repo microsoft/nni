@@ -101,17 +101,17 @@ NNI的注释编译器将带注释的试验代码转换为可以接收架构选�
 
 我们认为权重分配（转移）在加速NAS方面起着关键作用，而找到有效的权重共享方式仍然是一个热门的研究课题。 我们为用户提供了一个键值存储, 用于存储和加载权重。 Tuner和Trial使用提供的KV客户端lib来访问存储。
 
-[**TODO**] Example of weight sharing on NNI.
+[** TODO **] NNI上的权重分享示例。
 
-### Support of One-Shot NAS
+### 支持One-Shot NAS
 
-One-Shot NAS is a popular approach to find good neural architecture within a limited time and resource budget. Basically, it builds a full graph based on the search space, and uses gradient descent to at last find the best subgraph. There are different training approaches, such as [training subgraphs (per mini-batch)](https://arxiv.org/abs/1802.03268), [training full graph through dropout](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf), [training with architecture weights (regularization)](https://arxiv.org/abs/1806.09055). Here we focus on the first approach, i.e., training subgraphs (ENAS).
+One-Shot NAS是一种在有限的时间和资源预算内找到良好的神经结构的流行方法。 基本上，它基于搜索空间构建完整的图形，并使用梯度下降最终找到最佳子图。 有不同的培训方法，例如[训练子图（每个小批量） ](https://arxiv.org/abs/1802.03268) ，[使用dropout训练完整的图](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf) ，[和架构权重一起训练（正则化） ](https://arxiv.org/abs/1806.09055) 。 在这里，我们关注第一种方法，即训练子图（ENAS）。
 
-With the same annotated trial code, users could choose One-Shot NAS as execution mode on NNI. Specifically, the compiled trial code builds the full graph (rather than subgraph demonstrated above), it receives a chosen architecture and training this architecture on the full graph for a mini-batch, then request another chosen architecture. It is supported by [NNI multi-phase](./multiPhase.md). We support this training approach because training a subgraph is very fast, building the graph every time training a subgraph induces too much overhead.
+使用相同的带注释的试验代码，用户可以选择One-Shot NAS作为NNI上的执行模式。 具体来说, 编译后的试用代码构建完整的图形 (而不是上面演示的子图), 它接收所选择的架构, 并在完整的图形上对此体系结构进行小型批处理的训练, 然后请求另一个选定的架构。 它由[ NNI 多阶段实验](./multiPhase.md) 。 我们支持这种训练方法，因为训练子图非常快，每次训练子图时都会产生过多的开销。
 
 ![](../img/one-shot_training.png)
 
-The design of One-Shot NAS on NNI is shown in the above figure. One-Shot NAS usually only has one trial job with full graph. NNI supports running multiple such trial jobs each of which runs independently. As One-Shot NAS is not stable, running multiple instances helps find better model. Moreover, trial jobs are also able to synchronize weights during running (i.e., there is only one copy of weights, like asynchroneous parameter-server mode). This may speedup converge.
+NNI上One-Shot NAS的设计如上图所示。 One-Shot NAS通常只有一个带有完整图形的试验作业。 NNI supports running multiple such trial jobs each of which runs independently. As One-Shot NAS is not stable, running multiple instances helps find better model. Moreover, trial jobs are also able to synchronize weights during running (i.e., there is only one copy of weights, like asynchroneous parameter-server mode). This may speedup converge.
 
 [**TODO**] Example of One-Shot NAS on NNI.
 
