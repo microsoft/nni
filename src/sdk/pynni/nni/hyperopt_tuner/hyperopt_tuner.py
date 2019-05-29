@@ -27,7 +27,7 @@ import logging
 import hyperopt as hp
 import numpy as np
 from nni.tuner import Tuner
-from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
+from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index, randint_to_quniform
 
 logger = logging.getLogger('hyperopt_AutoML')
 
@@ -231,6 +231,8 @@ class HyperoptTuner(Tuner):
         search_space : dict
         """
         self.json = search_space
+        randint_to_quniform(self.json)
+
         search_space_instance = json2space(self.json)
         rstate = np.random.RandomState()
         trials = hp.Trials()
