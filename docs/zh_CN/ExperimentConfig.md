@@ -427,11 +427,11 @@ machineList:
   
   - **maxTrialNumPerGpu**
     
-    **maxTrialNumPerGpu** is used to specify the max concurrency trial number on a GPU device.
+    **maxTrialNumPerGpu** 用于指定每个 GPU 设备上最大并发的 Trial 数量。
   
   - **useActiveGpu**
     
-    **useActiveGpu** is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if **useActiveGpu** is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+    **useActiveGpu** 用于指定 NNI 是否使用还有其它进程的 GPU。 默认情况下，NNI 只会使用没有其它进程的空闲 GPU，如果 **useActiveGpu** 设置为 true，NNI 会使用所有 GPU。 此字段不适用于 Windows 版的 NNI。
 
 - **machineList**
   
@@ -471,11 +471,11 @@ machineList:
   
   - **maxTrialNumPerGpu**
     
-    **maxTrialNumPerGpu** is used to specify the max concurrency trial number on a GPU device.
+    **maxTrialNumPerGpu** 用于指定每个 GPU 设备上最大并发的 Trial 数量。
   
   - **useActiveGpu**
     
-    **useActiveGpu** is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if **useActiveGpu** is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+    **useActiveGpu** 用于指定 NNI 是否使用还有其它进程的 GPU。 默认情况下，NNI 只会使用没有其它进程的空闲 GPU，如果 **useActiveGpu** 设置为 true，NNI 会使用所有 GPU。 此字段不适用于 Windows 版的 NNI。
 
 - **kubeflowConfig**:
   
