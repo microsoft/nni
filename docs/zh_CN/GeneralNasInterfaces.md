@@ -1,22 +1,22 @@
-# General Programming Interface for Neural Architecture Search
+# 神经网络架构搜索的通用编程接口
 
-Automatic neural architecture search is taking an increasingly important role on finding better models. Recent research works have proved the feasibility of automatic NAS, and also found some models that could beat manually designed and tuned models. Some of representative works are [NASNet](https://arxiv.org/abs/1707.07012), [ENAS](https://arxiv.org/abs/1802.03268), [DARTS](https://arxiv.org/abs/1806.09055), [Network Morphism](https://arxiv.org/abs/1806.10282), and [Evolution](https://arxiv.org/abs/1703.01041). There are new innovations keeping emerging. However, it takes great efforts to implement those algorithms, and it is hard to reuse code base of one algorithm for implementing another.
+自动神经架构搜索在寻找更好的模型方面发挥着越来越重要的作用。 最近的研究工作证明了自动NAS的可行性，并且还发现了一些可以击败手动设计和调整模型的模型。 一些代表作品是[ NASNet ](https://arxiv.org/abs/1707.07012) ，[ ENAS ](https://arxiv.org/abs/1802.03268) ，[ DARTS ](https://arxiv.org/abs/1806.09055) ，[Network Morphism](https://arxiv.org/abs/1806.10282) ，和[Evolution](https://arxiv.org/abs/1703.01041)等 。 新的创新不断涌现。 然而，实现这些算法需要付出很大的努力，并且很难重用一种算法的代码库来实现另一种算法。
 
-To facilitate NAS innovations (e.g., design/implement new NAS models, compare different NAS models side-by-side), an easy-to-use and flexibile programming interface is crucial.
+为了促进NAS创新（例如，设计/实施新的NAS模型，并排比较不同的NAS模型），易于使用且灵活的编程接口至关重要。
 
-## Programming interface
+## 编程接口
 
-A new programming interface for designing and searching for a model is often demanded in two scenarios. 1) When designing a neural network, the designer may have multiple choices for a layer, sub-model, or connection, and not sure which one or a combination performs the best. It would be appealing to have an easy way to express the candidate layers/sub-models they want to try. 2) For the researchers who are working on automatic NAS, they want to have an unified way to express the search space of neural architectures. And making unchanged trial code adapted to different searching algorithms.
+在两种情况下经常需要使用用于设计和搜索模型的新编程接口。 1）在设计神经网络时，设计者可能对层，子模型或连接有多种选择，并且不确定哪一个或组合表现最佳。 如果能有一种简单的方法来表达他们想要尝试的候选层/子模型，将是很有吸引力的。 2）对于正在研究自动NAS的研究人员，他们希望有一种统一的方式来表达神经架构的搜索空间。 并使不变的试验代码适应不同的搜索算法。
 
-We designed a simple and flexible programming interface based on [NNI annotation](./AnnotationSpec.md). It is elaborated through examples below.
+我们基于[ NNI注释](./AnnotationSpec.md)设计了一个简单灵活的编程接口 。 通过以下示例详细说明。
 
-### Example: choose an operator for a layer
+###示例：为图层选择运算符
 
-When designing the following model there might be several choices in the fourth layer that may make this model perform good. In the script of this model, we can use annotation for the fourth layer as shown in the figure. In this annotation, there are five fields in total:
+在设计以下模型时，第四层中可能有多个运算符选项可能使该模型表现良好。 在此模型的脚本中, 我们可以对第四层使用注释, 如图所示。 在此注释中，总共有五个字段：
 
 ![](../img/example_layerchoice.png)
 
-* **layer_choice**: It is a list of function calls, each function should have defined in user's script or imported libraries. The input arguments of the function should follow the format: `def XXX(inputs, arg2, arg3, ...)`, where `inputs` is a list with two elements. One is the list of `fixed_inputs`, and the other is a list of the chosen inputs from `optional_inputs`. `conv` and `pool` in the figure are examples of function definition. For the function calls in this list, no need to write the first argument (i.e., `input`). Note that only one of the function calls are chosen for this layer.
+* ** layer_choice ** ：它是一个函数调用列表，每个函数都应该在用户脚本或导入的库中定义。 函数的输入参数应遵循以下格式：` def XXX（输入，arg2，arg3，...） ` ，其中`输入`是一个包含两个元素的列表。 一个是` fixed_inputs的列表` ，另一个是来自` optional_inputs的所选输入的列表` 。 图中的` conv `和`pool`函数定义的示例。 对于此列表中的函数调用，无需编写第一个参数（即`input` ）。 Note that only one of the function calls are chosen for this layer.
 * **fixed_inputs**: It is a list of variables, the variable could be an output tensor from a previous layer. The variable could be `layer_output` of another nni.mutable_layer before this layer, or other python variables before this layer. All the variables in this list will be fed into the chosen function in `layer_choice` (as the first element of the `input` list).
 * **optional_inputs**: It is a list of variables, the variable could be an output tensor from a previous layer. The variable could be `layer_output` of another nni.mutable_layer before this layer, or other python variables before this layer. Only `input_num` variables will be fed into the chosen function in `layer_choice` (as the second element of the `input` list).
 * **optional_input_size**: It indicates how many inputs are chosen from `input_candidates`. It could be a number or a range. A range [1,3] means it chooses 1, 2, or 3 inputs.
