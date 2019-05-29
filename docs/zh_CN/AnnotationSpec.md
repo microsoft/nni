@@ -34,7 +34,7 @@ NNI 中，有 4 种类型的 Annotation；
 NNI 支持如下 10 种类型来表示搜索空间：
 
 - `@nni.variable(nni.choice(option1,option2,...,optionN),name=variable)` 变量值是选项中的一种，这些变量可以是任意的表达式。
-- `@nni.variable(nni.randint(lower, upper),name=variable)` 变量值的公式为：round(uniform(low, high))。 当前所选值范围是 float。 如果要使用整数，需要显式转换。
+- `@nni.variable(nni.randint(lower, upper),name=variable)` 变量值的公式为：round(uniform(low, high))。 目前，值的类型为 float。 如果要使用整数，需要显式转换。
 - `@nni.variable(nni.uniform(low, high),name=variable)` 变量值会是 low 和 high 之间均匀分布的某个值。
 - `@nni.variable(nni.quniform(low, high, q),name=variable)` 变量值会是 low 和 high 之间均匀分布的某个值，公式为：round(uniform(low, high) / q) * q
 - `@nni.variable(nni.loguniform(low, high),name=variable)` 变量值是 exp(uniform(low, high)) 的点，数值以对数均匀分布。
