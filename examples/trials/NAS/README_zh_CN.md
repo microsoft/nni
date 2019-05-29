@@ -1,8 +1,8 @@
-**Run Neural Network Architecture Search in NNI**  
+**在 NNI 中运行神经网络架构搜索**  
 ===
 
-Now we have an NAS example [NNI-NAS-Example](https://github.com/Crysple/NNI-NAS-Example) run in NNI using NAS interface from our contributors.
+参考 [NNI-NAS-Example](https://github.com/Crysple/NNI-NAS-Example)，来使用贡献者提供的 NAS 接口。
 
-Thanks our lovely contributors.
+谢谢可爱的贡献者！
 
-And welcome more and more people to join us!
+欢迎越来越多的人加入我们！
