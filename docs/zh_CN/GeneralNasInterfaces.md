@@ -19,8 +19,8 @@
 * **layer_choice**：它是函数调用的 list，每个函数都要在代码或导入的库中实现。 函数的输入参数格式为：`def XXX (input, arg2, arg3, ...)`，其中 `input` 是包含了两个元素的 list。 其中一个是 `fixed_inputs` 的 list，另一个是 `optional_inputs` 中选择输入的 list。 `conv` 和 `pool` 是函数示例。 对于 list 中的函数调用，无需写出第一个参数（即 `input`）。 注意，只会从这些函数调用中选择一个来执行。
 * **fixed_inputs** ：它是变量的 list，可以是前一层输出的张量。 也可以是此层之前的另一个 nni.mutable_layer 的 `layer_output`，或此层之前的其它 Python 变量。 list 中的所有变量将被输入 `layer_choice` 中选择的函数（作为 `input` list 的第一个元素）。
 * **optional_inputs** ：它是变量的 list，可以是前一层的输出张量。 也可以是此层之前的另一个 nni.mutable_layer 的 `layer_output`，或此层之前的其它 Python 变量。 只有 `input_num` 变量被输入 `layer_choice` 到所选的函数 （作为 `input` list 的第二个元素）。
-* **optional_input_size** ：它表示从 `input_candidates` 中选择了多少输入。 它可以是一个数字, 也可以是一个范围。 范围 [1, 3] 表示它选择1、2或3个输入。
-* **layer_output** ：此层的输出的名称，在这种情况下，它表示在 `layer_choice` 中函数调用 的返回值。 这将是一个变量名，可以在以下 python 代码或 nni.mutable_layer 中使用。
+* **optional_input_size** ：它表示从 `input_candidates` 中选择多少个输入。 它可以是一个数字，也可以是一个范围。 范围 [1, 3] 表示选择 1、2 或 3 个输入。
+* **layer_output** ：表示输出的名称。本例中，表示 `layer_choice` 选择的函数的返回值。 这是一个变量名，可以在随后的 Python 代码或 nni.mutable_layer 中使用。
 
 为此示例编写注释有两种方法。 对于上一个，输入 `input` 函数调用是`[[]，[out3]] ` 。 对于底部，输入 `input` 是`[[out3]，[]]` 。
 
