@@ -111,22 +111,22 @@ One-Shot NAS是一种在有限的时间和资源预算内找到良好的神经�
 
 ![](../img/one-shot_training.png)
 
-NNI上One-Shot NAS的设计如上图所示。 One-Shot NAS通常只有一个带有完整图形的试验作业。 NNI supports running multiple such trial jobs each of which runs independently. As One-Shot NAS is not stable, running multiple instances helps find better model. Moreover, trial jobs are also able to synchronize weights during running (i.e., there is only one copy of weights, like asynchroneous parameter-server mode). This may speedup converge.
+NNI上One-Shot NAS的设计如上图所示。 One-Shot NAS通常只有一个带有完整图形的试验作业。 NNI支持运行多个此类试验作业，每个作业都独立运行。 由于One-Shot NAS不稳定，运行多个实例有助于找到更好的模型。 此外，试运行也能够在运行期间同步权重（即，只有一个权重副本，如异步参数 - 服务器模式）。 这可能会加速收敛。
 
-[**TODO**] Example of One-Shot NAS on NNI.
+[** TODO **] NNI上的权重分享示例。
 
-## General tuning algorithms for NAS
+## 通用的NAS调优算法
 
-Like hyperparameter tuning, a relatively general algorithm for NAS is required. The general programming interface makes this task easier to some extent. We have a RL-based tuner algorithm for NAS from our contributors. We expect efforts from community to design and implement better NAS algorithms.
+与超参数调整一样, NAS 也需要相对通用的算法。 通用编程接口使这项任务在某种程度上更容易。 我们的贡献者为NAS提供了基于RL的调参算法。 我们期待社区努力设计和实施更好的 NAS 调优算法。
 
 [**TODO**] More tuning algorithms for NAS.
 
-## Export best neural architecture and code
+## 导出最好的神经架构和代码
 
-[**TODO**] After the NNI experiment is done, users could run `nnictl experiment export --code` to export the trial code with the best neural architecture.
+[** TODO **完成NNI实验后，用户可以运行` nnictl实验导出--code `用最好的神经结构导出试验代码。
 
-## Conclusion and Future work
+## 结论和未来的工作
 
-There could be different NAS algorithms and execution modes, but they could be supported with the same programming interface as demonstrated above.
+可能有不同的 NAS 算法和执行模式, 但它们可以通过相同的编程接口得到支持, 如上面所示。
 
-There are many interesting research topics in this area, both system and machine learning.
+在这一领域有许多有趣的研究主题, 包括系统和机器学习。
