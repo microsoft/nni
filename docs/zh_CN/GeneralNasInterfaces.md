@@ -16,23 +16,23 @@
 
 ![](../img/example_layerchoice.png)
 
-* ** layer_choice ** ：它是一个函数调用列表，每个函数都应该在用户脚本或导入的库中定义。 函数的输入参数应遵循以下格式：`def XXX (input，arg2，arg3，...)` ，其中`input`是一个包含两个元素的列表。 一个是 `fixed_inputs` 的列表，另一个是来自 `optional_inputs` 的所选输入的列表 。 图中的 `conv` 和 `pool` 函数定义的示例。 对于此列表中的函数调用，无需编写第一个参数（即 `input` ）。 请注意, 仅一个函数调用为此图层选择。
-* ** fixed_inputs ** ：它是变量列表，变量可以是前一层的输出张量。 变量可以是此层之前的另一个 nni.mutable_layer 的 `layer_output`，或此层之前的其他python变量。 此列表中的所有变量将被输入` layer_choice`中的所选函数 （作为`input`列表的第一个元素列表）。
-* **optional_inputs** ：它是变量列表，变量可以是前一层的输出张量。 变量可以是此层之前的另一个nni.mutable_layer的` layer_output `，或此层之前的其他python变量。 只有` input_num `个变量将被输入` layer_choice`中的所选函数 （作为`input`列表的第二个元素列表）。
-* ** optional_input_size ** ：它表示从` input_candidates` 中选择了多少输入。 它可以是一个数字, 也可以是一个范围。 范围 [1, 3] 表示它选择1、2或3个输入。
-* ** layer_output ** ：此层的输出的名称，在这种情况下，它表示在` layer_choice`中函数调用 的返回值。 这将是一个变量名，可以在以下python代码或nni.mutable_layer中使用。
+* **layer_choice** ：它是一个函数调用列表，每个函数都应该在用户脚本或导入的库中定义。 函数的输入参数应遵循以下格式：`def XXX (input，arg2，arg3，...)` ，其中`input`是一个包含两个元素的列表。 一个是 `fixed_inputs` 的列表，另一个是来自 `optional_inputs` 的所选输入的列表 。 图中的 `conv` 和 `pool` 函数定义的示例。 对于此列表中的函数调用，无需编写第一个参数（即 `input` ）。 请注意, 仅一个函数调用为此图层选择。
+* **fixed_inputs** ：它是变量列表，变量可以是前一层的输出张量。 变量可以是此层之前的另一个 nni.mutable_layer 的 `layer_output`，或此层之前的其他python变量。 此列表中的所有变量将被输入` layer_choice`中的所选函数 （作为`input`列表的第一个元素列表）。
+* **optional_inputs** ：它是变量列表，变量可以是前一层的输出张量。 变量可以是此层之前的另一个nni.mutable_layer 的 `layer_output`，或此层之前的其他 python 变量。 只有` input_num `个变量将被输入` layer_choice`中的所选函数 （作为`input`列表的第二个元素列表）。
+* **optional_input_size** ：它表示从 `input_candidates` 中选择了多少输入。 它可以是一个数字, 也可以是一个范围。 范围 [1, 3] 表示它选择1、2或3个输入。
+* **layer_output** ：此层的输出的名称，在这种情况下，它表示在 `layer_choice` 中函数调用 的返回值。 这将是一个变量名，可以在以下python代码或nni.mutable_layer中使用。
 
-为此示例编写注释有两种方法。 对于上一个，输入`input`函数调用是`[[]，[out3]] ` 。 对于底部，输入`input`是`[[out3]，[]]` 。
+为此示例编写注释有两种方法。 对于上一个，输入 `input` 函数调用是`[[]，[out3]] ` 。 对于底部，输入 `input` 是`[[out3]，[]]` 。
 
 ### 示例：选择图层的输入连接
 
-设计层的连接对于制作高性能模型至关重要。 通过我们提供的接口，用户可以注释一个层采用哪些连接（作为输入）。 他们可以从一组连接中选择几个。 下面是一个例子，它从三个候选输入中为` concat`这个函数调用选择两个输入 。 这里` concat `始终使用` fixed_inputs`获取其上一层的输出 。
+设计层的连接对于制作高性能模型至关重要。 通过我们提供的接口，用户可以注释一个层采用哪些连接（作为输入）。 他们可以从一组连接中选择几个。 下面是一个例子，它从三个候选输入中为 `concat` 这个函数调用选择两个输入 。 这里 `concat` 始终使用 `fixed_inputs` 获取其上一层的输出 。
 
 ![](../img/example_connectchoice.png)
 
 ### 示例: 同时选择运算符和连接
 
-在这个例子中，我们从三个运算符中选择一个，并为它选择两个连接。 由于`input`中有多个变量, 我们在函数的开头调用`concat` 。
+在这个例子中，我们从三个运算符中选择一个，并为它选择两个连接。 由于 `input` 中有多个变量, 我们在函数的开头调用 `concat` 。
 
 ![](../img/example_combined.png)
 
