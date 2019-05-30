@@ -21,13 +21,13 @@
 
 # pylint: disable=wildcard-import
 
-from ..common import env_args
+from ..env_vars import trial_env_vars
 
-if env_args.platform is None:
+if trial_env_vars.NNI_PLATFORM is None:
     from .standalone import *
-elif env_args.platform == 'unittest':
+elif trial_env_vars.NNI_PLATFORM == 'unittest':
     from .test import *
-elif env_args.platform in ('local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'):
+elif trial_env_vars.NNI_PLATFORM in ('local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller'):
     from .local import *
 else:
-    raise RuntimeError('Unknown platform %s' % env_args.platform)
+    raise RuntimeError('Unknown platform %s' % trial_env_vars.NNI_PLATFORM)

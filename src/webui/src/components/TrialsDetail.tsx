@@ -23,9 +23,15 @@ interface TrialDetailState {
     experimentStatus: string;
     experimentPlatform: string;
     experimentLogCollection: boolean;
-    entriesTable: number;
+    entriesTable: number; // table components val
+    entriesInSelect: string;
     searchSpace: string;
-    defaultMetric?: Array<number>;
+    isMultiPhase: boolean;
+    isTableLoading: boolean;
+    whichGraph: string;
+    hyperCounts: number; // user click the hyper-parameter counts
+    durationCounts: number;
+    intermediateCounts: number;
 }
 
 class TrialsDetail extends React.Component<{}, TrialDetailState> {
@@ -38,21 +44,21 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     public tableList: TableList | null;
 
     private titleOfacc = (
-        <Title1 text="Default Metric" icon="3.png" />
+        <Title1 text="Default metric" icon="3.png" />
     );
 
     private titleOfhyper = (
-        <Title1 text="Hyper Parameter" icon="1.png" />
+        <Title1 text="Hyper-parameter" icon="1.png" />
     );
 
     private titleOfDuration = (
-        <Title1 text="Trial Duration" icon="2.png" />
+        <Title1 text="Trial duration" icon="2.png" />
     );
 
     private titleOfIntermediate = (
         <div className="panelTitle">
             <Icon type="line-chart" />
-            <span>Intermediate Result</span>
+            <span>Intermediate result</span>
         </div>
     );
 
@@ -68,9 +74,15 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             experimentPlatform: '',
             experimentLogCollection: false,
             entriesTable: 20,
-            isHasSearch: false,
+            entriesInSelect: '20',
             searchSpace: '',
-            defaultMetric: [0, 1]
+            whichGraph: '1',
+            isHasSearch: false,
+            isMultiPhase: false,
+            isTableLoading: false,
+            hyperCounts: 0,
+            durationCounts: 0,
+            intermediateCounts: 0
         };
     }
 
@@ -82,12 +94,14 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 axios.get(`${MANAGER_IP}/metric-data`)
             ])
             .then(axios.spread((res, res1) => {
-                if (res.status === 200) {
+                if (res.status === 200 && res1.status === 200) {
+                    if (this._isMounted === true) {
+                        this.setState(() => ({ isTableLoading: true }));
+                    }
                     const trialJobs = res.data;
                     const metricSource = res1.data;
                     const trialTable: Array<TableObj> = [];
                     Object.keys(trialJobs).map(item => {
-                        // only succeeded trials have finalMetricData
                         let desc: Parameters = {
                             parameters: {},
                             intermediate: []
@@ -108,8 +122,9 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 duration = (new Date().getTime() - begin) / 1000;
                             }
                         }
-                        if (trialJobs[item].hyperParameters !== undefined) {
-                            const getPara = JSON.parse(trialJobs[item].hyperParameters[0]).parameters;
+                        const tempHyper = trialJobs[item].hyperParameters;
+                        if (tempHyper !== undefined) {
+                            const getPara = JSON.parse(tempHyper[tempHyper.length - 1]).parameters;
                             if (typeof getPara === 'string') {
                                 desc.parameters = JSON.parse(getPara);
                             } else {
@@ -148,34 +163,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             description: desc
                         });
                     });
-                    // get acc max and min for hyper-parameters graph color bar max and min
-                    const sortSource = JSON.parse(JSON.stringify(trialTable));
-                    sortSource.sort((a: TableObj, b: TableObj) => {
-                        if (a.acc !== undefined && b.acc !== undefined) {
-                            return JSON.parse(a.acc.default) - JSON.parse(b.acc.default);
-                        } else {
-                            return NaN;
-                        }
-                    });
-
-                    if (this._isMounted && sortSource !== undefined) {
-
-                        const hyperMin = sortSource[0].acc !== undefined
-                            ?
-                            sortSource[0].acc.default
-                            :
-                            '0';
-                        const max = sortSource[sortSource.length - 1].acc;
-                        let maxResult = '1';
-                        if (max !== undefined) {
-                            maxResult = max.default;
-                        }
-                        this.setState(() => ({
-                            defaultMetric: [JSON.parse(hyperMin), JSON.parse(maxResult)]
-                        }));
-                    }
                     // update search data result
-                    const { searchResultSource } = this.state;
+                    const { searchResultSource, entriesInSelect } = this.state;
                     if (searchResultSource.length !== 0) {
                         const temp: Array<number> = [];
                         Object.keys(searchResultSource).map(index => {
@@ -199,7 +188,13 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     }
                     if (this._isMounted) {
                         this.setState(() => ({
+                            isTableLoading: false,
                             tableListSource: trialTable
+                        }));
+                    }
+                    if (entriesInSelect === 'all' && this._isMounted) {
+                        this.setState(() => ({
+                            entriesTable: trialTable.length
                         }));
                     }
                 }
@@ -224,7 +219,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 const item = tableListSource[key];
                 if (item.sequenceId.toString() === targetValue
                     || item.id.includes(targetValue)
-                    || item.status.includes(targetValue)
+                    || item.status.toUpperCase().includes(targetValue.toUpperCase())
                 ) {
                     searchResultList.push(item);
                 }
@@ -258,21 +253,26 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     }
 
     handleEntriesSelect = (value: string) => {
-        switch (value) {
-            case '20':
-                this.setState(() => ({ entriesTable: 20 }));
-                break;
-            case '50':
-                this.setState(() => ({ entriesTable: 50 }));
-                break;
-            case '100':
-                this.setState(() => ({ entriesTable: 100 }));
-                break;
-            case 'all':
-                const { tableListSource } = this.state;
-                this.setState(() => ({ entriesTable: tableListSource.length }));
-                break;
-            default:
+        // user select isn't 'all'
+        if (value !== 'all') {
+            if (this._isMounted) {
+                this.setState(() => ({ entriesTable: parseInt(value, 10) }));
+            }
+        } else {
+            const { tableListSource } = this.state;
+            if (this._isMounted) {
+                this.setState(() => ({
+                    entriesInSelect: 'all',
+                    entriesTable: tableListSource.length
+                }));
+            }
+        }
+    }
+
+    handleWhichTabs = (activeKey: string) => {
+        // const which = JSON.parse(activeKey);
+        if (this._isMounted) {
+            this.setState(() => ({ whichGraph: activeKey }));
         }
     }
 
@@ -295,6 +295,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                     // default logCollection is true
                     const logCollection = res.data.params.logCollection;
                     let expLogCollection: boolean = false;
+                    const isMultiy: boolean = res.data.params.multiPhase !== undefined
+                        ? res.data.params.multiPhase : false;
                     if (logCollection !== undefined && logCollection !== 'none') {
                         expLogCollection = true;
                     }
@@ -302,7 +304,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         this.setState({
                             experimentPlatform: trainingPlatform,
                             searchSpace: res.data.params.searchSpace,
-                            experimentLogCollection: expLogCollection
+                            experimentLogCollection: expLogCollection,
+                            isMultiPhase: isMultiy
                         });
                     }
                 }
@@ -325,20 +328,22 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     render() {
 
         const {
-            tableListSource, searchResultSource, isHasSearch,
-            entriesTable, experimentPlatform, searchSpace,
-            defaultMetric, experimentLogCollection
+            tableListSource, searchResultSource, isHasSearch, isMultiPhase,
+            entriesTable, experimentPlatform, searchSpace, experimentLogCollection,
+            whichGraph, isTableLoading
         } = this.state;
         const source = isHasSearch ? searchResultSource : tableListSource;
         return (
             <div>
                 <div className="trial" id="tabsty">
-                    <Tabs type="card">
+                    <Tabs type="card" onChange={this.handleWhichTabs}>
+                        {/* <TabPane tab={this.titleOfacc} key="1" destroyInactiveTabPane={true}> */}
                         <TabPane tab={this.titleOfacc} key="1">
                             <Row className="graph">
                                 <DefaultPoint
                                     height={432}
                                     showSource={source}
+                                    whichGraph={whichGraph}
                                 />
                             </Row>
                         </TabPane>
@@ -347,23 +352,24 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 <Para
                                     dataSource={source}
                                     expSearchSpace={searchSpace}
-                                    defaultMetric={defaultMetric}
+                                    whichGraph={whichGraph}
                                 />
                             </Row>
                         </TabPane>
                         <TabPane tab={this.titleOfDuration} key="3">
-                            <Duration source={source} />
+                            <Duration source={source} whichGraph={whichGraph} />
+                            {/* <Duration source={source} whichGraph={whichGraph} clickCounts={durationCounts} /> */}
                         </TabPane>
                         <TabPane tab={this.titleOfIntermediate} key="4">
-                            <Intermediate source={source} />
+                            <Intermediate source={source} whichGraph={whichGraph} />
                         </TabPane>
                     </Tabs>
                 </div>
                 {/* trial table list */}
-                <Title1 text="Trial Jobs" icon="6.png" />
+                <Title1 text="Trial jobs" icon="6.png" />
                 <Row className="allList">
                     <Col span={12}>
-                        <span>show</span>
+                        <span>Show</span>
                         <Select
                             className="entry"
                             onSelect={this.handleEntriesSelect}
@@ -384,13 +390,13 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                     className="tableButton editStyle"
                                     onClick={this.tableList ? this.tableList.addColumn : this.test}
                                 >
-                                    AddColumn
+                                    Add column
                                 </Button>
                             </Col>
                             <Col span={12}>
                                 <Input
                                     type="text"
-                                    placeholder="search by Id, Trial No. or Status"
+                                    placeholder="Search by id, trial No. or status"
                                     onChange={this.searchTrial}
                                     style={{ width: 230, marginLeft: 6 }}
                                 />
@@ -401,6 +407,8 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 <TableList
                     entries={entriesTable}
                     tableSource={source}
+                    isTableLoading={isTableLoading}
+                    isMultiPhase={isMultiPhase}
                     platform={experimentPlatform}
                     updateList={this.getDetailSource}
                     logCollection={experimentLogCollection}

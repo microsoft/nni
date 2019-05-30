@@ -21,27 +21,29 @@
 
 import { Container, Scope } from 'typescript-ioc';
 
-import * as component from './common/component';
 import * as fs from 'fs';
+import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
 import { Manager } from './common/manager';
 import { TrainingService } from './common/trainingService';
-import { parseArg, uniqueString, mkDirP, getLogDir } from './common/utils';
+import { getLogDir, mkDirP, parseArg, uniqueString } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
 import { NNIRestServer } from './rest_server/nniRestServer';
-import { LocalTrainingServiceForGPU } from './training_service/local/localTrainingServiceForGPU';
+import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
+import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
+import { LocalTrainingService } from './training_service/local/localTrainingService';
+import { PAITrainingService } from './training_service/pai/paiTrainingService';
 import {
     RemoteMachineTrainingService
 } from './training_service/remote_machine/remoteMachineTrainingService';
-import { PAITrainingService } from './training_service/pai/paiTrainingService';
-import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
-import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 
-function initStartupInfo(startExpMode: string, resumeExperimentId: string, basePort: number, logDirectory: string, experimentLogLevel: string) {
+function initStartupInfo(
+    startExpMode: string, resumeExperimentId: string, basePort: number,
+    logDirectory: string, experimentLogLevel: string): void {
     const createNew: boolean = (startExpMode === 'new');
     const expId: string = createNew ? uniqueString(8) : resumeExperimentId;
     setExperimentStartupInfo(createNew, expId, basePort, logDirectory, experimentLogLevel);
@@ -49,29 +51,45 @@ function initStartupInfo(startExpMode: string, resumeExperimentId: string, baseP
 
 async function initContainer(platformMode: string): Promise<void> {
     if (platformMode === 'local') {
-        Container.bind(TrainingService).to(LocalTrainingServiceForGPU).scope(Scope.Singleton);
+        Container.bind(TrainingService)
+            .to(LocalTrainingService)
+            .scope(Scope.Singleton);
     } else if (platformMode === 'remote') {
-        Container.bind(TrainingService).to(RemoteMachineTrainingService).scope(Scope.Singleton);
+        Container.bind(TrainingService)
+            .to(RemoteMachineTrainingService)
+            .scope(Scope.Singleton);
     } else if (platformMode === 'pai') {
-        Container.bind(TrainingService).to(PAITrainingService).scope(Scope.Singleton);
+        Container.bind(TrainingService)
+            .to(PAITrainingService)
+            .scope(Scope.Singleton);
     } else if (platformMode === 'kubeflow') {
-        Container.bind(TrainingService).to(KubeflowTrainingService).scope(Scope.Singleton);
+        Container.bind(TrainingService)
+            .to(KubeflowTrainingService)
+            .scope(Scope.Singleton);
     } else if (platformMode === 'frameworkcontroller') {
-        Container.bind(TrainingService).to(FrameworkControllerTrainingService).scope(Scope.Singleton);
-    }
-    else {
+        Container.bind(TrainingService)
+            .to(FrameworkControllerTrainingService)
+            .scope(Scope.Singleton);
+    } else {
         throw new Error(`Error: unsupported mode: ${mode}`);
     }
-    Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
-    Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
-    Container.bind(DataStore).to(NNIDataStore).scope(Scope.Singleton);
+    Container.bind(Manager)
+        .to(NNIManager)
+        .scope(Scope.Singleton);
+    Container.bind(Database)
+        .to(SqlDB)
+        .scope(Scope.Singleton);
+    Container.bind(DataStore)
+        .to(NNIDataStore)
+        .scope(Scope.Singleton);
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
 }
 
 function usage(): void {
-    console.info('usage: node main.js --port <port> --mode <local/remote/pai/kubeflow/frameworkcontroller> --start_mode <new/resume> --experiment_id <id>');
+    console.info('usage: node main.js --port <port> --mode \
+    <local/remote/pai/kubeflow/frameworkcontroller> --start_mode <new/resume> --experiment_id <id>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
@@ -117,7 +135,8 @@ if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
 
 initStartupInfo(startMode, experimentId, port, logDir, logLevel);
 
-mkDirP(getLogDir()).then(async () => {
+mkDirP(getLogDir())
+    .then(async () => {
     const log: Logger = getLogger();
     try {
         await initContainer(mode);
@@ -128,25 +147,35 @@ mkDirP(getLogDir()).then(async () => {
         log.error(`${err.stack}`);
         throw err;
     }
-}).catch((err: Error) => {
+})
+.catch((err: Error) => {
     console.error(`Failed to create log dir: ${err.stack}`);
 });
 
-process.on('SIGTERM', async () => {
+function getStopSignal(): any {
+    if (process.platform === "win32") {
+        return 'SIGBREAK';
+    }
+    else{
+        return 'SIGTERM';
+    }
+}
+
+process.on(getStopSignal(), async () => {
     const log: Logger = getLogger();
     let hasError: boolean = false;
-    try{
+    try {
         const nniManager: Manager = component.get(Manager);
         await nniManager.stopExperiment();
         const ds: DataStore = component.get(DataStore);
         await ds.close();
         const restServer: NNIRestServer = component.get(NNIRestServer);
         await restServer.stop();
-    }catch(err){
+    } catch (err) {
         hasError = true;
         log.error(`${err.stack}`);
-    }finally{
+    } finally {
         await log.close();
-        process.exit(hasError?1:0);
+        process.exit(hasError ? 1 : 0);
     }
-})
+});

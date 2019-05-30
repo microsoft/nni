@@ -30,8 +30,16 @@ export namespace ValidationSchemas {
                 port: joi.number().min(1).max(65535).required(),
                 passwd: joi.string(),
                 sshKeyPath: joi.string(),
-                passphrase: joi.string()
+                passphrase: joi.string(),
+                gpuIndices: joi.string(),
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean()
             })),
+            local_config: joi.object({
+                gpuIndices: joi.string(),
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean()
+            }),
             trial_config: joi.object({
                 image: joi.string().min(1),
                 codeDir: joi.string().min(1).required(),
@@ -144,7 +152,7 @@ export namespace ValidationSchemas {
             versionCheck: joi.boolean(),
             logCollection: joi.string(),
             advisor: joi.object({
-                builtinAdvisorName: joi.string().valid('Hyperband'),
+                builtinAdvisorName: joi.string().valid('Hyperband', 'BOHB'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),

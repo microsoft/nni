@@ -19,11 +19,9 @@
 # ==================================================================================================
 
 
-import inspect
-import math
 import random
 
-from .common import env_args
+from .env_vars import trial_env_vars
 from . import trial
 
 
@@ -45,7 +43,7 @@ __all__ = [
 
 # pylint: disable=unused-argument
 
-if env_args.platform is None:
+if trial_env_vars.NNI_PLATFORM is None:
     def choice(*options, name=None):
         return random.choice(options)
 
@@ -126,10 +124,7 @@ else:
             funcs_args,
             fixed_inputs,
             optional_inputs,
-            optional_input_size=0,
-            debug_mode=False,
-            name=None,
-            key=None):
+            optional_input_size=0):
         '''execute the chosen function and inputs.
         Below is an example of chosen function and inputs:
         {
@@ -144,17 +139,12 @@ else:
         ---------------
         mutable_id: the name of this mutable_layer block (which could have multiple mutable layers)
         mutable_layer_id: the name of a mutable layer in this block
-        funcs: dict of function alls
+        funcs: dict of function calls
         funcs_args:
         fixed_inputs:
         optional_inputs: dict of optional inputs
         optional_input_size: number of candidate inputs to be chosen
-        debug_mode: if True, every choice will use the first one(s)
         '''
-        if debug_mode:
-            # TODO:
-            return
-        
         mutable_block = _get_param(mutable_id)
         chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
         chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]

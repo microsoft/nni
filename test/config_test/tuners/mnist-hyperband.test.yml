@@ -3,7 +3,7 @@ experimentName: default_test
 maxExecDuration: 5m
 maxTrialNum: 2
 trialConcurrency: 1
-searchSpacePath: search_space_hyperband.json
+searchSpacePath: search_space_advisor.json
 
 advisor:
   builtinAdvisorName: Hyperband
@@ -11,12 +11,8 @@ advisor:
     optimize_mode: maximize
     R: 60
     eta: 3
-assessor:
-  builtinAssessorName: Medianstop
-  classArgs:
-    optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/trials/mnist-hyperband
+  codeDir: ../../../examples/trials/mnist-advisor
   command: python3 mnist.py
   gpuNum: 0
 

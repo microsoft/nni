@@ -23,10 +23,10 @@ import os
 
 
 from nni.tuner import Tuner
-from nni.utils import extract_scalar_reward
+from nni.utils import OptimizeMode, extract_scalar_reward
 from nni.networkmorphism_tuner.bayesian import BayesianOptimizer
 from nni.networkmorphism_tuner.nn import CnnGenerator, MlpGenerator
-from nni.networkmorphism_tuner.utils import Constant, OptimizeMode
+from nni.networkmorphism_tuner.utils import Constant
 
 from nni.networkmorphism_tuner.graph import graph_to_json, json_to_graph
 
@@ -307,3 +307,7 @@ class NetworkMorphismTuner(Tuner):
             if item["model_id"] == model_id:
                 return item["metric_value"]
         return None
+
+    def import_data(self, data):
+        pass
+

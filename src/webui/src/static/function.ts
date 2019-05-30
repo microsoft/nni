@@ -1,9 +1,7 @@
 import axios from 'axios';
-import {
-    message
-} from 'antd';
+import { message } from 'antd';
 import { MANAGER_IP } from './const';
-import { FinalResult, FinalType } from './interface';
+import { FinalResult, FinalType, TableObj } from './interface';
 
 const convertTime = (num: number) => {
     if (num % 3600 === 0) {
@@ -34,11 +32,11 @@ const convertDuration = (num: number) => {
 
 // get final result value
 // draw Accuracy point graph
-const getFinalResult = (final: FinalResult) => {
+const getFinalResult = (final: Array<FinalResult>) => {
     let acc;
     let showDefault = 0;
     if (final) {
-        acc = JSON.parse(final[0].data);
+        acc = JSON.parse(final[final.length - 1].data);
         if (typeof (acc) === 'object') {
             if (acc.default) {
                 showDefault = acc.default;
@@ -53,10 +51,10 @@ const getFinalResult = (final: FinalResult) => {
 };
 
 // get final result value // acc obj 
-const getFinal = (final: FinalResult) => {
+const getFinal = (final: Array<FinalResult>) => {
     let showDefault: FinalType;
     if (final) {
-        showDefault = JSON.parse(final[0].data);
+        showDefault = JSON.parse(final[final.length - 1].data);
         if (typeof showDefault === 'number') {
             showDefault = { default: showDefault };
         }
@@ -90,7 +88,7 @@ const intermediateGraphOption = (intermediateArr: number[], id: string) => {
             data: sequence
         },
         yAxis: {
-            name: 'Default Metric',
+            name: 'Default metric',
             type: 'value',
             data: intermediateArr
         },
@@ -112,6 +110,7 @@ const killJob = (key: number, id: string, status: string, updateList: Function) 
     })
         .then(res => {
             if (res.status === 200) {
+                message.destroy();
                 message.success('Cancel the job successfully');
                 // render the table
                 updateList();
@@ -130,7 +129,16 @@ const killJob = (key: number, id: string, status: string, updateList: Function) 
         });
 };
 
+const filterByStatus = (item: TableObj) => {
+    return item.status === 'SUCCEEDED';
+};
+
+// a waittiong trial may havn't start time 
+const filterDuration = (item: TableObj) => {
+    return item.status !== 'WAITING';
+};
+
 export {
-    convertTime, convertDuration, getFinalResult,
-    getFinal, intermediateGraphOption, killJob
+    convertTime, convertDuration, getFinalResult, getFinal, 
+    intermediateGraphOption, killJob, filterByStatus, filterDuration
 };
