@@ -74,6 +74,8 @@ def load_data(train_path='./data/regression.train', test_path='./data/regression
 def run(lgb_train, lgb_eval, params, X_test, y_test):
     print('Start training...')
 
+    params['num_leaves'] = int(params['num_leaves'])
+
     # train
     gbm = lgb.train(params,
                     lgb_train,

@@ -125,18 +125,17 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
-    stdout_file = open(stdout_full_path, 'a+')
-    stderr_file = open(stderr_full_path, 'a+')
-    time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-    #add time information in the header of log files
-    log_header = LOG_HEADER % str(time_now)
-    stdout_file.write(log_header)
-    stderr_file.write(log_header)
-    if sys.platform == 'win32':
-        from subprocess import CREATE_NEW_PROCESS_GROUP
-        process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
-    else:
-        process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
+    with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
+        time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+        #add time information in the header of log files
+        log_header = LOG_HEADER % str(time_now)
+        stdout_file.write(log_header)
+        stderr_file.write(log_header)
+        if sys.platform == 'win32':
+            from subprocess import CREATE_NEW_PROCESS_GROUP
+            process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
+        else:
+            process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
     return process, str(time_now)
 
 def set_trial_config(experiment_config, port, config_file_name):

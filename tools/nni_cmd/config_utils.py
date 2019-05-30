@@ -23,7 +23,6 @@ import os
 import json
 import shutil
 from .constants import NNICTL_HOME_DIR
-from .common_utils import print_error
 
 class Config:
     '''a util class to load and save config'''
@@ -121,25 +120,3 @@ class Experiments:
             except ValueError:
                 return {}
         return {} 
-
-class HDFSConfig:
-    '''manage hdfs configuration'''
-    def __init__(self):
-        os.makedirs(NNICTL_HOME_DIR, exist_ok=True)
-        self.hdfs_config_file = os.path.join(NNICTL_HOME_DIR, '.hdfs')
-    
-    def get_config(self):
-        if os.path.exists(self.hdfs_config_file):
-            try:
-                with open(self.hdfs_config_file, 'r') as file:
-                    return json.load(file)
-            except Exception as exception:
-                print_error(exception)
-                return None
-        else:
-            return None
-
-    def set_config(self, host, user_name):
-        with open(self.hdfs_config_file, 'w') as file:
-            json.dump({'host':host, 'userName': user_name}, file)
-    
