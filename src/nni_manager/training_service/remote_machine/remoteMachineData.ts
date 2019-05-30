@@ -23,7 +23,7 @@ import * as fs from 'fs';
 import { Client, ConnectConfig } from 'ssh2';
 import { Deferred } from 'ts-deferred';
 import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
-import { GPUSummary, GPUInfo } from '../common/gpuData';
+import { GPUInfo, GPUSummary } from '../common/gpuData';
 
 /**
  * Metadata of remote machine for configuration and statuc query
@@ -110,7 +110,7 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
         this.form = form;
         this.sequenceId = sequenceId;
         this.tags = [];
-        this.gpuIndices = []
+        this.gpuIndices = [];
     }
 }
 

@@ -412,11 +412,11 @@ class RemoteMachineTrainingService implements TrainingService {
      * remove gpu reversion when job is not running
      */
     private updateGpuReservation(): void {
-        for (const [key, value] of this.trialJobsMap) { 
+        for (const [key, value] of this.trialJobsMap) {
             if (!['WAITING', 'RUNNING'].includes(value.status)) {
                 this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
             }
-        };
+        }
     }
 
     /**
