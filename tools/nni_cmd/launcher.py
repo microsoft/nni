@@ -125,18 +125,17 @@ def start_rest_server(port, platform, mode, config_file_name, experiment_id=None
     if mode == 'resume':
         cmds += ['--experiment_id', experiment_id]
     stdout_full_path, stderr_full_path = get_log_path(config_file_name)
-    stdout_file = open(stdout_full_path, 'a+')
-    stderr_file = open(stderr_full_path, 'a+')
-    time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
-    #add time information in the header of log files
-    log_header = LOG_HEADER % str(time_now)
-    stdout_file.write(log_header)
-    stderr_file.write(log_header)
-    if sys.platform == 'win32':
-        from subprocess import CREATE_NEW_PROCESS_GROUP
-        process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
-    else:
-        process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
+    with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
+        time_now = time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))
+        #add time information in the header of log files
+        log_header = LOG_HEADER % str(time_now)
+        stdout_file.write(log_header)
+        stderr_file.write(log_header)
+        if sys.platform == 'win32':
+            from subprocess import CREATE_NEW_PROCESS_GROUP
+            process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
+        else:
+            process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
     return process, str(time_now)
 
 def set_trial_config(experiment_config, port, config_file_name):
@@ -160,9 +159,13 @@ def set_local_config(experiment_config, port, config_file_name):
     request_data = dict()
     if experiment_config.get('localConfig'):
         request_data['local_config'] = experiment_config['localConfig']
-        if request_data['local_config'] and request_data['local_config'].get('gpuIndices') \
-            and isinstance(request_data['local_config'].get('gpuIndices'), int):
-            request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
+        if request_data['local_config']:
+            if request_data['local_config'].get('gpuIndices') and isinstance(request_data['local_config'].get('gpuIndices'), int):
+                request_data['local_config']['gpuIndices'] = str(request_data['local_config'].get('gpuIndices'))
+            if request_data['local_config'].get('maxTrialNumOnEachGpu'):
+                request_data['local_config']['maxTrialNumOnEachGpu'] = request_data['local_config'].get('maxTrialNumOnEachGpu')
+            if request_data['local_config'].get('useActiveGpu'):
+                request_data['local_config']['useActiveGpu'] = request_data['local_config'].get('useActiveGpu')
         response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
         err_message = ''
         if not response or not check_response(response):
@@ -343,6 +346,13 @@ def set_experiment(experiment_config, mode, port, config_file_name):
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(config_file_name)
+    # check execution policy in powershell
+    if sys.platform == 'win32':
+        execution_policy = check_output(['powershell.exe','Get-ExecutionPolicy']).decode('ascii').strip()
+        if execution_policy == 'Restricted':
+            print_error('PowerShell execution policy error, please run PowerShell as administrator with this command first:\r\n'\
+                + '\'Set-ExecutionPolicy -ExecutionPolicy Unrestricted\'')
+            exit(1)
     # check packages for tuner
     package_name, module_name = None, None
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
