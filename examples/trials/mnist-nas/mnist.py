@@ -10,6 +10,7 @@ import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
 import nni
+import operators as op
 
 FLAGS = None
 
@@ -66,62 +67,85 @@ class MnistNetwork(object):
 
         """@nni.mutable_layers(
             {
-                layer_choice: [],
+                layer_choice: [op.conv2d(size=1, in_ch=1, out_ch=self.channel_1_num),
+                               op.conv2d(size=3, in_ch=1, out_ch=self.channel_1_num),
+                               op.twice_conv2d(size=3, in_ch=1, out_ch=self.channel_1_num),
+                               op.twice_conv2d(size=7, in_ch=1, out_ch=self.channel_1_num),
+                               op.dilated_conv(in_ch=1, out_ch=self.channel_1_num),
+                               op.separable_conv(size=3, in_ch=1, out_ch=self.channel_1_num),
+                               op.separable_conv(size=5, in_ch=1, out_ch=self.channel_1_num),
+                               op.separable_conv(size=7, in_ch=1, out_ch=self.channel_1_num)],
+                fixed_inputs: [x_image],
                 optional_inputs: [],
+                optional_input_size: 0,
+                layer_output: conv1_out
+            },
+            {
+                layer_choice: [op.post_process(ch_size=self.channel_1_num)],
+                fixed_inputs: [conv1_out],
+                optional_inputs: [],
+                optional_input_size: 0,
+                layer_output: post1_out
+            },
+            {
+                layer_choice: [op.max_pool(size=3),
+                               op.max_pool(size=5),
+                               op.max_pool(size=7),
+                               op.avg_pool(size=3),
+                               op.avg_pool(size=5),
+                               op.avg_pool(size=7)],
+                fixed_inputs: [post1_out],
+                optional_inputs: [],
+                optional_input_size: 0,
+                layer_output: pool1_out
+            },
+            {
+                layer_choice: [op.conv2d(size=1, in_ch=self.channel_1_num, out_ch=self.channel_2_num),
+                               op.conv2d(size=3, in_ch=self.channel_1_num, out_ch=self.channel_2_num),
+                               op.twice_conv2d(size=3, in_ch=self.channel_1_num, out_ch=self.channel_2_num),
+                               op.twice_conv2d(size=7, in_ch=self.channel_1_num, out_ch=self.channel_2_num),
+                               op.dilated_conv(in_ch=self.channel_1_num, out_ch=self.channel_2_num),
+                               op.separable_conv(size=3, in_ch=self.channel_1_num, out_ch=self.channel_2_num),
+                               op.separable_conv(size=5, in_ch=self.channel_1_num, out_ch=self.channel_2_num),
+                               op.separable_conv(size=7, in_ch=self.channel_1_num, out_ch=self.channel_2_num)],
+                fixed_inputs: [pool1_out],
+                optional_inputs: [],
+                optional_input_size: 0,
+                layer_output: conv2_out
+            },
+            {
+                layer_choice: [op.post_process(ch_size=self.channel_2_num)],
+                fixed_inputs: [conv2_out],
+                optional_inputs: [],
+                optional_input_size: 0,
+                layer_output: post2_out
+            },
+            {
+                layer_choice: [op.max_pool(size=3),
+                               op.max_pool(size=5),
+                               op.max_pool(size=7),
+                               op.avg_pool(size=3),
+                               op.avg_pool(size=5),
+                               op.avg_pool(size=7)],
+                fixed_inputs: [post2_out],
+                optional_inputs: [],
+                optional_input_size: 0,
+                layer_output: pool2_out
             }
         )"""
 
-    def build_network_tmp(self):
-        '''
-        Building network for mnist
-        '''
-
-        # Reshape to use within a convolutional neural net.
-        # Last dimension is for "features" - there is only one here, since images are
-        # grayscale -- it would be 3 for an RGB image, 4 for RGBA, etc.
-        with tf.name_scope('reshape'):
-            try:
-                input_dim = int(math.sqrt(self.x_dim))
-            except:
-                print(
-                    'input dim cannot be sqrt and reshape. input dim: ' + str(self.x_dim))
-                logger.debug(
-                    'input dim cannot be sqrt and reshape. input dim: %s', str(self.x_dim))
-                raise
-            x_image = tf.reshape(self.images, [-1, input_dim, input_dim, 1])
-
-        # First convolutional layer - maps one grayscale image to 32 feature maps.
-        with tf.name_scope('conv1'):
-            w_conv1 = weight_variable(
-                [self.conv_size, self.conv_size, 1, self.channel_1_num])
-            b_conv1 = bias_variable([self.channel_1_num])
-            h_conv1 = tf.nn.relu(conv2d(x_image, w_conv1) + b_conv1)
-
-        # Pooling layer - downsamples by 2X.
-        with tf.name_scope('pool1'):
-            h_pool1 = max_pool(h_conv1, self.pool_size)
-
-        # Second convolutional layer -- maps 32 feature maps to 64.
-        with tf.name_scope('conv2'):
-            w_conv2 = weight_variable([self.conv_size, self.conv_size,
-                                       self.channel_1_num, self.channel_2_num])
-            b_conv2 = bias_variable([self.channel_2_num])
-            h_conv2 = tf.nn.relu(conv2d(h_pool1, w_conv2) + b_conv2)
-
-        # Second pooling layer.
-        with tf.name_scope('pool2'):
-            h_pool2 = max_pool(h_conv2, self.pool_size)
-
         # Fully connected layer 1 -- after 2 round of downsampling, our 28x28 image
         # is down to 7x7x64 feature maps -- maps this to 1024 features.
-        last_dim = int(input_dim / (self.pool_size * self.pool_size))
+        last_dim_list = pool2_out.get_shape().as_list()
+        assert(last_dim_list[1] == last_dim_list[2])
+        last_dim = last_dim_list[1]
         with tf.name_scope('fc1'):
-            w_fc1 = weight_variable(
+            w_fc1 = op.weight_variable(
                 [last_dim * last_dim * self.channel_2_num, self.hidden_size])
-            b_fc1 = bias_variable([self.hidden_size])
+            b_fc1 = op.bias_variable([self.hidden_size])
 
         h_pool2_flat = tf.reshape(
-            h_pool2, [-1, last_dim * last_dim * self.channel_2_num])
+            pool2_out, [-1, last_dim * last_dim * self.channel_2_num])
         h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, w_fc1) + b_fc1)
 
         # Dropout - controls the complexity of the model, prevents co-adaptation of features.
@@ -130,8 +154,8 @@ class MnistNetwork(object):
 
         # Map the 1024 features to 10 classes, one for each digit
         with tf.name_scope('fc2'):
-            w_fc2 = weight_variable([self.hidden_size, self.y_dim])
-            b_fc2 = bias_variable([self.y_dim])
+            w_fc2 = op.weight_variable([self.hidden_size, self.y_dim])
+            b_fc2 = op.bias_variable([self.y_dim])
             y_conv = tf.matmul(h_fc1_drop, w_fc2) + b_fc2
 
         with tf.name_scope('loss'):
@@ -147,28 +171,6 @@ class MnistNetwork(object):
             self.accuracy = tf.reduce_mean(
                 tf.cast(correct_prediction, tf.float32))
 
-
-def conv2d(x_input, w_matrix):
-    """conv2d returns a 2d convolution layer with full stride."""
-    return tf.nn.conv2d(x_input, w_matrix, strides=[1, 1, 1, 1], padding='SAME')
-
-
-def max_pool(x_input, pool_size):
-    """max_pool downsamples a feature map by 2X."""
-    return tf.nn.max_pool(x_input, ksize=[1, pool_size, pool_size, 1],
-                          strides=[1, pool_size, pool_size, 1], padding='SAME')
-
-
-def weight_variable(shape):
-    """weight_variable generates a weight variable of a given shape."""
-    initial = tf.truncated_normal(shape, stddev=0.1)
-    return tf.Variable(initial)
-
-
-def bias_variable(shape):
-    """bias_variable generates a bias variable of a given shape."""
-    initial = tf.constant(0.1, shape=shape)
-    return tf.Variable(initial)
 
 def download_mnist_retry(data_dir, max_num_retries=20):
     """Try to download mnist dataset and avoid errors"""

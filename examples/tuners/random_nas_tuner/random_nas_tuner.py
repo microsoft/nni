@@ -14,11 +14,14 @@ def random_archi_generator(nas_ss, random_state):
                 if key == 'layer_choice':
                     index = random_state.randint(len(value))
                     tmp_layer['chosen_layer'] = value[index]
-                elif key == 'optional_inputs' or key == 'optional_input_size':
+                elif key == 'optional_inputs':
                     tmp_layer['chosen_inputs'] = []
-                    for _ in range(layer['optional_input_size']):
-                        index = random_state.randint(len(layer['optional_inputs']))
-                        tmp_layer['chosen_inputs'].append(layer['optional_inputs'][index])
+                    if layer['optional_inputs']:
+                        for _ in range(layer['optional_input_size']):
+                            index = random_state.randint(len(layer['optional_inputs']))
+                            tmp_layer['chosen_inputs'].append(layer['optional_inputs'][index])
+                elif key == 'optional_input_size':
+                    pass
                 else:
                     raise ValueError('Unknown field %s in layer %s of block %s' % (key, layer_name, block_name))
             tmp_block[layer_name] = tmp_layer
