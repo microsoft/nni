@@ -60,7 +60,7 @@ def parse_annotation_mutable_layers(code, lineno):
                     kw_args = []
                     kw_values = []
                     for kw in call.keywords:
-                        kw_args.append(kw.arg)
+                        kw_args.append(ast.Str(s=kw.arg))
                         kw_values.append(kw.value)
                     call_kwargs_values.append(ast.Dict(keys=kw_args, values=kw_values))
                 call_funcs = ast.Dict(keys=call_funcs_keys, values=call_funcs_values)
@@ -314,20 +314,20 @@ class Transformer(ast.NodeTransformer):
         else:
             return node  # not an annotation, ignore it
 
-        if string.startswith('@nni.get_next_parameter('):
+        if string.startswith('@nni.get_next_parameter'):
             deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. Please remove this line in the trial code."
             print_warning(deprecated_message)
 
-        if string.startswith('@nni.report_intermediate_result(')  \
-                or string.startswith('@nni.report_final_result(') \
-                or string.startswith('@nni.get_next_parameter('):
+        if string.startswith('@nni.report_intermediate_result')  \
+                or string.startswith('@nni.report_final_result') \
+                or string.startswith('@nni.get_next_parameter'):
             return parse_annotation(string[1:])  # expand annotation string to code
 
-        if string.startswith('@nni.mutable_layers('):
+        if string.startswith('@nni.mutable_layers'):
             return parse_annotation_mutable_layers(string[1:], node.lineno)
 
-        if string.startswith('@nni.variable(') \
-                or string.startswith('@nni.function_choice('):
+        if string.startswith('@nni.variable') \
+                or string.startswith('@nni.function_choice'):
             self.stack[-1] = string[1:]  # mark that the next expression is annotated
             return None
 
