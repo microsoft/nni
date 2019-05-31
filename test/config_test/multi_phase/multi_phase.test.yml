@@ -6,9 +6,9 @@ trialConcurrency: 4
 searchSpacePath: ./search_space.json
 
 tuner:
-  codeDir: ../../../src/sdk/pynni/tests
-  classFileName: test_multi_phase_tuner.py
-  className: NaiveMultiPhaseTuner
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
 
 trial:
   codeDir: .
