@@ -69,6 +69,7 @@ def init_logger(logger_file_path, log_level_name='info'):
     sys.stdout = _LoggerFileWrapper(logger_file)
 
 _multi_thread = False
+_multi_phase = False
 
 def enable_multi_thread():
     global _multi_thread
