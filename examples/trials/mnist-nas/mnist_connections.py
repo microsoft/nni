@@ -109,8 +109,8 @@ class MnistNetwork(object):
                                op.separable_conv(size=5, in_ch=self.channel_1_num, out_ch=self.channel_2_num),
                                op.separable_conv(size=7, in_ch=self.channel_1_num, out_ch=self.channel_2_num)],
                 fixed_inputs: [pool1_out],
-                optional_inputs: [],
-                optional_input_size: 0,
+                optional_inputs: [post1_out],
+                optional_input_size: [0, 1],
                 layer_output: conv2_out
             },
             {
@@ -128,8 +128,8 @@ class MnistNetwork(object):
                                op.avg_pool(size=5),
                                op.avg_pool(size=7)],
                 fixed_inputs: [post2_out],
-                optional_inputs: [],
-                optional_input_size: 0,
+                optional_inputs: [post1_out, pool1_out],
+                optional_input_size: [0, 1],
                 layer_output: pool2_out
             }
         )"""

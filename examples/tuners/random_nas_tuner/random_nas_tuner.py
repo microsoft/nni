@@ -6,6 +6,7 @@ def random_archi_generator(nas_ss, random_state):
     '''random
     '''
     chosen_archi = {}
+    print("zql: nas search space: ", nas_ss)
     for block_name, block in nas_ss.items():
         tmp_block = {}
         for layer_name, layer in block.items():
@@ -16,8 +17,14 @@ def random_archi_generator(nas_ss, random_state):
                     tmp_layer['chosen_layer'] = value[index]
                 elif key == 'optional_inputs':
                     tmp_layer['chosen_inputs'] = []
+                    print("zql: optional_inputs", layer['optional_inputs'])
                     if layer['optional_inputs']:
-                        for _ in range(layer['optional_input_size']):
+                        if isinstance(layer['optional_input_size'], int):
+                            choice_num = layer['optional_input_size']
+                        else:
+                            choice_range = layer['optional_input_size']
+                            choice_num = random_state.randint(choice_range[0], choice_range[1]+1)
+                        for _ in range(choice_num):
                             index = random_state.randint(len(layer['optional_inputs']))
                             tmp_layer['chosen_inputs'].append(layer['optional_inputs'][index])
                 elif key == 'optional_input_size':

@@ -79,7 +79,7 @@ def parse_annotation_mutable_layers(code, lineno):
                 fields['optional_inputs'] = True
             elif k.id == 'optional_input_size':
                 assert not fields['optional_input_size'], 'Duplicated field: optional_input_size'
-                assert type(value) is ast.Num, 'Value of optional_input_size should be a number'
+                assert type(value) is ast.Num or type(value) is ast.List, 'Value of optional_input_size should be a number or list'
                 optional_input_size = value
                 fields['optional_input_size'] = True
             elif k.id == 'layer_output':
@@ -102,13 +102,14 @@ def parse_annotation_mutable_layers(code, lineno):
         if fields['fixed_inputs']:
             target_call_args.append(fixed_inputs)
         else:
-            target_call_args.append(ast.NameConstant(value=None))
+            target_call_args.append(ast.List(elts=[]))
         if fields['optional_inputs']:
             target_call_args.append(optional_inputs)
             assert fields['optional_input_size'], 'optional_input_size must exist when optional_inputs exists'
             target_call_args.append(optional_input_size)
         else:
-            target_call_args.append(ast.NameConstant(value=None))
+            target_call_args.append(ast.List(elts=[]))
+            target_call_args.append(ast.Num(n=0))
         target_call = ast.Call(func=target_call_attr, args=target_call_args, keywords=[])
         node = ast.Assign(targets=[layer_output], value=target_call)
         nodes.append(node)

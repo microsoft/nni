@@ -124,7 +124,7 @@ else:
             funcs_args,
             fixed_inputs,
             optional_inputs,
-            optional_input_size=0):
+            optional_input_size):
         '''execute the chosen function and inputs.
         Below is an example of chosen function and inputs:
         {
