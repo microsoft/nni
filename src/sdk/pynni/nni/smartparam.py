@@ -149,7 +149,7 @@ else:
         chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
         chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
         real_chosen_inputs = [optional_inputs[input_name] for input_name in chosen_inputs]
-        layer_out = funcs[chosen_layer]([fixed_inputs, real_chosen_inputs], *funcs_args[chosen_layer])
+        layer_out = funcs[chosen_layer]([fixed_inputs, real_chosen_inputs], **funcs_args[chosen_layer])
         
         return layer_out
 
