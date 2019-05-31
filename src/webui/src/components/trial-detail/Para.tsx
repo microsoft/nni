@@ -22,6 +22,7 @@ interface ParaState {
     max: number; // graph color bar limit
     min: number;
     sutrialCount: number; // succeed trial numbers for SUC
+    succeedRenderCount: number; // all succeed trials number
     clickCounts: number;
     isLoadConfirm: boolean;
 }
@@ -68,6 +69,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             min: 0,
             max: 1,
             sutrialCount: 10000000,
+            succeedRenderCount: 10000000,
             clickCounts: 1,
             isLoadConfirm: false
         };
@@ -76,7 +78,8 @@ class Para extends React.Component<ParaProps, ParaState> {
     getParallelAxis =
         (
             dimName: Array<string>, parallelAxis: Array<Dimobj>,
-            accPara: Array<number>, eachTrialParams: Array<string>
+            accPara: Array<number>, eachTrialParams: Array<string>, 
+            lengthofTrials: number
         ) => {
             // get data for every lines. if dim is choice type, number -> toString()
             const paraYdata: number[][] = [];
@@ -120,7 +123,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             if (swapAxisArr.length >= 2) {
                 this.swapGraph(paraData, swapAxisArr);
             }
-            this.getOption(paraData);
+            this.getOption(paraData, lengthofTrials);
             if (this._isMounted === true) {
                 this.setState(() => ({ paraBack: paraData }));
             }
@@ -248,7 +251,8 @@ class Para extends React.Component<ParaProps, ParaState> {
                 this.setState({
                     paraNodata: 'No data',
                     option: optionOfNull,
-                    sutrialCount: 0
+                    sutrialCount: 0,
+                    succeedRenderCount: 0
                 });
             }
         } else {
@@ -265,7 +269,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             });
             if (this._isMounted) {
                 this.setState({ max: Math.max(...accPara), min: Math.min(...accPara) }, () => {
-                    this.getParallelAxis(dimName, parallelAxis, accPara, eachTrialParams);
+                    this.getParallelAxis(dimName, parallelAxis, accPara, eachTrialParams, lenOfDataSource);
                 });
             }
         }
@@ -283,7 +287,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     // deal with response data into pic data
-    getOption = (dataObj: ParaObj) => {
+    getOption = (dataObj: ParaObj, lengthofTrials: number) => {
         // dataObj [[y1], [y2]... [default metric]]
         const { max, min } = this.state;
         const parallelAxis = dataObj.parallelAxis;
@@ -348,6 +352,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             this.setState(() => ({
                 option: optionown,
                 paraNodata: '',
+                succeedRenderCount: lengthofTrials,
                 sutrialCount: paralleData.length
             }));
         }
@@ -367,7 +372,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     swapReInit = () => {
-        const { clickCounts } = this.state;
+        const { clickCounts, succeedRenderCount } = this.state;
         const val = clickCounts + 1;
         if (this._isMounted) {
             this.setState({ isLoadConfirm: true, clickCounts: val, });
@@ -419,7 +424,7 @@ class Para extends React.Component<ParaProps, ParaState> {
             paraData[paraItem][dim1] = paraData[paraItem][dim2];
             paraData[paraItem][dim2] = temp;
         });
-        this.getOption(paraBack);
+        this.getOption(paraBack, succeedRenderCount);
         // please wait the data
         if (this._isMounted) {
             this.setState(() => ({
@@ -503,10 +508,14 @@ class Para extends React.Component<ParaProps, ParaState> {
                 return true;
             }
 
-            const { sutrialCount, clickCounts } = nextState;
+            const { sutrialCount, clickCounts, succeedRenderCount } = nextState;
             const beforeCount = this.state.sutrialCount;
             const beforeClickCount = this.state.clickCounts;
+            const beforeRealRenderCount = this.state.succeedRenderCount;
             if (sutrialCount !== beforeCount) {
+                return true;
+            }
+            if (succeedRenderCount !== beforeRealRenderCount) {
                 return true;
             }
 

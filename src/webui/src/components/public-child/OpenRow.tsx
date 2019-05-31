@@ -123,7 +123,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                         <Button
                                             onClick={this.showFormatModal.bind(this, record)}
                                         >
-                                            Copy as python
+                                            Copy as json
                                         </Button>
                                     </Row>
                                 </Row>
