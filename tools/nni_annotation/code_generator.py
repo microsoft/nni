@@ -108,7 +108,7 @@ def parse_annotation_mutable_layers(code, lineno):
             assert fields['optional_input_size'], 'optional_input_size must exist when optional_inputs exists'
             target_call_args.append(optional_input_size)
         else:
-            target_call_args.append(ast.List(elts=[]))
+            target_call_args.append(ast.Dict(keys=[], values=[]))
             target_call_args.append(ast.Num(n=0))
         target_call = ast.Call(func=target_call_attr, args=target_call_args, keywords=[])
         node = ast.Assign(targets=[layer_output], value=target_call)
