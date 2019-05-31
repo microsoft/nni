@@ -106,7 +106,7 @@ We encourage researchers and students leverage these projects to accelerate the 
 
 ## **Install & Verify**
 
-If you choose NNI Windows local mode and you use PowerShell to run script for the first time, you need to **run PowerShell as administrator** with this command first:
+If you are using NNI on Windows and use PowerShell to run script for the first time, you need to **run PowerShell as administrator** with this command first:
 
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
@@ -114,7 +114,7 @@ If you choose NNI Windows local mode and you use PowerShell to run script for th
 
 **Install through pip** 	
 
-* We support Linux, MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+* We support Linux, MacOS and Windows(local, remote and pai mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
 
 Linux and MacOS
 
@@ -131,12 +131,12 @@ python -m pip install --upgrade nni
 Note:
 
 * `--user` can be added if you want to install NNI in your home directory, which does not require any special privileges.
-* Currently NNI on Windows only support local mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
+* Currently NNI on Windows support local, remote and pai mode. Anaconda or Miniconda is highly recommended to install NNI on Windows.
 * If there is any error like `Segmentation fault`, please refer to [FAQ](docs/en_US/FAQ.md)
 
 **Install through source code**
 
-* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) and Windows local mode (10.1809) in our current stage. 
+* We support Linux (Ubuntu 16.04 or higher), MacOS (10.14.1) and Windows (10.1809) in our current stage. 
 
 Linux and MacOS
 
@@ -155,12 +155,12 @@ Windows
 ```bash
   git clone -b v0.7 https://github.com/Microsoft/nni.git
   cd nni
-  powershell ./install.ps1
+  powershell .\install.ps1
 ```
 
 For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)
 
-For NNI Windows local mode, please refer to [NNI Windows local mode](docs/en_US/WindowsLocalMode.md)
+For NNI on Windows, please refer to [NNI on Windows](docs/en_US/NniOnWindows.md)
 
 **Verify install**
 
@@ -185,7 +185,7 @@ Windows
 * Run the MNIST example.
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config_windows.yml
+    nnictl create --config nni\examples\trials\mnist\config_windows.yml
 ```
 
 * Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.

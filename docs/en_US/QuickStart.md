@@ -2,7 +2,7 @@
 
 ## Installation
 
-We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
+We support Linux MacOS and Windows in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 and Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
 #### Linux and MacOS
 
 ```bash
@@ -10,7 +10,7 @@ We support Linux MacOS and Windows(local mode) in current stage, Ubuntu 16.04 or
 ```
 
 #### Windows
-If you choose Windows local mode and use PowerShell to run script, you need run below PowerShell command as administrator at first time.
+If you are using NNI on Windows, you need run below PowerShell command as administrator at first time.
 ```bash
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 ```
@@ -151,10 +151,10 @@ Run the **config.yml** file from your command line to start MNIST experiment.
 #### Windows   
 Run the **config_windows.yml** file from your command line to start MNIST experiment.
 
-**Note**, if you're using windows local mode, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
+**Note**, if you're using NNI on Windows, it needs to change `python3` to `python` in the config.yml file, or use the config_windows.yml file to start the experiment.
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config_windows.yml
+    nnictl create --config nni\examples\trials\mnist\config_windows.yml
 ```
 
 Note, **nnictl** is a command line tool, which can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click [here](Nnictl.md) for more usage of `nnictl`
