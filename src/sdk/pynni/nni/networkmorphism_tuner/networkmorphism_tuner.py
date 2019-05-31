@@ -123,7 +123,7 @@ class NetworkMorphismTuner(Tuner):
         """
         self.search_space = search_space
 
-    def generate_parameters(self, parameter_id):
+    def generate_parameters(self, parameter_id, **kwargs):
         """
         Returns a set of trial neural architecture, as a serializable object.
 
@@ -152,7 +152,7 @@ class NetworkMorphismTuner(Tuner):
 
         return json_out
 
-    def receive_trial_result(self, parameter_id, parameters, value):
+    def receive_trial_result(self, parameter_id, parameters, value, **kwargs):
         """ Record an observation of the objective function.
     
         Parameters

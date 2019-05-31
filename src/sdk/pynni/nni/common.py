@@ -76,3 +76,10 @@ def enable_multi_thread():
 
 def multi_thread_enabled():
     return _multi_thread
+
+def enable_multi_phase():
+    global _multi_phase
+    _multi_phase = True
+
+def multi_phase_enabled():
+    return _multi_phase
