@@ -78,7 +78,6 @@ def parse_annotation_mutable_layers(code, lineno):
                 for i in chosen_inputs:
                     index = var_names.index(i)
                     elts.append(value.elts[index])
-                #optional_inputs = ast.Dict(keys=var_names, values=value.elts)
                 optional_inputs = ast.List(elts=elts)
                 fields['optional_inputs'] = True
             elif k.id == 'optional_input_size':
