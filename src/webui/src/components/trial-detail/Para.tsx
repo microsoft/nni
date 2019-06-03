@@ -162,8 +162,8 @@ class Para extends React.Component<ParaProps, ParaState> {
                     parallelAxis.push({
                         dim: i,
                         name: dimName[i],
-                        min: searchKey._value[0] + 1,
-                        max: searchKey._value[1] - 1,
+                        min: searchKey._value[0],
+                        max: searchKey._value[1],
                     });
                     break;
 
