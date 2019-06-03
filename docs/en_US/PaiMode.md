@@ -31,7 +31,7 @@ trial:
   gpuNum: 0
   cpuNum: 1
   memoryMB: 8196
-  image: openpai/pai.example.tensorflow
+  image: msranni/nni:latest
   dataDir: hdfs://10.1.1.1:9000/nni
   outputDir: hdfs://10.1.1.1:9000/nni
 # Configuration to access OpenPAI Cluster
