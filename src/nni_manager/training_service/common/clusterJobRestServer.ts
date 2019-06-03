@@ -86,11 +86,11 @@ export abstract class ClusterJobRestServer extends RestServer {
     // tslint:disable-next-line:no-any
     protected abstract handleTrialMetrics(jobId : string, trialMetrics : any[]) : void;
 
-    // tslint:disable: no-unsafe-any typedef
+    // tslint:disable: no-unsafe-any no-any
     private createRestHandler() : Router {
         const router: Router = Router();
 
-        router.use((req: Request, res: Response, next) => {
+        router.use((req: Request, res: Response, next: any) => {
             this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
             res.setHeader('Content-Type', 'application/json');
             next();
@@ -137,8 +137,8 @@ export abstract class ClusterJobRestServer extends RestServer {
         });
 
         router.post(`/stdout/${this.expId}/:trialId`, (req: Request, res: Response) => {
-            if (this.enableVersionCheck && this.versionCheckSuccess !== undefined && !this.versionCheckSuccess
-                && this.errorMessage === undefined) {
+            if (this.enableVersionCheck && (this.versionCheckSuccess === undefined || !this.versionCheckSuccess)
+            && this.errorMessage === undefined) {
                 this.errorMessage = `Version check failed, didn't get version check response from trialKeeper,`
                  + ` please check your NNI version in NNIManager and TrialKeeper!`;
             }
@@ -146,7 +146,7 @@ export abstract class ClusterJobRestServer extends RestServer {
             try {
                 let skipLogging: boolean = false;
                 if (req.body.tag === 'trial' && req.body.msg !== undefined) {
-                    const metricsContent = req.body.msg.match(this.NNI_METRICS_PATTERN);
+                    const metricsContent: any = req.body.msg.match(this.NNI_METRICS_PATTERN);
                     if (metricsContent && metricsContent.groups) {
                         const key: string = 'metrics';
                         this.handleTrialMetrics(req.params.trialId, [metricsContent.groups[key]]);
@@ -176,5 +176,5 @@ export abstract class ClusterJobRestServer extends RestServer {
 
         return router;
     }
+    // tslint:enable: no-unsafe-any no-any
 }
-// tslint:enable: no-unsafe-any typedef

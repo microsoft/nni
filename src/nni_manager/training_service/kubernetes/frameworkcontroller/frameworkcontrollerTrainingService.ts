@@ -278,7 +278,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         }
     }
 
-    // tslint:disable: no-any no-unsafe-any no-backbone-get-set-outside-model
+    // tslint:disable: no-any no-unsafe-any
     private async prepareFrameworkControllerConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string):
      Promise<any> {
 
@@ -458,7 +458,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             }
         };
     }
-    // tslint:enable: no-any no-unsafe-any no-backbone-get-set-outside-model
+    // tslint:enable: no-any no-unsafe-any
 }
 
 export { FrameworkControllerTrainingService };
