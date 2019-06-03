@@ -79,9 +79,7 @@ def get_id(word_dict, word):
     '''
     Return word id.
     '''
-    if word in word_dict.keys():
-        return word_dict[word]
-    return word_dict['<unk>']
+    return word_dict.get(word, word_dict['<unk>'])
 
 
 def load_embedding(path):
