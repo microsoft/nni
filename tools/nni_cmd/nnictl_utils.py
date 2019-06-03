@@ -25,6 +25,7 @@ import json
 import datetime
 import time
 from subprocess import call, check_output
+from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
 from .config_utils import Config, Experiments
@@ -271,6 +272,17 @@ def trial_kill(args):
             print_error('Kill trial job failed...')
     else:
         print_error('Restful server is not running...')
+
+def trial_codegen(args):
+    '''Generate code for a specific trial'''
+    exp_id = check_experiment_id(args)
+    nni_config = Config(get_config_filename(args))
+    print(nni_config.get_all_config())
+    if not nni_config.get_config('experimentConfig')['useAnnotation']:
+        print_error('The experiment is not using annotation')
+        exit(1)
+    code_dir = nni_config.get_config('experimentConfig')['trial']['codeDir']
+    expand_annotations(code_dir, './exp_%s_trial_%s_code'%(exp_id, args.trial_id), exp_id, args.trial_id)
 
 def list_experiment(args):
     '''Get experiment information'''

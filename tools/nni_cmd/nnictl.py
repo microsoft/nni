@@ -103,6 +103,10 @@ def parse_args():
     parser_trial_kill.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_kill.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to be killed')
     parser_trial_kill.set_defaults(func=trial_kill)
+    parser_trial_codegen = parser_trial_subparsers.add_parser('codegen', help='generate trial code for a specific trial')
+    parser_trial_codegen.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_codegen.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to do code generation')
+    parser_trial_codegen.set_defaults(func=trial_codegen)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
