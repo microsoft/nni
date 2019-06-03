@@ -1,4 +1,6 @@
-# General Programming Interface for Neural Architecture Search
+# General Programming Interface for Neural Architecture Search (experimental feature)
+
+_*This is an experimental feature, currently, we only implemented the general NAS programming interface. Weight sharing and one-shot NAS will be supported in the following releases._
 
 Automatic neural architecture search is taking an increasingly important role on finding better models. Recent research works have proved the feasibility of automatic NAS, and also found some models that could beat manually designed and tuned models. Some of representative works are [NASNet][2], [ENAS][1], [DARTS][3], [Network Morphism][4], and [Evolution][5]. There are new innovations keeping emerging. However, it takes great efforts to implement those algorithms, and it is hard to reuse code base of one algorithm for implementing another.
 
@@ -23,6 +25,8 @@ When designing the following model there might be several choices in the fourth 
 * __layer_output__: The name of the output(s) of this layer, in this case it represents the return of the function call in `layer_choice`. This will be a variable name that can be used in the following python code or nni.mutable_layer(s).
 
 There are two ways to write annotation for this example. For the upper one, `input` of the function calls is `[[],[out3]]`. For the bottom one, `input` is `[[out3],[]]`.
+
+__Debugging__: We provided an `nnictl trial codegen` command to help debugging your code of NAS programming on NNI. If your trial with trial_id `XXX` in your experiment `YYY` is failed, you could run `nnictl trial codegen YYY --trial_id XXX` to generate an executable code for this trial under your current directory. With this code, you can directly run the trial command without NNI to check why this trial is failed. Basically, this command is to compile your trial code and replace the NNI NAS code with the chosen layers and inputs.
 
 ### Example: choose input connections for a layer
 
@@ -92,9 +96,9 @@ NNI's annotation compiler transforms the annotated trial code to the code that c
 
 The above figure shows how the trial code runs on NNI. `nnictl` processes user trial code to generate a search space file and compiled trial code. The former is fed to tuner, and the latter is used to run trials. 
 
-[__TODO__] Simple example of NAS on NNI.
+[Simple example of NAS on NNI](https://github.com/microsoft/nni/tree/v0.8/examples/trials/mnist-nas).
 
-### Weight sharing
+### [__TODO__] Weight sharing
 
 Sharing weights among chosen architectures (i.e., trials) could speedup model search. For example, properly inheriting weights of completed trials could speedup the converge of new trials. One-Shot NAS (e.g., ENAS, Darts) is more aggressive, the training of different architectures (i.e., subgraphs) shares the same copy of the weights in full graph.
 
@@ -102,9 +106,9 @@ Sharing weights among chosen architectures (i.e., trials) could speedup model se
 
 We believe weight sharing (transferring) plays a key role on speeding up NAS, while finding efficient ways of sharing weights is still a hot research topic. We provide a key-value store for users to store and load weights. Tuners and Trials use a provided KV client lib to access the storage.
 
-[__TODO__] Example of weight sharing on NNI.
+Example of weight sharing on NNI.
 
-### Support of One-Shot NAS
+### [__TODO__] Support of One-Shot NAS
 
 One-Shot NAS is a popular approach to find good neural architecture within a limited time and resource budget. Basically, it builds a full graph based on the search space, and uses gradient descent to at last find the best subgraph. There are different training approaches, such as [training subgraphs (per mini-batch)][1], [training full graph through dropout][6], [training with architecture weights (regularization)][3]. Here we focus on the first approach, i.e., training subgraphs (ENAS).
 
@@ -114,18 +118,18 @@ With the same annotated trial code, users could choose One-Shot NAS as execution
 
 The design of One-Shot NAS on NNI is shown in the above figure. One-Shot NAS usually only has one trial job with full graph. NNI supports running multiple such trial jobs each of which runs independently. As One-Shot NAS is not stable, running multiple instances helps find better model. Moreover, trial jobs are also able to synchronize weights during running (i.e., there is only one copy of weights, like asynchroneous parameter-server mode). This may speedup converge.
 
-[__TODO__] Example of One-Shot NAS on NNI.
+Example of One-Shot NAS on NNI.
 
 
-## General tuning algorithms for NAS
+## [__TODO__] General tuning algorithms for NAS
 
 Like hyperparameter tuning, a relatively general algorithm for NAS is required. The general programming interface makes this task easier to some extent. We have a RL-based tuner algorithm for NAS from our contributors. We expect efforts from community to design and implement better NAS algorithms.
 
-[__TODO__] More tuning algorithms for NAS.
+More tuning algorithms for NAS.
 
-## Export best neural architecture and code
+## [__TODO__] Export best neural architecture and code
 
-[__TODO__] After the NNI experiment is done, users could run `nnictl experiment export --code` to export the trial code with the best neural architecture.
+After the NNI experiment is done, users could run `nnictl experiment export --code` to export the trial code with the best neural architecture.
 
 ## Conclusion and Future work
 
