@@ -33,8 +33,6 @@ def parse_annotation_mutable_layers(code, lineno):
     Return a list of AST Expr nodes
     code: annotation string (excluding '@')
     """
-    global para_cfg
-    global prefix_name
     module = ast.parse(code)
     assert type(module) is ast.Module, 'internal error #1'
     assert len(module.body) == 1, 'Annotation mutable_layers contains more than one expression'
