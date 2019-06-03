@@ -44,6 +44,7 @@ import { KubeflowClusterConfig, KubeflowClusterConfigAzure, KubeflowClusterConfi
 import { KubeflowJobInfoCollector } from './kubeflowJobInfoCollector';
 import { KubeflowJobRestServer } from './kubeflowJobRestServer';
 
+// tslint:disable: no-unsafe-any no-any
 /**
  * Training Service implementation for Kubeflow
  * Refer https://github.com/kubeflow/kubeflow for more info about Kubeflow
@@ -123,6 +124,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         return Promise.resolve(trialJobDetail);
     }
 
+    // tslint:disable:no-redundant-jsdoc
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         switch (key) {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
@@ -130,7 +132,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 break;
 
             case TrialConfigMetadataKey.KUBEFLOW_CLUSTER_CONFIG:
-                const kubeflowClusterJsonObject = JSON.parse(value);
+                const kubeflowClusterJsonObject: object = JSON.parse(value);
                 this.kubeflowClusterConfig = KubeflowClusterConfigFactory.generateKubeflowClusterConfig(kubeflowClusterJsonObject);
                 if (this.kubeflowClusterConfig.storageType === 'azureStorage') {
                     const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
@@ -161,7 +163,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 }
 
                 assert(this.kubeflowClusterConfig !== undefined);
-                const kubeflowTrialJsonObjsect = JSON.parse(value);
+                const kubeflowTrialJsonObjsect: object = JSON.parse(value);
                 this.kubeflowTrialConfig = KubeflowTrialConfigFactory.generateKubeflowTrialConfig(
                     kubeflowTrialJsonObjsect,
                     this.kubeflowClusterConfig.operator
@@ -220,7 +222,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 return Promise.reject(error);
             }
         } else if (this.kubeflowClusterConfig.storage === 'nfs' || this.kubeflowClusterConfig.storage === undefined) {
-            let nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
+            const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
             // Creat work dir for current trial in NFS directory
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/nni/${getExperimentId()}/${trialJobId}`);
             // Copy code files from local dir to NFS mounted dir
@@ -240,7 +242,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         }
 
         // initialize kubeflow trial config to specific type
-        let kubeflowTrialConfig;
+        let kubeflowTrialConfig: any;
         if (this.kubeflowClusterConfig.operator === 'tf-operator') {
             kubeflowTrialConfig = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
         } else if (this.kubeflowClusterConfig.operator === 'pytorch-operator') {
@@ -322,7 +324,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
 
         const nonWorkerResources : any = {};
         if (this.kubeflowClusterConfig.operator === 'tf-operator') {
-            let tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
+            const tensorflowTrialConfig: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>this.kubeflowTrialConfig;
             if (tensorflowTrialConfig.ps !== undefined) {
                 nonWorkerResources.requests = this.generatePodResource(tensorflowTrialConfig.ps.memoryMB, tensorflowTrialConfig.ps.cpuNum,
                                                                        tensorflowTrialConfig.ps.gpuNum);
@@ -427,7 +429,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         }
 
         const volumeSpecMap: Map<string, object> = new Map<string, object>();
-        // tslint:disable:no-backbone-get-set-outside-model
         if (this.kubeflowClusterConfig.storageType === 'azureStorage') {
             volumeSpecMap.set('nniVolumes', [
             {
@@ -449,12 +450,12 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 }
             }]);
         }
-        // tslint:enable:no-backbone-get-set-outside-model
 
         return {
             replicas: replicaNumber,
             template: {
                 metadata: {
+                    // tslint:disable-next-line:no-null-keyword
                     creationTimestamp: null
                 },
                 spec: {
@@ -479,5 +480,5 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
         };
     }
 }
-
+// tslint:enable: no-unsafe-any no-any
 export { KubeflowTrainingService };

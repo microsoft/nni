@@ -43,8 +43,8 @@ class GeneralK8sClient {
 
     public async createSecret(secretManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
-        // tslint:disable-next-line:newline-per-chained-call
-        const response : any = await this.client.api.v1.namespaces('default').secrets.post({body: secretManifest});
+        const response : any = await this.client.api.v1.namespaces('default').secrets
+          .post({body: secretManifest});
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {

@@ -41,6 +41,7 @@ export class PAIJobRestServer extends ClusterJobRestServer {
         this.paiTrainingService = component.get(PAITrainingService);
     }
 
+    // tslint:disable-next-line:no-any
     protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
         // Split metrics array into single metric, then emit
         // Warning: If not split metrics into single ones, the behavior will be UNKNOWN

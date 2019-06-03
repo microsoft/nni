@@ -127,13 +127,13 @@ class LocalTrainingService implements TrainingService {
     private rootDir!: string;
     private trialSequenceId: number;
     private gpuScheduler!: GPUScheduler;
-    private occupiedGpuIndexNumMap: Map<number, number>;
+    private readonly occupiedGpuIndexNumMap: Map<number, number>;
     private designatedGpuIndices!: Set<number>;
     private readonly log: Logger;
     private localTrailConfig?: TrialConfig;
     private localConfig?: LocalConfig;
     private isMultiPhase: boolean;
-    private jobStreamMap: Map<string, ts.Stream>;
+    private readonly jobStreamMap: Map<string, ts.Stream>;
     private maxTrialNumPerGpu: number;
     private useActiveGpu: boolean;
 
@@ -379,13 +379,13 @@ class LocalTrainingService implements TrainingService {
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length > 0 && this.gpuScheduler !== undefined) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
                 for (const index of trialJob.gpuIndices) {
-                    let num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
-                    if(num === undefined) {
+                    const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
+                    if (num === undefined) {
                         throw new Error(`gpu resource schedule error`);
-                    } else if(num === 1) {
+                    } else if (num === 1) {
                         this.occupiedGpuIndexNumMap.delete(index);
                     } else {
-                        this.occupiedGpuIndexNumMap.set(index, num - 1)
+                        this.occupiedGpuIndexNumMap.set(index, num - 1);
                     }
                 }
             }
@@ -427,10 +427,10 @@ class LocalTrainingService implements TrainingService {
         }
 
         let selectedGPUIndices: number[] = [];
-        let availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.useActiveGpu, this.occupiedGpuIndexNumMap);
-        for(let index of availableGpuIndices) {
-            let num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
-            if(num === undefined || num < this.maxTrialNumPerGpu) {
+        const availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.useActiveGpu, this.occupiedGpuIndexNumMap);
+        for (const index of availableGpuIndices) {
+            const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
+            if (num === undefined || num < this.maxTrialNumPerGpu) {
                 selectedGPUIndices.push(index);
             }
         }
@@ -464,11 +464,11 @@ class LocalTrainingService implements TrainingService {
     private occupyResource(resource: {gpuIndices: number[]}): void {
         if (this.gpuScheduler !== undefined) {
             for (const index of resource.gpuIndices) {
-                let num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
-                if(num === undefined) {
-                    this.occupiedGpuIndexNumMap.set(index, 1)
+                const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
+                if (num === undefined) {
+                    this.occupiedGpuIndexNumMap.set(index, 1);
                 } else {
-                    this.occupiedGpuIndexNumMap.set(index, num + 1)
+                    this.occupiedGpuIndexNumMap.set(index, num + 1);
                 }
             }
         }

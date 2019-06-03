@@ -21,12 +21,11 @@
 
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
-import * as os from 'os';
 import * as fs from 'fs';
-import { getNewLine } from '../../common/utils';
+import * as os from 'os';
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
-import { countFilesRecursively } from '../../common/utils';
+import { countFilesRecursively, getNewLine } from '../../common/utils';
 import { file } from '../../node_modules/@types/tmp';
 import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
@@ -173,15 +172,15 @@ export function setEnvironmentVariable(variable: { key: string; value: string })
  */
 export async function tarAdd(tarPath: string, sourcePath: string): Promise<void> {
     if (process.platform === 'win32') {
-        tarPath = tarPath.split('\\')
-                         .join('\\\\');
-        sourcePath = sourcePath.split('\\')
-                               .join('\\\\');
-        let script: string[] = [];
+        const tarFilePath: string = tarPath.split('\\')
+                                    .join('\\\\');
+        const sourceFilePath: string = sourcePath.split('\\')
+                                   .join('\\\\');
+        const script: string[] = [];
         script.push(
             `import os`,
             `import tarfile`,
-            String.Format(`tar = tarfile.open("{0}","w:gz")\r\nfor root,dir,files in os.walk("{1}"):`, tarPath, sourcePath),
+            String.Format(`tar = tarfile.open("{0}","w:gz")\r\nfor root,dir,files in os.walk("{1}"):`, tarFilePath, sourceFilePath),
             `    for file in files:`,
             `        fullpath = os.path.join(root,file)`,
             `        tar.add(fullpath, arcname=file)`,

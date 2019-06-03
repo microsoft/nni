@@ -42,6 +42,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector {
             return Promise.reject('kubernetesCRDClient is undefined');
         }
 
+        // tslint:disable:no-any no-unsafe-any
         let kubernetesJobInfo: any;
         try {
             kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);
@@ -54,7 +55,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector {
         }
 
         if (kubernetesJobInfo.status && kubernetesJobInfo.status.conditions) {
-            const latestCondition = kubernetesJobInfo.status.conditions[kubernetesJobInfo.status.conditions.length - 1];
+            const latestCondition: any = kubernetesJobInfo.status.conditions[kubernetesJobInfo.status.conditions.length - 1];
             const tfJobType : KubeflowJobStatus = <KubeflowJobStatus>latestCondition.type;
             switch (tfJobType) {
                 case 'Created':
@@ -63,7 +64,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector {
                     break;
                 case 'Running':
                     kubernetesTrialJob.status = 'RUNNING';
-                    if (!kubernetesTrialJob.startTime) {
+                    if (kubernetesTrialJob.startTime === undefined) {
                         kubernetesTrialJob.startTime = Date.parse(<string>latestCondition.lastUpdateTime);
                     }
                     break;
@@ -78,6 +79,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector {
                 default:
             }
         }
+        // tslint:enable:no-any no-unsafe-any
 
         return Promise.resolve();
     }

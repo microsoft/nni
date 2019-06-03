@@ -11,7 +11,8 @@
         "no-console": [true, "log"],
         "no-multiline-string": false,
         "no-suspicious-comment": false,
-        "no-http-string": false
+        "no-http-string": false,
+        "no-backbone-get-set-outside-model": false
     },
     "rulesDirectory": [],
     "linterOptions": {
