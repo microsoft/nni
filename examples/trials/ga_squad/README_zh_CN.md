@@ -14,7 +14,7 @@
 6. ADD-SKIP (在随机层之间一致).
 7. REMOVE-SKIP (移除随机跳过).
 
-![ga-squad-logo](../../../../examples/trials/ga_squad/ga_squad.png)
+![ga-squad-logo](./ga_squad.png)
 
 ## 新版本
 
