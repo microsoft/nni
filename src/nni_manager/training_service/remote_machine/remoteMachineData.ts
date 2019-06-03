@@ -29,30 +29,18 @@ import { GPUSummary, GPUInfo } from '../common/gpuData';
  * Metadata of remote machine for configuration and statuc query
  */
 export class RemoteMachineMeta {
-    public readonly ip : string;
-    public readonly port : number;
-    public readonly username : string;
-    public readonly passwd?: string;
+    public readonly ip : string = '';
+    public readonly port : number = 22;
+    public readonly username : string = '';
+    public readonly passwd: string = '';
     public readonly sshKeyPath?: string;
     public readonly passphrase?: string;
     public gpuSummary : GPUSummary | undefined;
     public readonly gpuIndices?: string;
     public readonly maxTrialNumPerGpu?: number;
+    //TODO: initialize varialbe in constructor
     public occupiedGpuIndexMap?: Map<number, number>;
     public readonly useActiveGpu?: boolean = false;
-
-    constructor(ip : string, port : number, username : string, passwd : string,
-                sshKeyPath: string, passphrase : string, gpuIndices?: string, maxTrialNumPerGpu?: number, useActiveGpu?: boolean) {
-        this.ip = ip;
-        this.port = port;
-        this.username = username;
-        this.passwd = passwd;
-        this.sshKeyPath = sshKeyPath;
-        this.passphrase = passphrase;
-        this.gpuIndices = gpuIndices;
-        this.maxTrialNumPerGpu = maxTrialNumPerGpu;
-        this.useActiveGpu = useActiveGpu;
-    }
 }
 
 export function parseGpuIndices(gpuIndices?: string): Set<number> | undefined {
