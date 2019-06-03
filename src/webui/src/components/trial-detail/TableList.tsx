@@ -30,7 +30,6 @@ interface TableListProps {
     platform: string;
     logCollection: boolean;
     isMultiPhase: boolean;
-    isTableLoading: boolean;
 }
 
 interface TableListState {
@@ -195,7 +194,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     render() {
 
-        const { entries, tableSource, updateList, isTableLoading } = this.props;
+        const { entries, tableSource, updateList } = this.props;
         const { intermediateOption, modalVisible, isShowColumn, columnSelected } = this.state;
         let showTitle = COLUMN;
         let bgColor = '';
@@ -418,7 +417,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         dataSource={tableSource}
                         className="commonTableStyle"
                         pagination={{ pageSize: entries }}
-                        loading={isTableLoading}
                     />
                     {/* Intermediate Result Modal */}
                     <Modal
