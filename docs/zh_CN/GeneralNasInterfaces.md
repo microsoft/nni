@@ -77,56 +77,56 @@
 }
 ```
 
-通过对搜索空间格式和体系结构选择 (choice) 表达式的说明，可以自由地在 NNI 上实现神经体系结构搜索的各种或通用的调优算法。 One future work is to provide a general NAS algorithm.
+通过对搜索空间格式和体系结构选择 (choice) 表达式的说明，可以自由地在 NNI 上实现神经体系结构搜索的各种或通用的调优算法。 接下来的工作会提供一个通用的 NAS 算法。
 
 =============================================================
 
 ## 神经网络结构搜索在 NNI 上的应用
 
-### Basic flow of experiment execution
+### Experiment 执行的基本流程
 
-NNI's annotation compiler transforms the annotated trial code to the code that could receive architecture choice and build the corresponding model (i.e., graph). The NAS search space can be seen as a full graph (here, full graph means enabling all the provided operators and connections to build a graph), the architecture chosen by the tuning algorithm is a subgraph in it. By default, the compiled trial code only builds and executes the subgraph.
+NNI 的 Annotation 编译器会将 Trial 代码转换为可以接收架构选择并构建相应模型（如图）的代码。 NAS 的搜索空间可以看作是一个完整的图（在这里，完整的图意味着允许所有提供的操作符和连接来构建图），调优算法所选择的是其子图。 默认情况下，编译时 Trial 代码仅构建并执行子图。
 
 ![](../img/nas_on_nni.png)
 
-The above figure shows how the trial code runs on NNI. `nnictl` processes user trial code to generate a search space file and compiled trial code. The former is fed to tuner, and the latter is used to run trials.
+上图显示了 Trial 代码如何在 NNI 上运行。 `nnictl` 处理 Trial 代码，并生成搜索空间文件和编译后的 Trial 代码。 前者会输入 Tuner，后者会在 Trial 代码运行时使用。
 
-[**TODO**] Simple example of NAS on NNI.
+[**待实现**] NNI 上 NAS 的简单示例。
 
-### Weight sharing
+### 权重共享
 
-Sharing weights among chosen architectures (i.e., trials) could speedup model search. For example, properly inheriting weights of completed trials could speedup the converge of new trials. One-Shot NAS (e.g., ENAS, Darts) is more aggressive, the training of different architectures (i.e., subgraphs) shares the same copy of the weights in full graph.
+在所选择的架构（即 Trial）之间共享权重可以加速模型搜索。 例如，适当地继承已完成 Trial 的权重可加速新 Trial 的收敛。 One-shot NAS（例如，ENAS，Darts）更为激进，不同架构（即子图）的训练会在完整图中共享相同的权重。
 
 ![](../img/nas_weight_share.png)
 
-We believe weight sharing (transferring) plays a key role on speeding up NAS, while finding efficient ways of sharing weights is still a hot research topic. We provide a key-value store for users to store and load weights. Tuners and Trials use a provided KV client lib to access the storage.
+权重分配（转移）在加速 NAS 中有关键作用，而找到有效的权重共享方式仍是热门的研究课题。 NNI 提供了一个键值存储，用于存储和加载权重。 Tuner 和 Trial 使用 KV 客户端库来访问存储。
 
-[**TODO**] Example of weight sharing on NNI.
+[**待实现**] NNI 上的权重共享示例。
 
-### Support of One-Shot NAS
+### 支持 One-Shot NAS
 
-One-Shot NAS is a popular approach to find good neural architecture within a limited time and resource budget. Basically, it builds a full graph based on the search space, and uses gradient descent to at last find the best subgraph. There are different training approaches, such as [training subgraphs (per mini-batch)](https://arxiv.org/abs/1802.03268), [training full graph through dropout](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf), [training with architecture weights (regularization)](https://arxiv.org/abs/1806.09055). Here we focus on the first approach, i.e., training subgraphs (ENAS).
+One-Shot NAS 是流行的，能在有限的时间和资源预算内找到较好的神经网络结构的方法。 本质上，它会基于搜索空间来构建完整的图，并使用梯度下降最终找到最佳子图。 它有不同的训练方法，如：[training subgraphs (per mini-batch)](https://arxiv.org/abs/1802.03268) ，[training full graph through dropout](http://proceedings.mlr.press/v80/bender18a/bender18a.pdf)，以及 [training with architecture weights (regularization)](https://arxiv.org/abs/1806.09055) 。 这里会关注第一种方法，即训练子图（ENAS）。
 
-With the same annotated trial code, users could choose One-Shot NAS as execution mode on NNI. Specifically, the compiled trial code builds the full graph (rather than subgraph demonstrated above), it receives a chosen architecture and training this architecture on the full graph for a mini-batch, then request another chosen architecture. It is supported by [NNI multi-phase](./multiPhase.md). We support this training approach because training a subgraph is very fast, building the graph every time training a subgraph induces too much overhead.
+使用相同 Annotation Trial 代码，可选择 One-Shot NAS 作为执行模式。 具体来说，编译后的 Trial 代码会构建完整的图形（而不是上面演示的子图），会接收所选择的架构，并在完整的图形上对此体系结构进行小型的批处理训练，然后再请求另一个架构。 它通过 [NNI 多阶段 Experiment](./multiPhase.md) 来支持。 因为子图训练非常快，而每次启动子图训练时都会产生开销，所以采用此方法。
 
 ![](../img/one-shot_training.png)
 
-The design of One-Shot NAS on NNI is shown in the above figure. One-Shot NAS usually only has one trial job with full graph. NNI supports running multiple such trial jobs each of which runs independently. As One-Shot NAS is not stable, running multiple instances helps find better model. Moreover, trial jobs are also able to synchronize weights during running (i.e., there is only one copy of weights, like asynchronous parameter-server mode). This may speedup converge.
+One-Shot NAS 的设计如上图所示。 One-Shot NAS 通常只有一个带有完整图的 Trial 任务。 NNI 支持运行多个此类 Trial 任务，每个任务都独立运行。 由于 One-Shot NAS 不够稳定，运行多个实例有助于找到更好的模型。 此外，Trial 任务之间也能在运行时同步权重（即，只有一份权重数据，如异步的参数 — 服务器模式）。 这样有可能加速收敛。
 
-[**TODO**] Example of One-Shot NAS on NNI.
+[**TODO**] NNI 上的 One-Shot NAS 示例。
 
 ## 通用的 NAS 调优算法
 
-Like hyperparameter tuning, a relatively general algorithm for NAS is required. The general programming interface makes this task easier to some extent. We have a RL-based tuner algorithm for NAS from our contributors. We expect efforts from community to design and implement better NAS algorithms.
+与超参数调优一样，NAS 也需要相对通用的算法。 通用编程接口使其更容易。 贡献者为 NAS 提供了基于 RL 的调参算法。 期待社区努力设计和实施更好的 NAS 调优算法。
 
-[**TODO**] More tuning algorithms for NAS.
+[**待实现**] 更多 NAS 的调优算法。
 
 ## 导出最好的神经网络网络架构和代码
 
-[**TODO**] After the NNI experiment is done, users could run `nnictl experiment export --code` to export the trial code with the best neural architecture.
+[**待实现**] Experiment 完成后，可通过 `nnictl experiment export --code` 来导出用最好的神经网络结构和 Trial 代码。
 
 ## 结论和未来的工作
 
-There could be different NAS algorithms and execution modes, but they could be supported with the same programming interface as demonstrated above.
+如本文所示，不同的 NAS 算法和执行模式，可通过相同的编程接口来支持。
 
-There are many interesting research topics in this area, both system and machine learning.
+在这一领域有许多系统和机器学习方向的有趣的研究主题。
