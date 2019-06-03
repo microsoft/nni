@@ -13,15 +13,15 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# 并发运行的 Trial 数量
+# how many trials could be concurrently running
 trialConcurrency: 2
-# Experiment 的最长持续运行时间
+# maximum experiment running duration
 maxExecDuration: 3h
-# 空表示一直运行
+# empty means never stop
 maxTrialNum: 100
-# 可选项: local, remote, pai
+# choice: local, remote, pai
 trainingServicePlatform: pai
-# 可选项: true, false  
+# choice: true, false  
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -33,10 +33,10 @@ trial:
   gpuNum: 0
   cpuNum: 1
   memoryMB: 8196
-  image: openpai/pai.example.tensorflow
+  image: msranni/nni:latest
   dataDir: hdfs://10.1.1.1:9000/nni
   outputDir: hdfs://10.1.1.1:9000/nni
-# 配置访问的 OpenPAI 集群
+# Configuration to access OpenPAI Cluster
 paiConfig:
   userName: your_pai_nni_user
   passWord: your_pai_password
