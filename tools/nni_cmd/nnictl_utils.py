@@ -265,7 +265,7 @@ def trial_kill(args):
         return
     running, _ = check_rest_server_quick(rest_port)
     if running:
-        response = rest_delete(trial_job_id_url(rest_port, args.id), REST_TIME_OUT)
+        response = rest_delete(trial_job_id_url(rest_port, args.trial_id), REST_TIME_OUT)
         if response and check_response(response):
             print(response.text)
         else:

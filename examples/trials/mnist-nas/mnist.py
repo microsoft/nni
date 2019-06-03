@@ -9,7 +9,6 @@ import time
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
-
 import operators as op
 
 FLAGS = None
@@ -215,7 +214,11 @@ def main(params):
                                mnist_network.labels: mnist.test.labels,
                                mnist_network.keep_prob: 1.0})
 
+<<<<<<< HEAD
                 """@nni.report_intermediate_result(test_acc)"""
+=======
+                nni.report_intermediate_result(test_acc)
+>>>>>>> ce274f0aa7d397edf347ae08afaa2ba1dba2cb0c
                 logger.debug('test accuracy %g', test_acc)
                 logger.debug('Pipe send intermediate result done.')
 
@@ -224,7 +227,11 @@ def main(params):
                        mnist_network.labels: mnist.test.labels,
                        mnist_network.keep_prob: 1.0})
 
+<<<<<<< HEAD
         """@nni.report_final_result(test_acc)"""
+=======
+        nni.report_final_result(test_acc)
+>>>>>>> ce274f0aa7d397edf347ae08afaa2ba1dba2cb0c
         logger.debug('Final result is %g', test_acc)
         logger.debug('Send final result done.')
 
