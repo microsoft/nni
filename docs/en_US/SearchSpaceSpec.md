@@ -38,7 +38,7 @@ All types of sampling strategies and their parameter are listed here:
 
 * {"_type":"randint","_value":[lower, upper]}
 
-  * For now, we implment the "randint" distribution with "quniform", which means the variable value is a value like round(uniform(lower, upper)). The type of chosen value is float. If you want to use integer value, please convert it explicitly.
+  * For now, we implement the "randint" distribution with "quniform", which means the variable value is a value like round(uniform(lower, upper)). The type of chosen value is float. If you want to use integer value, please convert it explicitly.
 
 * {"_type":"uniform","_value":[low, high]}
   * Which means the variable value is a value uniformly between low and high.
@@ -92,7 +92,7 @@ Known Limitations:
 * Note that In Grid Search Tuner, for users' convenience, the definition of `quniform` and `qloguniform` change, where q here specifies the number of values that will be sampled. Details about them are listed as follows
 
     * Type 'quniform' will receive three values [low, high, q], where [low, high] specifies a range and 'q' specifies the number of values that will be sampled evenly. Note that q should be at least 2. It will be sampled in a way that the first sampled value is 'low', and each of the following values is (high-low)/q larger that the value in front of it.
-    
+
     * Type 'qloguniform' behaves like 'quniform' except that it will first change the range to [log(low), log(high)] and sample and then change the sampled value back.
 
 * Note that Metis Tuner only supports numerical `choice` now

@@ -30,8 +30,9 @@
 
 在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
 
-    bash
-      Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
 
 推荐使用 Anaconda 或 Miniconda。
 

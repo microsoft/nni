@@ -38,7 +38,7 @@
 
 * {"_type":"randint","_value":[lower, upper]}
   
-  * 当前有使用 "quniform" 的 "randint" 分布，随机变量的分布函数是 round(uniform(lower, upper))。 所选择值的类型是 float。 如果要使用整数，需要显式转换。
+  * 当前实现的是 "quniform" 的 "randint" 分布，随机变量的分布函数是 round(uniform(lower, upper))。 所选择值的类型是 float。 如果要使用整数，需要显式转换。
 
 * {"_type":"uniform","_value":[low, high]}
   
