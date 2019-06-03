@@ -31,7 +31,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 ### 使用 `nnictl stop` 无法停止 Experiment
 
-如果在实验运行时，升级了 nni 或删除了一些配置文件，会因为丢失配置文件而出现这类错误。 可以使用 `ps -ef | grep node` 命令来找到 Experiment 的 pid，并用 `kill -9 {pid}` 命令来停止 Experiment 进程。
+如果在实验运行时，升级了 nni 或删除了一些配置文件，会因为丢失配置文件而出现这类错误。 You could use `ps -ef | grep node` to find the PID of your experiment, and use `kill -9 {pid}` to kill it manually.
 
 ### 无法在虚拟机的 NNI 网页中看到 `指标数据`
 
@@ -43,7 +43,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 * http://127.0.0.1，http://172.17.0.1 以及 http://10.0.0.15 都是 localhost。如果在服务器或远程计算机上启动 Experiment， 可将此 IP 替换为所连接的 IP 来查看 Web 界面，如 http://[远程连接的地址]:8080
 * 如果使用服务器 IP 后还是无法看到 Web 界面，可检查此服务器上是否有防火墙或需要代理。 或使用此运行 NNI Experiment 的服务器上的浏览器来查看 Web 界面。
-* 另一个可能的原因是 Experiment 启动失败了，NNI 无法读取 Experiment 的信息。 可在如下目录中查看 NNIManager 的日志： ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
+* Another reason may be your experiment is failed and NNI may fail to get the experiment information. You can check the log of NNIManager in the following directory: ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
 
 ### NNI 在 Windows 上的问题
 
