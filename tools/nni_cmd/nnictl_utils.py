@@ -275,6 +275,7 @@ def trial_kill(args):
 
 def trial_codegen(args):
     '''Generate code for a specific trial'''
+    print_warning('Currently, this command is only for nni nas programming interface.')
     exp_id = check_experiment_id(args)
     nni_config = Config(get_config_filename(args))
     if not nni_config.get_config('experimentConfig')['useAnnotation']:
