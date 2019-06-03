@@ -277,7 +277,6 @@ def trial_codegen(args):
     '''Generate code for a specific trial'''
     exp_id = check_experiment_id(args)
     nni_config = Config(get_config_filename(args))
-    print(nni_config.get_all_config())
     if not nni_config.get_config('experimentConfig')['useAnnotation']:
         print_error('The experiment is not using annotation')
         exit(1)

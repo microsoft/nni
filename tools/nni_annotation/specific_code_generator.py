@@ -73,9 +73,7 @@ def parse_annotation_mutable_layers(code, lineno):
                 assert not fields['optional_inputs'], 'Duplicated field: optional_inputs'
                 assert type(value) is ast.List, 'Value of optional_inputs should be a list'
                 var_names = [astor.to_source(var).strip() for var in value.elts]
-                print(var_names)
                 chosen_inputs = para_cfg[mutable_id][mutable_layer_id]['chosen_inputs']
-                print(chosen_inputs)
                 elts = []
                 for i in chosen_inputs:
                     index = var_names.index(i)
@@ -314,7 +312,6 @@ class Transformer(ast.NodeTransformer):
 
         if string.startswith('@nni.report_intermediate_result'):
             module = ast.parse(string[1:])
-            print('zql: dump: ', ast.dump(module))
             arg = module.body[0].value.args[0]
             return ast.Expr(value=ast.Call(func=ast.Name(id='print', ctx=ast.Load()), args=[ast.Str(s='nni.report_intermediate_result: '), arg], keywords=[]))
 
