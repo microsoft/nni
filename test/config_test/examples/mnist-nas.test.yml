@@ -3,7 +3,6 @@ experimentName: default_test
 maxExecDuration: 5m
 maxTrialNum: 4
 trialConcurrency: 2
-searchSpacePath: ./mnist_search_space.json
 
 tuner:
   codeDir: ../../../examples/tuners/random_nas_tuner
