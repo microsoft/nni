@@ -90,7 +90,7 @@ NNI's annotation compiler transforms the annotated trial code to the code that c
 
 ![](../img/nas_on_nni.png)
 
-The above figure shows how the trial code runs on NNI. `nnictl` processes user trial code to generate a search space file and compiled trial code. The former is fed to tuner, and the latter is used to run trilas. 
+The above figure shows how the trial code runs on NNI. `nnictl` processes user trial code to generate a search space file and compiled trial code. The former is fed to tuner, and the latter is used to run trials. 
 
 [__TODO__] Simple example of NAS on NNI.
 
