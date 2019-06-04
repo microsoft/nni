@@ -133,7 +133,7 @@ class MetisTuner(Tuner):
                         self.x_bounds[idx] = bounds
                         self.x_types[idx] = 'discrete_int'
                 elif key_type == 'randint':
-                    self.x_bounds[idx] = [0, key_range[0]]
+                    self.x_bounds[idx] = [key_range[0], key_range[1]]
                     self.x_types[idx] = 'range_int'
                 elif key_type == 'uniform':
                     self.x_bounds[idx] = [key_range[0], key_range[1]]

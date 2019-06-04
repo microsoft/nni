@@ -83,7 +83,7 @@ def parse_args():
     parser_updater_duration.add_argument('--value', '-v', required=True, help='the unit of time should in {\'s\', \'m\', \'h\', \'d\'}')
     parser_updater_duration.set_defaults(func=update_duration)
     parser_updater_trialnum = parser_updater_subparsers.add_parser('trialnum', help='update maxtrialnum')
-    parser_updater_trialnum.add_argument('--id', '-i', dest='id', help='the id of experiment')
+    parser_updater_trialnum.add_argument('id', nargs='?', help='the id of experiment')
     parser_updater_trialnum.add_argument('--value', '-v', required=True)
     parser_updater_trialnum.set_defaults(func=update_trialnum)
 
@@ -103,6 +103,10 @@ def parse_args():
     parser_trial_kill.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_kill.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to be killed')
     parser_trial_kill.set_defaults(func=trial_kill)
+    parser_trial_codegen = parser_trial_subparsers.add_parser('codegen', help='generate trial code for a specific trial')
+    parser_trial_codegen.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_codegen.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to do code generation')
+    parser_trial_codegen.set_defaults(func=trial_codegen)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
@@ -193,15 +197,6 @@ def parse_args():
     parser_top.add_argument('--time', '-t', dest='time', type=int, default=3, help='the time interval to update the experiment status, ' \
     'the unit is second')
     parser_top.set_defaults(func=monitor_experiment)
-
-    parser_hdfs = subparsers.add_parser('hdfs', help='monitor hdfs files')
-    parser_hdfs_subparsers = parser_hdfs.add_subparsers()
-    parser_hdfs_set = parser_hdfs_subparsers.add_parser('set', help='set the host and userName of hdfs')
-    parser_hdfs_set.add_argument('--host', required=True, dest='host', help='the host of hdfs')
-    parser_hdfs_set.add_argument('--user_name', required=True, dest='user_name', help='the userName of hdfs')
-    parser_hdfs_set.set_defaults(func=hdfs_set)
-    parser_hdfs_list = parser_hdfs_subparsers.add_parser('clean', help='clean hdfs files')
-    parser_hdfs_list.set_defaults(func=hdfs_clean)
 
     args = parser.parse_args()
     args.func(args)

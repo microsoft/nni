@@ -282,7 +282,7 @@ class RemoteMachineTrainingService implements TrainingService {
     private updateGpuReservation() {
         for (const [key, value] of this.trialJobsMap) { 
             if(!['WAITING', 'RUNNING'].includes(value.status)) {
-                this.gpuScheduler.removeGpuReservation(value.id, value.rmMeta);
+                this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
             }
         };
     }
@@ -466,6 +466,7 @@ class RemoteMachineTrainingService implements TrainingService {
         let connectedRMNum: number = 0;
 
         rmMetaList.forEach(async (rmMeta: RemoteMachineMeta) => {
+            rmMeta.occupiedGpuIndexMap = new Map<number, number>();
             let sshClientManager: SSHClientManager = new SSHClientManager([], this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION, rmMeta);
             let sshClient: Client = await sshClientManager.getAvailableSSHClient();
             this.machineSSHClientMap.set(rmMeta, sshClientManager);
@@ -521,7 +522,7 @@ class RemoteMachineTrainingService implements TrainingService {
             return deferred.promise;
         }
         // get an ssh client from scheduler
-        const rmScheduleResult: RemoteMachineScheduleResult = this.gpuScheduler.scheduleMachine(this.trialConfig.gpuNum, trialJobId);
+        const rmScheduleResult: RemoteMachineScheduleResult = this.gpuScheduler.scheduleMachine(this.trialConfig.gpuNum, trialJobDetail);
         if (rmScheduleResult.resultType === ScheduleResultType.REQUIRE_EXCEED_TOTAL) {
             const errorMessage : string = `Required GPU number ${this.trialConfig.gpuNum} is too large, no machine can meet`;
             this.log.error(errorMessage);
@@ -542,6 +543,7 @@ class RemoteMachineTrainingService implements TrainingService {
             trialJobDetail.url = `file://${rmScheduleInfo.rmMeta.ip}:${trialWorkingFolder}`;
             trialJobDetail.startTime = Date.now();
 
+            this.trialJobsMap.set(trialJobId, trialJobDetail);
             deferred.resolve(true);
         } else if (rmScheduleResult.resultType === ScheduleResultType.TMP_NO_AVAILABLE_GPU) {
             this.log.info(`Right now no available GPU can be allocated for trial ${trialJobId}, will try to schedule later`);

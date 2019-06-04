@@ -38,7 +38,8 @@ _ss_funcs = [
     'qnormal',
     'lognormal',
     'qlognormal',
-    'function_choice'
+    'function_choice',
+    'mutable_layer'
 ]
 
 
@@ -49,6 +50,20 @@ class SearchSpaceGenerator(ast.NodeTransformer):
         self.module_name = module_name
         self.search_space = {}
         self.last_line = 0  # last parsed line, useful for error reporting
+
+    def generate_mutable_layer_search_space(self, args):
+        mutable_block = args[0].s
+        mutable_layer = args[1].s
+        key = self.module_name + '/' + mutable_block
+        args[0].s = key
+        if key not in self.search_space:
+            self.search_space[key] = dict()
+        self.search_space[key][mutable_layer] = {
+            'layer_choice': [k.s for k in args[2].keys],
+            'optional_inputs': [k.s for k in args[5].keys],
+            'optional_input_size': args[6].n if isinstance(args[6], ast.Num) else [args[6].elts[0].n, args[6].elts[1].n]
+        }
+
 
     def visit_Call(self, node):  # pylint: disable=invalid-name
         self.generic_visit(node)
@@ -67,6 +82,10 @@ class SearchSpaceGenerator(ast.NodeTransformer):
             return node
 
         self.last_line = node.lineno
+
+        if func == 'mutable_layer':
+            self.generate_mutable_layer_search_space(node.args)
+            return node
 
         if node.keywords:
             # there is a `name` argument

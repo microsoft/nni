@@ -4,31 +4,7 @@ Currently we support local, remote and pai mode on Windows. Windows 10.1809 is w
 
 ## **Installation on Windows**
 
-  **Anaconda or Miniconda python(64-bit) is highly recommended.**  
-
-When you use PowerShell to run script for the first time, you need **run PowerShell as administrator** with this command:
-
-```bash
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
-* __Install NNI through pip__
-
-  Prerequisite: `python(64-bit) >= 3.5`
-
-  ```bash
-  python -m pip install --upgrade nni
-  ```
-
-* __Install NNI through source code__
-
-  Prerequisite: `python >=3.5`, `git`, `PowerShell`
-
-  ```bash
-  git clone -b v0.8 https://github.com/Microsoft/nni.git
-  cd nni
-  powershell -file install.ps1
-  ```
+  please refer to [Installation](Installation.md#installation-on-windows) for more details.
 
 When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
 
