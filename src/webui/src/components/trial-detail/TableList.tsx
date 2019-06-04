@@ -263,8 +263,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
                         render: (text: string, record: TableObj) => {
                             let duration;
-                            if (record.duration !== undefined && record.duration > 0) {
-                                duration = convertDuration(record.duration);
+                            if (record.duration !== undefined) {
+                                if (record.duration > 0 && record.duration < 1) {
+                                    duration = `${record.duration}s`;
+                                } else {
+                                    duration = convertDuration(record.duration);
+                                }
                             } else {
                                 duration = 0;
                             }
