@@ -241,9 +241,7 @@ def get_id(word_dict, word):
     '''
     Given word, return word id.
     '''
-    if word in word_dict.keys():
-        return word_dict[word]
-    return word_dict['<unk>']
+    return word_dict.get(word, word_dict['<unk>'])
 
 
 def get_buckets(min_length, max_length, bucket_count):
