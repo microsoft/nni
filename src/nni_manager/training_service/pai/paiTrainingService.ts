@@ -233,7 +233,8 @@ class PAITrainingService implements TrainingService {
 
         return deferred.promise;
     }
-    // tslint:disable:typedef no-unsafe-any
+
+    // tslint:disable: no-unsafe-any no-any
     // tslint:disable-next-line:max-func-body-length
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
@@ -285,12 +286,12 @@ class PAITrainingService implements TrainingService {
                     break;
                 }
 
-                const hdfsDirContent = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
+                const hdfsDirContent: any = this.paiTrialConfig.outputDir.match(this.hdfsDirPattern);
 
                 if (hdfsDirContent === null) {
                     throw new Error('Trial outputDir format Error');
                 }
-                const groups = hdfsDirContent.groups;
+                const groups: any = hdfsDirContent.groups;
                 if (groups === undefined) {
                     throw new Error('Trial outputDir format Error');
                 }
@@ -301,7 +302,7 @@ class PAITrainingService implements TrainingService {
                     this.hdfsBaseDir = '/';
                 }
 
-                let dataOutputHdfsClient;
+                let dataOutputHdfsClient: any;
                 if (this.paiClusterConfig.host === this.hdfsOutputHost && this.hdfsClient) {
                     dataOutputHdfsClient = this.hdfsClient;
                 } else {
@@ -343,7 +344,7 @@ class PAITrainingService implements TrainingService {
 
         return deferred.promise;
     }
-    // tslint:enable:typedef no-unsafe-any
+    // tslint:enable: no-unsafe-any
 
     public getClusterMetadata(key: string): Promise<string> {
         const deferred : Deferred<string> = new Deferred<string>();
@@ -515,7 +516,7 @@ class PAITrainingService implements TrainingService {
                 Authorization: `Bearer ${this.paiToken}`
             }
         };
-        // tslint:disable-next-line:no-any
+        // tslint:disable:no-any no-unsafe-any
         request(submitJobRequest, (error: Error, response: request.Response, body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage : string = (error !== undefined && error !== null) ? error.message :
@@ -548,7 +549,6 @@ class PAITrainingService implements TrainingService {
                 this.log.error(`${error}`);
                 //only throw error when initlize paiToken first time
                 if (this.paiToken === undefined) {
-                    // tslint:disable-next-line: no-unsafe-any
                     throw new Error(error);
                 }
             }
@@ -605,7 +605,6 @@ class PAITrainingService implements TrainingService {
             }
         };
 
-        // tslint:disable-next-line:no-any
         request(authenticationReq, (error: Error, response: request.Response, body: any) => {
             if (error !== undefined && error !== null) {
                 this.log.error(`Get PAI token failed: ${error.message}`);
@@ -615,7 +614,6 @@ class PAITrainingService implements TrainingService {
                     this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
                     deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
                 }
-                // tslint:disable-next-line: no-unsafe-any
                 this.paiToken = body.token;
                 this.paiTokenUpdateTime = new Date().getTime();
                 deferred.resolve();
@@ -626,7 +624,6 @@ class PAITrainingService implements TrainingService {
         const timeoutDelay: Promise<void> = new Promise<void>((resolve: Function, reject: Function): void => {
             // Set timeout and reject the promise once reach timeout (5 seconds)
             timeoutId = setTimeout(
-                // tslint:disable-next-line: no-unsafe-any
                 () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
                 5000);
         });
@@ -634,6 +631,7 @@ class PAITrainingService implements TrainingService {
         return Promise.race([timeoutDelay, deferred.promise])
             .finally(() => { clearTimeout(timeoutId); });
     }
+    // tslint:enable:no-any no-unsafe-any
 }
 
 export { PAITrainingService };

@@ -70,16 +70,17 @@ export class PAIJobInfoCollector {
 
         // Rest call to get PAI job info and update status
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
+        // tslint:disable:quotemark prefer-template object-literal-key-quotes
         const getJobInfoRequest: request.Options = {
             uri: `http://${paiClusterConfig.host}/rest-server/api/v1/user/${paiClusterConfig.userName}/jobs/${paiTrialJob.paiJobName}`,
             method: 'GET',
             json: true,
             headers: {
-                'Content-Type': 'application/json',
-                // tslint:disable-next-line:prefer-template
-                Authorization: 'Bearer ' + paiToken
+                "Content-Type": "application/json",
+                "Authorization": 'Bearer ' + paiToken
             }
         };
+        // tslint:enable:quotemark prefer-template object-literal-key-quotes
 
         // tslint:disable:cyclomatic-complexity no-unsafe-any no-any
         //TODO : pass in request timeout param?
@@ -145,5 +146,5 @@ export class PAIJobInfoCollector {
 
         return deferred.promise;
     }
+    // tslint:enable:cyclomatic-complexity no-unsafe-any no-any
 }
-// tslint:enable:cyclomatic-complexity no-unsafe-any no-any

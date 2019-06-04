@@ -61,15 +61,15 @@ export namespace HDFSClientUtility {
      * @param hdfsFilePath hdfs file path(target)
      * @param hdfsClient hdfs client
      */
-    // tslint:disable:typedef no-unsafe-any non-literal-fs-path no-any
+    // tslint:disable: no-unsafe-any non-literal-fs-path no-any
     export async function copyFileToHdfs(localFilePath : string, hdfsFilePath : string, hdfsClient : any) : Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         // tslint:disable-next-line:non-literal-fs-path
         fs.exists(localFilePath, (exists : boolean) => {
             // Detect if local file exist
             if (exists) {
-                const localFileStream = fs.createReadStream(localFilePath);
-                const hdfsFileStream = hdfsClient.createWriteStream(hdfsFilePath);
+                const localFileStream: fs.ReadStream = fs.createReadStream(localFilePath);
+                const hdfsFileStream: any = hdfsClient.createWriteStream(hdfsFilePath);
                 localFileStream.pipe(hdfsFileStream);
                 hdfsFileStream.on('finish', () => {
                     deferred.resolve();
@@ -135,7 +135,7 @@ export namespace HDFSClientUtility {
             deferred.reject(`${hdfsPath} doesn't exists`);
         }
 
-        const remoteFileStream = hdfsClient.createReadStream(hdfsPath);
+        const remoteFileStream: any = hdfsClient.createReadStream(hdfsPath);
         remoteFileStream.on('error', (err : any) => {
             // Reject with the error
             deferred.reject(err);
@@ -236,4 +236,5 @@ export namespace HDFSClientUtility {
 
         return deferred.promise;
     }
+    // tslint:enable: no-unsafe-any non-literal-fs-path no-any
 }

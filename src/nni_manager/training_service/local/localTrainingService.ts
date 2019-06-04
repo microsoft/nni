@@ -47,7 +47,7 @@ import { GPUScheduler } from './gpuScheduler';
  *          success: true if the buffer contains at least one complete command; otherwise false
  *          remain: remaining data after the first command
  */
-/* tslint:disable:newline-per-chained-call informative-docs */
+// tslint:disable:newline-per-chained-call informative-docs
 function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
     if (data.length < 8) {
         return [false, '', '', data];
@@ -62,7 +62,7 @@ function decodeCommand(data: Buffer): [boolean, string, string, Buffer] {
 
     return [true, commandType, content, remain];
 }
-/* tslint:enable:newline-per-chained-call informative-docs */
+// tslint:enable:newline-per-chained-call informative-docs
 
 /**
  * LocalTrialJobDetail
