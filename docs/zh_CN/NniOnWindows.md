@@ -4,7 +4,7 @@
 
 ## **在 Windows 上安装**
 
-详细信息参考[安装](Installation.md#installation-on-windows)。
+please refer to [Installation](Installation.md) for more details.
 
 完成操作后，使用 **config_windows.yml** 配置来开始 Experiment 进行验证。
 
