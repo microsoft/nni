@@ -54,4 +54,4 @@ python >= 3.5
 
 please reference to the [NNI CTL document].
 
-[NNI CTL document]: ../docs/en_US/NNICTLDOC.md
+[NNI CTL document]: ../docs/en_US/Nnictl.md

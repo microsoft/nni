@@ -169,7 +169,7 @@ machineList:
 
     * __remote__ submit trial jobs to remote ubuntu machines, and __machineList__ field should be filed in order to set up SSH connection to remote machine.
 
-    * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PAIMode.md)
+    * __pai__  submit trial jobs to [OpenPai](https://github.com/Microsoft/pai) of Microsoft. For more details of pai configuration, please reference [PAIMOdeDoc](./PaiMode.md)
 
     * __kubeflow__ submit trial jobs to [kubeflow](https://www.kubeflow.org/docs/about/kubeflow/), NNI support kubeflow based on normal kubernetes and [azure kubernetes](https://azure.microsoft.com/en-us/services/kubernetes-service/).
 
@@ -399,6 +399,15 @@ machineList:
 
     __gpuIndices__ is used to specify designated GPU devices for NNI, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
 
+  * __maxTrialNumPerGpu__
+  
+    __maxTrialNumPerGpu__ is used to specify the max concurrency trial number on a GPU device.
+    
+  * __useActiveGpu__
+  
+    __useActiveGpu__ is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
+  
+
 * __machineList__
 
   __machineList__ should be set if __trainingServicePlatform__ is set to remote, or it should be empty.
@@ -432,6 +441,14 @@ machineList:
   * __gpuIndices__
 
     __gpuIndices__ is used to specify designated GPU devices for NNI on this remote machine, if it is set, only the specified GPU devices are used for NNI trial jobs. Single or multiple GPU indices can be specified, multiple GPU indices are seperated by comma(,), such as `1` or  `0,1,3`.
+
+  * __maxTrialNumPerGpu__
+  
+    __maxTrialNumPerGpu__ is used to specify the max concurrency trial number on a GPU device.
+
+  * __useActiveGpu__
+  
+    __useActiveGpu__ is used to specify whether to use a GPU if there is another process. By default, NNI will use the GPU only if there is no another active process in the GPU, if __useActiveGpu__ is set to true, NNI will use the GPU regardless of another processes. This field is not applicable for NNI on Windows.
 
 * __kubeflowConfig__:
 

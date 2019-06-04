@@ -63,7 +63,9 @@ common_schema = {
     Optional('advisor'): dict,
     Optional('assessor'): dict,
     Optional('localConfig'): {
-        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!')
+        Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+        Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+        Optional('useActiveGpu'): setType('useActiveGpu', bool)
     }
 }
 tuner_schema_dict = {
@@ -310,26 +312,30 @@ frameworkcontroller_config_schema = {
     })
 }
 
-machine_list_schima = {
+machine_list_schema = {
 Optional('machineList'):[Or({
     'ip': setType('ip', str),
     Optional('port'): setNumberRange('port', int, 1, 65535),
     'username': setType('username', str),
     'passwd': setType('passwd', str),
-    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!')
+    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+    Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+    Optional('useActiveGpu'): setType('useActiveGpu', bool)
     },{
     'ip': setType('ip', str),
     Optional('port'): setNumberRange('port', int, 1, 65535),
     'username': setType('username', str),
     'sshKeyPath': setPathCheck('sshKeyPath'),
     Optional('passphrase'): setType('passphrase', str),
-    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!')
+    Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
+    Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
+    Optional('useActiveGpu'): setType('useActiveGpu', bool)
 })]
 }
 
 LOCAL_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema})
 
-REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine_list_schima})
+REMOTE_CONFIG_SCHEMA = Schema({**common_schema, **common_trial_schema, **machine_list_schema})
 
 PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_schema})
 

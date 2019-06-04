@@ -25,6 +25,7 @@ import { EventEmitter } from 'events';
 import { Readable, Writable } from 'stream';
 import { NNIError } from '../common/errors';
 import { getLogger, Logger } from '../common/log';
+import { getLogDir } from '../common/utils';
 import * as CommandType from './commands';
 
 const ipcOutgoingFd: number = 3;
@@ -106,7 +107,10 @@ class IpcInterface {
                 this.logger.warning('Commands jammed in buffer!');
             }
         } catch (err) {
-            throw new NNIError('Dispatcher Error', `Dispatcher Error: ${err.message}`, err);
+            throw NNIError.FromError(
+                err,
+                `Dispatcher Error, please check this dispatcher log file for more detailed information: ${getLogDir()}/dispatcher.log . `
+            );
         }
     }
 

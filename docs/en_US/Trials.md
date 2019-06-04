@@ -41,14 +41,14 @@ RECEIVED_PARAMS = nni.get_next_parameter()
 ```python
 nni.report_intermediate_result(metrics)
 ```
-`metrics` could be any python object. If users use NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, 2) a dict object that has a key named `default` whose value is a number. This `metrics` is reported to [assessor](Builtin_Assessors.md). Usually, `metrics` could be periodically evaluated loss or accuracy.
+`metrics` could be any python object. If users use NNI built-in tuner/assessor, `metrics` can only have two formats: 1) a number e.g., float, int, 2) a dict object that has a key named `default` whose value is a number. This `metrics` is reported to [assessor](BuiltinAssessors.md). Usually, `metrics` could be periodically evaluated loss or accuracy.
 
 - Report performance of the configuration
 
 ```python
 nni.report_final_result(metrics)
 ```
-`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](Builtin_Tuner.md).
+`metrics` also could be any python object. If users use NNI built-in tuner/assessor, `metrics` follows the same format rule as that in `report_intermediate_result`, the number indicates the model's performance, for example, the model's accuracy, loss etc. This `metrics` is reported to [tuner](BuiltinTuner.md).
 
 ### Step 3 - Enable NNI API
 
@@ -156,8 +156,8 @@ For more information, please refer to [HowToDebug](HowToDebug.md)
 <a name="more-examples"></a>
 ## More Trial Examples
 
-* [MNIST examples](mnist_examples.md)
-* [Finding out best optimizer for Cifar10 classification](cifar10_examples.md)
-* [How to tune Scikit-learn on NNI](sklearn_examples.md)
-* [Automatic Model Architecture Search for Reading Comprehension.](SQuAD_evolution_examples.md)
-* [Tuning GBDT on NNI](gbdt_example.md)
+* [MNIST examples](MnistExamples.md)
+* [Finding out best optimizer for Cifar10 classification](Cifar10Examples.md)
+* [How to tune Scikit-learn on NNI](SklearnExamples.md)
+* [Automatic Model Architecture Search for Reading Comprehension.](SquadEvolutionExamples.md)
+* [Tuning GBDT on NNI](GbdtExample.md)

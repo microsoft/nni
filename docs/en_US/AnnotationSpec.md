@@ -9,6 +9,7 @@ Below is an example:
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
 learning_rate = 0.1
+
 ```
 The meaning of this example is that NNI will choose one of several values (0.1, 0.01, 0.001) to assign to the learning_rate variable. Specifically, this first line is an NNI annotation, which is a single string. Following is an assignment statement. What nni does here is to replace the right value of this assignment statement according to the information provided by the annotation line.
 
@@ -35,8 +36,8 @@ There are 10 types to express your search space as follows:
 
 * `@nni.variable(nni.choice(option1,option2,...,optionN),name=variable)`
   Which means the variable value is one of the options, which should be a list The elements of options can themselves be stochastic expressions
-* `@nni.variable(nni.randint(upper),name=variable)`
-  Which means the variable value is a random integer in the range [0, upper).
+* `@nni.variable(nni.randint(lower, upper),name=variable)`
+  Which means the variable value is a value like round(uniform(low, high)). For now, the type of chosen value is float. If you want to use integer value, please convert it explicitly.
 * `@nni.variable(nni.uniform(low, high),name=variable)`
   Which means the variable value is a value uniformly between low and high.
 * `@nni.variable(nni.quniform(low, high, q),name=variable)`

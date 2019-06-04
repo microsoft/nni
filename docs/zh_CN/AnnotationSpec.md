@@ -9,6 +9,7 @@
 ```python
 '''@nni.variable(nni.choice(0.1, 0.01, 0.001), name=learning_rate)'''
 learning_rate = 0.1
+
 ```
 
 此样例中，NNI 会从 (0.1, 0.01, 0.001) 中选择一个值赋给 learning_rate 变量。 第一行就是 NNI 的 Annotation，是 Python 中的一个字符串。 接下来的一行需要是赋值语句。 NNI 会根据 Annotation 行的信息，来给这一行的变量赋上相应的值。
@@ -33,7 +34,7 @@ NNI 中，有 4 种类型的 Annotation；
 NNI 支持如下 10 种类型来表示搜索空间：
 
 - `@nni.variable(nni.choice(option1,option2,...,optionN),name=variable)` 变量值是选项中的一种，这些变量可以是任意的表达式。
-- `@nni.variable(nni.randint(upper),name=variable)` 变量可以是范围 [0, upper) 中的任意整数。
+- `@nni.variable(nni.randint(lower, upper),name=variable)` 变量值的公式为：round(uniform(low, high))。 目前，值的类型为 float。 如果要使用整数，需要显式转换。
 - `@nni.variable(nni.uniform(low, high),name=variable)` 变量值会是 low 和 high 之间均匀分布的某个值。
 - `@nni.variable(nni.quniform(low, high, q),name=variable)` 变量值会是 low 和 high 之间均匀分布的某个值，公式为：round(uniform(low, high) / q) * q
 - `@nni.variable(nni.loguniform(low, high),name=variable)` 变量值是 exp(uniform(low, high)) 的点，数值以对数均匀分布。

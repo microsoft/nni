@@ -17,10 +17,54 @@
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
 # OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 # ==================================================================================================
+"""
+utils.py
+"""
 
 import os
+from enum import Enum, unique
+
 from .common import init_logger
 from .env_vars import dispatcher_env_vars
+
+@unique
+class OptimizeMode(Enum):
+    """Optimize Mode class
+
+    if OptimizeMode is 'minimize', it means the tuner need to minimize the reward
+    that received from Trial.
+
+    if OptimizeMode is 'maximize', it means the tuner need to maximize the reward
+    that received from Trial.
+    """
+    Minimize = 'minimize'
+    Maximize = 'maximize'
+
+
+class NodeType:
+    """Node Type class
+    """
+    ROOT = 'root'
+    TYPE = '_type'
+    VALUE = '_value'
+    INDEX = '_index'
+    NAME = '_name'
+
+
+def split_index(params):
+    """
+    Delete index infromation from params
+    """
+    if isinstance(params, dict):
+        if NodeType.INDEX in params.keys():
+            return split_index(params[NodeType.VALUE])
+        result = {}
+        for key in params:
+            result[key] = split_index(params[key])
+        return result
+    else:
+        return params
+
 
 def extract_scalar_reward(value, scalar_key='default'):
     """
@@ -40,6 +84,7 @@ def extract_scalar_reward(value, scalar_key='default'):
         raise RuntimeError('Incorrect final result: the final result should be float/int, or a dict which has a key named "default" whose value is float/int.')
     return reward
 
+
 def convert_dict2tuple(value):
     """
     convert dict type to tuple to solve unhashable problem.
@@ -51,9 +96,30 @@ def convert_dict2tuple(value):
     else:
         return value
 
+
 def init_dispatcher_logger():
     """ Initialize dispatcher logging configuration"""
     logger_file_path = 'dispatcher.log'
     if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
         logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
     init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)
+
+
+def randint_to_quniform(in_x):
+    if isinstance(in_x, dict):
+        if NodeType.TYPE in in_x.keys():
+            if in_x[NodeType.TYPE] == 'randint':
+                value = in_x[NodeType.VALUE]
+                value.append(1)
+
+                in_x[NodeType.TYPE] = 'quniform'
+                in_x[NodeType.VALUE] = value
+ 
+            elif in_x[NodeType.TYPE] == 'choice':
+                randint_to_quniform(in_x[NodeType.VALUE])
+        else:
+            for key in in_x.keys():
+                randint_to_quniform(in_x[key])
+    elif isinstance(in_x, list):
+        for temp in in_x:
+            randint_to_quniform(temp)

@@ -30,18 +30,33 @@ def find_wheel_package(dir):
             return file_name
     return None
 
-def start_container(image, name):
+def start_container(image, name, nnimanager_os):
     '''Start docker container, generate a port in /tmp/nnitest/{name}/port file'''
     port = find_port()
     source_dir = '/tmp/nnitest/' + name
     run_cmds = ['docker', 'run', '-d', '-p', str(port) + ':22', '--name', name, '--mount', 'type=bind,source=' + source_dir + ',target=/tmp/nni', image]
     output = check_output(run_cmds)
     commit_id = output.decode('utf-8')
-    wheel_name = find_wheel_package(os.path.join(source_dir, 'dist'))
+    
+    if nnimanager_os == 'windows':
+        wheel_name = find_wheel_package(os.path.join(source_dir, 'nni-remote/deployment/pypi/dist'))
+    else:
+        wheel_name = find_wheel_package(os.path.join(source_dir, 'dist'))
+        
     if not wheel_name:
         print('Error: could not find wheel package in {0}'.format(source_dir))
         exit(1)
-    sdk_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '/tmp/nni/dist/{0}'.format(wheel_name)]
+        
+    def get_dist(wheel_name):
+        '''get the wheel package path'''
+        if nnimanager_os == 'windows':
+            return '/tmp/nni/nni-remote/deployment/pypi/dist/{0}'.format(wheel_name)
+        else:
+            return '/tmp/nni/dist/{0}'.format(wheel_name)
+        
+    pip_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', '--upgrade', 'pip']
+    check_call(pip_cmds)
+    sdk_cmds = ['docker', 'exec', name, 'python3', '-m', 'pip', 'install', get_dist(wheel_name)]
     check_call(sdk_cmds)
     with open(source_dir + '/port', 'w') as file:
         file.write(str(port))
@@ -58,8 +73,9 @@ if __name__ == '__main__':
     parser.add_argument('--mode', required=True, choices=['start', 'stop'], dest='mode', help='start or stop a container')
     parser.add_argument('--name', required=True, dest='name', help='the name of container to be used')
     parser.add_argument('--image', dest='image', help='the image to be used')
+    parser.add_argument('--os', dest='os', default='unix', choices=['unix', 'windows'], help='nniManager os version')
     args = parser.parse_args()
     if args.mode == 'start':
-        start_container(args.image, args.name)
+        start_container(args.image, args.name, args.os)
     else:
         stop_container(args.name)

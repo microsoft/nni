@@ -1,12 +1,13 @@
 # Installation of NNI
 
-Currently we support installation on Linux, Mac and Windows(local mode).
+Currently we support installation on Linux, Mac and Windows(local, remote and pai mode).
 
 ## **Installation on Linux & Mac**
 
 * __Install NNI through pip__
 
   Prerequisite: `python >= 3.5`
+
   ```bash
   python3 -m pip install --upgrade nni
   ```
@@ -14,8 +15,9 @@ Currently we support installation on Linux, Mac and Windows(local mode).
 * __Install NNI through source code__
 
   Prerequisite: `python >=3.5`, `git`, `wget`
+
   ```bash
-  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
   ./install.sh
   ```
@@ -24,27 +26,34 @@ Currently we support installation on Linux, Mac and Windows(local mode).
 
   You can also install NNI in a docker image. Please follow the instructions [here](https://github.com/Microsoft/nni/tree/master/deployment/docker/README.md) to build NNI docker image. The NNI docker image can also be retrieved from Docker Hub through the command `docker pull msranni/nni:latest`.
 
-## **Installation on Windows** 
-  When you use powershell to run script for the first time, you need **run powershell as administrator** with this command:
-  ```bash
-  Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-  ```
-  Anaconda is highly recommanded.
+## **Installation on Windows**
+
+When you use PowerShell to run script for the first time, you need **run PowerShell as administrator** with this command:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
+
+  Anaconda or Miniconda is highly recommended.
+
 * __Install NNI through pip__
 
   Prerequisite: `python(64-bit) >= 3.5`
+
   ```bash
   python -m pip install --upgrade nni
   ```
 
 * __Install NNI through source code__
 
-  Prerequisite: `python >=3.5`, `git`, `powershell`
-  you can install nni as administrator or current user as follows:
+  Prerequisite: `python >=3.5`, `git`, `PowerShell`.
+
+  you can install NNI as administrator or current user as follows:
+
   ```bash
-  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
-  powershell ./install.ps1
+  powershell .\install.ps1
   ```
 
 ## **System requirements**
@@ -88,12 +97,12 @@ Below are the minimum system requirements for NNI on Windows, Windows 10.1809 is
 ## Further reading
 
 * [Overview](Overview.md)
-* [Use command line tool nnictl](NNICTLDOC.md)
+* [Use command line tool nnictl](Nnictl.md)
 * [Use NNIBoard](WebUI.md)
 * [Define search space](SearchSpaceSpec.md)
 * [Config an experiment](ExperimentConfig.md)
 * [How to run an experiment on local (with multiple GPUs)?](LocalMode.md)
 * [How to run an experiment on multiple machines?](RemoteMachineMode.md)
-* [How to run an experiment on OpenPAI?](PAIMode.md)
+* [How to run an experiment on OpenPAI?](PaiMode.md)
 * [How to run an experiment on Kubernetes through Kubeflow?](KubeflowMode.md)
 * [How to run an experiment on Kubernetes through FrameworkController?](FrameworkControllerMode.md)

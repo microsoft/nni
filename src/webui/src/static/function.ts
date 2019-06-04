@@ -1,9 +1,7 @@
 import axios from 'axios';
-import {
-    message
-} from 'antd';
+import { message } from 'antd';
 import { MANAGER_IP } from './const';
-import { FinalResult, FinalType } from './interface';
+import { FinalResult, FinalType, TableObj } from './interface';
 
 const convertTime = (num: number) => {
     if (num % 3600 === 0) {
@@ -131,7 +129,16 @@ const killJob = (key: number, id: string, status: string, updateList: Function) 
         });
 };
 
+const filterByStatus = (item: TableObj) => {
+    return item.status === 'SUCCEEDED';
+};
+
+// a waittiong trial may havn't start time 
+const filterDuration = (item: TableObj) => {
+    return item.status !== 'WAITING';
+};
+
 export {
-    convertTime, convertDuration, getFinalResult,
-    getFinal, intermediateGraphOption, killJob
+    convertTime, convertDuration, getFinalResult, getFinal, 
+    intermediateGraphOption, killJob, filterByStatus, filterDuration
 };
