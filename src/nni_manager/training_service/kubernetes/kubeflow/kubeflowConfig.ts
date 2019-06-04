@@ -100,7 +100,7 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure {
     }
 }
 
-// tslint:disable:max-classes-per-file no-unnecessary-class
+// tslint:disable: no-unnecessary-class
 export class KubeflowClusterConfigFactory {
 
     public static generateKubeflowClusterConfig(jsonObject: object): KubeflowClusterConfig {

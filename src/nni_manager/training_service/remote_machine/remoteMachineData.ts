@@ -117,7 +117,7 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
 /**
  * The remote machine ssh client used for trial and gpu detector
  */
-// tslint:disable: max-classes-per-file completed-docs
+// tslint:disable: completed-docs
 export class SSHClient {
     private readonly sshClient: Client;
     private usedConnectionNumber: number; //count the connection number of every client

@@ -115,7 +115,6 @@ export class PAIClusterConfig {
     }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 export class NNIPAITrialConfig extends TrialConfig {
     public readonly cpuNum: number;
     public readonly memoryMB: number;

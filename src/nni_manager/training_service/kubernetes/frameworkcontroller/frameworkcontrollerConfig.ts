@@ -61,7 +61,6 @@ export class FrameworkControllerTrialConfig extends KubernetesTrialConfig {
     }
 }
 
-// tslint:disable:max-classes-per-file
 export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
     public readonly serviceAccountName: string;
     constructor(apiVersion: string, serviceAccountName: string) {

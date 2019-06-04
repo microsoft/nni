@@ -33,7 +33,7 @@ import { getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, u
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
 import { KubernetesClusterConfig } from './kubernetesConfig';
-import { KubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
+import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
 
 import * as azureStorage from 'azure-storage';
@@ -299,7 +299,7 @@ abstract class KubernetesTrainingService {
         const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
         const runScript: string = String.Format(
-            KubernetesScriptFormat,
+            kubernetesScriptFormat,
             platform,
             trialJobId,
             path.join(trialWorkingFolder, 'output', `${roleName}_output`),

@@ -12,7 +12,8 @@
         "no-multiline-string": false,
         "no-suspicious-comment": false,
         "no-http-string": false,
-        "no-backbone-get-set-outside-model": false
+        "no-backbone-get-set-outside-model": false,
+        "max-classes-per-file": false
     },
     "rulesDirectory": [],
     "linterOptions": {

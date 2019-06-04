@@ -72,7 +72,6 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
     }
 }
 
-// tslint:disable:max-classes-per-file
 export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     public readonly keyVault: KeyVaultConfig;
     public readonly azureStorage: AzureStorage;

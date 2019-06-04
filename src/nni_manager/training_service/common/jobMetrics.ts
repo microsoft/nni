@@ -25,7 +25,6 @@ import { TrialJobStatus  } from '../../common/trainingService';
  * Trial job metrics class
  * Representing trial job metrics properties
  */
-// tslint:disable-next-line:max-classes-per-file
 export class JobMetrics {
     public readonly jobId: string;
     public readonly metrics: string[];

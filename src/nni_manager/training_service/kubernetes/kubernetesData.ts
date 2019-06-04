@@ -24,7 +24,6 @@ import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../commo
 /**
  * KubeflowTrialJobDetail
  */
-// tslint:disable-next-line:max-classes-per-file
 export class KubernetesTrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;
@@ -55,8 +54,7 @@ export class KubernetesTrialJobDetail implements TrialJobDetail {
     }
 }
 
-// tslint:disable-next-line:variable-name
-export const KubernetesScriptFormat: string =
+export const kubernetesScriptFormat: string =
 `#!/bin/bash
 export NNI_PLATFORM={0}
 export NNI_SYS_DIR=$PWD/nni/{1}
