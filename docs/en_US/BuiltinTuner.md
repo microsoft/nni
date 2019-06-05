@@ -2,7 +2,7 @@
 
 NNI provides state-of-the-art tuning algorithm as our builtin-tuners and makes them easy to use. Below is the brief summary of NNI currently built-in Tuners:
 
-Note: Click the **Tuner's name** to get a detailed description of the algorithm, click the corresponding **Usage** to get the Tuner's installation requirements, suggested scenario and using example. Here is an [article](./CommunitySharings/HPOComparison.md) about the comparison of different Tuners on several problems.
+Note: Click the **Tuner's name** to get the Tuner's installation requirements, suggested scenario and using example. The link for a detailed description of the algorithm is at the end of the suggested scenario of each tuner. Here is an [article](./CommunitySharings/HpoComparision.md) about the comparison of different Tuners on several problems.
 
 Currently we support the following algorithms:
 
@@ -36,7 +36,8 @@ Note: Please follow the format when you write your `config.yml` file. Some built
 
 **Suggested scenario**
 
-TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resource and can only try a small number of trials. From a large amount of experiments, we could found that TPE is far better than Random Search.
+TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resource and can only try a small number of trials. From a large amount of experiments, we could found that TPE is far better than Random Search. [Detailed Description](./HyperoptTuner.md)
+
 
 **Requirement of classArg**
 
@@ -62,7 +63,7 @@ tuner:
 
 **Suggested scenario**
 
-Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space. Random Search could be considered as baseline of search algorithm.
+Random search is suggested when each trial does not take too long (e.g., each trial can be completed very soon, or early stopped by assessor quickly), and you have enough computation resource. Or you want to uniformly explore the search space. Random Search could be considered as baseline of search algorithm. [Detailed Description](./HyperoptTuner.md)
 
 **Requirement of classArg:**
 
@@ -86,7 +87,8 @@ tuner:
 
 **Suggested scenario**
 
-Anneal is suggested when each trial does not take too long, and you have enough computation resource(almost same with Random Search). Or the variables in search space could be sample from some prior distribution.
+Anneal is suggested when each trial does not take too long, and you have enough computation resource(almost same with Random Search). Or the variables in search space could be sample from some prior distribution. [Detailed Description](./HyperoptTuner.md)
+
 
 **Requirement of classArg**
 
@@ -112,7 +114,8 @@ tuner:
 
 **Suggested scenario**
 
-Its requirement of computation resource is relatively high. Specifically, it requires large initial population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress.
+Its requirement of computation resource is relatively high. Specifically, it requires large initial population to avoid falling into local optimum. If your trial is short or leverages assessor, this tuner is a good choice. And, it is more suggested when your trial code supports weight transfer, that is, the trial could inherit the converged weights from its parent(s). This can greatly speed up the training progress. [Detailed Description](./EvolutionTuner.md)
+
 
 **Usage example**
 
@@ -144,7 +147,7 @@ nnictl package install --name=SMAC
 
 **Suggested scenario**
 
-Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete.
+Similar to TPE, SMAC is also a black-box tuner which can be tried in various scenarios, and is suggested when computation resource is limited. It is optimized for discrete hyperparameters, thus, suggested when most of your hyperparameters are discrete. [Detailed Description](./SmacTuner.md)
 
 **Requirement of classArg**
 
@@ -170,7 +173,7 @@ tuner:
 
 **Suggested scenario**
 
-If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner.
+If the configurations you want to try have been decided, you can list them in searchspace file (using `choice`) and run them using batch tuner. [Detailed Description](./BatchTuner.md)
 
 **Usage example**
 
@@ -211,7 +214,7 @@ The search space file including the high-level key `combine_params`. The type of
 
 Note that the only acceptable types of search space are `choice`, `quniform`, `qloguniform`. **The number `q` in `quniform` and `qloguniform` has special meaning (different from the spec in [search space spec](./SearchSpaceSpec.md)). It means the number of values that will be sampled evenly from the range `low` and `high`.**
 
-It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space.
+It is suggested when search space is small, it is feasible to exhaustively sweeping the whole search space. [Detailed Description](./GridsearchTuner.md)
 
 **Usage example**
 
@@ -231,7 +234,7 @@ tuner:
 
 **Suggested scenario**
 
-It is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent.
+It is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent. [Detailed Description](./HyperbandAdvisor.md)
 
 **Requirement of classArg**
 
@@ -265,7 +268,7 @@ NetworkMorphism requires [pyTorch](https://pytorch.org/get-started/locally), so 
 
 **Suggested scenario**
 
-It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain.
+It is suggested that you want to apply deep learning methods to your task (your own dataset) but you have no idea of how to choose or design a network. You modify the [example](https://github.com/Microsoft/nni/tree/master/examples/trials/network_morphism/cifar10/cifar10_keras.py) to fit your own dataset and your own data augmentation method. Also you can change the batch size, learning rate or optimizer. It is feasible for different tasks to find a good network architecture. Now this tuner only supports the computer vision domain. [Detailed Description](./NetworkmorphismTuner.md)
 
 **Requirement of classArg**
 
@@ -305,7 +308,7 @@ Metis Tuner requires [sklearn](https://scikit-learn.org/), so users should insta
 
 **Suggested scenario**
 
-Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK.
+Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK. [Detailed Description](./MetisTuner.md)
 
 **Requirement of classArg**
 
@@ -339,7 +342,7 @@ nnictl package install --name=BOHB
 
 **Suggested scenario**
 
-Similar to Hyperband, it is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent. In this case, it may converges to a better configuration due to bayesian optimization usage.
+Similar to Hyperband, it is suggested when you have limited computation resource but have relatively large search space. It performs well in the scenario that intermediate result (e.g., accuracy) can reflect good or bad of final result (e.g., accuracy) to some extent. In this case, it may converges to a better configuration due to bayesian optimization usage. [Detailed Description](./BohbAdvisor.md)
 
 **Requirement of classArg**
 

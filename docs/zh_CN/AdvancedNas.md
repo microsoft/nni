@@ -101,4 +101,4 @@ sudo mount -t nfs 10.10.10.10:/tmp/nni/shared /mnt/nfs/nni
 
 ## 样例
 
-详细内容参考：[简单的参数共享样例](https://github.com/Microsoft/nni/tree/master/test/async_sharing_test)。 基于上一个 [ga_squad](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad) 样例，还提供了新的 [样例](https://github.com/Microsoft/nni/tree/master/examples/trials/weight_sharing/ga_squad)。
+详细内容参考：[简单的参数共享样例](https://github.com/Microsoft/nni/tree/master/test/async_sharing_test)。 基于已有的 [ga_squad](https://github.com/Microsoft/nni/tree/master/examples/trials/ga_squad) 样例，还提供了新的 [样例](https://github.com/Microsoft/nni/tree/master/examples/trials/weight_sharing/ga_squad)。

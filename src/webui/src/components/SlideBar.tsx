@@ -92,7 +92,7 @@ class SlideBar extends React.Component<{}, SliderState> {
           const aTag = document.createElement('a');
           const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
           const file = new Blob([nniLogfile], { type: 'application/json' });
-          aTag.download = 'nnimanagerLog.json';
+          aTag.download = 'nnimanager.log';
           aTag.href = URL.createObjectURL(file);
           aTag.click();
           if (!isEdge) {
@@ -101,7 +101,7 @@ class SlideBar extends React.Component<{}, SliderState> {
           if (navigator.userAgent.indexOf('Firefox') > -1) {
             const downTag = document.createElement('a');
             downTag.addEventListener('click', function () {
-              downTag.download = 'nnimanagerLog.json';
+              downTag.download = 'nnimanager.log';
               downTag.href = URL.createObjectURL(file);
             });
             let eventMouse = document.createEvent('MouseEvents');
@@ -122,7 +122,7 @@ class SlideBar extends React.Component<{}, SliderState> {
           const aTag = document.createElement('a');
           const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
           const file = new Blob([dispatchLogfile], { type: 'application/json' });
-          aTag.download = 'dispatcherLog.json';
+          aTag.download = 'dispatcher.log';
           aTag.href = URL.createObjectURL(file);
           aTag.click();
           if (!isEdge) {
@@ -131,7 +131,7 @@ class SlideBar extends React.Component<{}, SliderState> {
           if (navigator.userAgent.indexOf('Firefox') > -1) {
             const downTag = document.createElement('a');
             downTag.addEventListener('click', function () {
-              downTag.download = 'dispatcherLog.json';
+              downTag.download = 'dispatcher.log';
               downTag.href = URL.createObjectURL(file);
             });
             let eventMouse = document.createEvent('MouseEvents');

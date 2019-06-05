@@ -164,7 +164,7 @@ trial:
 **注意**：如果使用 Windows，则需要在 config.yml 文件中，将 `python3` 改为 `python`，或者使用 config_windows.yml 来开始 Experiment。
 
 ```bash
-    nnictl create --config nni/examples/trials/mnist/config_windows.yml
+    nnictl create --config nni\examples\trials\mnist\config_windows.yml
 ```
 
 注意：**nnictl** 是一个命令行工具，用来控制 NNI Experiment，如启动、停止、继续 Experiment，启动、停止 NNIBoard 等等。 查看[这里](Nnictl.md)，了解 `nnictl` 更多用法。
