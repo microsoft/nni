@@ -477,6 +477,7 @@ class RemoteMachineTrainingService implements TrainingService {
         let connectedRMNum: number = 0;
 
         rmMetaList.forEach(async (rmMeta: RemoteMachineMeta) => {
+            rmMeta.occupiedGpuIndexMap = new Map<number, number>();
             const sshClientManager: SSHClientManager = new SSHClientManager([], this.MAX_TRIAL_NUMBER_PER_SSHCONNECTION, rmMeta);
             const sshClient: Client = await sshClientManager.getAvailableSSHClient();
             this.machineSSHClientMap.set(rmMeta, sshClientManager);
