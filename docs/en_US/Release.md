@@ -1,5 +1,36 @@
 # ChangeLog
 
+# Release 0.8 - 6/4/2019
+## Major Features
+* [Support NNI on Windows for PAI/Remote mode]
+    * NNI running on windows for remote mode
+    * NNI running on windows for PAI mode
+* [Advanced features for using GPU]
+   * Run multiple trial jobs on the same GPU for local and remote mode
+   * Run trial jobs on the GPU running non-NNI jobs
+* [Kubeflow v1beta2 operator]
+   * Support Kubeflow TFJob/PyTorchJob v1beta2
+* [General NAS programming interface](./GeneralNasInterfaces.md)
+   * Provide NAS programming interface for users to easily express their neural architecture search space through NNI annotation
+   * Provide a new command `nnictl trial codegen` for debugging the NAS code
+   * Tutorial of NAS programming interface, example of NAS on mnist, customized random tuner for NAS
+* [Support resume tuner/advisor's state for experiment resume]
+   * For experiment resume, tuner/advisor will be resumed by replaying finished trial data
+* [Web Portal]
+   * Improve the design of copying trial's parameters
+   * Support 'randint' type in hyper-parameter graph
+   * Use should ComponentUpdate to avoid unnecessary render
+## Bug fix and other changes
+* [Bug fix that `nnictl update` has inconsistent command styles]
+* [Support import data for SMAC tuner]
+* [Bug fix that experiment state transition from ERROR back to RUNNING]
+* [Fix bug of table entries]
+* [Nested search space refinement]
+* [Refine 'randint' type and support lower bound]
+* [Comparison of different hyper-parameter tuning algorithm](./CommunitySharings/HpoComparision.md)
+* [Comparison of NAS algorithm](./CommunitySharings/NasComparision.md)
+* [NNI practice on Recommenders](./CommunitySharings/NniPracticeSharing/RecommendersSvd.md)
+
 ## Release 0.7 - 4/29/2018
 
 ### Major Features
