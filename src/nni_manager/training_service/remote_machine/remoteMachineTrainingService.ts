@@ -508,7 +508,8 @@ class RemoteMachineTrainingService implements TrainingService {
                                                 unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh'), conn);
 
         //Begin to execute gpu_metrics_collection scripts
-        await SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh')}`, conn);
+        // tslint:disable-next-line: no-floating-promises
+        SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(remoteGpuScriptCollectorDir, 'gpu_metrics_collector.sh')}`, conn);
 
         this.timer.subscribe(
             async (tick: number) => {
@@ -644,7 +645,8 @@ class RemoteMachineTrainingService implements TrainingService {
         // Copy files in codeDir to remote working directory
         await SSHClientUtility.copyDirectoryToRemote(trialLocalTempFolder, trialWorkingFolder, sshClient, this.remoteOS);
         // Execute command in remote machine
-        await SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(trialWorkingFolder, 'run.sh')}`, sshClient);
+        // tslint:disable-next-line: no-floating-promises
+        SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(trialWorkingFolder, 'run.sh')}`, sshClient);
     }
 
     private async runHostJob(form: HostJobApplicationForm): Promise<TrialJobDetail> {
@@ -665,7 +667,8 @@ class RemoteMachineTrainingService implements TrainingService {
         await fs.promises.writeFile(path.join(localDir, 'run.sh'), runScriptContent, { encoding: 'utf8' });
         await SSHClientUtility.copyFileToRemote(
             path.join(localDir, 'run.sh'), unixPathJoin(remoteDir, 'run.sh'), sshClient);
-        await SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(remoteDir, 'run.sh')}`, sshClient);
+        // tslint:disable-next-line: no-floating-promises
+        SSHClientUtility.remoteExeCommand(`bash ${unixPathJoin(remoteDir, 'run.sh')}`, sshClient);
 
         const jobDetail: RemoteMachineTrialJobDetail =  new RemoteMachineTrialJobDetail(
             jobId, 'RUNNING', Date.now(), remoteDir, form, this.generateSequenceId()
