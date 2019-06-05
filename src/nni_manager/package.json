@@ -5,14 +5,17 @@
   "scripts": {
     "build": "tsc",
     "test": "nyc mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
+    "preinstall": "yarn global add node-pre-gyp",
     "start": "node dist/main.js",
     "tslint": "tslint -p ."
   },
   "license": "MIT",
   "dependencies": {
     "azure-storage": "^2.10.2",
+    "body-parser": "^1.18.3",
     "chai-as-promised": "^7.1.1",
     "child-process-promise": "^2.2.1",
+    "child_process": "^1.0.2",
     "express": "^4.16.3",
     "express-joi-validator": "^2.0.0",
     "js-base64": "^2.4.9",

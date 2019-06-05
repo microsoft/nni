@@ -52,14 +52,14 @@ export abstract class ClusterJobRestServer extends RestServer{
         super();
         const basePort: number = getBasePort();
         assert(basePort && basePort > 1024);
-        
-        this.port = basePort + 1;         
+        this.port = basePort + 1;
     }
 
     public get clusterRestServerPort(): number {
-        if(!this.port) {
+        if (!this.port) {
             throw new Error('PAI Rest server port is undefined');
         }
+
         return this.port;
     }
     

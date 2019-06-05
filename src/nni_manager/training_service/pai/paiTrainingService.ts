@@ -141,6 +141,7 @@ class PAITrainingService implements TrainingService {
         this.metricsEmitter.off('metric', listener);
     }
 
+    // tslint:disable-next-line:max-func-body-length
     public async submitTrialJob(form: JobApplicationForm): Promise<TrialJobDetail> {
         const deferred : Deferred<PAITrialJobDetail> = new Deferred<PAITrialJobDetail>();
         if (!this.hdfsBaseDir) {
@@ -272,7 +273,7 @@ class PAITrainingService implements TrainingService {
                 // Validate to make sure codeDir doesn't have too many files
                 try {
                     await validateCodeDir(this.paiTrialConfig.codeDir);
-                } catch(error) {
+                } catch (error) {
                     this.log.error(error);
                     deferred.reject(new Error(error));
                     break;

@@ -612,7 +612,7 @@ class NNIManager implements Manager {
     }
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
-        this.log.debug(`NNIManager received trial job metrics: ${metric}`);
+        this.log.debug(`NNIManager received trial job metrics: ${JSON.stringify(metric)}`);
         await this.dataStore.storeMetricData(metric.id, metric.data);
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');

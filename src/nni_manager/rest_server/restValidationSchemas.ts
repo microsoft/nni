@@ -47,6 +47,9 @@ export namespace ValidationSchemas {
                 command: joi.string().min(1),
                 virtualCluster: joi.string(),
                 shmMB: joi.number(),
+                baseGraph: joi.string(),
+                outputNodeAlias: joi.string(),
+                outputName: joi.string(),
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),

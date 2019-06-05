@@ -14,6 +14,8 @@ $nodeUrl = "https://aka.ms/nni/nodejs-download/" + $OS_VERSION
 $yarnUrl = "https://yarnpkg.com/latest.tar.gz"
 $unzipNodeDir = "node-v*"
 $unzipYarnDir = "yarn-v*"
+# nuget
+$nugetUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
 
 $NNI_DEPENDENCY_FOLDER = "C:\tmp\$env:USERNAME"
 
@@ -56,6 +58,8 @@ $NNI_NODE_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-node"
 $NNI_YARN_TARBALL = $NNI_DEPENDENCY_FOLDER+"\nni-yarn.tar.gz"
 $NNI_YARN_FOLDER = $NNI_DEPENDENCY_FOLDER+"\nni-yarn"
 $NNI_YARN = $NNI_YARN_FOLDER +"\bin\yarn"
+$NNI_NUGET_FOLDER = $NNI_DEPENDENCY_FOLDER + "\nni-nuget"
+$NNI_NUGET = $NNI_NUGET_FOLDER + "\nuget.exe"
 
 ## Version number
 $NNI_VERSION_VALUE = $(git describe --tags)
@@ -69,6 +73,14 @@ if(!(Test-Path $NNI_NODE_ZIP)){
 if(!(Test-Path $NNI_YARN_TARBALL)){
     Write-Host "Downloading Yarn..."
     (New-Object Net.WebClient).DownloadFile($yarnUrl, $NNI_YARN_TARBALL)
+}
+
+if(!(Test-Path $NNI_NUGET)) {
+    Write-Host "Downloading nuget..."
+    if (!(Test-Path $NNI_NUGET_FOLDER)) {
+        New-Item $NNI_NUGET_FOLDER -ItemType Directory
+    }
+    (New-Object Net.WebClient).DownloadFile($nugetUrl, $NNI_NUGET)
 }
 
 $NNI_YARN_TARBALL = $NNI_YARN_TARBALL -split '\\' -join '\\'
@@ -106,18 +118,30 @@ if ($install_node) {
 (Get-Content setup.py).replace($NNI_VERSION_TEMPLATE, $NNI_VERSION_VALUE) | Set-Content setup.py
 cmd /c $PIP_INSTALL
 
+
 # Building NNI Manager
 $env:PATH=$NNI_PYTHON_SCRIPTS+';'+$env:PATH
-cd src\nni_manager
+Set-Location src\nni_manager
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
 Copy-Item config -Destination .\dist\ -Recurse -Force
+
+# Building Aether Client
+Set-Location .\training_service\aether\cslib
+if (!(Get-Command msbuild | Test-Path)) {
+    Write-Host "Please install msbuild first"
+    exit
+}
+
+cmd /c 'msbuild -Property:Configure=Release;OutputPath=..\..\..\dist\aether'
+
 # Building WebUI
-cd ..\webui
+Set-Location ..\..\..\..\webui
 cmd /c $NNI_YARN
 cmd /c $NNI_YARN build
 
-cd ..\..
+Set-Location ..\..\
+
 
 ## install-node-modules
 if(!(Test-Path $NNI_PKG_FOLDER)){

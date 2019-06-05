@@ -1,7 +1,22 @@
 jobs:
 - job: 'Test'
-
   steps:
+  - task: NuGetToolInstaller@1
+    inputs:
+      checkLatest: true
+  - task: NuGetCommand@2
+    inputs:
+      command: 'restore'
+      restoreSolution: 'src/nni_manager/training_service/aether/cslib/AetherClient.sln'
+      feedsToUse: 'config'
+      nugetConfigPath: 'src/nni_manager/training_service/aether/cslib/NuGet.Config'
+      externalFeedCredentials: 'AzureDstsManagement'
+      versioningScheme: 'off'
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '3.x'
+      addToPath: true
+      architecture: 'x64'
   - script: |
       powershell.exe -file install.ps1
     displayName: 'Install nni toolkit via source code'
@@ -10,7 +25,7 @@ jobs:
       python -m pip install keras==2.1.6 --user
       python -m pip install https://download.pytorch.org/whl/cu90/torch-0.4.1-cp36-cp36m-win_amd64.whl --user
       python -m pip install torchvision --user
-      python -m pip install tensorflow-gpu==1.11.0 --user
+      python -m pip install tensorflow==1.11.0 --user
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
@@ -18,7 +33,7 @@ jobs:
     displayName: 'generate config files'
   - script: |
       cd test
-      python config_test.py --ts local --local_gpu --exclude smac,bohb
+      python config_test.py --ts local --local_gpu --exclude cifar10,smac,bohb
     displayName: 'Examples and advanced features tests on local machine'
   - script: |
       cd test
@@ -36,3 +51,13 @@ jobs:
       cd test
       python metrics_test.py
     displayName: 'Trial job metrics test'
+  - script: |
+      cd deployment\pypi
+      powershell.exe -file install.ps1
+      dir $(Build.SourcesDirectory)\deployment\pypi\dist\
+    displayName: 'Build bdsit_wheel'
+  - script:  |
+      powershell.exe rm $(Agent.ToolsDirectory)\nni -Recurse -Force
+      powershell.exe New-Item $(Agent.ToolsDirectory)\nni -itemtype directory
+      powershell.exe cp $(Build.SourcesDirectory)\deployment\pypi\dist\* $(Agent.ToolsDirectory)\nni
+    displayName: 'Host bdsit_wheel'

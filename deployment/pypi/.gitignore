@@ -4,3 +4,9 @@ build/
 *.egg-info/
 node-*.tar.xz
 node-*/
+nni-nuget/
+nni-yarn/
+node-windows/
+*.gz
+*.zip
+extract.py
