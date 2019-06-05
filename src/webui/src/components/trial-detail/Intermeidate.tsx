@@ -115,13 +115,13 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 xAxis: {
                     type: 'category',
-                    name: 'Scape',
+                    name: 'Step',
                     boundaryGap: false,
                     data: xAxis
                 },
                 yAxis: {
                     type: 'value',
-                    name: 'Intermediate'
+                    name: 'metric'
                 },
                 series: trialIntermediate
             };

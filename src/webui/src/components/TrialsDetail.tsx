@@ -27,7 +27,6 @@ interface TrialDetailState {
     entriesInSelect: string;
     searchSpace: string;
     isMultiPhase: boolean;
-    isTableLoading: boolean;
     whichGraph: string;
     hyperCounts: number; // user click the hyper-parameter counts
     durationCounts: number;
@@ -79,7 +78,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             whichGraph: '1',
             isHasSearch: false,
             isMultiPhase: false,
-            isTableLoading: false,
             hyperCounts: 0,
             durationCounts: 0,
             intermediateCounts: 0
@@ -95,9 +93,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
             ])
             .then(axios.spread((res, res1) => {
                 if (res.status === 200 && res1.status === 200) {
-                    if (this._isMounted === true) {
-                        this.setState(() => ({ isTableLoading: true }));
-                    }
                     const trialJobs = res.data;
                     const metricSource = res1.data;
                     const trialTable: Array<TableObj> = [];
@@ -187,10 +182,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                         }
                     }
                     if (this._isMounted) {
-                        this.setState(() => ({
-                            isTableLoading: false,
-                            tableListSource: trialTable
-                        }));
+                        this.setState(() => ({ tableListSource: trialTable }));
                     }
                     if (entriesInSelect === 'all' && this._isMounted) {
                         this.setState(() => ({
@@ -330,7 +322,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
         const {
             tableListSource, searchResultSource, isHasSearch, isMultiPhase,
             entriesTable, experimentPlatform, searchSpace, experimentLogCollection,
-            whichGraph, isTableLoading
+            whichGraph
         } = this.state;
         const source = isHasSearch ? searchResultSource : tableListSource;
         return (
@@ -407,7 +399,6 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                 <TableList
                     entries={entriesTable}
                     tableSource={source}
-                    isTableLoading={isTableLoading}
                     isMultiPhase={isMultiPhase}
                     platform={experimentPlatform}
                     updateList={this.getDetailSource}

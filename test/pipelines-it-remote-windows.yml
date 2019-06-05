@@ -47,3 +47,9 @@ jobs:
       runOptions: commands
       commands: python3 /tmp/nnitest/$(Build.BuildId)/nni-remote/test/remote_docker.py --mode stop --name $(Build.BuildId) --os windows
     displayName: 'Stop docker'
+  - task: SSH@0
+    inputs:
+      sshEndpoint: $(end_point)
+      runOptions: commands
+      commands: sudo rm -rf /tmp/nnitest/$(Build.BuildId)
+    displayName: 'Clean the remote files'  
