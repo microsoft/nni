@@ -302,10 +302,6 @@ tuner:
 
 Note that the only acceptable types of search space are `choice`, `quniform`, `uniform` and `randint`.
 
-**Installation**
-
-Metis Tuner requires [sklearn](https://scikit-learn.org/), so users should install it first. User could use `pip3 install sklearn` to install it.
-
 **Suggested scenario**
 
 Similar to TPE and SMAC, Metis is a black-box tuner. If your system takes a long time to finish each trial, Metis is more favorable than other approaches such as random search. Furthermore, Metis provides guidance on the subsequent trial. Here is an [example](https://github.com/Microsoft/nni/tree/master/examples/trials/auto-gbdt/search_space_metis.json) about the use of Metis. User only need to send the final result like `accuracy` to tuner, by calling the nni SDK. [Detailed Description](./MetisTuner.md)

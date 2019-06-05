@@ -75,7 +75,8 @@ setuptools.setup(
         'numpy',
         'scipy',
         'coverage',
-        'colorama'
+        'colorama',
+        'sklearn'
     ],
     classifiers = [
         'Programming Language :: Python :: 3',

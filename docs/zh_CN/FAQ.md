@@ -31,7 +31,7 @@ nnictl 在执行时，使用 tmp 目录作为临时目录来复制 codeDir 下�
 
 ### 使用 `nnictl stop` 无法停止 Experiment
 
-如果在实验运行时，升级了 nni 或删除了一些配置文件，会因为丢失配置文件而出现这类错误。 可以使用 `ps -ef | grep node` 命令来找到 Experiment 的 pid，并用 `kill -9 {pid}` 命令来停止 Experiment 进程。
+如果在 Experiment 运行时，升级了 nni 或删除了一些配置文件，会因为丢失配置文件而出现这类错误。 可以使用 `ps -ef | grep node` 命令来找到 Experiment 的 PID，并用 `kill -9 {pid}` 命令来停止 Experiment 进程。
 
 ### 无法在虚拟机的 NNI 网页中看到 `指标数据`
 
