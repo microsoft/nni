@@ -295,9 +295,9 @@ class PAITrainingService implements TrainingService {
                 if (groups === undefined) {
                     throw new Error('Trial outputDir format Error');
                 }
-                this.hdfsOutputHost = groups.host;
+                this.hdfsOutputHost = groups['host'];
                 //TODO: choose to use /${username} as baseDir
-                this.hdfsBaseDir = groups.baseDir;
+                this.hdfsBaseDir = groups.['baseDir'];
                 if (this.hdfsBaseDir === undefined) {
                     this.hdfsBaseDir = '/';
                 }
