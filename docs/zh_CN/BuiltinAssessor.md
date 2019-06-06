@@ -2,7 +2,7 @@
 
 NNI 提供了先进的调优算法，使用上也很简单。 下面是内置 Assessor 的介绍：
 
-Note: Click the **Assessor's name** to get the Assessor's installation requirements, suggested scenario and using example. The link for a detailed description of the algorithm is at the end of the suggested scenario of each Assessor.
+注意：点击 **Assessor 的名称**可看到 Assessor 的安装需求，建议的场景以及示例。 算法的详细说明在每个 Assessor 建议场景的最后。
 
 当前支持的 Assessor：
 
@@ -25,7 +25,7 @@ Note: Click the **Assessor's name** to get the Assessor's installation requireme
 
 **建议场景**
 
-It is applicable in a wide range of performance curves, thus, can be used in various scenarios to speed up the tuning progress. [Detailed Description](./MedianstopAssessor.md)
+适用于各种性能曲线，可用到各种场景中来加速优化过程。 [详细说明](./MedianstopAssessor.md)
 
 **参数**
 
@@ -53,7 +53,7 @@ assessor:
 
 **建议场景**
 
-适用于各种性能曲线，可用到各种场景中来加速优化过程。 更好的地方是，它能处理并评估性能类似的曲线。 [Detailed Description](./CurvefittingAssessor.md)
+适用于各种性能曲线，可用到各种场景中来加速优化过程。 更好的地方是，它能处理并评估性能类似的曲线。 [详细说明](./CurvefittingAssessor.md)
 
 **参数**
 
