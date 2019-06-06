@@ -7,9 +7,9 @@
 * [在 Windows 上支持 NNI 的 OpenPAI 和远程模式] 
     * NNI 可在 Windows 上使用远程模式
     * NNI 可在 Windows 上使用 OpenPAI 模式
-* [Advanced features for using GPU] 
-    * Run multiple trial jobs on the same GPU for local and remote mode
-    * Run trial jobs on the GPU running non-NNI jobs
+* GPU 的高级功能 
+    * 在本机或远程模式上，可在同一个 GPU 上运行多个 Trial。
+    * 在已经运行非 NNI 任务的 GPU 上也能运行 Trial
 * [Kubeflow v1beta2 operator] 
     * Support Kubeflow TFJob/PyTorchJob v1beta2
 * [General NAS programming interface](./GeneralNasInterfaces.md) 
