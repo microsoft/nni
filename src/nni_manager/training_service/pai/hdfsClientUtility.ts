@@ -33,6 +33,7 @@ export namespace HDFSClientUtility {
      * @param hdfsUserName HDFS user name
      */
     function hdfsExpRootDir(hdfsUserName: string): string {
+        // tslint:disable-next-line:prefer-template
         return '/' + unixPathJoin(hdfsUserName, 'nni', 'experiments', getExperimentId());
     }
 
