@@ -5,8 +5,8 @@
 ## 主要功能
 
 * [在 Windows 上支持 NNI 的 OpenPAI 和远程模式] 
-    * NNI running on windows for remote mode
-    * NNI running on windows for PAI mode
+    * NNI 可在 Windows 上使用远程模式
+    * NNI 可在 Windows 上使用 OpenPAI 模式
 * [Advanced features for using GPU] 
     * Run multiple trial jobs on the same GPU for local and remote mode
     * Run trial jobs on the GPU running non-NNI jobs
