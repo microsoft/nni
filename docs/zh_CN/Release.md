@@ -4,24 +4,24 @@
 
 ## 主要功能
 
-* [在 Windows 上支持 NNI 的 OpenPAI 和远程模式] 
+* 在 Windows 上支持 NNI 的 OpenPAI 和远程模式 
     * NNI 可在 Windows 上使用远程模式
     * NNI 可在 Windows 上使用 OpenPAI 模式
 * GPU 的高级功能 
     * 在本机或远程模式上，可在同一个 GPU 上运行多个 Trial。
     * 在已经运行非 NNI 任务的 GPU 上也能运行 Trial
-* [Kubeflow v1beta2 operator] 
-    * Support Kubeflow TFJob/PyTorchJob v1beta2
-* [General NAS programming interface](./GeneralNasInterfaces.md) 
-    * Provide NAS programming interface for users to easily express their neural architecture search space through NNI annotation
-    * Provide a new command `nnictl trial codegen` for debugging the NAS code
-    * Tutorial of NAS programming interface, example of NAS on mnist, customized random tuner for NAS
-* [Support resume tuner/advisor's state for experiment resume] 
-    * For experiment resume, tuner/advisor will be resumed by replaying finished trial data
-* [Web Portal] 
-    * Improve the design of copying trial's parameters
-    * Support 'randint' type in hyper-parameter graph
-    * Use should ComponentUpdate to avoid unnecessary render
+* 支持 Kubeflow v1beta2 操作符 
+    * 支持 Kubeflow TFJob/PyTorchJob v1beta2
+* [通过 NAS 编程接口](./GeneralNasInterfaces.md) 
+    * 实现了 NAS 的编程接口，可通过 NNI Annotation 很容易的表达神经网络架构搜索空间
+    * 提供新命令 `nnictl trial codegen` 来调试 NAS 代码生成部分
+    * 提供 NAS 编程接口教程，NAS 在 MNIST 上的示例，用于 NAS 的可定制的随机 Tuner
+* 支持在恢复 Experiment 时，同时恢复 Tuner 和 Advisor 的状态 
+    * 在恢复 Experiment 时，Tuner 和 Advisor 会导入已完成的 Trial 的数据。
+* Web 界面 
+    * 改进拷贝 Trial 参数的设计
+    * 在 hyper-parameter 图中支持 'randint' 类型
+    * 使用 ComponentUpdate 来避免不必要的刷新
 
 ## Bug 修复和其它更新
 
