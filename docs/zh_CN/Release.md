@@ -1,10 +1,10 @@
 # 更改日志
 
-# Release 0.8 - 6/4/2019
+# 发布 0.8 - 6/4/2019
 
-## Major Features
+## 主要功能
 
-* [Support NNI on Windows for PAI/Remote mode] 
+* [在 Windows 上支持 NNI 的 OpenPAI 和远程模式] 
     * NNI running on windows for remote mode
     * NNI running on windows for PAI mode
 * [Advanced features for using GPU] 
@@ -23,7 +23,7 @@
     * Support 'randint' type in hyper-parameter graph
     * Use should ComponentUpdate to avoid unnecessary render
 
-## Bug fix and other changes
+## Bug 修复和其它更新
 
 * [Bug fix that `nnictl update` has inconsistent command styles]
 * [Support import data for SMAC tuner]
@@ -35,15 +35,15 @@
 * [Comparison of NAS algorithm](./CommunitySharings/NasComparision.md)
 * [NNI practice on Recommenders](./CommunitySharings/NniPracticeSharing/RecommendersSvd.md)
 
-## Release 0.7 - 4/29/2018
+## 发布 0.7 - 4/29/2018
 
 ### 主要功能
 
-* [Support NNI on Windows](./WindowsLocalMode.md) 
-    * NNI running on windows for local mode
-* [New advisor: BOHB](./BohbAdvisor.md) 
-    * Support a new advisor BOHB, which is a robust and efficient hyperparameter tuning algorithm, combines the advantages of Bayesian optimization and Hyperband
-* [Support import and export experiment data through nnictl](./Nnictl.md#experiment) 
+* [支持在 Windows 上使用 NNI](./WindowsLocalMode.md) 
+    * NNI 可在 Windows 上使用本机模式
+* [支持新的 Advisor: BOHB](./BohbAdvisor.md) 
+    * 支持新的 BOHB Advisor，这是一个健壮而有效的超参调优算法，囊括了贝叶斯优化和 Hyperband 的优点
+* [支持通过 nnictl 来导入导出 Experiment 数据](./Nnictl.md#experiment) 
     * Generate analysis results report after the experiment execution
     * Support import data to tuner and advisor for tuning
 * [Designated gpu devices for NNI trial jobs](./ExperimentConfig.md#localConfig) 
