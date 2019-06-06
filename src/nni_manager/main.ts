@@ -154,7 +154,16 @@ mkDirP(getLogDir())
     console.error(`Failed to create log dir: ${err.stack}`);
 });
 
-process.on('SIGTERM', async () => {
+function getStopSignal(): any {
+    if (process.platform === "win32") {
+        return 'SIGBREAK';
+    }
+    else{
+        return 'SIGTERM';
+    }
+}
+
+process.on(getStopSignal(), async () => {
     const log: Logger = getLogger();
     let hasError: boolean = false;
     try {

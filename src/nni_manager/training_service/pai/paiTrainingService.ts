@@ -40,7 +40,8 @@ import { delay, generateParamFileName,
     getExperimentRootDir, getIPV4Address, getVersion, uniqueString } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { validateCodeDir } from '../common/util';
+import { validateCodeDir, execMkdir } from '../common/util';
+import { unixPathJoin } from '../../common/utils'
 import { HDFSClientUtility } from './hdfsClientUtility';
 import { NNIPAITrialConfig, PAIClusterConfig, PAIJobConfig, PAITaskRole } from './paiConfig';
 import { PAI_LOG_PATH_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_TRIAL_COMMAND_FORMAT, PAITrialJobDetail } from './paiData';
@@ -407,12 +408,12 @@ class PAITrainingService implements TrainingService {
         }
 
         // Step 1. Prepare PAI job configuration
-        const hdfsOutputDir : string = path.join(this.hdfsBaseDir, this.experimentId, trialJobId);
+        const hdfsOutputDir : string = unixPathJoin(this.hdfsBaseDir, this.experimentId, trialJobId);
         const hdfsCodeDir: string = HDFSClientUtility.getHdfsTrialWorkDir(this.paiClusterConfig.userName, trialJobId);
 
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         //create tmp trial working folder locally.
-        await cpp.exec(`mkdir -p ${trialLocalTempFolder}`);
+        await execMkdir(trialLocalTempFolder);
 
         const runScriptContent : string = CONTAINER_INSTALL_NNI_SHELL_FORMAT;
         // Write NNI installation file to local tmp files

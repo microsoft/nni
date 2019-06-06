@@ -1,16 +1,13 @@
 import * as React from 'react';
 import axios from 'axios';
 import ReactEcharts from 'echarts-for-react';
-import {
-    Row, Table, Button, Popconfirm, Modal, Checkbox
-} from 'antd';
+import { Row, Table, Button, Popconfirm, Modal, Checkbox } from 'antd';
 const CheckboxGroup = Checkbox.Group;
 import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/const';
 import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
-// import DefaultMetric from '../public-child/DefaultMetrc';
-import IntermediateVal from '../public-child/IntermediateVal';
+import IntermediateVal from '../public-child/IntermediateVal'; // table default metric column
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
 require('../../static/style/logPath.scss');
@@ -266,8 +263,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         sorter: (a: TableObj, b: TableObj) => (a.duration as number) - (b.duration as number),
                         render: (text: string, record: TableObj) => {
                             let duration;
-                            if (record.duration !== undefined && record.duration > 0) {
-                                duration = convertDuration(record.duration);
+                            if (record.duration !== undefined) {
+                                if (record.duration > 0 && record.duration < 1) {
+                                    duration = `${record.duration}s`;
+                                } else {
+                                    duration = convertDuration(record.duration);
+                                }
                             } else {
                                 duration = 0;
                             }

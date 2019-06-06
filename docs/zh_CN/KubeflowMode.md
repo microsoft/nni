@@ -204,6 +204,6 @@ Kubeflow 模式的配置有下列主键：
 
 ## 版本校验
 
-从 0.6 开始，NNI 支持版本校验，详情参考[这里](PAIMode.md)。
+从 0.6 开始，NNI 支持版本校验，详情参考[这里](PaiMode.md)。
 
 如果在使用 Kubeflow 模式时遇到任何问题，请到 [NNI Github](https://github.com/Microsoft/nni) 中创建问题。

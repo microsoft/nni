@@ -29,7 +29,7 @@ jobs:
     displayName: 'Install dependencies for integration tests'
   - script: |
       cd test
-      python generate_ts_config.py
+      python generate_ts_config.py --ts local
     displayName: 'generate config files'
   - script: |
       cd test

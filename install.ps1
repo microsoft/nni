@@ -17,7 +17,7 @@ $unzipYarnDir = "yarn-v*"
 # nuget
 $nugetUrl = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
 
-$NNI_DEPENDENCY_FOLDER = "C:\tmp\$env:USERNAME"
+$NNI_DEPENDENCY_FOLDER = [System.IO.Path]::GetTempPath()+$env:USERNAME
 
 $WHICH_PYTHON = where.exe python
 if($WHICH_PYTHON -eq $null){

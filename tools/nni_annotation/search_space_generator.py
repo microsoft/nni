@@ -21,6 +21,7 @@
 
 import ast
 import astor
+import numbers
 
 # pylint: disable=unidiomatic-typecheck
 
@@ -37,7 +38,8 @@ _ss_funcs = [
     'qnormal',
     'lognormal',
     'qlognormal',
-    'function_choice'
+    'function_choice',
+    'mutable_layer'
 ]
 
 
@@ -48,6 +50,20 @@ class SearchSpaceGenerator(ast.NodeTransformer):
         self.module_name = module_name
         self.search_space = {}
         self.last_line = 0  # last parsed line, useful for error reporting
+
+    def generate_mutable_layer_search_space(self, args):
+        mutable_block = args[0].s
+        mutable_layer = args[1].s
+        key = self.module_name + '/' + mutable_block
+        args[0].s = key
+        if key not in self.search_space:
+            self.search_space[key] = dict()
+        self.search_space[key][mutable_layer] = {
+            'layer_choice': [k.s for k in args[2].keys],
+            'optional_inputs': [k.s for k in args[5].keys],
+            'optional_input_size': args[6].n if isinstance(args[6], ast.Num) else [args[6].elts[0].n, args[6].elts[1].n]
+        }
+
 
     def visit_Call(self, node):  # pylint: disable=invalid-name
         self.generic_visit(node)
@@ -66,6 +82,10 @@ class SearchSpaceGenerator(ast.NodeTransformer):
             return node
 
         self.last_line = node.lineno
+
+        if func == 'mutable_layer':
+            self.generate_mutable_layer_search_space(node.args)
+            return node
 
         if node.keywords:
             # there is a `name` argument
@@ -87,8 +107,9 @@ class SearchSpaceGenerator(ast.NodeTransformer):
             args = [key.n if type(key) is ast.Num else key.s for key in node.args[0].keys]
         else:
             # arguments of other functions must be literal number
-            assert all(type(arg) is ast.Num for arg in node.args), 'Smart parameter\'s arguments must be number literals'
-            args = [arg.n for arg in node.args]
+            assert all(isinstance(ast.literal_eval(astor.to_source(arg)), numbers.Real) for arg in node.args), \
+            'Smart parameter\'s arguments must be number literals'
+            args = [ast.literal_eval(astor.to_source(arg)) for arg in node.args]
 
         key = self.module_name + '/' + name + '/' + func
         # store key in ast.Call

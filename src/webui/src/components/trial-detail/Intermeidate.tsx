@@ -11,16 +11,21 @@ interface Intermedia {
     data: Array<number | object>; // intermediate data
     hyperPara: object; // each trial hyperpara value
 }
+
 interface IntermediateState {
+    detailSource: Array<TableObj>;
     interSource: object;
     filterSource: Array<TableObj>;
     eachIntermediateNum: number; // trial's intermediate number count
     isLoadconfirmBtn: boolean;
     isFilter: boolean;
+    length: number; 
+    clickCounts: number; // user filter intermediate click confirm btn's counts
 }
 
 interface IntermediateProps {
     source: Array<TableObj>;
+    whichGraph: string;
 }
 
 class Intermediate extends React.Component<IntermediateProps, IntermediateState> {
@@ -34,39 +39,25 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
     constructor(props: IntermediateProps) {
         super(props);
         this.state = {
+            detailSource: [],
             interSource: {},
             filterSource: [],
             eachIntermediateNum: 1,
             isLoadconfirmBtn: false,
-            isFilter: false
+            isFilter: false,
+            length: 100000,
+            clickCounts: 0
         };
-    }
-
-    initMediate = () => {
-        const option = {
-            grid: {
-                left: '5%',
-                top: 40,
-                containLabel: true
-            },
-            xAxis: {
-                type: 'category',
-                boundaryGap: false,
-            },
-            yAxis: {
-                type: 'value',
-                name: 'Scape'
-            }
-        };
-        if (this._isMounted) {
-            this.setState(() => ({
-                interSource: option
-            }));
-        }
     }
 
     drawIntermediate = (source: Array<TableObj>) => {
         if (source.length > 0) {
+            if (this._isMounted) {
+                this.setState(() => ({
+                    length: source.length,
+                    detailSource: source
+                }));
+            }
             const trialIntermediate: Array<Intermedia> = [];
             Object.keys(source).map(item => {
                 const temp = source[item];
@@ -124,13 +115,13 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 },
                 xAxis: {
                     type: 'category',
-                    name: 'Scape',
+                    name: 'Step',
                     boundaryGap: false,
                     data: xAxis
                 },
                 yAxis: {
                     type: 'value',
-                    name: 'Intermediate'
+                    name: 'metric'
                 },
                 series: trialIntermediate
             };
@@ -140,7 +131,24 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 }));
             }
         } else {
-            this.initMediate();
+            const nullData = {
+                grid: {
+                    left: '5%',
+                    top: 40,
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Scape'
+                }
+            };
+            if (this._isMounted) {
+                this.setState(() => ({ interSource: nullData }));
+            }
         }
     }
 
@@ -183,8 +191,9 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         this.setState({ filterSource: filterSource });
                     }
                     this.drawIntermediate(filterSource);
+                    const counts = this.state.clickCounts + 1;
+                    this.setState({ isLoadconfirmBtn: false, clickCounts: counts });
                 }
-                this.setState({ isLoadconfirmBtn: false });
             });
         }
     }
@@ -204,19 +213,65 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
         this.drawIntermediate(source);
     }
 
-    componentWillReceiveProps(nextProps: IntermediateProps) {
-        const { isFilter, filterSource } = this.state;
-        if (isFilter === true) {
-            const pointVal = this.pointInput !== null ? this.pointInput.value : '';
-            const minVal = this.minValInput !== null ? this.minValInput.value : '';
-            if (pointVal === '' && minVal === '') {
-                this.drawIntermediate(nextProps.source);
+    componentWillReceiveProps(nextProps: IntermediateProps, nextState: IntermediateState) {
+        const { isFilter, filterSource } = nextState;
+        const { whichGraph, source } = nextProps;
+        
+        if (whichGraph === '4') {
+            if (isFilter === true) {
+                const pointVal = this.pointInput !== null ? this.pointInput.value : '';
+                const minVal = this.minValInput !== null ? this.minValInput.value : '';
+                if (pointVal === '' && minVal === '') {
+                    this.drawIntermediate(source);
+                } else {
+                    this.drawIntermediate(filterSource);
+                }
             } else {
-                this.drawIntermediate(filterSource);
+                this.drawIntermediate(source);
             }
-        } else {
-            this.drawIntermediate(nextProps.source);
         }
+    }
+
+    shouldComponentUpdate(nextProps: IntermediateProps, nextState: IntermediateState) {
+        const { whichGraph } = nextProps;
+        const beforeGraph = this.props.whichGraph;
+        if (whichGraph === '4') {
+            
+            const { source } = nextProps;
+            const { isFilter, length, clickCounts } = nextState;
+            const beforeLength = this.state.length;
+            const beforeSource = this.state.detailSource;
+            const beforeClickCounts = this.state.clickCounts;
+    
+            if (isFilter !== this.state.isFilter) {
+                return true;
+            }
+
+            if (clickCounts !== beforeClickCounts) {
+                return true;
+            }
+            
+            if (isFilter === false) {
+                if (whichGraph !== beforeGraph) {
+                    return true;
+                }
+                if (length !== beforeLength) {
+                    return true;
+                }
+                if (source[source.length - 1].description.intermediate.length !==
+                    beforeSource[beforeSource.length - 1].description.intermediate.length) {
+                    return true;
+                }
+                if (source[source.length - 1].duration !== beforeSource[beforeSource.length - 1].duration) {
+                    return true;
+                }
+                if (source[source.length - 1].status !== beforeSource[beforeSource.length - 1].status) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     componentWillUnmount() {
@@ -225,7 +280,6 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
 
     render() {
         const { interSource, isLoadconfirmBtn, isFilter } = this.state;
-
         return (
             <div>
                 {/* style in para.scss */}

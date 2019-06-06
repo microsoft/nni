@@ -3,9 +3,10 @@ import * as copy from 'copy-to-clipboard';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
 import { TableObj } from '../../static/interface';
-import { Row, Tabs, Button, message } from 'antd';
+import { Row, Tabs, Button, message, Modal } from 'antd';
 import { MANAGER_IP } from '../../static/const';
 import '../../static/style/overview.scss';
+import '../../static/style/copyParameter.scss';
 import JSONTree from 'react-json-tree';
 const TabPane = Tabs.TabPane;
 
@@ -17,43 +18,62 @@ interface OpenRowProps {
 }
 
 interface OpenRowState {
-    idList: Array<string>;
+    isShowFormatModal: boolean;
+    formatStr: string;
 }
 
 class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
 
+    public _isMounted: boolean;
     constructor(props: OpenRowProps) {
         super(props);
         this.state = {
-            idList: ['']
+            isShowFormatModal: false,
+            formatStr: ''
         };
-
     }
 
-    copyParams = (record: TableObj) => {
-        // json format
+    showFormatModal = (record: TableObj) => {
+        // get copy parameters
         const params = JSON.stringify(record.description.parameters, null, 4);
-        if (copy(params)) {
+        // open modal with format string
+        if (this._isMounted === true) {
+            this.setState(() => ({ isShowFormatModal: true, formatStr: params }));
+        }
+    }
+
+    hideFormatModal = () => {
+        // close modal, destroy state format string data
+        if (this._isMounted === true) {
+            this.setState(() => ({ isShowFormatModal: false, formatStr: '' }));
+        }
+    }
+
+    copyParams = () => {
+        // json format
+        const { formatStr } = this.state;
+        if (copy(formatStr)) {
             message.destroy();
             message.success('Success copy parameters to clipboard in form of python dict !', 3);
-            const { idList } = this.state;
-            const copyIdList: Array<string> = idList;
-            copyIdList[copyIdList.length - 1] = record.id;
-            this.setState(() => ({
-                idList: copyIdList
-            }));
         } else {
             message.destroy();
             message.error('Failed !', 2);
         }
+        this.hideFormatModal();
     }
 
+    componentDidMount() {
+        this._isMounted = true;
+    }
+
+    componentWillUnmount() {
+        this._isMounted = false;
+    }
     render() {
         const { trainingPlatform, record, logCollection, multiphase } = this.props;
-        const { idList } = this.state;
+        const { isShowFormatModal, formatStr } = this.state;
         let isClick = false;
         let isHasParameters = true;
-        if (idList.indexOf(record.id) !== -1) { isClick = true; }
         if (record.description.parameters.error) {
             isHasParameters = false;
         }
@@ -101,9 +121,9 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                     </Row>
                                     <Row className="copy">
                                         <Button
-                                            onClick={this.copyParams.bind(this, record)}
+                                            onClick={this.showFormatModal.bind(this, record)}
                                         >
-                                            Copy as python
+                                            Copy as json
                                         </Button>
                                     </Row>
                                 </Row>
@@ -128,6 +148,21 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                         }
                     </TabPane>
                 </Tabs>
+                <Modal
+                    title="Format"
+                    okText="Copy"
+                    centered={true}
+                    visible={isShowFormatModal}
+                    onCancel={this.hideFormatModal}
+                    maskClosable={false} // click mongolian layer don't close modal
+                    onOk={this.copyParams}
+                    destroyOnClose={true}
+                    width="60%"
+                    className="format"
+                >
+                    {/* write string in pre to show format string */}
+                    <pre className="formatStr">{formatStr}</pre>
+                </Modal>
             </Row >
         );
     }
