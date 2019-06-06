@@ -49,7 +49,7 @@ common_schema = {
     'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$',error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
-    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller'),
+    'trainingServicePlatform': setChoice('trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'aether'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -312,6 +312,15 @@ frameworkcontroller_config_schema = {
     })
 }
 
+aether_trial_schema = {
+    'trial': {
+        'codeDir': setPathCheck('codeDir'),
+        'baseGraph': setPathCheck('baseGraph'),
+        'outputNodeAlias': Regex('([0-9]|[a-f]){8}'),
+        'outputName': setType('outputName', str)
+    }
+}
+
 machine_list_schema = {
 Optional('machineList'):[Or({
     'ip': setType('ip', str),
@@ -342,3 +351,5 @@ PAI_CONFIG_SCHEMA = Schema({**common_schema, **pai_trial_schema, **pai_config_sc
 KUBEFLOW_CONFIG_SCHEMA = Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema})
 
 FRAMEWORKCONTROLLER_CONFIG_SCHEMA = Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema})
+
+AETHER_CONFIG_SCHEMA = Schema({**common_schema, **aether_trial_schema})
