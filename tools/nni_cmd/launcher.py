@@ -251,11 +251,9 @@ def set_kubeflow_config(experiment_config, port, config_file_name):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
-    print_normal('-------------line 254-------------------')
     result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
-    print_normal('-------------line 258-------------------')
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
@@ -463,7 +461,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
     
-    #set kubeflow config
+    #set frameworkcontroller config
     if experiment_config['trainingServicePlatform'] == 'frameworkcontroller':
         print_normal('Setting frameworkcontroller config...')
         config_result, err_msg = set_frameworkcontroller_config(experiment_config, args.port, config_file_name)
