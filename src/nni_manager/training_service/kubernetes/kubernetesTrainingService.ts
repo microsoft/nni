@@ -230,25 +230,28 @@ abstract class KubernetesTrainingService {
         return this.nextTrialSequenceId++;
     }
 
+    // tslint:disable: no-unsafe-any no-any
     protected async createAzureStorage(vaultName: string, valutKeyName: string, accountName: string, azureShare: string): Promise<void> {
         try {
-            const result = await cpp.exec(`az keyvault secret show --name ${valutKeyName} --vault-name ${vaultName}`);
-            if(result.stderr) {
+            const result: any = await cpp.exec(`az keyvault secret show --name ${valutKeyName} --vault-name ${vaultName}`);
+            if (result.stderr !== undefined && result.stderr !== null) {
                 const errorMessage: string = result.stderr;
                 this.log.error(errorMessage);
+
                 return Promise.reject(errorMessage);
             }
-            const storageAccountKey =JSON.parse(result.stdout).value;
+            const storageAccountKey: any = JSON.parse(result.stdout).value;
             //create storage client
             this.azureStorageClient = azure.createFileService(this.azureStorageAccountName, storageAccountKey);
             await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
             //create sotrage secret
-            this.azureStorageSecretName = 'nni-secret-' + uniqueString(8).toLowerCase();
+            this.azureStorageSecretName = String.Format('nni-secret-{0}', uniqueString(8)
+                                                                            .toLowerCase());
             await this.genericK8sClient.createSecret(
                 {
                     apiVersion: 'v1',
                     kind: 'Secret',
-                    metadata: { 
+                    metadata: {
                         name: this.azureStorageSecretName,
                         namespace: 'default',
                         labels: {
@@ -263,12 +266,15 @@ abstract class KubernetesTrainingService {
                     }
                 }
             );
-        } catch(error) {
+        } catch (error) {
             this.log.error(error);
+
             return Promise.reject(error);
         }
+
         return Promise.resolve();
     }
+    // tslint:enable: no-unsafe-any no-any
 
     /**
      * Genereate run script for different roles(like worker or ps)
