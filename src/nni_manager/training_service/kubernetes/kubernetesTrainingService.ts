@@ -232,28 +232,23 @@ abstract class KubernetesTrainingService {
 
     protected async createAzureStorage(vaultName: string, valutKeyName: string, accountName: string, azureShare: string): Promise<void> {
         try {
-            // tslint:disable-next-line:typedef
             const result = await cpp.exec(`az keyvault secret show --name ${valutKeyName} --vault-name ${vaultName}`);
-            if (result.stderr !== undefined && result.stderr !== null) {
+            if(result.stderr) {
                 const errorMessage: string = result.stderr;
                 this.log.error(errorMessage);
-
                 return Promise.reject(errorMessage);
             }
-            // tslint:disable: no-unsafe-any
-            const storageAccountKey: string = JSON.parse(result.stdout).value;
+            const storageAccountKey =JSON.parse(result.stdout).value;
             //create storage client
             this.azureStorageClient = azure.createFileService(this.azureStorageAccountName, storageAccountKey);
-            // tslint:enable: no-unsafe-any
             await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
             //create sotrage secret
-            this.azureStorageSecretName = String.Format('nni-secret-{0}', uniqueString(8)
-                                                                            .toLowerCase());
+            this.azureStorageSecretName = 'nni-secret-' + uniqueString(8).toLowerCase();
             await this.genericK8sClient.createSecret(
                 {
                     apiVersion: 'v1',
                     kind: 'Secret',
-                    metadata: {
+                    metadata: { 
                         name: this.azureStorageSecretName,
                         namespace: 'default',
                         labels: {
@@ -263,19 +258,15 @@ abstract class KubernetesTrainingService {
                     },
                     type: 'Opaque',
                     data: {
-                        // tslint:disable: no-unsafe-any
                         azurestorageaccountname: base64.encode(this.azureStorageAccountName),
                         azurestorageaccountkey: base64.encode(storageAccountKey)
-                        // tslint:enable: no-unsafe-any
                     }
                 }
             );
-        } catch (error) {
+        } catch(error) {
             this.log.error(error);
-
             return Promise.reject(error);
         }
-
         return Promise.resolve();
     }
 
