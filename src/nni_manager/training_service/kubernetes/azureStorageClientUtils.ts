@@ -208,13 +208,13 @@ export namespace AzureStorageClientUtility {
 
             for (const fileName of result.entries.files) {
                 const fullFilePath: string = path.join(localDirectory, fileName.name);
-                downloadFile(fileServerClient, azureDirectory, fileName.name, azureShare, fullFilePath);
+                await downloadFile(fileServerClient, azureDirectory, fileName.name, azureShare, fullFilePath);
             }
 
             for (const directoryName of result.entries.directories) {
                 const fullDirectoryPath: string = path.join(localDirectory, directoryName.name);
                 const fullAzureDirectory: string = path.join(azureDirectory, directoryName.name);
-                downloadDirectory(fileServerClient, fullAzureDirectory, azureShare, fullDirectoryPath);
+                await downloadDirectory(fileServerClient, fullAzureDirectory, azureShare, fullDirectoryPath);
             }
             deferred.resolve();
         });
