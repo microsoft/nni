@@ -54,12 +54,14 @@ class SearchSpaceGenerator(ast.NodeTransformer):
     def generate_mutable_layer_search_space(self, args):
         mutable_block = args[0].s
         mutable_layer = args[1].s
-        if mutable_block not in self.search_space:
-            self.search_space[mutable_block] = dict()
-        self.search_space[mutable_block][mutable_layer] = {
-            'layer_choice': [key.s for key in args[2].keys],
-            'optional_inputs': [key.s for key in args[5].keys],
-            'optional_input_size': args[6].n
+        key = self.module_name + '/' + mutable_block
+        args[0].s = key
+        if key not in self.search_space:
+            self.search_space[key] = dict()
+        self.search_space[key][mutable_layer] = {
+            'layer_choice': [k.s for k in args[2].keys],
+            'optional_inputs': [k.s for k in args[5].keys],
+            'optional_input_size': args[6].n if isinstance(args[6], ast.Num) else [args[6].elts[0].n, args[6].elts[1].n]
         }
 
 

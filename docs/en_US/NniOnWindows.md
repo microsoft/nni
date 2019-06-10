@@ -4,7 +4,7 @@ Currently we support local, remote and pai mode on Windows. Windows 10.1809 is w
 
 ## **Installation on Windows**
 
-  please refer to [Installation](Installation.md#installation-on-windows) for more details.
+  please refer to [Installation](Installation.md) for more details.
 
 When these things are done, use the **config_windows.yml** configuration to start an experiment for validation.
 

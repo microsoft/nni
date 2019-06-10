@@ -10,7 +10,7 @@
 
 NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包。 它通过多种调优的算法来搜索最好的神经网络结构和（或）超参，并支持单机、本地多机、云等不同的运行环境。
 
-### **NNI [v0.7](https://github.com/Microsoft/nni/releases) 已发布！**
+### **NNI [v0.8](https://github.com/Microsoft/nni/releases) 已发布！**
 
 <p align="center">
   <a href="#nni-v05-has-been-released"><img src="docs/img/overview.svg" /></a>
@@ -55,14 +55,14 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="docs/zh_CN/BuiltinTuner.md#Evolution">Naive Evolution（进化算法）</a></li>
           <li><a href="docs/zh_CN/BuiltinTuner.md#SMAC">SMAC</a></li>
           <li><a href="docs/zh_CN/BuiltinTuner.md#Batch">Batch（批处理）</a></li>
-          <li><a href="docs/en_US/BuiltinTuner.md#GridSearch">Grid Search（遍历搜索）</a></li>
+          <li><a href="docs/zh_CN/BuiltinTuner.md#GridSearch">Grid Search（遍历搜索）</a></li>
           <li><a href="docs/zh_CN/BuiltinTuner.md#Hyperband">Hyperband</a></li>
           <li><a href="docs/zh_CN/BuiltinTuner.md#NetworkMorphism">Network Morphism</a></li>
           <li><a href="examples/tuners/enas_nni/README_zh_CN.md">ENAS</a></li>
-          <li><a href="docs/en_US/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
+          <li><a href="docs/zh_CN/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
           <li><a href="docs/zh_CN/BuiltinTuner.md#BOHB">BOHB</a></li>
         </ul>
-          <a href="docs/en_US/BuiltinAssessors.md">Assessor（评估器）</a> 
+          <a href="docs/zh_CN/BuiltinAssessors.md">Assessor（评估器）</a> 
         <ul>
           <li><a href="docs/zh_CN/BuiltinAssessors.md#Medianstop">Median Stop</a></li>
           <li><a href="docs/zh_CN/BuiltinAssessors.md#Curvefitting">Curve Fitting</a></li>
