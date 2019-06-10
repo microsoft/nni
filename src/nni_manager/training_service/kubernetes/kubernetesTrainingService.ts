@@ -234,7 +234,7 @@ abstract class KubernetesTrainingService {
     protected async createAzureStorage(vaultName: string, valutKeyName: string, accountName: string, azureShare: string): Promise<void> {
         try {
             const result: any = await cpp.exec(`az keyvault secret show --name ${valutKeyName} --vault-name ${vaultName}`);
-            if (result.stderr !== undefined && result.stderr !== null) {
+            if (result.stderr) {
                 const errorMessage: string = result.stderr;
                 this.log.error(errorMessage);
 
