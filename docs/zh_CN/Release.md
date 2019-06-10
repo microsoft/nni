@@ -191,42 +191,42 @@
 * [Hyperband Tuner](HyperbandAdvisor.md)
 * 支持在 MAC 上运行 NNI Experiment
 * Web 界面 
-    * UI support for hyperband tuner
-    * Remove tensorboard button
-    * Show experiment error message
-    * Show line numbers in search space and trial profile
-    * Support search a specific trial by trial number
-    * Show trial's hdfsLogPath
-    * Download experiment parameters
+    * 支持 hyperband Tuner
+    * 移除 tensorboard 按钮
+    * 显示 Experiment 的错误消息
+    * 显示搜索空间和 Trial 配置的行号
+    * 支持通过指定的 Trial id 来搜索
+    * 显示 Trial 的 hdfsLogPath
+    * 下载 Experiment 参数
 
 ### 其它
 
-* Asynchronous dispatcher
-* Docker file update, add pytorch library 
-* Refactor 'nnictl stop' process, send SIGTERM to nni manager process, rather than calling stop Rest API. 
-* OpenPAI training service bug fix 
-    * Support NNI Manager IP configuration(nniManagerIp) in OpenPAI cluster config file, to fix the issue that user’s machine has no eth0 device 
-    * File number in codeDir is capped to 1000 now, to avoid user mistakenly fill root dir for codeDir
-    * Don’t print useless ‘metrics is empty’ log in OpenPAI job’s stdout. Only print useful message once new metrics are recorded, to reduce confusion when user checks OpenPAI trial’s output for debugging purpose
-    * Add timestamp at the beginning of each log entry in trial keeper.
+* 异步调度
+* 更新 Docker 文件，增加 pytorch 库 
+* 重构 'nnictl stop' 过程，发送 SIGTERM 给 NNI 管理器进程，而不是调用停止 Restful API. 
+* 修复 OpenPAI 训练服务的 Bug 
+    * 在 NNI 管理器中为 OpenPAI 集群配置文件支持 IP 配置(nniManagerIp)，来修复用户计算机没有 eth0 设备的问题。 
+    * codeDir 中的文件数量上限改为1000，避免用户无意中填写了 root 目录。
+    * 移除 OpenPAI 作业的 stdout 日志中无用的 ‘metrics is empty’。 在新指标被记录时，仅输出有用的消息，来减少用户检查 OpenPAI Trial 输出时的困惑。
+    * 在 Trial keeper 的开始增加时间戳。
 
-## Release 0.3.0 - 11/2/2018
+## 发布 0.3.0 - 11/2/2018
 
 ### NNICTL 的新功能和更新
 
-* Support running multiple experiments simultaneously.
+* 支持同时运行多个 Experiment。
     
-    Before v0.3, NNI only supports running single experiment once a time. After this release, users are able to run multiple experiments simultaneously. Each experiment will require a unique port, the 1st experiment will be set to the default port as previous versions. You can specify a unique port for the rest experiments as below:
+    在 v0.3 以前，NNI 仅支持一次运行一个 Experiment。 此版本开始，用户可以同时运行多个 Experiment。 每个 Experiment 都需要一个唯一的端口，第一个 Experiment 会像以前版本一样使用默认端口。 需要为其它 Experiment 指定唯一端口：
     
     ```bash
     nnictl create --port 8081 --config <config file path>
     ```
 
-* Support updating max trial number. use `nnictl update --help` to learn more. Or refer to [NNICTL Spec](Nnictl.md) for the fully usage of NNICTL.
+* 支持更新最大 Trial 的数量。 使用 `nnictl update --help` 了解详情。 或参考 [NNICTL](Nnictl.md) 查看完整帮助。
 
 ### API 的新功能和更新
 
-* <span style="color:red"><strong>breaking change</strong></span>: nn.get_parameters() is refactored to nni.get_next_parameter. 所有以前版本的样例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新样例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
+* <span style="color:red"><strong>不兼容的改动</strong></span>：nn.get_parameters() 改为 nni.get_next_parameter。 所有以前版本的样例将无法在 v0.3 上运行，需要重新克隆 NNI 代码库获取新样例。 如果在自己的代码中使用了 NNI，也需要相应的更新。
 
 * 新 API **nni.get_sequence_id()**。 每个 Trial 任务都会被分配一个唯一的序列数字，可通过 nni.get_sequence_id() API 来获取。
     
