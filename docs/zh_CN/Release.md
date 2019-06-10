@@ -25,10 +25,10 @@
 
 ## Bug 修复和其它更新
 
-* [Bug fix that `nnictl update` has inconsistent command styles]
-* [Support import data for SMAC tuner]
-* [Bug fix that experiment state transition from ERROR back to RUNNING]
-* [Fix bug of table entries]
+* 修复 `nnictl update` 不一致的命令行风格
+* SMAC Tuner 支持导入数据
+* 支持 Experiment 状态从 ERROR 回到 RUNNING
+* 修复表格的 Bug
 * [Nested search space refinement]
 * [Refine 'randint' type and support lower bound]
 * [Comparison of different hyper-parameter tuning algorithm](./CommunitySharings/HpoComparision.md)
