@@ -99,17 +99,17 @@
 | HyperBand     | 0.416807     | 0.417549      | 0.418828      |
 | HyperBand     | 0.415550     | 0.415977      | 0.417186      |
 
-For Metis, there are about 300 trials because it runs slowly due to its high time complexity O(n^3) in Gaussian Process.
+Metis 算法因为其高斯计算过程的复杂度为 O(n^3) 而运行非常慢，因此仅执行了 300 次 Trial。
 
-## RocksDB Benchmark 'fillrandom' and 'readrandom'
+## RocksDB 的 'fillrandom' 和 'readrandom' 基准测试
 
-### Problem Description
+### 问题描述
 
-[DB_Bench](https://github.com/facebook/rocksdb/wiki/Benchmarking-tools) is the main tool that is used to benchmark [RocksDB](https://rocksdb.org/)'s performance. It has so many hapermeter to tune.
+[DB_Bench](https://github.com/facebook/rocksdb/wiki/Benchmarking-tools) 是用来做 [RocksDB](https://rocksdb.org/) 性能基准测试的工具。 有多个参数需要调优。
 
-The performance of `DB_Bench` is associated with the machine configuration and installation method. We run the `DB_Bench`in the Linux machine and install the Rock in shared library.
+`DB_Bench` 的性能与计算机配置和安装方法有关。 在 `DB_Bench` Linux 系统上运行，并将 Rock 作为共享库安装。
 
-#### Machine configuration
+#### 计算机配置
 
     RocksDB:    version 6.1
     CPU:        6 * Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz
@@ -119,19 +119,19 @@ The performance of `DB_Bench` is associated with the machine configuration and i
     Entries:    1000000
     
 
-#### Storage performance
+#### 存储性能
 
-**Latency**: each IO request will take some time to complete, this is called the average latency. There are several factors that would affect this time including network connection quality and hard disk IO performance.
+**延迟**：每个 IO 请求都需要一些时间才能完成，这称为平均延迟。 有几个因素会影响此时间，包括网络连接质量和硬盘IO性能。
 
-**IOPS**: **IO operations per second**, which means the amount of *read or write operations* that could be done in one seconds time.
+**IOPS**： **每秒的 IO 操作数量**，这意味着可以在一秒钟内完成的*读取或写入操作次数*。
 
-**IO size**: **the size of each IO request**. Depending on the operating system and the application/service that needs disk access it will issue a request to read or write a certain amount of data at the same time.
+**IO 大小**： **每个 IO 请求的大小**。 根据操作系统和需要磁盘访问的应用程序、服务，它将同时发出读取或写入一定数量数据的请求。
 
-**Throughput (in MB/s) = Average IO size x IOPS **
+**吞吐量（以 MB/s 为单位）= 平均 IO 大小 x IOPS **
 
-IOPS is related to online processing ability and we use the IOPS as the metric in my experiment.
+IOPS 与在线处理能力有关，我们在实验中使用 IOPS 作为指标。
 
-### Search Space
+### 搜索空间
 
 ```json
 {
@@ -182,35 +182,35 @@ IOPS is related to online processing ability and we use the IOPS as the metric i
 }
 ```
 
-The search space is enormous (about 10^40) and we set the maximum number of trial to 100 to limit the computation resource.
+搜索空间非常大（约10 的 40 次方），将最大 Trial 次数设置为 100 以限制资源。
 
-### Results
+### 结果
 
-#### fillrandom' Benchmark
+#### fillrandom 基准
 
-| Model     | Best IOPS (Repeat 1) | Best IOPS (Repeat 2) | Best IOPS (Repeat 3) |
-| --------- | -------------------- | -------------------- | -------------------- |
-| Random    | 449901               | 427620               | 477174               |
-| Anneal    | 461896               | 467150               | 437528               |
-| Evolution | 436755               | 389956               | 389790               |
-| TPE       | 378346               | 482316               | 468989               |
-| SMAC      | 491067               | 490472               | **491136**           |
-| Metis     | 444920               | 457060               | 454438               |
+| 模型        | 最高 IOPS（重复 1 次） | 最高 IOPS（重复 2 次） | 最高 IOPS（重复 3 次） |
+| --------- | --------------- | --------------- | --------------- |
+| Random    | 449901          | 427620          | 477174          |
+| Anneal    | 461896          | 467150          | 437528          |
+| Evolution | 436755          | 389956          | 389790          |
+| TPE       | 378346          | 482316          | 468989          |
+| SMAC      | 491067          | 490472          | **491136**      |
+| Metis     | 444920          | 457060          | 454438          |
 
 Figure:
 
 ![](../../img/hpo_rocksdb_fillrandom.png)
 
-#### 'readrandom' Benchmark
+#### readrandom 基准
 
-| Model     | Best IOPS (Repeat 1) | Best IOPS (Repeat 2) | Best IOPS (Repeat 3) |
-| --------- | -------------------- | -------------------- | -------------------- |
-| Random    | 2276157              | 2285301              | 2275142              |
-| Anneal    | 2286330              | 2282229              | 2284012              |
-| Evolution | 2286524              | 2283673              | 2283558              |
-| TPE       | 2287366              | 2282865              | 2281891              |
-| SMAC      | 2270874              | 2284904              | 2282266              |
-| Metis     | **2287696**          | 2283496              | 2277701              |
+| 模型        | 最高 IOPS（重复 1 次） | 最高 IOPS（重复 2 次） | 最高 IOPS（重复 3 次） |
+| --------- | --------------- | --------------- | --------------- |
+| Random    | 2276157         | 2285301         | 2275142         |
+| Anneal    | 2286330         | 2282229         | 2284012         |
+| Evolution | 2286524         | 2283673         | 2283558         |
+| TPE       | 2287366         | 2282865         | 2281891         |
+| SMAC      | 2270874         | 2284904         | 2282266         |
+| Metis     | **2287696**     | 2283496         | 2277701         |
 
 Figure:
 
