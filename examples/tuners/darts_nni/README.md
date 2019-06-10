@@ -6,4 +6,4 @@
  turns discrete problems into a continuous ones is its major advantage.
  Darts successfuly improves three orders of magnitudes in speed, compared to previous methods.
 
- Our teams' project "DARTS for nni" is in this [repo](https://github.com/microsoft/nni)
+ Our teams' project "DARTS for nni" is in this [repo](https://github.com/VDeamoV/darts_for_nni)
