@@ -121,16 +121,16 @@ One-Shot NAS 示例。
 
 ## [**待实现**] NAS 的一般调优算法。
 
-与超参数调优一样，NAS 也需要相对通用的算法。 The general programming interface makes this task easier to some extent. We have a RL-based tuner algorithm for NAS from our contributors. We expect efforts from community to design and implement better NAS algorithms.
+与超参数调优一样，NAS 也需要相对通用的算法。 通用编程接口使其更容易。 贡献者为 NAS 提供了基于 RL 的调参算法。 期待社区努力设计和实施更好的 NAS 调优算法。
 
-More tuning algorithms for NAS.
+NAS 的一般调优算法。
 
-## [**TODO**] Export best neural architecture and code
+## [**待实现**] 导出最佳神经网络架构和代码
 
-After the NNI experiment is done, users could run `nnictl experiment export --code` to export the trial code with the best neural architecture.
+Experiment 完成后，可通过 `nnictl experiment export --code` 来导出用最好的神经网络结构和 Trial 代码。
 
 ## 结论和未来的工作
 
-There could be different NAS algorithms and execution modes, but they could be supported with the same programming interface as demonstrated above.
+如本文所示，不同的 NAS 算法和执行模式，可通过相同的编程接口来支持。
 
-There are many interesting research topics in this area, both system and machine learning.
+在这一领域有许多系统和机器学习方向的有趣的研究主题。
