@@ -97,7 +97,7 @@ NNI 的 Annotation 编译器会将 Trial 代码转换为可以接收架构选择
 
 [使用 NAS 的简单示例](https://github.com/microsoft/nni/tree/v0.8/examples/trials/mnist-nas)。
 
-### [**待实现**] 权重分享
+### [**待实现**] 权重共享
 
 在所选择的架构（即 Trial）之间共享权重可以加速模型搜索。 例如，适当地继承已完成 Trial 的权重可加速新 Trial 的收敛。 One-shot NAS（例如，ENAS，Darts）更为激进，不同架构（即子图）的训练会在完整图中共享相同的权重。
 
@@ -105,7 +105,7 @@ NNI 的 Annotation 编译器会将 Trial 代码转换为可以接收架构选择
 
 权重分配（转移）在加速 NAS 中有关键作用，而找到有效的权重共享方式仍是热门的研究课题。 NNI 提供了一个键值存储，用于存储和加载权重。 Tuner 和 Trial 使用 KV 客户端库来访问存储。
 
-NNI 上的权重分享示例。
+NNI 上的权重共享示例。
 
 ### [**待实现**] 支持 One-Shot NAS
 
