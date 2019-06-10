@@ -4,6 +4,6 @@
 ..  toctree::
     :maxdepth: 1
 
-    Overview<BuiltinAssessor>
+    介绍<BuiltinAssessor>
     Medianstop<MedianstopAssessor>
     Curvefitting<CurvefittingAssessor>
