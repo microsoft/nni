@@ -1,42 +1,42 @@
-# Hyperparameter Optimization Comparison
+# 超参数优化的对比
 
-*Posted by Anonymous Author*
+*匿名作者*
 
-Comparison of Hyperparameter Optimization algorithms on several problems.
+超参优化算法在几个问题上的对比。
 
-Hyperparameter Optimization algorithms are list below:
+超参数优化算法如下：
 
-- [Random Search](../BuiltinTuner.md)
-- [Grid Search](../BuiltinTuner.md)
+- [Random Search（随机搜索）](../BuiltinTuner.md)
+- [Grid Search（遍历搜索）](../BuiltinTuner.md)
 - [Evolution](../BuiltinTuner.md)
-- [Anneal](../BuiltinTuner.md)
+- [Anneal（退火算法）](../BuiltinTuner.md)
 - [Metis](../BuiltinTuner.md)
 - [TPE](../BuiltinTuner.md)
 - [SMAC](../BuiltinTuner.md)
 - [HyperBand](../BuiltinTuner.md)
 - [BOHB](../BuiltinTuner.md)
 
-All algorithms run in NNI local environment.
+所有算法都在 NNI 本机环境下运行。
 
-Machine Environment：
+环境：
 
     OS: Linux Ubuntu 16.04 LTS
     CPU: Intel(R) Xeon(R) CPU E5-2690 v3 @ 2.60GHz 2600 MHz
     Memory: 112 GB
     NNI Version: v0.7
-    NNI Mode(local|pai|remote): local
-    Python version: 3.6
-    Is conda or virtualenv used?: Conda
-    is running in docker?: no
+    NNI 模式(local|pai|remote): local
+    Python 版本: 3.6
+    使用的虚拟环境: Conda
+    是否在 Docker 中运行: no
     
 
-## AutoGBDT Example
+## AutoGBDT 示例
 
-### Problem Description
+### 问题描述
 
-Nonconvex problem on the hyper-parameter search of [AutoGBDT](../gbdt_example.md) example.
+超参搜索上的非凸问题 [AutoGBDT](../gbdt_example.md)。
 
-### Search Space
+### 搜索空间
 
 ```json
 {
@@ -67,37 +67,37 @@ Nonconvex problem on the hyper-parameter search of [AutoGBDT](../gbdt_example.md
 }
 ```
 
-The total search space is 1,204,224, we set the number of maximum trial to 1000. The time limitation is 48 hours.
+总搜索空间为 1, 204, 224 次，将最大 Trial 次数设置为1000。 时间限制为 48 小时。
 
-### Results
+### 结果
 
-| Algorithm     | Best loss    | Average of Best 5 Losses | Average of Best 10 Losses |
-| ------------- | ------------ | ------------------------ | ------------------------- |
-| Random Search | 0.418854     | 0.420352                 | 0.421553                  |
-| Random Search | 0.417364     | 0.420024                 | 0.420997                  |
-| Random Search | 0.417861     | 0.419744                 | 0.420642                  |
-| Grid Search   | 0.498166     | 0.498166                 | 0.498166                  |
-| Evolution     | 0.409887     | 0.409887                 | 0.409887                  |
-| Evolution     | 0.413620     | 0.413875                 | 0.414067                  |
-| Evolution     | 0.409887     | 0.409887                 | 0.409887                  |
-| Anneal        | 0.414877     | 0.417289                 | 0.418281                  |
-| Anneal        | 0.409887     | 0.409887                 | 0.410118                  |
-| Anneal        | 0.413683     | 0.416949                 | 0.417537                  |
-| Metis         | 0.416273     | 0.420411                 | 0.422380                  |
-| Metis         | 0.420262     | 0.423175                 | 0.424816                  |
-| Metis         | 0.421027     | 0.424172                 | 0.425714                  |
-| TPE           | 0.414478     | 0.414478                 | 0.414478                  |
-| TPE           | 0.415077     | 0.417986                 | 0.418797                  |
-| TPE           | 0.415077     | 0.417009                 | 0.418053                  |
-| SMAC          | **0.408386** | **0.408386**             | **0.408386**              |
-| SMAC          | 0.414012     | 0.414012                 | 0.414012                  |
-| SMAC          | **0.408386** | **0.408386**             | **0.408386**              |
-| BOHB          | 0.410464     | 0.415319                 | 0.417755                  |
-| BOHB          | 0.418995     | 0.420268                 | 0.422604                  |
-| BOHB          | 0.415149     | 0.418072                 | 0.418932                  |
-| HyperBand     | 0.414065     | 0.415222                 | 0.417628                  |
-| HyperBand     | 0.416807     | 0.417549                 | 0.418828                  |
-| HyperBand     | 0.415550     | 0.415977                 | 0.417186                  |
+| 算法            | 最好的损失值       | 最好的 5 次损失的平均值 | 最好的 10 次损失的平均 |
+| ------------- | ------------ | ------------- | ------------- |
+| Random Search | 0.418854     | 0.420352      | 0.421553      |
+| Random Search | 0.417364     | 0.420024      | 0.420997      |
+| Random Search | 0.417861     | 0.419744      | 0.420642      |
+| Grid Search   | 0.498166     | 0.498166      | 0.498166      |
+| Evolution     | 0.409887     | 0.409887      | 0.409887      |
+| Evolution     | 0.413620     | 0.413875      | 0.414067      |
+| Evolution     | 0.409887     | 0.409887      | 0.409887      |
+| Anneal        | 0.414877     | 0.417289      | 0.418281      |
+| Anneal        | 0.409887     | 0.409887      | 0.410118      |
+| Anneal        | 0.413683     | 0.416949      | 0.417537      |
+| Metis         | 0.416273     | 0.420411      | 0.422380      |
+| Metis         | 0.420262     | 0.423175      | 0.424816      |
+| Metis         | 0.421027     | 0.424172      | 0.425714      |
+| TPE           | 0.414478     | 0.414478      | 0.414478      |
+| TPE           | 0.415077     | 0.417986      | 0.418797      |
+| TPE           | 0.415077     | 0.417009      | 0.418053      |
+| SMAC          | **0.408386** | **0.408386**  | **0.408386**  |
+| SMAC          | 0.414012     | 0.414012      | 0.414012      |
+| SMAC          | **0.408386** | **0.408386**  | **0.408386**  |
+| BOHB          | 0.410464     | 0.415319      | 0.417755      |
+| BOHB          | 0.418995     | 0.420268      | 0.422604      |
+| BOHB          | 0.415149     | 0.418072      | 0.418932      |
+| HyperBand     | 0.414065     | 0.415222      | 0.417628      |
+| HyperBand     | 0.416807     | 0.417549      | 0.418828      |
+| HyperBand     | 0.415550     | 0.415977      | 0.417186      |
 
 For Metis, there are about 300 trials because it runs slowly due to its high time complexity O(n^3) in Gaussian Process.
 
