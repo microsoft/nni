@@ -21,7 +21,7 @@ import { getLogger } from "common/log";
 
 'use strict';
 
-import { countFilesRecursively } from '../../common/utils'
+import { countFilesRecursively, validateFileNameRecursively } from '../../common/utils'
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import * as os from 'os';
@@ -40,9 +40,10 @@ import { file } from "../../node_modules/@types/tmp";
  */
 export async function validateCodeDir(codeDir: string) : Promise<number> {
     let fileCount: number | undefined;
-
+    let fileNameValid: boolean = true;
     try {
         fileCount = await countFilesRecursively(codeDir);
+        fileNameValid = await validateFileNameRecursively(codeDir);
     } catch(error) {
         throw new Error(`Call count file error: ${error}`);
     }
@@ -52,9 +53,15 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
                                     + ` please check if it's a valid code dir`;
         throw new Error(errMessage);        
     }
+    
+    if(!fileNameValid) {
+        const errMessage: string = `file name not valid`; 
+        throw new Error(errMessage);    
+    }
 
     return fileCount;
 }
+
 
 /**
  * crete a new directory

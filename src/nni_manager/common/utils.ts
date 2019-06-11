@@ -374,6 +374,41 @@ function countFilesRecursively(directory: string, timeoutMilliSeconds?: number):
     });
 }
 
+function validateFileName(fileName: string): boolean {
+    let pattern: string = '^[a-z0-9A-Z\.\\-_]+$';
+    const validateResult = fileName.match(pattern);
+    if(validateResult) {
+        return true;
+    }
+    return false;
+}
+
+async function validateFileNameRecursively(directory: string): Promise<boolean> {
+    if(!fs.existsSync(directory)) {
+        throw Error(`Direcotory ${directory} doesn't exist`);
+    }
+
+    const fileNameArray: string[] = fs.readdirSync(directory);
+    let result = true;
+    for(var fileName of fileNameArray){
+        const fullFilePath: string = path.join(directory, fileName);
+        try {
+            if (fs.lstatSync(fullFilePath).isFile()) {
+                result = validateFileName(fileName);
+            } else {
+                // If filePath is a directory, recuisively copy it to remote directory
+                result = await validateFileNameRecursively(fullFilePath);
+            }
+            if(!result) {
+                return Promise.resolve(result);
+            }
+        } catch(error) {
+            return Promise.reject(result);
+        }
+    }
+    return Promise.resolve(result);   
+}
+
 /**
  * get the version of current package
  */
@@ -474,6 +509,6 @@ function unixPathJoin(...paths: any[]): string {
     return dir;
 }
 
-export {countFilesRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
+export {countFilesRecursively, validateFileNameRecursively, getRemoteTmpDir, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin,
     mkDirP, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine };
