@@ -55,7 +55,7 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
     }
     
     if(!fileNameValid) {
-        const errMessage: string = `file name not valid`; 
+        const errMessage: string = `File name in ${codeDir} is not valid, please check file names, only support digit number、alphabet and (.-_) in file name.`; 
         throw new Error(errMessage);    
     }
 
