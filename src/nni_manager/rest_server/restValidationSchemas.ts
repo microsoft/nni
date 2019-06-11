@@ -48,6 +48,7 @@ export namespace ValidationSchemas {
                 cpuNum: joi.number().min(1),
                 memoryMB: joi.number().min(100),
                 gpuNum: joi.number().min(0),
+                gpuType: joi.string(),
                 command: joi.string().min(1),
                 virtualCluster: joi.string(),
                 shmMB: joi.number(),

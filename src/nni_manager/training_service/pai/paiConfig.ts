@@ -75,6 +75,9 @@ export class PAIJobConfig{
     //The virtual cluster job runs on.
     public readonly virtualCluster: string;
 
+    //The type of gpu job runs on.
+    public readonly gpuType: string;
+
     /**
      * Constructor
      * @param jobName Name for the job, need to be unique
@@ -84,7 +87,7 @@ export class PAIJobConfig{
      * @param taskRoles List of taskRole, one task role at least
      */
     constructor(jobName: string, image : string, dataDir : string, outputDir : string, codeDir : string, 
-            taskRoles : PAITaskRole[], virtualCluster: string) {
+            taskRoles : PAITaskRole[], virtualCluster: string, gpuType: string) {
         this.jobName = jobName;
         this.image = image;
         this.dataDir = dataDir;
@@ -92,6 +95,7 @@ export class PAIJobConfig{
         this.codeDir = codeDir;
         this.taskRoles = taskRoles;
         this.virtualCluster = virtualCluster;
+        this.gpuType = gpuType;
     }
 }
 
@@ -124,9 +128,12 @@ export class NNIPAITrialConfig extends TrialConfig{
     public virtualCluster?: string;
     //Shared memory for one task in the task role
     public shmMB?: number;
+    //The type of gpu job runs on. If omitted, the job will run on default type of gpu
+    public gpuType?: string;
+
 
     constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number, 
-            image: string, dataDir: string, outputDir: string, virtualCluster?: string, shmMB?: number) {
+            image: string, dataDir: string, outputDir: string, virtualCluster?: string, shmMB?: number, gpuType?: string) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
@@ -135,6 +142,7 @@ export class NNIPAITrialConfig extends TrialConfig{
         this.outputDir = outputDir;
         this.virtualCluster = virtualCluster;
         this.shmMB = shmMB;
+        this.gpuType = gpuType;
     }
 }
 

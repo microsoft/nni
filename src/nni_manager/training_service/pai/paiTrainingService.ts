@@ -481,7 +481,9 @@ class PAITrainingService implements TrainingService {
             // PAI Task roles
             paiTaskRoles,
             // Add Virutal Cluster
-            this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString()
+            this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString(),
+            // Add gpuType
+            this.paiTrialConfig.gpuType === undefined ? '' : this.paiTrialConfig.gpuType.toString()
         );
 
         // Step 2. Upload code files in codeDir onto HDFS
