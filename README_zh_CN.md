@@ -138,7 +138,7 @@ Linux 和 macOS
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
 ```bash
-    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    git clone -b v0.8 https://github.com/Microsoft/nni.git
     cd nni
     source install.sh
 ```
@@ -148,7 +148,7 @@ Windows
 * 在 `python >=3.5` 的环境中运行命令： `git` 和 `PowerShell`，确保安装了这两个组件。
 
 ```bash
-  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
   powershell .\install.ps1
 ```
@@ -164,7 +164,7 @@ Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/NniOnWindows.md)。
 * 通过克隆源代码下载示例。
 
 ```bash
-    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    git clone -b v0.8 https://github.com/Microsoft/nni.git
 ```
 
 Linux 和 macOS
