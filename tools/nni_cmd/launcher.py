@@ -39,6 +39,7 @@ import site
 import time
 from pathlib import Path
 from .command_utils import check_output_command, kill_command
+from .nnictl_utils import update_experiment
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -508,6 +509,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
 
 def resume_experiment(args):
     '''resume an experiment'''
+    update_experiment()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     experiment_id = None
