@@ -149,7 +149,7 @@ Windows
 ```bash
   git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
-  powershell .\install.ps1 -ExecutionPolicy UnRestricted
+  powershell -ExecutionPolicy Bypass -file install.ps1
 ```
 
 For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)

@@ -45,7 +45,7 @@ Currently we support installation on Linux, Mac and Windows(local, remote and pa
   ```bash
   git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
-  powershell .\install.ps1 -ExecutionPolicy UnRestricted
+  powershell -ExecutionPolicy Bypass -file install.ps1
   ```
 
 ## **System requirements**
