@@ -346,13 +346,6 @@ def set_experiment(experiment_config, mode, port, config_file_name):
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(config_file_name)
-    # check execution policy in powershell
-    if sys.platform == 'win32':
-        execution_policy = check_output(['powershell.exe','Get-ExecutionPolicy']).decode('ascii').strip()
-        if execution_policy == 'Restricted':
-            print_error('PowerShell execution policy error, please run PowerShell as administrator with this command first:\r\n'\
-                + '\'Set-ExecutionPolicy -ExecutionPolicy Unrestricted\'')
-            exit(1)
     # check packages for tuner
     package_name, module_name = None, None
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
