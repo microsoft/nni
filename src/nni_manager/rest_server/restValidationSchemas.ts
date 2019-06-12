@@ -30,8 +30,16 @@ export namespace ValidationSchemas {
                 port: joi.number().min(1).max(65535).required(),
                 passwd: joi.string(),
                 sshKeyPath: joi.string(),
-                passphrase: joi.string()
+                passphrase: joi.string(),
+                gpuIndices: joi.string(),
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean()
             })),
+            local_config: joi.object({
+                gpuIndices: joi.string(),
+                maxTrialNumPerGpu: joi.number(),
+                useActiveGpu: joi.boolean()
+            }),
             trial_config: joi.object({
                 image: joi.string().min(1),
                 codeDir: joi.string().min(1).required(),
@@ -42,6 +50,7 @@ export namespace ValidationSchemas {
                 gpuNum: joi.number().min(0),
                 command: joi.string().min(1),
                 virtualCluster: joi.string(),
+                shmMB: joi.number(),
                 worker: joi.object({
                     replicas: joi.number().min(1).required(),
                     image: joi.string().min(1),
@@ -76,6 +85,7 @@ export namespace ValidationSchemas {
                     outputDir: joi.string(),
                     cpuNum: joi.number().min(1),
                     memoryMB: joi.number().min(100),
+                    shmMB: joi.number(),
                     gpuNum: joi.number().min(0).required(),
                     command: joi.string().min(1).required(),
                     frameworkAttemptCompletionPolicy: joi.object({
@@ -108,6 +118,7 @@ export namespace ValidationSchemas {
             }),
             frameworkcontroller_config: joi.object({
                 storage: joi.string().min(1),
+                serviceAccountName: joi.string().min(1),
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()
@@ -138,8 +149,10 @@ export namespace ValidationSchemas {
             maxExecDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
+            versionCheck: joi.boolean(),
+            logCollection: joi.string(),
             advisor: joi.object({
-                builtinAdvisorName: joi.string().valid('Hyperband'),
+                builtinAdvisorName: joi.string().valid('Hyperband', 'BOHB'),
                 codeDir: joi.string(),
                 classFileName: joi.string(),
                 className: joi.string(),
@@ -154,7 +167,8 @@ export namespace ValidationSchemas {
                 className: joi.string(),
                 classArgs: joi.any(),
                 gpuNum: joi.number().min(0),
-                checkpointDir: joi.string().allow('')
+                checkpointDir: joi.string().allow(''),
+                includeIntermediateResults: joi.boolean()
             }),
             assessor: joi.object({
                 builtinAssessorName: joi.string().valid('Medianstop', 'Curvefitting'),
@@ -184,16 +198,6 @@ export namespace ValidationSchemas {
             endTime: joi.number(),
             logDir: joi.string(),
             maxSequenceId: joi.number()
-        }
-    };
-    export const STARTTENSORBOARD = {
-        query: {
-            job_ids: joi.string().min(5).max(5).required()
-        }
-    };
-    export const STOPTENSORBOARD = {
-        query: {
-            endpoint: joi.string().uri().required()
         }
     };
 }

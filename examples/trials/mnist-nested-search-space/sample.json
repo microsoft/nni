@@ -1,0 +1,17 @@
+{
+    "layer0": {
+        "_name": "Avg_pool",
+        "pooling_size": 3
+    },
+    "layer1": {
+        "_name": "Conv",
+        "kernel_size": 2
+    },
+    "layer2": {
+        "_name": "Empty"
+    },
+    "layer3": {
+        "_name": "Conv",
+        "kernel_size": 5
+    }
+}

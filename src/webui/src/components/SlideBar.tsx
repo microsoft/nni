@@ -41,9 +41,8 @@ class SlideBar extends React.Component<{}, SliderState> {
             res.data.params.searchSpace = JSON.parse(res.data.params.searchSpace);
           }
           const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
-          const interResultList = res2.data;
-          const contentOfExperiment = JSON.stringify(res.data, null, 2);
           let trialMessagesArr = res1.data;
+          const interResultList = res2.data;
           Object.keys(trialMessagesArr).map(item => {
             // transform hyperparameters as object to show elegantly
             trialMessagesArr[item].hyperParameters = JSON.parse(trialMessagesArr[item].hyperParameters);
@@ -57,9 +56,12 @@ class SlideBar extends React.Component<{}, SliderState> {
               }
             });
           });
-          const trialMessages = JSON.stringify(trialMessagesArr, null, 2);
+          const result = {
+            experimentParameters: res.data,
+            trialMessage: trialMessagesArr
+          };
           const aTag = document.createElement('a');
-          const file = new Blob([contentOfExperiment, trialMessages], { type: 'application/json' });
+          const file = new Blob([JSON.stringify(result, null, 4)], { type: 'application/json' });
           aTag.download = 'experiment.json';
           aTag.href = URL.createObjectURL(file);
           aTag.click();
@@ -90,7 +92,7 @@ class SlideBar extends React.Component<{}, SliderState> {
           const aTag = document.createElement('a');
           const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
           const file = new Blob([nniLogfile], { type: 'application/json' });
-          aTag.download = 'nnimanagerLog.json';
+          aTag.download = 'nnimanager.log';
           aTag.href = URL.createObjectURL(file);
           aTag.click();
           if (!isEdge) {
@@ -99,7 +101,7 @@ class SlideBar extends React.Component<{}, SliderState> {
           if (navigator.userAgent.indexOf('Firefox') > -1) {
             const downTag = document.createElement('a');
             downTag.addEventListener('click', function () {
-              downTag.download = 'nnimanagerLog.json';
+              downTag.download = 'nnimanager.log';
               downTag.href = URL.createObjectURL(file);
             });
             let eventMouse = document.createEvent('MouseEvents');
@@ -120,7 +122,7 @@ class SlideBar extends React.Component<{}, SliderState> {
           const aTag = document.createElement('a');
           const isEdge = navigator.userAgent.indexOf('Edge') !== -1 ? true : false;
           const file = new Blob([dispatchLogfile], { type: 'application/json' });
-          aTag.download = 'dispatcherLog.json';
+          aTag.download = 'dispatcher.log';
           aTag.href = URL.createObjectURL(file);
           aTag.click();
           if (!isEdge) {
@@ -129,7 +131,7 @@ class SlideBar extends React.Component<{}, SliderState> {
           if (navigator.userAgent.indexOf('Firefox') > -1) {
             const downTag = document.createElement('a');
             downTag.addEventListener('click', function () {
-              downTag.download = 'dispatcherLog.json';
+              downTag.download = 'dispatcher.log';
               downTag.href = URL.createObjectURL(file);
             });
             let eventMouse = document.createEvent('MouseEvents');
@@ -139,6 +141,7 @@ class SlideBar extends React.Component<{}, SliderState> {
         }
       });
   }
+
   getNNIversion = () => {
     axios(`${MANAGER_IP}/version`, {
       method: 'GET'
@@ -182,6 +185,7 @@ class SlideBar extends React.Component<{}, SliderState> {
 
   render() {
     const { version, menuVisible } = this.state;
+    const feed = `https://github.com/Microsoft/nni/issues/new?labels=${version}`;
     const menu = (
       <Menu onClick={this.handleMenuClick}>
         <Menu.Item key="1">Experiment Parameters</Menu.Item>
@@ -205,7 +209,7 @@ class SlideBar extends React.Component<{}, SliderState> {
             </li>
             <li className="tab">
               <Link to={'/detail'} activeClassName="high">
-                Trials Detail
+                Trials detail
             </Link>
             </li>
           </ul>
@@ -221,16 +225,15 @@ class SlideBar extends React.Component<{}, SliderState> {
               Download <Icon type="down" />
             </a>
           </Dropdown>
-          <a href="https://github.com/Microsoft/nni/issues/new" target="_blank">
+          <a href={feed} target="_blank">
             <img
               src={require('../static/img/icon/issue.png')}
               alt="NNI github issue"
             />
-            FeedBack
+            Feedback
           </a>
           <span className="version">Version: {version}</span>
         </Col>
-
       </Row>
     );
   }

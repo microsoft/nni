@@ -32,7 +32,7 @@ class MultiPhaseTuner(Recoverable):
     def generate_parameters(self, parameter_id, trial_job_id=None):
         """Returns a set of trial (hyper-)parameters, as a serializable object.
         User code must override either this function or 'generate_multiple_parameters()'.
-        parameter_id: int
+        parameter_id: identifier of the parameter (int)
         """
         raise NotImplementedError('Tuner: generate_parameters not implemented')
 
@@ -46,25 +46,41 @@ class MultiPhaseTuner(Recoverable):
 
     def receive_trial_result(self, parameter_id, parameters, value, trial_job_id):
         """Invoked when a trial reports its final result. Must override.
-        parameter_id: int
+        parameter_id: identifier of the parameter (int)
         parameters: object created by 'generate_parameters()'
         value: object reported by trial
+        trial_job_id: identifier of the trial (str)
         """
         raise NotImplementedError('Tuner: receive_trial_result not implemented')
 
     def receive_customized_trial_result(self, parameter_id, parameters, value, trial_job_id):
         """Invoked when a trial added by WebUI reports its final result. Do nothing by default.
-        parameter_id: int
+        parameter_id: identifier of the parameter (int)
         parameters: object created by user
         value: object reported by trial
+        trial_job_id: identifier of the trial (str)
         """
         _logger.info('Customized trial job %s ignored by tuner', parameter_id)
+
+    def trial_end(self, parameter_id, success, trial_job_id):
+        """Invoked when a trial is completed or terminated. Do nothing by default.
+        parameter_id: identifier of the parameter (int)
+        success: True if the trial successfully completed; False if failed or terminated
+        trial_job_id: identifier of the trial (str)
+        """
+        pass
 
     def update_search_space(self, search_space):
         """Update the search space of tuner. Must override.
         search_space: JSON object
         """
         raise NotImplementedError('Tuner: update_search_space not implemented')
+
+    def import_data(self, data):
+        """Import additional data for tuning
+        data: a list of dictionarys, each of which has at least two keys, 'parameter' and 'value'
+        """
+        pass
 
     def load_checkpoint(self):
         """Load the checkpoint of tuner.
@@ -84,4 +100,7 @@ class MultiPhaseTuner(Recoverable):
         pass
 
     def _on_error(self):
+        pass
+
+    def import_data(self, data):
         pass

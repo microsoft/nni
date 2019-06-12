@@ -46,33 +46,43 @@ RUN DEBIAN_FRONTEND=noninteractive && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+#
+# update pip
+#
+RUN python3 -m pip install --upgrade pip
+
 # numpy 1.14.3  scipy 1.1.0 
 RUN python3 -m pip --no-cache-dir install \
     numpy==1.14.3 scipy==1.1.0 
 
 #
-#Tensorflow 1.10.0
+# Tensorflow 1.10.0
 #
 RUN python3 -m pip --no-cache-dir install tensorflow-gpu==1.10.0
 
 #
-#Keras 2.1.6
+# Keras 2.1.6
 #
 RUN python3 -m pip --no-cache-dir install Keras==2.1.6
 
 #
-#PyTorch 
+# PyTorch 
 #
 RUN python3 -m pip --no-cache-dir install torch==0.4.1
 RUN python3 -m pip install torchvision==0.2.1
 
 #
-#sklearn 0.20.0
+# sklearn 0.20.0
 #
 RUN python3 -m pip --no-cache-dir install scikit-learn==0.20.0
 
 #
-#Install NNI
+# pandas==0.23.4 lightgbm==2.2.2
+#
+RUN python3 -m pip --no-cache-dir install pandas==0.23.4 lightgbm==2.2.2
+
+#
+# Install NNI
 #
 RUN python3 -m pip --no-cache-dir install nni
 

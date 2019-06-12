@@ -40,7 +40,7 @@ def parse_log_path(args, trial_content):
     path_list = []
     host_list = []
     for trial in trial_content:
-        if args.trialid and args.trialid != 'all' and trial.get('id') != args.trialid:
+        if args.trial_id and args.trial_id != 'all' and trial.get('id') != args.trial_id:
             continue
         pattern = r'(?P<head>.+)://(?P<host>.+):(?P<path>.*)'
         match = re.search(pattern,trial['logPath'])
@@ -48,7 +48,7 @@ def parse_log_path(args, trial_content):
             path_list.append(match.group('path'))
             host_list.append(match.group('host'))
     if not path_list:
-        print_error('Trial id %s error!' % args.trialid)
+        print_error('Trial id %s error!' % args.trial_id)
         exit(1)
     return path_list, host_list
 
@@ -94,11 +94,9 @@ def start_tensorboard_process(args, nni_config, path_list, temp_nni_path):
     if detect_port(args.port):
         print_error('Port %s is used by another process, please reset port!' % str(args.port))
         exit(1)
-    
-    stdout_file = open(os.path.join(temp_nni_path, 'tensorboard_stdout'), 'a+')
-    stderr_file = open(os.path.join(temp_nni_path, 'tensorboard_stderr'), 'a+')
-    cmds = ['tensorboard', '--logdir', format_tensorboard_log_path(path_list), '--port', str(args.port)]
-    tensorboard_process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
+    with open(os.path.join(temp_nni_path, 'tensorboard_stdout'), 'a+') as stdout_file, open(os.path.join(temp_nni_path, 'tensorboard_stderr'), 'a+') as stderr_file:
+        cmds = ['tensorboard', '--logdir', format_tensorboard_log_path(path_list), '--port', str(args.port)]
+        tensorboard_process = Popen(cmds, stdout=stdout_file, stderr=stderr_file)
     url_list = get_local_urls(args.port)
     print_normal(COLOR_GREEN_FORMAT % 'Start tensorboard success!\n' + 'Tensorboard urls: ' + '     '.join(url_list))
     tensorboard_process_pid_list = nni_config.get_config('tensorboardPidList')
@@ -144,7 +142,7 @@ def start_tensorboard(args):
     running, response = check_rest_server_quick(rest_port)
     trial_content = None
     if running:
-        response = rest_get(trial_jobs_url(rest_port), 20)
+        response = rest_get(trial_jobs_url(rest_port), REST_TIME_OUT)
         if response and check_response(response):
             trial_content = json.loads(response.text)
         else:
@@ -154,7 +152,7 @@ def start_tensorboard(args):
     if not trial_content:
         print_error('No trial information!')
         exit(1)
-    if len(trial_content) > 1 and not args.trialid:
+    if len(trial_content) > 1 and not args.trial_id:
         print_error('There are multiple trials, please set trial id!')
         exit(1)
     experiment_id = nni_config.get_config('experimentId')

@@ -28,12 +28,12 @@ import { MethodNotImplementedError } from '../../../common/errors';
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type DistTrainRole = 'worker' | 'ps' | 'master';
 export type KubeflowJobStatus = 'Created' | 'Running' | 'Failed' | 'Succeeded';
-export type OperatorApiVersion = 'v1alpha2' | 'v1beta1';
+export type OperatorApiVersion = 'v1alpha2' | 'v1beta1' | 'v1beta2';
 
 export class KubeflowClusterConfig extends KubernetesClusterConfig {
     public readonly operator: KubeflowOperator;
-    constructor(codeDir: string, operator: KubeflowOperator) {
-        super(codeDir);
+    constructor(apiVersion: string, operator: KubeflowOperator) {
+        super(apiVersion);
         this.operator = operator;
     }
 }

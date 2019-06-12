@@ -137,7 +137,7 @@ def main():
     # Import data
     data_dir= '/tmp/tensorflow/mnist/input_data'
     mnist = input_data.read_data_sets(data_dir, one_hot=True)
-    logger.debug('Mnist download data down.')
+    logger.debug('Mnist download data done.')
 
     # Create the model
     # Build the graph for the deep net

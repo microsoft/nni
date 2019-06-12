@@ -22,11 +22,13 @@
 import argparse
 import pkg_resources
 from .launcher import create_experiment, resume_experiment
-from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum
+from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import *
 from .package_management import *
 from .constants import *
 from .tensorboard_utils import *
+from colorama import init
+init(autoreset=True)
 
 if os.environ.get('COVERAGE_PROCESS_START'):
     import coverage
@@ -34,7 +36,10 @@ if os.environ.get('COVERAGE_PROCESS_START'):
 
 def nni_info(*args):
     if args[0].version:
-        print(pkg_resources.get_distribution('nni').version)
+        try:
+            print(pkg_resources.get_distribution('nni').version)
+        except pkg_resources.ResolutionError as err:
+            print_error('Get version failed, please use `pip3 list | grep nni` to check nni version!')
     else:
         print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
@@ -51,12 +56,14 @@ def parse_args():
     parser_start = subparsers.add_parser('create', help='create a new experiment')
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
     parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_start.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_start.set_defaults(func=create_experiment)
 
     # parse resume command
     parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
     parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to resume')
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of restful server')
+    parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse update command
@@ -73,10 +80,10 @@ def parse_args():
     parser_updater_concurrency.set_defaults(func=update_concurrency)
     parser_updater_duration = parser_updater_subparsers.add_parser('duration', help='update duration')
     parser_updater_duration.add_argument('id', nargs='?', help='the id of experiment')
-    parser_updater_duration.add_argument('--value', '-v', required=True)
+    parser_updater_duration.add_argument('--value', '-v', required=True, help='the unit of time should in {\'s\', \'m\', \'h\', \'d\'}')
     parser_updater_duration.set_defaults(func=update_duration)
     parser_updater_trialnum = parser_updater_subparsers.add_parser('trialnum', help='update maxtrialnum')
-    parser_updater_trialnum.add_argument('--id', '-i', dest='id', help='the id of experiment')
+    parser_updater_trialnum.add_argument('id', nargs='?', help='the id of experiment')
     parser_updater_trialnum.add_argument('--value', '-v', required=True)
     parser_updater_trialnum.set_defaults(func=update_trialnum)
 
@@ -94,8 +101,12 @@ def parse_args():
     parser_trial_ls.set_defaults(func=trial_ls)
     parser_trial_kill = parser_trial_subparsers.add_parser('kill', help='kill trial jobs')
     parser_trial_kill.add_argument('id', nargs='?', help='the id of experiment')
-    parser_trial_kill.add_argument('--trialid', '-t', required=True, dest='trialid', help='the id of trial to be killed')
+    parser_trial_kill.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to be killed')
     parser_trial_kill.set_defaults(func=trial_kill)
+    parser_trial_codegen = parser_trial_subparsers.add_parser('codegen', help='generate trial code for a specific trial')
+    parser_trial_codegen.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_codegen.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to do code generation')
+    parser_trial_codegen.set_defaults(func=trial_codegen)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
@@ -110,6 +121,17 @@ def parse_args():
     parser_experiment_list = parser_experiment_subparsers.add_parser('list', help='list all of running experiment ids')
     parser_experiment_list.add_argument('all', nargs='?', help='list all of experiments')
     parser_experiment_list.set_defaults(func=experiment_list)
+    #import tuning data
+    parser_import_data = parser_experiment_subparsers.add_parser('import', help='import additional data')
+    parser_import_data.add_argument('id', nargs='?', help='the id of experiment')
+    parser_import_data.add_argument('--filename', '-f', required=True)
+    parser_import_data.set_defaults(func=import_data)
+    #export trial data
+    parser_trial_export = parser_experiment_subparsers.add_parser('export', help='export trial job results to csv or json')
+    parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_export.add_argument('--type', '-t', choices=['json', 'csv'], required=True, dest='type', help='target file type')
+    parser_trial_export.add_argument('--filename', '-f', required=True, dest='path', help='target file path')
+    parser_trial_export.set_defaults(func=export_trials_data)
 
     #TODO:finish webui function
     #parse board command
@@ -145,7 +167,7 @@ def parse_args():
     parser_log_stderr.set_defaults(func=log_stderr)
     parser_log_trial = parser_log_subparsers.add_parser('trial', help='get trial log path')
     parser_log_trial.add_argument('id', nargs='?', help='the id of experiment')
-    parser_log_trial.add_argument('--trialid', '-T', dest='trialid', help='find trial log path by id')
+    parser_log_trial.add_argument('--trial_id', '-T', dest='trial_id', help='find trial log path by id')
     parser_log_trial.set_defaults(func=log_trial)
 
     #parse package command
@@ -163,7 +185,7 @@ def parse_args():
     parser_tensorboard_subparsers = parser_tensorboard.add_subparsers()
     parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('start', help='start tensorboard')
     parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
-    parser_tensorboard_start.add_argument('--trialid', dest='trialid', help='the id of trial')
+    parser_tensorboard_start.add_argument('--trial_id', '-T', dest='trial_id', help='the id of trial')
     parser_tensorboard_start.add_argument('--port', dest='port', default=6006, help='the port to start tensorboard')
     parser_tensorboard_start.set_defaults(func=start_tensorboard)
     parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')

@@ -11,27 +11,38 @@ else
 	$(error platform $(UNAME_S) not supported)
 endif
 
-NNI_VERSION_VALUE = $(shell git describe --tags)
-NNI_VERSION_TEMPLATE = 999.0.0-developing
+TIME_STAMP = $(shell date -u "+%y%m%d%H%M")
+NNI_VERSION_VALUE = $(shell git describe --tags --abbrev=0)
 
+# To include time stamp in version value, run:
+# make version_ts=true build
+ifeq ($(version_ts), true)
+	NNI_VERSION_VALUE := $(NNI_VERSION_VALUE).$(TIME_STAMP)
+endif
+NNI_VERSION_TEMPLATE = 999.0.0-developing
+NNI_YARN_TARBALL ?= $(CWD)nni-yarn.tar.gz
+NNI_YARN_FOLDER ?= $(CWD)nni-yarn
+NNI_YARN := PATH=$(CWD)node-$(OS_SPEC)-x64/bin:$${PATH} $(NNI_YARN_FOLDER)/bin/yarn
 .PHONY: build
 build:
 	python3 -m pip install --user --upgrade setuptools wheel
-	wget https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(CWD)node-$(OS_SPEC)-x64.tar.xz
+	wget -q https://aka.ms/nni/nodejs-download/$(OS_SPEC) -O $(CWD)node-$(OS_SPEC)-x64.tar.xz
 	rm -rf $(CWD)node-$(OS_SPEC)-x64
 	mkdir $(CWD)node-$(OS_SPEC)-x64
 	tar xf $(CWD)node-$(OS_SPEC)-x64.tar.xz -C node-$(OS_SPEC)-x64 --strip-components 1
-	cd $(CWD)../../src/nni_manager && yarn && yarn build
-	cd $(CWD)../../src/webui && yarn && yarn build
+	wget -q https://aka.ms/yarn-download -O $(NNI_YARN_TARBALL)
+	rm -rf $(NNI_YARN_FOLDER)
+	mkdir $(NNI_YARN_FOLDER)
+	tar -xf $(NNI_YARN_TARBALL) -C $(NNI_YARN_FOLDER) --strip-components 1
+	cd $(CWD)../../src/nni_manager && $(NNI_YARN) && $(NNI_YARN) build
+	cd $(CWD)../../src/webui && $(NNI_YARN) && $(NNI_YARN) build
 	rm -rf $(CWD)nni
 	cp -r $(CWD)../../src/nni_manager/dist $(CWD)nni
 	cp -r $(CWD)../../src/webui/build $(CWD)nni/static
 	cp $(CWD)../../src/nni_manager/package.json $(CWD)nni
 	sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' $(CWD)nni/package.json
-	cd $(CWD)nni && yarn --prod
+	cd $(CWD)nni && $(NNI_YARN) --prod
 	cd $(CWD) && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && python3 setup.py bdist_wheel -p $(WHEEL_SPEC)
-	cd $(CWD)../../src/sdk/pynni && sed -ie 's/$(NNI_VERSION_TEMPLATE)/$(NNI_VERSION_VALUE)/' setup.py && python3 setup.py bdist_wheel
-	cp -r $(CWD)../../src/sdk/pynni/dist/*.whl $(CWD)dist
 	cd $(CWD)
 
 .PHONY: upload
@@ -41,7 +52,6 @@ upload:
 
 .PHONY: clean
 clean:
-	rm -rf $(CWD)../../src/sdk/pynni/dist
 	rm -rf $(CWD)build
 	rm -rf $(CWD)dist
 	rm -rf $(CWD)nni

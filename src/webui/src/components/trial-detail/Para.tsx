@@ -1,10 +1,8 @@
 import * as React from 'react';
-import axios from 'axios';
-import { MANAGER_IP } from '../../static/const';
 import ReactEcharts from 'echarts-for-react';
+import { filterByStatus } from '../../static/function';
 import { Row, Col, Select, Button, message } from 'antd';
-import { ParaObj, VisualMapValue, Dimobj } from '../../static/interface';
-import { getFinalResult } from '../../static/function';
+import { ParaObj, Dimobj, TableObj } from '../../static/interface';
 const Option = Select.Option;
 require('echarts/lib/chart/parallel');
 require('echarts/lib/component/tooltip');
@@ -14,18 +12,25 @@ require('../../static/style/para.scss');
 require('../../static/style/button.scss');
 
 interface ParaState {
+    // paraSource: Array<TableObj>;
     option: object;
     paraBack: ParaObj;
     dimName: Array<string>;
     swapAxisArr: Array<string>;
     percent: number;
     paraNodata: string;
-    visualValue: VisualMapValue;
+    max: number; // graph color bar limit
+    min: number;
+    sutrialCount: number; // succeed trial numbers for SUC
+    succeedRenderCount: number; // all succeed trials number
+    clickCounts: number;
+    isLoadConfirm: boolean;
 }
 
-interface SearchSpace {
-    _value: Array<number | string>;
-    _type: string;
+interface ParaProps {
+    dataSource: Array<TableObj>;
+    expSearchSpace: string;
+    whichGraph: string;
 }
 
 message.config({
@@ -33,14 +38,22 @@ message.config({
     duration: 2,
 });
 
-class Para extends React.Component<{}, ParaState> {
+class Para extends React.Component<ParaProps, ParaState> {
 
-    static intervalIDPara = 4;
     public _isMounted = false;
 
-    constructor(props: {}) {
+    private chartMulineStyle = {
+        width: '100%',
+        height: 392,
+        margin: '0 auto',
+        padding: '0 15 10 15'
+    };
+
+    constructor(props: ParaProps) {
         super(props);
         this.state = {
+            // paraSource: [],
+            // option: this.hyperParaPic,
             option: {},
             dimName: [],
             paraBack: {
@@ -53,27 +66,84 @@ class Para extends React.Component<{}, ParaState> {
             swapAxisArr: [],
             percent: 0,
             paraNodata: '',
-            visualValue: {
-                minAccuracy: 0,
-                maxAccuracy: 1
-            }
+            min: 0,
+            max: 1,
+            sutrialCount: 10000000,
+            succeedRenderCount: 10000000,
+            clickCounts: 1,
+            isLoadConfirm: false
         };
     }
 
-    getParallelAxis = 
-    (   dimName: Array<string>, searchRange: SearchSpace, 
-        parallelAxis: Array<Dimobj>, accPara: Array<number>,
-        eachTrialParams: Array<string>, paraYdata: number[][]
-    ) => {
-        if (this._isMounted) {
-            this.setState(() => ({
-                dimName: dimName,
-                visualValue: {
-                    minAccuracy: accPara.length !== 0 ? Math.min(...accPara) : 0,
-                    maxAccuracy: accPara.length !== 0 ? Math.max(...accPara) : 1
+    getParallelAxis =
+        (
+            dimName: Array<string>, parallelAxis: Array<Dimobj>,
+            accPara: Array<number>, eachTrialParams: Array<string>, 
+            lengthofTrials: number
+        ) => {
+            // get data for every lines. if dim is choice type, number -> toString()
+            const paraYdata: number[][] = [];
+            Object.keys(eachTrialParams).map(item => {
+                let temp: Array<number> = [];
+                for (let i = 0; i < dimName.length; i++) {
+                    if ('type' in parallelAxis[i]) {
+                        temp.push(
+                            eachTrialParams[item][dimName[i]].toString()
+                        );
+                    } else {
+                        temp.push(
+                            eachTrialParams[item][dimName[i]]
+                        );
+                    }
                 }
-            }));
+                paraYdata.push(temp);
+            });
+            // add acc
+            Object.keys(paraYdata).map(item => {
+                paraYdata[item].push(accPara[item]);
+            });
+            // according acc to sort ydata // sort to find top percent dataset
+            if (paraYdata.length !== 0) {
+                const len = paraYdata[0].length - 1;
+                paraYdata.sort((a, b) => b[len] - a[len]);
+            }
+            const paraData = {
+                parallelAxis: parallelAxis,
+                data: paraYdata
+            };
+            const { percent, swapAxisArr } = this.state;
+            // need to cut down the data
+            if (percent !== 0) {
+                const linesNum = paraData.data.length;
+                // Math.ceil rather than Math.floor to avoid lost lines
+                const len = Math.ceil(linesNum * percent);
+                paraData.data.length = len;
+            }
+            // need to swap the yAxis
+            if (swapAxisArr.length >= 2) {
+                this.swapGraph(paraData, swapAxisArr);
+            }
+            this.getOption(paraData, lengthofTrials);
+            if (this._isMounted === true) {
+                this.setState(() => ({ paraBack: paraData }));
+            }
         }
+
+    hyperParaPic = (source: Array<TableObj>, searchSpace: string) => {
+        // filter succeed trials [{}, {}, {}]
+        const dataSource: Array<TableObj> = source.filter(filterByStatus);
+        const lenOfDataSource: number = dataSource.length;
+        const accPara: Array<number> = [];
+        // specific value array
+        const eachTrialParams: Array<string> = [];
+        // experiment interface search space obj
+        const searchRange = searchSpace !== undefined ? JSON.parse(searchSpace) : '';
+        const dimName = Object.keys(searchRange);
+        if (this._isMounted === true) {
+            this.setState(() => ({ dimName: dimName }));
+        }
+
+        const parallelAxis: Array<Dimobj> = [];
         // search space range and specific value [only number]
         for (let i = 0; i < dimName.length; i++) {
             const searchKey = searchRange[dimName[i]];
@@ -92,8 +162,8 @@ class Para extends React.Component<{}, ParaState> {
                     parallelAxis.push({
                         dim: i,
                         name: dimName[i],
-                        max: searchKey._value[0],
-                        min: 0
+                        min: searchKey._value[0],
+                        max: searchKey._value[1],
                     });
                     break;
 
@@ -106,7 +176,32 @@ class Para extends React.Component<{}, ParaState> {
                         dim: i,
                         name: dimName[i],
                         type: 'category',
-                        data: data
+                        data: data,
+                        boundaryGap: true,
+                        axisLine: {
+                            lineStyle: {
+                                type: 'dotted', // axis type,solid，dashed，dotted
+                                width: 1
+                            }
+                        },
+                        axisTick: {
+                            show: true,
+                            interval: 0,
+                            alignWithLabel: true,
+                        },
+                        axisLabel: {
+                            show: true,
+                            interval: 0,
+                            // rotate: 30
+                        },
+                    });
+                    break;
+                // support log distribute
+                case 'loguniform':
+                    parallelAxis.push({
+                        dim: i,
+                        name: dimName[i],
+                        type: 'log',
                     });
                     break;
 
@@ -118,119 +213,92 @@ class Para extends React.Component<{}, ParaState> {
 
             }
         }
-        // get data for every lines. if dim is choice type, number -> toString()
-        Object.keys(eachTrialParams).map(item => {
-            let temp: Array<number> = [];
-            for (let i = 0; i < dimName.length; i++) {
-                if ('type' in parallelAxis[i]) {
-                    temp.push(
-                        eachTrialParams[item][dimName[i]].toString()
-                    );
-                } else {
-                    temp.push(
-                        eachTrialParams[item][dimName[i]]
-                    );
-                }
-            }
-            paraYdata.push(temp);
-        });
-    }
-
-    hyperParaPic = () => {
-        axios
-            .all([
-                axios.get(`${MANAGER_IP}/trial-jobs`),
-                axios.get(`${MANAGER_IP}/experiment`)
-            ])
-            .then(axios.spread((res, res1) => {
-                if (res.status === 200 && res1.status === 200) {
-                    if (res.data.length !== 0) {
-                        const accParaData = res.data;
-                        const accPara: Array<number> = [];
-                        // specific value array
-                        const eachTrialParams: Array<string> = [];
-                        const parallelAxis: Array<Dimobj> = [];
-                        const paraYdata: number[][] = [];
-                        // experiment interface search space obj
-                        const searchRange = JSON.parse(res1.data.params.searchSpace);
-                        const reallySearchKeys = Object.keys(searchRange);
-                        // trial-jobs interface list
-                        Object.keys(accParaData).map(item => {
-                            if (accParaData[item].status === 'SUCCEEDED') {
-                                const finalData = accParaData[item].finalMetricData;
-                                if (finalData && accParaData[item].hyperParameters) {
-                                    const result = getFinalResult(finalData);
-                                    accPara.push(result);
-                                    // get dim and every line specific number
-                                    const temp = JSON.parse(accParaData[item].hyperParameters).parameters;
-                                    eachTrialParams.push(temp);
+        if (lenOfDataSource === 0) {
+            const optionOfNull = {
+                parallelAxis,
+                tooltip: {
+                    trigger: 'item'
+                },
+                parallel: {
+                    parallelAxisDefault: {
+                        tooltip: {
+                            show: true
+                        },
+                        axisLabel: {
+                            formatter: function (value: string) {
+                                const length = value.length;
+                                if (length > 16) {
+                                    const temp = value.split('');
+                                    for (let i = 16; i < temp.length; i += 17) {
+                                        temp[i] += '\n';
+                                    }
+                                    return temp.join('');
+                                } else {
+                                    return value;
                                 }
                             }
-                        });
-                        const dimName = reallySearchKeys;
-                        this.getParallelAxis(dimName, searchRange, parallelAxis, accPara, eachTrialParams, paraYdata);
-
-                        // add acc
-                        Object.keys(paraYdata).map(item => {
-                            paraYdata[item].push(accPara[item]);
-                        });
-
-                        // according acc to sort ydata
-                        if (paraYdata.length !== 0) {
-                            const len = paraYdata[0].length - 1;
-                            paraYdata.sort((a, b) => b[len] - a[len]);
-                        }
-                        if (this._isMounted) {
-                            this.setState(() => ({
-                                paraBack: {
-                                    parallelAxis: parallelAxis,
-                                    data: paraYdata
-                                }
-                            }));
-                        }
-                        const { percent, swapAxisArr, paraBack } = this.state;
-                        // need to cut down the data
-                        if (percent !== 0) {
-                            const linesNum = paraBack.data.length;
-                            const len = Math.floor(linesNum * percent);
-                            paraBack.data.length = len;
-                        }
-                        // need to swap the yAxis
-                        if (swapAxisArr.length >= 2) {
-                            this.swapGraph(paraBack, swapAxisArr);
-                        }
-                        this.getOption(paraBack);
+                        },
+                    }
+                },
+                visualMap: {
+                    type: 'continuous',
+                    min: 0,
+                    max: 1,
+                    color: ['#CA0000', '#FFC400', '#90EE90']
+                }
+            };
+            if (this._isMounted === true) {
+                this.setState({
+                    paraNodata: 'No data',
+                    option: optionOfNull,
+                    sutrialCount: 0,
+                    succeedRenderCount: 0
+                });
+            }
+        } else {
+            Object.keys(dataSource).map(item => {
+                const temp = dataSource[item];
+                eachTrialParams.push(temp.description.parameters);
+                // may be a succeed trial hasn't final result
+                // all detail page may be break down if havn't if
+                if (temp.acc !== undefined) {
+                    if (temp.acc.default !== undefined) {
+                        accPara.push(temp.acc.default);
                     }
                 }
-            }));
+            });
+            if (this._isMounted) {
+                this.setState({ max: Math.max(...accPara), min: Math.min(...accPara) }, () => {
+                    this.getParallelAxis(dimName, parallelAxis, accPara, eachTrialParams, lenOfDataSource);
+                });
+            }
+        }
     }
 
     // get percent value number
     percentNum = (value: string) => {
 
-        window.clearInterval(Para.intervalIDPara);
         let vals = parseFloat(value);
         if (this._isMounted) {
-            this.setState(() => ({
-                percent: vals
-            }));
+            this.setState({ percent: vals }, () => {
+                this.reInit();
+            });
         }
-        this.hyperParaPic();
-        Para.intervalIDPara = window.setInterval(this.hyperParaPic, 10000);
     }
 
     // deal with response data into pic data
-    getOption = (dataObj: ParaObj) => {
-        const { visualValue } = this.state;
-        let parallelAxis = dataObj.parallelAxis;
-        let paralleData = dataObj.data;
-        const maxAccuracy = visualValue.maxAccuracy;
-        const minAccuracy = visualValue.minAccuracy;
+    getOption = (dataObj: ParaObj, lengthofTrials: number) => {
+        // dataObj [[y1], [y2]... [default metric]]
+        const { max, min } = this.state;
+        const parallelAxis = dataObj.parallelAxis;
+        const paralleData = dataObj.data;
         let visualMapObj = {};
-        if (maxAccuracy === minAccuracy) {
+        if (max === min) {
             visualMapObj = {
                 type: 'continuous',
                 precision: 3,
+                min: 0,
+                max: max,
                 color: ['#CA0000', '#FFC400', '#90EE90']
             };
         } else {
@@ -238,13 +306,12 @@ class Para extends React.Component<{}, ParaState> {
                 bottom: '20px',
                 type: 'continuous',
                 precision: 3,
-                min: visualValue.minAccuracy,
-                max: visualValue.maxAccuracy,
-                color: ['#CA0000', '#FFC400', '#90EE90'],
-                calculable: true
+                min: min,
+                max: max,
+                color: ['#CA0000', '#FFC400', '#90EE90']
             };
         }
-        let optionown = {
+        const optionown = {
             parallelAxis,
             tooltip: {
                 trigger: 'item'
@@ -253,7 +320,21 @@ class Para extends React.Component<{}, ParaState> {
                 parallelAxisDefault: {
                     tooltip: {
                         show: true
-                    }
+                    },
+                    axisLabel: {
+                        formatter: function (value: string) {
+                            const length = value.length;
+                            if (length > 16) {
+                                const temp = value.split('');
+                                for (let i = 16; i < temp.length; i += 17) {
+                                    temp[i] += '\n';
+                                }
+                                return temp.join('');
+                            } else {
+                                return value;
+                            }
+                        }
+                    },
                 }
             },
             visualMap: visualMapObj,
@@ -268,20 +349,11 @@ class Para extends React.Component<{}, ParaState> {
         };
         // please wait the data
         if (this._isMounted) {
-            if (paralleData.length === 0) {
-                this.setState({
-                    paraNodata: 'No data'
-                });
-            } else {
-                this.setState({
-                    paraNodata: ''
-                });
-            }
-        }
-        // draw search space graph
-        if (this._isMounted) {
             this.setState(() => ({
-                option: optionown
+                option: optionown,
+                paraNodata: '',
+                succeedRenderCount: lengthofTrials,
+                sutrialCount: paralleData.length
             }));
         }
     }
@@ -294,11 +366,71 @@ class Para extends React.Component<{}, ParaState> {
         }
     }
 
-    swapBtn = () => {
+    reInit = () => {
+        const { dataSource, expSearchSpace } = this.props;
+        this.hyperParaPic(dataSource, expSearchSpace);
+    }
 
-        window.clearInterval(Para.intervalIDPara);
-        this.hyperParaPic();
-        Para.intervalIDPara = window.setInterval(this.hyperParaPic, 10000);
+    swapReInit = () => {
+        const { clickCounts, succeedRenderCount } = this.state;
+        const val = clickCounts + 1;
+        if (this._isMounted) {
+            this.setState({ isLoadConfirm: true, clickCounts: val, });
+        }
+        const { paraBack, swapAxisArr } = this.state;
+        const paralDim = paraBack.parallelAxis;
+        const paraData = paraBack.data;
+        let temp: number;
+        let dim1: number;
+        let dim2: number;
+        let bool1: boolean = false;
+        let bool2: boolean = false;
+        let bool3: boolean = false;
+        Object.keys(paralDim).map(item => {
+            const paral = paralDim[item];
+            switch (paral.name) {
+                case swapAxisArr[0]:
+                    dim1 = paral.dim;
+                    bool1 = true;
+                    break;
+
+                case swapAxisArr[1]:
+                    dim2 = paral.dim;
+                    bool2 = true;
+                    break;
+
+                default:
+            }
+            if (bool1 && bool2) {
+                bool3 = true;
+            }
+        });
+        // swap dim's number
+        Object.keys(paralDim).map(item => {
+            if (bool3) {
+                if (paralDim[item].name === swapAxisArr[0]) {
+                    paralDim[item].dim = dim2;
+                }
+                if (paralDim[item].name === swapAxisArr[1]) {
+                    paralDim[item].dim = dim1;
+                }
+            }
+        });
+        paralDim.sort(this.sortDimY);
+        // swap data array
+        Object.keys(paraData).map(paraItem => {
+
+            temp = paraData[paraItem][dim1];
+            paraData[paraItem][dim1] = paraData[paraItem][dim2];
+            paraData[paraItem][dim2] = temp;
+        });
+        this.getOption(paraBack, succeedRenderCount);
+        // please wait the data
+        if (this._isMounted) {
+            this.setState(() => ({
+                isLoadConfirm: false
+            }));
+        }
     }
 
     sortDimY = (a: Dimobj, b: Dimobj) => {
@@ -307,86 +439,106 @@ class Para extends React.Component<{}, ParaState> {
 
     // deal with after swap data into pic
     swapGraph = (paraBack: ParaObj, swapAxisArr: string[]) => {
+        const paralDim = paraBack.parallelAxis;
+        const paraData = paraBack.data;
+        let temp: number;
+        let dim1: number;
+        let dim2: number;
+        let bool1: boolean = false;
+        let bool2: boolean = false;
+        let bool3: boolean = false;
+        Object.keys(paralDim).map(item => {
+            const paral = paralDim[item];
+            switch (paral.name) {
+                case swapAxisArr[0]:
+                    dim1 = paral.dim;
+                    bool1 = true;
+                    break;
 
-        if (swapAxisArr.length >= 2) {
-            const paralDim = paraBack.parallelAxis;
-            const paraData = paraBack.data;
-            let temp: number;
-            let dim1: number;
-            let dim2: number;
-            let bool1: boolean = false;
-            let bool2: boolean = false;
-            let bool3: boolean = false;
-            Object.keys(paralDim).map(item => {
-                const paral = paralDim[item];
-                switch (paral.name) {
-                    case swapAxisArr[0]:
-                        dim1 = paral.dim;
-                        bool1 = true;
-                        break;
+                case swapAxisArr[1]:
+                    dim2 = paral.dim;
+                    bool2 = true;
+                    break;
 
-                    case swapAxisArr[1]:
-                        dim2 = paral.dim;
-                        bool2 = true;
-                        break;
-
-                    default:
+                default:
+            }
+            if (bool1 && bool2) {
+                bool3 = true;
+            }
+        });
+        // swap dim's number
+        Object.keys(paralDim).map(item => {
+            if (bool3) {
+                if (paralDim[item].name === swapAxisArr[0]) {
+                    paralDim[item].dim = dim2;
                 }
-                if (bool1 && bool2) {
-                    bool3 = true;
+                if (paralDim[item].name === swapAxisArr[1]) {
+                    paralDim[item].dim = dim1;
                 }
-            });
-            // swap dim's number
-            Object.keys(paralDim).map(item => {
-                if (bool3) {
-                    if (paralDim[item].name === this.state.swapAxisArr[0]) {
-                        paralDim[item].dim = dim2;
-                    }
-                    if (paralDim[item].name === this.state.swapAxisArr[1]) {
-                        paralDim[item].dim = dim1;
-                    }
-                }
-            });
-            paralDim.sort(this.sortDimY);
-            // swap data array
-            Object.keys(paraData).map(paraItem => {
+            }
+        });
+        paralDim.sort(this.sortDimY);
+        // swap data array
+        Object.keys(paraData).map(paraItem => {
 
-                temp = paraData[paraItem][dim1];
-                paraData[paraItem][dim1] = paraData[paraItem][dim2];
-                paraData[paraItem][dim2] = temp;
-            });
-        }
+            temp = paraData[paraItem][dim1];
+            paraData[paraItem][dim1] = paraData[paraItem][dim2];
+            paraData[paraItem][dim2] = temp;
+        });
     }
 
     componentDidMount() {
-
         this._isMounted = true;
-        // default draw all data pic
-        this.hyperParaPic();
-        Para.intervalIDPara = window.setInterval(this.hyperParaPic, 10000);
+        this.reInit();
+    }
+
+    componentWillReceiveProps(nextProps: ParaProps) {
+        const { dataSource, expSearchSpace, whichGraph } = nextProps;
+        if (whichGraph === '2') {
+            this.hyperParaPic(dataSource, expSearchSpace);
+        }
+    }
+
+    shouldComponentUpdate(nextProps: ParaProps, nextState: ParaState) {
+
+        const { whichGraph } = nextProps;
+        const beforeGraph = this.props.whichGraph;
+        if (whichGraph === '2') {
+            if (whichGraph !== beforeGraph) {
+                return true;
+            }
+
+            const { sutrialCount, clickCounts, succeedRenderCount } = nextState;
+            const beforeCount = this.state.sutrialCount;
+            const beforeClickCount = this.state.clickCounts;
+            const beforeRealRenderCount = this.state.succeedRenderCount;
+            if (sutrialCount !== beforeCount) {
+                return true;
+            }
+            if (succeedRenderCount !== beforeRealRenderCount) {
+                return true;
+            }
+
+            if (clickCounts !== beforeClickCount) {
+                return true;
+            }
+        }
+        return false;
     }
 
     componentWillUnmount() {
-
         this._isMounted = false;
-        window.clearInterval(Para.intervalIDPara);
     }
 
     render() {
-        const { option, paraNodata, dimName } = this.state;
-        const chartMulineStyle = {
-            width: '100%',
-            height: 392,
-            margin: '0 auto',
-            padding: '0 15 10 15'
-        };
+        const { option, paraNodata, dimName, isLoadConfirm } = this.state;
         return (
             <Row className="parameter">
                 <Row>
                     <Col span={6} />
                     <Col span={18}>
                         <Row className="meline">
-                            <span>top</span>
+                            <span>Top</span>
                             <Select
                                 style={{ width: '20%', marginRight: 10 }}
                                 placeholder="100%"
@@ -416,7 +568,8 @@ class Para extends React.Component<{}, ParaState> {
                             <Button
                                 type="primary"
                                 className="changeBtu tableButton"
-                                onClick={this.swapBtn}
+                                onClick={this.swapReInit}
+                                disabled={isLoadConfirm}
                             >
                                 Confirm
                             </Button>
@@ -426,7 +579,7 @@ class Para extends React.Component<{}, ParaState> {
                 <Row className="searcHyper">
                     <ReactEcharts
                         option={option}
-                        style={chartMulineStyle}
+                        style={this.chartMulineStyle}
                         // lazyUpdate={true}
                         notMerge={true} // update now
                     />
