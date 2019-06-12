@@ -489,7 +489,10 @@ class PAITrainingService implements TrainingService {
             await HDFSClientUtility.copyDirectoryToHdfs(trialLocalTempFolder, hdfsCodeDir, this.hdfsClient);
         } catch (error) {
             this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${hdfsCodeDir} failed, error is ${error}`);
-            throw new Error(error.message);
+            trialJobDetail.status = 'FAILED';
+            deferred.resolve(false);
+
+            return deferred.promise;
         }
 
         // Step 3. Submit PAI job via Rest call
@@ -510,7 +513,7 @@ class PAITrainingService implements TrainingService {
                     `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body}`;
                 this.log.error(errorMessage);
                 trialJobDetail.status = 'FAILED';
-                deferred.reject(new Error(errorMessage));
+                deferred.resolve(false);
             } else {
                 trialJobDetail.submitTime = Date.now();
                 deferred.resolve(true);
