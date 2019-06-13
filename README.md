@@ -106,12 +106,6 @@ We encourage researchers and students leverage these projects to accelerate the 
 
 ## **Install & Verify**
 
-If you are using NNI on Windows and use PowerShell to run script for the first time, you need to **run PowerShell as administrator** with this command first:
-
-```bash
-    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
 **Install through pip** 	
 
 * We support Linux, MacOS and Windows(local, remote and pai mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
@@ -124,6 +118,12 @@ python3 -m pip install --upgrade nni
 
 Windows
 
+**IMPORTANT** Make sure `ExecutionPolicy` has been set to `Unrestricted` before installation. To set the policy, **run PowerShell as administrator** with the following command:
+
+```bash
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
+Once ExecutionPolicy is unrestricted, run the following command to install NNI:
 ```bash
 python -m pip install --upgrade nni
 ```
