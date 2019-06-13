@@ -490,7 +490,7 @@ class PAITrainingService implements TrainingService {
         } catch (error) {
             this.log.error(`PAI Training service: copy ${this.paiTrialConfig.codeDir} to HDFS ${hdfsCodeDir} failed, error is ${error}`);
             trialJobDetail.status = 'FAILED';
-            deferred.resolve(false);
+            deferred.resolve(true);
 
             return deferred.promise;
         }
@@ -513,7 +513,7 @@ class PAITrainingService implements TrainingService {
                     `Submit trial ${trialJobId} failed, http code:${response.statusCode}, http body: ${response.body}`;
                 this.log.error(errorMessage);
                 trialJobDetail.status = 'FAILED';
-                deferred.resolve(false);
+                deferred.resolve(true);
             } else {
                 trialJobDetail.submitTime = Date.now();
                 deferred.resolve(true);
