@@ -75,7 +75,7 @@ export class PAIJobConfig{
     //The virtual cluster job runs on.
     public readonly virtualCluster: string;
 
-    //The type of gpu job runs on.
+    //The gpu type job runs on.
     public readonly gpuType: string;
 
     /**
@@ -128,7 +128,7 @@ export class NNIPAITrialConfig extends TrialConfig{
     public virtualCluster?: string;
     //Shared memory for one task in the task role
     public shmMB?: number;
-    //The type of gpu job runs on. If omitted, the job will run on any gpu type
+    //The gpu type job runs on. If omitted, the job will run on any gpu type
     public gpuType?: string;
 
 

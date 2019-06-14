@@ -59,6 +59,8 @@ Compared with LocalMode and [RemoteMachineMode](RemoteMachineMode.md), trial con
     * Optional key. Set the virtualCluster of OpenPAI. If omitted, the job will run on default virtual cluster.
 * shmMB
     * Optional key. Set the shmMB configuration of OpenPAI, it set the shared memory for one task in the task role.
+* gpuType
+    * Optional key. Specify the GPU type to be used in the tasks. If omitted, the job will run on any gpu type
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 ```
