@@ -76,7 +76,7 @@ export class PAIJobConfig{
     public readonly virtualCluster: string;
 
     //The gpu type job runs on.
-    public readonly gpuType: string;
+    public readonly gpuType?: string;
 
     /**
      * Constructor
@@ -87,7 +87,7 @@ export class PAIJobConfig{
      * @param taskRoles List of taskRole, one task role at least
      */
     constructor(jobName: string, image : string, dataDir : string, outputDir : string, codeDir : string, 
-            taskRoles : PAITaskRole[], virtualCluster: string, gpuType: string) {
+            taskRoles : PAITaskRole[], virtualCluster: string, gpuType?: string) {
         this.jobName = jobName;
         this.image = image;
         this.dataDir = dataDir;
