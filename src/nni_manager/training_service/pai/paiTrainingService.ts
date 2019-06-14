@@ -483,7 +483,7 @@ class PAITrainingService implements TrainingService {
             // Add Virutal Cluster
             this.paiTrialConfig.virtualCluster === undefined ? 'default' : this.paiTrialConfig.virtualCluster.toString(),
             // Add gpuType
-            this.paiTrialConfig.gpuType === undefined ? '' : this.paiTrialConfig.gpuType.toString()
+            this.paiTrialConfig.gpuType === undefined ? undefined : this.paiTrialConfig.gpuType.toString()
         );
 
         // Step 2. Upload code files in codeDir onto HDFS
