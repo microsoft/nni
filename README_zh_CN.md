@@ -101,11 +101,11 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
 
 ## **安装和验证**
 
-**Install through pip**
+**通过 pip 命令安装**
 
 * 当前支持 Linux，MacOS 和 Windows（本机，远程，OpenPAI 模式），在 Ubuntu 16.04 或更高版本，MacOS 10.14.1 以及 Windows 10.1809 上进行了测试。 在 `python >= 3.5` 的环境中，只需要运行 `pip install` 即可完成安装。
 
-Linux and MacOS
+Linux 和 macOS
 
 ```bash
 python3 -m pip install --upgrade nni
@@ -113,7 +113,7 @@ python3 -m pip install --upgrade nni
 
 Windows
 
-**IMPORTANT** Make sure `ExecutionPolicy` has been set to `Unrestricted` before installation. To set the policy, **run PowerShell as administrator** with the following command:
+**重要**：确保安装前将 `ExecutionPolicy` 设为 `Unrestricted`。 To set the policy, **run PowerShell as administrator** with the following command:
 
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy Unrestricted
