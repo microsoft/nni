@@ -28,12 +28,13 @@ import re
 import sys
 import select
 import json
+import threading
 from pyhdfs import HdfsClient
 import pkg_resources
-from .rest_utils import rest_post
-from .url_utils import gen_send_stdout_url, gen_send_version_url
+from .rest_utils import rest_post, rest_get
+from .url_utils import gen_send_stdout_url, gen_send_version_url, gen_parameter_meta_url
 
-from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH
+from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH, MULTI_PHASE
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal
 from .log_utils import LogType, nni_log, RemoteLogger, PipeLogReader, StdOutputType
 
@@ -138,6 +139,18 @@ def check_version(args):
         except AttributeError as err:
             nni_log(LogType.Error, err)
 
+def is_multi_phase():
+    return MULTI_PHASE and (MULTI_PHASE in ['True', 'true'])
+
+def fetch_parameter_file(args):
+    class FetchThread(threading.Thread):
+        def run(self):
+            meta_list = rest_get(gen_parameter_meta_url(args.nnimanager_ip, args.nnimanager_port), 10)
+            print(meta_list)
+
+    fetch_file_thread = FetchThread()
+    fetch_file_thread.start()
+
 if __name__ == '__main__':
     '''NNI Trial Keeper main function'''
     PARSER = argparse.ArgumentParser()
@@ -159,6 +172,8 @@ if __name__ == '__main__':
         exit(1)
     check_version(args)
     try:
+        if is_multi_phase():
+            fetch_parameter_file(args)
         main_loop(args)
     except SystemExit as se:
         nni_log(LogType.Info, 'NNI trial keeper exit with code {}'.format(se.code))
