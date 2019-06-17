@@ -103,7 +103,7 @@ export async function execNewFile(filename: string): Promise<void> {
  */
 export function execScript(filePath: string): cp.ChildProcess {
     if (process.platform === 'win32') {
-        return cp.exec(`powershell.exe -file ${filePath}`);
+        return cp.exec(`powershell.exe -ExecutionPolicy Bypass -file ${filePath}`);
     } else {
         return cp.exec(`bash ${filePath}`);
     }

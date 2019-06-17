@@ -106,12 +106,6 @@ We encourage researchers and students leverage these projects to accelerate the 
 
 ## **Install & Verify**
 
-If you are using NNI on Windows and use PowerShell to run script for the first time, you need to **run PowerShell as administrator** with this command first:
-
-```bash
-    Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
 **Install through pip** 	
 
 * We support Linux, MacOS and Windows(local, remote and pai mode) in current stage, Ubuntu 16.04 or higher, MacOS 10.14.1 along with Windows 10.1809 are tested and supported. Simply run the following `pip install` in an environment that has `python >= 3.5`.
@@ -124,6 +118,12 @@ python3 -m pip install --upgrade nni
 
 Windows
 
+**IMPORTANT** Make sure `ExecutionPolicy` has been set to `Unrestricted` before installation. To set the policy, **run PowerShell as administrator** with the following command:
+
+```bash
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
+Once ExecutionPolicy is unrestricted, run the following command to install NNI:
 ```bash
 python -m pip install --upgrade nni
 ```
@@ -143,7 +143,7 @@ Linux and MacOS
 * Run the following commands in an environment that has `python >= 3.5`, `git` and `wget`.
 
 ```bash
-    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    git clone -b v0.8 https://github.com/Microsoft/nni.git
     cd nni
     source install.sh
 ```
@@ -153,9 +153,9 @@ Windows
 * Run the following commands in an environment that has `python >=3.5`, `git` and `PowerShell`
 
 ```bash
-  git clone -b v0.7 https://github.com/Microsoft/nni.git
+  git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
-  powershell .\install.ps1
+  powershell -ExecutionPolicy Bypass -file install.ps1
 ```
 
 For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)
@@ -169,7 +169,7 @@ The following example is an experiment built on TensorFlow. Make sure you have *
 * Download the examples via clone the source code.
 
 ```bash
-    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    git clone -b v0.8 https://github.com/Microsoft/nni.git
 ```
 
 Linux and MacOS
