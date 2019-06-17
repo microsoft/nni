@@ -152,7 +152,7 @@ Windows
 ```bash
   git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
-  powershell .\install.ps1
+  powershell -ExecutionPolicy Bypass -file install.ps1
 ```
 
 参考[安装 NNI](docs/zh_CN/Installation.md) 了解系统需求。
