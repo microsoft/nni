@@ -31,7 +31,7 @@ const K8SConfig = require('kubernetes-client').config;
 /**
  * Generict Kubernetes client, target version >= 1.9
  */
-// tslint:disable:completed-docs no-any no-unsafe-any
+// tslint:disable: no-any no-unsafe-any
 class GeneralK8sClient {
     protected readonly client: any;
     protected readonly log: Logger = getLogger();
@@ -55,6 +55,9 @@ class GeneralK8sClient {
     }
 }
 
+/**
+ * Kubernetes CRD client
+ */
 abstract class KubernetesCRDClient {
     protected readonly client: any;
     protected readonly log: Logger = getLogger();
@@ -105,8 +108,8 @@ abstract class KubernetesCRDClient {
     //TODO : replace any
     public async getKubernetesJob(kubeflowJobName: string): Promise<any> {
         let result: Promise<any>;
-        // tslint:disable-next-line:newline-per-chained-call
-        const response : any = await this.operator(kubeflowJobName).get();
+        const response : any = await this.operator(kubeflowJobName)
+          .get();
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(response.body);
         } else {

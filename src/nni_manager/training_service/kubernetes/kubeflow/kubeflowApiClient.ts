@@ -26,7 +26,7 @@ import { KubeflowOperator } from './kubeflowConfig';
 // tslint:disable: completed-docs no-use-before-declare
 abstract class KubeflowOperatorClient extends KubernetesCRDClient {
     /**
-     * Factory method to generate operator cliet
+     * Factory method to generate operator client
      */
     // tslint:disable-next-line:function-name
     public static generateOperatorClient(kubeflowOperator: KubeflowOperator,

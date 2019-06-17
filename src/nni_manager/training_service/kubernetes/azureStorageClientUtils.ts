@@ -206,17 +206,19 @@ export namespace AzureStorageClientUtility {
                 throw new Error(`list files failed, can't get directories in result['entries']`);
             }
 
+            // tslint:disable: no-floating-promises
             for (const fileName of result.entries.files) {
                 const fullFilePath: string = path.join(localDirectory, fileName.name);
-                await downloadFile(fileServerClient, azureDirectory, fileName.name, azureShare, fullFilePath);
+                downloadFile(fileServerClient, azureDirectory, fileName.name, azureShare, fullFilePath);
             }
 
             for (const directoryName of result.entries.directories) {
                 const fullDirectoryPath: string = path.join(localDirectory, directoryName.name);
                 const fullAzureDirectory: string = path.join(azureDirectory, directoryName.name);
-                await downloadDirectory(fileServerClient, fullAzureDirectory, azureShare, fullDirectoryPath);
+                downloadDirectory(fileServerClient, fullAzureDirectory, azureShare, fullDirectoryPath);
             }
             deferred.resolve();
+            // tslint:enable: no-floating-promises
         });
 
         return deferred.promise;

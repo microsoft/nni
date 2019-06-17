@@ -21,7 +21,9 @@
 
 import { JobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
 
-// tslint:disable-next-line:completed-docs
+/**
+ * PAI trial job detail
+ */
 export class PAITrialJobDetail implements TrialJobDetail {
     public id: string;
     public status: TrialJobStatus;
@@ -71,5 +73,6 @@ export const PAI_TRIAL_COMMAND_FORMAT: string =
 export const PAI_OUTPUT_DIR_FORMAT: string =
 `hdfs://{0}:9000/`;
 
+// tslint:disable:no-http-string
 export const PAI_LOG_PATH_FORMAT: string =
 `http://{0}/webhdfs/explorer.html#{1}`;

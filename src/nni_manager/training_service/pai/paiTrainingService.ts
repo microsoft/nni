@@ -189,6 +189,7 @@ class PAITrainingService implements TrainingService {
         return false;
     }
 
+    // tslint:disable:no-http-string
     public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trialJobDetail : PAITrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
         const deferred : Deferred<void> = new Deferred<void>();
@@ -206,8 +207,8 @@ class PAITrainingService implements TrainingService {
         }
 
         const stopJobRequest: request.Options = {
-            // tslint:disable-next-line:max-line-length
-            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}/jobs/${trialJobDetail.paiJobName}/executionType`,
+            uri: `http://${this.paiClusterConfig.host}/rest-server/api/v1/user/${this.paiClusterConfig.userName}\
+/jobs/${trialJobDetail.paiJobName}/executionType`,
             method: 'PUT',
             json: true,
             body: {value: 'STOP'},
@@ -631,7 +632,7 @@ class PAITrainingService implements TrainingService {
         return Promise.race([timeoutDelay, deferred.promise])
             .finally(() => { clearTimeout(timeoutId); });
     }
-    // tslint:enable:no-any no-unsafe-any
+    // tslint:enable:no-any no-unsafe-any no-http-string
 }
 
 export { PAITrainingService };

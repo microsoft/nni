@@ -104,7 +104,6 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
 /**
  * The remote machine ssh client used for trial and gpu detector
  */
-// tslint:disable: completed-docs
 export class SSHClient {
     private readonly sshClient: Client;
     private usedConnectionNumber: number; //count the connection number of every client
@@ -130,6 +129,9 @@ export class SSHClient {
     }
 }
 
+/**
+ * The remote machine ssh client manager
+ */
 export class SSHClientManager {
     private readonly sshClientArray: SSHClient[];
     private readonly maxTrialNumberPerConnection: number;
@@ -169,7 +171,7 @@ export class SSHClientManager {
     }
 
     /**
-     * first ssh clilent instance is used for gpu collector and host job
+     * first ssh client instance is used for gpu collector and host job
      */
     public getFirstSSHClient(): Client {
         return this.sshClientArray[0].getSSHClientInstance;

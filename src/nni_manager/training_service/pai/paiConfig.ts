@@ -21,7 +21,9 @@
 
 import {TrialConfig} from '../common/trialConfig';
 
-// tslint:disable:completed-docs
+/**
+ * Task role for PAI
+ */
 export class PAITaskRole {
     // Name for the task role
     public readonly name: string;
@@ -59,6 +61,9 @@ export class PAITaskRole {
     }
 }
 
+/**
+ * Trial job configuration submitted to PAI
+ */
 export class PAIJobConfig {
     // Name for the job, need to be unique
     public readonly jobName: string;
@@ -97,6 +102,9 @@ export class PAIJobConfig {
     }
 }
 
+/**
+ * PAI cluster configuration
+ */
 export class PAIClusterConfig {
     public readonly userName: string;
     public readonly passWord: string;
@@ -115,6 +123,9 @@ export class PAIClusterConfig {
     }
 }
 
+/**
+ * PAI trial configuration
+ */
 export class NNIPAITrialConfig extends TrialConfig {
     public readonly cpuNum: number;
     public readonly memoryMB: number;

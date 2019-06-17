@@ -43,7 +43,9 @@ const azure = require('azure-storage');
 const base64 = require('js-base64').Base64;
 // tslint:enable:no-var-requires no-require-imports typedef no-unsafe-any
 
-// tslint:disable-next-line:completed-docs
+/**
+ * Training Service implementation for Kubernetes
+ */
 abstract class KubernetesTrainingService {
     protected readonly NNI_KUBERNETES_TRIAL_LABEL: string = 'nni-kubernetes-trial';
     protected readonly log!: Logger;
