@@ -24,7 +24,7 @@ Your machine don't have eth0 device, please set [nniManagerIp](ExperimentConfig.
 When the duration of experiment reaches the maximum duration, nniManager will not create new trials, but the existing trials will continue unless user manually stop the experiment. 
 
 ### Could not stop an experiment using `nnictl stop`
-If you upgrade your NNI or you delete some config files of NNI when there is an experiment running, this kind of issue may happen because the loss of config file. You could use `ps -ef | grep node` to find the pid of your experiment, and use `kill -9 {pid}` to kill it manually.
+If you upgrade your NNI or you delete some config files of NNI when there is an experiment running, this kind of issue may happen because the loss of config file. You could use `ps -ef | grep node` to find the PID of your experiment, and use `kill -9 {pid}` to kill it manually.
 
 ### Could not get `default metric` in webUI of virtual machines
 Config the network mode to bridge mode or other mode that could make virtual machine's host accessible from external machine, and make sure the port of virtual machine is not forbidden by firewall.
@@ -34,7 +34,7 @@ Unable to open the WebUI may have the following reasons:
 
 * http://127.0.0.1, http://172.17.0.1 and http://10.0.0.15 are referred to localhost, if you start your experiment on the server or remote machine. You can replace the IP to your server IP to view the WebUI, like http://[your_server_ip]:8080
 * If you still can't see the WebUI after you use the server IP, you can check the proxy and the firewall of your machine. Or use the browser on the machine where you start your NNI experiment.
-* Another reason may be your experiment is failed and NNI may fail to get the experiment infomation. You can check the log of NNImanager in the following directory: ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
+* Another reason may be your experiment is failed and NNI may fail to get the experiment information. You can check the log of NNIManager in the following directory: ~/nni/experiment/[your_experiment_id] /log/nnimanager.log
 
 ### NNI on Windows problems
 Please refer to [NNI on Windows](NniOnWindows.md) 
