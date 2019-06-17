@@ -279,6 +279,7 @@ class SlideBar extends React.Component<SliderProps, SliderState> {
     }
 
     fresh = (event: React.SyntheticEvent<EventTarget>) => {
+        event.preventDefault();
         const whichPage = window.location.pathname;
         this.props.changeFresh(whichPage);
     }
