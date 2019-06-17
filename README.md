@@ -118,12 +118,6 @@ python3 -m pip install --upgrade nni
 
 Windows
 
-**IMPORTANT** Make sure `ExecutionPolicy` has been set to `Unrestricted` before installation. To set the policy, **run PowerShell as administrator** with the following command:
-
-```bash
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-Once ExecutionPolicy is unrestricted, run the following command to install NNI:
 ```bash
 python -m pip install --upgrade nni
 ```
