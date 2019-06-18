@@ -27,7 +27,7 @@ from nni_cmd.common_utils import print_warning
 
 def parse_annotation_mutable_layers(code, lineno):
     """Parse the string of mutable layers in annotation.
-    Return a list of AST Expr nodes
+    Return a list of AST Expr nodes and NAS mode
     code: annotation string (excluding '@')
     """
     module = ast.parse(code)
@@ -38,7 +38,11 @@ def parse_annotation_mutable_layers(code, lineno):
     nodes = []
     mutable_id = 'mutable_block_' + str(lineno)
     mutable_layer_cnt = 0
+    mode = 'general'
     for arg in call.args:
+        if type(arg) is ast.Str:
+            assert arg.s in ['general', 'tensorflow'], 'Unsupported mode %s' % arg.s
+            mode = arg.s
         fields = {'layer_choice': False,
                   'fixed_inputs': False,
                   'optional_inputs': False,
@@ -110,10 +114,12 @@ def parse_annotation_mutable_layers(code, lineno):
         else:
             target_call_args.append(ast.Dict(keys=[], values=[]))
             target_call_args.append(ast.Num(n=0))
+        if mode == 'tensorflow':
+            target_call_args.append(ast.Name('tensorflow'))
         target_call = ast.Call(func=target_call_attr, args=target_call_args, keywords=[])
         node = ast.Assign(targets=[layer_output], value=target_call)
         nodes.append(node)
-    return nodes
+    return nodes, mode
 
 def parse_annotation(code):
     """Parse an annotation string.
@@ -281,6 +287,7 @@ class Transformer(ast.NodeTransformer):
         self.stack = []
         self.last_line = 0
         self.annotated = False
+        self.mode = 'general'
 
     def visit(self, node):
         if isinstance(node, (ast.expr, ast.stmt)):
@@ -325,7 +332,8 @@ class Transformer(ast.NodeTransformer):
             return parse_annotation(string[1:])  # expand annotation string to code
 
         if string.startswith('@nni.mutable_layers'):
-            return parse_annotation_mutable_layers(string[1:], node.lineno)
+            nodes, self.mode = parse_annotation_mutable_layers(string[1:], node.lineno)
+            return nodes
 
         if string.startswith('@nni.variable') \
                 or string.startswith('@nni.function_choice'):
@@ -369,5 +377,8 @@ def parse(code):
         if type(nodes[i]) is ast.ImportFrom and nodes[i].module == '__future__':
             last_future_import = i
     nodes.insert(last_future_import + 1, import_nni)
+    if transformer.mode == 'tensorflow':
+        import_tf = ast.Import(names=[ast.alias(name='tensorflow', asname=None)])
+        nodes.insert(last_future_import + 1, import_tf)
 
     return astor.to_source(ast_tree)

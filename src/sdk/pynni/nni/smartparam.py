@@ -37,7 +37,8 @@ __all__ = [
     'lognormal',
     'qlognormal',
     'function_choice',
-    'mutable_layer'
+    'mutable_layer',
+    'reload_tensorflow_variables'
 ]
 
 
@@ -81,6 +82,10 @@ if trial_env_vars.NNI_PLATFORM is None:
 
     def mutable_layer():
         raise RuntimeError('Cannot call nni.mutable_layer in this mode')
+
+    def reload_tensorflow_variables(session, tf):
+        raise RuntimeError(
+            'Cannot call nni.reload_tensorflow_variables in this mode')
 
 else:
 
@@ -151,8 +156,10 @@ else:
             mutable_block = _get_param(mutable_id)
             chosen_layer = mutable_block[mutable_layer_id]["chosen_layer"]
             chosen_inputs = mutable_block[mutable_layer_id]["chosen_inputs"]
-            real_chosen_inputs = [optional_inputs[input_name] for input_name in chosen_inputs]
-            layer_out = funcs[chosen_layer]([fixed_inputs, real_chosen_inputs], **funcs_args[chosen_layer])
+            real_chosen_inputs = [optional_inputs[input_name]
+                                  for input_name in chosen_inputs]
+            layer_out = funcs[chosen_layer](
+                [fixed_inputs, real_chosen_inputs], **funcs_args[chosen_layer])
         else:
             name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
             # store namespace
@@ -160,33 +167,52 @@ else:
             name_space[name_prefix] = dict()
             name_space[name_prefix]['funcs'] = list(funcs)
             name_space[name_prefix]['optional_inputs'] = list(optional_inputs)
-            # create tensorflow variables as signals of selections
+            # create tensorflow variables as 1/0 signals used to form subgraph
+            global tf_variables
             name_for_optional_inputs = name_prefix + '_optional_inputs'
             name_for_funcs = name_prefix + '_funcs'
-
-            global tf_variables
             tf_variables[name_prefix] = dict()
             tf_variables[name_prefix]['optional_inputs'] = tf.get_variable(name_for_optional_inputs,
-                                                                                            [len(optional_inputs)],
-                                                                                            dtype=tf.bool,
-                                                                                            trainable=False)
-            tf_variables[name_prefix]['funcs'] = tf.get_variable(name_for_funcs, [], dtype=tf.int64, trainable=False)
+                                                                           [len(optional_inputs)],
+                                                                           dtype=tf.bool,
+                                                                           trainable=False)
+            tf_variables[name_prefix]['funcs'] = tf.get_variable(
+                name_for_funcs, [], dtype=tf.int64, trainable=False)
 
             # get real values using their variable names
-            real_optional_inputs_value = [optional_inputs[name] for name in name_space[name_prefix]['optional_inputs']]
-            real_func_value = [funcs[name] for name in name_space[name_prefix]['funcs']]
-            real_funcs_args = [funcs_args[name] for name in name_space[name_prefix]['funcs']]
+            real_optional_inputs_value = [optional_inputs[name]
+                                          for name in name_space[name_prefix]['optional_inputs']]
+            real_func_value = [funcs[name]
+                               for name in name_space[name_prefix]['funcs']]
+            real_funcs_args = [funcs_args[name]
+                               for name in name_space[name_prefix]['funcs']]
             # build tensorflow graph of geting chosen inputs by masking
-            real_chosen_inputs = tf.boolean_mask(real_optional_inputs_value, tf_variables[name_prefix]['optional_inputs'])
+            real_chosen_inputs = tf.boolean_mask(
+                real_optional_inputs_value, tf_variables[name_prefix]['optional_inputs'])
             # build tensorflow graph of different branches by using tf.case
             branches = dict()
             for func_id in range(len(funcs)):
-                func_output = real_func_value[func_id](
-                    [fixed_inputs, real_chosen_inputs], *real_funcs_args[func_id])
+                func_output = real_func_value[func_id]([fixed_inputs, real_chosen_inputs], *real_funcs_args[func_id])
                 branches[tf.equal(tf_variables[name_prefix]['funcs'], func_id)] = lambda: func_output
-            layer_out = tf.case(branches, exclusive=True, default=lambda: func_output)
+            layer_out = tf.case(branches, exclusive=True,
+                                default=lambda: func_output)
 
         return layer_out
+
+    def reload_tensorflow_variables(session, tf):
+        subgraph_from_tuner = trial.get_next_parameter()
+        for mutable_id, mutable_block in subgraph_from_tuner.items():
+            for mutable_layer_id, mutable_layer in mutable_block.items():
+                name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
+                # extract layer information from the subgraph sampled by tuner
+                chosen_layer = name_space[name_prefix]['funcs'].index(
+                    mutable_layer["chosen_layer"])
+                chosen_inputs = [1 if inp in mutable_layer["chosen_inputs"]
+                                 else 0 for inp in name_space[name_prefix]['funcs']]
+                # load these information into pre-defined tensorflow variables
+                tf_variables[name_prefix]['funcs'].load(chosen_layer, session)
+                tf_variables[name_prefix]['optional_inputs'].load(
+                    chosen_inputs, session)
 
     def _get_param(key):
         if trial._params is None:
