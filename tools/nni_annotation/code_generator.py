@@ -121,7 +121,7 @@ def parse_annotation_mutable_layers(code, lineno):
             target_call_args.append(ast.Dict(keys=[], values=[]))
             target_call_args.append(ast.Num(n=0))
         if mode == 'oneshot-tf':
-            target_call_args.append(ast.Name('tensorflow'))
+            target_call_args.append(ast.Name(id='tensorflow'))
         target_call = ast.Call(func=target_call_attr, args=target_call_args, keywords=[])
         node = ast.Assign(targets=[layer_output], value=target_call)
         nodes.append(node)
@@ -332,7 +332,7 @@ class Transformer(ast.NodeTransformer):
             call_node = parse_annotation(string[1:]).value
             if call_node.args:
                 call_attr = ast.Attribute(value=ast.Name(id='nni', ctx=ast.Load()), attr='reload_tensorflow_variables', ctx=ast.Load())
-                return ast.Call(func=call_attr, args=call_node.args, keywords=[])
+                return ast.Expr(value=ast.Call(func=call_attr, args=call_node.args, keywords=[]))
             else:
                 deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. Please remove this line in the trial code."
                 print_warning(deprecated_message)

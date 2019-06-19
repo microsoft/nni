@@ -164,11 +164,16 @@ else:
             name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
             # store namespace
             global name_space
+            if 'name_space' not in globals():
+                name_space = dict()
+            name_space[mutable_id] = True
             name_space[name_prefix] = dict()
             name_space[name_prefix]['funcs'] = list(funcs)
             name_space[name_prefix]['optional_inputs'] = list(optional_inputs)
             # create tensorflow variables as 1/0 signals used to form subgraph
             global tf_variables
+            if 'tf_variables' not in globals():
+                tf_variables = dict()
             name_for_optional_inputs = name_prefix + '_optional_inputs'
             name_for_funcs = name_prefix + '_funcs'
             tf_variables[name_prefix] = dict()
@@ -192,23 +197,25 @@ else:
             # build tensorflow graph of different branches by using tf.case
             branches = dict()
             for func_id in range(len(funcs)):
-                func_output = real_func_value[func_id]([fixed_inputs, real_chosen_inputs], *real_funcs_args[func_id])
+                func_output = real_func_value[func_id]([fixed_inputs, real_chosen_inputs], **real_funcs_args[func_id])
                 branches[tf.equal(tf_variables[name_prefix]['funcs'], func_id)] = lambda: func_output
             layer_out = tf.case(branches, exclusive=True,
                                 default=lambda: func_output)
 
         return layer_out
 
-    def reload_tensorflow_variables(session, tf):
+    def reload_tensorflow_variables(session):
         subgraph_from_tuner = trial.get_next_parameter()
         for mutable_id, mutable_block in subgraph_from_tuner.items():
+            if mutable_id not in name_space:
+                continue
             for mutable_layer_id, mutable_layer in mutable_block.items():
                 name_prefix = "{}_{}".format(mutable_id, mutable_layer_id)
                 # extract layer information from the subgraph sampled by tuner
                 chosen_layer = name_space[name_prefix]['funcs'].index(
                     mutable_layer["chosen_layer"])
                 chosen_inputs = [1 if inp in mutable_layer["chosen_inputs"]
-                                 else 0 for inp in name_space[name_prefix]['funcs']]
+                                 else 0 for inp in name_space[name_prefix]['optional_inputs']]
                 # load these information into pre-defined tensorflow variables
                 tf_variables[name_prefix]['funcs'].load(chosen_layer, session)
                 tf_variables[name_prefix]['optional_inputs'].load(
