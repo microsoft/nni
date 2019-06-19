@@ -26,7 +26,7 @@ import { ClusterJobRestServer } from '../common/clusterJobRestServer'
 
 /**
  * Kubeflow Training service Rest server, provides rest API to support kubeflow job metrics update
- * 
+ *
  */
 @component.Singleton
 export class KubernetesJobRestServer extends ClusterJobRestServer{
@@ -53,5 +53,5 @@ export class KubernetesJobRestServer extends ClusterJobRestServer{
                 data : singleMetric
             });
         }
-    }   
+    }
 }

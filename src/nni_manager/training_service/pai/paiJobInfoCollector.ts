@@ -44,7 +44,7 @@ export class PAIJobInfoCollector {
 
     public async retrieveTrialStatus(paiToken? : string, paiClusterConfig?: PAIClusterConfig) : Promise<void> {
         if (!paiClusterConfig || !paiToken) {
-            return Promise.resolve();            
+            return Promise.resolve();
         }
 
         const updatePaiTrialJobs : Promise<void>[] = [];
@@ -76,7 +76,7 @@ export class PAIJobInfoCollector {
                 "Authorization": 'Bearer ' + paiToken
             }
         };
-        //TODO : pass in request timeout param? 
+        //TODO : pass in request timeout param?
         request(getJobInfoRequest, (error: Error, response: request.Response, body: any) => {
             if (error || response.statusCode >= 500) {
                 this.log.error(`PAI Training service: get job info for trial ${paiTrialJob.id} from PAI Cluster failed!`);
@@ -87,7 +87,7 @@ export class PAIJobInfoCollector {
             } else {
                 if(response.body.jobStatus && response.body.jobStatus.state) {
                     switch(response.body.jobStatus.state) {
-                        case 'WAITING': 
+                        case 'WAITING':
                             paiTrialJob.status = 'WAITING';
                             break;
                         case 'RUNNING':
@@ -96,7 +96,7 @@ export class PAIJobInfoCollector {
                                 paiTrialJob.startTime = response.body.jobStatus.appLaunchedTime;
                             }
                             if(!paiTrialJob.url) {
-                                paiTrialJob.url = response.body.jobStatus.appTrackingUrl;    
+                                paiTrialJob.url = response.body.jobStatus.appTrackingUrl;
                             }
                             break;
                         case 'SUCCEEDED':
@@ -104,7 +104,7 @@ export class PAIJobInfoCollector {
                             break;
                         case 'STOPPED':
                             if (paiTrialJob.isEarlyStopped !== undefined) {
-                                paiTrialJob.status = paiTrialJob.isEarlyStopped === true ? 
+                                paiTrialJob.status = paiTrialJob.isEarlyStopped === true ?
                                         'EARLY_STOPPED' : 'USER_CANCELED';
                             } else {
                                 // if paiTrialJob's isEarlyStopped is undefined, that mean we didn't stop it via cancellation, mark it as SYS_CANCELLED by PAI
@@ -112,7 +112,7 @@ export class PAIJobInfoCollector {
                             }
                             break;
                         case 'FAILED':
-                            paiTrialJob.status = 'FAILED';                            
+                            paiTrialJob.status = 'FAILED';
                             break;
                         default:
                             paiTrialJob.status = 'UNKNOWN';

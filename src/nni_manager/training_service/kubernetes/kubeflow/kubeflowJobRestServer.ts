@@ -25,7 +25,7 @@ import { KubernetesJobRestServer } from '../kubernetesJobRestServer'
 
 /**
  * Kubeflow Training service Rest server, provides rest API to support kubeflow job metrics update
- * 
+ *
  */
 @component.Singleton
 export class KubeflowJobRestServer extends KubernetesJobRestServer{
@@ -34,5 +34,5 @@ export class KubeflowJobRestServer extends KubernetesJobRestServer{
      */
     constructor() {
         super(component.get(KubeflowTrainingService));
-    }   
+    }
 }

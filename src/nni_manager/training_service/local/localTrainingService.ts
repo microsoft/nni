@@ -532,7 +532,7 @@ class LocalTrainingService implements TrainingService {
         }
         const scripts: string[] = this.getScript(this.localTrailConfig, trialJobDetail.workingDirectory);
         scripts.forEach(script => {
-            runScriptLines.push(script); 
+            runScriptLines.push(script);
         });
         await execMkdir(trialJobDetail.workingDirectory);
         await execMkdir(path.join(trialJobDetail.workingDirectory, '.nni'));

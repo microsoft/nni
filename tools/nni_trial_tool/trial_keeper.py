@@ -42,10 +42,10 @@ regular = re.compile('v?(?P<version>[0-9](\.[0-9]){0,1}).*')
 
 def main_loop(args):
     '''main loop logic for trial keeper'''
-    
+
     if not os.path.exists(LOG_DIR):
         os.makedirs(LOG_DIR)
-    
+
     stdout_file = open(STDOUT_FULL_PATH, 'a+')
     stderr_file = open(STDERR_FULL_PATH, 'a+')
     trial_keeper_syslogger = RemoteLogger(args.nnimanager_ip, args.nnimanager_port, 'trial_keeper', StdOutputType.Stdout, args.log_collection)

@@ -25,7 +25,7 @@ import { MethodNotImplementedError } from '../../common/errors';
 export abstract class KubernetesClusterConfig {
     public readonly storage?: KubernetesStorageKind;
     public readonly apiVersion: string;
-    
+
     constructor(apiVersion: string, storage?: KubernetesStorageKind) {
         this.storage = storage;
         this.apiVersion = apiVersion;
@@ -48,7 +48,7 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
     public readonly nfs: NFSConfig;
 
     constructor(
-            apiVersion: string, 
+            apiVersion: string,
             nfs: NFSConfig,
             storage?: KubernetesStorageKind
         ) {
@@ -73,11 +73,11 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
 export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     public readonly keyVault: keyVaultConfig;
     public readonly azureStorage: AzureStorage;
-    
+
     constructor(
-            apiVersion: string, 
-            keyVault: keyVaultConfig, 
-            azureStorage: AzureStorage, 
+            apiVersion: string,
+            keyVault: keyVaultConfig,
+            azureStorage: AzureStorage,
             storage?: KubernetesStorageKind
         ) {
         super(apiVersion, storage);
@@ -151,7 +151,7 @@ export class keyVaultConfig {
 export class AzureStorage {
     /**The azure share to storage files */
     public readonly azureShare : string;
-    
+
     /**The account name of sotrage service */
     public readonly accountName: string;
     constructor(azureShare : string, accountName: string){
@@ -178,8 +178,8 @@ export class KubernetesTrialConfigTemplate {
 
     /** Required GPU number for trial job. The number should be in [0,100] */
     public readonly gpuNum : number;
-    
-    constructor(command : string, gpuNum : number, 
+
+    constructor(command : string, gpuNum : number,
         cpuNum: number, memoryMB: number, image: string) {
         this.command = command;
         this.gpuNum = gpuNum;

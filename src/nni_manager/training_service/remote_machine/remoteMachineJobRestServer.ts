@@ -26,7 +26,7 @@ import { ClusterJobRestServer } from '../common/clusterJobRestServer'
 
 /**
  * RemoteMachine Training service Rest server, provides rest RemoteMachine to support remotemachine job metrics update
- * 
+ *
  */
 @component.Singleton
 export class RemoteMachineJobRestServer extends ClusterJobRestServer{

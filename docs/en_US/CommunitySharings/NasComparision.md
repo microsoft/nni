@@ -28,7 +28,7 @@ To avoid over-fitting in **CIFAR-10**, we also compare the models in the other f
 
 
 
-We do not change the default fine-tuning technique in their source code. In order to match each task, the codes of input image shape and output numbers are changed.  
+We do not change the default fine-tuning technique in their source code. In order to match each task, the codes of input image shape and output numbers are changed.
 
 Search phase time for all NAS methods is **two days** as well as the retrain time.  Average results are reported based on **three repeat times**. Our evaluation machines have one Nvidia Tesla P100 GPU, 112GB of RAM and one 2.60GHz CPU (Intel E5-2690).
 
@@ -57,7 +57,7 @@ The best or average results reported in the paper:
 
 For AutoKeras, it has relatively worse performance across all datasets due to its random factor on network morphism.
 
-For ENAS, ENAS (macro) shows good results in OUI-Adience-Age and ENAS (micro)  shows good results in CIFAR-10. 
+For ENAS, ENAS (macro) shows good results in OUI-Adience-Age and ENAS (micro)  shows good results in CIFAR-10.
 
 For DARTS, it has a good performance on some datasets but we found its high variance in other datasets. The difference among three runs of benchmarks can be up to 5.37% in OUI-Adience-Age and 4.36% in ImageNet-10-1.
 

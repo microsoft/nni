@@ -1,5 +1,5 @@
 ## NNI CTL
-The NNI CTL module is used to control Neural Network Intelligence, including start a new experiment, stop an experiment and update an experiment etc.  
+The NNI CTL module is used to control Neural Network Intelligence, including start a new experiment, stop an experiment and update an experiment etc.
 ## Environment
 
 ```
@@ -9,7 +9,7 @@ python >= 3.5
 
 ## Installation
 
-1. Enter tools directory  
+1. Enter tools directory
 
 1. Use pip to install packages
     * Install for current user:
@@ -24,17 +24,17 @@ python >= 3.5
       python3 -m pip install -e .
       ```
 
-1. Change the mode of nnictl file 
+1. Change the mode of nnictl file
 
     ```bash
     chmod +x ./nnictl
     ```
 
 1. Add nnictl to your PATH system environment variable.
-  
+
     * You could use `export` command to set PATH variable temporary.
-  
-          export PATH={your nnictl path}:$PATH  
+
+          export PATH={your nnictl path}:$PATH
 
     * Or you could edit your `/etc/profile` file.
 

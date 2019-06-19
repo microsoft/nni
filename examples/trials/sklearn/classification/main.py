@@ -56,7 +56,7 @@ def get_model(PARAMS):
     model.degree = PARAMS.get('degree')
     model.gamma = PARAMS.get('gamma')
     model.coef0 = PARAMS.get('coef0')
-    
+
     return model
 
 def run(X_train, X_test, y_train, y_test, PARAMS):

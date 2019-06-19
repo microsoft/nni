@@ -19,26 +19,26 @@ To enable NNI API, make the following changes:
 
         RECEIVED_PARAMS = nni.get_next_parameter()
 
-    to get hyper-parameters' values assigned by tuner. `RECEIVED_PARAMS` is an object, for example: 
+    to get hyper-parameters' values assigned by tuner. `RECEIVED_PARAMS` is an object, for example:
 
         {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
 
 1.3 Report NNI results
-    Use the API: 
-
-        `nni.report_intermediate_result(accuracy)` 
-    
-    to send `accuracy` to assessor.
-    
     Use the API:
 
-        `nni.report_final_result(accuracy)` 
-        
-    to send `accuracy` to tuner. 
+        `nni.report_intermediate_result(accuracy)`
+
+    to send `accuracy` to assessor.
+
+    Use the API:
+
+        `nni.report_final_result(accuracy)`
+
+    to send `accuracy` to tuner.
 ~~~~
 We had made the changes and saved it to `mnist.py`.
 
-**NOTE**: 
+**NOTE**:
 ~~~~
 accuracy - The `accuracy` could be any python object, but  if you use NNI built-in tuner/assessor, `accuracy` should be a numerical variable (e.g. float, int).
 assessor - The assessor will decide which trial should early stop based on the history performance of trial (intermediate result of one trial).
@@ -47,7 +47,7 @@ tuner    - The tuner will generate next parameters/architecture based on the exp
 
 >Step 2 - Define SearchSpace
 
-The hyper-parameters used in `Step 1.2 - Get predefined parameters` is defined in a `search_space.json` file like below: 
+The hyper-parameters used in `Step 1.2 - Get predefined parameters` is defined in a `search_space.json` file like below:
 ```
 {
     "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
@@ -76,10 +76,10 @@ To run an experiment in NNI, you only needed:
 * Provide a YAML experiment configure file
 * (optional) Provide or choose an assessor
 
-**Prepare trial**: 
+**Prepare trial**:
 >A set of examples can be found in ~/nni/examples after your installation, run `ls ~/nni/examples/trials` to see all the trial examples.
 
-Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example: 
+Let's use a simple trial example, e.g. mnist, provided by NNI. After you installed NNI, NNI examples have been put in ~/nni/examples, run `ls ~/nni/examples/trials` to see all the trial examples. You can simply execute the following command to run the NNI mnist example:
 
       python ~/nni/examples/trials/mnist-annotation/mnist.py
 
@@ -109,10 +109,10 @@ maxExecDuration: 3h
 # empty means never stop
 maxTrialNum: 100
 
-# choice: local, remote  
+# choice: local, remote
 trainingServicePlatform: local
 
-# choice: true, false  
+# choice: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -122,7 +122,7 @@ trial:
   command: python mnist.py
   codeDir: ~/nni/examples/trials/mnist-annotation
   gpuNum: 0
-``` 
+```
 
 Here *useAnnotation* is true because this trial example uses our python annotation (refer to [here](AnnotationSpec.md) for details). For trial, we should provide *trialCommand* which is the command to run the trial, provide *trialCodeDir* where the trial code is. The command will be executed in this directory. We should also provide how many GPUs a trial requires.
 
@@ -136,7 +136,7 @@ You can refer to [here](Nnictl.md) for more usage guide of *nnictl* command line
 The experiment has been running now. Other than *nnictl*, NNI also provides WebUI for you to view experiment progress, to control your experiment, and some other appealing features.
 
 ## Using multiple local GPUs to speed up search
-The following steps assume that you have 4 NVIDIA GPUs installed at local and [tensorflow with GPU support](https://www.tensorflow.org/install/gpu). The demo enables 4 concurrent trail jobs and each trail job uses 1 GPU. 
+The following steps assume that you have 4 NVIDIA GPUs installed at local and [tensorflow with GPU support](https://www.tensorflow.org/install/gpu). The demo enables 4 concurrent trail jobs and each trail job uses 1 GPU.
 
 **Prepare configure file**: NNI provides a demo configuration file for the setting above, `cat ~/nni/examples/trials/mnist-annotation/config_gpu.yml` to see it. The trailConcurrency and gpuNum are different from the basic configure file:
 
@@ -152,7 +152,7 @@ trial:
   command: python mnist.py
   codeDir: ~/nni/examples/trials/mnist-annotation
   gpuNum: 1
-``` 
+```
 
 We can run the experiment with the following command:
 

@@ -40,7 +40,7 @@ class TrialTestCase(TestCase):
 
     def test_get_sequence_id(self):
         self.assertEqual(nni.get_sequence_id(), 0)
-        
+
     def test_report_intermediate_result(self):
         nni.report_intermediate_result(123)
         self.assertEqual(test_platform.get_last_metric(), {

@@ -27,7 +27,7 @@ from scipy.optimize import minimize
 import nni.metis_tuner.lib_data as lib_data
 
 
-def next_hyperparameter_expected_improvement(fun_prediction,   
+def next_hyperparameter_expected_improvement(fun_prediction,
                                              fun_prediction_args,
                                              x_bounds, x_types,
                                              samples_y_aggregation,

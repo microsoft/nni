@@ -112,7 +112,7 @@ export class SSHClient {
         this.sshClient = sshClient;
         this.usedConnectionNumber = usedConnectionNumber;
     }
-    
+
     public get getSSHClientInstance(): Client {
         return this.sshClient;
     }
@@ -151,7 +151,7 @@ export class SSHClientManager {
             port: this.rmMeta.port,
             username: this.rmMeta.username };
         if (this.rmMeta.passwd) {
-            connectConfig.password = this.rmMeta.passwd;                
+            connectConfig.password = this.rmMeta.passwd;
         } else if(this.rmMeta.sshKeyPath) {
             if(!fs.existsSync(this.rmMeta.sshKeyPath)) {
                 //SSh key path is not a valid file, reject
@@ -171,10 +171,10 @@ export class SSHClientManager {
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
         }).connect(connectConfig);
-      
+
         return deferred.promise;
     }
-    
+
     /**
      * find a available ssh client in ssh array, if no ssh client available, return undefined
      */
@@ -191,7 +191,7 @@ export class SSHClientManager {
         //init a new ssh client if could not get an available one
         return await this.initNewSSHClient();
     }
-    
+
     /**
      * add a new ssh client to sshClientArray
      * @param sshClient
@@ -199,14 +199,14 @@ export class SSHClientManager {
     public addNewSSHClient(client: Client) {
         this.sshClientArray.push(new SSHClient(client, 1));
     }
-    
+
     /**
      * first ssh clilent instance is used for gpu collector and host job
      */
     public getFirstSSHClient() {
         return this.sshClientArray[0].getSSHClientInstance;
     }
-    
+
     /**
      * close all of ssh client
      */
@@ -215,7 +215,7 @@ export class SSHClientManager {
             sshClient.getSSHClientInstance.end();
         }
     }
-    
+
     /**
      * retrieve resource, minus a number for given ssh client
      * @param client
@@ -231,7 +231,7 @@ export class SSHClientManager {
             }
         }
     }
-} 
+}
 
 
 export type RemoteMachineScheduleResult = { scheduleInfo : RemoteMachineScheduleInfo | undefined; resultType : ScheduleResultType};
@@ -242,7 +242,7 @@ export enum ScheduleResultType {
     /* Schedule succeeded*/
     SUCCEED,
 
-    /* Temporarily, no enough available GPU right now */    
+    /* Temporarily, no enough available GPU right now */
     TMP_NO_AVAILABLE_GPU,
 
     /* Cannot match requirement even if all GPU are a*/

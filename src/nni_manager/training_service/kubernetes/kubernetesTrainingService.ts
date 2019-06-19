@@ -63,13 +63,13 @@ abstract class KubernetesTrainingService {
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
     protected versionCheck: boolean = true;
     protected logCollection: string;
-    
+
     constructor() {
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, KubernetesTrialJobDetail>();
         this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
-        this.experimentId = getExperimentId();      
+        this.experimentId = getExperimentId();
         this.nextTrialSequenceId = -1;
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.genericK8sClient = new GeneralK8sClient();
@@ -86,8 +86,8 @@ abstract class KubernetesTrainingService {
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
         const jobs: TrialJobDetail[] = [];
-        
-        for (const [key, value] of this.trialJobsMap) { 
+
+        for (const [key, value] of this.trialJobsMap) {
             if (value.form.jobType === 'TRIAL') {
                 jobs.push(await this.getTrialJob(key));
             }
@@ -102,7 +102,7 @@ abstract class KubernetesTrainingService {
 
         if (!kubernetesTrialJob) {
             return Promise.reject(`trial job ${trialJobId} not found`)
-        }        
+        }
 
         return Promise.resolve(kubernetesTrialJob);
     }
@@ -114,7 +114,7 @@ abstract class KubernetesTrainingService {
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void) {
         this.metricsEmitter.off('metric', listener);
     }
- 
+
     public get isMultiPhaseJobSupported(): boolean {
         return false;
     }
@@ -153,7 +153,7 @@ abstract class KubernetesTrainingService {
                 {
                     apiVersion: 'v1',
                     kind: 'Secret',
-                    metadata: { 
+                    metadata: {
                         name: this.azureStorageSecretName,
                         namespace: 'default',
                         labels: {
@@ -174,15 +174,15 @@ abstract class KubernetesTrainingService {
         }
         return Promise.resolve();
     }
-    
+
         /**
      * Genereate run script for different roles(like worker or ps)
      * @param trialJobId trial job id
      * @param trialWorkingFolder working folder
-     * @param command 
+     * @param command
      * @param trialSequenceId sequence id
      */
-    protected async generateRunScript(platform: string, trialJobId: string, trialWorkingFolder: string, 
+    protected async generateRunScript(platform: string, trialJobId: string, trialWorkingFolder: string,
                 command: string, trialSequenceId: string, roleName: string, gpuNum: number): Promise<string> {
         let nvidia_script: string = '';
         // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
@@ -229,7 +229,7 @@ abstract class KubernetesTrainingService {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} not found`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
-        }        
+        }
         if(!this.kubernetesCRDClient) {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} failed because operatorClient is undefined`;
             this.log.error(errorMessage);
@@ -268,8 +268,8 @@ abstract class KubernetesTrainingService {
                 kubernetesTrialJob.status = 'SYS_CANCELED';
             }
         }
-        
-        // Delete all kubernetes jobs whose expId label is current experiment id 
+
+        // Delete all kubernetes jobs whose expId label is current experiment id
         try {
             if(this.kubernetesCRDClient) {
                 await this.kubernetesCRDClient.deleteKubernetesJob(new Map(
@@ -290,7 +290,7 @@ abstract class KubernetesTrainingService {
             this.log.error(`Unmount ${this.trialLocalNFSTempFolder} failed, error is ${error}`);
         }
 
-        // Stop kubernetes rest server 
+        // Stop kubernetes rest server
         if(!this.kubernetesJobRestServer) {
             throw new Error('kubernetesJobRestServer not initialized!');
         }

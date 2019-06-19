@@ -40,7 +40,7 @@ export class KubernetesTrialJobDetail implements TrialJobDetail {
     public queryJobFailedCount: number;
 
     constructor(id: string, status: TrialJobStatus, submitTime: number,
-                workingDirectory: string, form: JobApplicationForm, 
+                workingDirectory: string, form: JobApplicationForm,
                 kubernetesJobName: string, sequenceId: number, url: string) {
         this.id = id;
         this.status = status;
