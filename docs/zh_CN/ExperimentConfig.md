@@ -134,8 +134,7 @@ machineList:
   
   - 说明
     
-    **experimentName** 是 Experiment 的名称。  
-    待实现：增加默认值
+    **experimentName** is the name of the experiment created. TBD: add default value
 
 - **trialConcurrency**
   
