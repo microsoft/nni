@@ -43,9 +43,13 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
     let fileNameValid: boolean = true;
     try {
         fileCount = await countFilesRecursively(codeDir);
-        fileNameValid = await validateFileNameRecursively(codeDir);
     } catch(error) {
         throw new Error(`Call count file error: ${error}`);
+    }
+    try {
+        fileNameValid = await validateFileNameRecursively(codeDir);
+    } catch(error) {
+        throw new Error(`Validate file name error: ${error}`);
     }
 
     if(fileCount && fileCount > 1000) {

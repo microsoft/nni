@@ -390,13 +390,13 @@ async function validateFileNameRecursively(directory: string): Promise<boolean> 
 
     const fileNameArray: string[] = fs.readdirSync(directory);
     let result = true;
-    for(var fileName of fileNameArray){
-        const fullFilePath: string = path.join(directory, fileName);
+    for(var name of fileNameArray){
+        const fullFilePath: string = path.join(directory, name);
         try {
-            if (fs.lstatSync(fullFilePath).isFile()) {
-                result = validateFileName(fileName);
-            } else {
-                result = await validateFileNameRecursively(fullFilePath);
+            // validate file names and directory names
+            result = validateFileName(name);
+            if (fs.lstatSync(fullFilePath).isDirectory) {
+                result = result && await validateFileNameRecursively(fullFilePath);
             }
             if(!result) {
                 return Promise.resolve(result);
