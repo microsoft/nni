@@ -26,7 +26,7 @@ import { ClusterJobRestServer } from '../common/clusterJobRestServer'
 
 /**
  * PAI Training service Rest server, provides rest API to support pai job metrics update
- * 
+ *
  */
 @component.Singleton
 export class PAIJobRestServer extends ClusterJobRestServer{

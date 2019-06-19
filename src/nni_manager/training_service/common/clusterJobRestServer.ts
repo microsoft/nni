@@ -32,7 +32,7 @@ import { Writable } from 'stream';
 
 /**
  * Cluster Job Training service Rest server, provides rest API to support Cluster job metrics update
- * 
+ *
  */
 @component.Singleton
 export abstract class ClusterJobRestServer extends RestServer{
@@ -52,8 +52,8 @@ export abstract class ClusterJobRestServer extends RestServer{
         super();
         const basePort: number = getBasePort();
         assert(basePort && basePort > 1024);
-        
-        this.port = basePort + 1;         
+
+        this.port = basePort + 1;
     }
 
     public get clusterRestServerPort(): number {
@@ -62,11 +62,11 @@ export abstract class ClusterJobRestServer extends RestServer{
         }
         return this.port;
     }
-    
+
     public get getErrorMessage(): string | undefined{
         return this.errorMessage;
     }
-    
+
     public set setEnableVersionCheck(versionCheck: boolean) {
         this.enableVersionCheck = versionCheck;
     }

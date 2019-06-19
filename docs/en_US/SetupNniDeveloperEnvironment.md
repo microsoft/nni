@@ -63,4 +63,4 @@ After the code changes, use **step 3** to rebuild your codes, then the changes w
 
 ---
 At last, wish you have a wonderful day.
-For more contribution guidelines on making PR's or issues to NNI source code, you can refer to our [Contributing](./Contributing.md) document. 
+For more contribution guidelines on making PR's or issues to NNI source code, you can refer to our [Contributing](./Contributing.md) document.

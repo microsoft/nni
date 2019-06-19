@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# 
-# NNI (https://github.com/Microsoft/nni) modified this code to show how to 
+#
+# NNI (https://github.com/Microsoft/nni) modified this code to show how to
 # integrate distributed pytorch training with NNI SDK
-# 
+#
 
 import os
 import torch

@@ -59,8 +59,8 @@ class GPUScheduler {
     }
 
     /**
-     * Generate gpu metric collector shell script in local machine, 
-     * used to run in remote machine, and will be deleted after uploaded from local. 
+     * Generate gpu metric collector shell script in local machine,
+     * used to run in remote machine, and will be deleted after uploaded from local.
      */
     private async runGpuMetricsCollectorScript(): Promise<void> {
         await execMkdir(this.gpuMetricCollectorScriptFolder);

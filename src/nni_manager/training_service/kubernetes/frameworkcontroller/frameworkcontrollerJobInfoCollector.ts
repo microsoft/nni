@@ -32,7 +32,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
         super(jobMap);
     }
 
-    protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined, 
+    protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined,
         kubernetesTrialJob : KubernetesTrialJobDetail) : Promise<void> {
         if (!this.statusesNeedToCheck.includes(kubernetesTrialJob.status)) {
             return Promise.resolve();
@@ -44,7 +44,7 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
 
         let kubernetesJobInfo: any;
         try {
-            kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);            
+            kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);
         } catch(error) {
             this.log.error(`Get job ${kubernetesTrialJob.kubernetesJobName} info failed, error is ${error}`);
             //This is not treat as a error status
@@ -71,9 +71,9 @@ export class FrameworkControllerJobInfoCollector extends KubernetesJobInfoCollec
                             break;
                         case 'Failed':
                             kubernetesTrialJob.status = 'FAILED';
-                            break;        
+                            break;
                     }
-                    kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTime); 
+                    kubernetesTrialJob.endTime = Date.parse(<string>kubernetesJobInfo.status.completionTime);
                     break;
                 default:
                     break;

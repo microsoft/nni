@@ -89,7 +89,7 @@ describe('Unit Test for PAITrainingService', () => {
             chai.expect(trialDetail.status).to.be.equals('WAITING');
         } catch(error) {
             console.log('Submit job failed:' + error);
-            chai.assert(error)            
+            chai.assert(error)
         }
     });
 });

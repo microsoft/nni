@@ -201,12 +201,12 @@ class UNetResNetV4(nn.Module):
             F.upsample(d3, scale_factor=4, mode='bilinear', align_corners=False),
             F.upsample(d4, scale_factor=8, mode='bilinear', align_corners=False),
             F.upsample(d5, scale_factor=16, mode='bilinear', align_corners=False),
-        ], 1) 
+        ], 1)
 
         f = F.dropout2d(f, p=self.dropout_2d)
 
         return self.logit(f), None
-    
+
     def freeze_bn(self):
         '''Freeze BatchNorm layers.'''
         for layer in self.modules():
@@ -221,7 +221,7 @@ class UNetResNetV4(nn.Module):
         for x in group1:
             for p in x.parameters():
                 params1.append(p)
-        
+
         param_group1 = {'params': params1, 'lr': base_lr / 5}
 
         params2 = []
@@ -321,7 +321,7 @@ class UNetResNetV5(nn.Module):
             F.interpolate(d3, scale_factor=4, mode='bilinear', align_corners=False),
             F.interpolate(d4, scale_factor=8, mode='bilinear', align_corners=False),
             F.interpolate(d5, scale_factor=16, mode='bilinear', align_corners=False),
-        ], 1) 
+        ], 1)
 
         f = F.dropout2d(f, p=self.dropout_2d)
 
@@ -331,7 +331,7 @@ class UNetResNetV6(nn.Module):
     '''
     1. Remove first pool from UNetResNetV5, such that resolution is doubled
     2. Remove scSE from center block
-    3. Increase default dropout 
+    3. Increase default dropout
     '''
     def __init__(self, encoder_depth, num_filters=32, dropout_2d=0.5):
         super(UNetResNetV6, self).__init__()
@@ -400,7 +400,7 @@ class UNetResNetV6(nn.Module):
             F.interpolate(d4, scale_factor=4, mode='bilinear', align_corners=False),
             F.interpolate(d5, scale_factor=8, mode='bilinear', align_corners=False),
             F.interpolate(center, scale_factor=16, mode='bilinear', align_corners=False),
-        ], 1) 
+        ], 1)
 
         f = F.dropout2d(f, p=self.dropout_2d, training=self.training)
 

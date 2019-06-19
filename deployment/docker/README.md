@@ -14,11 +14,11 @@ pandas 0.23.4
 lightgbm 2.2.2
 NNI v0.7
 ```
-You can take this Dockerfile as a reference for your own customized Dockerfile. 
+You can take this Dockerfile as a reference for your own customized Dockerfile.
 
 ## 2.How to build and run
 __Use the following command from `nni/deployment/docker` to build docker image__
-```    
+```
     docker build -t nni/nni .
 ```
 __Run the docker image__

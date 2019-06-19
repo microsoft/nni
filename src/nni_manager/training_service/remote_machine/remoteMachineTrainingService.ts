@@ -125,10 +125,10 @@ class RemoteMachineTrainingService implements TrainingService {
         }
         this.log.info('Remote machine training service exit.');
     }
-    
+
     /**
      * give trial a ssh connection
-     * @param trial 
+     * @param trial
      */
     public async allocateSSHClientForTrial(trial: RemoteMachineTrialJobDetail): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
@@ -144,10 +144,10 @@ class RemoteMachineTrainingService implements TrainingService {
         deferred.resolve();
         return deferred.promise;
     }
-    
+
     /**
      * If a trial is finished, release the connection resource
-     * @param trial 
+     * @param trial
      */
     public releaseTrialSSHClient(trial: RemoteMachineTrialJobDetail): void {
         if(!trial.rmMeta) {
@@ -167,7 +167,7 @@ class RemoteMachineTrainingService implements TrainingService {
         const jobs: TrialJobDetail[] = [];
         const deferred: Deferred<TrialJobDetail[]> = new Deferred<TrialJobDetail[]>();
 
-        for (const [key, value] of this.trialJobsMap) { 
+        for (const [key, value] of this.trialJobsMap) {
             if (value.form.jobType === 'TRIAL') {
                 jobs.push(await this.getTrialJob(key));
             }
@@ -275,12 +275,12 @@ class RemoteMachineTrainingService implements TrainingService {
 
         return trialJobDetail;
     }
-    
+
     /**
      * remove gpu reversion when job is not running
      */
     private updateGpuReservation() {
-        for (const [key, value] of this.trialJobsMap) { 
+        for (const [key, value] of this.trialJobsMap) {
             if(!['WAITING', 'RUNNING'].includes(value.status)) {
                 this.gpuScheduler.removeGpuReservation(key, this.trialJobsMap);
             }
@@ -371,7 +371,7 @@ class RemoteMachineTrainingService implements TrainingService {
                     await validateCodeDir(remoteMachineTrailConfig.codeDir);
                 } catch(error) {
                     this.log.error(error);
-                    return Promise.reject(new Error(error));                    
+                    return Promise.reject(new Error(error));
                 }
 
                 this.trialConfig = remoteMachineTrailConfig;
@@ -400,16 +400,16 @@ class RemoteMachineTrainingService implements TrainingService {
 
         return deferred.promise;
     }
-    
+
     /**
-     * cleanup() has a time out of 10s to clean remote connections 
+     * cleanup() has a time out of 10s to clean remote connections
      */
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping remote machine training service...');
         this.stopping = true;
         await Promise.race([delay(10000), this.cleanupConnections()]);
     }
-    
+
     /**
      * stop gpu_metric_collector process in remote machine and remove unused scripts
      */
@@ -430,8 +430,8 @@ class RemoteMachineTrainingService implements TrainingService {
         }
 
         return Promise.resolve();
-    } 
-    
+    }
+
     /**
      * Generate gpu metric collector directory to store temp gpu metric collector script files
      */
@@ -441,8 +441,8 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     /**
-     * Generate gpu metric collector shell script in local machine, 
-     * used to run in remote machine, and will be deleted after uploaded from local. 
+     * Generate gpu metric collector shell script in local machine,
+     * used to run in remote machine, and will be deleted after uploaded from local.
      */
     private async generateGpuMetricsCollectorScript(userName: string): Promise<void> {
         let gpuMetricCollectorScriptFolder : string = this.getLocalGpuMetricCollectorDir();
@@ -451,9 +451,9 @@ class RemoteMachineTrainingService implements TrainingService {
         let gpuMetricsCollectorScriptPath: string = path.join(gpuMetricCollectorScriptFolder, userName, 'gpu_metrics_collector.sh');
         const remoteGPUScriptsDir: string = this.getRemoteScriptsPath(userName); // This directory is used to store gpu_metrics and pid created by script
         const gpuMetricsCollectorScriptContent: string = String.Format(
-            GPU_INFO_COLLECTOR_FORMAT_LINUX, 
-            remoteGPUScriptsDir, 
-            unixPathJoin(remoteGPUScriptsDir, 'pid'), 
+            GPU_INFO_COLLECTOR_FORMAT_LINUX,
+            remoteGPUScriptsDir,
+            unixPathJoin(remoteGPUScriptsDir, 'pid'),
         );
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
     }
@@ -589,7 +589,7 @@ class RemoteMachineTrainingService implements TrainingService {
         } else {
             command = `CUDA_VISIBLE_DEVICES=" " ${this.trialConfig.command}`;
         }
-        
+
         const nniManagerIp = this.nniManagerIpConfig?this.nniManagerIpConfig.nniManagerIp:getIPV4Address();
         if(!this.remoteRestServerPort) {
             const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);

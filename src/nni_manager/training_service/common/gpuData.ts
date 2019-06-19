@@ -59,7 +59,7 @@ export class GPUSummary {
     }
 }
 
-export const GPU_INFO_COLLECTOR_FORMAT_LINUX: string = 
+export const GPU_INFO_COLLECTOR_FORMAT_LINUX: string =
 `
 #!/bin/bash
 export METRIC_OUTPUT_DIR={0}
@@ -67,7 +67,7 @@ echo $$ >{1}
 python3 -m nni_gpu_tool.gpu_metrics_collector
 `
 
-export const GPU_INFO_COLLECTOR_FORMAT_WINDOWS: string = 
+export const GPU_INFO_COLLECTOR_FORMAT_WINDOWS: string =
 `
 $env:METRIC_OUTPUT_DIR="{0}"
 $app = Start-Process "python" -ArgumentList "-m nni_gpu_tool.gpu_metrics_collector" -passthru -NoNewWindow

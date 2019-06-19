@@ -15,6 +15,6 @@
 * When the experiment is done, meaning it is successfully done in this case, `Experiment done` can be detected in the nni_manager.log file.
 
 ## Issues
-* Private APIs are used to detect whether tuner and assessor have terminated successfully. 
+* Private APIs are used to detect whether tuner and assessor have terminated successfully.
 * The output of REST server is not tested.
 * Remote machine training service is not tested.

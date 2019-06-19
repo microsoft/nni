@@ -10,7 +10,7 @@ useAnnotation: false
 multiThread: true
 tuner:
   codeDir: ../../../tuners/weight_sharing/ga_customer_tuner
-  classFileName: customer_tuner.py 
+  classFileName: customer_tuner.py
   className: CustomerTuner
   classArgs:
     optimize_mode: maximize
@@ -23,9 +23,9 @@ trial:
 machineList:
   - ip: remote-ip-0
     port: 8022
-    username: root 
+    username: root
     passwd: screencast
   - ip: remote-ip-1
     port: 8022
-    username: root 
+    username: root
     passwd: screencast
