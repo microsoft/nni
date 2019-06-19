@@ -1,7 +1,6 @@
 # NNI 中使用 scikit-learn
 
-[scikit-learn](https://github.com/scikit-learn/scikit-learn) (sklearn) 是数据挖掘和分析的流行工具。 它支持多种机器学习模型，如线性回归，逻辑回归，决策树，支持向量机等。 提高 scikit-learn 的效率是非常有价值的课题。  
-NNI 支持多种调优算法，可以为 scikit-learn 搜索最佳的模型和超参，并支持本机、远程服务器组、云等各种环境。
+[scikit-learn](https://github.com/scikit-learn/scikit-learn) (sklearn) 是数据挖掘和分析的流行工具。 它支持多种机器学习模型，如线性回归，逻辑回归，决策树，支持向量机等。 How to make the use of scikit-learn more efficiency is a valuable topic. NNI supports many kinds of tuning algorithms to search the best models and/or hyper-parameters for scikit-learn, and support many kinds of environments like local machine, remote servers and cloud.
 
 ## 1. 如何运行此样例
 
@@ -15,8 +14,7 @@ nnictl create --config ./config.yml
 
 ### 2.1 分类
 
-此样例使用了数字数据集，由 1797 张 8x8 的图片组成，每张图片都是一个手写数字。目标是将这些图片分到 10 个类别中。  
-在此样例中，使用了 SVC 作为模型，并选择了一些参数，包括 `"C", "keral", "degree", "gamma" 和 "coef0"`。 关于这些参数的更多信息，可参考[这里](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html)。
+This example uses the dataset of digits, which is made up of 1797 8x8 images, and each image is a hand-written digit, the goal is to classify these images into 10 classes. In this example, we use SVC as the model, and choose some parameters of this model, including `"C", "keral", "degree", "gamma" and "coef0"`. For more information of these parameters, please [refer](https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html).
 
 ### 2.2 回归
 
@@ -48,8 +46,7 @@ nnictl create --config ./config.yml
     
     在 Python 代码中，可以将这些值作为一个 dict，读取到 Python 代码中。
 
-* **第二步**  
-    在代码最前面，加上 `import nni` 来导入 NNI 包。 首先，要使用 `nni.get_next_parameter()` 函数从 NNI 中获取参数。 然后在代码中使用这些参数。 例如，如果定义了如下的 search_space.json：
+* **step 2** At the beginning of your python code, you should `import nni` to insure the packages works normally. 首先，要使用 `nni.get_next_parameter()` 函数从 NNI 中获取参数。 然后在代码中使用这些参数。 例如，如果定义了如下的 search_space.json：
     
     ```json
     {
@@ -75,6 +72,4 @@ nnictl create --config ./config.yml
     
     就可以使用这些变量来编写 scikit-learn 的代码。
 
-* **第三步**  
-    完成训练后，可以得到模型分数，如：精度，召回率，均方差等等。 NNI 会将分数发送给 Tuner 算法，并据此生成下一组参数，所以需要将分数返回给 NNI。NNI 会开始下一个 Trial 任务。  
-    只需要在训练结束后调用 `nni.report_final_result(score)`，就可以将分数传给 NNI。 如果训练过程中有中间分数，也可以使用 `nni.report_intemediate_result(score)` 返回给 NNI。 注意， 可以不返回中间分数，但必须返回最终的分数。
+* **step 3** After you finished your training, you could get your own score of the model, like your percision, recall or MSE etc. NNI needs your score to tuner algorithms and generate next group of parameters, please report the score back to NNI and start next trial job. You just need to use `nni.report_final_result(score)` to communitate with NNI after you process your scikit-learn code. Or if you have multiple scores in the steps of training, you could also report them back to NNI using `nni.report_intemediate_result(score)`. Note, you may not report intemediate result of your job, but you must report back your final result.
