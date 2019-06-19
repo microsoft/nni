@@ -40,16 +40,16 @@ def copyHdfsDirectoryToLocal(hdfsDirectory, localDirectory, hdfsClient):
             copyHdfsDirectoryToLocal(subHdfsDirectory, subLocalDirectory, hdfsClient)
         elif f.type == 'FILE':
             hdfsFilePath = posixpath.join(hdfsDirectory, f.pathSuffix)
-            localFilePath = os.path.join(localDirectory, f.pathSuffix)            
+            localFilePath = os.path.join(localDirectory, f.pathSuffix)
             copyHdfsFileToLocal(hdfsFilePath, localFilePath, hdfsClient)
-        else: 
+        else:
             raise AssertionError('unexpected type {}'.format(f.type))
 
 def copyHdfsFileToLocal(hdfsFilePath, localFilePath, hdfsClient, override=True):
     '''Copy file from HDFS to local'''
     if not hdfsClient.exists(hdfsFilePath):
         raise Exception('HDFS file {} does not exist!'.format(hdfsFilePath))
-    try: 
+    try:
         file_status = hdfsClient.get_file_status(hdfsFilePath)
         if file_status.type != 'FILE':
             raise Exception('HDFS file path {} is not a file'.format(hdfsFilePath))

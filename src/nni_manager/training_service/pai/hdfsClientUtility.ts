@@ -58,6 +58,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Copy a local file to hdfs directory
+     *
      * @param localFilePath local file path(source)
      * @param hdfsFilePath hdfs file path(target)
      * @param hdfsClient hdfs client
@@ -92,6 +93,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Recursively copy local directory to hdfs directory
+     *
      * @param localDirectory local directory
      * @param hdfsDirectory HDFS directory
      * @param hdfsClient   HDFS client
@@ -124,6 +126,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Read content from HDFS file
+     *
      * @param hdfsPath HDFS file path
      * @param hdfsClient HDFS client
      */
@@ -157,6 +160,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Check if an HDFS path already exists
+     *
      * @param hdfsPath target path need to check in HDFS
      * @param hdfsClient HDFS client
      */
@@ -179,6 +183,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Mkdir in HDFS, use default permission 755
+     * 
      * @param hdfsPath the path in HDFS. It could be either file or directory
      * @param hdfsClient HDFS client
      */
@@ -198,6 +203,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Read directory contents
+     * 
      * @param hdfsPath the path in HDFS. It could be either file or directory
      * @param hdfsClient HDFS client
      */

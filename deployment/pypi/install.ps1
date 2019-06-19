@@ -43,7 +43,7 @@ $env:PATH = $NNI_NODE_FOLDER+';'+$env:PATH
 cd $CWD\..\..\src\nni_manager
 yarn
 yarn build
-cd $CWD\..\..\src\webui 
+cd $CWD\..\..\src\webui
 yarn
 yarn build
 if(Test-Path $CWD\nni){

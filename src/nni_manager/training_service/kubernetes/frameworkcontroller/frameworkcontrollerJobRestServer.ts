@@ -25,6 +25,7 @@ import { FrameworkControllerTrainingService } from './frameworkcontrollerTrainin
 
 /**
  * frameworkcontroller Training service Rest server, provides rest API to support frameworkcontroller job metrics update
+ *
  */
 @component.Singleton
 export class FrameworkControllerJobRestServer extends KubernetesJobRestServer {

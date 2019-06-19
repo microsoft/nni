@@ -10,7 +10,7 @@ trainingServicePlatform: local
 useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, NetworkMorphism
-  #SMAC (SMAC should be installed through nnictl) 
+  #SMAC (SMAC should be installed through nnictl)
   builtinTunerName: NetworkMorphism
   classArgs:
     #choice: maximize, minimize
