@@ -28,12 +28,6 @@ Currently we support installation on Linux, Mac and Windows(local, remote and pa
 
 ## **Installation on Windows**
 
-When you use PowerShell to run script for the first time, you need **run PowerShell as administrator** with this command:
-
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
   Anaconda or Miniconda is highly recommended.
 
 * __Install NNI through pip__
@@ -48,12 +42,10 @@ Set-ExecutionPolicy -ExecutionPolicy Unrestricted
 
   Prerequisite: `python >=3.5`, `git`, `PowerShell`.
 
-  you can install NNI as administrator or current user as follows:
-
   ```bash
   git clone -b v0.8 https://github.com/Microsoft/nni.git
   cd nni
-  powershell .\install.ps1
+  powershell -ExecutionPolicy Bypass -file install.ps1
   ```
 
 ## **System requirements**

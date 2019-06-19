@@ -39,6 +39,7 @@ import site
 import time
 from pathlib import Path
 from .command_utils import check_output_command, kill_command
+from .nnictl_utils import update_experiment
 
 def get_log_path(config_file_name):
     '''generate stdout and stderr log path'''
@@ -346,13 +347,6 @@ def set_experiment(experiment_config, mode, port, config_file_name):
 def launch_experiment(args, experiment_config, mode, config_file_name, experiment_id=None):
     '''follow steps to start rest server and start experiment'''
     nni_config = Config(config_file_name)
-    # check execution policy in powershell
-    if sys.platform == 'win32':
-        execution_policy = check_output(['powershell.exe','Get-ExecutionPolicy']).decode('ascii').strip()
-        if execution_policy == 'Restricted':
-            print_error('PowerShell execution policy error, please run PowerShell as administrator with this command first:\r\n'\
-                + '\'Set-ExecutionPolicy -ExecutionPolicy Unrestricted\'')
-            exit(1)
     # check packages for tuner
     package_name, module_name = None, None
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
@@ -508,6 +502,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
 
 def resume_experiment(args):
     '''resume an experiment'''
+    update_experiment()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     experiment_id = None

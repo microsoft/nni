@@ -83,7 +83,7 @@ def parse_args():
     parser_updater_duration.add_argument('--value', '-v', required=True, help='the unit of time should in {\'s\', \'m\', \'h\', \'d\'}')
     parser_updater_duration.set_defaults(func=update_duration)
     parser_updater_trialnum = parser_updater_subparsers.add_parser('trialnum', help='update maxtrialnum')
-    parser_updater_trialnum.add_argument('--id', '-i', dest='id', help='the id of experiment')
+    parser_updater_trialnum.add_argument('id', nargs='?', help='the id of experiment')
     parser_updater_trialnum.add_argument('--value', '-v', required=True)
     parser_updater_trialnum.set_defaults(func=update_trialnum)
 
@@ -103,6 +103,10 @@ def parse_args():
     parser_trial_kill.add_argument('id', nargs='?', help='the id of experiment')
     parser_trial_kill.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to be killed')
     parser_trial_kill.set_defaults(func=trial_kill)
+    parser_trial_codegen = parser_trial_subparsers.add_parser('codegen', help='generate trial code for a specific trial')
+    parser_trial_codegen.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_codegen.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to do code generation')
+    parser_trial_codegen.set_defaults(func=trial_codegen)
 
     #parse experiment command
     parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
