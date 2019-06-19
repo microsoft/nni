@@ -55,45 +55,45 @@ nni.report_final_result(best_acc)
 如果需要保存并**读取最佳模型**，推荐采用以下方法。
 
 ```python
-# 1. 使用 NNI API
-## 从 Web 界面获取最佳模型的 ID 
-## 或查看 `nni/experiments/experiment_id/log/model_path/best_model.txt' 文件
+# 1. Use NNI API
+## You can get the best model ID from WebUI
+## or `nni/experiments/experiment_id/log/model_path/best_model.txt'
 
-## 从 JSON 文件中读取，并使用 NNI API 来加载
+## read the json string from model file and load it with NNI API
 with open("best-model.json") as json_file:
     json_of_model = json_file.read()
 model = build_graph_from_json(json_of_model)
 
-# 2. 使用框架的 API (与具体框架相关) 
+# 2. Use Framework API (Related to Framework)
 ## 2.1 Keras API
 
-## 在 Trial 代码中使用 Keras API 保存
-## 最好保存 NNI 的 ID
+## Save the model with Keras API in the trial code
+## it's better to save model with id in nni local mode
 model_id = nni.get_sequence_id()
-## 将模型序列化为 JSON
+## serialize model to JSON
 model_json = model.to_json()
 with open("model-{}.json".format(model_id), "w") as json_file:
     json_file.write(model_json)
-## 将权重序列化至 HDF5
+## serialize weights to HDF5
 model.save_weights("model-{}.h5".format(model_id))
 
-## 重用模型时，使用 Keras API 读取
-## 读取 JSON 文件，并创建模型
-model_id = "" # 需要重用的模型 ID
+## Load the model with Keras API if you want to reuse the model
+## load json and create model
+model_id = "" # id of the model you want to reuse
 with open('model-{}.json'.format(model_id), 'r') as json_file:
     loaded_model_json = json_file.read()
 loaded_model = model_from_json(loaded_model_json)
-## 将权重加载到新模型中
+## load weights into new model
 loaded_model.load_weights("model-{}.h5".format(model_id))
 
 ## 2.2 PyTorch API
 
-## 在 Trial 代码中使用 PyTorch API 保存
+## Save the model with PyTorch API in the trial code
 model_id = nni.get_sequence_id()
 torch.save(model, "model-{}.pt".format(model_id))
 
-## 重用模型时，使用 PyTorch API 读取
-model_id = "" # 需要重用的模型 ID
+## Load the model with PyTorch API if you want to reuse the model
+model_id = "" # id of the model you want to reuse
 loaded_model = torch.load("model-{}.pt".format(model_id))
 
 ```
@@ -107,7 +107,7 @@ Tuner 有大量的文件、函数和类。 这里只简单介绍最重要的文�
 - `bayesian.py` 是用来基于已经搜索道德模型来预测未知模型指标的贝叶斯算法。
 
 - `graph.py` 是元图数据结构。 类 Graph 表示了模型的神经网络图。 
-  - Graph 从模型中抽取神经网络。 
+  - Graph 从模型中抽取神经网络。
   - 图中的每个节点都是层之间的中间张量。
   - 在图中，边表示层。
   - 注意，多条边可能会表示同一层。
