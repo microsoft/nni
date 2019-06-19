@@ -167,7 +167,7 @@ class EvolutionTuner(Tuner):
         self.space = None
 
     def update_search_space(self, search_space):
-        """Update search space. 
+        """Update search space.
         Search_space contains the information that user pre-defined.
 
         Parameters
@@ -194,7 +194,7 @@ class EvolutionTuner(Tuner):
         Parameters
         ----------
         parameter_id : int
-    
+
         Returns
         -------
         config : dict

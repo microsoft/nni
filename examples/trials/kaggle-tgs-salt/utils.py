@@ -166,7 +166,7 @@ def get_nfold_split2(ifold, nfold=10):
     train_index = train_splits[str(ifold)]['train_index']
     valid_index = train_splits[str(ifold)]['val_index']
 
-    return meta_train.iloc[train_index], meta_train.iloc[valid_index] 
+    return meta_train.iloc[train_index], meta_train.iloc[valid_index]
 
 
 def get_test_meta():

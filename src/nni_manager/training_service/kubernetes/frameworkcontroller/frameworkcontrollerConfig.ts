@@ -40,8 +40,8 @@ export class FrameworkControllerTrialConfigTemplate extends KubernetesTrialConfi
     public readonly frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy;
     public readonly name: string;
     public readonly taskNum: number;
-    constructor(taskNum: number, command : string, gpuNum : number, 
-        cpuNum: number, memoryMB: number, image: string, 
+    constructor(taskNum: number, command : string, gpuNum : number,
+        cpuNum: number, memoryMB: number, image: string,
         frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy) {
         super(command, gpuNum, cpuNum, memoryMB, image);
         this.frameworkAttemptCompletionPolicy = frameworkAttemptCompletionPolicy;
@@ -71,8 +71,8 @@ export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
 export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly serviceAccountName: string;
     constructor(
-            serviceAccountName: string, 
-            apiVersion: string, 
+            serviceAccountName: string,
+            apiVersion: string,
             nfs: NFSConfig,
             storage?: KubernetesStorageKind
         ) {
@@ -94,12 +94,12 @@ export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfig
 
 export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConfigAzure {
     public readonly serviceAccountName: string;
-    
+
     constructor(
-            serviceAccountName: string, 
-            apiVersion: string, 
-            keyVault: keyVaultConfig, 
-            azureStorage: AzureStorage, 
+            serviceAccountName: string,
+            apiVersion: string,
+            keyVault: keyVaultConfig,
+            azureStorage: AzureStorage,
             storage?: KubernetesStorageKind
         ) {
         super(apiVersion, keyVault, azureStorage,storage);

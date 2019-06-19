@@ -230,7 +230,7 @@ def test_variable_equal(node1, node2):
         if len(node1) != len(node2):
             return False
         return all(test_variable_equal(n1, n2) for n1, n2 in zip(node1, node2))
-    
+
     return node1 == node2
 
 

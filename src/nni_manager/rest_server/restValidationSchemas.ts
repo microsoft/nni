@@ -133,7 +133,7 @@ export namespace ValidationSchemas {
                 })
             }),
             nni_manager_ip: joi.object({
-                nniManagerIp: joi.string().min(1) 
+                nniManagerIp: joi.string().min(1)
             })
         }
     };

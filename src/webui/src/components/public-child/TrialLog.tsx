@@ -15,7 +15,7 @@ class TrialLog extends React.Component<TrialLogProps, {}> {
 
     render() {
         const { logStr } = this.props;
-        
+
         return (
             <div>
                 <LogPathChild

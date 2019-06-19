@@ -142,7 +142,7 @@ class PipeLogReader(threading.Thread):
             '''
             time.sleep(5)
             while True:
-                cur_process_exit = self.process_exit       
+                cur_process_exit = self.process_exit
                 try:
                     line = self.queue.get(True, 5)
                     try:
@@ -150,7 +150,7 @@ class PipeLogReader(threading.Thread):
                     except Exception as e:
                         pass
                 except Exception as e:
-                    if cur_process_exit == True:     
+                    if cur_process_exit == True:
                         self._is_read_completed = True
                         break
 
@@ -177,7 +177,7 @@ class PipeLogReader(threading.Thread):
                 if not self.log_pattern.match(line):
                     continue
             self.queue.put(line)
-            
+
         self.pipeReader.close()
 
     def close(self):
@@ -190,7 +190,7 @@ class PipeLogReader(threading.Thread):
         """Return if read is completed
         """
         return self._is_read_completed
-    
+
     def set_process_exit(self):
         self.process_exit = True
         return self.process_exit

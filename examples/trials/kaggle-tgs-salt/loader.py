@@ -40,11 +40,11 @@ class ImageDataset(data.Dataset):
 
         self.train_mode = train_mode
         self.meta = meta
-    
+
         self.img_ids = meta[ID_COLUMN].values
         self.salt_exists = meta['salt_exists'].values
         self.is_train = meta['is_train'].values
-        
+
         if self.train_mode:
             self.mask_filenames = meta[Y_COLUMN].values
 
@@ -207,7 +207,7 @@ def get_train_loaders(ifold, batch_size=8, dev_mode=False, pad_mode='edge', meta
 
     val_set = ImageDataset(True, val_meta,
                             augment_with_target=img_mask_aug_val,
-                            image_augment=None, 
+                            image_augment=None,
                             image_transform=get_image_transform(pad_mode),
                             mask_transform=get_mask_transform(pad_mode))
     val_loader = data.DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=val_set.collate_fn)
@@ -221,7 +221,7 @@ def get_test_loader(batch_size=16, index=0, dev_mode=False, pad_mode='edge'):
     if dev_mode:
         test_meta = test_meta.iloc[:10]
     test_set = ImageDataset(False, test_meta,
-                            image_augment=None if pad_mode == 'resize' else transforms.Pad((13,13,14,14), padding_mode=pad_mode), 
+                            image_augment=None if pad_mode == 'resize' else transforms.Pad((13,13,14,14), padding_mode=pad_mode),
                             image_transform=get_tta_transforms(index, pad_mode))
     test_loader = data.DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=test_set.collate_fn, drop_last=False)
     test_loader.num = len(test_set)
@@ -236,13 +236,13 @@ def get_depth_tensor(pad_mode):
 
     if depth_channel_tensor is not None:
         return depth_channel_tensor
-    
+
     depth_tensor = None
 
     if pad_mode == 'resize':
         depth_tensor = np.zeros((H, W))
         for row, const in enumerate(np.linspace(0, 1, H)):
-            depth_tensor[row, :] = const 
+            depth_tensor[row, :] = const
     else:
         depth_tensor = np.zeros((ORIG_H, ORIG_W))
         for row, const in enumerate(np.linspace(0, 1, ORIG_H)):

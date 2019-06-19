@@ -54,11 +54,11 @@ net = build_graph_from_json(RCV_CONFIG)
 nni.report_final_result(best_acc)
 ```
 
-If you want to save and **load the best model**, the following methods are recommended. 
+If you want to save and **load the best model**, the following methods are recommended.
 
 ```python
 # 1. Use NNI API
-## You can get the best model ID from WebUI 
+## You can get the best model ID from WebUI
 ## or `nni/experiments/experiment_id/log/model_path/best_model.txt'
 
 ## read the json string from model file and load it with NNI API
@@ -66,7 +66,7 @@ with open("best-model.json") as json_file:
     json_of_model = json_file.read()
 model = build_graph_from_json(json_of_model)
 
-# 2. Use Framework API (Related to Framework) 
+# 2. Use Framework API (Related to Framework)
 ## 2.1 Keras API
 
 ## Save the model with Keras API in the trial code
@@ -106,9 +106,9 @@ The tuner has a lot of different files, functions and classes. Here we will only
 
 - `networkmorphism_tuner.py` is a tuner which using network morphism techniques.
 
-- `bayesian.py` is Bayesian method to estimate the metric of unseen model based on the models we have already searched.  
+- `bayesian.py` is Bayesian method to estimate the metric of unseen model based on the models we have already searched.
 - `graph.py`  is the meta graph data structure. Class Graph is representing the neural architecture graph of a model.
-  - Graph extracts the neural architecture graph from a model. 
+  - Graph extracts the neural architecture graph from a model.
   - Each node in the graph is a intermediate tensor between layers.
   - Each layer is an edge in the graph.
   - Notably, multiple edges may refer to the same layer.

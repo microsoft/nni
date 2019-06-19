@@ -32,7 +32,7 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
         super(jobMap);
     }
 
-    protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined, 
+    protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined,
         kubernetesTrialJob : KubernetesTrialJobDetail) : Promise<void> {
         if (!this.statusesNeedToCheck.includes(kubernetesTrialJob.status)) {
             return Promise.resolve();
@@ -44,9 +44,9 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
 
         let kubernetesJobInfo: any;
         try {
-            kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);            
+            kubernetesJobInfo = await kubernetesCRDClient.getKubernetesJob(kubernetesTrialJob.kubernetesJobName);
         } catch(error) {
-            // Notice: it maynot be a 'real' error since cancel trial job can also cause getKubernetesJob failed. 
+            // Notice: it maynot be a 'real' error since cancel trial job can also cause getKubernetesJob failed.
             this.log.error(`Get job ${kubernetesTrialJob.kubernetesJobName} info failed, error is ${error}`);
             //This is not treat as a error status
             return Promise.resolve();
@@ -58,8 +58,8 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
             switch(tfJobType) {
                 case 'Created':
                     kubernetesTrialJob.status = 'WAITING';
-                    kubernetesTrialJob.startTime = Date.parse(<string>latestCondition.lastUpdateTime);                    
-                    break; 
+                    kubernetesTrialJob.startTime = Date.parse(<string>latestCondition.lastUpdateTime);
+                    break;
                 case 'Running':
                     kubernetesTrialJob.status = 'RUNNING';
                     if(!kubernetesTrialJob.startTime) {
@@ -68,11 +68,11 @@ export class KubeflowJobInfoCollector extends KubernetesJobInfoCollector{
                     break;
                 case 'Failed':
                     kubernetesTrialJob.status = 'FAILED';
-                    kubernetesTrialJob.endTime = Date.parse(<string>latestCondition.lastUpdateTime);                    
+                    kubernetesTrialJob.endTime = Date.parse(<string>latestCondition.lastUpdateTime);
                     break;
                 case  'Succeeded':
                     kubernetesTrialJob.status = 'SUCCEEDED';
-                    kubernetesTrialJob.endTime = Date.parse(<string>latestCondition.lastUpdateTime);                    
+                    kubernetesTrialJob.endTime = Date.parse(<string>latestCondition.lastUpdateTime);
                     break;
                 default:
                     break;
