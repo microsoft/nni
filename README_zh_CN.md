@@ -62,7 +62,7 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="docs/zh_CN/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
           <li><a href="docs/zh_CN/BuiltinTuner.md#BOHB">BOHB</a></li>
         </ul>
-          <a href="docs/zh_CN/BuiltinAssessors.md">Assessor（评估器）</a> 
+          <a href="docs/zh_CN/BuiltinAssessors.md">Assessor（评估器）</a>
         <ul>
           <li><a href="docs/zh_CN/BuiltinAssessors.md#Medianstop">Median Stop</a></li>
           <li><a href="docs/zh_CN/BuiltinAssessors.md#Curvefitting">Curve Fitting</a></li>
@@ -133,7 +133,7 @@ python -m pip install --upgrade nni
 
 **通过源代码安装**
 
-* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。 
+* 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。
 
 Linux 和 macOS
 
