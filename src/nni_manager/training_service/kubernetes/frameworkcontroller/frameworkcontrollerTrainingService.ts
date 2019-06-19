@@ -204,6 +204,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         let trialJobOutputUrl: string = '';
 
         if (this.fcClusterConfig.storageType === 'azureStorage') {
+            if (this.azureStorageClient === undefined) {
+                throw new Error('azureStorageClient is not initialized');
+            }
             try {
                 //upload local files to azure storage
                 await AzureStorageClientUtility.uploadDirectory(

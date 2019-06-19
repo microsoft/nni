@@ -37,7 +37,7 @@ import {
 } from '../../common/utils';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { execMkdir, execNewFile, runScript, getScriptName, setEnvironmentVariable } from '../common/util';
+import { execMkdir, execNewFile, getScriptName, runScript, setEnvironmentVariable } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 
 /**

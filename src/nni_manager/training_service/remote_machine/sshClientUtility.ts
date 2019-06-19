@@ -126,7 +126,7 @@ export namespace SSHClientUtility {
                 }
             })
               .on('exit', (code : any, signal : any) => {
-                exitCode = code as number;
+                exitCode = <number>code;
                 deferred.resolve({
                     stdout : stdout,
                     stderr : stderr,

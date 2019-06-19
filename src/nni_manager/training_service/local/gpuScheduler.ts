@@ -28,7 +28,7 @@ import { String } from 'typescript-string-operations';
 import { getLogger, Logger } from '../../common/log';
 import { delay } from '../../common/utils';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
-import { execKill, execMkdir, execRemove, runScript, execTail, getgpuMetricsCollectorScriptContent, getScriptName } from '../common/util';
+import { execKill, execMkdir, execRemove, execTail, getgpuMetricsCollectorScriptContent, getScriptName, runScript } from '../common/util';
 
 /**
  * GPUScheduler for local training service

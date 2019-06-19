@@ -22,15 +22,22 @@
 import * as fs from 'fs';
 import { GeneralK8sClient, KubernetesCRDClient } from '../kubernetesApiClient';
 
+/**
+ * FrameworkController Client
+ */
 abstract class FrameworkControllerClient extends KubernetesCRDClient {
     /**
      * Factory method to generate operator client
      */
+    // tslint:disable-next-line:function-name
     public static generateFrameworkControllerClient(): KubernetesCRDClient {
         return new FrameworkControllerClientV1();
     }
 }
 
+/**
+ * FrameworkController ClientV1
+ */
 class FrameworkControllerClientV1 extends FrameworkControllerClient {
     /**
      * constructor, to initialize frameworkcontroller CRD definition

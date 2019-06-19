@@ -208,6 +208,9 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             || this.kubeflowClusterConfig.storage === 'nfs');
 
         if (this.kubeflowClusterConfig.storage === 'azureStorage') {
+            if (this.azureStorageClient === undefined) {
+                throw new Error('azureStorageClient is not initialized');
+            }
             try {
                 //upload local files to azure storage
                 await AzureStorageClientUtility.uploadDirectory(this.azureStorageClient,

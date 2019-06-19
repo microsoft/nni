@@ -98,7 +98,7 @@ export async function execNewFile(filename: string): Promise<void> {
 }
 
 /**
- * run script
+ * run script using powershell or bash
  * @param filePath
  */
 export function runScript(filePath: string): cp.ChildProcess {

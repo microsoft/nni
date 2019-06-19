@@ -22,6 +22,7 @@
 import * as cpp from 'child-process-promise';
 import * as path from 'path';
 
+import * as azureStorage from 'azure-storage';
 import { EventEmitter } from 'events';
 import { String } from 'typescript-string-operations';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
@@ -35,8 +36,6 @@ import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
 import { KubernetesClusterConfig } from './kubernetesConfig';
 import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
-
-import * as azureStorage from 'azure-storage';
 
 const azure = require('azure-storage');
 const base64 = require('js-base64').Base64;

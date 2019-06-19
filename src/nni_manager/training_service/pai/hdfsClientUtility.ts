@@ -183,7 +183,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Mkdir in HDFS, use default permission 755
-     * 
+     *
      * @param hdfsPath the path in HDFS. It could be either file or directory
      * @param hdfsClient HDFS client
      */
@@ -203,7 +203,7 @@ export namespace HDFSClientUtility {
 
     /**
      * Read directory contents
-     * 
+     *
      * @param hdfsPath the path in HDFS. It could be either file or directory
      * @param hdfsClient HDFS client
      */

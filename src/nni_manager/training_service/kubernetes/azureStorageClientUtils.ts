@@ -19,6 +19,7 @@
 
 'use strict';
 
+import * as azureStorage from 'azure-storage';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Deferred } from 'ts-deferred';
@@ -55,7 +56,7 @@ export namespace AzureStorageClientUtility {
      * @param azureFoler
      * @param azureShare
      */
-    export async function createDirectory(fileServerClient: any, azureFoler: any, azureShare: any): Promise<void> {
+    export async function createDirectory(fileServerClient: azureStorage.FileService, azureFoler: any, azureShare: any): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         fileServerClient.createDirectoryIfNotExists(azureShare, azureFoler, (error: any, result: any, response: any) => {
             if (error) {
@@ -75,7 +76,8 @@ export namespace AzureStorageClientUtility {
      * @param fileServerClient
      * @param azureDirectory
      */
-    export async function createDirectoryRecursive(fileServerClient: any, azureDirectory: string, azureShare: any): Promise<void> {
+    export async function createDirectoryRecursive(fileServerClient: azureStorage.FileService, azureDirectory: string,
+                                                   azureShare: any): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         const directories: string[] = azureDirectory.split('/');
         let rootDirectory: string = '';
@@ -148,8 +150,8 @@ export namespace AzureStorageClientUtility {
      * @param localDirectory : local directory to be uploaded
      */
     // tslint:disable:non-literal-fs-path
-    export async function uploadDirectory(fileServerClient: any, azureDirectory: string, azureShare: any, localDirectory: string):
-     Promise<void> {
+    export async function uploadDirectory(fileServerClient: azureStorage.FileService, azureDirectory: string, azureShare: any,
+                                          localDirectory: string): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         const fileNameArray: string[] = fs.readdirSync(localDirectory);
         await createDirectoryRecursive(fileServerClient, azureDirectory, azureShare);

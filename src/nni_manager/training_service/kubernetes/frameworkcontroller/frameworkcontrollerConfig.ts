@@ -69,6 +69,7 @@ export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
     }
 }
 
+// tslint:disable:function-name
 export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly serviceAccountName: string;
     constructor(

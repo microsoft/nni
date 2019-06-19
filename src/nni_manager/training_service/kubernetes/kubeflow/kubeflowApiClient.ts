@@ -23,6 +23,9 @@ import * as fs from 'fs';
 import { GeneralK8sClient, KubernetesCRDClient } from '../kubernetesApiClient';
 import { KubeflowOperator } from './kubeflowConfig';
 
+/**
+ * KubeflowOperator Client
+ */
 abstract class KubeflowOperatorClient extends KubernetesCRDClient {
     /**
      * Factory method to generate operator client
@@ -67,7 +70,7 @@ abstract class KubeflowOperatorClient extends KubernetesCRDClient {
     }
 }
 
-// tslint:disable: no-unsafe-any no-any
+// tslint:disable: no-unsafe-any no-any completed-docs
 class TFOperatorClientV1Alpha2 extends KubeflowOperatorClient {
     /**
      * constructor, to initialize tfjob CRD definition
