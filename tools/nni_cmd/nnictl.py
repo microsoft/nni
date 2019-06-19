@@ -121,6 +121,18 @@ def parse_args():
     parser_experiment_list = parser_experiment_subparsers.add_parser('list', help='list all of running experiment ids')
     parser_experiment_list.add_argument('all', nargs='?', help='list all of experiments')
     parser_experiment_list.set_defaults(func=experiment_list)
+    parser_experiment_clean = parser_experiment_subparsers.add_parser('clean', help='clean up the experiment data')
+    parser_experiment_clean.add_argument('id', nargs='?', help='the id of experiment')
+    parser_experiment_clean.set_defaults(func=experiment_clean)
+
+    #parse experiment command
+    parser_platform = subparsers.add_parser('platform', help='get platform information')
+    #add subparsers for parser_experiment
+    parser_platform_subparsers = parser_platform.add_subparsers()
+    parser_platform_clean = parser_platform_subparsers.add_parser('clean', help='clean up the experiment data')
+    parser_platform_clean.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
+    parser_platform_clean.set_defaults(func=platform_clean)
+
     #import tuning data
     parser_import_data = parser_experiment_subparsers.add_parser('import', help='import additional data')
     parser_import_data.add_argument('id', nargs='?', help='the id of experiment')

@@ -24,6 +24,10 @@ import psutil
 import json
 import datetime
 import time
+import re
+from pathlib import Path
+from pyhdfs import HdfsClient, HdfsFileNotFoundException
+import shutil
 from subprocess import call, check_output
 from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
@@ -33,6 +37,7 @@ from .constants import NNICTL_HOME_DIR, EXPERIMENT_INFORMATION_FORMAT, EXPERIMEN
      EXPERIMENT_MONITOR_INFO, TRIAL_MONITOR_HEAD, TRIAL_MONITOR_CONTENT, TRIAL_MONITOR_TAIL, REST_TIME_OUT
 from .common_utils import print_normal, print_error, print_warning, detect_process
 from .command_utils import check_output_command, kill_command
+from .ssh_utils import create_ssh_sftp_client, remote_remove_directory
 
 def get_experiment_time(port):
     '''get the startTime and endTime of an experiment'''
@@ -73,10 +78,11 @@ def update_experiment():
                 if status:
                     experiment_config.update_experiment(key, 'status', status)
 
-def check_experiment_id(args):
+def check_experiment_id(args, update=True):
     '''check if the id is valid
     '''
-    update_experiment()
+    if update:
+        update_experiment()
     experiment_config = Experiments()
     experiment_dict = experiment_config.get_all_experiments()
     if not experiment_dict:
@@ -373,6 +379,101 @@ def webui_url(args):
     nni_config = Config(get_config_filename(args))
     print_normal('{0} {1}'.format('Web UI url:', ' '.join(nni_config.get_config('webuiUrl'))))
 
+def local_clean(directory):
+    '''clean up local data'''
+    print_normal('cleaning up {0}'.format(directory))
+    shutil.rmtree(directory)
+    
+def remote_clean(nni_config):
+    '''clean up remote data'''
+    machine_list = nni_config.get_config('experimentConfig').get('machineList')
+    for machine in machine_list:
+        passwd = machine.get('passwd')
+        userName = machine.get('username')
+        host = machine.get('ip')
+        port = machine.get('port')
+        remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments', nni_config.get_config('experimentId')])
+        sftp = create_ssh_sftp_client(host, port, userName, passwd)
+        print_normal('cleaning up {0}'.format(host + ':' + str(port) + remote_dir))
+        remote_remove_directory(sftp, remote_dir)
+    
+def hdfs_clean(nni_config):
+    '''clean up hdfs data'''
+    host = nni_config.get_config('experimentConfig').get('paiConfig').get('host')	
+    user_name = nni_config.get_config('experimentConfig').get('paiConfig').get('userName')
+    pass_word = nni_config.get_config('experimentConfig').get('paiConfig').get('passWord')
+    hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)	
+    full_path = '/' + '/'.join([user_name, 'nni', 'experiments', nni_config.get_config('experimentId')])
+    print_normal('deleting {0} in hdfs'.format(full_path))
+    hdfs_client.delete(full_path, recursive=True)
+    output_dir = nni_config.get_config('experimentConfig').get('paiConfig').get('outputDir')
+    pattern = re.compile('hdfs://(?P<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?P<baseDir>/.*)?')
+    match_result = pattern.match(output_dir)
+    if match_result:
+        output_host = match_result.group('host')
+        output_directory = match_result.group('baseDir')
+        if output_host == host:
+            print_normal('deleting {0} in hdfs'.format(output_directory))
+            hdfs_client.delete(output_directory, recursive=True)
+    
+def nfs_clean(experiment_id):
+    '''clean up nfs data'''
+    pass
+    
+def azure_storage_clean(experiment_id):
+    '''clean up azure data'''
+    pass
+    
+def get_experiment_clean_dirs(args):
+    '''get all of directory to be deleted, print in console'''
+    dir_list = []
+    nni_config = Config(get_config_filename(args))
+    home = str(Path.home())
+    local_dir = os.path.join(home, 'nni', 'experiments', str(args.id))
+    dir_list.append(local_dir)
+    if nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'remote':
+            machine_list = nni_config.get_config('experimentConfig').get('machineList')
+            for machine in machine_list:
+                host = machine.get('ip')
+                port = machine.get('port')
+                remote_dir = '/'.join([host + ':' + str(port), 'tmp', 'nni', 'experiments', nni_config.get_config('experimentId')])
+                dir_list.append(remote_dir)
+    return dir_list
+
+def experiment_clean(args):
+    '''clean up the experiment data'''
+    nni_config = Config(get_config_filename(args))
+    home = str(Path.home())
+    local_dir = os.path.join(home, 'nni', 'experiments', str(args.id))
+    dir_list = get_experiment_clean_dirs(args)
+    while True:
+        print('INFO: clean up all data in {0} .'.format(' '.join(dir_list)))
+        inputs = input('INFO: do you want to continue?[Y/N]:')
+        if inputs.lower() not in ['y', 'n', 'yes', 'no']:
+            print_warning('please input Y or N!')
+        elif inputs.lower() in ['n', 'no']:
+            exit(0)
+        else:
+            break
+    #clean local data
+    local_clean(local_dir)
+    if nni_config.get_config('experimentConfig').get('trainingServicePlatform') == 'remote':
+        remote_clean(nni_config)
+    experiment_config = Experiments()
+    experiment_config.remove_experiment(args.id)
+    print('INFO: done!')
+    
+def platform_clean(args):
+    '''clean up the experiment data'''
+    while True:
+        inputs = input('INFO: clean up all data for platform remote, do you want to continue?[Y/N]:')
+        if inputs.lower() not in ['y', 'n', 'yes', 'no']:
+            print_warning('please input Y or N!')
+        elif inputs.lower() in ['n', 'no']:
+            exit(0)
+        else:
+            break
+    
 def experiment_list(args):
     '''get the information of all experiments'''
     experiment_config = Experiments()
