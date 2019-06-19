@@ -18,22 +18,22 @@
     
             RECEIVED_PARAMS = nni.get_next_parameter()
     
-        来获得 Tuner 分配的超参值。 `RECEIVED_PARAMS` 是一个对象，例如： 
+        来获得 Tuner 分配的超参值。 `RECEIVED_PARAMS` is an object, for example:
     
             {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
     
-    1.3 返回结果
-        使用 API：
+    1.3 Report NNI results
+        Use the API:
     
-            `nni.report_intermediate_result(accuracy)` 
+            `nni.report_intermediate_result(accuracy)`
     
-        返回 `accuracy` 的值给 Assessor。
+        to send `accuracy` to assessor.
     
-        使用 API:
+        Use the API:
     
-            `nni.report_final_result(accuracy)` 
+            `nni.report_final_result(accuracy)`
     
-        返回 `accuracy` 的值给 Tuner。 
+        to send `accuracy` to tuner.
     
 
 将改动保存到 `mnist.py` 文件中。
@@ -102,19 +102,19 @@
     authorName: your_name
     experimentName: auto_mnist
     
-    # 并发运行数量
-    trialConcurrency: 2
+    # how many trials could be concurrently running
+    trialConcurrency: 1
     
-    # Experiment 运行时间
+    # maximum experiment running duration
     maxExecDuration: 3h
     
-    # 可为空，即数量不限
+    # empty means never stop
     maxTrialNum: 100
     
-    # 可选值为: local, remote  
+    # choice: local, remote
     trainingServicePlatform: local
     
-    # 可选值为: true, false  
+    # choice: true, false
     useAnnotation: true
     tuner:
       builtinTunerName: TPE
