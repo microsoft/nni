@@ -31,7 +31,6 @@ export type DistTrainRole = 'worker' | 'ps' | 'master';
 export type KubeflowJobStatus = 'Created' | 'Running' | 'Failed' | 'Succeeded';
 export type OperatorApiVersion = 'v1alpha2' | 'v1beta1' | 'v1beta2';
 
-// tslint:disable:completed-docs function-name
 export class KubeflowClusterConfig extends KubernetesClusterConfig {
     public readonly operator: KubeflowOperator;
     constructor(apiVersion: string, operator: KubeflowOperator) {
@@ -100,7 +99,6 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure {
     }
 }
 
-// tslint:disable: no-unnecessary-class
 export class KubeflowClusterConfigFactory {
 
     public static generateKubeflowClusterConfig(jsonObject: object): KubeflowClusterConfig {
@@ -189,4 +187,3 @@ export class KubeflowTrialConfigFactory {
         throw new Error(`Invalid json object ${jsonObject}`);
     }
 }
-// tslint:enable:completed-docs function-name no-unnecessary-class

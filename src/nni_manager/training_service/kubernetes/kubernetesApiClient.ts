@@ -23,10 +23,8 @@ import * as os from 'os';
 import * as path from 'path';
 import { getLogger, Logger } from '../../common/log';
 
-// tslint:disable:no-var-requires no-require-imports typedef no-unsafe-any variable-name
 const K8SClient = require('kubernetes-client').Client;
 const K8SConfig = require('kubernetes-client').config;
-// tslint:enable:no-var-requires no-require-imports typedef no-unsafe-any variable-name
 
 /**
  * Generict Kubernetes client, target version >= 1.9

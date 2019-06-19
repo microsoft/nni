@@ -81,7 +81,7 @@ export class PAIJobInfoCollector {
             }
         };
 
-        // tslint:disable:cyclomatic-complexity no-unsafe-any no-any
+        // tslint:disable: no-unsafe-any no-any
         //TODO : pass in request timeout param?
         request(getJobInfoRequest, (error: Error, response: request.Response, body: any) => {
             if ((error !== undefined && error !== null) || response.statusCode >= 500) {
@@ -145,5 +145,5 @@ export class PAIJobInfoCollector {
 
         return deferred.promise;
     }
-    // tslint:enable:cyclomatic-complexity no-unsafe-any no-any
+    // tslint:enable: no-unsafe-any no-any
 }

@@ -69,7 +69,6 @@ export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
     }
 }
 
-// tslint:disable:function-name
 export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly serviceAccountName: string;
     constructor(
@@ -122,7 +121,6 @@ export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConf
     }
 }
 
-// tslint:disable-next-line:no-unnecessary-class
 export class FrameworkControllerClusterConfigFactory {
 
     public static generateFrameworkControllerClusterConfig(jsonObject: object): FrameworkControllerClusterConfig {
@@ -138,7 +136,6 @@ export class FrameworkControllerClusterConfigFactory {
          throw new Error(`Invalid json object ${jsonObject}`);
     }
 }
-// tslint:enable:function-name
 
 export type FrameworkControllerJobStatus =
   'AttemptRunning' | 'Completed' | 'AttemptCreationPending' | 'AttemptCreationRequested' | 'AttemptPreparing' | 'AttemptCompleted';

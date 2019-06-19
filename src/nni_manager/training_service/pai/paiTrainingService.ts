@@ -47,7 +47,6 @@ import { PAI_LOG_PATH_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_TRIAL_COMMAND_FORMAT, P
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { PAIJobRestServer } from './paiJobRestServer';
 
-// tslint:disable-next-line: no-require-imports no-var-requires typedef variable-name
 const WebHDFS = require('webhdfs');
 
 /**

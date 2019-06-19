@@ -38,10 +38,8 @@ import { KubernetesJobRestServer } from './kubernetesJobRestServer';
 
 import * as azureStorage from 'azure-storage';
 
-// tslint:disable:no-var-requires no-require-imports typedef no-unsafe-any
 const azure = require('azure-storage');
 const base64 = require('js-base64').Base64;
-// tslint:enable:no-var-requires no-require-imports typedef no-unsafe-any
 
 /**
  * Training Service implementation for Kubernetes

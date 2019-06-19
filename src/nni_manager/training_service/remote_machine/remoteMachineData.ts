@@ -158,7 +158,6 @@ export class SSHClientManager {
         }
 
         //init a new ssh client if could not get an available one
-        // tslint:disable-next-line:no-return-await
         return await this.initNewSSHClient();
     }
 
