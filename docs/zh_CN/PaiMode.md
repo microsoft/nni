@@ -13,15 +13,15 @@ NNI 支持在 [OpenPAI](https://github.com/Microsoft/pai) （简称 pai）上运
 ```yaml
 authorName: your_name
 experimentName: auto_mnist
-# 并发运行的 Trial 数量
+# how many trials could be concurrently running
 trialConcurrency: 2
-# Experiment 的最长持续运行时间
+# maximum experiment running duration
 maxExecDuration: 3h
-# 空表示一直运行
+# empty means never stop
 maxTrialNum: 100
-# 可选项: local, remote, pai
+# choice: local, remote, pai
 trainingServicePlatform: pai
-# 可选项: true, false  
+# choice: true, false
 useAnnotation: true
 tuner:
   builtinTunerName: TPE
@@ -36,7 +36,7 @@ trial:
   image: msranni/nni:latest
   dataDir: hdfs://10.1.1.1:9000/nni
   outputDir: hdfs://10.1.1.1:9000/nni
-# 配置访问的 OpenPAI 集群
+# Configuration to access OpenPAI Cluster
 paiConfig:
   userName: your_pai_nni_user
   passWord: your_pai_password
@@ -86,12 +86,10 @@ paiConfig:
 
 ## 版本校验
 
-从 0.6 开始，NNI 支持版本校验。确保 NNIManager 与 trialKeeper 的版本一致，避免兼容性错误。  
-检查策略：
+NNI support version check feature in since version 0.6. It is a policy to insure the version of NNIManager is consistent with trialKeeper, and avoid errors caused by version incompatibility. Check policy:
 
 1. 0.6 以前的 NNIManager 可与任何版本的 trialKeeper 一起运行，trialKeeper 支持向后兼容。
-2. 从 NNIManager 0.6 开始，与 triakKeeper 的版本必须一致。 例如，如果 NNIManager 是 0.6 版，则 trialKeeper 也必须是 0.6 版。 
-3. 注意，只有版本的前两位数字才会被检查。例如，NNIManager 0.6.1 可以和 trialKeeper 的 0.6 或 0.6.2 一起使用，但不能与 trialKeeper 的 0.5.1 或 0.7 版本一起使用。 
+2. 从 NNIManager 0.6 开始，与 triakKeeper 的版本必须一致。 例如，如果 NNIManager 是 0.6 版，则 trialKeeper 也必须是 0.6 版。
+3. 注意，只有版本的前两位数字才会被检查。例如，NNIManager 0.6.1 可以和 trialKeeper 的 0.6 或 0.6.2 一起使用，但不能与 trialKeeper 的 0.5.1 或 0.7 版本一起使用。
 
-如果 Experiment 无法运行，而且不能确认是否是因为版本不匹配造成的，可以在 Web 界面检查是否有相关的错误消息。  
-![](../img/version_check.png)
+If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check. ![](../img/version_check.png)
