@@ -28,7 +28,7 @@ import { String } from 'typescript-string-operations';
 import { getLogger, Logger } from '../../common/log';
 import { delay } from '../../common/utils';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
-import { execKill, execMkdir, execRemove, execScript, execTail, getgpuMetricsCollectorScriptContent, getScriptName } from '../common/util';
+import { execKill, execMkdir, execRemove, runScript, execTail, getgpuMetricsCollectorScriptContent, getScriptName } from '../common/util';
 
 /**
  * GPUScheduler for local training service
@@ -103,8 +103,7 @@ class GPUScheduler {
             path.join(this.gpuMetricCollectorScriptFolder, getScriptName('gpu_metrics_collector'));
         const gpuMetricsCollectorScriptContent: string = getgpuMetricsCollectorScriptContent(this.gpuMetricCollectorScriptFolder);
         await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
-        // tslint:disable-next-line:no-exec-script
-        execScript(gpuMetricsCollectorScriptPath);
+        runScript(gpuMetricsCollectorScriptPath);
     }
 
     // tslint:disable:non-literal-fs-path

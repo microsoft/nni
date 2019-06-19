@@ -22,7 +22,6 @@
 import * as fs from 'fs';
 import { GeneralK8sClient, KubernetesCRDClient } from '../kubernetesApiClient';
 
-// tslint:disable:completed-docs function-name no-use-before-declare
 abstract class FrameworkControllerClient extends KubernetesCRDClient {
     /**
      * Factory method to generate operator client
@@ -31,7 +30,6 @@ abstract class FrameworkControllerClient extends KubernetesCRDClient {
         return new FrameworkControllerClientV1();
     }
 }
-// tslint:enable: function-name no-use-before-declare
 
 class FrameworkControllerClientV1 extends FrameworkControllerClient {
     /**

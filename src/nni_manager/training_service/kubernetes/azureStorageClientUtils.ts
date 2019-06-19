@@ -22,6 +22,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Deferred } from 'ts-deferred';
+import { String } from 'typescript-string-operations';
 import { getLogger } from '../../common/log';
 import { mkDirP } from '../../common/utils';
 
@@ -160,8 +161,7 @@ export namespace AzureStorageClientUtility {
                     await uploadFileToAzure(fileServerClient, azureDirectory, fileName, azureShare, fullFilePath);
                 } else {
                     // If filePath is a directory, recuisively copy it to azure
-                    // tslint:disable-next-line:prefer-template
-                    await uploadDirectory(fileServerClient, azureDirectory + '/' + fileName, azureShare, fullFilePath);
+                    await uploadDirectory(fileServerClient, String.Format('{0}/{1}', azureDirectory, fileName), azureShare, fullFilePath);
                 }
             } catch (error) {
                 deferred.reject(error);
@@ -206,19 +206,17 @@ export namespace AzureStorageClientUtility {
                 throw new Error(`list files failed, can't get directories in result['entries']`);
             }
 
-            // tslint:disable: no-floating-promises
             for (const fileName of result.entries.files) {
                 const fullFilePath: string = path.join(localDirectory, fileName.name);
-                downloadFile(fileServerClient, azureDirectory, fileName.name, azureShare, fullFilePath);
+                await downloadFile(fileServerClient, azureDirectory, fileName.name, azureShare, fullFilePath);
             }
 
             for (const directoryName of result.entries.directories) {
                 const fullDirectoryPath: string = path.join(localDirectory, directoryName.name);
                 const fullAzureDirectory: string = path.join(azureDirectory, directoryName.name);
-                downloadDirectory(fileServerClient, fullAzureDirectory, azureShare, fullDirectoryPath);
+                await downloadDirectory(fileServerClient, fullAzureDirectory, azureShare, fullDirectoryPath);
             }
             deferred.resolve();
-            // tslint:enable: no-floating-promises
         });
 
         return deferred.promise;

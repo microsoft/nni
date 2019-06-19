@@ -37,7 +37,7 @@ import {
 } from '../../common/utils';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { execMkdir, execNewFile, execScript, getScriptName, setEnvironmentVariable } from '../common/util';
+import { execMkdir, execNewFile, runScript, getScriptName, setEnvironmentVariable } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 
 /**
@@ -525,27 +525,26 @@ class LocalTrainingService implements TrainingService {
         if (this.localTrailConfig === undefined) {
             throw new Error('trial config is not initialized');
         }
-        const runScriptLines: string[] = [];
+        const runScriptContent: string[] = [];
         if (process.platform !== 'win32') {
-            runScriptLines.push('#!/bin/bash');
+            runScriptContent.push('#!/bin/bash');
         }
-        runScriptLines.push(`cd ${this.localTrailConfig.codeDir}`);
+        runScriptContent.push(`cd ${this.localTrailConfig.codeDir}`);
         for (const variable of variables) {
-            runScriptLines.push(setEnvironmentVariable(variable));
+            runScriptContent.push(setEnvironmentVariable(variable));
         }
         const scripts: string[] = this.getScript(this.localTrailConfig, trialJobDetail.workingDirectory);
         scripts.forEach((script: string) => {
-            runScriptLines.push(script);
+            runScriptContent.push(script);
         });
         await execMkdir(trialJobDetail.workingDirectory);
         await execMkdir(path.join(trialJobDetail.workingDirectory, '.nni'));
         await execNewFile(path.join(trialJobDetail.workingDirectory, '.nni', 'metrics'));
         const scriptName: string = getScriptName('run');
         await fs.promises.writeFile(path.join(trialJobDetail.workingDirectory, scriptName),
-                                    runScriptLines.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
+                                    runScriptContent.join(getNewLine()), { encoding: 'utf8', mode: 0o777 });
         await this.writeParameterFile(trialJobDetail.workingDirectory, (<TrialJobApplicationForm>trialJobDetail.form).hyperParameters);
-        // tslint:disable-next-line:no-exec-script
-        const trialJobProcess: cp.ChildProcess = execScript(path.join(trialJobDetail.workingDirectory, scriptName));
+        const trialJobProcess: cp.ChildProcess = runScript(path.join(trialJobDetail.workingDirectory, scriptName));
         this.setTrialJobStatus(trialJobDetail, 'RUNNING');
         trialJobDetail.startTime = Date.now();
         trialJobDetail.pid = trialJobProcess.pid;
