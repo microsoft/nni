@@ -510,7 +510,7 @@ class LocalTrainingService implements TrainingService {
         else{
             script.push(
                 `eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
-                `echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`);
+                `echo $? \`date +%s%3N\` >${path.join(workingDirectory, '.nni', 'state')}`);
         }
         return script;
     }
