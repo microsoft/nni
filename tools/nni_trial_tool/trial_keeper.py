@@ -34,7 +34,8 @@ import pkg_resources
 from .rest_utils import rest_post, rest_get
 from .url_utils import gen_send_stdout_url, gen_send_version_url, gen_parameter_meta_url
 
-from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH, MULTI_PHASE, NNI_TRIAL_JOB_ID, NNI_SYS_DIR
+from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH, \
+    MULTI_PHASE, NNI_TRIAL_JOB_ID, NNI_SYS_DIR, NNI_EXP_ID
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal, copyHdfsFileToLocal
 from .log_utils import LogType, nni_log, RemoteLogger, PipeLogReader, StdOutputType
 
@@ -167,12 +168,11 @@ def download_parameter(meta_list, args):
         {"experimentId":"yWFJarYa","trialId":"aIUMA","filePath":"/chec/nni/experiments/yWFJarYa/trials/aIUMA/parameter_1.cfg"}
     ]
     """
-    print('sysdir:', NNI_SYS_DIR)
-    print(os.listdir(NNI_SYS_DIR))
-    print('trial id:', NNI_TRIAL_JOB_ID)
-    print('meta_list:', meta_list)
+    nni_log(LogType.Debug, str(meta_list))
+    nni_log(LogType.Debug, 'NNI_SYS_DIR: {}, trial Id: {}, experiment ID: {}'.format(NNI_SYS_DIR, NNI_TRIAL_JOB_ID, NNI_EXP_ID))
+    nni_log(LogType.Debug, 'NNI_SYS_DIR files: {}'.format(os.listdir(NNI_SYS_DIR)))
     for meta in meta_list:
-        if meta['trialId'] == NNI_TRIAL_JOB_ID:
+        if meta['experimentId'] == NNI_EXP_ID and meta['trialId'] == NNI_TRIAL_JOB_ID:
             param_fp = os.path.join(NNI_SYS_DIR, os.path.basename(meta['filePath']))
             if not os.path.exists(param_fp):
                 hdfs_client = get_hdfs_client(args)
@@ -183,12 +183,14 @@ def fetch_parameter_file(args):
         def __init__(self, args):
             super(FetchThread, self).__init__()
             self.args = args
+
         def run(self):
+            uri = gen_parameter_meta_url(args.nnimanager_ip, args.nnimanager_port)
+            nni_log(LogType.Info, uri)
+
             while True:
-                uri = gen_parameter_meta_url(args.nnimanager_ip, args.nnimanager_port)
-                print('uri:', uri)
                 res = rest_get(uri, 10)
-                print('status code:', res.status_code)
+                nni_log(LogType.Debug, 'status code: {}'.format(res.status_code))
                 if res.status_code == 200:
                     meta_list = res.json()
                     download_parameter(meta_list, self.args)
