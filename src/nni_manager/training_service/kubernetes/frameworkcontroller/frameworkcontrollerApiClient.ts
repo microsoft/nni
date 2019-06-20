@@ -1,3 +1,4 @@
+
 /**
  * Copyright (c) Microsoft Corporation
  * All rights reserved.
@@ -20,21 +21,29 @@
 'use strict';
 
 import * as fs from 'fs';
-import { KubernetesCRDClient, GeneralK8sClient } from '../kubernetesApiClient';
+import { GeneralK8sClient, KubernetesCRDClient } from '../kubernetesApiClient';
 
-abstract class FrameworkControllerClient extends KubernetesCRDClient{
+/**
+ * FrameworkController Client
+ */
+abstract class FrameworkControllerClient extends KubernetesCRDClient {
     /**
-     * Factory method to generate operator cliet
+     * Factory method to generate operator client
      */
+    // tslint:disable-next-line:function-name
     public static generateFrameworkControllerClient(): KubernetesCRDClient {
         return new FrameworkControllerClientV1();
     }
 }
 
+/**
+ * FrameworkController ClientV1
+ */
 class FrameworkControllerClientV1 extends FrameworkControllerClient {
     /**
      * constructor, to initialize frameworkcontroller CRD definition
      */
+    // tslint:disable: no-unsafe-any no-any
     public constructor() {
         super();
         this.crdSchema = JSON.parse(fs.readFileSync('./config/frameworkcontroller/frameworkcontrollerjob-crd-v1.json', 'utf8'));
@@ -42,8 +51,9 @@ class FrameworkControllerClientV1 extends FrameworkControllerClient {
     }
 
     protected get operator(): any {
-        return this.client.apis["frameworkcontroller.microsoft.com"].v1.namespaces('default').frameworks;
+        return this.client.apis['frameworkcontroller.microsoft.com'].v1.namespaces('default').frameworks;
     }
+    // tslint:enable: no-unsafe-any no-any
 
     public get containerName(): string {
         return 'framework';
@@ -51,4 +61,3 @@ class FrameworkControllerClientV1 extends FrameworkControllerClient {
 }
 
 export { FrameworkControllerClient, GeneralK8sClient };
-

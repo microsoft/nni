@@ -20,11 +20,10 @@
 'use strict';
 
 import * as assert from 'assert';
+import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
 import { getLogger, Logger } from '../../common/log';
-import { NNIError, NNIErrorNames } from '../../common/errors';
 import { TrialJobStatus } from '../../common/trainingService';
 import { KubernetesCRDClient } from './kubernetesApiClient';
-import { MethodNotImplementedError } from '../../common/errors';
 import { KubernetesTrialJobDetail } from './kubernetesData';
 
 /**
@@ -43,22 +42,22 @@ export class KubernetesJobInfoCollector {
     public async retrieveTrialStatus(kubernetesCRDClient: KubernetesCRDClient | undefined) : Promise<void> {
         assert(kubernetesCRDClient !== undefined);
         const updateKubernetesTrialJobs : Promise<void>[] = [];
-        for(let [trialJobId, kubernetesTrialJob] of this.trialJobsMap) {
-            if (!kubernetesTrialJob) {
+        for (const [trialJobId, kubernetesTrialJob] of this.trialJobsMap) {
+            if (kubernetesTrialJob === undefined) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
             // Since Kubeflow needs some delay to schedule jobs, we provide 20 seconds buffer time to check kubeflow job's status
-            if( Date.now() - kubernetesTrialJob.submitTime < 20 * 1000) {
+            if (Date.now() - kubernetesTrialJob.submitTime < 20 * 1000) {
                 return Promise.resolve();
             }
-            updateKubernetesTrialJobs.push(this.retrieveSingleTrialJobInfo(kubernetesCRDClient, kubernetesTrialJob))
+            updateKubernetesTrialJobs.push(this.retrieveSingleTrialJobInfo(kubernetesCRDClient, kubernetesTrialJob));
         }
 
         await Promise.all(updateKubernetesTrialJobs);
     }
 
     protected async retrieveSingleTrialJobInfo(kubernetesCRDClient: KubernetesCRDClient | undefined,
-        kubernetesTrialJob : KubernetesTrialJobDetail) : Promise<void> {
+                                               kubernetesTrialJob : KubernetesTrialJobDetail) : Promise<void> {
             throw new MethodNotImplementedError();
     }
 }
