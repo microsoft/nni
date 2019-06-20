@@ -464,10 +464,8 @@ def get_platform_dir(experiment_dict, platform):
                 port = machine.get('port')
                 remote_dir = '/' + '/'.join(['tmp', 'nni', 'experiments', nni_config.get_config('experimentId')])
                 dir_list.append(host + ':' + str(port) + remote_dir)
-        elif platform == 'pai':
-            host = nni_config.get_config('experimentConfig').get('paiConfig').get('host')	
-            user_name = nni_config.get_config('experimentConfig').get('paiConfig').get('userName')
-            hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)	
+        elif platform == 'pai':	
+            user_name = nni_config.get_config('experimentConfig').get('paiConfig').get('userName')	
             full_path = '/' + '/'.join([user_name, 'nni', 'experiments', nni_config.get_config('experimentId')])
             dir_list.append(full_path)
             output_dir = nni_config.get_config('experimentConfig').get('paiConfig').get('outputDir')
