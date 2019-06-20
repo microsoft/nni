@@ -19,17 +19,17 @@
 
 'use strict';
 
-import * as component from '../../common/component';
 import { Inject } from 'typescript-ioc';
+import * as component from '../../common/component';
+import { ClusterJobRestServer } from '../common/clusterJobRestServer';
 import { PAITrainingService } from './paiTrainingService';
-import { ClusterJobRestServer } from '../common/clusterJobRestServer'
 
 /**
  * PAI Training service Rest server, provides rest API to support pai job metrics update
  *
  */
 @component.Singleton
-export class PAIJobRestServer extends ClusterJobRestServer{
+export class PAIJobRestServer extends ClusterJobRestServer {
     @Inject
     private readonly paiTrainingService : PAITrainingService;
 
@@ -41,6 +41,7 @@ export class PAIJobRestServer extends ClusterJobRestServer{
         this.paiTrainingService = component.get(PAITrainingService);
     }
 
+    // tslint:disable-next-line:no-any
     protected handleTrialMetrics(jobId : string, metrics : any[]) : void {
         // Split metrics array into single metric, then emit
         // Warning: If not split metrics into single ones, the behavior will be UNKNOWN

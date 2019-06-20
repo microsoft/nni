@@ -22,6 +22,7 @@
 export type KubernetesStorageKind = 'nfs' | 'azureStorage';
 import { MethodNotImplementedError } from '../../common/errors';
 
+// tslint:disable: completed-docs function-name
 export abstract class KubernetesClusterConfig {
     public readonly storage?: KubernetesStorageKind;
     public readonly apiVersion: string;
@@ -31,7 +32,7 @@ export abstract class KubernetesClusterConfig {
         this.apiVersion = apiVersion;
     }
 
-    public get storageType(): KubernetesStorageKind{
+    public get storageType(): KubernetesStorageKind {
         throw new MethodNotImplementedError();
     }
 }
@@ -56,12 +57,13 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
         this.nfs = nfs;
     }
 
-    public get storageType(): KubernetesStorageKind{
+    public get storageType(): KubernetesStorageKind {
         return 'nfs';
     }
 
     public static getInstance(jsonObject: object): KubernetesClusterConfigNFS {
-        let kubernetesClusterConfigObjectNFS = <KubernetesClusterConfigNFS>jsonObject;
+        const kubernetesClusterConfigObjectNFS: KubernetesClusterConfigNFS = <KubernetesClusterConfigNFS>jsonObject;
+
         return new KubernetesClusterConfigNFS(
             kubernetesClusterConfigObjectNFS.apiVersion,
             kubernetesClusterConfigObjectNFS.nfs,
@@ -71,12 +73,12 @@ export class KubernetesClusterConfigNFS extends KubernetesClusterConfig {
 }
 
 export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
-    public readonly keyVault: keyVaultConfig;
+    public readonly keyVault: KeyVaultConfig;
     public readonly azureStorage: AzureStorage;
 
     constructor(
             apiVersion: string,
-            keyVault: keyVaultConfig,
+            keyVault: KeyVaultConfig,
             azureStorage: AzureStorage,
             storage?: KubernetesStorageKind
         ) {
@@ -85,12 +87,13 @@ export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
         this.azureStorage = azureStorage;
     }
 
-    public get storageType(): KubernetesStorageKind{
+    public get storageType(): KubernetesStorageKind {
         return 'azureStorage';
     }
 
     public static getInstance(jsonObject: object): KubernetesClusterConfigAzure {
-        let kubernetesClusterConfigObjectAzure = <KubernetesClusterConfigAzure>jsonObject;
+        const kubernetesClusterConfigObjectAzure: KubernetesClusterConfigAzure = <KubernetesClusterConfigAzure>jsonObject;
+
         return new KubernetesClusterConfigAzure(
             kubernetesClusterConfigObjectAzure.apiVersion,
             kubernetesClusterConfigObjectAzure.keyVault,
@@ -100,17 +103,20 @@ export class KubernetesClusterConfigAzure extends KubernetesClusterConfig {
     }
 }
 
+// tslint:disable-next-line:no-unnecessary-class
 export class KubernetesClusterConfigFactory {
 
     public static generateKubernetesClusterConfig(jsonObject: object): KubernetesClusterConfig {
-         let storageConfig = <StorageConfig>jsonObject;
-         switch(storageConfig.storage) {
+         const storageConfig: StorageConfig = <StorageConfig>jsonObject;
+         switch (storageConfig.storage) {
             case 'azureStorage':
                 return KubernetesClusterConfigAzure.getInstance(jsonObject);
-            case  'nfs' || undefined :
+            case 'nfs':
+            case undefined:
                 return KubernetesClusterConfigNFS.getInstance(jsonObject);
+            default:
+                throw new Error(`Invalid json object ${jsonObject}`);
          }
-         throw new Error(`Invalid json object ${jsonObject}`);
     }
 }
 
@@ -118,9 +124,9 @@ export class KubernetesClusterConfigFactory {
  * NFS configuration to store Kubeflow job related files
  */
 export class NFSConfig {
-    /** IP Adress of NFS server */
+    // IP Adress of NFS server
     public readonly server : string;
-    /** exported NFS path on NFS server */
+    // exported NFS path on NFS server
     public readonly path : string;
 
     constructor(server : string, path : string) {
@@ -133,13 +139,13 @@ export class NFSConfig {
  * KeyVault configuration to store the key of Azure Storage Service
  * Refer https://docs.microsoft.com/en-us/azure/key-vault/key-vault-manage-with-cli2
  */
-export class keyVaultConfig {
-    /**The vault-name to specify vault */
+export class KeyVaultConfig {
+    // The vault-name to specify vault
     public readonly vaultName : string;
-    /**The name to specify private key */
+    // The name to specify private key
     public readonly name : string;
 
-    constructor(vaultName : string, name : string){
+    constructor(vaultName : string, name : string) {
         this.vaultName = vaultName;
         this.name = name;
     }
@@ -149,12 +155,12 @@ export class keyVaultConfig {
  * Azure Storage Service
  */
 export class AzureStorage {
-    /**The azure share to storage files */
+    // The azure share to storage files
     public readonly azureShare : string;
 
-    /**The account name of sotrage service */
+    // The account name of sotrage service
     public readonly accountName: string;
-    constructor(azureShare : string, accountName: string){
+    constructor(azureShare : string, accountName: string) {
         this.azureShare = azureShare;
         this.accountName = accountName;
     }
@@ -164,23 +170,23 @@ export class AzureStorage {
  * Trial job configuration for Kubernetes
  */
 export class KubernetesTrialConfigTemplate {
-    /** CPU number */
+    // CPU number
     public readonly cpuNum: number;
 
-    /** Memory  */
+    // Memory
     public readonly memoryMB: number;
 
-    /** Docker image */
+    // Docker image
     public readonly image: string;
 
-    /** Trail command */
+    // Trail command
     public readonly command : string;
 
-    /** Required GPU number for trial job. The number should be in [0,100] */
+    // Required GPU number for trial job. The number should be in [0,100]
     public readonly gpuNum : number;
 
     constructor(command : string, gpuNum : number,
-        cpuNum: number, memoryMB: number, image: string) {
+                cpuNum: number, memoryMB: number, image: string) {
         this.command = command;
         this.gpuNum = gpuNum;
         this.cpuNum = cpuNum;

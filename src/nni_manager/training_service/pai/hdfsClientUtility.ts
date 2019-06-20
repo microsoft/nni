@@ -17,12 +17,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import * as path from 'path';
 import * as fs from 'fs';
+import * as path from 'path';
 import { Deferred } from 'ts-deferred';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger } from '../../common/log';
-import { unixPathJoin } from '../../common/utils'
+import { unixPathJoin } from '../../common/utils';
 
 /**
  * HDFS client utility, including copy file/directory
@@ -33,6 +33,7 @@ export namespace HDFSClientUtility {
      * @param hdfsUserName HDFS user name
      */
     function hdfsExpRootDir(hdfsUserName: string): string {
+        // tslint:disable-next-line:prefer-template
         return '/' + unixPathJoin(hdfsUserName, 'nni', 'experiments', getExperimentId());
     }
 
@@ -50,8 +51,8 @@ export namespace HDFSClientUtility {
      * @param trialId NNI trial ID
      */
     export function getHdfsTrialWorkDir(hdfsUserName: string, trialId: string): string {
-        let root = hdfsExpRootDir(hdfsUserName)
-        console.log(root)
+        const root: string = hdfsExpRootDir(hdfsUserName);
+
         return unixPathJoin(root, 'trials', trialId);
     }
 
@@ -62,26 +63,31 @@ export namespace HDFSClientUtility {
      * @param hdfsFilePath hdfs file path(target)
      * @param hdfsClient hdfs client
      */
+    // tslint:disable: no-unsafe-any non-literal-fs-path no-any
     export async function copyFileToHdfs(localFilePath : string, hdfsFilePath : string, hdfsClient : any) : Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
+        // tslint:disable-next-line:non-literal-fs-path
         fs.exists(localFilePath, (exists : boolean) => {
             // Detect if local file exist
             if (exists) {
-                var localFileStream = fs.createReadStream(localFilePath);
-                var hdfsFileStream = hdfsClient.createWriteStream(hdfsFilePath);
+                const localFileStream: fs.ReadStream = fs.createReadStream(localFilePath);
+                const hdfsFileStream: any = hdfsClient.createWriteStream(hdfsFilePath);
                 localFileStream.pipe(hdfsFileStream);
-                hdfsFileStream.on('finish', function onFinish () {
+                hdfsFileStream.on('finish', () => {
                     deferred.resolve();
                 });
                 hdfsFileStream.on('error', (err : any) => {
-                    getLogger().error(`HDFSCientUtility:copyFileToHdfs, copy file failed, err is ${err.message}`);
+                    getLogger()
+                      .error(`HDFSCientUtility:copyFileToHdfs, copy file failed, err is ${err.message}`);
                     deferred.reject(err);
                 });
             } else {
-                getLogger().error(`HDFSCientUtility:copyFileToHdfs, ${localFilePath} doesn't exist locally`);
+                getLogger()
+                  .error(`HDFSCientUtility:copyFileToHdfs, ${localFilePath} doesn't exist locally`);
                 deferred.reject('file not exist!');
             }
         });
+
         return deferred.promise;
     }
 
@@ -92,21 +98,23 @@ export namespace HDFSClientUtility {
      * @param hdfsDirectory HDFS directory
      * @param hdfsClient   HDFS client
      */
-    export async function copyDirectoryToHdfs(localDirectory : string, hdfsDirectory : string, hdfsClient : any) : Promise<void>{
+    export async function copyDirectoryToHdfs(localDirectory : string, hdfsDirectory : string, hdfsClient : any) : Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         // TODO: fs.readdirSync doesn't support ~($HOME)
         const fileNameArray: string[] = fs.readdirSync(localDirectory);
 
-        for(var fileName of fileNameArray){
+        for (const fileName of fileNameArray) {
             const fullFilePath: string = path.join(localDirectory, fileName);
             try {
-                if (fs.lstatSync(fullFilePath).isFile()) {
+                // tslint:disable-next-line:non-literal-fs-path
+                if (fs.lstatSync(fullFilePath)
+                    .isFile()) {
                     await copyFileToHdfs(fullFilePath, path.join(hdfsDirectory, fileName), hdfsClient);
                 } else {
                     // If filePath is a directory, recuisively copy it to remote directory
                     await copyDirectoryToHdfs(fullFilePath, path.join(hdfsDirectory, fileName), hdfsClient);
                 }
-            } catch(error) {
+            } catch (error) {
                 deferred.reject(error);
             }
         }
@@ -122,16 +130,16 @@ export namespace HDFSClientUtility {
      * @param hdfsPath HDFS file path
      * @param hdfsClient HDFS client
      */
-    export async function readFileFromHDFS(hdfsPath : string, hdfsClient :any) : Promise<Buffer> {
+    export async function readFileFromHDFS(hdfsPath : string, hdfsClient : any) : Promise<Buffer> {
         const deferred: Deferred<Buffer> = new Deferred<Buffer>();
         let buffer : Buffer = Buffer.alloc(0);
 
         const exist : boolean = await pathExists(hdfsPath, hdfsClient);
-        if(!exist) {
+        if (!exist) {
             deferred.reject(`${hdfsPath} doesn't exists`);
         }
 
-        const remoteFileStream = hdfsClient.createReadStream(hdfsPath);
+        const remoteFileStream: any = hdfsClient.createReadStream(hdfsPath);
         remoteFileStream.on('error', (err : any) => {
             // Reject with the error
             deferred.reject(err);
@@ -142,7 +150,7 @@ export namespace HDFSClientUtility {
             buffer = Buffer.concat([buffer, chunk]);
         });
 
-        remoteFileStream.on('finish', function onFinish () {
+        remoteFileStream.on('finish', () => {
             // Upload is done, resolve
             deferred.resolve(buffer);
         });
@@ -158,30 +166,32 @@ export namespace HDFSClientUtility {
      */
     export async function pathExists(hdfsPath : string, hdfsClient : any) : Promise<boolean> {
         const deferred : Deferred<boolean> = new Deferred<boolean>();
-        hdfsClient.exists(hdfsPath, (exist : boolean ) => {
+        hdfsClient.exists(hdfsPath, (exist : boolean) => {
              deferred.resolve(exist);
         });
 
-        let timeoutId : NodeJS.Timer
+        let timeoutId : NodeJS.Timer;
+
         const delayTimeout : Promise<boolean> = new Promise<boolean>((resolve : Function, reject : Function) : void => {
             // Set timeout and reject the promise once reach timeout (5 seconds)
-            timeoutId = setTimeout(() => deferred.reject(`Check HDFS path ${hdfsPath} exists timeout`), 5000);
+            timeoutId = setTimeout(() => { reject(`Check HDFS path ${hdfsPath} exists timeout`); }, 5000);
         });
 
-        return Promise.race([deferred.promise, delayTimeout]).finally(() => clearTimeout(timeoutId));
+        return Promise.race([deferred.promise, delayTimeout])
+          .finally(() => { clearTimeout(timeoutId); });
     }
 
     /**
      * Mkdir in HDFS, use default permission 755
      *
      * @param hdfsPath the path in HDFS. It could be either file or directory
-     * @param hdfsClient
+     * @param hdfsClient HDFS client
      */
     export function mkdir(hdfsPath : string, hdfsClient : any) : Promise<boolean> {
         const deferred : Deferred<boolean> = new Deferred<boolean>();
 
-        hdfsClient.mkdir(hdfsPath, (err : any)=> {
-            if(!err) {
+        hdfsClient.mkdir(hdfsPath, (err : any) => {
+            if (!err) {
                 deferred.resolve(true);
             } else {
                 deferred.reject(err.message);
@@ -195,17 +205,17 @@ export namespace HDFSClientUtility {
      * Read directory contents
      *
      * @param hdfsPath the path in HDFS. It could be either file or directory
-     * @param hdfsClient
+     * @param hdfsClient HDFS client
      */
     export async function readdir(hdfsPath : string, hdfsClient : any) : Promise<string[]> {
         const deferred : Deferred<string[]> = new Deferred<string[]>();
         const exist : boolean = await pathExists(hdfsPath, hdfsClient);
-        if(!exist) {
+        if (!exist) {
             deferred.reject(`${hdfsPath} doesn't exists`);
         }
 
-        hdfsClient.readdir(hdfsPath, (err : any, files : any[] ) => {
-            if(err) {
+        hdfsClient.readdir(hdfsPath, (err : any, files : any[]) => {
+            if (err) {
                 deferred.reject(err);
             }
 
@@ -218,18 +228,20 @@ export namespace HDFSClientUtility {
     /**
      * Delete HDFS path
      * @param hdfsPath the path in HDFS. It could be either file or directory
-     * @param hdfsClient
+     * @param hdfsClient HDFS client
      * @param recursive Mark if need to delete recursively
      */
     export function deletePath(hdfsPath : string, hdfsClient : any, recursive : boolean = true) : Promise<boolean> {
         const deferred : Deferred<boolean> = new Deferred<boolean>();
-        hdfsClient.unlink(hdfsPath, recursive, (err : any)=> {
-            if(!err) {
+        hdfsClient.unlink(hdfsPath, recursive, (err : any) => {
+            if (!err) {
                 deferred.resolve(true);
             } else {
                 deferred.reject(err.message);
             }
         });
+
         return deferred.promise;
     }
+    // tslint:enable: no-unsafe-any non-literal-fs-path no-any
 }

@@ -454,8 +454,8 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             except Exception:
                 raise Exception(ERROR_INFO % 'Restful server stopped!')
             exit(1)
-
-        #set kubeflow config
+    
+    #set frameworkcontroller config
     if experiment_config['trainingServicePlatform'] == 'frameworkcontroller':
         print_normal('Setting frameworkcontroller config...')
         config_result, err_msg = set_frameworkcontroller_config(experiment_config, args.port, config_file_name)

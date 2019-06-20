@@ -91,6 +91,7 @@ interface TrialJobMetric {
  * define TrainingServiceError
  */
 class TrainingServiceError extends Error {
+
     private errCode: number;
 
     constructor(errorCode: number, errorMessage: string) {
@@ -136,5 +137,3 @@ export {
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
     HostJobApplicationForm, JobApplicationForm, JobType, NNIManagerIpConfig
 };
-
-
