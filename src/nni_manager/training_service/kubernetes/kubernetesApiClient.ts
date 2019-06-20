@@ -19,12 +19,8 @@
 
 'use strict';
 
-import * as os from 'os';
-import * as path from 'path';
+import { Client1_10, config } from 'kubernetes-client';
 import { getLogger, Logger } from '../../common/log';
-
-const K8SClient = require('kubernetes-client').Client;
-const K8SConfig = require('kubernetes-client').config;
 
 /**
  * Generict Kubernetes client, target version >= 1.9
@@ -35,7 +31,7 @@ class GeneralK8sClient {
     protected readonly log: Logger = getLogger();
 
     constructor() {
-        this.client = new K8SClient({ config: K8SConfig.fromKubeconfig(), version: '1.9'});
+        this.client = new Client1_10({ config: config.fromKubeconfig(), version: '1.9'});
         this.client.loadSpec();
     }
 
@@ -62,7 +58,7 @@ abstract class KubernetesCRDClient {
     protected crdSchema: any;
 
     constructor() {
-        this.client = new K8SClient({ config: K8SConfig.fromKubeconfig() });
+        this.client = new Client1_10({ config: config.fromKubeconfig() });
         this.client.loadSpec();
     }
 

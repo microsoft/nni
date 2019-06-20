@@ -158,7 +158,7 @@ export class SSHClientManager {
         }
 
         //init a new ssh client if could not get an available one
-        return await this.initNewSSHClient();
+        return this.initNewSSHClient();
     }
 
     /**

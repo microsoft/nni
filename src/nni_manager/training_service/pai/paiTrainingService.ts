@@ -47,7 +47,7 @@ import { PAI_LOG_PATH_FORMAT, PAI_OUTPUT_DIR_FORMAT, PAI_TRIAL_COMMAND_FORMAT, P
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { PAIJobRestServer } from './paiJobRestServer';
 
-const WebHDFS = require('webhdfs');
+import * as WebHDFS from 'webhdfs';
 
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)

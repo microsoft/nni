@@ -24,6 +24,7 @@ import * as path from 'path';
 
 import * as azureStorage from 'azure-storage';
 import { EventEmitter } from 'events';
+import { Base64 } from 'js-base64';
 import { String } from 'typescript-string-operations';
 import { getExperimentId, getInitTrialSequenceId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
@@ -36,9 +37,6 @@ import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
 import { KubernetesClusterConfig } from './kubernetesConfig';
 import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
 import { KubernetesJobRestServer } from './kubernetesJobRestServer';
-
-const azure = require('azure-storage');
-const base64 = require('js-base64').Base64;
 
 /**
  * Training Service implementation for Kubernetes
@@ -240,8 +238,11 @@ abstract class KubernetesTrainingService {
                 return Promise.reject(errorMessage);
             }
             const storageAccountKey: any = JSON.parse(result.stdout).value;
+            if (this.azureStorageAccountName === undefined) {
+                throw new Error('azureStorageAccountName not initialized!');
+            }
             //create storage client
-            this.azureStorageClient = azure.createFileService(this.azureStorageAccountName, storageAccountKey);
+            this.azureStorageClient = azureStorage.createFileService(this.azureStorageAccountName, storageAccountKey);
             await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
             //create sotrage secret
             this.azureStorageSecretName = String.Format('nni-secret-{0}', uniqueString(8)
@@ -260,8 +261,8 @@ abstract class KubernetesTrainingService {
                     },
                     type: 'Opaque',
                     data: {
-                        azurestorageaccountname: base64.encode(this.azureStorageAccountName),
-                        azurestorageaccountkey: base64.encode(storageAccountKey)
+                        azurestorageaccountname: Base64.encode(this.azureStorageAccountName),
+                        azurestorageaccountkey: Base64.encode(storageAccountKey)
                     }
                 }
             );
