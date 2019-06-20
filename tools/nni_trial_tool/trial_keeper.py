@@ -34,7 +34,7 @@ import pkg_resources
 from .rest_utils import rest_post, rest_get
 from .url_utils import gen_send_stdout_url, gen_send_version_url, gen_parameter_meta_url
 
-from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH, MULTI_PHASE, NNI_TRIAL_JOB_ID
+from .constants import HOME_DIR, LOG_DIR, NNI_PLATFORM, STDOUT_FULL_PATH, STDERR_FULL_PATH, MULTI_PHASE, NNI_TRIAL_JOB_ID, NNI_SYS_DIR
 from .hdfsClientUtility import copyDirectoryToHdfs, copyHdfsDirectoryToLocal, copyHdfsFileToLocal
 from .log_utils import LogType, nni_log, RemoteLogger, PipeLogReader, StdOutputType
 
@@ -167,15 +167,16 @@ def download_parameter(meta_list, args):
         {"experimentId":"yWFJarYa","trialId":"aIUMA","filePath":"/chec/nni/experiments/yWFJarYa/trials/aIUMA/parameter_1.cfg"}
     ]
     """
-    print(os.listdir('.'))
+    print('sysdir:', NNI_SYS_DIR)
+    print(os.listdir(NNI_SYS_DIR))
     print('trial id:', NNI_TRIAL_JOB_ID)
     print('meta_list:', meta_list)
     for meta in meta_list:
         if meta['trialId'] == NNI_TRIAL_JOB_ID:
-            fn = os.path.basename(meta['filePath'])
-            if not os.path.exists(fn):
+            param_fp = os.path.join(NNI_SYS_DIR, os.path.basename(meta['filePath']))
+            if not os.path.exists(param_fp):
                 hdfs_client = get_hdfs_client(args)
-                copyHdfsFileToLocal(meta['filePath'], fn, hdfs_client, override=False)
+                copyHdfsFileToLocal(meta['filePath'], param_fp, hdfs_client, override=False)
 
 def fetch_parameter_file(args):
     class FetchThread(threading.Thread):
