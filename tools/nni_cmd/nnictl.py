@@ -121,7 +121,7 @@ def parse_args():
     parser_experiment_list = parser_experiment_subparsers.add_parser('list', help='list all of running experiment ids')
     parser_experiment_list.add_argument('all', nargs='?', help='list all of experiments')
     parser_experiment_list.set_defaults(func=experiment_list)
-    parser_experiment_clean = parser_experiment_subparsers.add_parser('clean', help='clean up the experiment data')
+    parser_experiment_clean = parser_experiment_subparsers.add_parser('delete', help='clean up the experiment data')
     parser_experiment_clean.add_argument('id', nargs='?', help='the id of experiment')
     parser_experiment_clean.set_defaults(func=experiment_clean)
 
