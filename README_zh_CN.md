@@ -62,10 +62,10 @@ NNI (Neural Network Intelligence) 是自动机器学习（AutoML）的工具包�
           <li><a href="docs/zh_CN/BuiltinTuner.md#MetisTuner">Metis Tuner</a></li>
           <li><a href="docs/zh_CN/BuiltinTuner.md#BOHB">BOHB</a></li>
         </ul>
-          <a href="docs/zh_CN/BuiltinAssessors.md">Assessor（评估器）</a>
+          <a href="docs/en_US/BuiltinAssessor.md">Assessor（评估器）</a>
         <ul>
-          <li><a href="docs/zh_CN/BuiltinAssessors.md#Medianstop">Median Stop</a></li>
-          <li><a href="docs/zh_CN/BuiltinAssessors.md#Curvefitting">Curve Fitting</a></li>
+          <li><a href="docs/en_US/BuiltinAssessor.md#Medianstop">Median Stop</a></li>
+          <li><a href="docs/en_US/BuiltinAssessor.md#Curvefitting">Curve Fitting</a></li>
         </ul>
       </td>
       <td>
@@ -113,29 +113,21 @@ python3 -m pip install --upgrade nni
 
 Windows
 
-**重要**：确保安装前将 `ExecutionPolicy` 设为 `Unrestricted`。 要设置策略，**以管理员身份运行 PowerShell**，并执行下列命令。
-
-```bash
-Set-ExecutionPolicy -ExecutionPolicy Unrestricted
-```
-
-ExecutionPolicy 设置为 unrestricted后，运行下列命令安装 NNI：
-
 ```bash
 python -m pip install --upgrade nni
 ```
 
-注意：
+Note:
 
 * 如果需要将 NNI 安装到自己的 home 目录中，可使用 `--user`，这样也不需要任何特殊权限。
 * 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda 在 Windows 上安装 NNI。
 * 如果遇到如`Segmentation fault` 这样的任何错误请参考[常见问题](docs/zh_CN/FAQ.md)。
 
-**通过源代码安装**
+**Install through source code**
 
 * 当前支持 Linux（Ubuntu 16.04 或更高版本），MacOS（10.14.1）以及 Windows 10（1809 版）。
 
-Linux 和 macOS
+Linux and MacOS
 
 * 在 `python >= 3.5` 的环境中运行命令： `git` 和 `wget`，确保安装了这两个组件。
 
@@ -155,13 +147,13 @@ Windows
   powershell -ExecutionPolicy Bypass -file install.ps1
 ```
 
-参考[安装 NNI](docs/zh_CN/Installation.md) 了解系统需求。
+For the system requirements of NNI, please refer to [Install NNI](docs/en_US/Installation.md)
 
-Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/NniOnWindows.md)。
+For NNI on Windows, please refer to [NNI on Windows](docs/en_US/NniOnWindows.md)
 
-**验证安装**
+**Verify install**
 
-以下示例 Experiment 依赖于 TensorFlow 。 在运行前确保安装了 **TensorFlow**。
+The following example is an experiment built on TensorFlow. Make sure you have **TensorFlow installed** before running it.
 
 * 通过克隆源代码下载示例。
 
@@ -169,7 +161,7 @@ Windows 上参考 [Windows 上使用 NNI](docs/zh_CN/NniOnWindows.md)。
     git clone -b v0.8 https://github.com/Microsoft/nni.git
 ```
 
-Linux 和 macOS
+Linux and MacOS
 
 * 运行 MNIST 示例。
 
@@ -251,16 +243,16 @@ You can use these commands to get more information about the experiment
 
 ## **贡献**
 
-欢迎贡献代码或提交建议，可在 [GitHub issues](https://github.com/Microsoft/nni/issues) 跟踪需求和 Bug。
+This project welcomes contributions and suggestions, we use [GitHub issues](https://github.com/Microsoft/nni/issues) for tracking requests and bugs.
 
-推荐新贡献者从标有 **good first issue** 的简单需求开始。
+Issues with the **good first issue** label are simple and easy-to-start ones that we recommend new contributors to start with.
 
-如要安装 NNI 开发环境，参考：[配置 NNI 开发环境](docs/zh_CN/SetupNniDeveloperEnvironment.md)。
+To set up environment for NNI development, refer to the instruction: [Set up NNI developer environment](docs/en_US/SetupNniDeveloperEnvironment.md)
 
-在写代码之前，请查看并熟悉 NNI 代码贡献指南：[贡献](docs/zh_CN/Contributing.md)。
+Before start coding, review and get familiar with the NNI Code Contribution Guideline: [Contributing](docs/en_US/Contributing.md)
 
-我们正在编写[如何调试](docs/zh_CN/HowToDebug.md) 的页面，欢迎提交建议和问题。
+We are in construction of the instruction for [How to Debug](docs/en_US/HowToDebug.md), you are also welcome to contribute questions or suggestions on this area.
 
 ## **许可协议**
 
-代码库遵循 [MIT 许可协议](LICENSE)
+The entire codebase is under [MIT license](LICENSE)
