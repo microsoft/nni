@@ -20,16 +20,20 @@
 'use strict';
 
 import * as assert from 'assert';
-import { KubernetesClusterConfigAzure, KubernetesClusterConfigNFS, KubernetesStorageKind, NFSConfig, AzureStorage, keyVaultConfig,
-        KubernetesTrialConfig, KubernetesTrialConfigTemplate, StorageConfig, KubernetesClusterConfig } from '../kubernetesConfig'
 import { MethodNotImplementedError } from '../../../common/errors';
+import { AzureStorage, KeyVaultConfig, KubernetesClusterConfig, KubernetesClusterConfigAzure, KubernetesClusterConfigNFS,
+    KubernetesStorageKind, KubernetesTrialConfig, KubernetesTrialConfigTemplate, NFSConfig, StorageConfig
+} from '../kubernetesConfig';
 
-/** operator types that kubeflow supported */
+// operator types that kubeflow supported
 export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type DistTrainRole = 'worker' | 'ps' | 'master';
 export type KubeflowJobStatus = 'Created' | 'Running' | 'Failed' | 'Succeeded';
 export type OperatorApiVersion = 'v1alpha2' | 'v1beta1' | 'v1beta2';
 
+/**
+ * Kubeflow Cluster Configuration
+ */
 export class KubeflowClusterConfig extends KubernetesClusterConfig {
     public readonly operator: KubeflowOperator;
     constructor(apiVersion: string, operator: KubeflowOperator) {
@@ -38,6 +42,7 @@ export class KubeflowClusterConfig extends KubernetesClusterConfig {
     }
 }
 
+// tslint:disable:completed-docs
 export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly operator: KubeflowOperator;
     constructor(
@@ -54,9 +59,11 @@ export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
         return 'nfs';
     }
 
+    // tslint:disable-next-line:function-name
     public static getInstance(jsonObject: object): KubeflowClusterConfigNFS {
-        let kubeflowClusterConfigObjectNFS = <KubeflowClusterConfigNFS>jsonObject;
-        assert (kubeflowClusterConfigObjectNFS !== undefined)
+        const kubeflowClusterConfigObjectNFS: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>jsonObject;
+        assert (kubeflowClusterConfigObjectNFS !== undefined);
+
         return new KubeflowClusterConfigNFS(
             kubeflowClusterConfigObjectNFS.operator,
             kubeflowClusterConfigObjectNFS.apiVersion,
@@ -66,26 +73,28 @@ export class KubeflowClusterConfigNFS extends KubernetesClusterConfigNFS {
     }
 }
 
-export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure{
+export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure {
     public readonly operator: KubeflowOperator;
 
     constructor(
             operator: KubeflowOperator,
             apiVersion: string,
-            keyVault: keyVaultConfig,
+            keyVault: KeyVaultConfig,
             azureStorage: AzureStorage,
             storage?: KubernetesStorageKind
         ) {
-        super(apiVersion, keyVault, azureStorage,storage);
+        super(apiVersion, keyVault, azureStorage, storage);
         this.operator = operator;
     }
 
-    public get storageType(): KubernetesStorageKind{
+    public get storageType(): KubernetesStorageKind {
         return 'azureStorage';
     }
 
+    // tslint:disable-next-line:function-name
     public static getInstance(jsonObject: object): KubeflowClusterConfigAzure {
-        let kubeflowClusterConfigObjectAzure = <KubeflowClusterConfigAzure>jsonObject;
+        const kubeflowClusterConfigObjectAzure: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>jsonObject;
+
         return new KubeflowClusterConfigAzure(
             kubeflowClusterConfigObjectAzure.operator,
             kubeflowClusterConfigObjectAzure.apiVersion,
@@ -98,12 +107,13 @@ export class KubeflowClusterConfigAzure extends KubernetesClusterConfigAzure{
 
 export class KubeflowClusterConfigFactory {
 
+    // tslint:disable-next-line:function-name
     public static generateKubeflowClusterConfig(jsonObject: object): KubeflowClusterConfig {
-         let storageConfig = <StorageConfig>jsonObject;
-         if(!storageConfig) {
-            throw new Error("Invalid json object as a StorageConfig instance");
+         const storageConfig: StorageConfig = <StorageConfig>jsonObject;
+         if (storageConfig === undefined) {
+            throw new Error('Invalid json object as a StorageConfig instance');
         }
-         if(storageConfig.storage && storageConfig.storage === 'azureStorage') {
+         if (storageConfig.storage !== undefined && storageConfig.storage === 'azureStorage') {
             return KubeflowClusterConfigAzure.getInstance(jsonObject);
          } else if (storageConfig.storage === undefined || storageConfig.storage === 'nfs') {
             return KubeflowClusterConfigNFS.getInstance(jsonObject);
@@ -122,10 +132,10 @@ export class KubeflowTrialConfig extends KubernetesTrialConfig {
     }
 }
 
-export class KubeflowTrialConfigTemplate extends KubernetesTrialConfigTemplate{
+export class KubeflowTrialConfigTemplate extends KubernetesTrialConfigTemplate {
     public readonly replicas: number;
     constructor(replicas: number, command : string, gpuNum : number,
-        cpuNum: number, memoryMB: number, image: string) {
+                cpuNum: number, memoryMB: number, image: string) {
         super(command, gpuNum, cpuNum, memoryMB, image);
         this.replicas = replicas;
     }
@@ -163,22 +173,25 @@ export class KubeflowTrialConfigPytorch extends KubeflowTrialConfig {
 
 export class KubeflowTrialConfigFactory {
 
+    // tslint:disable-next-line:function-name
     public static generateKubeflowTrialConfig(jsonObject: object, operator: KubeflowOperator): KubeflowTrialConfig {
-        if(operator === 'tf-operator'){
-            let kubeflowTrialConfigObject = <KubeflowTrialConfigTensorflow>jsonObject;
+        if (operator === 'tf-operator') {
+            const kubeflowTrialConfigObject: KubeflowTrialConfigTensorflow = <KubeflowTrialConfigTensorflow>jsonObject;
+
             return new KubeflowTrialConfigTensorflow(
                 kubeflowTrialConfigObject.codeDir,
                 kubeflowTrialConfigObject.worker,
                 kubeflowTrialConfigObject.ps
             );
-        }else if(operator === 'pytorch-operator'){
-            let kubeflowTrialConfigObject = <KubeflowTrialConfigPytorch>jsonObject;
+        } else if (operator === 'pytorch-operator') {
+            const kubeflowTrialConfigObject: KubeflowTrialConfigPytorch = <KubeflowTrialConfigPytorch>jsonObject;
+
             return new KubeflowTrialConfigPytorch(
                 kubeflowTrialConfigObject.codeDir,
                 kubeflowTrialConfigObject.master,
                 kubeflowTrialConfigObject.worker
             );
         }
-         throw new Error(`Invalid json object ${jsonObject}`);
+        throw new Error(`Invalid json object ${jsonObject}`);
     }
 }
