@@ -23,7 +23,6 @@ gp_tuner.py
 
 import warnings
 import logging
-import numpy as np
 
 from sklearn.gaussian_process.kernels import Matern
 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -42,7 +41,7 @@ class GPTuner(Tuner):
     GPTuner
     '''
 
-    def __init__(self, optimize_mode="maximize", cold_start_num=3, random_state=None):
+    def __init__(self, optimize_mode="maximize", cold_start_num=1, random_state=None):
         self.optimize_mode = optimize_mode
         self._random_state = ensure_rng(random_state)
 
@@ -59,7 +58,7 @@ class GPTuner(Tuner):
         self.supplement_data_num = 0
 
     def update_search_space(self, search_space):
-        """Update the self.x_bounds and self.x_types by the search_space.json
+        """Update the self.bounds and self.types by the search_space.json
 
         Parameters
         ----------
@@ -70,7 +69,7 @@ class GPTuner(Tuner):
     def generate_parameters(self, parameter_id):
         """Generate next parameter for trial
         If the number of trial result is lower than cold start number,
-        metis will first random generate some parameters.
+        gp will first randomly generate some parameters.
         Otherwise, choose the parameters by the Gussian Process Model
 
         Parameters
@@ -81,35 +80,27 @@ class GPTuner(Tuner):
         -------
         result : dict
         """
-        """Most promissing point to probe next"""
         if len(self._space) == 0 or len(self._space._target) < self.cold_start_num:
-            return self._space.array_to_params(self._space.random_sample())
+            results = self._space.random_sample()
+        else:
+            # Sklearn's GP throws a large number of warnings at times, but
+            # we don't really need to see them here.
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self._gp.fit(self._space.params, self._space.target)
 
-        # Sklearn's GP throws a large number of warnings at times, but
-        # we don't really need to see them here.
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self._gp.fit(self._space.params, self._space.target)
+            util = UtilityFunction(kind='ei', kappa=0, xi=0)
+            results = acq_max(
+                ac=util.utility,
+                gp=self._gp,
+                y_max=self._space.target.max(),
+                bounds=self._space.bounds,
+                random_state=self._random_state,
+                space=self._space
+            )
 
-        util = UtilityFunction(kind='ei', kappa=0, xi=0)
-
-        # Finding argmax of the acquisition function.
-        suggestion = acq_max(
-            ac=util.utility,
-            gp=self._gp,
-            y_max=self._space.target.max(),
-            bounds=self._space.bounds,
-            random_state=self._random_state,
-            space=self._space
-        )
-        
-        logger.info("Generate paramageters(array):\n" + str(suggestion))
-        print("Generate paramageters(array):\n" + str(suggestion))
-
-        results = self._space.array_to_params(suggestion)
+        results = self._space.array_to_params(results)
         logger.info("Generate paramageters(json):\n" + str(results))
-        print("Generate paramageters(json):\n" + str(results))
-
         return results
 
     def receive_trial_result(self, parameter_id, parameters, value):

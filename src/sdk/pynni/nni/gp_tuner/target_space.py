@@ -1,11 +1,31 @@
+# Copyright (c) Microsoft Corporation
+# All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge,
+# to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and
+# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 import numpy as np
 from .util import ensure_rng
 
 
 def _hashable(x):
     """ ensure that an point is hashable by a python dict """
-    #return tuple(map(float, x))
-    return x
+    return tuple(map(float, x))
+
 
 class TargetSpace(object):
     """
@@ -99,24 +119,17 @@ class TargetSpace(object):
                 "Size of array ({}) is different than the ".format(len(x)) +
                 "expected number of parameters ({}).".format(len(self.keys))
             )
-        return dict(zip(self.keys, x))
 
-    def _as_array(self, x):
-        try:
-            #x = np.asarray(x, dtype=float)
-            x = np.asarray(x)
-        except TypeError:
-            x = self.params_to_array(x)
+        # maintain int type if the choices are int
+        # TODO: better implementation
+        params = {}
+        for i, _bound in enumerate(self._bounds):
+            if _bound['_type'] == "choice" and isinstance(_bound['_value'][0], int):
+                params.update({self.keys[i]: int(x[i])})
+            else:
+                params.update({self.keys[i]:  x[i]})
 
-        x = x.ravel()
-        try:
-            assert x.size == self.dim
-        except AssertionError:
-            raise ValueError(
-                "Size of array ({}) is different than the ".format(len(x)) +
-                "expected number of parameters ({}).".format(len(self.keys))
-            )
-        return x
+        return params
 
     def register(self, params, target):
         """
@@ -124,8 +137,7 @@ class TargetSpace(object):
 
         Parameters
         ----------
-        x : ndarray
-            a single point, with len(x) == self.dim
+        x : dict
 
         y : float
             target function value
@@ -134,24 +146,9 @@ class TargetSpace(object):
         ------
         KeyError:
             if the point is not unique
-
-        Notes
-        -----
-        runs in ammortized constant time
-
-        Example
-        -------
-        >>> pbounds = {'p1': (0, 1), 'p2': (1, 100)}
-        >>> space = TargetSpace(lambda p1, p2: p1 + p2, pbounds)
-        >>> len(space)
-        0
-        >>> x = np.array([0, 0])
-        >>> y = 1
-        >>> space.add_observation(x, y)
-        >>> len(space)
-        1
         """
-        x = self._as_array(params)
+
+        x = self.params_to_array(params)
         if x in self:
             raise KeyError('Data point {} is not unique'.format(x))
 
@@ -174,18 +171,18 @@ class TargetSpace(object):
         -------
         >>> target_func = lambda p1, p2: p1 + p2
         >>> pbounds = { "dropout_rate":{"_type":"uniform","_value":[0.5, 0.9]}, "conv_size":{"_type":"choice","_value":[2,3,5,7]}}
-        >>> space = TargetSpace( pbounds, random_state=0)
-        >>> space.random_points(1)
+        >>> space = TargetSpace(pbounds, random_state=0)
+        >>> space.random_points()
         array([[ 55.33253689,   0.54488318]])
         """
         # TODO: support randint, quniform
         data = np.empty((1, self.dim))
         for col, _bound in enumerate(self._bounds):
             if _bound['_type'] == 'uniform':
-                data.T[col] = self.random_state.uniform(_bound['_value'][0], _bound['_value'][1], size=1)
+                data.T[col] = self.random_state.uniform(
+                    _bound['_value'][0], _bound['_value'][1], size=1)
             elif _bound['_type'] == 'choice':
                 data.T[col] = self.random_state.choice(_bound['_value'])
-        print("rand sample:", data.ravel())
         return data.ravel()
 
     def max(self):
@@ -222,4 +219,3 @@ class TargetSpace(object):
         for row, key in enumerate(self.keys):
             if key in new_bounds:
                 self._bounds[row] = new_bounds[key]
-
