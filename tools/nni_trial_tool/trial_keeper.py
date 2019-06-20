@@ -172,7 +172,7 @@ def download_parameter(meta_list, args):
     print('meta_list:', meta_list)
     for meta in meta_list:
         if meta['trialId'] == NNI_TRIAL_JOB_ID:
-            fn = os.path.basename(meta)
+            fn = os.path.basename(meta['filePath'])
             if not os.path.exists(fn):
                 hdfs_client = get_hdfs_client(args)
                 copyHdfsFileToLocal(meta['filePath'], fn, hdfs_client, override=False)
