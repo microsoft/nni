@@ -67,7 +67,7 @@ def get_next_parameter():
             params_file_name = 'parameter.cfg'
         else:
             raise AssertionError('_param_index value ({}) should >=0'.format(_param_index))
-    
+
     params_filepath = os.path.join(_sysdir, params_file_name)
     if not os.path.isfile(params_filepath):
         request_next_parameter()
@@ -81,11 +81,11 @@ def get_next_parameter():
 def send_metric(string):
     if _nni_platform != 'local':
         data = (string).encode('utf8')
-        assert len(data) < 1000000, 'Metric too long'    
+        assert len(data) < 1000000, 'Metric too long'
         print('NNISDK_ME%s' % (data), flush=True)
     else:
         data = (string + '\n').encode('utf8')
-        assert len(data) < 1000000, 'Metric too long'    
+        assert len(data) < 1000000, 'Metric too long'
         _metric_file.write(b'ME%06d%b' % (len(data), data))
         _metric_file.flush()
         if sys.platform == "win32":

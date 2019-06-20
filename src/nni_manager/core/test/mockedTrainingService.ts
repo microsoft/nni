@@ -59,10 +59,10 @@ class MockedTrainingService extends TrainingService {
         },
         sequenceId: 0
     };
-    
+
     public listTrialJobs(): Promise<TrialJobDetail[]> {
         const deferred = new Deferred<TrialJobDetail[]>();
-        
+
         deferred.resolve([this.jobDetail1, this.jobDetail2]);
         return deferred.promise;
     }

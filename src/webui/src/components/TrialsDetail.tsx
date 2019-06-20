@@ -139,7 +139,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                             const items = metricSource[key];
                             if (items.trialJobId === id) {
                                 // succeed trial, last intermediate result is final result
-                                // final result format may be object 
+                                // final result format may be object
                                 if (typeof JSON.parse(items.data) === 'object') {
                                     mediate.push(JSON.parse(items.data).default);
                                 } else {

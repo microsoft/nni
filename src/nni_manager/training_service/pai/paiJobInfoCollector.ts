@@ -19,13 +19,14 @@
 
 'use strict';
 
+// tslint:disable-next-line:no-implicit-dependencies
 import * as request from 'request';
 import { Deferred } from 'ts-deferred';
-import { getLogger, Logger } from '../../common/log';
 import { NNIError, NNIErrorNames } from '../../common/errors';
-import { PAITrialJobDetail } from './paiData';
-import { PAIClusterConfig } from './paiConfig';
+import { getLogger, Logger } from '../../common/log';
 import { TrialJobStatus } from '../../common/trainingService';
+import { PAIClusterConfig } from './paiConfig';
+import { PAITrialJobDetail } from './paiData';
 
 /**
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
@@ -43,60 +44,65 @@ export class PAIJobInfoCollector {
     }
 
     public async retrieveTrialStatus(paiToken? : string, paiClusterConfig?: PAIClusterConfig) : Promise<void> {
-        if (!paiClusterConfig || !paiToken) {
-            return Promise.resolve();            
+        if (paiClusterConfig === undefined || paiToken === undefined) {
+            return Promise.resolve();
         }
 
         const updatePaiTrialJobs : Promise<void>[] = [];
-        for(let [trialJobId, paiTrialJob] of this.trialJobsMap) {
-            if (!paiTrialJob) {
+        for (const [trialJobId, paiTrialJob] of this.trialJobsMap) {
+            if (paiTrialJob === undefined) {
                 throw new NNIError(NNIErrorNames.NOT_FOUND, `trial job id ${trialJobId} not found`);
             }
-            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiTrialJob, paiToken, paiClusterConfig))
+            updatePaiTrialJobs.push(this.getSinglePAITrialJobInfo(paiTrialJob, paiToken, paiClusterConfig));
         }
 
         await Promise.all(updatePaiTrialJobs);
     }
 
-    private getSinglePAITrialJobInfo(paiTrialJob : PAITrialJobDetail, paiToken : string, paiClusterConfig: PAIClusterConfig) : Promise<void> {
+    private getSinglePAITrialJobInfo(paiTrialJob : PAITrialJobDetail, paiToken : string, paiClusterConfig: PAIClusterConfig)
+     : Promise<void> {
         const deferred : Deferred<void> = new Deferred<void>();
         if (!this.statusesNeedToCheck.includes(paiTrialJob.status)) {
             deferred.resolve();
+
             return deferred.promise;
         }
 
         // Rest call to get PAI job info and update status
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const getJobInfoRequest: request.Options = {
+            // tslint:disable-next-line:no-http-string
             uri: `http://${paiClusterConfig.host}/rest-server/api/v1/user/${paiClusterConfig.userName}/jobs/${paiTrialJob.paiJobName}`,
             method: 'GET',
             json: true,
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": 'Bearer ' + paiToken
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${paiToken}`
             }
         };
-        //TODO : pass in request timeout param? 
+
+        // tslint:disable: no-unsafe-any no-any cyclomatic-complexity
+        //TODO : pass in request timeout param?
         request(getJobInfoRequest, (error: Error, response: request.Response, body: any) => {
-            if (error || response.statusCode >= 500) {
+            if ((error !== undefined && error !== null) || response.statusCode >= 500) {
                 this.log.error(`PAI Training service: get job info for trial ${paiTrialJob.id} from PAI Cluster failed!`);
                 // Queried PAI job info failed, set job status to UNKNOWN
-                if(paiTrialJob.status === 'WAITING' || paiTrialJob.status === 'RUNNING') {
+                if (paiTrialJob.status === 'WAITING' || paiTrialJob.status === 'RUNNING') {
                     paiTrialJob.status = 'UNKNOWN';
                 }
             } else {
-                if(response.body.jobStatus && response.body.jobStatus.state) {
-                    switch(response.body.jobStatus.state) {
-                        case 'WAITING': 
+                if (response.body.jobStatus && response.body.jobStatus.state) {
+                    switch (response.body.jobStatus.state) {
+                        case 'WAITING':
                             paiTrialJob.status = 'WAITING';
                             break;
                         case 'RUNNING':
                             paiTrialJob.status = 'RUNNING';
-                            if(!paiTrialJob.startTime) {
+                            if (paiTrialJob.startTime === undefined) {
                                 paiTrialJob.startTime = response.body.jobStatus.appLaunchedTime;
                             }
-                            if(!paiTrialJob.url) {
-                                paiTrialJob.url = response.body.jobStatus.appTrackingUrl;    
+                            if (paiTrialJob.url === undefined) {
+                                paiTrialJob.url = response.body.jobStatus.appTrackingUrl;
                             }
                             break;
                         case 'SUCCEEDED':
@@ -104,30 +110,31 @@ export class PAIJobInfoCollector {
                             break;
                         case 'STOPPED':
                             if (paiTrialJob.isEarlyStopped !== undefined) {
-                                paiTrialJob.status = paiTrialJob.isEarlyStopped === true ? 
+                                paiTrialJob.status = paiTrialJob.isEarlyStopped === true ?
                                         'EARLY_STOPPED' : 'USER_CANCELED';
                             } else {
-                                // if paiTrialJob's isEarlyStopped is undefined, that mean we didn't stop it via cancellation, mark it as SYS_CANCELLED by PAI
+                                /* if paiTrialJob's isEarlyStopped is undefined, that mean we didn't stop it via cancellation,
+                                 * mark it as SYS_CANCELLED by PAI
+                                 */
                                 paiTrialJob.status = 'SYS_CANCELED';
                             }
                             break;
                         case 'FAILED':
-                            paiTrialJob.status = 'FAILED';                            
+                            paiTrialJob.status = 'FAILED';
                             break;
                         default:
                             paiTrialJob.status = 'UNKNOWN';
-                            break;
                     }
                     // For final job statues, update startTime, endTime and url
-                    if(this.finalStatuses.includes(paiTrialJob.status)) {
-                        if(!paiTrialJob.startTime) {
+                    if (this.finalStatuses.includes(paiTrialJob.status)) {
+                        if (paiTrialJob.startTime === undefined) {
                             paiTrialJob.startTime = response.body.jobStatus.appLaunchedTime;
                         }
-                        if(!paiTrialJob.endTime) {
+                        if (paiTrialJob.endTime === undefined) {
                             paiTrialJob.endTime = response.body.jobStatus.completedTime;
                         }
                         // Set pai trial job's url to WebHDFS output path
-                        if(paiTrialJob.hdfsLogPath) {
+                        if (paiTrialJob.hdfsLogPath !== undefined) {
                             paiTrialJob.url += `,${paiTrialJob.hdfsLogPath}`;
                         }
                     }
@@ -138,4 +145,5 @@ export class PAIJobInfoCollector {
 
         return deferred.promise;
     }
+    // tslint:enable: no-unsafe-any no-any
 }
