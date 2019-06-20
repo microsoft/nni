@@ -21,7 +21,6 @@
 
 import ast
 import astor
-from nni_cmd.common_utils import print_warning
 
 # pylint: disable=unidiomatic-typecheck
 
@@ -333,9 +332,6 @@ class Transformer(ast.NodeTransformer):
             if call_node.args:
                 call_attr = ast.Attribute(value=ast.Name(id='nni', ctx=ast.Load()), attr='reload_tensorflow_variables', ctx=ast.Load())
                 return ast.Expr(value=ast.Call(func=call_attr, args=call_node.args, keywords=[]))
-            else:
-                deprecated_message = "'@nni.get_next_parameter' is deprecated in annotation due to inconvenience. Please remove this line in the trial code."
-                print_warning(deprecated_message)
 
         if string.startswith('@nni.report_intermediate_result')  \
                 or string.startswith('@nni.report_final_result') \
