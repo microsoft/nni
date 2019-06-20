@@ -21,7 +21,7 @@
 import os
 import json
 from .config_schema import LOCAL_CONFIG_SCHEMA, REMOTE_CONFIG_SCHEMA, PAI_CONFIG_SCHEMA, KUBEFLOW_CONFIG_SCHEMA, FRAMEWORKCONTROLLER_CONFIG_SCHEMA, \
-tuner_schema_dict, advisor_schema_dict, assessor_schema_dict               
+tuner_schema_dict, advisor_schema_dict, assessor_schema_dict
 from schema import SchemaMissingKeyError, SchemaForbiddenKeyError, SchemaUnexpectedTypeError, SchemaWrongKeyError, SchemaError
 from .common_utils import get_json_content, print_error, print_warning, print_normal
 from schema import Schema, And, Use, Optional, Regex, Or
@@ -62,7 +62,7 @@ def parse_path(experiment_config, config_path):
         expand_path(experiment_config['assessor'], 'codeDir')
     if experiment_config.get('advisor'):
         expand_path(experiment_config['advisor'], 'codeDir')
-    
+
     #if users use relative path, convert it to absolute path
     root_path = os.path.dirname(config_path)
     if experiment_config.get('searchSpacePath'):
@@ -80,8 +80,8 @@ def parse_path(experiment_config, config_path):
             parse_relative_path(root_path, experiment_config['machineList'][index], 'sshKeyPath')
 
 def validate_search_space_content(experiment_config):
-    '''Validate searchspace content, 
-       if the searchspace file is not json format or its values does not contain _type and _value which must be specified, 
+    '''Validate searchspace content,
+       if the searchspace file is not json format or its values does not contain _type and _value which must be specified,
        it will not be a valid searchspace file'''
     try:
         search_space_content = json.load(open(experiment_config.get('searchSpacePath'), 'r'))
@@ -110,7 +110,7 @@ def validate_kubeflow_operators(experiment_config):
             if experiment_config.get('trial').get('master') is None:
                 print_error('kubeflow with pytorch-operator must set master')
                 exit(1)
-        
+
         if experiment_config.get('kubeflowConfig').get('storage') == 'nfs':
             if experiment_config.get('kubeflowConfig').get('nfs') is None:
                 print_error('please set nfs configuration!')
@@ -170,7 +170,7 @@ def validate_common_content(experiment_config):
         else:
             print_error(error)
         exit(1)
-    
+
     #set default value
     if experiment_config.get('maxExecDuration') is None:
         experiment_config['maxExecDuration'] = '999d'

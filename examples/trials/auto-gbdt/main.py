@@ -3,9 +3,9 @@
 #
 # MIT License
 #
-# Permission is hereby granted, free of charge, 
+# Permission is hereby granted, free of charge,
 # to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), 
+# documentation files (the "Software"),
 # to deal in the Software without restriction, including without limitation
 # the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
 # to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -88,7 +88,7 @@ def run(lgb_train, lgb_eval, params, X_test, y_test):
     # predict
     y_pred = gbm.predict(X_test, num_iteration=gbm.best_iteration)
 
-    # eval 
+    # eval
     rmse = mean_squared_error(y_test, y_pred) ** 0.5
     print('The rmse of prediction is:', rmse)
 

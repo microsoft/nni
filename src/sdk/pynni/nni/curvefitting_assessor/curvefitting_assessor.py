@@ -67,7 +67,7 @@ class CurvefittingAssessor(Assessor):
 
     def trial_end(self, trial_job_id, success):
         """update the best performance of completed trial job
-        
+
         Parameters
         ----------
         trial_job_id: int
@@ -112,7 +112,7 @@ class CurvefittingAssessor(Assessor):
         curr_step = len(trial_history)
         if curr_step < self.start_step:
             return AssessResult.Good
-        
+
         if trial_job_id in self.last_judgment_num.keys() and curr_step - self.last_judgment_num[trial_job_id] < self.gap:
             return AssessResult.Good
         self.last_judgment_num[trial_job_id] = curr_step

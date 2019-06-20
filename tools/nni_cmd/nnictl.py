@@ -188,7 +188,7 @@ def parse_args():
     parser_package_subparsers = parser_package.add_subparsers()
     parser_package_install = parser_package_subparsers.add_parser('install', help='install packages')
     parser_package_install.add_argument('--name', '-n', dest='name', help='package name to be installed')
-    parser_package_install.set_defaults(func=package_install) 
+    parser_package_install.set_defaults(func=package_install)
     parser_package_show = parser_package_subparsers.add_parser('show', help='show the information of packages')
     parser_package_show.set_defaults(func=package_show)
 

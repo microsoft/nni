@@ -327,7 +327,7 @@ def log_internal(args, filetype):
     else:
         file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'stderr')
     print(check_output_command(file_full_path, head=args.head, tail=args.tail))
-    
+
 def log_stdout(args):
     '''get stdout log'''
     log_internal(args, 'stdout')

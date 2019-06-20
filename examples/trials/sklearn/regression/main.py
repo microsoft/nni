@@ -63,9 +63,9 @@ def get_model(PARAMS):
     if not model_dict.get(PARAMS['model_name']):
         LOG.exception('Not supported model!')
         exit(1)
-    
+
     model = model_dict[PARAMS['model_name']]
-    
+
     try:
         if PARAMS['model_name'] == 'SVR':
             model.kernel = PARAMS['svr_kernel']

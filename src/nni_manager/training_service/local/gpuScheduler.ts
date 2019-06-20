@@ -25,10 +25,10 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
-import { execMkdir, getScriptName, getgpuMetricsCollectorScriptContent, execScript, execTail, execRemove, execKill } from '../common/util'
 import { getLogger, Logger } from '../../common/log';
 import { delay } from '../../common/utils';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
+import { execKill, execMkdir, execRemove, execTail, getgpuMetricsCollectorScriptContent, getScriptName, runScript } from '../common/util';
 
 /**
  * GPUScheduler for local training service
@@ -37,8 +37,8 @@ class GPUScheduler {
 
     private gpuSummary!: GPUSummary;
     private stopping: boolean;
-    private log: Logger;
-    private gpuMetricCollectorScriptFolder: string;
+    private readonly log: Logger;
+    private readonly gpuMetricCollectorScriptFolder: string;
 
     constructor() {
         this.stopping = false;
@@ -58,28 +58,15 @@ class GPUScheduler {
         }
     }
 
-    /**
-     * Generate gpu metric collector shell script in local machine, 
-     * used to run in remote machine, and will be deleted after uploaded from local. 
-     */
-    private async runGpuMetricsCollectorScript(): Promise<void> {
-        await execMkdir(this.gpuMetricCollectorScriptFolder);
-        //generate gpu_metrics_collector script
-        let gpuMetricsCollectorScriptPath: string = path.join(this.gpuMetricCollectorScriptFolder, getScriptName('gpu_metrics_collector'));
-        const gpuMetricsCollectorScriptContent: string = getgpuMetricsCollectorScriptContent(this.gpuMetricCollectorScriptFolder);
-        await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
-        execScript(gpuMetricsCollectorScriptPath)
-    }
-
     public getAvailableGPUIndices(useActiveGpu: boolean, occupiedGpuIndexNumMap: Map<number, number>): number[] {
         if (this.gpuSummary !== undefined) {
-            if(process.platform === 'win32' || useActiveGpu) {
+            if (process.platform === 'win32' || useActiveGpu) {
                 return this.gpuSummary.gpuInfos.map((info: GPUInfo) => info.index);
-            }
-            else{
-                return this.gpuSummary.gpuInfos.filter((info: GPUInfo) => 
-                occupiedGpuIndexNumMap.get(info.index) === undefined && info.activeProcessNum === 0 ||
-                occupiedGpuIndexNumMap.get(info.index) !== undefined).map((info: GPUInfo) => info.index);
+            } else {
+                return this.gpuSummary.gpuInfos.filter((info: GPUInfo) =>
+                         occupiedGpuIndexNumMap.get(info.index) === undefined && info.activeProcessNum === 0 ||
+                         occupiedGpuIndexNumMap.get(info.index) !== undefined)
+                       .map((info: GPUInfo) => info.index);
             }
         }
 
@@ -105,17 +92,32 @@ class GPUScheduler {
         }
     }
 
+    /**
+     * Generate gpu metric collector shell script in local machine,
+     * used to run in remote machine, and will be deleted after uploaded from local.
+     */
+    private async runGpuMetricsCollectorScript(): Promise<void> {
+        await execMkdir(this.gpuMetricCollectorScriptFolder);
+        //generate gpu_metrics_collector script
+        const gpuMetricsCollectorScriptPath: string =
+            path.join(this.gpuMetricCollectorScriptFolder, getScriptName('gpu_metrics_collector'));
+        const gpuMetricsCollectorScriptContent: string = getgpuMetricsCollectorScriptContent(this.gpuMetricCollectorScriptFolder);
+        await fs.promises.writeFile(gpuMetricsCollectorScriptPath, gpuMetricsCollectorScriptContent, { encoding: 'utf8' });
+        runScript(gpuMetricsCollectorScriptPath);
+    }
+
+    // tslint:disable:non-literal-fs-path
     private async updateGPUSummary(): Promise<void> {
-        let gpuMetricPath = path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics');
+        const gpuMetricPath: string = path.join(this.gpuMetricCollectorScriptFolder, 'gpu_metrics');
         if (fs.existsSync(gpuMetricPath)) {
             const cmdresult: cpp.childProcessPromise.Result = await execTail(gpuMetricPath);
-            if (cmdresult && cmdresult.stdout) {
+            if (cmdresult !== undefined && cmdresult.stdout !== undefined) {
                 this.gpuSummary = <GPUSummary>JSON.parse(cmdresult.stdout);
             } else {
                 this.log.error('Could not get gpu metrics information!');
             }
-        } else{
-            this.log.warning('gpu_metrics file does not exist!')
+        } else {
+            this.log.warning('gpu_metrics file does not exist!');
         }
     }
 }

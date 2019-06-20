@@ -35,7 +35,7 @@ logger = logging.getLogger('curvefitting_Assessor')
 
 class CurveModel(object):
     """Build a Curve Model to predict the performance
-    
+
     Algorithm: https://github.com/Microsoft/nni/blob/master/src/sdk/pynni/nni/curvefitting_assessor/README.md
 
     Parameters
@@ -53,7 +53,7 @@ class CurveModel(object):
 
     def fit_theta(self):
         """use least squares to fit all default curves parameter seperately
-        
+
         Returns
         -------
         None
@@ -87,7 +87,7 @@ class CurveModel(object):
 
     def filter_curve(self):
         """filter the poor performing curve
-        
+
         Returns
         -------
         None
@@ -117,7 +117,7 @@ class CurveModel(object):
 
     def predict_y(self, model, pos):
         """return the predict y of 'model' when epoch = pos
-        
+
         Parameters
         ----------
         model: string
@@ -162,7 +162,7 @@ class CurveModel(object):
 
     def normalize_weight(self, samples):
         """normalize weight
-        
+
         Parameters
         ----------
         samples: list
@@ -184,7 +184,7 @@ class CurveModel(object):
 
     def sigma_sq(self, sample):
         """returns the value of sigma square, given the weight's sample
-        
+
         Parameters
         ----------
         sample: list
@@ -203,7 +203,7 @@ class CurveModel(object):
 
     def normal_distribution(self, pos, sample):
         """returns the value of normal distribution, given the weight's sample and target position
-        
+
         Parameters
         ----------
         pos: int
@@ -227,7 +227,7 @@ class CurveModel(object):
         ----------
         sample: list
             sample is a (1 * NUM_OF_FUNCTIONS) matrix, representing{w1, w2, ... wk}
-        
+
         Returns
         -------
         float
@@ -241,13 +241,13 @@ class CurveModel(object):
 
     def prior(self, samples):
         """priori distribution
- 
+
         Parameters
         ----------
         samples: list
             a collection of sample, it's a (NUM_OF_INSTANCE * NUM_OF_FUNCTIONS) matrix,
             representing{{w11, w12, ..., w1k}, {w21, w22, ... w2k}, ...{wk1, wk2,..., wkk}}
-        
+
         Returns
         -------
         float
@@ -264,13 +264,13 @@ class CurveModel(object):
 
     def target_distribution(self, samples):
         """posterior probability
-        
+
         Parameters
         ----------
         samples: list
             a collection of sample, it's a (NUM_OF_INSTANCE * NUM_OF_FUNCTIONS) matrix,
             representing{{w11, w12, ..., w1k}, {w21, w22, ... w2k}, ...{wk1, wk2,..., wkk}}
-        
+
         Returns
         -------
         float
@@ -319,7 +319,7 @@ class CurveModel(object):
 
     def predict(self, trial_history):
         """predict the value of target position
-        
+
         Parameters
         ----------
         trial_history: list

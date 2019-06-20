@@ -21,10 +21,12 @@
 
 import * as assert from 'assert';
 import { getLogger, Logger } from '../../common/log';
+import { TrialJobDetail } from '../../common/trainingService';
 import { randomSelect } from '../../common/utils';
 import { GPUInfo } from '../common/gpuData';
-import { RemoteMachineTrialJobDetail, parseGpuIndices, RemoteMachineMeta, RemoteMachineScheduleResult, ScheduleResultType, SSHClientManager } from './remoteMachineData';
-import { TrialJobDetail } from 'common/trainingService';
+import {
+    parseGpuIndices, RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail, ScheduleResultType, SSHClientManager
+} from './remoteMachineData';
 
 /**
  * A simple GPU scheduler implementation
@@ -32,7 +34,7 @@ import { TrialJobDetail } from 'common/trainingService';
 export class GPUScheduler {
 
     private readonly machineSSHClientMap : Map<RemoteMachineMeta, SSHClientManager>;
-    private log: Logger = getLogger();
+    private readonly log: Logger = getLogger();
 
     /**
      * Constructor
@@ -89,21 +91,21 @@ export class GPUScheduler {
      * remove the job's gpu reversion
      */
     public removeGpuReservation(trialJobId: string, trialJobMap: Map<string, RemoteMachineTrialJobDetail>): void {
-        let trialJobDetail: RemoteMachineTrialJobDetail | undefined = trialJobMap.get(trialJobId);
-        if(trialJobDetail === undefined) {
+        const trialJobDetail: RemoteMachineTrialJobDetail | undefined = trialJobMap.get(trialJobId);
+        if (trialJobDetail === undefined) {
             throw new Error(`could not get trialJobDetail by id ${trialJobId}`);
-        } 
-        if (trialJobDetail.rmMeta !== undefined && 
-            trialJobDetail.rmMeta.occupiedGpuIndexMap !== undefined && 
-            trialJobDetail.gpuIndices !== undefined && 
+        }
+        if (trialJobDetail.rmMeta !== undefined &&
+            trialJobDetail.rmMeta.occupiedGpuIndexMap !== undefined &&
+            trialJobDetail.gpuIndices !== undefined &&
             trialJobDetail.gpuIndices.length > 0) {
             for (const gpuInfo of trialJobDetail.gpuIndices) {
-                let num: number | undefined = trialJobDetail.rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
-                if(num !== undefined) {
-                    if(num === 1) {
+                const num: number | undefined = trialJobDetail.rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
+                if (num !== undefined) {
+                    if (num === 1) {
                         trialJobDetail.rmMeta.occupiedGpuIndexMap.delete(gpuInfo.index);
                     } else {
-                        trialJobDetail.rmMeta.occupiedGpuIndexMap.set(gpuInfo.index, num - 1)
+                        trialJobDetail.rmMeta.occupiedGpuIndexMap.set(gpuInfo.index, num - 1);
                     }
                 }
             }
@@ -116,7 +118,6 @@ export class GPUScheduler {
         const totalResourceMap: Map<RemoteMachineMeta, GPUInfo[]> = this.gpuResourceDetection();
         const qualifiedRMs: RemoteMachineMeta[] = [];
         totalResourceMap.forEach((gpuInfos: GPUInfo[], rmMeta: RemoteMachineMeta) => {
-            
             if (gpuInfos !== undefined && gpuInfos.length >= requiredGPUNum) {
                 qualifiedRMs.push(rmMeta);
             }
@@ -154,6 +155,7 @@ export class GPUScheduler {
                     }
                 }
                 this.log.debug(`designated gpu indices: ${designatedGpuIndices}`);
+                // tslint:disable: strict-boolean-expressions
                 rmMeta.gpuSummary.gpuInfos.forEach((gpuInfo: GPUInfo) => {
                     // if the GPU has active process, OR be reserved by a job,
                     // or index not in gpuIndices configuration in machineList,
@@ -161,10 +163,10 @@ export class GPUScheduler {
                     // We should NOT allocate this GPU
                     // if users set useActiveGpu, use the gpu whether there is another activeProcess
                     if (designatedGpuIndices === undefined || designatedGpuIndices.has(gpuInfo.index)) {
-                        if(rmMeta.occupiedGpuIndexMap !== undefined) {
-                            let num = rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
-                            let maxTrialNumPerGpu: number = rmMeta.maxTrialNumPerGpu? rmMeta.maxTrialNumPerGpu: 1;
-                            if((num === undefined && (!rmMeta.useActiveGpu && gpuInfo.activeProcessNum === 0 || rmMeta.useActiveGpu)) ||
+                        if (rmMeta.occupiedGpuIndexMap !== undefined) {
+                            const num: number | undefined = rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
+                            const maxTrialNumPerGpu: number = rmMeta.maxTrialNumPerGpu ? rmMeta.maxTrialNumPerGpu : 1;
+                            if ((num === undefined && (!rmMeta.useActiveGpu && gpuInfo.activeProcessNum === 0 || rmMeta.useActiveGpu)) ||
                                (num !== undefined && num < maxTrialNumPerGpu)) {
                                 availableGPUs.push(gpuInfo);
                             }
@@ -179,6 +181,7 @@ export class GPUScheduler {
 
         return totalResourceMap;
     }
+    // tslint:enable: strict-boolean-expressions
 
     private selectMachine(rmMetas: RemoteMachineMeta[]): RemoteMachineMeta {
         assert(rmMetas !== undefined && rmMetas.length > 0);
@@ -196,23 +199,28 @@ export class GPUScheduler {
         assert(gpuInfos.length >= requiredGPUNum);
         const allocatedGPUs: GPUInfo[] = this.selectGPUsForTrial(gpuInfos, requiredGPUNum);
         allocatedGPUs.forEach((gpuInfo: GPUInfo) => {
-            if(rmMeta.occupiedGpuIndexMap !== undefined) {
-                let num = rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
-                if(num === undefined) {
+            if (rmMeta.occupiedGpuIndexMap !== undefined) {
+                let num: number | undefined = rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
+                if (num === undefined) {
                     num = 0;
                 }
                 rmMeta.occupiedGpuIndexMap.set(gpuInfo.index, num + 1);
-            }else {
+            } else {
                 throw new Error(`Machine ${rmMeta.ip} occupiedGpuIndexMap initialize error!`);
             }
         });
         trialJobDetail.gpuIndices = allocatedGPUs;
         trialJobDetail.rmMeta = rmMeta;
+
         return {
             resultType: ScheduleResultType.SUCCEED,
             scheduleInfo: {
                 rmMeta: rmMeta,
-                cuda_visible_device: allocatedGPUs.map((gpuInfo: GPUInfo) => { return gpuInfo.index; }).join(',')
+                cuda_visible_device: allocatedGPUs
+                                       .map((gpuInfo: GPUInfo) => {
+                                            return gpuInfo.index;
+                                        })
+                                       .join(',')
             }
         };
     }
