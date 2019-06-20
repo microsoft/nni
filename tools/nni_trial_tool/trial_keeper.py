@@ -185,7 +185,7 @@ def fetch_parameter_file(args):
             self.args = args
 
         def run(self):
-            uri = gen_parameter_meta_url(args.nnimanager_ip, args.nnimanager_port)
+            uri = gen_parameter_meta_url(self.args.nnimanager_ip, self.args.nnimanager_port)
             nni_log(LogType.Info, uri)
 
             while True:
