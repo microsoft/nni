@@ -650,10 +650,10 @@ class PAITrainingService implements TrainingService {
 
     private async writeParameterFile(trialJobId: string, hyperParameters: HyperParameters): Promise<void> {
         if (this.paiClusterConfig === undefined) {
-            throw new Error('');
+            throw new Error('PAI Cluster config is not initialized');
         }
         if (this.paiTrialConfig === undefined) {
-            throw new Error('');
+            throw new Error('PAI trial config is not initialized');
         }
 
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
