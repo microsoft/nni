@@ -158,7 +158,7 @@ machineList:
 * __debug__
   * Description
 
-    Debug mode will set versionCheck be True and set logLevel be 'debug'
+    Debug mode will set versionCheck be False and set logLevel be 'debug'
 
 * __maxTrialNum__
   * Description
