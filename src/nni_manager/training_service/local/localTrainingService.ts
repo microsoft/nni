@@ -507,12 +507,12 @@ class LocalTrainingService implements TrainingService {
             script.push(
                 `cmd /c ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
-                `$NOW_DATE = "$NOW_DATE" + "000"`,
+                `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File ${path.join(workingDirectory, '.nni', 'state')} -NoNewline -encoding utf8`);
         } else {
             script.push(
                 `eval ${localTrailConfig.command} 2>${path.join(workingDirectory, 'stderr')}`,
-                `echo $? \`date +%s000\` >${path.join(workingDirectory, '.nni', 'state')}`);
+                `echo $? \`date +%s%3N\` >${path.join(workingDirectory, '.nni', 'state')}`);
         }
 
         return script;
