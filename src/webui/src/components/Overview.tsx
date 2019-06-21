@@ -39,13 +39,18 @@ interface OverviewState {
     isMultiPhase: boolean;
 }
 
-class Overview extends React.Component<{}, OverviewState> {
+interface OverviewProps {
+    interval: number; // user select
+    whichPageToFresh: string;
+}
+
+class Overview extends React.Component<OverviewProps, OverviewState> {
 
     public _isMounted = false;
     public intervalID = 0;
     public intervalProfile = 1;
 
-    constructor(props: {}) {
+    constructor(props: OverviewProps) {
         super(props);
         this.state = {
             searchSpace: {},
@@ -377,17 +382,19 @@ class Overview extends React.Component<{}, OverviewState> {
                 data: accarr
             }]
         };
-        this.setState({ accuracyData: accOption }, () => {
-            if (accarr.length === 0) {
-                this.setState({
-                    accNodata: 'No data'
-                });
-            } else {
-                this.setState({
-                    accNodata: ''
-                });
-            }
-        });
+        if (this._isMounted) {
+            this.setState({ accuracyData: accOption }, () => {
+                if (accarr.length === 0) {
+                    this.setState({
+                        accNodata: 'No data'
+                    });
+                } else {
+                    this.setState({
+                        accNodata: ''
+                    });
+                }
+            });
+        }
     }
 
     clickMaxTop = (event: React.SyntheticEvent<EventTarget>) => {
@@ -405,23 +412,39 @@ class Overview extends React.Component<{}, OverviewState> {
 
     isOffInterval = () => {
         const { status } = this.state;
-        switch (status) {
-            case 'DONE':
-            case 'ERROR':
-            case 'STOPPED':
-                window.clearInterval(this.intervalID);
-                window.clearInterval(this.intervalProfile);
-                break;
-            default:
+        const { interval } = this.props;
+        if (status === 'DONE' || status === 'ERROR' || status === 'STOPPED' ||
+            interval === 0
+        ) {
+            window.clearInterval(this.intervalID);
+            window.clearInterval(this.intervalProfile);
+            return;
+        }
+    }
+
+    componentWillReceiveProps(nextProps: OverviewProps) {
+        const { interval, whichPageToFresh } = nextProps;
+        window.clearInterval(this.intervalID);
+        window.clearInterval(this.intervalProfile);
+        if (whichPageToFresh.includes('/oview')) {
+            this.showTrials();
+            this.showSessionPro();
+        }
+        if (interval !== 0) {
+            this.intervalID = window.setInterval(this.showTrials, interval * 1000);
+            this.intervalProfile = window.setInterval(this.showSessionPro, interval * 1000);
         }
     }
 
     componentDidMount() {
         this._isMounted = true;
-        this.showSessionPro();
+        const { interval } = this.props;
         this.showTrials();
-        this.intervalID = window.setInterval(this.showTrials, 10000);
-        this.intervalProfile = window.setInterval(this.showSessionPro, 60000);
+        this.showSessionPro();
+        if (interval !== 0) {
+            this.intervalID = window.setInterval(this.showTrials, interval * 1000);
+            this.intervalProfile = window.setInterval(this.showSessionPro, interval * 1000);
+        }
     }
 
     componentWillUnmount() {
@@ -447,7 +470,7 @@ class Overview extends React.Component<{}, OverviewState> {
                 </Row>
                 <Row className="overMessage">
                     {/* status graph */}
-                    <Col span={9} className="prograph overviewBoder">
+                    <Col span={9} className="prograph overviewBoder cc">
                         <Title1 text="Status" icon="5.png" />
                         <Progressed
                             trialNumber={trialNumber}
@@ -459,13 +482,13 @@ class Overview extends React.Component<{}, OverviewState> {
                         />
                     </Col>
                     {/* experiment parameters search space tuner assessor... */}
-                    <Col span={7} className="overviewBoder">
+                    <Col span={7} className="overviewBoder cc">
                         <Title1 text="Search space" icon="10.png" />
                         <Row className="experiment">
                             <SearchSpace searchSpace={searchSpace} />
                         </Row>
                     </Col>
-                    <Col span={8} className="overviewBoder">
+                    <Col span={8} className="overviewBoder cc">
                         <Title1 text="Profile" icon="4.png" />
                         <Row className="experiment">
                             {/* the scroll bar all the trial profile in the searchSpace div*/}
