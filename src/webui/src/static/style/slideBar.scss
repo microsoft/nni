@@ -1,9 +1,14 @@
 $barHeight: 56px;
+/* drowdown and select default bgcolor */
+$drowBgColor: #f2f2f2;
+/* drowdown and select hover bgcolor */
+$drowHoverBgColor: #e2e2e2;
 .nav{
     list-style: none;
-    width: 94%;
+    width: 95%;
     height: $barHeight;
     margin: 0 auto;
+    position: relative;
     .tab{
         font-family: 'Segoe';
         line-height: $barHeight;
@@ -14,7 +19,7 @@ $barHeight: 56px;
         }
     }
     .firstTab{
-        margin: 0 32px;
+        margin: 0 20px;
     }
     .logo{
         margin-top: 2px;
@@ -28,17 +33,26 @@ $barHeight: 56px;
 }
 
 .feedback{
-    text-align: right;
+    position: fixed;
+    right: 19%;
     line-height: $barHeight;
     font-size: 16px;
     color: #fff;
+    .fresh{
+        span{
+            margin: 0 10px 0 3px;
+        }
+    }
+    .fresh:hover{
+        cursor: pointer;
+    }
     a{
         color: #fff;
         text-decoration: none;
         margin-left: 10px;
     }
     img{
-        width: 24px;
+        width: 20px;
         margin-right: 8px;
     }
     .version{
@@ -51,4 +65,66 @@ $barHeight: 56px;
 }
 .dropdown{
     margin-right: 10px;
+    /* make dropdown content box position in blue bar bottom */
+    padding-bottom: 14px;
+}
+.interval{
+    position: fixed;
+    right: 7%;
+    top: 12px;
+    .ant-select-selection{
+        background-color: transparent;
+        border: none;
+        color: #fff;
+        outline: none;
+        font-size: 16px;
+    }
+    .ant-select-arrow{
+        color: #fff;
+    }
+}
+/* set select bgcolor */
+.ant-select-dropdown-menu{
+    background-color: $drowBgColor;
+}
+.ant-select-dropdown-menu-item:hover{
+    background-color: $drowHoverBgColor;
+}
+.ant-select-dropdown-menu-item-active{
+    background-color: transparent;
+}
+/* set dropdown bgcolor */
+.ant-dropdown{
+    .ant-dropdown-menu{
+        padding: 0;
+        background-color: $drowBgColor;
+        border-radius: 0;
+        .ant-dropdown-menu-item:hover{
+            background-color: $drowHoverBgColor;
+        }
+    }
+}
+
+/* nav style*/
+.little{
+    width: 100%;
+    .menu{
+        .show{
+            display: block;
+        }
+        .hide{
+            display: none;
+        }
+        .more{
+            color: #fff;
+            font-size: 24px;
+            margin-top: 16px;
+        }
+        .more:hover{
+            cursor: pointer;
+        }
+    }
+    .logo{
+        text-align: center;
+    }
 }
