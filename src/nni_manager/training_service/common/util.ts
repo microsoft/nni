@@ -25,7 +25,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import { String } from 'typescript-string-operations';
-import { countFilesRecursively, getNewLine } from '../../common/utils';
+import { countFilesRecursively, getNewLine, validateFileNameRecursively } from '../../common/utils';
 import { file } from '../../node_modules/@types/tmp';
 import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
@@ -38,11 +38,16 @@ import { GPU_INFO_COLLECTOR_FORMAT_LINUX, GPU_INFO_COLLECTOR_FORMAT_WINDOWS } fr
 // tslint:disable: no-redundant-jsdoc
 export async function validateCodeDir(codeDir: string) : Promise<number> {
     let fileCount: number | undefined;
-
+    let fileNameValid: boolean = true;
     try {
         fileCount = await countFilesRecursively(codeDir);
     } catch (error) {
         throw new Error(`Call count file error: ${error}`);
+    }
+    try {
+        fileNameValid = await validateFileNameRecursively(codeDir);
+    } catch(error) {
+        throw new Error(`Validate file name error: ${error}`);
     }
 
     if (fileCount !== undefined && fileCount > 1000) {
@@ -50,9 +55,15 @@ export async function validateCodeDir(codeDir: string) : Promise<number> {
                                     + ` please check if it's a valid code dir`;
         throw new Error(errMessage);
     }
+    
+    if(!fileNameValid) {
+        const errMessage: string = `File name in ${codeDir} is not valid, please check file names, only support digit number、alphabet and (.-_) in file name.`; 
+        throw new Error(errMessage);    
+    }
 
     return fileCount;
 }
+
 
 /**
  * crete a new directory
