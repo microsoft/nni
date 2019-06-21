@@ -17,6 +17,9 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+'''
+gp_tuner.py
+'''
 
 import warnings
 import numpy as np
@@ -44,7 +47,7 @@ def _match_val_type(vals, bounds):
     return vals_new
 
 
-def acq_max(ac, gp, y_max, bounds, space, n_warmup=1e5, n_iter=250):
+def acq_max(f_acq, gp, y_max, bounds, space, num_warmup, num_starting_points):
     """
     A function to find the maximum of the acquisition function
 
@@ -54,7 +57,7 @@ def acq_max(ac, gp, y_max, bounds, space, n_warmup=1e5, n_iter=250):
 
     Parameters
     ----------
-    :param ac:
+    :param f_acq:
         The acquisition function object that return its point-wise value.
 
     :param gp:
@@ -66,10 +69,10 @@ def acq_max(ac, gp, y_max, bounds, space, n_warmup=1e5, n_iter=250):
     :param bounds:
         The variables bounds to limit the search of the acq max.
 
-    :param n_warmup:
+    :param num_warmup:
         number of times to randomly sample the aquisition function
 
-    :param n_iter:
+    :param num_starting_points:
         number of times to run scipy.minimize
 
     Returns
@@ -78,20 +81,21 @@ def acq_max(ac, gp, y_max, bounds, space, n_warmup=1e5, n_iter=250):
     """
 
     # Warm up with random points
-    x_tries=[space.random_sample() for _ in range(int(n_warmup)] # TODO why int here ? 
-    ys=ac(x_tries, gp=gp, y_max=y_max)
-    x_max=x_tries[ys.argmax()]
-    max_acq=ys.max()
+    x_tries = [space.random_sample()
+               for _ in range(int(num_warmup))]
+    ys = f_acq(x_tries, gp=gp, y_max=y_max)
+    x_max = x_tries[ys.argmax()]
+    max_acq = ys.max()
 
     # Explore the parameter space more throughly
-    x_seeds=[space.random_sample() for _ in range(n_iter)]
+    x_seeds = [space.random_sample() for _ in range(num_starting_points)]
 
-    bounds_minmax=np.array(
+    bounds_minmax = np.array(
         [[bound['_value'][0], bound['_value'][-1]] for bound in bounds])
 
     for x_try in x_seeds:
         # Find the minimum of minus the acquisition function
-        res=minimize(lambda x: -ac(x.reshape(1, -1), gp=gp, y_max=y_max),
+        res = minimize(lambda x: -f_acq(x.reshape(1, -1), gp=gp, y_max=y_max),
                        x_try.reshape(1, -1),
                        bounds=bounds_minmax,
                        method="L-BFGS-B")
@@ -102,15 +106,15 @@ def acq_max(ac, gp, y_max, bounds, space, n_warmup=1e5, n_iter=250):
 
         # Store it if better than previous minimum(maximum).
         if max_acq is None or -res.fun[0] >= max_acq:
-            x_max=_match_val_type(res.x, bounds)
-            max_acq=-res.fun[0]
+            x_max = _match_val_type(res.x, bounds)
+            max_acq = -res.fun[0]
 
     # Clip output to make sure it lies within the bounds. Due to floating
     # point technicalities this is not always the case.
     return np.clip(x_max, bounds_minmax[:, 0], bounds_minmax[:, 1])
 
 
-class UtilityFunction(object):
+class UtilityFunction():
     """
     An object to compute the acquisition functions.
     """
@@ -119,31 +123,32 @@ class UtilityFunction(object):
         """
         If UCB is to be used, a constant kappa is needed.
         """
-        self.kappa=kappa
+        self.kappa = kappa
 
-        self.xi=xi
+        self.xi = xi
 
         if kind not in ['ucb', 'ei', 'poi']:
-            err="The utility function " \
-                  "{} has not been implemented, " \
-                  "please choose one of ucb, ei, or poi.".format(kind)
+            err = "The utility function " \
+                "{} has not been implemented, " \
+                "please choose one of ucb, ei, or poi.".format(kind)
             raise NotImplementedError(err)
-        else:
-            self.kind=kind
+        self.kind = kind
 
     def utility(self, x, gp, y_max):
+        '''return utility function'''
         if self.kind == 'ucb':
             return self._ucb(x, gp, self.kappa)
         if self.kind == 'ei':
             return self._ei(x, gp, y_max, self.xi)
         if self.kind == 'poi':
             return self._poi(x, gp, y_max, self.xi)
+        return None
 
     @staticmethod
     def _ucb(x, gp, kappa):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            mean, std=gp.predict(x, return_std=True)
+            mean, std = gp.predict(x, return_std=True)
 
         return mean + kappa * std
 
@@ -151,16 +156,16 @@ class UtilityFunction(object):
     def _ei(x, gp, y_max, xi):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            mean, std=gp.predict(x, return_std=True)
+            mean, std = gp.predict(x, return_std=True)
 
-        z=(mean - y_max - xi)/std
+        z = (mean - y_max - xi)/std
         return (mean - y_max - xi) * norm.cdf(z) + std * norm.pdf(z)
 
     @staticmethod
     def _poi(x, gp, y_max, xi):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            mean, std=gp.predict(x, return_std=True)
+            mean, std = gp.predict(x, return_std=True)
 
-        z=(mean - y_max - xi)/std
+        z = (mean - y_max - xi)/std
         return norm.cdf(z)

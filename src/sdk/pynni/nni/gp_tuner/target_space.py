@@ -17,17 +17,20 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+'''
+target_space.py
+'''
 
 import numpy as np
 import nni.parameter_expressions as parameter_expressions
 
 
-def _hashable(x):
+def _hashable(params):
     """ ensure that an point is hashable by a python dict """
-    return tuple(map(float, x))
+    return tuple(map(float, params))
 
 
-class TargetSpace(object):
+class TargetSpace():
     """
     Holds the param-space coordinates (X) and target values (Y)
     """
@@ -59,38 +62,55 @@ class TargetSpace(object):
         # keep track of unique points we have seen so far
         self._cache = {}
 
-    def __contains__(self, x):
-        return _hashable(x) in self._cache
+    def __contains__(self, params):
+        '''
+        check if a parameter is already registered
+        '''
+        return _hashable(params) in self._cache
 
-    def __len__(self):
+    def len(self):
+        '''
+        length of registered params and targets
+        '''
         assert len(self._params) == len(self._target)
         return len(self._target)
 
     @property
-    def empty(self):
-        return len(self) == 0
-
-    @property
     def params(self):
+        '''
+        params: numpy array
+        '''
         return self._params
 
     @property
     def target(self):
+        '''
+        target: numpy array
+        '''
         return self._target
 
     @property
     def dim(self):
+        '''
+        dim: int
+            length of keys
+        '''
         return len(self._keys)
 
     @property
     def keys(self):
+        '''
+        keys: numpy array
+        '''
         return self._keys
 
     @property
     def bounds(self):
+        '''bounds'''
         return self._bounds
 
     def params_to_array(self, params):
+        ''' dict to array '''
         try:
             assert set(params) == set(self.keys)
         except AssertionError:
@@ -101,15 +121,19 @@ class TargetSpace(object):
         return np.asarray([params[key] for key in self.keys])
 
     def array_to_params(self, x):
+        '''
+        array to dict
+
+        maintain int type if the paramters is defined as int in search_space.json
+        '''
         try:
             assert len(x) == len(self.keys)
         except AssertionError:
             raise ValueError(
                 "Size of array ({}) is different than the ".format(len(x)) +
-                "expected number of parameters ({}).".format(len(self.keys))
+                "expected number of parameters ({}).".format(self.dim())
             )
 
-        # maintain int type if the choices are int
         params = {}
         for i, _bound in enumerate(self._bounds):
             if _bound['_type'] == 'choice' and all(isinstance(val, int) for val in _bound['_value']):
@@ -131,16 +155,12 @@ class TargetSpace(object):
 
         y : float
             target function value
-
-        Raises
-        ------
-        KeyError:
-            if the point is not unique
         """
 
         x = self.params_to_array(params)
         if x in self:
-            raise KeyError('Data point {} is not unique'.format(x))
+            #raise KeyError('Data point {} is not unique'.format(x))
+            print('Data point {} is not unique'.format(x))
 
         # Insert data into unique dictionary
         self._cache[_hashable(x.ravel())] = target
@@ -150,12 +170,8 @@ class TargetSpace(object):
 
     def random_sample(self):
         """
-        Creates random points within the bounds of the space.
+        Creates a random point within the bounds of the space.
 
-        Returns
-        ----------
-        params: ndarray
-            [num x dim] array points with dimensions corresponding to `self._keys`
         """
         params = np.empty(self.dim)
         for col, _bound in enumerate(self._bounds):
@@ -194,16 +210,3 @@ class TargetSpace(object):
             {"target": target, "params": param}
             for target, param in zip(self.target, params)
         ]
-
-    def set_bounds(self, new_bounds):
-        """
-        A method that allows changing the lower and upper searching bounds
-
-        Parameters
-        ----------
-        new_bounds : dict
-            A dictionary with the parameter name and its new bounds
-        """
-        for row, key in enumerate(self.keys):
-            if key in new_bounds:
-                self._bounds[row] = new_bounds[key]

@@ -97,7 +97,7 @@ class GPTuner(Tuner):
         -------
         result : dict
         """
-        if len(self._space) == 0 or len(self._space._target) < self._cold_start_num:
+        if self._space.len() < self._cold_start_num:
             results = self._space.random_sample()
         else:
             # Sklearn's GP throws a large number of warnings at times, but
@@ -110,13 +110,13 @@ class GPTuner(Tuner):
                 kind=self.utility_kind, kappa=self.kappa, xi=self.xi)
 
             results = acq_max(
-                ac=util.utility,
+                f_acq=util.utility,
                 gp=self._gp,
                 y_max=self._space.target.max(),
                 bounds=self._space.bounds,
                 space=self._space,
-                n_warmup=self._selection_num_warm_up,
-                n_iter=self._selection_num_starting_points
+                num_warmup=self._selection_num_warm_up,
+                num_starting_points=self._selection_num_starting_points
             )
 
         results = self._space.array_to_params(results)
