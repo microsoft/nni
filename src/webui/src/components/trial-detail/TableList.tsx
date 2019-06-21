@@ -7,6 +7,7 @@ import { MANAGER_IP, trialJobStatus, COLUMN, COLUMN_INDEX } from '../../static/c
 import { convertDuration, intermediateGraphOption, killJob } from '../../static/function';
 import { TableObj, TrialJob } from '../../static/interface';
 import OpenRow from '../public-child/OpenRow';
+import Compare from '../Modal/Compare';
 import IntermediateVal from '../public-child/IntermediateVal'; // table default metric column
 import '../../static/style/search.scss';
 require('../../static/style/tableStatus.css');
@@ -38,6 +39,9 @@ interface TableListState {
     isObjFinal: boolean;
     isShowColumn: boolean;
     columnSelected: Array<string>; // user select columnKeys
+    selectRows: Array<TableObj>;
+    isShowCompareModal: boolean;
+    selectedRowKeys: string[] | number[];
 }
 
 interface ColumnIndex {
@@ -50,6 +54,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     public _isMounted = false;
     public intervalTrialLog = 10;
     public _trialId: string;
+    public tables: Table<TableObj> | null;
 
     constructor(props: TableListProps) {
         super(props);
@@ -59,7 +64,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
             modalVisible: false,
             isObjFinal: false,
             isShowColumn: false,
-            columnSelected: COLUMN
+            isShowCompareModal: false,
+            columnSelected: COLUMN,
+            selectRows: [],
+            selectedRowKeys: [] // after modal closed 清掉选择的痕迹
         };
     }
 
@@ -71,7 +79,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             .then(res => {
                 if (res.status === 200) {
                     const intermediateArr: number[] = [];
-                    // support intermediate result is dict
+                    // support intermediate result is dict because the last intermediate result is
+                    // final result in a succeed trial, it may be a dict.
                     Object.keys(res.data).map(item => {
                         const temp = JSON.parse(res.data[item].data);
                         if (typeof temp === 'object') {
@@ -184,6 +193,31 @@ class TableList extends React.Component<TableListProps, TableListState> {
         );
     }
 
+    fillSelectedRowsTostate = (selected: number[] | string[], selectedRows: Array<TableObj>) => {
+        if (this._isMounted === true) {
+            this.setState(() => ({ selectRows: selectedRows, selectedRowKeys: selected }));
+        }
+    }
+    // open Compare-modal
+    compareBtn = () => {
+
+        const { selectRows } = this.state;
+        if (selectRows.length === 0) {
+            alert('Please select datas you want to compare!');
+        } else {
+            if (this._isMounted === true) {
+                this.setState({ isShowCompareModal: true });
+            }
+        }
+    }
+    // close Compare-modal
+    hideCompareModal = () => {
+        // close modal. clear select rows data, clear selected track
+        if (this._isMounted) {
+            this.setState({ isShowCompareModal: false, selectedRowKeys: [], selectRows: [] });
+        }
+    }
+
     componentDidMount() {
         this._isMounted = true;
     }
@@ -195,7 +229,16 @@ class TableList extends React.Component<TableListProps, TableListState> {
     render() {
 
         const { entries, tableSource, updateList } = this.props;
-        const { intermediateOption, modalVisible, isShowColumn, columnSelected } = this.state;
+        const { intermediateOption, modalVisible, isShowColumn, columnSelected,
+            selectRows, isShowCompareModal, selectedRowKeys } = this.state;
+        const rowSelection = {
+            selectedRowKeys: selectedRowKeys,
+            // 第一个参数不写去掉格式检查过不了，虽然这个参数没用到
+            // onChange类似于给普通元素绑定了事件，在事件里设置this.setState不会引起infinite loop
+            onChange: (selected: string[] | number[], selectedRows: Array<TableObj>) => {
+                this.fillSelectedRowsTostate(selected, selectedRows);
+            }
+        };
         let showTitle = COLUMN;
         let bgColor = '';
         const trialJob: Array<TrialJob> = [];
@@ -416,7 +459,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
             <Row className="tableList">
                 <div id="tableList">
                     <Table
+                        ref={(table: Table<TableObj> | null) => this.tables = table}
                         columns={showColumn}
+                        rowSelection={rowSelection}
                         expandedRowRender={this.openRow}
                         dataSource={tableSource}
                         className="commonTableStyle"
@@ -457,6 +502,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         className="titleColumn"
                     />
                 </Modal>
+                <Compare compareRows={selectRows} visible={isShowCompareModal} cancelFunc={this.hideCompareModal} />
             </Row>
         );
     }

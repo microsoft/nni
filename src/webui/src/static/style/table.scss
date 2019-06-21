@@ -102,3 +102,8 @@
 .ant-modal-title{
     font-size: 20px;
 }
+
+/*disable select all checkbox in detail page*/
+.ant-table-selection{
+    display: none;
+}
