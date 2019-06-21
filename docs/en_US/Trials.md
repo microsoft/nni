@@ -144,7 +144,7 @@ export NNI_TRIAL_SEQ_ID=1
 export MULTI_PHASE=false
 export CUDA_VISIBLE_DEVICES=
 eval python3 mnist.py 2>/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/stderr
-echo $? `date +%s000` >/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/.nni/state
+echo $? `date +%s%3N` >/home/user_name/nni/experiments/$experiment_id$/trials/$trial_id$/.nni/state
 ```
 
 ### Other Modes
