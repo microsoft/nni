@@ -233,8 +233,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectRows, isShowCompareModal, selectedRowKeys } = this.state;
         const rowSelection = {
             selectedRowKeys: selectedRowKeys,
-            // 第一个参数不写去掉格式检查过不了，虽然这个参数没用到
-            // onChange类似于给普通元素绑定了事件，在事件里设置this.setState不会引起infinite loop
             onChange: (selected: string[] | number[], selectedRows: Array<TableObj>) => {
                 this.fillSelectedRowsTostate(selected, selectedRows);
             }
