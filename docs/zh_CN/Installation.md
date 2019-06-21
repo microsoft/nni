@@ -17,7 +17,7 @@
     先决条件：`python >=3.5`, `git`, `wget`
     
     ```bash
-    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    git clone -b v0.8 https://github.com/Microsoft/nni.git
     cd nni
     ./install.sh
     ```
@@ -30,8 +30,9 @@
 
 在第一次使用 PowerShell 运行脚本时，需要用**使用管理员权限**运行如下命令：
 
-    bash
-      Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Unrestricted
+```
 
 推荐使用 Anaconda 或 Miniconda。
 
@@ -50,9 +51,9 @@
     然后可以使用管理员或当前用户安装 NNI：
     
     ```bash
-    git clone -b v0.7 https://github.com/Microsoft/nni.git
+    git clone -b v0.8 https://github.com/Microsoft/nni.git
     cd nni
-    powershell ./install.ps1
+    powershell .\install.ps1
     ```
 
 ## **系统需求**

@@ -424,6 +424,14 @@ machineList:
   - **gpuIndices**
     
     **gpuIndices** 用于指定 GPU。设置此值后，只有指定的 GPU 会被用来运行 Trial 任务。 可指定单个或多个 GPU 的索引，多个 GPU 之间用逗号（,）隔开，例如 `1` 或 `0,1,3`。
+  
+  - **maxTrialNumPerGpu**
+    
+    **maxTrialNumPerGpu** 用于指定每个 GPU 设备上最大并发的 Trial 数量。
+  
+  - **useActiveGpu**
+    
+    **useActiveGpu** 用于指定 NNI 是否使用还有其它进程的 GPU。 默认情况下，NNI 只会使用没有其它进程的空闲 GPU，如果 **useActiveGpu** 设置为 true，NNI 会使用所有 GPU。 此字段不适用于 Windows 版的 NNI。
 
 - **machineList**
   
@@ -460,6 +468,14 @@ machineList:
   - **gpuIndices**
     
     **gpuIndices** 用于指定 GPU。设置此值后，远程计算机上只有指定的 GPU 会被用来运行 Trial 任务。 可指定单个或多个 GPU 的索引，多个 GPU 之间用逗号（,）隔开，例如 `1` 或 `0,1,3`。
+  
+  - **maxTrialNumPerGpu**
+    
+    **maxTrialNumPerGpu** 用于指定每个 GPU 设备上最大并发的 Trial 数量。
+  
+  - **useActiveGpu**
+    
+    **useActiveGpu** 用于指定 NNI 是否使用还有其它进程的 GPU。 默认情况下，NNI 只会使用没有其它进程的空闲 GPU，如果 **useActiveGpu** 设置为 true，NNI 会使用所有 GPU。 此字段不适用于 Windows 版的 NNI。
 
 - **kubeflowConfig**:
   

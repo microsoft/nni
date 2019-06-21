@@ -19,16 +19,20 @@
 
 'use strict';
 
-import {TrialConfig} from '../common/trialConfig'
+import {TrialConfig} from '../common/trialConfig';
 
-export class PAITrialConfig extends TrialConfig{
+/**
+ * PAI configuration to run trials
+ */
+export class PAITrialConfig extends TrialConfig {
     public readonly cpuNum: number;
     public readonly memoryMB: number;
     public readonly image: string;
-    public readonly dataDir: string; 
+    public readonly dataDir: string;
     public readonly outputDir: string;
 
-    constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number, image: string, dataDir: string, outputDir: string) {
+    constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number,
+                image: string, dataDir: string, outputDir: string) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;

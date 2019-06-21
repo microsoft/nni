@@ -22,16 +22,18 @@
 import os
 import sys
 import shutil
+import json
 
 from . import code_generator
 from . import search_space_generator
+from . import specific_code_generator
 
 
 __all__ = ['generate_search_space', 'expand_annotations']
 
 slash = '/'
 if sys.platform == "win32":
-    slash = '\\'        
+    slash = '\\'
 
 def generate_search_space(code_dir):
     """Generate search space from Python source code.
@@ -39,7 +41,7 @@ def generate_search_space(code_dir):
     code_dir: directory path of source files (str)
     """
     search_space = {}
-    
+
     if code_dir.endswith(slash):
         code_dir = code_dir[:-1]
 
@@ -74,7 +76,7 @@ def _generate_file_search_space(path, module):
     return search_space
 
 
-def expand_annotations(src_dir, dst_dir):
+def expand_annotations(src_dir, dst_dir, exp_id='', trial_id=''):
     """Expand annotations in user code.
     Return dst_dir if annotation detected; return src_dir if not.
     src_dir: directory path of user code (str)
@@ -82,7 +84,7 @@ def expand_annotations(src_dir, dst_dir):
     """
     if src_dir[-1] == slash:
         src_dir = src_dir[:-1]
-    
+
     if dst_dir[-1] == slash:
         dst_dir = dst_dir[:-1]
 
@@ -93,11 +95,23 @@ def expand_annotations(src_dir, dst_dir):
         dst_subdir = src_subdir.replace(src_dir, dst_dir, 1)
         os.makedirs(dst_subdir, exist_ok=True)
 
+        # generate module name from path
+        if src_subdir == src_dir:
+            package = ''
+        else:
+            assert src_subdir.startswith(src_dir + slash), src_subdir
+            prefix_len = len(src_dir) + 1
+            package = src_subdir[prefix_len:].replace(slash, '.') + '.'
+
         for file_name in files:
             src_path = os.path.join(src_subdir, file_name)
             dst_path = os.path.join(dst_subdir, file_name)
             if file_name.endswith('.py'):
-                annotated |= _expand_file_annotations(src_path, dst_path)
+                if trial_id == '':
+                    annotated |= _expand_file_annotations(src_path, dst_path)
+                else:
+                    module = package + file_name[:-3]
+                    annotated |= _generate_specific_file(src_path, dst_path, exp_id, trial_id, module)
             else:
                 shutil.copyfile(src_path, dst_path)
 
@@ -121,3 +135,22 @@ def _expand_file_annotations(src_path, dst_path):
                 raise RuntimeError(src_path + ' ' + '\n'.join(str(arg) for arg in exc.args))
             else:
                 raise RuntimeError('Failed to expand annotations for %s: %r' % (src_path, exc))
+
+def _generate_specific_file(src_path, dst_path, exp_id, trial_id, module):
+    with open(src_path) as src, open(dst_path, 'w') as dst:
+        try:
+            with open(os.path.expanduser('~/nni/experiments/%s/trials/%s/parameter.cfg'%(exp_id, trial_id))) as fd:
+                para_cfg = json.load(fd)
+            annotated_code = specific_code_generator.parse(src.read(), para_cfg["parameters"], module)
+            if annotated_code is None:
+                shutil.copyfile(src_path, dst_path)
+                return False
+            dst.write(annotated_code)
+            return True
+
+        except Exception as exc:  # pylint: disable=broad-except
+            if exc.args:
+                raise RuntimeError(src_path + ' ' + '\n'.join(str(arg) for arg in exc.args))
+            else:
+                raise RuntimeError('Failed to expand annotations for %s: %r' % (src_path, exc))
+

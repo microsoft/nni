@@ -161,7 +161,7 @@ def main():
 def generate_default_params():
     params = {'data_dir': '/tmp/tensorflow/mnist/input_data',
         'dropout_rate': 0.5, 'channel_1_num': 32, 'channel_2_num': 64,
-        'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'batch_size': 
+        'conv_size': 5, 'pool_size': 2, 'hidden_size': 1024, 'batch_size':
         50, 'batch_num': 200, 'learning_rate': 0.0001}
     return params
 

@@ -25,6 +25,7 @@ import json
 import datetime
 import time
 from subprocess import call, check_output
+from nni_annotation import expand_annotations
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url
 from .config_utils import Config, Experiments
@@ -264,13 +265,24 @@ def trial_kill(args):
         return
     running, _ = check_rest_server_quick(rest_port)
     if running:
-        response = rest_delete(trial_job_id_url(rest_port, args.id), REST_TIME_OUT)
+        response = rest_delete(trial_job_id_url(rest_port, args.trial_id), REST_TIME_OUT)
         if response and check_response(response):
             print(response.text)
         else:
             print_error('Kill trial job failed...')
     else:
         print_error('Restful server is not running...')
+
+def trial_codegen(args):
+    '''Generate code for a specific trial'''
+    print_warning('Currently, this command is only for nni nas programming interface.')
+    exp_id = check_experiment_id(args)
+    nni_config = Config(get_config_filename(args))
+    if not nni_config.get_config('experimentConfig')['useAnnotation']:
+        print_error('The experiment is not using annotation')
+        exit(1)
+    code_dir = nni_config.get_config('experimentConfig')['trial']['codeDir']
+    expand_annotations(code_dir, './exp_%s_trial_%s_code'%(exp_id, args.trial_id), exp_id, args.trial_id)
 
 def list_experiment(args):
     '''Get experiment information'''
@@ -309,7 +321,7 @@ def log_internal(args, filetype):
     else:
         file_full_path = os.path.join(NNICTL_HOME_DIR, file_name, 'stderr')
     print(check_output_command(file_full_path, head=args.head, tail=args.tail))
-    
+
 def log_stdout(args):
     '''get stdout log'''
     log_internal(args, 'stdout')
@@ -381,7 +393,7 @@ def experiment_list(args):
             print_warning('There is no experiment running...\nYou can use \'nnictl experiment list all\' to list all stopped experiments!')
     experiment_information = ""
     for key in experiment_id_list:
-        
+
         experiment_information += (EXPERIMENT_DETAIL_FORMAT % (key, experiment_dict[key]['status'], experiment_dict[key]['port'],\
         experiment_dict[key].get('platform'), experiment_dict[key]['startTime'], experiment_dict[key]['endTime']))
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)

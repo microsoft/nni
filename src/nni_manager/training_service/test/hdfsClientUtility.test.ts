@@ -37,7 +37,7 @@ describe('WebHDFS', function () {
     {
         "user": "user1",
         "port": 50070,
-        "host": "10.0.0.0"        
+        "host": "10.0.0.0"
     }
     */
     let skip: boolean = false;
@@ -45,7 +45,7 @@ describe('WebHDFS', function () {
     let hdfsClient: any;
     try {
         testHDFSInfo = JSON.parse(fs.readFileSync('../../.vscode/hdfsInfo.json', 'utf8'));
-        console.log(testHDFSInfo);        
+        console.log(testHDFSInfo);
         hdfsClient = WebHDFS.createClient({
             user: testHDFSInfo.user,
             port: testHDFSInfo.port,
@@ -120,7 +120,7 @@ describe('WebHDFS', function () {
         chai.expect(actualFileData).to.be.equals(testFileData);
 
         const testHDFSDirPath : string = path.join('/nni_unittest_' + uniqueString(6) +  '_dir');
-        
+
         await HDFSClientUtility.copyDirectoryToHdfs(tmpLocalDirectoryPath, testHDFSDirPath, hdfsClient);
 
         const files : any[] = await HDFSClientUtility.readdir(testHDFSDirPath, hdfsClient);
@@ -133,7 +133,7 @@ describe('WebHDFS', function () {
 
         // Cleanup
         rmdir(tmpLocalDirectoryPath);
-        
+
         let deleteRestult : boolean = await HDFSClientUtility.deletePath(testHDFSFilePath, hdfsClient);
         chai.expect(deleteRestult).to.be.equals(true);
 

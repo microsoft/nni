@@ -83,7 +83,7 @@ class Experiments:
         self.experiments[id]['fileName'] = file_name
         self.experiments[id]['platform'] = platform
         self.write_file()
-    
+
     def update_experiment(self, id, key, value):
         '''Update experiment'''
         if id not in self.experiments:
@@ -91,17 +91,17 @@ class Experiments:
         self.experiments[id][key] = value
         self.write_file()
         return True
-    
+
     def remove_experiment(self, id):
         '''remove an experiment by id'''
         if id in self.experiments:
             self.experiments.pop(id)
         self.write_file()
-        
+
     def get_all_experiments(self):
         '''return all of experiments'''
         return self.experiments
-    
+
     def write_file(self):
         '''save config to local file'''
         try:
