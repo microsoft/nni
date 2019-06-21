@@ -146,7 +146,7 @@ class NNIRestHandler {
             });
         });
     }
-    
+
     private importData(router: Router): void {
         router.post('/experiment/import-data', (req: Request, res: Response) => {
             this.nniManager.importData(JSON.stringify(req.body)).then(() => {
@@ -203,7 +203,7 @@ class NNIRestHandler {
                 res.send();
             } catch (err) {
                 // setClusterMetata is a step of initialization, so any exception thrown is a fatal
-                this.handle_error(err, res, true);
+                this.handle_error(NNIError.FromError(err), res, true);
             }
         });
     }

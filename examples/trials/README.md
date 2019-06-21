@@ -1,6 +1,6 @@
 # How to write a Trial running on NNI?
 
-*Trial receive the hyper-parameter/architecture configure from Tuner, and send intermediate result to Assessor and final result to Tuner.* 
+*Trial receive the hyper-parameter/architecture configure from Tuner, and send intermediate result to Assessor and final result to Tuner.*
 
 So when user want to write a Trial running on NNI, she/he should:
 
@@ -140,9 +140,9 @@ def train(args, params):
 
     _, acc = model.evaluate(x_test, y_test, verbose=0)
 
-...    
+...
 ```
-**4) Send final result**  
+**4) Send final result**
 
 Use `nni.report_final_result` to send final result to Tuner. Please noted **15** line in the following code.
 
@@ -162,7 +162,7 @@ def train(args, params):
 
     _, acc = model.evaluate(x_test, y_test, verbose=0)
     nni.report_final_result(acc)
-...    
+...
 ```
 
 Here is the complete example:

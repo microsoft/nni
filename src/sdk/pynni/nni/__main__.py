@@ -155,7 +155,7 @@ def main():
         assessor = None
         if args.tuner_class_name in ModuleName:
             tuner = create_builtin_class_instance(
-                args.tuner_class_name, 
+                args.tuner_class_name,
                 args.tuner_args)
         else:
             tuner = create_customized_class_instance(

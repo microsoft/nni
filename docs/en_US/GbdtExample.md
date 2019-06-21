@@ -1,9 +1,9 @@
 # GBDT in nni
-Gradient boosting is a machine learning technique for regression and classification problems, which produces a prediction model in the form of an ensemble of weak prediction models, typically decision trees. It builds the model in a stage-wise fashion as other boosting methods do, and it generalizes them by allowing optimization of an arbitrary differentiable loss function. 
+Gradient boosting is a machine learning technique for regression and classification problems, which produces a prediction model in the form of an ensemble of weak prediction models, typically decision trees. It builds the model in a stage-wise fashion as other boosting methods do, and it generalizes them by allowing optimization of an arbitrary differentiable loss function.
 
 Gradient boosting decision tree has many popular implementations, such as [lightgbm](https://github.com/Microsoft/LightGBM), [xgboost](https://github.com/dmlc/xgboost), and [catboost](https://github.com/catboost/catboost), etc. GBDT is a great tool for solving the problem of traditional machine learning problem. Since GBDT is a robust algorithm, it could use in many domains. The better hyper-parameters for GBDT, the better performance you could achieve.
 
-NNI is a great platform for tuning hyper-parameters, you could try various builtin search algorithm in nni and run multiple trials concurrently. 
+NNI is a great platform for tuning hyper-parameters, you could try various builtin search algorithm in nni and run multiple trials concurrently.
 
 ## 1. Search Space in GBDT
 There are many hyper-parameters in GBDT, but what kind of parameters will affect the performance or speed? Based on some practical experience, some suggestion here(Take lightgbm as example):

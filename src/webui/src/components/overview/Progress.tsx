@@ -78,7 +78,7 @@ class Progressed extends React.Component<ProgressProps, ProgressState> {
                                     }).then(res => {
                                         if (res.status === 200) {
                                             message.destroy();
-                                            message.success(`Update ${CONTROLTYPE[1].toLocaleLowerCase()} 
+                                            message.success(`Update ${CONTROLTYPE[1].toLocaleLowerCase()}
                                             successfully`);
                                             // rerender trial profile message
                                             const { updateFile } = this.props;

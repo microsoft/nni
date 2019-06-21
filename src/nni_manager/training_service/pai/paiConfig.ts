@@ -19,8 +19,11 @@
 
 'use strict';
 
-import {TrialConfig} from '../common/trialConfig'
+import {TrialConfig} from '../common/trialConfig';
 
+/**
+ * Task role for PAI
+ */
 export class PAITaskRole {
     // Name for the task role
     public readonly name: string;
@@ -36,7 +39,7 @@ export class PAITaskRole {
     public readonly command: string;
     //Shared memory for one task in the task role
     public readonly shmMB?: number;
-    
+
     /**
      * Constructor
      * @param name Name for the task role
@@ -46,18 +49,22 @@ export class PAITaskRole {
      * @param gpuNumber GPU number for one task in the task role, no less than 0
      * @param command Executable command for tasks in the task role, can not be empty
      */
-    constructor(name : string, taskNumber : number, cpuNumber : number, memoryMB : number, gpuNumber : number, command : string, shmMB?: number) {
+    constructor(name : string, taskNumber : number, cpuNumber : number, memoryMB : number, gpuNumber : number,
+                command : string, shmMB?: number) {
         this.name = name;
         this.taskNumber = taskNumber;
         this.cpuNumber = cpuNumber;
         this.memoryMB = memoryMB;
         this.gpuNumber = gpuNumber;
-        this.command = command;    
+        this.command = command;
         this.shmMB = shmMB;
     }
 }
 
-export class PAIJobConfig{
+/**
+ * Trial job configuration submitted to PAI
+ */
+export class PAIJobConfig {
     // Name for the job, need to be unique
     public readonly jobName: string;
     // URL pointing to the Docker image for all tasks in the job
@@ -83,8 +90,8 @@ export class PAIJobConfig{
      * @param outputDir Output directory on HDFS
      * @param taskRoles List of taskRole, one task role at least
      */
-    constructor(jobName: string, image : string, dataDir : string, outputDir : string, codeDir : string, 
-            taskRoles : PAITaskRole[], virtualCluster: string) {
+    constructor(jobName: string, image : string, dataDir : string, outputDir : string, codeDir : string,
+                taskRoles : PAITaskRole[], virtualCluster: string) {
         this.jobName = jobName;
         this.image = image;
         this.dataDir = dataDir;
@@ -95,6 +102,9 @@ export class PAIJobConfig{
     }
 }
 
+/**
+ * PAI cluster configuration
+ */
 export class PAIClusterConfig {
     public readonly userName: string;
     public readonly passWord: string;
@@ -106,18 +116,21 @@ export class PAIClusterConfig {
      * @param passWord password of PAI Cluster
      * @param host Host IP of PAI Cluster
      */
-    constructor(userName: string, passWord : string, host : string){
+    constructor(userName: string, passWord : string, host : string) {
         this.userName = userName;
         this.passWord = passWord;
         this.host = host;
     }
 }
 
-export class NNIPAITrialConfig extends TrialConfig{
+/**
+ * PAI trial configuration
+ */
+export class NNIPAITrialConfig extends TrialConfig {
     public readonly cpuNum: number;
     public readonly memoryMB: number;
     public readonly image: string;
-    public readonly dataDir: string; 
+    public readonly dataDir: string;
     public outputDir: string;
 
     //The virtual cluster job runs on. If omitted, the job will run on default virtual cluster
@@ -125,8 +138,8 @@ export class NNIPAITrialConfig extends TrialConfig{
     //Shared memory for one task in the task role
     public shmMB?: number;
 
-    constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number, 
-            image: string, dataDir: string, outputDir: string, virtualCluster?: string, shmMB?: number) {
+    constructor(command : string, codeDir : string, gpuNum : number, cpuNum: number, memoryMB: number,
+                image: string, dataDir: string, outputDir: string, virtualCluster?: string, shmMB?: number) {
         super(command, codeDir, gpuNum);
         this.cpuNum = cpuNum;
         this.memoryMB = memoryMB;
@@ -137,4 +150,3 @@ export class NNIPAITrialConfig extends TrialConfig{
         this.shmMB = shmMB;
     }
 }
-

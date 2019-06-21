@@ -26,7 +26,7 @@ curve_combination_models = ['vap', 'pow3', 'linear', 'logx_linear', 'dr_hill_zer
 
 def vap(x, a, b, c):
     """Vapor pressure model
-    
+
     Parameters
     ----------
     x: int
@@ -109,7 +109,7 @@ model_para_num['logx_linear'] = 2
 
 def dr_hill_zero_background(x, theta, eta, kappa):
     """dr hill zero background
- 
+
     Parameters
     ----------
     x: int
@@ -261,7 +261,7 @@ model_para_num['weibull'] = 4
 
 def janoschek(x, a, beta, k, delta):
     """http://www.pisces-conservation.com/growthhelp/janoschek.htm
-    
+
     Parameters
     ----------
     x: int
