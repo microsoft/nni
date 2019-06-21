@@ -56,6 +56,7 @@ common_schema = {
     Optional('nniManagerIp'): setType('nniManagerIp', str),
     Optional('logDir'): And(os.path.isdir, error=SCHEMA_PATH_ERROR % 'logDir'),
     Optional('debug'): setType('debug', bool),
+    Optional('versionCheck'): setType('versionCheck', bool),
     Optional('logLevel'): setChoice('logLevel', 'trace', 'debug', 'info', 'warning', 'error', 'fatal'),
     Optional('logCollection'): setChoice('logCollection', 'http', 'none'),
     'useAnnotation': setType('useAnnotation', bool),

@@ -303,6 +303,9 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     #debug mode should disable version check
     if experiment_config.get('debug') is not None:
         request_data['versionCheck'] = not experiment_config.get('debug')
+    #validate version check
+    if experiment_config.get('versionCheck') is not None:
+        request_data['versionCheck'] = experiment_config.get('versionCheck')
     if experiment_config.get('logCollection'):
         request_data['logCollection'] = experiment_config.get('logCollection')
 
@@ -363,7 +366,7 @@ def launch_experiment(args, experiment_config, mode, config_file_name, experimen
             exit(1)
     log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
-    if log_level not in ['trace', 'debug'] and args.debug:
+    if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
         log_level = 'debug'
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], mode, config_file_name, experiment_id, log_dir, log_level)
